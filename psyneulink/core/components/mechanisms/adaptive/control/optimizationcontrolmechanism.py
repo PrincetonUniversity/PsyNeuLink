@@ -388,36 +388,28 @@ Class Reference
 """
 import copy
 import itertools
-import numbers
 import numpy as np
 import typecheck as tc
 
 from collections.abc import Iterable
-from collections import namedtuple
 
-from psyneulink.core.components.functions.function import \
-    Function_Base, ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.function import Function_Base, is_function_type
 from psyneulink.core.components.functions.optimizationfunctions import \
     OBJECTIVE_FUNCTION, SEARCH_SPACE, OptimizationFunction
+from psyneulink.core.components.functions.transferfunctions import CostFunctions
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.states.inputstate import InputState, _parse_shadow_inputs
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal, ControlSignalCosts
 from psyneulink.core.components.states.outputstate import OutputState
-from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
-    DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, \
-    PARAMETER_STATES, PARAMS, VARIABLE
+    DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, NAME, \
+    OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMETER_STATES, PARAMS
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import is_iterable
-from psyneulink.core.globals.sampleiterator import SampleIterator
 
 from psyneulink.core import llvm as pnlvm
 
@@ -443,26 +435,26 @@ class OptimizationControlMechanismError(Exception):
 
 
 class OptimizationControlMechanism(ControlMechanism):
-    """OptimizationControlMechanism(            \
-    objective_mechanism=None,                   \
-    monitor_for_control=None,                   \
-    objective_mechanism=None,                   \
-    origin_objective_mechanism=False            \
-    terminal_objective_mechanism=False          \
-    features=None,                              \
-    feature_function=None,                      \
-    function=None,                              \
-    agent_rep=None,                             \
-    search_function=None,                       \
-    search_termination_function=None,           \
-    search_space=None,                          \
-    control_signals=None,                       \
-    modulation=ModulationParam.MULTIPLICATIVE,  \
-    combine_costs=np.sum,                       \
-    compute_reconfiguration_cost=None,          \
-    compute_net_outcome=lambda x,y:x-y,         \
-    params=None,                                \
-    name=None,                                  \
+    """OptimizationControlMechanism(     \
+    objective_mechanism=None,            \
+    monitor_for_control=None,            \
+    objective_mechanism=None,            \
+    origin_objective_mechanism=False     \
+    terminal_objective_mechanism=False   \
+    features=None,                       \
+    feature_function=None,               \
+    function=None,                       \
+    agent_rep=None,                      \
+    search_function=None,                \
+    search_termination_function=None,    \
+    search_space=None,                   \
+    control_signals=None,                \
+    modulation=MULTIPLICATIVE,           \
+    combine_costs=np.sum,                \
+    compute_reconfiguration_cost=None,   \
+    compute_net_outcome=lambda x,y:x-y,  \
+    params=None,                         \
+    name=None,                           \
     prefs=None)
 
     Subclass of `ControlMechanism <ControlMechanism>` that adjusts its `ControlSignals <ControlSignal>` to optimize
@@ -743,6 +735,10 @@ class OptimizationControlMechanism(ControlMechanism):
                                                   feature_function=feature_function,
                                                   num_estimates=num_estimates,
                                                   search_statefulness=search_statefulness,
+                                                  search_function=search_function,
+                                                  search_termination_function=search_termination_function,
+                                                  agent_rep=agent_rep,
+                                                  features=features,
                                                   params=params)
 
         super().__init__(system=None,
@@ -802,14 +798,14 @@ class OptimizationControlMechanism(ControlMechanism):
                                                         f"but it receives {len(state.path_afferents)} projections.")
 
     def _instantiate_output_states(self, context=None):
-        """Assign ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals.
+        """Assign CostFunctions.DEFAULTS as default for cost_option of ControlSignals.
         OptimizationControlMechanism requires use of at least one of the cost options
         """
         super()._instantiate_output_states(context)
 
         for control_signal in self.control_signals:
             if control_signal.cost_options is None:
-                control_signal.cost_options = ControlSignalCosts.DEFAULTS
+                control_signal.cost_options = CostFunctions.DEFAULTS
                 control_signal._instantiate_cost_attributes(context)
 
     def _instantiate_modulatory_signals(self, context):
@@ -842,7 +838,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
         if (isinstance(self.agent_rep, CompositionFunctionApproximator)):
-            self._initialize_composition_function_approximator()
+            self._initialize_composition_function_approximator(context)
 
     def _update_input_states(self, context=None, runtime_params=None):
         """Update value for each InputState in self.input_states:
@@ -1045,7 +1041,7 @@ class OptimizationControlMechanism(ControlMechanism):
         builder.store(ctx.float_ty(-0.0), total_cost)
         for i, os in enumerate(self.output_states):
             # FIXME: Add support for other cost types
-            assert os.cost_options == ControlSignalCosts.INTENSITY
+            assert os.cost_options == CostFunctions.INTENSITY
 
             func = ctx.get_llvm_function(os.intensity_cost_function)
             func_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
@@ -1190,15 +1186,14 @@ class OptimizationControlMechanism(ControlMechanism):
         return f
 
     def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable):
-        from psyneulink.core.compositions.composition import Composition
-        is_comp = isinstance(self.agent_rep, Composition)
-
         fun = ctx.get_llvm_function(function)
         fun_in, builder = self._gen_llvm_function_input_parse(builder, ctx, fun, variable)
         fun_out = builder.alloca(fun.args[3].type.pointee)
 
         args = [params, context, fun_in, fun_out]
-        if is_comp:
+        # If we're calling compiled version of Composition.evaluate,
+        # we need to pass extra arguments
+        if len(fun.args) > 4:
             args += builder.function.args[-3:]
         builder.call(fun, args)
 
@@ -1286,24 +1281,12 @@ class OptimizationControlMechanism(ControlMechanism):
     # FIX:  THE FOLLOWING IS SPECIFIC TO CompositionFunctionApproximator AS agent_rep
     # ******************************************************************************************************************
 
-    def _initialize_composition_function_approximator(self):
+    def _initialize_composition_function_approximator(self, context):
         """Initialize CompositionFunctionApproximator"""
 
         # CompositionFunctionApproximator needs to have access to control_signals to:
         # - to construct control_allocation_search_space from their allocation_samples attributes
         # - compute their values and costs for samples of control_allocations from control_allocation_search_space
         self.agent_rep.initialize(features_array=np.array(self.defaults.variable[1:]),
-                                  control_signals = self.control_signals)
-
-    @property
-    def _dependent_components(self):
-        from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
-
-        return list(itertools.chain(
-            super()._dependent_components,
-            [self._objective_mechanism] if self.objective_mechanism else [],
-            [self.agent_rep] if isinstance(self.agent_rep, CompositionFunctionApproximator) else [],
-            [self.feature_function] if isinstance(self.feature_function, Function_Base) else [],
-            [self.search_function] if isinstance(self.search_function, Function_Base) else [],
-            [self.search_termination_function] if isinstance(self.search_termination_function, Function_Base) else [],
-        ))
+                                  control_signals = self.control_signals,
+                                  context=context)

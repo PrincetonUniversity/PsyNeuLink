@@ -28,20 +28,22 @@ from enum import IntEnum
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.function import \
-    Function_Base, FunctionError, MULTIPLICATIVE_PARAM, ADDITIVE_PARAM
+from psyneulink.core.components.functions.function import Function_Base, FunctionError
 from psyneulink.core.globals.keywords import \
-    DIST_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, STANDARD_DEVIATION, DIST_MEAN, EXPONENTIAL_DIST_FUNCTION, \
-    BETA, UNIFORM_DIST_FUNCTION, LOW, HIGH, GAMMA_DIST_FUNCTION, SCALE, DIST_SHAPE, WALD_DIST_FUNCTION, NOISE, \
-    DRIFT_DIFFUSION_ANALYTICAL_FUNCTION
+    ADDITIVE_PARAM, DIST_FUNCTION_TYPE, BETA, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_ANALYTICAL_FUNCTION, \
+    EXPONENTIAL_DIST_FUNCTION, GAMMA_DIST_FUNCTION, HIGH, LOW, MULTIPLICATIVE_PARAM, NOISE, NORMAL_DIST_FUNCTION, \
+    SCALE, STANDARD_DEVIATION, UNIFORM_DIST_FUNCTION, WALD_DIST_FUNCTION
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.utilities import parameter_spec
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 
 from psyneulink.core.globals.parameters import Parameter
 
-__all__ = ['DistributionFunction', 'NormalDist', 'UniformDist', 'UniformToNormalDist', 'ExponentialDist',
-           'GammaDist', 'WaldDist', 'DriftDiffusionAnalytical']
+__all__ = [
+    'DistributionFunction', 'DRIFT_RATE', 'DRIFT_RATE_VARIABILITY', 'DriftDiffusionAnalytical', 'ExponentialDist',
+    'GammaDist', 'NON_DECISION_TIME', 'NormalDist', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY', 'THRESHOLD',
+    'THRESHOLD_VARIABILITY', 'UniformDist', 'UniformToNormalDist', 'WaldDist',
+]
 
 
 class DistributionFunction(Function_Base):
@@ -1278,7 +1280,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                                  (csch(Z - X))**2 - 3 * (Z - X)*coth(Z - X))
 
             # divide third central moment by var_rt**1.5 to get skewness
-            moments['skew_rt_plus'] /=  moments['var_rt_plus']**1.5
+            moments['skew_rt_plus'] /= moments['var_rt_plus']**1.5
             moments['skew_rt_minus'] /= moments['var_rt_minus']**1.5
 
             # Add the non-decision time to the mean RTs

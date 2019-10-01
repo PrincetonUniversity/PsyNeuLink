@@ -10,7 +10,6 @@ from itertools import product
 
 import psyneulink.core.llvm as pnlvm
 import psyneulink as pnl
-from psyneulink.core.components.functions.function import ModulationParam
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator, SimpleIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
@@ -24,14 +23,16 @@ from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.compositions.composition import Composition, CompositionError
 from psyneulink.core.compositions.pathwaycomposition import PathwayComposition
 from psyneulink.core.compositions.systemcomposition import SystemComposition
-from psyneulink.core.globals.keywords import INPUT_STATE, NAME, PROJECTIONS, ALLOCATION_SAMPLES
+from psyneulink.core.globals.keywords import \
+    ADDITIVE, ALLOCATION_SAMPLES, DISABLE, INPUT_STATE, NAME, PROJECTIONS, OVERRIDE
 from psyneulink.core.globals.utilities import NodeRole
 from psyneulink.core.scheduling.condition import AfterNCalls
 from psyneulink.core.scheduling.condition import EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism import LCControlMechanism
-from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RECURRENT_OUTPUT, RecurrentTransferMechanism
+from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
+    RECURRENT_OUTPUT, RecurrentTransferMechanism
 
 logger = logging.getLogger(__name__)
 
@@ -808,7 +809,7 @@ class TestExecutionOrder:
 
         cycle_nodes = [B, C, D, C2]
         for cycle_node in cycle_nodes:
-            cycle_node.output_states[0].parameters.value.set([1.0])
+            cycle_node.output_states[0].parameters.value.set([1.0], override=True)
 
         comp.add_linear_processing_pathway([A, B, MappingProjection(matrix=2.0), C, D, MappingProjection(matrix=5.0), E])
         comp.add_linear_processing_pathway([D, MappingProjection(matrix=3.0), C2, MappingProjection(matrix=4.0), B])
@@ -1121,7 +1122,7 @@ class TestExecutionOrder:
         A = ObjectiveMechanism(function=Linear,
                                monitor=[B],
                                name="A")
-        LC = LCControlMechanism(name="LC", modulation=ModulationParam.ADDITIVE,
+        LC = LCControlMechanism(name="LC", modulation=ADDITIVE,
                                modulated_mechanisms=C,
                                objective_mechanism=A)
         D = TransferMechanism(name="D", function=Linear(slope=5.0))
@@ -1166,7 +1167,7 @@ class TestExecutionOrder:
         A = ObjectiveMechanism(function=Linear,
                                monitor=[B],
                                name="A")
-        LC = LCControlMechanism(name="LC", modulation=ModulationParam.OVERRIDE,
+        LC = LCControlMechanism(name="LC", modulation=OVERRIDE,
                                modulated_mechanisms=C,
                                objective_mechanism=A)
         D = TransferMechanism(name="D", function=Linear(slope=5.0))
@@ -1216,7 +1217,7 @@ class TestExecutionOrder:
         A = ObjectiveMechanism(function=Linear,
                                monitor=[B],
                                name="A")
-        LC = LCControlMechanism(name="LC", modulation=ModulationParam.DISABLE,
+        LC = LCControlMechanism(name="LC", modulation=DISABLE,
                                modulated_mechanisms=C,
                                objective_mechanism=A)
         D = TransferMechanism(name="D", function=Linear(slope=5.0))
@@ -3429,6 +3430,7 @@ class TestNestedCompositions:
 
         sched = Scheduler(composition=outer_comp)
         ret = outer_comp.run(inputs=[1.0], bin_execute=mode)
+
         assert np.allclose(ret, [[[0.52497918747894]]])
 
 
@@ -4235,6 +4237,27 @@ class TestCompositionInterface:
         assert np.allclose(np.shape(out.defaults.variable), (1, 1))
         assert np.allclose(out.parameters.variable.get(comp), [[6.0]])
 
+    def test_inner_composition_change_before_run(self):
+        comp = Composition()
+        inner_comp = Composition()
+
+        A = pnl.TransferMechanism(name='A')
+        B = pnl.TransferMechanism(name='B')
+        C = pnl.TransferMechanism(name='C')
+
+        inner_comp.add_nodes([B, C])
+        comp.add_nodes([A, inner_comp])
+
+        comp.add_projection(pnl.MappingProjection(), A, inner_comp)
+        inner_comp.add_projection(pnl.MappingProjection(), B, C)
+
+        comp.run(inputs={A: 1})
+
+        # inner_comp is updated to make B not an OUTPUT node
+        # after being added to comp
+        assert len(comp.output_CIM.output_states) == 1
+        assert len(comp.results[0]) == 1
+
 
 class TestInputStateSpecifications:
 
@@ -4825,3 +4848,16 @@ class TestNodeRoles:
         comp._analyze_graph()
 
         assert set(comp.get_nodes_by_role(NodeRole.CYCLE)) == {A, B, C}
+
+
+class TestMisc:
+
+    def test_disable_all_history(self):
+        comp = Composition(name='comp')
+        A = ProcessingMechanism(name='A')
+
+        comp.add_node(A)
+        comp.disable_all_history()
+        comp.run(inputs={A: [2]})
+
+        assert len(A.parameters.value.history[comp.default_execution_id]) == 0

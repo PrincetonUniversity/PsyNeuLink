@@ -281,6 +281,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
 
                     :default value: 0.3
                     :type: float
+
         """
 
         variable = Parameter(None, read_only=True)

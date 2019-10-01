@@ -37,12 +37,12 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.function import \
-    Function_Base, FunctionError, FunctionOutputType, ADDITIVE_PARAM, MULTIPLICATIVE_PARAM
+from psyneulink.core.components.functions.function import Function_Base, FunctionError, FunctionOutputType
 from psyneulink.core.globals.keywords import \
-    ARRANGEMENT, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONCATENATE_FUNCTION, DEFAULT_VARIABLE, EXPONENTS, \
-    LINEAR_COMBINATION_FUNCTION, OFFSET, OPERATION, PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT, REARRANGE_FUNCTION, \
-    REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, kwPreferenceSetName
+    ADDITIVE_PARAM, ARRANGEMENT, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONCATENATE_FUNCTION, \
+    DEFAULT_VARIABLE, EXPONENTS, LINEAR_COMBINATION_FUNCTION, MULTIPLICATIVE_PARAM, OFFSET, OPERATION, \
+    PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT, REARRANGE_FUNCTION, REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, \
+    kwPreferenceSetName
 from psyneulink.core.globals.utilities import is_numeric, np_array_less_than_2d, parameter_spec
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.parameters import Parameter
@@ -86,35 +86,24 @@ class CombinationFunction(Function_Base):
                  prefs=None,
                  context=None):
 
-        if not hasattr(self, MULTIPLICATIVE_PARAM):
-            raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
-                                format(self.__class__.__name__, MULTIPLICATIVE_PARAM))
-
-        if not hasattr(self, ADDITIVE_PARAM):
-            raise FunctionError("PROGRAM ERROR: {} must implement an {} attribute".
-                                format(self.__class__.__name__, ADDITIVE_PARAM))
+        # # FIX: 9/3/19 - DON'T IMPLEMENT, SINCE PredictionErrorDeltaFunction DOESN"T IMPLEMENT MODULATORY PARAMS
+        # try:
+        #     self.parameters.multiplicative_param
+        # except:
+        #     raise FunctionError(f"PROGRAM ERROR: {self.__class__.__name__} must implement "
+        #                         f"a {repr(MULTIPLICATIVE_PARAM)} Parameter or alias to one.")
+        #
+        # try:
+        #     self.parameters.additive_param
+        # except:
+        #     raise FunctionError(f"PROGRAM ERROR: {self.__class__.__name__} must implement "
+        #                         f"a {repr(ADDITIVE_PARAM)} Parameter or alias to one.")
 
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
                          context=context)
-
-    @property
-    def multiplicative(self):
-        return getattr(self, self.multiplicative_param)
-
-    @multiplicative.setter
-    def multiplicative(self, val):
-        setattr(self, self.multiplicative_param, val)
-
-    @property
-    def additive(self):
-        return getattr(self, self.additive_param)
-
-    @additive.setter
-    def additive(self, val):
-        setattr(self, self.additive_param, val)
 
 
 class Concatenate(CombinationFunction):  # ------------------------------------------------------------------------
@@ -192,8 +181,6 @@ class Concatenate(CombinationFunction):  # -------------------------------------
     """
     componentName = CONCATENATE_FUNCTION
 
-    multiplicative_param = SCALE
-    additive_param = OFFSET
 
     class Parameters(CombinationFunction.Parameters):
         """
@@ -213,8 +200,8 @@ class Concatenate(CombinationFunction):  # -------------------------------------
                     :type: float
 
         """
-        scale = Parameter(1.0, modulable=True)
-        offset = Parameter(0.0, modulable=True)
+        scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -412,9 +399,6 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
     """
     componentName = REARRANGE_FUNCTION
 
-    multiplicative_param = SCALE
-    additive_param = OFFSET
-
     class Parameters(CombinationFunction.Parameters):
         """
             Attributes
@@ -422,6 +406,9 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
 
                 arrangement
                     see `arrangement <Rearrange.arrangement>`
+
+                    :default value: None
+                    :type:
 
                 offset
                     see `offset <Rearrange.offset>`
@@ -437,8 +424,8 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
 
         """
         arrangement = Parameter(None, modulable=False)
-        scale = Parameter(1.0, modulable=True)
-        offset = Parameter(0.0, modulable=True)
+        scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -703,8 +690,6 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     """
     componentName = REDUCE_FUNCTION
 
-    multiplicative_param = SCALE
-    additive_param = OFFSET
 
     class Parameters(CombinationFunction.Parameters):
         """
@@ -745,8 +730,8 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         weights = None
         exponents = None
         operation = SUM
-        scale = Parameter(1.0, modulable=True)
-        offset = Parameter(0.0, modulable=True)
+        scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -787,8 +772,12 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         """
         variable = super()._validate_variable(variable=variable, context=context)
         if not is_numeric(variable):
-            raise FunctionError("All elements of {} must be scalar values".
-                                format(self.__class__.__name__))
+            if self.owner:
+                err_msg = f"{self.__class__.__name__} function of {repr(self.owner.name)} " \
+                          f"passed variable ({variable}) with non-scalar element."
+            else:
+                err_msg = f"All elements of variable ({variable}) for {self.__class__.__name__} must be scalar values."
+            raise FunctionError(err_msg)
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -1080,9 +1069,6 @@ class LinearCombination(
         kwPreferenceSetName: 'LinearCombinationCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
-
-    multiplicative_param = SCALE
-    additive_param = OFFSET
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -1411,13 +1397,13 @@ class LinearCombination(
         offset = ctx.float_ty(-0.0) if isinstance(offset_type, pnlvm.ir.LiteralStructType) and len(offset_type.elements) == 0 else builder.load(offset_ptr)
 
         # assume operation does not change dynamically
-        operation = self.get_current_function_param(OPERATION, context=Context())
+        operation = self.parameters.operation.get()
         if operation is SUM:
             val = ctx.float_ty(-0.0)
         elif operation is PRODUCT:
             val = ctx.float_ty(1.0)
         else:
-            assert False, "Unknown operation: " + operation
+            assert False, "Unknown operation: {}".format(operation)
 
         pow_f = ctx.get_builtin("pow", [ctx.float_ty])
 
@@ -1684,8 +1670,6 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
-    multiplicative_param = SCALE
-    additive_param = OFFSET
 
     class Parameters(CombinationFunction.Parameters):
         """
@@ -1994,8 +1978,6 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         gamma = Parameter(1.0, modulable=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    multiplicative_param = None
-    additive_param = None
 
     @tc.typecheck
     def __init__(self,

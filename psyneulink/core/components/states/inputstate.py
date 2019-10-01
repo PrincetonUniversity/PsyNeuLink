@@ -427,7 +427,7 @@ to, and that can be used to customize the InputState:
 
 .. _InputState_Function:
 
-* `function <InputState.function>` -- aggregates the `value <Projection_Base.value>` of all of the
+* `function <InputState.function>` -- combines the `value <Projection_Base.value>` of all of the
   `Projections <Projection>` received by the InputState, and assigns the result to the InputState's `value
   <InputState.value>` attribute.  The default function is `LinearCombination` that performs an elementwise (Hadamard)
   sums the values. However, the parameters of the `function <InputState.function>` -- and thus the `value
@@ -459,7 +459,7 @@ Execution
 
 An InputState cannot be executed directly.  It is executed when the Mechanism to which it belongs is executed.
 When this occurs, the InputState executes any `Projections <Projection>` it receives, calls its `function
-<InputState.function>` to aggregate the values received from any `MappingProjections <MappingProjection>` it receives
+<InputState.function>` to combines the values received from any `MappingProjections <MappingProjection>` it receives
 (listed in its its `path_afferents  <InputState.path_afferents>` attribute) and modulate them in response to any
 `GatingProjections <GatingProjection>` (listed in its `mod_afferents <InputState.mod_afferents>` attribute),
 and then assigns the result to the InputState's `value <InputState.value>` attribute. This, in turn, is assigned to
@@ -961,15 +961,25 @@ class InputState(State_Base):
         self._instantiate_projections_to_state(projections=projections, context=context)
 
     def _check_for_duplicate_projections(self, projection):
+        """Check if projection is redundant with one in path_afferents of InputState
+
+        Check for any instantiated projection in path_afferents with the same sender as projection
+        or one in deferred_init status with sender specification that is the same type as projection.
+
+        Returns redundant Projection if found, otherwise False.
+        """
+
         # FIX: 7/22/19 - CHECK IF SENDER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_OUTPUT_STATE
-        assert True
-        if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
+        duplicate = next(iter([proj for proj in self.path_afferents
+                               if ((proj.sender == projection.sender and proj != projection)
+                                   or (proj.initialization_status == ContextFlags.DEFERRED_INIT
+                                       and proj.init_args[SENDER] == type(projection.sender)))]), None)
+        if duplicate and self.verbosePref or self.owner.verbosePref:
             from psyneulink.core.components.projections.projection import Projection
             warnings.warn(f'{Projection.__name__} from {projection.sender.name}  {projection.sender.__class__.__name__}'
                           f' of {projection.sender.owner.name} to {self.name} {self.__class__.__name__} of '
                           f'{self.owner.name} already exists; will ignore additional one specified ({projection.name}).')
-            return True
-        return False
+        return duplicate
 
     def _parse_function_variable(self, variable, context=None):
         variable = super()._parse_function_variable(variable, context)

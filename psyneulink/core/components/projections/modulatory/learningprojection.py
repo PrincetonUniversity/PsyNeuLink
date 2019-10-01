@@ -328,7 +328,7 @@ class LearningProjection(ModulatoryProjection_Base):
         the Projection's default `function <LearningProjection.function>` and parameter assignments.  Values specified
         for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default see ModulatoryProjection `name <ModulatoryProjection.name>`
+    name : str : default see ModulatoryProjection `name <ModulatoryProjection_Base.name>`
         specifies the name of the LearningProjection.
 
     prefs : PreferenceSet or specification dict : default Projection.classPreferences
@@ -399,7 +399,7 @@ class LearningProjection(ModulatoryProjection_Base):
        <LearningProjection.exponent>`, and before combining it with any others that project to the `ParameterState`
        for the `matrix <MappingProjection.matrix>` parameter of the same `MappingProjection` to determine how that
        MappingProjection's `matrix <MappingProjection.matrix>` is modified (see `description above
-       <LearningProjection_Weight_and_Exponent>` for additional details, including relationship to `learning_rate
+       <LearningProjection_Weight_Exponent>` for additional details, including relationship to `learning_rate
        <LearningProjection.learning_rate>`).
 
     exponent : number
@@ -407,12 +407,12 @@ class LearningProjection(ModulatoryProjection_Base):
         <ControlProjection.weight>`, and before combining it with any others that project to the `ParameterState`
        for the `matrix <MappingProjection.matrix>` parameter of the same `MappingProjection` to determine how that
        MappingProjection's `matrix <MappingProjection.matrix>` is modified (see `description above
-       <LearningProjection_Weight_and_Exponent>` for additional details, including relationship to `learning_rate
+       <LearningProjection_Weight_Exponent>` for additional details, including relationship to `learning_rate
        <LearningProjection.learning_rate>`).
 
     name : str
         name of the LearningProjection; if it is not specified in the **name** argument of its constructor,
-        a default name is assigned (see ModulatoryProjection `name <ModulatoryProjection.name>`;
+        a default name is assigned (see ModulatoryProjection `name <ModulatoryProjection_Base.name>`;
         also see `Naming` for conventions regarding duplicate names).
 
     prefs : PreferenceSet or specification dict
@@ -456,6 +456,12 @@ class LearningProjection(ModulatoryProjection_Base):
                     :default value: `Linear`
                     :type: `Function`
 
+                learning_enabled
+                    see `learning_enabled <LearningProjection.learning_enabled>`
+
+                    :default value: None
+                    :type:
+
                 learning_function
                     see `learning_function <LearningProjection.learning_function>`
 
@@ -474,12 +480,6 @@ class LearningProjection(ModulatoryProjection_Base):
                     :default value: None
                     :type:
                     :read only: True
-
-                learning_enabled
-                    see `learning_enabled <LearningProjection.learning_enabled>`
-
-                    :default value: True
-                    :type:
 
         """
         value = Parameter(np.array([0]), read_only=True, aliases=['weight_change_matrix'])

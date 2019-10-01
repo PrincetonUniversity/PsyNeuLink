@@ -174,7 +174,7 @@ it *adds* the `value <GatingSignal.value>` of the `GatingSignal` to the `value <
     ...                                                            pnl.PROJECTIONS: [my_input_layer,
     ...                                                                              my_hidden_layer,
     ...                                                                              my_output_layer]}],
-    ...                                           modulation=pnl.ModulationParam.ADDITIVE)
+    ...                                           modulation=pnl.ADDITIVE)
 
 Note that, again, the **gating_signals** are listed as Mechanisms, since in this case it is their primary InputStates
 that are to be gated. Since they are all listed in a single entry of a
@@ -193,7 +193,7 @@ using a single GatingSignal.  In the example below, a different GatingSignal is 
 Mechanism::
 
     >>> my_gating_mechanism = pnl.GatingMechanism(gating_signals=[{pnl.NAME: 'GATING_SIGNAL_A',
-    ...                                                            pnl.MODULATION: pnl.ModulationParam.ADDITIVE,
+    ...                                                            pnl.MODULATION: pnl.ADDITIVE,
     ...                                                            pnl.PROJECTIONS: my_input_layer},
     ...                                                           {pnl.NAME: 'GATING_SIGNAL_B',
     ...                                                            pnl.PROJECTIONS: [my_hidden_layer,
@@ -214,7 +214,7 @@ assigned to a GatingMechanism.  In the example below, the same GatingSignals spe
 created directly and then assigned to ``my_gating_mechanism``::
 
     >>> my_gating_signal_A = pnl.GatingSignal(name='GATING_SIGNAL_A',
-    ...                                       modulation=pnl.ModulationParam.ADDITIVE,
+    ...                                       modulation=pnl.ADDITIVE,
     ...                                       projections=my_input_layer)
     >>> my_gating_signal_B = pnl.GatingSignal(name='GATING_SIGNAL_B',
     ...                                       projections=[my_hidden_layer,
@@ -231,7 +231,6 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.function import _is_modulation_param
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal, modulatory_signal_keywords
 from psyneulink.core.components.states.outputstate import PRIMARY, SEQUENTIAL, _output_state_variable_getter
@@ -269,7 +268,7 @@ class GatingSignal(ModulatorySignal):
         index=PRIMARY                               \
         variable=defaultGatingAllocation            \
         function=Linear(),                          \
-        modulation=ModulationParam.MULTIPLICATIVE,  \
+        modulation=MULTIPLICATIVE,                  \
         projections=None,                           \
         params=None,                                \
         name=None,                                  \
@@ -354,8 +353,12 @@ class GatingSignal(ModulatorySignal):
         same as `allocation <GatingSignal.allocation>`.
 
     allocation : float : default: defaultGatingAllocation
-        value assigned by the GatingSignal's `owner <GatingSignal.owner>`, and used by the GatingSignal's `function
-        <GatingSignal.function>` to determine its `GatingSignal.intensity`.
+        value assigned by the GatingSignal's `owner <GatingSignal.owner>`, and used as the `variable
+        <GatingSignal.variable>` of the it `function <GatingSignal.function>` to determine the GatingSignal's
+        `GatingSignal.intensity`.
+    COMMENT:
+    FOR DEVELOPERS:  Implemented as an alias of the GatingSignal's variable Parameter
+    COMMENT
 
     function : TransferFunction :  default Linear(slope=1, intercept=0)
         provides the GatingSignal's `value <GatingMechanism.value>`; the default is an identity function that
@@ -430,21 +433,23 @@ class GatingSignal(ModulatorySignal):
             ----------
 
                 variable
-                    see `variable <ControlSignal.variable>`
+                    see `variable <GatingSignal.variable>`
 
-                    :default value: numpy.array([1.])
+                    :default value: numpy.array([0.5])
                     :type: numpy.ndarray
-
 
                 value
                     see `value <GatingSignal.value>`
 
-                    :default value: numpy.array([0])
+                    :default value: numpy.array([0.5])
                     :type: numpy.ndarray
                     :read only: True
 
                 allocation_samples
-                    see `allocation_samples <ControlSignal.allocation_samples>`
+                    see `allocation_samples <GatingSignal.allocation_samples>`
+
+                    :default value: None
+                    :type:
 
         """
         variable = Parameter(np.array([defaultGatingAllocation]),
@@ -469,7 +474,7 @@ class GatingSignal(ModulatorySignal):
                  index=None,
                  assign=None,
                  function=Linear(),
-                 modulation:tc.optional(_is_modulation_param)=None,
+                 modulation:tc.optional(str)=None,
                  modulates=None,
                  params=None,
                  name=None,

@@ -723,7 +723,7 @@ class NWhen(Condition):
         if execution_id is None:
             if scheduler is not None:
                 execution_id = scheduler.default_execution_id
-        # if no ECONTEXT_COMMENT or scheduler is provided technically this will still work
+        # if no execution_id or scheduler is provided technically this will still work
         # indexed on None, but that's a bit weird honestly
 
         if execution_id not in self.satisfactions:

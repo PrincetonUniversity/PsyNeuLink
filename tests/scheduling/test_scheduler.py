@@ -1,7 +1,6 @@
 import logging
 import numpy as np
 import pytest
-import uuid
 
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear
@@ -37,19 +36,19 @@ class TestScheduler:
 
         comp.scheduler_processing.clock._increment_time(TimeScale.TRIAL)
 
-        eid2 = uuid.uuid4()
-        eid3 = uuid.uuid4()
-        comp.scheduler_processing._init_counts(execution_id=eid2)
+        eid = 'eid'
+        eid1 = 'eid1'
+        comp.scheduler_processing._init_counts(execution_id=eid)
 
-        assert comp.scheduler_processing.clocks[eid2].time.trial == 0
+        assert comp.scheduler_processing.clocks[eid].time.trial == 0
 
         comp.scheduler_processing.clock._increment_time(TimeScale.TRIAL)
 
-        assert comp.scheduler_processing.clocks[eid2].time.trial == 0
+        assert comp.scheduler_processing.clocks[eid].time.trial == 0
 
-        comp.scheduler_processing._init_counts(execution_id=eid3, base_execution_id=comp.scheduler_processing.default_execution_id)
+        comp.scheduler_processing._init_counts(execution_id=eid1, base_execution_id=comp.scheduler_processing.default_execution_id)
 
-        assert comp.scheduler_processing.clocks[eid3].time.trial == 2
+        assert comp.scheduler_processing.clocks[eid1].time.trial == 2
 
     def test_two_compositions_one_scheduler(self):
         comp1 = Composition()
@@ -103,7 +102,7 @@ class TestScheduler:
         termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(6)
         termination_conds[TimeScale.TRIAL] = AfterNPasses(1)
-        eid = uuid.uuid4()
+        eid = 'eid'
         comp.run(
             inputs={A: [[0], [1], [2], [3], [4], [5]]},
             scheduler_processing=sched,
@@ -132,14 +131,14 @@ class TestScheduler:
         # pprint.pprint(output)
         assert output == pytest.helpers.setify_expected_output(expected_output)
 
-        eid2 = uuid.uuid4()
+        eid = 'eid1'
         comp.run(
             inputs={A: [[0], [1], [2], [3], [4], [5]]},
             scheduler_processing=sched,
             termination_processing=termination_conds,
-            context=eid2,
+            context=eid,
         )
-        output = sched.execution_list[eid2]
+        output = sched.execution_list[eid]
 
         expected_output = [
             A, A, A, A, A, set()

@@ -484,7 +484,7 @@ Each ParameterState uses the value it receives from the `LearningProjection` tha
 parameter of its `function <ParameterState.function>`, in a manner specified by the `modulation
 <LearningSignal.modulation>` attribute of the `LearningSignal` from which it receives the LearningProjection (see
 `Modulation <ModulatorySignal_Modulation>` for a description of how modulation operates). By default, the
-`modulation <LearningSignal.modulation>` attribute of a LearningSignal is `ModulationParam.ADDITIVE`, the `function
+`modulation <LearningSignal.modulation>` attribute of a LearningSignal is `ADDITIVE`, the `function
 <ParameterState.function>` of a *MATRIX* ParameterState for a MappingProjection is `AccumulatorIntegrator`,
 and the parameter it uses for additive modulation is its `increment <AccumulatorIntegrator.increment>` parameter.
 These assignments cause the value of the LearningProjection to be added to the previous value of the *MATRIX*
@@ -513,7 +513,6 @@ import typecheck as tc
 from enum import Enum
 
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.core.components.functions.learningfunctions import BackPropagation
 from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
@@ -523,11 +522,9 @@ from psyneulink.core.components.states.modulatorysignals.learningsignal import L
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    AFTER, ASSERT, CONTEXT, CONTROL_PROJECTIONS, ENABLED, INPUT_STATES, \
+    ADDITIVE, AFTER, ASSERT, CONTEXT, CONTROL_PROJECTIONS, ENABLED, INPUT_STATES, \
     LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
-    MATRIX, NAME, ONLINE, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, STATE_TYPE, \
-    VALUE, VARIABLE, AFTER, \
-    ONLINE
+    MATRIX, NAME, ONLINE, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, STATE_TYPE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -615,7 +612,7 @@ ERROR_SIGNAL_INDEX = 2
 ACTIVATION_INPUT = 'activation_input'     # InputState
 ACTIVATION_OUTPUT = 'activation_output'   # InputState
 ERROR_SIGNAL = 'error_signal'
-input_state_names =  [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL]
+input_state_names = [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL]
 output_state_names = [LEARNING_SIGNAL, ERROR_SIGNAL]
 
 ERROR_SOURCES = 'error_sources'
@@ -637,7 +634,6 @@ def _learning_signal_getter(owning_component=None, context=None):
     except (TypeError, IndexError):
         return None
 
-
 def _error_signal_getter(owning_component=None, context=None):
     try:
         return owning_component.parameters.value._get(context)[1]
@@ -658,7 +654,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         function=BackPropagation,             \
         learning_rate=None,                   \
         learning_signals=LEARNING_SIGNAL,     \
-        modulation=ModulationParam.ADDITIVE,  \
+        modulation=ADDITIVE,                  \
         learning_enabled=True,                \
         params=None,                          \
         name=None,                            \
@@ -746,7 +742,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         specifies the parameter(s) to be learned (see `learning_signals <LearningMechanism.learning_signals>` for
         details).
 
-    modulation : ModulationParam : default ModulationParam.ADDITIVE
+    modulation : str : default ADDITIVE
         specifies the default form of modulation used by the LearningMechanism's LearningSignals,
         unless they are `individually specified <LearningSignal_Specification>`.
 
@@ -986,7 +982,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  error_sources:tc.optional(tc.any(Mechanism, list))=None,
                  function=None,
                  learning_signals:tc.optional(list) = None,
-                 modulation:tc.optional(_is_modulation_param)=ModulationParam.ADDITIVE,
+                 modulation:tc.optional(str)=ADDITIVE,
                  learning_rate:tc.optional(parameter_spec)=None,
                  learning_enabled:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=True,
                  in_composition=False,

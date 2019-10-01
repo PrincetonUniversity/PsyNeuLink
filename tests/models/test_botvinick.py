@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-import psyneulink.core.llvm as pnlvm
 
 # This script implements Figure 1 of Botvinick, M. M., Braver, T. S., Barch, D. M., Carter, C. S., & Cohen, J. D. (2001).
 # Conflict monitoring and cognitive control. Psychological Review, 108, 624–652.

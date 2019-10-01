@@ -161,7 +161,7 @@ case the AutodiffComposition executes like a Composition.
 However, if `learning_enabled <AutodiffComposition.learning_enabled>` is True, the **inputs** argument
 format is different. If `learning_enabled <AutodiffComposition.learning_enabled>` is True, then **inputs**
 argument must be a dictionary with at least two nested dictionaries within it, one for the inputs and the other
-for the targets, as well as an additional entry specifying the numbrer of training epochs to run.  Specifically,
+for the targets, as well as an additional entry specifying the number of training epochs to run.  Specifically,
 the outer dictionary must have at least two entries with keys *"inputs"* and  *"targets"*.  The value of the
 *"inputs"* entry must be a standard input dictionary, specifying the inputs for each `ORIGIN` Mechanism.  The value
 of the *"targets"* entry must be a similar dictionary, in this case specifying the target values for the outputs of
@@ -265,7 +265,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.compositions.composition import CompositionError
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import SOFT_CLAMP
+from psyneulink.core.globals.keywords import SOFT_CLAMP, TRAINING_SET
 from psyneulink.core.globals.utilities import NodeRole
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter
@@ -614,7 +614,7 @@ class AutodiffComposition(Composition):
         if self.learning_enabled:
             if isinstance(inputs, dict):
                 if self._has_required_keys(inputs):
-                    return [inputs]
+                    return inputs
                 raise AutodiffCompositionError("Invalid input specification.")
             elif isinstance(inputs, list):
                 for input_dict in inputs:
@@ -644,7 +644,7 @@ class AutodiffComposition(Composition):
         return outputs
 
     # performs learning/training on all input-target pairs it recieves for given number of epochs
-    def autodiff_training(self, inputs, targets, epochs, context=None, do_logging=False, scheduler=None,bin_execute=False):
+    def autodiff_training(self, inputs, targets, total_epochs, curr_epoch, context=None, do_logging=False, scheduler=None, bin_execute=False):
 
         # FIX CW 11/1/18: this value of num_inputs assumes all inputs have same length, and that the length of
         # the input for an origin component equals the number of desired trials. We could clean this up
@@ -668,106 +668,104 @@ class AutodiffComposition(Composition):
         for target in targets.values():
             out_size += len(target)
 
-        # iterate over epochs
-        for epoch in range(epochs):
+        # if training in random order, generate random order and set up mapping
+        # from random order back to original order
+        if self.randomize:
+            rand_train_order = np.random.permutation(num_inputs)
+            rand_train_order_reverse[rand_train_order] = np.arange(num_inputs)
 
-            # if training in random order, generate random order and set up mapping
-            # from random order back to original order
+        # set up array to keep track of losses on epoch
+        curr_losses = np.zeros(num_inputs)
+
+        # reset temporary list to keep track of most recent outputs
+        outputs = []
+
+        self.parameters.pytorch_representation._get(context).detach_all()
+        # self.parameters.pytorch_representation._get(context).reset_all()
+
+        # compute total loss across output neurons for current trial
+        curr_loss = torch.zeros(1, device=self.device).double()
+
+        # iterate over inputs, targets
+        for t in range(num_inputs):
+
             if self.randomize:
-                rand_train_order = np.random.permutation(num_inputs)
-                rand_train_order_reverse[rand_train_order] = np.arange(num_inputs)
+                input_index = rand_train_order[t]
+            else:
+                input_index = t
+            curr_tensor_inputs = {}
+            curr_tensor_targets = {}
+            for component in inputs.keys():
+                input = inputs[component][input_index]
+                curr_tensor_inputs[component] = torch.tensor(input, device=self.device).double()
+            for component in targets.keys():
+                target = targets[component][input_index]
+                curr_tensor_targets[component] = torch.tensor(target, device=self.device).double()
 
-            # set up array to keep track of losses on epoch
-            curr_losses = np.zeros(num_inputs)
+            # do forward computation on current inputs
+            curr_tensor_outputs = self.parameters.pytorch_representation._get(context).forward(
+                curr_tensor_inputs,
+                context,
+                do_logging,
+                scheduler=scheduler,
+            )
 
-            # reset temporary list to keep track of most recent outputs
-            outputs = []
+            for component in curr_tensor_outputs.keys():
+                # possibly add custom loss option, which is a loss function that takes many args
+                # (outputs, targets, weights, and more) and returns a scalar
+                new_loss = self.loss(curr_tensor_outputs[component], curr_tensor_targets[component])
+                curr_loss += new_loss
+            # save average loss across all output neurons on current trial
+            curr_losses[t] = curr_loss[0].item()/num_inputs
 
-            self.parameters.pytorch_representation._get(context).detach_all()
-            # self.parameters.pytorch_representation._get(context).reset_all()
-
-            # iterate over inputs, targets
-            for t in range(num_inputs):
-
-                if self.randomize:
-                    input_index = rand_train_order[t]
-                else:
-                    input_index = t
-                curr_tensor_inputs = {}
-                curr_tensor_targets = {}
-                for component in inputs.keys():
-                    input = inputs[component][input_index]
-                    curr_tensor_inputs[component] = torch.tensor(input, device=self.device).double()
-                for component in targets.keys():
-                    target = targets[component][input_index]
-                    curr_tensor_targets[component] = torch.tensor(target, device=self.device).double()
-
-                # do forward computation on current inputs
-                curr_tensor_outputs = self.parameters.pytorch_representation._get(context).forward(
-                    curr_tensor_inputs,
-                    context,
-                    do_logging,
-                    scheduler=scheduler,
-                )
-                # compute total loss across output neurons for current trial
-                curr_loss = torch.zeros(1, device=self.device).double()
-                for component in curr_tensor_outputs.keys():
-                    # possibly add custom loss option, which is a loss function that takes many args
-                    # (outputs, targets, weights, and more) and returns a scalar
-                    new_loss = self.loss(curr_tensor_outputs[component], curr_tensor_targets[component])
-                    curr_loss += new_loss
-                # save average loss across all output neurons on current trial
-                curr_losses[t] = (curr_loss[0].item())/out_size
-
-                optimizer = self.parameters.optimizer._get(context)
-
-                # backpropagate to compute gradients and perform learning update for parameters
-                optimizer.zero_grad()
-                curr_loss = curr_loss/2
-                printable = {}
-                for component in curr_tensor_outputs.keys():
-                    printable[component] = curr_tensor_outputs[component].detach().numpy()
-                np.set_printoptions(precision=3)
-                if self.force_no_retain_graph:
-                    curr_loss.backward(retain_graph=False)
-                else:
-                    curr_loss.backward(retain_graph=True)
-                self.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
-                optimizer.step()
-
-                # save outputs of model if this is final epoch or if using early stopping
+            # save outputs of model if this is final epoch or if using early stopping
+            if patience is not None or curr_epoch == total_epochs - 1:
                 curr_output_list = []
-                if patience is not None or epoch == epochs - 1:
-                    for input_state in self.output_CIM.input_states:
-                        assert(len(input_state.all_afferents) == 1)  # CW 12/05/18, this assert may eventually be outdated
-                        component = input_state.all_afferents[0].sender.owner
-                        curr_output_list.append(curr_tensor_outputs[component].detach().cpu().numpy().copy())
-                # for component in curr_tensor_outputs.keys():
-                #     curr_output_list.append(curr_tensor_outputs[component].detach().numpy().copy())
+                for input_state in self.output_CIM.input_states:
+                    assert (len(input_state.all_afferents) == 1)  # CW 12/05/18, this assert may eventually be outdated
+                    component = input_state.all_afferents[0].sender.owner
+                    curr_output_list.append(curr_tensor_outputs[component].detach().cpu().numpy().copy())
                 outputs.append(curr_output_list)
+                # outputs.extend(curr_output_list)
 
-                if epoch == epochs - 1 and not do_logging:
-                    self.parameters.pytorch_representation._get(context).\
-                        copy_outputs_to_psyneulink(curr_tensor_outputs, context)
+        optimizer = self.parameters.optimizer._get(context)
 
-                scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
+        # backpropagate to compute gradients and perform learning update for parameters
+        optimizer.zero_grad()
+        curr_loss = curr_loss / num_inputs / 2
+        printable = {}
+        for component in curr_tensor_outputs.keys():
+            printable[component] = curr_tensor_outputs[component].detach().numpy()
+        np.set_printoptions(precision=3)
+        if self.force_no_retain_graph:
+            curr_loss.backward(retain_graph=False)
+        else:
+            curr_loss.backward(retain_graph=True)
+        self.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
+        optimizer.step()
 
-            # save average loss on the current epoch
-            average_loss = np.mean(curr_losses)
-            self.parameters.losses._get(context).append(average_loss)
+        if curr_epoch == total_epochs - 1 and not do_logging:
+            self.parameters.pytorch_representation._get(context).\
+                copy_outputs_to_psyneulink(curr_tensor_outputs, context)
 
-            # update early stopper with most recent average loss
-            if self.parameters.patience._get(context) is not None:
-                should_stop = early_stopper.step(average_loss)
-                if should_stop:
-                    logger.warning('Due to early stopping, stopped training early after {} epochs'.format(epoch))
-                    if self.randomize:
-                        outputs_list = [None] * len(outputs)
-                        for i in range(len(outputs)):
-                            outputs_list[i] = outputs[int(rand_train_order_reverse[i])]
-                        return outputs_list
-                    else:
-                        return outputs
+        scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
+
+        # save average loss on the current epoch
+        average_loss = np.mean(curr_losses)
+        self.parameters.losses._get(context).append(average_loss)
+
+        # update early stopper with most recent average loss
+        if self.parameters.patience._get(context) is not None:
+            should_stop = early_stopper.step(average_loss)
+            if should_stop:
+                logger.warning('Due to early stopping, stopped training early after {} epochs'.format(curr_epoch))
+                if self.randomize:
+                    outputs_list = [None] * len(outputs)
+                    for i in range(len(outputs)):
+                        outputs_list[i] = outputs[int(rand_train_order_reverse[i])]
+                    return outputs_list
+                else:
+                    return outputs
 
         if self.randomize:  # save outputs in a list in correct order, return them
             outputs_list = [None] * len(outputs)
@@ -809,9 +807,13 @@ class AutodiffComposition(Composition):
     def execute(self,
                 inputs=None,
                 autodiff_stimuli=None,
+                num_trials=None,
+                minibatch_size=1,
                 do_logging=False,
                 scheduler_processing=None,
                 termination_processing=None,
+                call_before_minibatch=None,
+                call_after_minibatch=None,
                 call_before_time_step=None,
                 call_before_pass=None,
                 call_after_time_step=None,
@@ -823,7 +825,6 @@ class AutodiffComposition(Composition):
                 runtime_params=None,
                 skip_initialization=False,
                 bin_execute=False,
-
                 ):
         self._assign_execution_ids(context)
         context.composition = self
@@ -841,26 +842,64 @@ class AutodiffComposition(Composition):
 
             self._analyze_graph()  # ADDED by CW 12/17/18: unsure if correct here
 
-            self._build_pytorch_representation(context)
-
             autodiff_inputs = inputs["inputs"]
             autodiff_targets = inputs["targets"]
             autodiff_epochs = 1
             if "epochs" in inputs:
                 autodiff_epochs = inputs["epochs"]
 
-            output = self.autodiff_training(autodiff_inputs, autodiff_targets, autodiff_epochs, context, do_logging, scheduler_processing)
-            self.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
+            minibatch = {
+                'inputs': {
+                    k: [] for k in inputs['inputs'].keys()
+                },
+                'targets': {
+                    k: [] for k in inputs['targets'].keys()
+                }
+            }
+
+            if num_trials is None:
+                num_trials = len(list(inputs['inputs'].values())[0])
+            if minibatch_size == TRAINING_SET:
+                minibatch_size = num_trials
+
+            results = []
+            self._build_pytorch_representation(context)
+
+            for current_epoch in range(autodiff_epochs):
+                for trial_num in range(num_trials):
+                    for k,v in inputs['inputs'].items():
+                        minibatch['inputs'][k].append(v[trial_num])
+                    for k, v in inputs['targets'].items():
+                        minibatch['targets'][k].append(v[trial_num])
+                    minibatch_results = []
+                    if len(list(minibatch['inputs'].values())[0]) == minibatch_size or \
+                            trial_num == num_trials-1:
+                        if call_before_minibatch:
+                            call_before_minibatch()
+                        output = self.autodiff_training(minibatch['inputs'],
+                                                        minibatch['targets'],
+                                                        autodiff_epochs,
+                                                        current_epoch,
+                                                        context,
+                                                        do_logging,
+                                                        scheduler_processing)
+                        if call_after_minibatch:
+                            call_after_minibatch()
+                        self.most_recent_context = context
+                        for k, v in inputs['inputs'].items():
+                            minibatch['inputs'][k] = []
+                        for k, v in inputs['targets'].items():
+                            minibatch['targets'][k] = []
+                        if current_epoch == autodiff_epochs-1:
+                            results.extend(output)
 
             context.add_flag(ContextFlags.PROCESSING)
             # note that output[-1] might not be the truly most recent value
             # HACK CW 2/5/19: the line below is a hack. In general, the output_CIM of an AutodiffComposition
             # is not having its parameters populated correctly, and this should be fixed in the long run.
-            self.output_CIM.execute(input=output[-1], context=context)
-
+            self.output_CIM.execute(input=results[-1], context=context)
             context.remove_flag(ContextFlags.PROCESSING)
-
-            return output
+            return results
 
         return super(AutodiffComposition, self).execute(inputs=inputs,
                                                         scheduler_processing=scheduler_processing,
@@ -886,19 +925,139 @@ class AutodiffComposition(Composition):
         scheduler_processing=None,
         termination_processing=None,
         context=None,
-        num_trials=1,
+        num_trials=None,
+        minibatch_size=1,
         call_before_time_step=None,
         call_after_time_step=None,
         call_before_pass=None,
         call_after_pass=None,
         call_before_trial=None,
         call_after_trial=None,
+        call_before_minibatch=None,
+        call_after_minibatch=None,
         clamp_input=SOFT_CLAMP,
         bin_execute=False,
         initial_values=None,
         reinitialize_values=None,
         runtime_params=None,
-        ):
+    ):
+        """Passes inputs to AutodiffComposition, then execute sets of nodes that are eligible to run until termination
+        conditions are met.
+
+            Arguments
+            ---------
+
+            inputs: {'inputs': {`Mechanism <Mechanism>`: list}, 'targets': {`Mechanism <Mechanism>`: list}, 'epochs': int }
+                a key-value pair with the keys "inputs", "targets", and "epochs". The value corresponding
+                to the "inputs" key should itself be a key-value pair for each Node in the composition that receives
+                inputs from the user. For each pair, the key is the Node and the value is a list of inputs. Each input
+                in the list corresponds to one `TRIAL`. Analogously, the value corresponding with 'targets' should be a
+                key-value pair with keys for each terminal Node in the composition and a corresponding list of the Node's
+                target values for each trial. The value corresponding to the 'epochs' key is an int specifying how many
+                times the Composition should run through the entire input set.
+
+            scheduler_processing: Scheduler
+                the scheduler object that owns the conditions that will instruct the execution of the Composition.
+                If not specified, the Composition will use its automatically generated scheduler.
+
+            context
+                context will be set to self.default_execution_id if unspecified
+
+            base_context
+                the context corresponding to the execution context from which this execution will be initialized,
+                if values currently do not exist for **context**
+
+            num_trials: int
+                typically, the composition will infer the number of trials from the length of its input specification.
+                To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
+                or use default inputs, and select a number of trials with num_trials.
+
+            minibatch_size: int or `TRAINING_SET`
+                if learning is enabled, the number of trials to be executed by the autodiff composition between weight
+                updates. if set to `TRAINING_SET`, weights will be updated after each full traversal of the provided
+                inputs (i.e. after each epoch).
+
+            call_before_time_step: callable
+                Not currently implemented for autodiff compositions.
+
+            call_after_time_step: callable
+                Not currently implemented for autodiff compositions.
+
+            call_before_pass: callable
+                Not currently implemented for autodiff compositions.
+
+            call_after_pass: callable
+                Not currently implemented for autodiff compositions.
+
+            call_before_trial: callable
+                Not currently implemented for autodiff compositions.
+
+            call_after_trial: callable
+                Not currently implemented for autodiff compositions.
+
+            call_before_minibatch: callable
+                will be called before each minibatch is executed.
+
+            call_after_minibatch: callable
+                will be called after each minibatch is executed.
+
+            initial_values: Dict[Node: Node Value]
+                sets the values of nodes before the start of the run. This is useful in cases where a node's value is
+                used before that node executes for the first time (usually due to recurrence or control).
+
+            runtime_params: Dict[Node: Dict[Parameter: Tuple(Value, Condition)]]
+                nested dictionary of (value, `Condition`) tuples for parameters of Nodes (`Mechanisms <Mechanism>` or
+                `Compositions <Composition>` of the Composition; specifies alternate parameter values to be used only
+                during this `Run` when the specified `Condition` is met.
+
+                Outer dictionary:
+                    - *key* - Node
+                    - *value* - Runtime Parameter Specification Dictionary
+
+                Runtime Parameter Specification Dictionary:
+                    - *key* - keyword corresponding to a parameter of the Node
+                    - *value* - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is
+                      a `Condition`
+
+                See `Run_Runtime_Parameters` for more details and examples of valid dictionaries.
+
+            log: bool, LogCondition
+                Sets the `log_condition <Parameter.log_condition>` for every primary `node <Composition.nodes>` and
+                `projection <Composition.projections>` in this Composition, if it is not already set.
+
+                .. note::
+                   as when setting the `log_condition <Parameter.log_condition>` directly, a value of `True` will
+                   correspond to the `EXECUTION LogCondition <LogCondition.EXECUTION>`.
+
+        COMMENT:
+        REPLACE WITH EVC/OCM EXAMPLE
+        Examples
+        --------
+
+        This figure shows an animation of the Composition in the XXX example script, with
+        the show_graph **show_learning** argument specified as *ALL*:
+
+        .. _Composition_XXX_movie:
+
+        .. figure:: _static/XXX_movie.gif
+           :alt: Animation of Composition in XXX example script
+           :scale: 50 %
+
+        This figure shows an animation of the Composition in the XXX example script, with
+        the show_graph **show_control** argument specified as *ALL* and *UNIT* specified as *EXECUTION_SET*:
+
+        .. _Composition_XXX_movie:
+
+        .. figure:: _static/XXX_movie.gif
+           :alt: Animation of Composition in XXX example script
+           :scale: 150 %
+        COMMENT
+
+        Returns
+        ---------
+
+        output value of the final Node executed in the composition : various
+        """
         # TBI: Handle trials, timesteps, etc
         self._assign_execution_ids(context)
         context.composition = self
@@ -963,31 +1122,29 @@ class AutodiffComposition(Composition):
                 self._initialize_from_context(context, base_context=Context(execution_id=None), override=False)
                 if self.refresh_losses or (self.parameters.losses._get(context) is None):
                     self.parameters.losses._set([], context)
-                adjusted_stimuli = self._adjust_stimulus_dict(inputs)
-                if num_trials is None:
-                    num_trials = len(adjusted_stimuli)
-
-                results = []
-                for trial_num in range(num_trials):
-                    stimulus_index = trial_num % len(adjusted_stimuli)
-                    trial_output = self.execute(
-                        inputs=adjusted_stimuli[stimulus_index],
-                        context=context,
-                        do_logging=do_logging,
-                        bin_execute = bin_execute
-                    )
-                    results.append(trial_output)
-
-            full_results = self.parameters.results._get(context)
-            if full_results is None:
-                full_results = results
-            else:
-                full_results.extend(results)
-
-            self.parameters.results._set(full_results, context)
+                if callable(inputs):
+                    stimuli = inputs()
+                else:
+                    stimuli = self._adjust_stimulus_dict(inputs)
+                trial_output = self.execute(
+                    inputs=stimuli,
+                    minibatch_size=minibatch_size,
+                    call_before_minibatch=call_before_minibatch,
+                    call_after_minibatch=call_after_minibatch,
+                    num_trials=num_trials,
+                    context=context,
+                    do_logging=do_logging,
+                    bin_execute=bin_execute
+                )
+                full_results = self.parameters.results._get(context)
+                if full_results is None:
+                    full_results = trial_output
+                else:
+                    full_results.append(trial_output)
+                self.parameters.results._set(full_results, context)
+                results = full_results
             self.most_recent_context = context
             return results
-
 
         else:
             results = super(AutodiffComposition, self).run(inputs=inputs,

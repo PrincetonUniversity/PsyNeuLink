@@ -139,17 +139,16 @@ import numpy as np
 import typecheck as tc
 import warnings
 
-from collections import namedtuple
 from enum import Enum, IntEnum
 from random import randint
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.shellclasses import Function, Mechanism
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ARGUMENT_THERAPY_FUNCTION, EXAMPLE_FUNCTION_TYPE, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION,\
-    MODULATORY_PROJECTION, NAME, PARAMETER_STATE_PARAMS, kwComponentCategory, kwPreferenceSetName
+    NAME, PARAMETER_STATE_PARAMS, kwComponentCategory, kwPreferenceSetName
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -157,13 +156,10 @@ from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import object_has_single_value, parameter_spec, safe_len
 
 __all__ = [
-    'ADDITIVE', 'ADDITIVE_PARAM', 'AdditiveParam', 'ArgumentTherapy', 'DISABLE', 'DISABLE_PARAM', 'EPSILON',
-    'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType', 'FunctionRegistry',
-    'get_param_value_for_function', 'get_param_value_for_keyword', 'is_Function', 'is_function_type',
-    'ModulatedParam', 'ModulationParam', 'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM', 'MultiplicativeParam',
-    'OVERRIDE', 'OVERRIDE_PARAM', 'PERTINACITY', 'PROPENSITY'
+    'ArgumentTherapy', 'EPSILON', 'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType',
+    'FunctionRegistry', 'get_param_value_for_function', 'get_param_value_for_keyword', 'is_Function',
+    'is_function_type', 'PERTINACITY', 'PROPENSITY'
 ]
-
 
 EPSILON = np.finfo(float).eps
 
@@ -209,159 +205,6 @@ def is_function_type(x):
         return True
     else:
         return False
-
-
-# Modulatory Parameters ************************************************************************************************
-
-ADDITIVE_PARAM = 'additive_param'
-MULTIPLICATIVE_PARAM = 'multiplicative_param'
-OVERRIDE_PARAM = 'OVERRIDE'
-DISABLE_PARAM = 'DISABLE'
-
-
-class MultiplicativeParam():
-    attrib_name = MULTIPLICATIVE_PARAM
-    name = 'MULTIPLICATIVE'
-    init_val = 1
-    reduce = lambda x: np.product(np.array(x), axis=0)
-
-
-class AdditiveParam():
-    attrib_name = ADDITIVE_PARAM
-    name = 'ADDITIVE'
-    init_val = 0
-    reduce = lambda x: np.sum(np.array(x), axis=0)
-
-
-# class OverrideParam():
-#     attrib_name = OVERRIDE_PARAM
-#     name = 'OVERRIDE'
-#     init_val = None
-#     reduce = lambda x : None
-#
-# class DisableParam():
-#     attrib_name = OVERRIDE_PARAM
-#     name = 'DISABLE'
-#     init_val = None
-#     reduce = lambda x : None
-
-
-# IMPLEMENTATION NOTE:  USING A namedtuple DOESN'T WORK, AS CAN'T COPY PARAM IN Component._validate_param
-# ModulationType = namedtuple('ModulationType', 'attrib_name, name, init_val, reduce')
-
-
-class ModulationParam(Enum):
-    """Specify parameter of a `Function <Function>` for `modulation <ModulatorySignal_Modulation>` by a ModulatorySignal
-
-    COMMENT:
-        Each term specifies a different type of modulation used by a `ModulatorySignal <ModulatorySignal>`.
-        The first two refer to classes that define the following terms:
-            * attrib_name (*ADDITIVE_PARAM* or *MULTIPLICATIVE_PARAM*): specifies which meta-parameter of the function
-              to use for modulation;
-            * name (str): name of the meta-parameter;
-            * init_val (int or float): value with which to initialize the parameter being modulated
-              if it is not otherwise specified;
-            * reduce (function): the manner by which to aggregate multiple ModulatorySignals of that type, if the
-              `ParameterState` receives more than one `ModulatoryProjection <ModulatoryProjection>` of that type.
-    COMMENT
-
-    Attributes
-    ----------
-
-    MULTIPLICATIVE
-        assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *MULTIPLICATIVE_PARAM*
-        of the State's `function <State_Base.function>`
-
-    ADDITIVE
-        assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *ADDITIVE_PARAM*
-        of the State's `function <State_Base.function>`
-
-    OVERRIDE
-        assign the `value <ModulatorySignal.value>` of the ModulatorySignal directly to the State's
-        `value <State_Base.value>` (ignoring its `variable <State_Base.variable>` and `function <State_Base.function>`)
-
-    DISABLE
-        ignore the ModulatorySignal when calculating the State's `value <State_Base.value>`
-    """
-    MULTIPLICATIVE = MultiplicativeParam
-    # MULTIPLICATIVE = ModulationType(MULTIPLICATIVE_PARAM,
-    #                                 'MULTIPLICATIVE',
-    #                                 1,
-    #                                 lambda x : np.product(np.array(x), axis=0))
-    ADDITIVE = AdditiveParam
-    # ADDITIVE = ModulationType(ADDITIVE_PARAM,
-    #                           'ADDITIVE',
-    #                           0,
-    #                           lambda x : np.sum(np.array(x), axis=0))
-    OVERRIDE = OVERRIDE_PARAM
-    # OVERRIDE = OverrideParam
-    DISABLE = DISABLE_PARAM
-    # DISABLE = DisableParam
-
-
-MULTIPLICATIVE = ModulationParam.MULTIPLICATIVE
-ADDITIVE = ModulationParam.ADDITIVE
-OVERRIDE = ModulationParam.OVERRIDE
-DISABLE = ModulationParam.DISABLE
-
-
-def _is_modulation_param(val):
-    if val in ModulationParam.__dict__.values():
-        return True
-    else:
-        return False
-
-
-ModulatedParam = namedtuple('ModulatedParam', 'meta_param, function_param, function_param_val')
-
-
-def _get_modulated_param(owner, mod_proj, context=None):
-    """Return ModulationParam object, function param name and value of param modulated by ModulatoryProjection
-    """
-
-    from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-    from psyneulink.core.globals.parameters import parse_context
-
-    if not isinstance(mod_proj, ModulatoryProjection_Base):
-        raise FunctionError(f'Specification of {MODULATORY_PROJECTION} to {owner.full_name} ({mod_proj}) '
-                            f'is not a {ModulatoryProjection_Base.__name__}')
-
-    context = parse_context(context)
-
-    # Get function "meta-parameter" object specified in the Projection sender's modulation attribute
-    function_mod_meta_param_obj = mod_proj.sender.parameters.modulation._get(context)
-
-    # # MODIFIED 6/27/18 NEW:
-    if function_mod_meta_param_obj in {OVERRIDE, DISABLE}:
-        # function_param_name = function_mod_meta_param_obj
-        from psyneulink.core.globals.utilities import Modulation
-        function_mod_meta_param_obj = getattr(Modulation, function_mod_meta_param_obj.name)
-        function_param_name = function_mod_meta_param_obj
-        function_param_value = mod_proj.sender.parameters.value.get(context)
-    else:
-        # Get the actual parameter of owner.function to be modulated
-        function_param_name = owner.function.params[function_mod_meta_param_obj.value.attrib_name]
-        # Get the function parameter's value
-        function_param_value = owner.function.params[function_param_name]
-    # # MODIFIED 6/27/18 NEWER:
-    # from psyneulink.core.globals.utilities import Modulation
-    # mod_spec = function_mod_meta_param_obj.value.attrib_name
-    # if mod_spec == OVERRIDE_PARAM:
-    #     function_param_name = mod_spec
-    #     function_param_value = mod_proj.sender.value
-    # elif mod_spec == DISABLE_PARAM:
-    #     function_param_name = mod_spec
-    #     function_param_value = None
-    # else:
-    #     # Get name of the actual parameter of owner.function to be modulated
-    #     function_param_name = owner.function.params[mod_spec]
-    #     # Get the function parameter's value
-    #     function_param_value = owner.function.params[mod_spec]
-    # MODIFIED 6/27/18 END
-
-    # Return the meta_parameter object, function_param name, and function_param_value
-    return ModulatedParam(function_mod_meta_param_obj, function_param_name, function_param_value)
-
 
 # *******************************   get_param_value_for_keyword ********************************************************
 
@@ -671,6 +514,12 @@ class Function_Base(Function):
     def __call__(self, *args, **kwargs):
         return self.function(*args, **kwargs)
 
+    def __deepcopy__(self, memo):
+        new = super().__deepcopy__(memo)
+        # ensure copy does not have identical name
+        register_category(new, Function_Base, new.name, FunctionRegistry)
+        return new
+
     @handle_external_context()
     def function(self,
                  variable=None,
@@ -714,27 +563,27 @@ class Function_Base(Function):
         """
         if not parameter_spec(param, numeric_only):
             owner_name = 'of ' + self.owner_name if self.owner else ""
-            raise FunctionError("{} is not a valid specification for the {} argument of {}{}".
-                                format(param, param_name, self.__class__.__name__, owner_name))
+            raise FunctionError(f"{param} is not a valid specification for "
+                                f"the {param_name} argument of {self.__class__.__name__}{owner_name}.")
 
     def get_current_function_param(self, param_name, context=None):
         if param_name == "variable":
-            raise FunctionError("The method 'get_current_function_param' is intended for retrieving the current value "
-                                "of a function parameter. 'variable' is not a function parameter. If looking for {}'s "
-                                "default variable, try {}.defaults.variable.".format(self.name, self.name))
+            raise FunctionError(f"The method 'get_current_function_param' is intended for retrieving "
+                                f"the current value of a function parameter. 'variable' is not a function parameter. "
+                                f"If looking for {self.name}'s default variable, try {self.name}.defaults.variable.")
         try:
             return self.owner._parameter_states[param_name].parameters.value._get(context)
         except (AttributeError, TypeError):
             try:
                 return getattr(self.parameters, param_name)._get(context)
             except AttributeError:
-                raise FunctionError("{0} has no parameter '{1}'".format(self, param_name))
+                raise FunctionError(f"{self} has no parameter '{param_name}'.")
 
     def get_previous_value(self, context=None):
         # temporary method until previous values are integrated for all parameters
         value = self.parameters.previous_value._get(context)
         if value is None:
-            value = self.parameters.previous_value._get()
+            value = self.parameters.previous_value._get(Context())
 
         return value
 
@@ -780,14 +629,14 @@ class Function_Base(Function):
                 if len(value) == 1:
                     value = value[0]
                 else:
-                    raise FunctionError(f"Can't convert value ({value}: 2D np.ndarray object with more than one array)"
-                                        " to 1D array.")
+                    raise FunctionError(f"Can't convert value ({value}: 2D np.ndarray object "
+                                        f"with more than one array) to 1D array.")
             elif value.ndim == 1:
                 value = value
             elif value.ndim == 0:
                 value = np.atleast_1d(value)
             else:
-                raise FunctionError("Can't convert value ({0} to 1D array".format(value))
+                raise FunctionError(f"Can't convert value ({value} to 1D array.")
 
         # Convert to raw number, irrespective of value type:
         # Note: if 2D or 1D array has more than two items, generate exception
@@ -795,7 +644,7 @@ class Function_Base(Function):
             if object_has_single_value(value):
                 value = float(value)
             else:
-                raise FunctionError("Can't convert value ({0}) with more than a single number to a raw number".format(value))
+                raise FunctionError(f"Can't convert value ({value}) with more than a single number to a raw number.")
 
         return value
 
@@ -807,8 +656,8 @@ class Function_Base(Function):
     def output_type(self, value):
         # Bad outputType specification
         if value is not None and not isinstance(value, FunctionOutputType):
-            raise FunctionError("value ({0}) of output_type attribute must be FunctionOutputType for {1}".
-                                format(self.output_type, self.__class__.__name__))
+            raise FunctionError(f"value ({self.output_type}) of output_type attribute "
+                                f"must be FunctionOutputType for {self.__class__.__name__}.")
 
         # Can't convert from arrays of length > 1 to number
         if (
@@ -816,9 +665,8 @@ class Function_Base(Function):
             and safe_len(self.defaults.variable) > 1
             and self.output_type is FunctionOutputType.RAW_NUMBER
         ):
-            raise FunctionError(
-                "{0} can't be set to return a single number since its variable has more than one number".
-                format(self.__class__.__name__))
+            raise FunctionError(f"{self.__class__.__name__} can't be set to return a single number "
+                                f"since its variable has more than one number.")
 
         # warn if user overrides the 2D setting for mechanism functions
         # may be removed when https://github.com/PrincetonUniversity/PsyNeuLink/issues/895 is solved properly
@@ -828,10 +676,8 @@ class Function_Base(Function):
             # so no need to warn unecessarily
             import llvmlite
             if (isinstance(self.owner, Mechanism) and (value == FunctionOutputType.RAW_NUMBER or value == FunctionOutputType.NP_1D_ARRAY)):
-                warnings.warn(
-                    'Functions that are owned by a Mechanism but do not return a 2D numpy array may cause unexpected behavior if '
-                    'llvm compilation is enabled.'
-                )
+                warnings.warn(f'Functions that are owned by a Mechanism but do not return a 2D numpy array '
+                              f'may cause unexpected behavior if llvm compilation is enabled.')
         except (AttributeError, ImportError):
             pass
 
@@ -849,69 +695,6 @@ class Function_Base(Function):
             return self.owner.name
         except AttributeError:
             return '<no owner>'
-
-    def _get_compilation_state(self):
-        try:
-            stateful = self.stateful_attributes
-        except AttributeError:
-            return ()
-        return (getattr(self.parameters, sa) for sa in stateful)
-
-    def _get_state_ids(self):
-        return [sp.name for sp in self._get_compilation_state()]
-
-    def _get_state_values(self, context=None):
-        return tuple(sp.get(context) for sp in self._get_compilation_state())
-
-    def _get_state_initializer(self, context):
-        stateful = self._get_state_values(context)
-        # Skip first element of random state (id string)
-        lists = (s.tolist() if not isinstance(s, np.random.RandomState) else s.get_state()[1:] for s in stateful)
-
-        return pnlvm._tupleize(lists)
-
-    def _get_compilation_params(self, context=None):
-        # Filter out known unused/invalid params
-        black_list = {'variable', 'value', 'initializer'}
-        try:
-            # Don't list stateful params, the are included in context
-            black_list.update(self.stateful_attributes)
-        except AttributeError:
-            pass
-        def _is_compilation_param(p):
-            if p.name not in black_list and not isinstance(p, ParameterAlias):
-                val = p.get(context)
-                # Check if the value is string (like integration_method)
-                return not isinstance(val, str)
-            return False
-
-        return filter(_is_compilation_param, self.parameters)
-
-    def _get_param_ids(self, context=None):
-        return [p.name for p in self._get_compilation_params(context)]
-
-    def _get_param_values(self, context=None):
-        param_init = []
-        for p in self._get_compilation_params(context):
-            param = p.get(context)
-            try:
-                # Existence of parameter state changes the shape to array
-                # the base value should remain the same though
-                if p.name in self.owner.parameter_states:
-                    param = [param]
-            except AttributeError:
-                pass
-            if not np.isscalar(param) and param is not None:
-                if p.name == 'matrix': # Flatten matrix
-                    param = np.asfarray(param).flatten().tolist()
-                elif len(param) == 1 and hasattr(param[0], '__len__'): # Remove 2d. FIXME: Remove this
-                    param = np.asfarray(param[0]).tolist()
-            param_init.append(param)
-
-        return tuple(param_init)
-
-    def _get_param_initializer(self, context):
-        return pnlvm._tupleize(self._get_param_values(context))
 
     def _is_identity(self, context=None):
         # should return True in subclasses if the parameters for context are such that
@@ -1061,7 +844,7 @@ class ArgumentTherapy(Function_Base):
                 (isinstance(variable, numbers.Number) and isinstance(self.class_defaults.variable, numbers.Number)):
             return variable
         else:
-            raise FunctionError("Variable must be {0}".format(type(self.class_defaults.variable)))
+            raise FunctionError(f"Variable must be {type(self.class_defaults.variable)}.")
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validates variable and /or params and assigns to targets

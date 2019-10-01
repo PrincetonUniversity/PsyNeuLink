@@ -87,13 +87,16 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.learningfunctions import Hebbian
-from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism, LearningTiming, LearningType
+from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import \
+    ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism, LearningTiming, LearningType
 from psyneulink.core.components.projections.projection import Projection_Base, projection_keywords
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONTROL_PROJECTIONS, INPUT_STATES, KOHONEN_LEARNING_MECHANISM, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE
+from psyneulink.core.globals.keywords import \
+    ADDITIVE, CONTROL_PROJECTIONS, INPUT_STATES, KOHONEN_LEARNING_MECHANISM, \
+    LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -108,7 +111,7 @@ __all__ = [
 parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
 projection_keywords.update({LEARNING_PROJECTION, LEARNING})
 
-input_state_names =  [ACTIVATION_INPUT, ACTIVATION_OUTPUT]
+input_state_names = [ACTIVATION_INPUT, ACTIVATION_OUTPUT]
 output_state_names = [LEARNING_SIGNAL]
 
 # DefaultTrainingMechanism = ObjectiveMechanism
@@ -130,7 +133,7 @@ class KohonenLearningMechanism(LearningMechanism):
         matrix=None,                         \
         learning_rate=None,                  \
         learning_signals=LEARNING_SIGNAL,    \
-        modulation=ModulationParam.ADDITIVE, \
+        modulation=ADDITIVE,v                \
         params=None,                         \
         name=None,                           \
         prefs=None)
@@ -154,7 +157,7 @@ class KohonenLearningMechanism(LearningMechanism):
         specifies the `matrix <AutoAssociativeProjection.matrix>` to be learned (see `learning_signals
         <LearningMechanism.learning_signals>` for details of specification).
 
-    modulation : ModulationParam : default ModulationParam.ADDITIVE
+    modulation : ModulationParam : default ADDITIVE
         specifies the default form of modulation used by the KohonenLearningMechanism's LearningSignals,
         unless they are `individually specified <LearningSignal_Specification>`.
 
@@ -323,7 +326,7 @@ class KohonenLearningMechanism(LearningMechanism):
                 modulation
                     see `modulation <KohonenLearningMechanism.modulation>`
 
-                    :default value: ModulationParam.ADDITIVE
+                    :default value: ADDITIVE
                     :type: `ModulationParam`
 
         """
@@ -334,7 +337,7 @@ class KohonenLearningMechanism(LearningMechanism):
 
         learning_type = LearningType.UNSUPERVISED
         learning_timing = LearningTiming.EXECUTION_PHASE
-        modulation = ModulationParam.ADDITIVE
+        modulation = ADDITIVE
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -351,7 +354,7 @@ class KohonenLearningMechanism(LearningMechanism):
                  matrix:tc.optional(ParameterState)=None,
                  function:is_function_type=Hebbian,
                  learning_signals:tc.optional(list) = None,
-                 modulation:tc.optional(_is_modulation_param)=ModulationParam.ADDITIVE,
+                 modulation:tc.optional(str)=ADDITIVE,
                  learning_rate:tc.optional(parameter_spec)=None,
                  params=None,
                  name=None,

@@ -525,7 +525,7 @@ class Projection_Base(Projection):
     ----------
 
     variable : value
-        input to Projection, received from OutputState.value of `sender <Projection_Base.sender>`.
+        input to Projection, received from `value <OutputState.value>` of `sender <Projection_Base.sender>`.
 
     sender : State
         State from which Projection receives its input (see `Projection_Sender` for additional information).
@@ -534,7 +534,7 @@ class Projection_Base(Projection):
         State to which Projection sends its output  (see `Projection_Receiver` for additional information)
 
     value : value
-        Output of Projection, transmitted as variable to InputState of `receiver <Projection_Base.receiver>`.
+        output of Projection, transmitted to variable of function of its `receiver <Projection_Base.receiver>`.
 
     parameter_states : ContentAddressableList[str, ParameterState]
         a list of the Projection's `ParameterStates <Projection_ParameterStates>`, one for each of its specifiable
@@ -850,16 +850,6 @@ class Projection_Base(Projection):
         # Assign projection to self.sender's efferents list attribute
         # First make sure that projection is not already in efferents
         if self not in self.sender.efferents:
-            # # MODIFIED 7/22/19 OLD:
-            # self.sender.efferents.append(self)
-            # # MODIFIED 7/22/19 NEW: [JDC]
-            # FIX: THIS CRASHES IF RECEIVER IS NONE;
-            #      CAN BE FIXED BY HAVING _instantiate_projection_from_state HANDLE THAT GRACEFULLY BY
-            #      SIMPLY ADDING PROJECTION TO self.sender.efferents;  THAT SHOULD ALSO TAKE CARE OF
-            #      CHECKING FOR DUPLICATES
-            # sender._instantiate_projection_from_state(projection_spec=self,
-            #                                           context=context)
-            # MODIFIED 7/22/19 NEWER: [JDC]
             # Then make sure there is not already a projection to its receiver
             receiver = self.receiver
             if isinstance(receiver, Composition):
@@ -868,13 +858,19 @@ class Projection_Base(Projection):
                 receiver = receiver.input_state
             assert isinstance(receiver, (State)), \
                 f"Illegal receiver ({receiver}) detected in _instantiate_sender() method for {self.name}"
-            if receiver._check_for_duplicate_projections(self):
-                raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} to {receiver.name} of "
-                                               f"{receiver.owner.name} that already has an identical "
-                                               f"{Projection.__name__}.")
-            else:
-                self.sender.efferents.append(self)
-            # MODIFIED 7/22/19 END
+            dup = receiver._check_for_duplicate_projections(self)
+            # If duplicate is a deferred_init Projection, delete it and use one currently being instantiated
+            # IMPLEMENTATION NOTE:  this gives precedence to a Projection to a Component specified by its sender
+            #                      (e.g., controller of a Composition for a ControlProjection)
+            #                       over its specification in the constructor for the receiver or its owner
+            if dup:
+                if dup.initialization_status == ContextFlags.DEFERRED_INIT:
+                    del receiver.mod_afferents[receiver.mod_afferents.index(dup)]
+                else:
+                    raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} to {receiver.name} of "
+                                                   f"{receiver.owner.name} that already has an identical "
+                                                   f"{Projection.__name__}.")
+            self.sender.efferents.append(self)
         else:
             raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} from {sender.name} of "
                                            f"{sender.owner.name} that already has an identical {Projection.__name__}.")
@@ -1013,22 +1009,12 @@ class Projection_Base(Projection):
         #    but averts exception when setting paramsCurrent in Component (around line 850)
         pass
 
-    def _get_param_struct_type(self, ctx):
-        return ctx.get_param_struct_type(self.function)
-
-    def _get_state_struct_type(self, ctx):
-        return ctx.get_state_struct_type(self.function)
-
-    def _get_param_initializer(self, context):
-        return self.function._get_param_initializer(context)
-
-    def _get_state_initializer(self, context):
-        return self.function._get_state_initializer(context)
-
     # Provide invocation wrapper
-    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+        mf_state = ctx.get_state_ptr(self, builder, state, self.parameters.function.name)
+        mf_params = ctx.get_param_ptr(self, builder, params, self.parameters.function.name)
         main_function = ctx.get_llvm_function(self.function)
-        builder.call(main_function, [params, context, arg_in, arg_out])
+        builder.call(main_function, [mf_params, mf_state, arg_in, arg_out])
 
         return builder
 
@@ -1036,7 +1022,6 @@ class Projection_Base(Projection):
     def _dependent_components(self):
         return list(itertools.chain(
             super()._dependent_components,
-            [self.function],
             self.parameter_states,
         ))
 
@@ -1414,7 +1399,7 @@ def _parse_connection_specs(connectee_state_type,
             else:
                 projection_spec = connectee_state_type
 
-            projection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
+            projection_tuple = (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
             connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, projection_tuple))
 
         # If a Projection specification is used to specify the connection:
@@ -1635,9 +1620,8 @@ def _parse_connection_specs(connectee_state_type,
                                               mech_state_attribute=mech_state_attribute,
                                               projection_socket=projection_socket)
             except StateError as e:
-                raise ProjectionError("Problem with specification for {} in {} specification for {}: ".
-                                      format(State.__name__, Projection.__name__, owner.name) + e.error_value)
-
+                raise ProjectionError(f"Problem with specification for {State.__name__} in {Projection.__name__} "
+                                      f"specification for {owner.name}: " + e.error_value)
 
             # Check compatibility with any State(s) returned by _get_state_for_socket
 
@@ -1745,9 +1729,9 @@ def _validate_connection_request(
 
 
     if connectee_state:
-        connectee_str =  " {} of".format(connectee_state.__name__)
+        connectee_str = " {} of".format(connectee_state.__name__)
     else:
-        connectee_str =  ""
+        connectee_str = ""
 
     # Convert connect_with_states (a set of classes) into a tuple for use as second arg in isinstance()
     connect_with_states = tuple(connect_with_states)

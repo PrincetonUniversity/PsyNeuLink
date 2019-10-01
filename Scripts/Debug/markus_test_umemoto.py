@@ -90,6 +90,8 @@ Decision = pnl.DDM(function=psyneulink.core.components.functions.distributionfun
         }
     ],) #drift_rate=(1.0),threshold=(0.2645),noise=(0.5),starting_point=(0), t0=0.15
 
+print(Decision.execute([1]))
+
 # Decision.set_log_conditions('DECISION_VARIABLE')
 # Decision.set_log_conditions('value')
 # Decision.set_log_conditions('PROBABILITY_UPPER_THRESHOLD')
@@ -143,8 +145,8 @@ mySystem = pnl.System(processes=[TargetControlProcess,
                                                                            (pnl.SLOPE, Distractor_Rep)
                                                                            ],
                                                                 function=psyneulink.core.components.functions.transferfunctions.Logistic,
-                                                                cost_options=[pnl.ControlSignalCosts.INTENSITY,
-                                                                               pnl.ControlSignalCosts.ADJUSTMENT],
+                                                                cost_options=[pnl.CostFunctions.INTENSITY,
+                                                                               pnl.CostFunctions.ADJUSTMENT],
                                                                 allocation_samples=signalSearchRange
                                                                 )),
                       enable_controller=True,

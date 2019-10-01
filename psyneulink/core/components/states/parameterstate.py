@@ -176,7 +176,7 @@ In the following example, a Mechanism is created by specifying two of its parame
     ...                         noise=pnl.ControlSignal(),
     ...                         function=pnl.Logistic(
     ...                                         gain=(0.5, pnl.ControlSignal),
-    ...                                         bias=(1.0, pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))))
+    ...                                         bias=(1.0, pnl.ControlSignal(modulation=pnl.ADDITIVE))))
 
 COMMENT:
     If assigning a default ControlSignal makes the noise value the same as the
@@ -218,7 +218,7 @@ The example below shows how to specify the parameters in the first example using
     ...                              pnl.FUNCTION: pnl.Logistic,
     ...                              pnl.FUNCTION_PARAMS:{
     ...                                     pnl.GAIN:(0.5,pnl.ControlSignal),
-    ...                                     pnl.BIAS:(1.0,pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))}})
+    ...                                     pnl.BIAS:(1.0,pnl.ControlSignal(modulation=pnl.ADDITIVE))}})
 
 There are several things to note here.
 
@@ -356,17 +356,16 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, function_type, method_type, parameter_keywords
-from psyneulink.core.components.functions.function import ModulationParam, get_param_value_for_keyword
+from psyneulink.core.components.functions.function import get_param_value_for_keyword
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.states.state import StateError, State_Base, _instantiate_state, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    CONTEXT, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, FUNCTION, FUNCTION_PARAMS, \
-    LEARNING_SIGNAL, LEARNING_SIGNALS, MECHANISM, NAME, PARAMETER_STATE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, \
-    PATHWAY_PROJECTION, PROJECTION, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, VALUE
+    ADDITIVE, CONTEXT, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, DISABLE, FUNCTION, FUNCTION_PARAMS, \
+    LEARNING_SIGNAL, LEARNING_SIGNALS, MECHANISM, MULTIPLICATIVE, NAME, OVERRIDE, PARAMETER_STATE, PARAMETER_STATES, \
+    PARAMETER_STATE_PARAMS, PATHWAY_PROJECTION, PROJECTION, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, VALUE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities \
@@ -484,7 +483,7 @@ class ParameterState(State_Base):
         a list of the `ModulatoryProjection <ModulatoryProjection>` that project to the ParameterState (i.e.,
         for which it is a `receiver <Projection_Base.receiver>`); these can be
         `ControlProjection(s) <ControlProjection>` and/or `LearningProjection(s) <LearningProjection>`,
-        but not `GatingProjection <GatingProjection>`.  The `value <ModulatoryProjection.value>` of each
+        but not `GatingProjection <GatingProjection>`.  The `value <ModulatoryProjection_Base.value>` of each
         must match the format (number and types of elements) of the ParameterState's
         `variable <ParameterState.variable>`.
 
@@ -642,13 +641,25 @@ class ParameterState(State_Base):
         self._instantiate_projections_to_state(projections=projections, context=context)
 
     def _check_for_duplicate_projections(self, projection):
-        if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
+        """Check if projection is redundant with one in mod_afferents of ParameterState
+
+        Check for any instantiated projection in mod_afferents with the same sender as projection
+        or one in deferred_init status with sender specification that is the same type as projection.
+
+        Returns redundant Projection if found, otherwise False.
+        """
+
+        duplicate = next(iter([proj for proj in self.mod_afferents
+                               if ((proj.sender == projection.sender and proj != projection)
+                                   or (proj.initialization_status == ContextFlags.DEFERRED_INIT
+                                       and proj.init_args[SENDER] == type(projection.sender)))]), None)
+        if duplicate and self.verbosePref or self.owner.verbosePref:
             from psyneulink.core.components.projections.projection import Projection
             warnings.warn(f'{Projection.__name__} from {projection.sender.name}  {projection.sender.__class__.__name__}'
                           f' of {projection.sender.owner.name} to {self.name} {self.__class__.__name__} of '
                           f'{self.owner.name} already exists; will ignore additional one specified ({projection.name}).')
-            return True
-        return False
+        return duplicate
+
 
     @tc.typecheck
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
@@ -829,59 +840,6 @@ class ParameterState(State_Base):
     def pathway_projections(self, value):
         raise ParameterStateError("PROGRAM ERROR: Attempt to assign {} to {}; {}s cannot accept {}s".
                                   format(PATHWAY_PROJECTION, self.name, PARAMETER_STATE, PATHWAY_PROJECTION))
-
-    def _get_input_struct_type(self, ctx):
-        func_input_type = ctx.get_input_struct_type(self.function)
-        input_types = [func_input_type]
-        for mod in self.mod_afferents:
-            input_types.append(ctx.get_output_struct_type(mod))
-        return pnlvm.ir.LiteralStructType(input_types)
-
-    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
-        state_f = ctx.get_llvm_function(self.function)
-
-        # Extract the original mechanism function's param value
-        f_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
-
-        # Create a local copy of the function parameters
-        f_params = builder.alloca(state_f.args[0].type.pointee)
-        builder.store(builder.load(params), f_params)
-
-        # FIXME: is this always true, by design?
-        assert len(self.mod_afferents) <= 1
-
-        for idx, afferent in enumerate(self.mod_afferents):
-            # The first input is function input (the old parameter value)
-            # Modulatory projections are ordered after that
-            # FIXME: It's expected to be a single element array,
-            #        so why is the parameter below a scalar?
-            f_mod_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(idx + 1), ctx.int32_ty(0)])
-
-            f_mod = builder.load(f_mod_ptr)
-
-            # Get name of the modulated parameter
-            if afferent.sender.modulation is ModulationParam.MULTIPLICATIVE:
-                name = self.function.parameters.multiplicative_param.source.name
-            elif afferent.sender.modulation is ModulationParam.ADDITIVE:
-                name = self.function.parameters.additive_param.source.name
-            elif afferent.sender.modulation is ModulationParam.DISABLE:
-                name = None
-            elif afferent.sender.modulation is ModulationParam.OVERRIDE:
-                # Directly store the value in the output array
-                output_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-                builder.store(f_mod, output_ptr)
-                return builder
-            else:
-                assert False, "Unsupported modulation parameter: {}".format(afferent.sender.modulation)
-
-            if name is not None:
-                f_mod_param_ptr = ctx.get_param_ptr(self.function, builder, f_params, name)
-                builder.store(f_mod, f_mod_param_ptr)
-
-
-        builder.call(state_f, [f_params, context, f_input, arg_out])
-        return builder
 
 def _instantiate_parameter_states(owner, function=None, context=None):
     """Call _instantiate_parameter_state for all params in user_params to instantiate ParameterStates for them

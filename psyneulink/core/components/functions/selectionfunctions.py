@@ -29,13 +29,11 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
-from psyneulink.core.components.functions.function import \
-    Function, Function_Base, MULTIPLICATIVE_PARAM, FunctionError, ADDITIVE_PARAM
+from psyneulink.core.components.functions.function import Function, Function_Base, FunctionError
 from psyneulink.core.globals.keywords import \
-    SELECTION_FUNCTION_TYPE, ONE_HOT_FUNCTION, PARAMETER_STATE_PARAMS, \
-    MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, \
+    ADDITIVE_PARAM, MULTIPLICATIVE_PARAM, MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, \
     MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR, \
-    MODE, PROB, PROB_INDICATOR, kwPreferenceSetName
+    MODE, ONE_HOT_FUNCTION, PARAMETER_STATE_PARAMS, PROB, PROB_INDICATOR, SELECTION_FUNCTION_TYPE, kwPreferenceSetName
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import \
@@ -73,35 +71,24 @@ class SelectionFunction(Function_Base):
                  prefs=None,
                  context=None):
 
-        if not hasattr(self, MULTIPLICATIVE_PARAM):
-            raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
-                                format(self.__class__.__name__, MULTIPLICATIVE_PARAM))
-
-        if not hasattr(self, ADDITIVE_PARAM):
-            raise FunctionError("PROGRAM ERROR: {} must implement an {} attribute".
-                                format(self.__class__.__name__, ADDITIVE_PARAM))
+        # # FIX: 9/3/19 - DON'T IMPLEMENT, SINCE OneHot DOESN"T IMPLEMENT MODULATORY PARAMS
+        # try:
+        #     self.parameters.multiplicative_param
+        # except:
+        #     raise FunctionError(f"PROGRAM ERROR: {self.__class__.__name__} must implement "
+        #                         f"a {repr(MULTIPLICATIVE_PARAM)} Parameter or alias to one.")
+        #
+        # try:
+        #     self.parameters.additive_param
+        # except:
+        #     raise FunctionError(f"PROGRAM ERROR: {self.__class__.__name__} must implement "
+        #                         f"a {repr(ADDITIVE_PARAM)} Parameter or alias to one.")
 
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
                          context=context)
-
-    @property
-    def multiplicative(self):
-        return getattr(self, self.multiplicative_param)
-
-    @multiplicative.setter
-    def multiplicative(self, val):
-        setattr(self, self.multiplicative_param, val)
-
-    @property
-    def additive(self):
-        return getattr(self, self.additive_param)
-
-    @additive.setter
-    def additive(self, val):
-        setattr(self, self.additive_param, val)
 
 
 class OneHot(SelectionFunction):
@@ -200,8 +187,6 @@ class OneHot(SelectionFunction):
     componentName = ONE_HOT_FUNCTION
 
     bounds = None
-    multiplicative_param = None
-    additive_param = None
 
     classPreferences = {
         kwPreferenceSetName: 'OneHotClassPreferences',

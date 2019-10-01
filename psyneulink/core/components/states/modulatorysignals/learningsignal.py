@@ -171,7 +171,6 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.states.outputstate import PRIMARY
@@ -204,7 +203,7 @@ class LearningSignal(ModulatorySignal):
     LearningSignal(                                      \
         owner,                                           \
         function=Linear(),                               \
-        modulation=ModulationParam.MULTIPLICATIVE        \
+        modulation=MULTIPLICATIVE                        \
         learning_rate=None                               \
         params=None,                                     \
         projections=None,                                \
@@ -253,7 +252,7 @@ class LearningSignal(ModulatorySignal):
         specifies the learning_rate for the LearningSignal's `LearningProjections <LearningProjection>`
         (see `learning_rate <LearningSignal.learning_rate>` for details).
 
-    modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
+    modulation : str : default ADDITIVE
         specifies the way in which the `value <LearningSignal.value>` of the LearningSignal is used to modify the value
         of the `matrix <MappingProjection.matrix>` parameter for the `MappingProjection(s) <MappingProjection>` to which
         the LearningSignal's `LearningProjection(s) <LearningProjection>` project.
@@ -307,7 +306,7 @@ class LearningSignal(ModulatorySignal):
         a list of the `LearningProjections <LearningProjection>` assigned to (i.e., that project from) the
         LearningSignal.
 
-    modulation : ModulationParam
+    modulation : str
         determines the way in which the `value <LearningSignal.value>` of the LearningSignal is used to modify the
         value of the `matrix <MappingProjection.matrix>` parameter for the `MappingProjection` to which the
         LearningSignal's `LearningProjection(s) <LearningProjection>` project.
@@ -388,7 +387,7 @@ class LearningSignal(ModulatorySignal):
                  assign=None,
                  function=Linear(),
                  learning_rate: tc.optional(parameter_spec) = None,
-                 modulation:tc.optional(_is_modulation_param)=None,
+                 modulation:tc.optional(str)=None,
                  modulates=None,
                  params=None,
                  name=None,

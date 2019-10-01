@@ -38,10 +38,10 @@ class TestReinforcement:
             input_layer = pnl.TransferMechanism(size=2,
                                                 name='Input Layer')
             input_layer.log.set_log_conditions(items=pnl.VALUE)
-            action_selection =  pnl.DDM(input_format=pnl.ARRAY,
-                                        function=pnl.DriftDiffusionAnalytical(),
-                                        output_states=[pnl.SELECTED_INPUT_ARRAY],
-                                        name='DDM')
+            action_selection = pnl.DDM(input_format=pnl.ARRAY,
+                                       function=pnl.DriftDiffusionAnalytical(),
+                                       output_states=[pnl.SELECTED_INPUT_ARRAY],
+                                       name='DDM')
             action_selection.log.set_log_conditions(items=pnl.SELECTED_INPUT_ARRAY)
 
             comp = pnl.Composition(name='comp')
@@ -142,10 +142,10 @@ class TestReinforcement:
             input_layer = pnl.TransferMechanism(size=2,
                                                 name='Input Layer')
             input_layer.log.set_log_conditions(items=pnl.VALUE)
-            action_selection =  pnl.DDM(input_format=pnl.ARRAY,
-                                        function=pnl.DriftDiffusionAnalytical(),
-                                        output_states=[pnl.SELECTED_INPUT_ARRAY],
-                                        name='DDM')
+            action_selection = pnl.DDM(input_format=pnl.ARRAY,
+                                       function=pnl.DriftDiffusionAnalytical(),
+                                       output_states=[pnl.SELECTED_INPUT_ARRAY],
+                                       name='DDM')
             action_selection.log.set_log_conditions(items=pnl.SELECTED_INPUT_ARRAY)
 
             comp = pnl.Composition(name='comp')

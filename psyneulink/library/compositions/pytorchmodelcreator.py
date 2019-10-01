@@ -211,7 +211,7 @@ class PytorchModelCreator(torch.nn.Module):
                 bias = forward_info[1]
                 if bias is not None:
                     if "no_ref_pass" not in debug_env:
-                        node_params.append(bias.detach().numpy().ctypes.data)
+                        node_params += [bias.detach().numpy().ctypes.data]
                     else:
                         node_params.append(bias.detach().numpy())
 
@@ -693,13 +693,13 @@ class PytorchModelCreator(torch.nn.Module):
         optimizer.initialize_optimizer_struct(ctx,builder,optimizer_struct)
         backprop = ctx.get_llvm_function(self._gen_llvm_training_backprop(ctx,optimizer,loss).name)
         optimizer_step = ctx.get_llvm_function(optimizer.step(ctx).name)
-
+        optimizer_zero_grad = ctx.get_llvm_function(optimizer.zero_grad(ctx).name)
         with pnlvm.helpers.for_loop_zero_inc(builder, epochs, "epoch_loop") as (b1, epoch_idx):
             ctx.inject_printf(builder, "\033[0;32mEPOCH %d\033[0m\n", epoch_idx)
             with pnlvm.helpers.for_loop_zero_inc(b1, num_inputs, "input_loop") as (b2, input_idx):
                 ctx.inject_printf(b2, "\n\033[0;31mINPUT %d\033[0m\n", input_idx)
                 ctx.inject_printf(b2, "OPTIMIZER ZERO GRAD %d\n", input_idx)
-                optimizer.zero_grad(ctx,b2,optimizer_struct)
+                b2.call(optimizer_zero_grad,[optimizer_struct,model_params])
                 ctx.inject_printf(b2, "BACKPROP %d\n", input_idx)
                 b2.call(backprop,[model_context, model_params, model_input, model_output, optimizer_struct, input_struct_ptr, target_struct_ptr, input_idx])
                 ctx.inject_printf(b2, "OPTIMIZER STEP %d\n", input_idx)
@@ -959,7 +959,7 @@ class PytorchModelCreator(torch.nn.Module):
             gain = get_fct_param_value('gain')
             bias = get_fct_param_value('bias')
             offset = get_fct_param_value('offset')
-            return lambda x: 1 / (1 + torch.exp(-gain * (x - bias) + offset))
+            return lambda x: 1 / (1 + torch.exp(-gain * (x + bias) + offset))
 
         # if we have relu function (the only other kind of function allowed by the autodiff composition)
         else:

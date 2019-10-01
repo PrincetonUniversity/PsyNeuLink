@@ -181,7 +181,7 @@ class ControlProjection(ModulatoryProjection_Base):
                 FUNCTION:Linear,
                 FUNCTION_PARAMS:{SLOPE: 1, INTERCEPT: 0},  # Note: this implements identity function
                 PROJECTION_SENDER: ControlMechanism
-                CONTROL_SIGNAL_COST_OPTIONS:ControlSignalCosts.DEFAULTS,
+                CONTROL_SIGNAL_COST_OPTIONS:CostFunctions.DEFAULTS,
                 ALLOCATION_SAMPLES: DEFAULT_ALLOCATION_SAMPLES,
     COMMENT
 
@@ -222,7 +222,7 @@ class ControlProjection(ModulatoryProjection_Base):
         Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
 
-    name : str : default see ModulatoryProjection `name <ModulatoryProjection.name>`
+    name : str : default see ModulatoryProjection `name <ModulatoryProjection_Base.name>`
         specifies the name of the ControlProjection.
 
     prefs : PreferenceSet or specification dict : default Projection.classPreferences
@@ -258,17 +258,17 @@ class ControlProjection(ModulatoryProjection_Base):
        multiplies the `value <ControlProjection.value>` of the ControlProjection after applying `exponent
        <ControlProjection.exponent>`, and before combining it with any others that project to the same `ParameterState`
        to determine how that ParameterState's `variable <ParameterState.variable>` is modified (see description in
-       `Projection <Projection_Weight_and_Exponent>` for details).
+       `Projection <Projection_Weight_Exponent>` for details).
 
     exponent : number
         exponentiates the `value <ControlProjection.value>` of the ControlProjection, before applying `weight
         <ControlProjection.weight>`, and before combining it with any others that project to the same `ParameterState`
         to determine how that ParameterState's `variable <ParameterState.variable>` is modified (see description in
-        `Projection <Projection_Weight_and_Exponent>` for details).
+        `Projection <Projection_Weight_Exponent>` for details).
 
     name : str
         name of the ControlProjection; if it is not specified in the **name** argument of its constructor,
-        a default name is assigned (see ModulatoryProjection `name <ModulatoryProjection.name>`;
+        a default name is assigned (see ModulatoryProjection `name <ModulatoryProjection_Base.name>`;
         also see `Naming` for conventions regarding duplicate names).
 
     prefs : PreferenceSet or specification dict

@@ -320,7 +320,7 @@ In addition, like all PsyNeuLink Components, it also has the three following cor
       Mechanism's `value <Mechanism_Base.value>` to which the OutputState is assigned (specified by the OutputState's
       `index <OutputState_Index>` attribute.
     ..
-    * `function <State_Base.function>`:  for an `InputState` this aggregates the values of the Projections that the
+    * `function <State_Base.function>`:  for an `InputState` this combines the values of the Projections that the
       State receives (the default is `LinearCombination` that sums the values), under the potential influence of a
       `GatingSignal`;  for a `ParameterState`, it determines the value of the associated parameter, under the potential
       influence of a `ControlSignal` (for a `Mechanism <Mechanism>`) or a `LearningSignal` (for a `MappingProjection`);
@@ -329,7 +329,7 @@ In addition, like all PsyNeuLink Components, it also has the three following cor
       `ModulatorySignals <ModulatorySignal_Structure>` and the `AdaptiveMechanism <AdaptiveMechanism>` associated with
       each type for a description of how they can be used to modulate the `function <State_Base.function>` of a State.
     ..
-    * `value <State_Base.value>`:  for an `InputState` this is the aggregated value of the `PathwayProjections` it
+    * `value <State_Base.value>`:  for an `InputState` this is the combined value of the `PathwayProjections` it
       receives;  for a `ParameterState`, this represents the value of the parameter that will be used by the State's
       owner or its `function <Component.function>`; for an `OutputState`, it is the item of the  owner Mechanism's
       `value <Mechanisms.value>` to which the OutputState is assigned, possibly modified by its `assign
@@ -741,30 +741,34 @@ from collections.abc import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import Component, ComponentError, DefaultsFlexibility, component_keywords, function_type, method_type
+from psyneulink.core import llvm as pnlvm
+from psyneulink.core.components.component import \
+    Component, ComponentError, DefaultsFlexibility, component_keywords, function_type, method_type
 from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, LinearCombination
-from psyneulink.core.components.functions.function import Function, ModulationParam, _get_modulated_param, get_param_value_for_keyword
+from psyneulink.core.components.functions.function import Function, get_param_value_for_keyword, is_function_type
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Mechanism, Projection, State
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.keywords import \
-    AUTO_ASSIGN_MATRIX, CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, DEFERRED_INITIALIZATION, \
-    EXPONENT, FUNCTION, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INPUT_STATES, \
+    ADDITIVE, ADDITIVE_PARAM, AUTO_ASSIGN_MATRIX, CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, \
+    DEFERRED_INITIALIZATION, DISABLE, EXPONENT, FUNCTION, FUNCTION_PARAMS, \
+    GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INPUT_STATES, \
     LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MATRIX, MECHANISM, \
-    MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, NAME, OUTPUT_STATES, OWNER, \
+    MODULATORY_PROJECTION, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, MULTIPLICATIVE, MULTIPLICATIVE_PARAM, \
+    NAME, OUTPUT_STATES, OVERRIDE, OWNER, \
     PARAMETER_STATES, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, \
     PROJECTION_DIRECTION, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, \
     RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, STANDARD_OUTPUT_STATES, \
-    STATE, STATE_CONTEXT, STATE_NAME, STATE_PARAMS, STATE_PREFS, STATE_TYPE, STATE_VALUE, \
-    VALUE, VARIABLE, WEIGHT, kwStateComponentCategory
-from psyneulink.core.globals.parameters import Parameter
+    STATE, STATE_CONTEXT, STATE_NAME, STATE_PARAMS, STATE_PREFS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, WEIGHT, \
+    kwStateComponentCategory
+from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.componentpreferenceset import kpVerbosePref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.socket import ConnectionInfo
 from psyneulink.core.globals.utilities import \
-    ContentAddressableList, MODULATION_OVERRIDE, Modulation, convert_to_np_array, get_args, get_class_attributes, \
-    is_value_spec, iscompatible, merge_param_dicts, type_match
+    ContentAddressableList, convert_to_np_array, get_args, is_value_spec, iscompatible, \
+    merge_param_dicts, MODULATION_OVERRIDE, type_match
 
 __all__ = [
     'State_Base', 'state_keywords', 'state_type_keywords', 'StateError', 'StateRegistry'
@@ -950,6 +954,9 @@ class State_Base(State):
     Attributes
     ----------
 
+    variable : number, list or np.ndarray
+        the State's input, provided as the `variable <State_Base.variable>` to its `function <State_Base.function>`.
+
     owner : Mechanism or Projection
         object to which the State belongs (see `State_Owner` for additional details).
 
@@ -976,12 +983,12 @@ class State_Base(State):
         InputStates and ParameterStates.
 
     function : TransferFunction : default determined by type
-        used to determine the State's own value from the value of the Projection(s) it receives;  the parameters that
-        the TransferFunction identifies as ADDITIVE and MULTIPLICATIVE are subject to modulation by a
-        `ModulatoryProjection <ModulatoryProjection_Structure>`.
+        used to determine the State's `value <State_Base.value>` from the `value <Projection_Base.value>` of the
+        `Projection(s) <Projection>` it receives;  the parameters that the TransferFunction identifies as *ADDITIVE*
+        and *MULTIPLICATIVE* are subject to modulation by a `ModulatorySignal <ModulatorySignal>`.
 
     value : number, list or np.ndarray
-        current value of the State (updated by `_update <State_Base._update>` method).
+        current value of the State.
 
     name : str
         the name of the State. If the State's `initialization has been deferred <State_Deferred_Initialization>`,
@@ -1035,7 +1042,7 @@ class State_Base(State):
                     :read only: True
         """
         function = Parameter(Linear, stateful=False, loggable=False)
-        require_projection_in_composition = Parameter(None, stateful=False, loggable=False, read_only=True)
+        require_projection_in_composition = Parameter(True, stateful=False, loggable=False, read_only=True)
 
     stateAttributes = {FUNCTION, FUNCTION_PARAMS, PROJECTIONS}
 
@@ -1134,15 +1141,6 @@ class State_Base(State):
                           # sub_group_attr='owner',
                           context=context)
 
-        self.path_afferents = []
-        self.mod_afferents = []
-
-        self._path_proj_values = []
-        # Create dict with entries for each ModualationParam and initialize - used in _update()
-        self._mod_proj_values = {}
-        for (attrib, value) in ModulationParam.__members__.items():
-            self._mod_proj_values[getattr(ModulationParam,attrib)] = []
-
         # VALIDATE VARIABLE, PARAM_SPECS, AND INSTANTIATE self.function
         super(State_Base, self).__init__(default_variable=variable,
                                          size=size,
@@ -1151,6 +1149,9 @@ class State_Base(State):
                                          name=name,
                                          prefs=prefs
         )
+
+        self.path_afferents = []
+        self.mod_afferents = []
 
         # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
         # INSTANTIATE PROJECTIONS SPECIFIED IN projections ARG OR params[PROJECTIONS:<>]
@@ -1513,11 +1514,11 @@ class State_Base(State):
                 # ModualatoryProjection:
                 #    - check that projection's value is compatible with value of the function param being modulated
                 elif isinstance(projection, ModulatoryProjection_Base):
-                    function_param_value = _get_modulated_param(self, projection, context).function_param_val
+                    mod_spec, mod_param_name, mod_param_value = self._get_modulated_param(projection, context=context)
                     # Match the projection's value with the value of the function parameter
-                    mod_proj_spec_value = type_match(projection.defaults.value, type(function_param_value))
-                    if (function_param_value is not None
-                        and not iscompatible(function_param_value, mod_proj_spec_value)):
+                    mod_proj_spec_value = type_match(projection.defaults.value, type(mod_param_value))
+                    if (mod_param_value is not None
+                        and not iscompatible(mod_param_value, mod_proj_spec_value)):
                         raise StateError("Output of function for {} ({}) is not compatible with value of {} ({}).".
                                              format(projection.name, projection.defaults.value, self.name, self.defaults.value))
 
@@ -1624,7 +1625,7 @@ class State_Base(State):
 
 
         # IMPLEMENTATION NOTE:  THE FOLLOWING IS WRITTEN AS A LOOP IN PREP FOR GENERALINZING METHOD
-        #                       TO HANDLE PROJECTION LIST (AS PER _instantiate_projection_to_state())
+        #                       TO HANDLE PROJECTION LIST (AS PER _instantiate_projections_to_state())
 
         # If projection_spec and/or receiver is not in a list, wrap it in one for consistency of treatment below
         # (since specification can be a list, so easier to treat any as a list)
@@ -1801,7 +1802,7 @@ class State_Base(State):
                 if isinstance(receiver, State) and receiver.initialization_status == ContextFlags.INITIALIZED:
                     projection._deferred_init(context=context)
 
-            # VALIDATE (if initialized or being initialized (INITIALIZA))
+            # VALIDATE (if initialized or being initialized)
 
             if projection.initialization_status & (ContextFlags.INITIALIZED | ContextFlags.INITIALIZING):
 
@@ -1848,14 +1849,16 @@ class State_Base(State):
                     # ModualatoryProjection:
                     #    - check that projection's value is compatible with value of the function param being modulated
                     elif isinstance(projection, ModulatoryProjection_Base):
-                        function_param_value = _get_modulated_param(receiver, projection, context).function_param_val
+                        mod_spec, mod_param_name, mod_param_value = self._get_modulated_param(projection,
+                                                                                              receiver=receiver,
+                                                                                              context=context)
                         # Match the projection's value with the value of the function parameter
                         # should be defaults.value?
-                        mod_proj_spec_value = type_match(projection.value, type(function_param_value))
-                        if (function_param_value is not None
-                            and not iscompatible(function_param_value, mod_proj_spec_value)):
-                            raise StateError("Output of {} ({}) is not compatible with the value of {} ({}).".
-                                             format(projection.name,mod_proj_spec_value,receiver.name,function_param_value))
+                        mod_proj_spec_value = type_match(projection.value, type(mod_param_value))
+                        if (mod_param_value is not None
+                            and not iscompatible(mod_param_value, mod_proj_spec_value)):
+                            raise StateError(f"Output of {projection.name} ({mod_proj_spec_value}) is not compatible "
+                                             f"with the value of {receiver.name} ({mod_param_value}).")
 
 
             # ASSIGN TO STATE
@@ -1866,6 +1869,8 @@ class State_Base(State):
                 continue
 
             # FIX: MODIFIED FEEDBACK - CHECK THAT THAT THIS IS STILL NEEDED (RE: ASSIGNMENT IN ModulatorySignal)
+            # FIX: 9/14/19 - NOTE:  IT *IS* NEEDED FOR CONTROLPROJECTIONS
+            #                       SPECIFIED FOR PARAMETER IN CONSTRUCTOR OF A MECHANISM
             if isinstance(projection, ModulatoryProjection_Base):
                 self.owner.aux_components.append((projection, feedback))
             return projection
@@ -1930,9 +1935,6 @@ class State_Base(State):
         gating_projection_params = merge_param_dicts(self.stateParams, GATING_PROJECTION_PARAMS, PROJECTION_PARAMS)
 
         #For each projection: get its params, pass them to it, get the projection's value, and append to relevant list
-        self._path_proj_values = []
-        for value in self._mod_proj_values:
-            self._mod_proj_values[value] = []
 
         from psyneulink.core.components.process import ProcessInputState
         from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
@@ -1947,6 +1949,9 @@ class State_Base(State):
 
         # Get values of all Projections
         variable = []
+        # self._path_proj_values = []
+        mod_proj_values = {}
+
         for projection in self.all_afferents:
 
             if hasattr(projection, 'sender'):
@@ -2009,7 +2014,7 @@ class State_Base(State):
 
                 # KDM 8/14/19: a caveat about the dot notation/most_recent_context here!
                 # should these be manually set despite it not actually being executed?
-                # explicitly getting/setting based on ECONTEXT_COMMENT will be more clear
+                # explicitly getting/setting based on context will be more clear
                 projection.most_recent_context = context
                 projection.function.most_recent_context = context
                 for pstate in projection.parameter_states:
@@ -2033,34 +2038,36 @@ class State_Base(State):
             # into separate methods
             if isinstance(projection, PathwayProjection_Base):
                 # Add projection_value to list of PathwayProjection values (for aggregation below)
-                self._path_proj_values.append(projection_value)
+                # self._path_proj_values.append(projection_value)
                 variable.append(projection_value)
 
             # If it is a ModulatoryProjection, add its value to the list in the dict entry for the relevant mod_param
             elif isinstance(projection, ModulatoryProjection_Base):
                 # Get the meta_param to be modulated from modulation attribute of the  projection's ModulatorySignal
                 #    and get the function parameter to be modulated to type_match the projection value below
-                mod_meta_param, mod_param_name, mod_param_value = _get_modulated_param(self, projection, context)
+                mod_spec, mod_param_name, mod_param_value = self._get_modulated_param(projection, context=context)
                 # If meta_param is DISABLE, ignore the ModulatoryProjection
-                if mod_meta_param is Modulation.DISABLE:
+                if mod_spec is DISABLE:
                     continue
-                if mod_meta_param is Modulation.OVERRIDE:
+                if mod_spec is OVERRIDE:
                     # If paramValidationPref is set, allow all projections to be processed
                     #    to be sure there are no other conflicting OVERRIDES assigned
                     if self.owner.paramValidationPref:
                         if modulatory_override:
-                            raise StateError("Illegal assignment of {} to more than one {} ({} and {})".
-                                             format(MODULATION_OVERRIDE, MODULATORY_SIGNAL,
-                                                    projection.name, modulatory_override[2]))
+                            raise StateError(f"Illegal assignment of {MODULATION_OVERRIDE} to more than one "
+                                             f"{MODULATORY_SIGNAL} ({projection.name} and {modulatory_override[2]}).")
                         modulatory_override = (MODULATION_OVERRIDE, projection_value, projection)
                         continue
-                    # Otherwise, for efficiency, assign OVERRIDE value to State here and return
+                    # Otherwise, for efficiency, assign first OVERRIDE value encountered and return
                     else:
                         self.parameters.value._set(type_match(projection_value, type(self.defaults.value)), context)
                         return
                 else:
                     mod_value = type_match(projection_value, type(mod_param_value))
-                    self._mod_proj_values[mod_meta_param].append(mod_value)
+                    if mod_param_name not in mod_proj_values.keys():
+                        mod_proj_values[mod_param_name]=[mod_value]
+                    else:
+                        mod_proj_values[mod_param_name].append(mod_value)
 
         # KDM 6/20/18: consider defining exactly when and how type_match occurs, now it seems
         # a bit handwavy just to make stuff work
@@ -2073,20 +2080,23 @@ class State_Base(State):
 
         # AGGREGATE ModulatoryProjection VALUES  -----------------------------------------------------------------------
 
-        # For each modulated parameter of the State's function,
-        #    combine any values received from the relevant projections into a single modulation value
-        #    and assign that to the relevant entry in the params dict for the State's function.
-        for mod_param, value_list in self._mod_proj_values.items():
-            # check if override or disable ever have a nonempty value_list here..
-            if value_list:
-                # KDM 12/10/18: below is confusing - why does the mod_param "enum" value refer to a class?
-                aggregated_mod_val = mod_param.value.reduce(value_list)
-                getattr(self.function.parameters, mod_param.value.attrib_name)._set(aggregated_mod_val, context)
-                function_param = self.function.params[mod_param.value.attrib_name]
-                if not FUNCTION_PARAMS in self.stateParams:
-                    self.stateParams[FUNCTION_PARAMS] = {function_param: aggregated_mod_val}
-                else:
-                    self.stateParams[FUNCTION_PARAMS].update({function_param: aggregated_mod_val})
+        for mod_param_name, value_list in mod_proj_values.items():
+            param = getattr(self.function.parameters, mod_param_name)
+            # If the param has a single modulatory value, use that
+            if len(value_list)==1:
+                mod_val = value_list[0]
+            # If the param has multiple modulatory values, combine them
+            else:
+                mod_val = self._get_combined_mod_val(mod_param_name, value_list)
+
+            # FIX: SHOULD THIS REALLY BE GETTING SET HERE??
+            # Set modulatory parameter's value
+            param._set(mod_val, context)
+
+            if not FUNCTION_PARAMS in self.stateParams:
+                self.stateParams[FUNCTION_PARAMS] = {mod_param_name: mod_val}
+            else:
+                self.stateParams[FUNCTION_PARAMS].update({mod_param_name: mod_val})
 
         # CALL STATE'S function TO GET ITS VALUE  ----------------------------------------------------------------------
         # FIX: THIS IS INEFFICIENT;  SHOULD REPLACE WITH IF STATEMENTS
@@ -2133,10 +2143,60 @@ class State_Base(State):
 
         )
 
+    def _get_modulated_param(self, mod_proj, receiver=None, context=None):
+        """Return modulation specification from ModulatoryProjection, and name and value of param modulated."""
+
+        from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
+
+        receiver = receiver or self
+
+        if not isinstance(mod_proj, ModulatoryProjection_Base):
+            raise StateError(f'Specification of {MODULATORY_PROJECTION} to {receiver.full_name} ({mod_proj}) '
+                                f'is not a {ModulatoryProjection_Base.__name__}')
+
+        # FIX: 9/17/19
+        # execution_id = parse_execution_context(context)
+
+        # Get modulation specification from the Projection sender's modulation attribute
+        mod_spec = mod_proj.sender.parameters.modulation._get(context)
+
+        if mod_spec in {OVERRIDE, DISABLE}:
+            mod_param_name = mod_proj.receiver.name
+            mod_param_value = mod_proj.sender.parameters.value.get(context)
+        else:
+            mod_param = getattr(receiver.function.parameters, mod_spec)
+            try:
+                mod_param_name = mod_param.source.name
+            except:
+                mod_param_name = mod_param.name
+
+            # Get the value of the modulated parameter
+            mod_param_value = getattr(receiver.function.parameters, mod_spec).get(context)
+
+        return mod_spec, mod_param_name, mod_param_value
+
+    def _get_combined_mod_val(self, mod_param_name, values):
+        """Combine the modulatory values received by ModulatoryProjections to mod_param_name
+        Uses function specified by modulation_combination_function attribute of param,
+        or MULTIPLICATIVE if not specified
+        """
+        comb_fct = getattr(self.function.parameters, mod_param_name).modulation_combination_function or MULTIPLICATIVE
+        aliases = getattr(self.function.parameters, mod_param_name).aliases
+
+        if comb_fct==MULTIPLICATIVE or any(mod_spec in aliases for mod_spec in {MULTIPLICATIVE, MULTIPLICATIVE_PARAM}):
+            return np.product(np.array(values), axis=0)
+        if comb_fct==ADDITIVE or any(mod_spec in aliases for mod_spec in {MULTIPLICATIVE, ADDITIVE_PARAM}):
+            return np.sum(np.array(values), axis=0)
+        elif isinstance(comb_fct, is_function_type):
+            return comb_fct(values)
+        else:
+            assert False, f'PROGRAM ERROR: modulation_combination_function not properly specified ' \
+                          f'for {mod_param_name} {Parameter.__name__} of {self.name}'
+
     @abc.abstractmethod
     def _get_fallback_variable(self, context=None):
         """
-            Returns a variable to be used for self.execute when the variable passed in is None
+            Return a variable to be used for self.execute when the variable passed in is None
         """
         pass
 
@@ -2225,29 +2285,68 @@ class State_Base(State):
     def _get_input_struct_type(self, ctx):
         # Use function input type. The shape should be the same,
         # however, some functions still need input shape workarounds.
-        return ctx.get_input_struct_type(self.function)
+        func_input_type = ctx.get_input_struct_type(self.function)
+        input_types = [func_input_type]
+        # Add modulation
+        for mod in self.mod_afferents:
+            input_types.append(ctx.get_output_struct_type(mod))
+        return pnlvm.ir.LiteralStructType(input_types)
 
-    def _get_param_struct_type(self, ctx):
-        return ctx.get_param_struct_type(self.function)
+    def _get_compilation_params(self, context=None):
+        return [self.parameters.function]
 
-    def _get_state_struct_type(self, ctx):
-        return ctx.get_state_struct_type(self.function)
+    def _get_compilation_state(self):
+        return [self.parameters.function]
 
-    def _get_param_initializer(self, context):
-        return self.function._get_param_initializer(context)
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+        state_f = ctx.get_llvm_function(self.function)
 
-    def _get_state_initializer(self, context):
-        return self.function._get_state_initializer(context)
+        # Create a local copy of the function parameters
+        base_params = ctx.get_param_ptr(self, builder, params, self.parameters.function.name)
+        f_params = builder.alloca(state_f.args[0].type.pointee)
+        builder.store(builder.load(base_params), f_params)
 
-    # Provide invocation wrapper
-    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
-        main_function = ctx.get_llvm_function(self.function)
+        # FIXME: is this always true, by design?
+        assert len(self.mod_afferents) <= 1
+
+        # Apply modulation
+        for idx, afferent in enumerate(self.mod_afferents):
+            # The first input is function data input
+            # Modulatory projections are ordered after that
+            # FIXME: It's expected to be a single element array,
+            #        so why is the parameter below a scalar?
+
+            # Get the modulation value
+            f_mod_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(idx + 1), ctx.int32_ty(0)])
+
+            # Get name of the modulated parameter
+            if afferent.sender.modulation is MULTIPLICATIVE:
+                name = self.function.parameters.multiplicative_param.source.name
+            elif afferent.sender.modulation is ADDITIVE:
+                name = self.function.parameters.additive_param.source.name
+            elif afferent.sender.modulation is DISABLE:
+                name = None
+            elif afferent.sender.modulation is OVERRIDE:
+                # Directly store the value in the output array
+                output_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+                builder.store(builder.load(f_mod_ptr), output_ptr)
+                return builder
+            else:
+                assert False, "Unsupported modulation parameter: {}".format(afferent.sender.modulation)
+
+            # Replace base param with the modulation value
+            if name is not None:
+                f_mod_param_ptr = ctx.get_param_ptr(self.function, builder, f_params, name)
+                builder.store(builder.load(f_mod_ptr), f_mod_param_ptr)
+
         # OutputState returns 1D array even for scalar functions
-        if arg_out.type != main_function.args[3].type:
+        if arg_out.type != state_f.args[3].type:
             assert len(arg_out.type.pointee) == 1
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        builder.call(main_function, [params, context, arg_in, arg_out])
-
+        # Extract the data part of input
+        f_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        f_state = ctx.get_state_ptr(self, builder, state, self.parameters.function.name)
+        builder.call(state_f, [f_params, f_state, f_input, arg_out])
         return builder
 
     @staticmethod
@@ -2265,7 +2364,6 @@ class State_Base(State):
     def _dependent_components(self):
         return list(itertools.chain(
             super()._dependent_components,
-            [self.function],
             self.efferents,
         ))
 
@@ -2628,7 +2726,6 @@ def _parse_state_type(owner, state_spec):
     raise StateError("{} is not a legal State specification for {}".format(state_spec, owner.name))
 
 
-
 STATE_SPEC_INDEX = 0
 
 # FIX: CHANGE EXPECTATION OF *PROJECTIONS* ENTRY TO BE A SET OF TUPLES WITH THE WEIGHT AND EXPONENT FOR IT
@@ -2716,9 +2813,9 @@ def _parse_state_spec(state_type=None,
 
     if state_spec:
         if owner.verbosePref:
-            print('Args other than standard args and state_spec were in _instantiate_state ({})'.
-                  format(state_spec))
-        state_specific_args.update(state_spec)
+            print(f'Args other than standard args and state_spec were in _instantiate_state ({state_spec}).')
+        state_spec.update(state_specific_args)
+        state_specific_args = state_spec
 
     state_dict = standard_args
     context = state_dict.pop(CONTEXT, None)
@@ -3236,11 +3333,10 @@ def _get_state_for_socket(owner,
                              format(mech_state_attribute, mech.name, mech.__class__.__name__))
         if state is None:
             if len(mech_state_attribute)==1:
-                attr_name = mech_state_attribute[0] + " attribute."
+                attr_name = mech_state_attribute[0] + " attribute"
             else:
-                attr_name = " or ".join(", ".format(attr) for (attr) in mech_state_attribute) + " attributes."
-            raise StateError("{} does not have a {} named \'{}\' in its {}".
-                             format(mech.name, State.__name__, state_spec, attr_name))
+                attr_name = " or ".join(f"{repr(attr)}" for (attr) in mech_state_attribute) + " attributes"
+            raise StateError(f"{mech.name} does not have a {State.__name__} named \'{state_spec}\' in its {attr_name}.")
 
     # Get primary State of specified type
     elif isinstance(state_spec, Mechanism):

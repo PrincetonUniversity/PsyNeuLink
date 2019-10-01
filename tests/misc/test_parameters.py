@@ -133,7 +133,7 @@ def test_delta():
 
 def test_delta_fail():
     t = pnl.TransferMechanism()
-    t.parameters.value.set(None)
+    t.parameters.value.set(None, override=True)
 
     t.execute(10)
     with pytest.raises(TypeError) as error:

@@ -51,6 +51,7 @@ from itertools import product
 from psyneulink.core.components.functions.learningfunctions import BayesGLM
 from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
 from psyneulink.core.globals.keywords import DEFAULT_VARIABLE
+from psyneulink.core.globals.parameters import Parameter
 
 __all__ = ['GymForagerCFA']
 
@@ -85,6 +86,9 @@ class GymForagerCFA(CompositionFunctionApproximator):
     `prediction_vector <RegressorCFA.prediction_vector>`.
 
     """
+
+    class Parameters(CompositionFunctionApproximator.Parameters):
+        update_weights = Parameter(BayesGLM, stateful=False, loggable=False)
 
     def __init__(self,
                  name=None,
@@ -189,10 +193,3 @@ class GymForagerCFA(CompositionFunctionApproximator):
             predicted_outcome+=net_outcome
         predicted_outcome/=count
         return predicted_outcome
-
-    @property
-    def _dependent_components(self):
-        return list(itertools.chain(
-            [self.update_weights]
-        ))
-

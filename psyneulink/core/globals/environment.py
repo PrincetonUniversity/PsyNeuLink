@@ -880,7 +880,7 @@ def run(obj,
                     if mechanism.reinitialize_when.is_satisfied(scheduler=obj.scheduler_processing, context=context):
                         mechanism.reinitialize(None, context=context)
 
-            input_num = execution%num_inputs_sets
+            input_num = execution % num_inputs_sets
 
             for mech in inputs:
                 execution_inputs[mech] = inputs[mech][input_num]
@@ -1327,8 +1327,3 @@ def _get_object_type(obj):
         return SYSTEM
     else:
         raise RunError("{} type not supported by Run module".format(obj.__class__.__name__))
-
-
-import uuid
-def _get_unique_id():
-    return uuid.uuid4()

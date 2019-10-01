@@ -596,7 +596,7 @@ from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.states.state import State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ALL, ASSIGN, CALCULATE, COMMAND_LINE, CONTEXT, FUNCTION, GATING_SIGNAL, INDEX, INPUT_STATE, INPUT_STATES, \
+    ALL, ASSIGN, CALCULATE, CONTEXT, FUNCTION, GATING_SIGNAL, INDEX, INPUT_STATE, INPUT_STATES, \
     MAPPING_PROJECTION, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MECHANISM_VALUE, NAME, \
     OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, OUTPUT_STD_DEV, OUTPUT_VARIANCE, \
     OWNER_VALUE, PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, PROJECTION_TYPE, \
@@ -707,8 +707,8 @@ def _parse_output_state_variable(variable, owner, context=None, output_state_nam
                     #                        format(spec, output_state_name or OutputState.__name__, owner.name))
                     raise Exception
             except:
-                raise OutputStateError("Can't parse variable ({}) for {} of {}".
-                                       format(spec, output_state_name or OutputState.__name__, owner.name))
+                raise OutputStateError(f"Can't parse variable ({spec}) for "
+                                       f"{output_state_name or OutputState.__name__} of {owner.name}.")
 
         elif isinstance(spec, str) and spec == PARAMS_DICT:
             # Specifies passing owner's params_dict as variable
@@ -734,18 +734,13 @@ def _parse_output_state_variable(variable, owner, context=None, output_state_nam
                     else:
                         return getattr(owner.function.parameters, owner_param_name)._get(context)
                 except AttributeError:
-                    raise OutputStateError(
-                        "Can't parse variable ({}) for {} of {}".format(
-                            spec, output_state_name or OutputState.__name__, owner.name
-                        )
-                    )
+                    raise OutputStateError(f"Can't parse variable ({spec}) for "
+                                           f"{output_state_name or OutputState.__name__} of {owner.name}.")
         else:
-            raise OutputStateError("\'{}\' entry for {} specification dictionary of {} ({}) must be "
-                                   "numeric or a list of {} attribute names".
-                                   format(VARIABLE.upper(),
-                                          output_state_name or OutputState.__name__,
-                                          owner.name, spec,
-                                          owner.__class__.__name__))
+            raise OutputStateError(f"'{VARIABLE.upper()}' entry for {output_state_name or OutputState.__name__} "
+                                   f"specification dictionary of {owner.name} ({spec}) must be "
+                                   "numeric or a list of {owner.__class__.__name__} attribute names.")
+
     if not isinstance(variable, list):
         variable = [variable]
 
@@ -1018,7 +1013,7 @@ class OutputState(State_Base):
                 params=params)
 
         # setting here to ensure even deferred init states have this attribute
-        self._variable_spec = None
+        self._variable_spec = variable
 
         # If owner or reference_value has not been assigned, defer init to State._instantiate_projection()
         # if owner is None or reference_value is None:
@@ -1039,11 +1034,8 @@ class OutputState(State_Base):
 
         self.reference_value = reference_value
 
-        # FIX: PUT THIS IN DEDICATED OVERRIDE OF COMPONENT VARIABLE-SETTING METHOD??
         if variable is None:
             if reference_value is None:
-                # variable = owner.defaults.value[0]
-                # variable = self.paramClassDefaults[DEFAULT_VARIABLE_SPEC] # Default is 1st item of owner.value
                 variable = DEFAULT_VARIABLE_SPEC
             else:
                 variable = reference_value
@@ -1109,22 +1101,6 @@ class OutputState(State_Base):
             _is_modulatory_spec
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 
-        # Treat as ModulatoryProjection spec if it is a ModulatoryProjection, ModulatorySignal or AdaptiveMechanism
-        # or one of those is the first or last item of a ProjectionTuple
-        # modulatory_projections = [proj for proj in projections
-        #                           if (isinstance(proj, (ModulatoryProjection_Base,
-        #                                                ModulatorySignal,
-        #                                                AdaptiveMechanism_Base)) or
-        #                               (isinstance(proj, ProjectionTuple) and
-        #                                any(isinstance(item, (ModulatoryProjection_Base,
-        #                                                    ModulatorySignal,
-        #                                                    AdaptiveMechanism_Base)) for item in proj)))]
-        # modulatory_projections = [proj for proj in projections
-        #                           if ((_is_modulatory_spec(proj) and
-        #                               isinstance(proj, ProjectionTuple)) or
-        #                                any((_is_modulatory_spec(item)
-        #                                     or isinstance(item, ProjectionTuple))
-        #                                    for item in proj))]
         modulatory_projections = [proj for proj in projections if _is_modulatory_spec(proj)]
         self._instantiate_projections_to_state(projections=modulatory_projections, context=context)
 
@@ -1136,21 +1112,34 @@ class OutputState(State_Base):
                                                     context=context)
 
     def _check_for_duplicate_projections(self, projection):
+        """Check if projection is redundant with one in efferents of OutputState
+
+        Check for any instantiated projection in efferents with the same receiver as projection
+        or one in deferred_init status with receiver specification that is the same type as projection.
+
+        Returns redundant Projection if found, otherwise False.
+        """
+
         # FIX: 7/22/19 - CHECK IF RECEIVER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_INPUT_STATE
-        assert True
-        if any(proj.receiver == projection.receiver and proj != projection for proj in self.efferents):
+        duplicate = next(iter([proj for proj in self.efferents
+                               if ((proj.receiver == projection.receiver and proj != projection)
+                                   or (proj.initialization_status == ContextFlags.DEFERRED_INIT
+                                       and proj.init_args[RECEIVER] == type(projection.receiver)))]), None)
+        if duplicate and self.verbosePref or self.owner.verbosePref:
             from psyneulink.core.components.projections.projection import Projection
             warnings.warn(f'{Projection.__name__} from {projection.sender.name} of {projection.sender.owner.name} '
                           f'to {self.name} of {self.owner.name} already exists; will ignore additional '
                           f'one specified ({projection.name}).')
-            return True
-        return False
+        return duplicate
 
     def _get_primary_state(self, mechanism):
         return mechanism.output_state
 
     def _parse_arg_variable(self, default_variable):
         return _parse_output_state_variable(default_variable, self.owner)
+
+    def _parse_function_variable(self, variable, context=None):
+        return _parse_output_state_variable(variable, self.owner)
 
     @tc.typecheck
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
@@ -1443,7 +1432,11 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                 if output_state.initialization_status == ContextFlags.DEFERRED_INIT:
                     try:
                         output_state_value = OutputState._get_state_function_value(owner,
-                                                                                   output_state.function,
+                                                                                   # MODIFIED 9/22/19 OLD:
+                                                                                   # output_state.function,
+                                                                                   # MODIFIED 9/22/19 NEW: [JDC]
+                                                                                   output_state.init_args[FUNCTION],
+                                                                                   # MODIFIED 9/22/19 END
                                                                                    output_state.init_args[VARIABLE])
                     # For backward compatibility with INDEX and ASSIGN
                     except AttributeError:

@@ -263,7 +263,7 @@ class ptx_jit_engine(jit_engine):
                 ptx = self._target_machine.emit_assembly(module)
                 mod = pycuda.compiler.DynamicModule()
                 mod.add_data(self._generated_builtins, pycuda.driver.jit_input_type.CUBIN, "builtins.cubin")
-                mod.add_data(ptx.encode(), pycuda.driver.jit_input_type.PTX, "pnl.ptx")
+                mod.add_data(ptx.encode(), pycuda.driver.jit_input_type.PTX, module.name + ".ptx")
                 ptx_mod = mod.link()
 
             except Exception as e:

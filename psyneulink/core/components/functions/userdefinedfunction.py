@@ -11,13 +11,14 @@
 
 import typecheck as tc
 
-from psyneulink.core.components.functions.function import ADDITIVE_PARAM, FunctionError, Function_Base, MULTIPLICATIVE_PARAM
+from psyneulink.core.components.functions.function import FunctionError, Function_Base
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONTEXT, CUSTOM_FUNCTION, PARAMETER_STATE_PARAMS, PARAMS, SELF, \
-    USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, VARIABLE, OWNER, EXECUTION_ID
+from psyneulink.core.globals.keywords import \
+    ADDITIVE_PARAM, CONTEXT, CUSTOM_FUNCTION, EXECUTION_ID, MULTIPLICATIVE_PARAM, OWNER, PARAMS, \
+    PARAMETER_STATE_PARAMS, SELF, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences import is_pref_set
-from psyneulink.core.globals.utilities import call_with_pruned_args, iscompatible
+from psyneulink.core.globals.utilities import iscompatible
 
 __all__ = ['UserDefinedFunction']
 

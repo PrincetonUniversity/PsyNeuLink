@@ -258,22 +258,21 @@ following two informational attributes:
 
 .. _Component_Execution_Count:
 
-* **current_execution_count** -- maintains a record of the number of times a Component has executed; it *excludes* the
+* **execution_count** -- maintains a record of the number of times a Component has executed; it *excludes* the
   executions carried out during initialization and validation, but includes all other executions, whether they are of
-  the Component on its own are as part of a `Composition` (e.g., `Process` or `System`). The value can be changed
-  "manually" or programmatically by assigning an integer value directly to the attribute.
+  the Component on its own are as part of a `Composition`, and irresective of the `context <Context>` in which they
+  are occur. The value can be changed "manually" or programmatically by assigning an integer value directly to the
+  attribute.
 
 .. _Component_Current_Execution_Time:
 
-* **current_execution_time** -- maintains the `Time` of the last execution of the Component in the context of a
-  `System`'s `scheduler <System_Scheduler>`, and is stored as a `time <Context.time>` tuple of values indicating the
-  `TimeScale.TRIAL`,  `TimeScale.PASS`, and `TimeScale.TIME_STEP` of the last execution.  Note that a System has two
-  schedulers -- `scheduler_processing <Composition.scheduler_processing>` and `scheduler_learning
-  <Composition.scheduler_learning>`; `current_execution_time` stores the time of whichever of these was the last to
-  execute the Component.
-
+* **current_execution_time** -- maintains the `Time` of the last execution of the Component in the context of the
+  `Composition`'s current `scheduler_processing <Composition.scheduler_processing`, and is stored as a `time
+  <Context.time>` tuple of values indicating the `TimeScale.TRIAL`,  `TimeScale.PASS`, and `TimeScale.TIME_STEP` of the
+  last execution.
 
 COMMENT:
+FIX: STATEMENT ABOVE ABOUT MODIFYING EXECUTION COUNT VIOLATES THIS DEFINITION, AS PROBABLY DO OTHER ATTRIBUTES
   * parameters are things that govern the operation of the Mechanism (including its function) and/or can be modified/modulated
   * attributes include parameters, but also read-only attributes that reflect but do not determine the operation (e.g., EXECUTION_COUNT)
 COMMENT
@@ -631,8 +630,7 @@ def make_parameter_property(name):
             # set to backing field, which is what gets looked for and discarded when creating an object's parameters
             setattr(self, backing_field, value)
         else:
-            # stack level 3 instead of normal 2 to properly show source when setting using dot notation
-            getattr(self.parameters, name)._set(value, self.most_recent_context, _ro_warning_stacklevel=3)
+            getattr(self.parameters, name)._set(value, self.most_recent_context)
 
     return property(getter).setter(setter)
 
@@ -820,8 +818,8 @@ class Component(object, metaclass=ComponentsMeta):
     log : Log
         see `log <Component_Log>`
 
-    current_execution_count : int
-        see `current_execution_count <Component_Execution_Count>`
+    execution_count : int
+        see `execution_count <Component_Execution_Count>`
 
     current_execution_time : tuple(`Time.RUN`, `Time.TRIAL`, `Time.PASS`, `Time.TIME_STEP`)
         see `current_execution_time <Component_Current_Execution_Time>`
@@ -890,10 +888,20 @@ class Component(object, metaclass=ComponentsMeta):
                     :default value: False
                     :type: bool
 
+                execution_count
+                    see `execution_count <Component.execution_count>`
+
+                    :default value: 0
+                    :type: int
+                    :read only: True
+
         """
         variable = Parameter(np.array([0]), read_only=True)
         value = Parameter(np.array([0]), read_only=True)
         has_initializers = Parameter(False, setter=_has_initializers_setter)
+        # execution_count ios not stateful because it is a global counter;
+        #    for context-specific counts should use schedulers which store this info
+        execution_count = Parameter(0, read_only=True, loggable=False, stateful=False, fallback_default=True)
 
         def _parse_variable(self, variable):
             return variable
@@ -1110,7 +1118,9 @@ class Component(object, metaclass=ComponentsMeta):
         # INSTANTIATE ATTRIBUTES BEFORE FUNCTION
         # Stub for methods that need to be executed before instantiating function
         #    (e.g., _instantiate_sender and _instantiate_receiver in Projection)
-        self._instantiate_attributes_before_function(function=function, context=context)
+        # Allow _instantiate_attributes_before_function of subclass
+        #    to modify/replace function arg provided in constructor (e.g. TransferWithCosts)
+        function = self._instantiate_attributes_before_function(function=function, context=context) or function
 
         # INSTANTIATE FUNCTION
         #    - assign initial function parameter values from ParameterStates,
@@ -1141,6 +1151,96 @@ class Component(object, metaclass=ComponentsMeta):
 
         self._compilation_data = self._CompilationData(owner=self)
 
+        self._update_parameter_components(context)
+
+    def __repr__(self):
+        return '({0} {1})'.format(type(self).__name__, self.name)
+        #return '{1}'.format(type(self).__name__, self.name)
+
+    def __deepcopy__(self, memo):
+        fun = get_deepcopy_with_shared_Components(self._deepcopy_shared_keys)
+        newone = fun(self, memo)
+
+        if newone.parameters is not newone.class_parameters:
+            # may be in DEFERRED INIT, so parameters/defaults belongs to class
+            newone.parameters._owner = newone
+            newone.defaults._owner = newone
+
+        return newone
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # Compilation support
+    # ------------------------------------------------------------------------------------------------------------------
+    def _get_compilation_state(self):
+        try:
+            stateful = self.stateful_attributes
+        except AttributeError:
+            stateful = []
+
+        return (p for p in self.parameters if p.name in stateful or isinstance(p.get(), Component))
+
+    def _get_state_ids(self):
+        return [sp.name for sp in self._get_compilation_state()]
+
+    def _get_state_values(self, context=None):
+        def _state_values(x):
+            return x._get_state_values(context) if isinstance(x, Component) else x
+        return tuple(map(_state_values, (sp.get(context) for sp in self._get_compilation_state())))
+
+    def _get_state_initializer(self, context):
+        def _convert(x):
+            if isinstance(x, np.random.RandomState):
+                # Skip first element of random state (id string)
+                return x.get_state()[1:]
+            else:
+                return x
+        lists = (_convert(s) for s in self._get_state_values(context))
+        return pnlvm._tupleize(lists)
+
+    def _get_compilation_params(self, context=None):
+        # Filter out known unused/invalid params
+        black_list = {'variable', 'value', 'initializer'}
+        try:
+            # Don't list stateful params, the are included in context
+            black_list.update(self.stateful_attributes)
+        except AttributeError:
+            pass
+        def _is_compilation_param(p):
+            if p.name not in black_list and not isinstance(p, ParameterAlias):
+                val = p.get(context)
+                # Check if the value is string (like integration_method)
+                return not isinstance(val, (str, ComponentsMeta))
+            return False
+
+        return filter(_is_compilation_param, self.parameters)
+
+    def _get_param_ids(self, context=None):
+        return [p.name for p in self._get_compilation_params(context)]
+
+    def _get_param_values(self, context=None):
+        def _get_values(p):
+            param = p.get(context)
+            try:
+                # Existence of parameter state changes the shape to array
+                # the base value should remain the same though
+                if p.name in self.owner.parameter_states:
+                    param = [param]
+            except AttributeError:
+                pass
+            if not np.isscalar(param) and param is not None:
+                if p.name == 'matrix': # Flatten matrix
+                    param = np.asfarray(param).flatten().tolist()
+                elif isinstance(param, Component):
+                    param = param._get_param_values(context)
+                elif len(param) == 1 and hasattr(param[0], '__len__'): # Remove 2d. FIXME: Remove this
+                    param = np.asfarray(param[0]).tolist()
+            return param
+
+        return tuple(map(_get_values, self._get_compilation_params(context)))
+
+    def _get_param_initializer(self, context):
+        return pnlvm._tupleize(self._get_param_values(context))
+
     def _gen_llvm_function(self, extra_args=[]):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             args = [ctx.get_param_struct_type(self).as_pointer(),
@@ -1160,21 +1260,6 @@ class Component(object, metaclass=ComponentsMeta):
             builder.ret_void()
 
         return llvm_func
-
-    def __repr__(self):
-        return '({0} {1})'.format(type(self).__name__, self.name)
-        #return '{1}'.format(type(self).__name__, self.name)
-
-    def __deepcopy__(self, memo):
-        fun = get_deepcopy_with_shared_Components(self._deepcopy_shared_keys)
-        newone = fun(self, memo)
-
-        if newone.parameters is not newone.class_parameters:
-            # may be in DEFERRED INIT, so parameters/defaults belongs to class
-            newone.parameters._owner = newone
-            newone.defaults._owner = newone
-
-        return newone
 
     # ------------------------------------------------------------------------------------------------------------------
     # Handlers
@@ -2087,7 +2172,10 @@ class Component(object, metaclass=ComponentsMeta):
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
 
         # assign defaults based on pass in params and class defaults
-        defaults = self.class_defaults.values(show_all=True).copy()
+        defaults = {
+            k: copy.deepcopy(v) for (k, v) in self.class_defaults.values(show_all=True).items()
+            if not isinstance(getattr(self.class_parameters, k), ParameterAlias)
+        }
         try:
             function_params = param_defaults[FUNCTION_PARAMS]
         except KeyError:
@@ -2238,11 +2326,16 @@ class Component(object, metaclass=ComponentsMeta):
             self.params_current = self.paramClassDefaults.copy()
             self.paramInstanceDefaults = self.paramClassDefaults.copy()
 
-    def _initialize_from_context(self, context, base_context=Context(execution_id=None), override=True):
-        for comp in self._dependent_components:
-            comp._initialize_from_context(context, base_context, override)
+    def _initialize_from_context(self, context, base_context=Context(execution_id=None), override=True, visited=None):
+        if visited is None:
+            visited = set()
 
-        non_alias_params =  [p for p in self.stateful_parameters if not isinstance(p, ParameterAlias)]
+        for comp in self._dependent_components:
+            if comp not in visited:
+                visited.add(comp)
+                comp._initialize_from_context(context, base_context, override, visited=visited)
+
+        non_alias_params = [p for p in self.stateful_parameters if not isinstance(p, ParameterAlias)]
         for param in non_alias_params:
             if param.setter is None:
                 param._initialize_from_context(context, base_context, override)
@@ -2256,16 +2349,24 @@ class Component(object, metaclass=ComponentsMeta):
             if param.setter is not None:
                 param._initialize_from_context(context, base_context, override)
 
-    def _delete_contexts(self, *contexts, check_simulation_storage=False):
+    def _delete_contexts(self, *contexts, check_simulation_storage=False, visited=None):
+        if visited is None:
+            visited = set()
+
         for comp in self._dependent_components:
-            comp._delete_contexts(*contexts, check_simulation_storage=check_simulation_storage)
+            if comp not in visited:
+                visited.add(comp)
+                comp._delete_contexts(*contexts, check_simulation_storage=check_simulation_storage, visited=visited)
 
         for param in self.stateful_parameters:
             if not check_simulation_storage or not param.retain_old_simulation_data:
                 for context in contexts:
                     param.delete(context)
 
-    def _set_all_parameter_properties_recursively(self, **kwargs):
+    def _set_all_parameter_properties_recursively(self, visited=None, **kwargs):
+        if visited is None:
+            visited = set()
+
         # sets a property of all parameters for this component and all its dependent components
         # used currently for disabling history, but setting logging could use this
         for param_name in self.parameters.names():
@@ -2277,7 +2378,12 @@ class Component(object, metaclass=ComponentsMeta):
                     logger.warning(str(e) + ' Parameter has not been modified.')
 
         for comp in self._dependent_components:
-            comp._set_all_parameter_properties_recursively(**kwargs)
+            if comp not in visited:
+                visited.add(comp)
+                comp._set_all_parameter_properties_recursively(
+                    visited=visited,
+                    **kwargs
+                )
 
     def _set_multiple_parameter_values(self, context, **kwargs):
         """
@@ -2285,7 +2391,7 @@ class Component(object, metaclass=ComponentsMeta):
             For every kwarg k, v pair, will attempt to set self.parameters.<k> to v for context
         """
         for (k, v) in kwargs.items():
-            getattr(self.parameters, k)._set(v, context, _ro_warning_stacklevel=3)
+            getattr(self.parameters, k)._set(v, context)
 
     # ------------------------------------------------------------------------------------------------------------------
     # Parsing methods
@@ -2638,7 +2744,7 @@ class Component(object, metaclass=ComponentsMeta):
                  isinstance(param_spec[1], ALLOWABLE_TUPLE_SPEC_CLASSES) or
                  (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], ALLOWABLE_TUPLE_SPEC_CLASSES)))
             ):
-            value =  param_spec[0]
+            value = param_spec[0]
 
         # Otherwise, just return the tuple
         else:
@@ -2793,7 +2899,7 @@ class Component(object, metaclass=ComponentsMeta):
             if function.owner is None and not function.is_pnl_inherent:
                 self.function = function
             else:
-                self.function = self._clone_function(function)
+                self.function = copy.deepcopy(function)
 
             # setting init status because many mechanisms change execution or validation behavior
             # during initialization
@@ -2945,34 +3051,9 @@ class Component(object, metaclass=ComponentsMeta):
         except AttributeError:
             pass
 
-    def _clone_function(self, function):
-        from psyneulink.core.components.functions.function import Function_Base, FunctionRegistry
-        fct = copy.deepcopy(function)
-        # ensure copy does not have identical name
-        register_category(fct, Function_Base, fct.name, FunctionRegistry)
-        return fct
-
-    @property
-    def current_execution_count(self):
-        """Maintains a simple count of executions over the life of the Component,
-        Incremented in the Component's execute method by call to self._increment_execution_count
-        """
-        try:
-            return self._current_execution_count
-        except:
-            self._current_execution_count = 0
-            return self._current_execution_count
-
-    @current_execution_count.setter
-    def current_execution_count(self, count:int):
-        self._current_execution_count = count
-
     def _increment_execution_count(self, count=1):
-        try:
-            self._current_execution_count +=count
-        except:
-            self._current_execution_count = 1
-        return self._current_execution_count
+        self.parameters.execution_count.set(self.execution_count+count, override=True)
+        return self.execution_count
 
     @property
     def current_execution_time(self):
@@ -2989,6 +3070,7 @@ class Component(object, metaclass=ComponentsMeta):
                 return context.composition.scheduler_processing.get_clock(context).time
             except AttributeError:
                 return None
+    # MODIFIED 9/22/19 END
 
     def _get_current_execution_time(self, context):
         from psyneulink.core.globals.context import _get_context
@@ -3362,11 +3444,38 @@ class Component(object, metaclass=ComponentsMeta):
             return self._is_pnl_inherent
 
     @property
+    def _parameter_components(self):
+        """
+            Returns a set of Components that are values of this object's
+            Parameters
+        """
+        try:
+            return self.__parameter_components
+        except AttributeError:
+            self.__parameter_components = set()
+            return self.__parameter_components
+
+    def _update_parameter_components(self, context):
+        # store all Components in Parameters to be used in
+        # _dependent_components for _initialize_from_context
+        for p in self.parameters:
+            try:
+                param_value = p.get(context)
+                if isinstance(param_value, Component):
+                    self._parameter_components.add(param_value)
+            # ControlMechanism and GatingMechanism have Parameters that only
+            # throw these errors
+            except Exception as e:
+                # cannot import the specific exceptions due to circularity
+                if 'attribute is not implemented on' not in str(e):
+                    raise
+
+    @property
     def _dependent_components(self):
         """
             Returns a set of Components that will be executed if this Component is executed
         """
-        return []
+        return list(self._parameter_components)
 
     @property
     def most_recent_context(self):

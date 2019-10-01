@@ -101,13 +101,13 @@ class PV(Enum):
     # FCC =  auto()
     # FFCC = auto()
     # COST = auto()
-    F =    0
-    C =    1
-    FF =   2
-    CC =   3
-    FC =   4
-    FFC =  5
-    FCC =  6
+    F    = 0
+    C    = 1
+    FF   = 2
+    CC   = 3
+    FC   = 4
+    FFC  = 5
+    FCC  = 6
     FFCC = 7
     COST = 8
 
@@ -264,7 +264,7 @@ class RegressionCFA(CompositionFunctionApproximator):
             self.prediction_terms = [PV.F,PV.C,PV.COST]
 
     # def initialize(self, owner):
-    def initialize(self, features_array, control_signals):
+    def initialize(self, features_array, control_signals, context):
         """Assign owner and instantiate `prediction_vector <RegressorCFA.prediction_vector>`
 
         Must be called before RegressorCFA's methods can be used.
@@ -278,6 +278,7 @@ class RegressionCFA(CompositionFunctionApproximator):
         if isinstance(self.update_weights, type):
             self.update_weights = \
                 self.update_weights(default_variable=update_weights_default_variable)
+            self._update_parameter_components(context)
         else:
             self.update_weights.reinitialize({DEFAULT_VARIABLE: update_weights_default_variable})
 
@@ -346,7 +347,7 @@ class RegressionCFA(CompositionFunctionApproximator):
             # Concatenate values for each prediction term, and same for corresponding weights
             for term_label, term_value in term_values_dict.items():
                 if term_label in terms:
-                    pv_enum_val =  term_label.value
+                    pv_enum_val = term_label.value
                     item_idx = prediction_vector.idx[pv_enum_val]
                     v = np.append(v, term_value.reshape(-1))
                     w = np.append(w, weights[item_idx])
@@ -358,11 +359,6 @@ class RegressionCFA(CompositionFunctionApproximator):
 
         return predicted_outcome
 
-    @property
-    def _dependent_components(self):
-        return list(itertools.chain(
-            [self.update_weights]
-        ))
 
     class PredictionVector():
         """Maintain a `vector <PredictionVector.vector>` of terms for a regression model specified by a list of
@@ -445,6 +441,7 @@ class RegressionCFA(CompositionFunctionApproximator):
                     v = state_spec_dict[VARIABLE]
                     v = v or ControlSignal.defaults.variable
                 control_allocation.append(v)
+            # Get primary function and compute_costs function for each ControlSignal (called in compute_terms)
             self.control_signal_functions = [c.function for c in control_signals]
             self._compute_costs = [c.compute_costs for c in control_signals]
 
@@ -470,9 +467,9 @@ class RegressionCFA(CompositionFunctionApproximator):
             # RENAME THIS AS SPECIFIED_TERMS
             self.specified_terms = specified_terms
             self.terms = [None] * len(PV)
-            self.idx =  [None] * len(PV)
-            self.num =  [None] * len(PV)
-            self.num_elems =  [None] * len(PV)
+            self.idx = [None] * len(PV)
+            self.num = [None] * len(PV)
+            self.num_elems = [None] * len(PV)
             self.labels = [None] * len(PV)
 
             # MAIN EFFECT TERMS (unflattened)

@@ -182,7 +182,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                 variable
                     see `variable <EpisodicMemoryMechanism.variable>`
 
-                    :default value: [[0], [0]]
+                    :default value: [[0]]
                     :type: list
 
         """
@@ -221,10 +221,10 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
 
     def _execute(self, variable=None, context=None, runtime_params=None):
 
-        value =  super()._execute(variable=variable,
-                                           context=context,
-                                           runtime_params=runtime_params,
-                                           )
+        value = super()._execute(variable=variable,
+                                 context=context,
+                                 runtime_params=runtime_params,
+                                )
         # Only return content if assoc has not been specified (in which case second element of value should be empty)
         if len(value[1]) == 0:
             return np.delete(value,1)

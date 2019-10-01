@@ -84,13 +84,16 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.learningfunctions import Hebbian
-from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, LearningMechanism, LearningTiming, LearningType
+from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import \
+    ACTIVATION_INPUT, LearningMechanism, LearningTiming, LearningType
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.projection import Projection_Base, projection_keywords
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import AUTOASSOCIATIVE_LEARNING_MECHANISM, CONTROL_PROJECTIONS, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE
+from psyneulink.core.globals.keywords import \
+    ADDITIVE, AUTOASSOCIATIVE_LEARNING_MECHANISM, CONTROL_PROJECTIONS, INPUT_STATES, \
+    LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, parameter_spec
@@ -105,7 +108,7 @@ __all__ = [
 parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
 projection_keywords.update({LEARNING_PROJECTION, LEARNING})
 
-input_state_names =  [ACTIVATION_INPUT]
+input_state_names = [ACTIVATION_INPUT]
 output_state_names = [LEARNING_SIGNAL]
 
 DefaultTrainingMechanism = ObjectiveMechanism
@@ -125,7 +128,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         function=Hebbian,                          \
         learning_rate=None,                        \
         learning_signals=LEARNING_SIGNAL,          \
-        modulation=ModulationParam.ADDITIVE,       \
+        modulation=ADDITIVE,                       \
         params=None,                               \
         name=None,                                 \
         prefs=None)
@@ -149,7 +152,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         specifies the `matrix <AutoAssociativeProjection.matrix>` to be learned (see `learning_signals
         <LearningMechanism.learning_signals>` for details of specification).
 
-    modulation : ModulationParam : default ModulationParam.ADDITIVE
+    modulation : ModulationParam : default ADDITIVE
         specifies the default form of modulation used by the AutoAssociativeLearningMechanism's LearningSignals,
         unless they are `individually specified <LearningSignal_Specification>`.
 
@@ -298,12 +301,12 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                 modulation
                     see `modulation <AutoAssociativeLearningMechanism.modulation>`
 
-                    :default value: ModulationParam.ADDITIVE
+                    :default value: ADDITIVE
                     :type: `ModulationParam`
 
         """
         learning_signals = None
-        modulation = ModulationParam.ADDITIVE
+        modulation = ADDITIVE
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
@@ -324,7 +327,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                  size=None,
                  function:is_function_type=Hebbian,
                  learning_signals:tc.optional(list) = None,
-                 modulation:tc.optional(_is_modulation_param)=ModulationParam.ADDITIVE,
+                 modulation:tc.optional(str)=ADDITIVE,
                  learning_rate:tc.optional(parameter_spec)=None,
                  params=None,
                  name=None,

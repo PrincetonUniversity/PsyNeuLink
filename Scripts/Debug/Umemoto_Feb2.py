@@ -112,7 +112,7 @@ Umemoto_comp.add_node(Decision,
 Target_Rep_Control_Signal = pnl.ControlSignal(modulates=[(pnl.SLOPE, Target_Rep)],
                                               function=pnl.Linear,
                                               variable=1.0,
-                                              cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
+                                              cost_options=[pnl.CostFunctions.INTENSITY, pnl.CostFunctions.ADJUSTMENT],
                                               intensity_cost_function=pnl.Exponential(scale=1, rate=1),
                                               # compute_reconfiguration_cost=pnl.Distance(metric=pnl.EUCLIDEAN),
                                               # adjustment_cost_function=pnl.Exponential(scale=1, rate=1, offset=-1),#offset = -1
@@ -121,7 +121,7 @@ Target_Rep_Control_Signal = pnl.ControlSignal(modulates=[(pnl.SLOPE, Target_Rep)
 Distractor_Rep_Control_Signal = pnl.ControlSignal(modulates=[(pnl.SLOPE, Distractor_Rep)],
                                                   function=pnl.Linear,
                                                   variable=1.0,
-                                                  cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
+                                                  cost_options=[pnl.CostFunctions.INTENSITY, pnl.CostFunctions.ADJUSTMENT],
                                                   intensity_cost_function=pnl.Exponential(scale=1, rate=1),
                                                   # adjustment_cost_function=pnl.Exponential(scale=1, rate=1, offset=-1),
                                                   #offset = -1

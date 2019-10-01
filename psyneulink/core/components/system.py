@@ -5047,9 +5047,3 @@ class SystemInputState(OutputState):
         self.defaults = Defaults(owner=self, variable=variable, value=variable)
 
         self.parameters.value._set(variable, context)
-
-    @property
-    def _dependent_components(self):
-        return list(itertools.chain(
-            self.efferents,
-        ))

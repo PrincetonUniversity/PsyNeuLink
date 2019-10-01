@@ -2702,11 +2702,6 @@ class ProcessInputState(OutputState):
         # self.index = PRIMARY
         # self.assign = None
 
-    @property
-    def _dependent_components(self):
-        return list(itertools.chain(
-            self.efferents,
-        ))
 
 ProcessTuple = namedtuple('ProcessTuple', 'process, input')
 

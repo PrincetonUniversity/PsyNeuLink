@@ -481,6 +481,7 @@ def _integrator_mode_setter(value, owning_component=None, context=None):
                     owning_component.reinitialize(owning_component.parameters.value._get(context), context=context)
                 elif owning_component.on_resume_integrator_mode == REINITIALIZE:
                     owning_component.reinitialize(context=context)
+            owning_component._parameter_components.add(owning_component.integrator_function)
         owning_component.parameters.has_initializers._set(True, context)
     elif value is False:
         owning_component.parameters.has_initializers._set(False, context)
@@ -862,6 +863,12 @@ class TransferMechanism(ProcessingMechanism_Base):
                     :default value: 0.5
                     :type: float
 
+                integrator_function
+                    see `integrator_function <TransferMechanism.integrator_function>`
+
+                    :default value: `AdaptiveIntegrator`
+                    :type: `Function`
+
                 integrator_function_value
                     see `integrator_function_value <TransferMechanism.integrator_function_value>`
 
@@ -905,13 +912,14 @@ class TransferMechanism(ProcessingMechanism_Base):
         integration_rate = Parameter(0.5, modulable=True)
         initial_value = None
         previous_value = Parameter(None, read_only=True)
+        integrator_function = Parameter(AdaptiveIntegrator, stateful=False, loggable=False)
         integrator_function_value = Parameter([[0]], read_only=True)
         has_integrated = Parameter(False, user=False)
         on_resume_integrator_mode = Parameter(INSTANTANEOUS_MODE_VALUE, stateful=False, loggable=False)
         clip = None
         noise = Parameter(0.0, modulable=True)
         convergence_criterion = Parameter(0.01, modulable=True)
-        convergence_function = Parameter(Distance(metric=DIFFERENCE), stateful=False, loggable=False)
+        convergence_function = Parameter(Distance, stateful=False, loggable=False)
         max_passes = Parameter(1000, stateful=False)
 
         def _validate_integrator_mode(self, integrator_mode):
@@ -931,7 +939,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                  on_resume_integrator_mode=INSTANTANEOUS_MODE_VALUE,
                  noise=0.0,
                  clip=None,
-                 convergence_function:tc.any(is_function_type)=Distance(metric=DIFFERENCE),
+                 convergence_function=None,
                  convergence_criterion:float=0.01,
                  max_passes:tc.optional(int)=1000,
                  output_states:tc.optional(tc.any(str, Iterable))=RESULTS,
@@ -1396,10 +1404,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         mf_out, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_context, mf_in)
 
-        # KDM 12/13/18: for some reason on devel f8b1e2cbf this was returning None on several tests, but when
-        # refactoring function_object -> function using __call__ on Function_Base, it now returned a tuple in those cases.
-        # Seems not to cause any test failures however..
-        clip = self.get_current_mechanism_param("clip", Context())
+        # FIXME: Convert to runtime instead of compile time
+        clip = self.parameters.clip.get()
         if clip is not None:
             for i in range(mf_out.type.pointee.count):
                 mf_out_local = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
@@ -1411,17 +1417,9 @@ class TransferMechanism(ProcessingMechanism_Base):
                     val = pnlvm.helpers.fclamp(b1, val, clip[0], clip[1])
                     b1.store(val, ptro)
 
-        builder = self._gen_llvm_output_states(ctx, builder, params, context, mf_out, arg_out)
+        builder = self._gen_llvm_output_states(ctx, builder, mf_out, params, context, arg_in, arg_out)
 
         return builder
-
-    def _gen_llvm_function_input_parse(self, builder, ctx, func, func_in):
-        # LLVM version of parse input variable
-        # FIXME: Should this be more targeted?
-        # FIXME: Remove this workaround
-        if func.args[2].type != func_in.type:
-            func_in = builder.gep(func_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        return func_in, builder
 
     def _execute(self,
         variable=None,
@@ -1563,10 +1561,3 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Otherwise just return True
         else:
             return None
-
-    @property
-    def _dependent_components(self):
-        return list(itertools.chain(
-            super()._dependent_components,
-            [self.integrator_function] if isinstance(self.integrator_function, IntegratorFunction) else [],
-        ))

@@ -513,3 +513,25 @@ def test_ContentAddressableMemory_max_entries():
                        [[11,21,31],[41,51,61]],
                        [[12,22,32],[42,52,62]]]
     assert np.allclose(em.memory, expected_memory)
+
+
+@pytest.mark.parametrize(
+    'param_name',
+    [
+        'distance_function',
+        'selection_function',
+    ]
+)
+def test_ContentAddressableMemory_unique_functions(param_name):
+    a = ContentAddressableMemory()
+    b = ContentAddressableMemory()
+
+    assert (
+        getattr(a.parameters, param_name).get()
+        is not getattr(b.parameters, param_name).get()
+    )
+
+    assert (
+        getattr(a.defaults, param_name)
+        is not getattr(b.defaults, param_name)
+    )

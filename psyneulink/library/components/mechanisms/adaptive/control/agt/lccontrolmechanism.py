@@ -278,7 +278,6 @@ Class Reference
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.function import MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import FitzHughNagumoIntegrator
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -286,8 +285,10 @@ from psyneulink.core.components.projections.modulatory.controlprojection import 
 from psyneulink.core.components.shellclasses import Mechanism, System_Base
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.globals.context import Context, ContextFlags
-from psyneulink.core.globals.keywords import ALL, CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT_EXECUTE_METHOD_ONLY, PROJECTIONS
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.keywords import \
+    ALL, CONTROL, CONTROL_PROJECTIONS, FUNCTION, INIT_EXECUTE_METHOD_ONLY, \
+    MULTIPLICATIVE, MULTIPLICATIVE_PARAM, PROJECTIONS
+from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
@@ -542,8 +543,8 @@ class LCControlMechanism(ControlMechanism):
         <FitzHughNagumoIntegrator>` function
 
     time_step_size_FitzHughNagumo : float : default 0.0
-        sets `time_step_size <time_step_size.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
-        <FitzHughNagumoIntegrator>` function
+        sets `time_step_size <time_step_size.FitzHughNagumoIntegrator>` on the LCControlMechanism's
+        `FitzHughNagumoIntegrator <FitzHughNagumoIntegrator>` function
 
     t_0_FitzHughNagumo : float : default 0.0
         sets `t_0 <t_0.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
@@ -633,7 +634,7 @@ class LCControlMechanism(ControlMechanism):
 
         scaling_factor_gain = k
 
-    modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
+    modulation : ModulationParam : default MULTIPLICATIVE
         the default value of `ModulationParam` that specifies the form of modulation used by the LCControlMechanism's
         `ControlProjections <ControlProjection>` unless they are `individually specified <ControlSignal_Specification>`.
 
@@ -701,7 +702,7 @@ class LCControlMechanism(ControlMechanism):
                  # modulated_mechanisms:tc.optional(tc.any(list,str)) = None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
                  modulated_mechanisms=None,
-                 modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
+                 modulation:tc.optional(str)=MULTIPLICATIVE,
                  integration_method="RK4",
                  initial_w_FitzHughNagumo=0.0,
                  initial_v_FitzHughNagumo=0.0,
@@ -834,7 +835,10 @@ class LCControlMechanism(ControlMechanism):
                 self._modulated_mechanisms = [self.modulated_mechanisms]
             multiplicative_param_names = []
             for mech in self.modulated_mechanisms:
-                multiplicative_param_names.append(mech.function.multiplicative_param)
+                if isinstance(mech.function.parameters.multiplicative_param, ParameterAlias):
+                    multiplicative_param_names.append(mech.function.parameters.multiplicative_param.source.name)
+                else:
+                    multiplicative_param_names.append(mech.function.parameters.multiplicative_param.name)
             ctl_sig_projs = []
             for mech, mult_param_name in zip(self.modulated_mechanisms, multiplicative_param_names):
                 ctl_sig_projs.append((mult_param_name, mech))
@@ -881,10 +885,10 @@ class LCControlMechanism(ControlMechanism):
 
         # Load mechanism parameters
         params, _, _, _ = builder.function.args
-        mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(4)])
+        mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
         scaling_factor_ptr = builder.gep(mech_params, [ctx.int32_ty(0), ctx.int32_ty(0)])
         base_factor_ptr = builder.gep(mech_params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        scaling_factor =  builder.load(scaling_factor_ptr)
+        scaling_factor = builder.load(scaling_factor_ptr)
         base_factor = builder.load(base_factor_ptr)
 
         # Apply to the entire vector
@@ -908,9 +912,6 @@ class LCControlMechanism(ControlMechanism):
             builder.store(val, out_ptr)
 
         return new_out, builder
-
-    def _gen_llvm_function_input_parse(self, builder, ctx, func, func_in):
-        return func_in, builder
 
     @tc.typecheck
     def _add_system(self, system, role:str):

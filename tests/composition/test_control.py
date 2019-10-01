@@ -9,8 +9,130 @@ from psyneulink.core.components.functions.optimizationfunctions import Optimizat
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleIteratorError, SampleSpec
 from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, PROJECTIONS
 
+class TestControlSpecification:
+    # These test the coordination of adding a node with a control specification to a Composition
+    #    with adding a controller that may also specify control of that node.
+    # Principles:
+    #    1) there should be no redundant ControlSignals or ControlProjections created;
+    #    2) specification of control in controller supercedes any conflicting specification on a node;
+    #    3) order of addition to the composition does not matter (i.e., Principle 2 always applies)
+
+    # FIX: OUTSTANDING ISSUES -
+    #      When control is specified in a controller for a Mechanism that is not yet a node in the Composition
+    #          it neverhtless gets activated (in call to controller._activate_projections_for_compositions;
+    #          instead, it should either be put in deferred_init or added to node's aux_components attribute
+
+    def test_add_node_with_control_specified_then_add_controller(self):
+        # First add Mechanism with control specification to Composition,
+        #    then add controller with NO control specification to Composition
+        # ControlProjection specified on Mechanism should initially be in deferred_init,
+        #    but then initialized and added to controller when the Mechanism is added.
+        ddm = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
+                                drift_rate=(1.0,
+                                            pnl.ControlProjection(
+                                                  function=pnl.Linear,
+                                                  control_signal_params={ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}))))
+        ctl_mech = pnl.ControlMechanism()
+        comp = pnl.Composition()
+        comp.add_node(ddm)
+        comp.add_controller(ctl_mech)
+        assert ddm.parameter_states['drift_rate'].mod_afferents[0].sender.owner == comp.controller
+        assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_states['drift_rate']
+        assert np.allclose(comp.controller.control_signals[0].allocation_samples(),
+                           [0.1, 0.4, 0.7000000000000001, 1.0000000000000002])
+
+    def test_add_controller_in_comp_constructor_then_add_node_with_control_specified(self):
+        # First create Composition with controller that has NO control specification,
+        #    then add Mechanism with control specification to Composition;
+        # ControlProjection specified on Mechanism should initially be in deferred_init,
+        #    but then initialized and added to controller when the Mechanism is added.
+        ddm = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
+                                drift_rate=(1.0,
+                                            pnl.ControlProjection(
+                                                  function=pnl.Linear,
+                                                  control_signal_params={ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}))))
+        ctl_mech = pnl.ControlMechanism()
+        comp = pnl.Composition(controller=ctl_mech)
+        comp.add_node(ddm)
+        assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_states['drift_rate']
+        assert ddm.parameter_states['drift_rate'].mod_afferents[0].sender.owner == comp.controller
+        assert np.allclose(comp.controller.control_signals[0].allocation_samples(),
+                           [0.1, 0.4, 0.7000000000000001, 1.0000000000000002])
+
+    def test_redundant_control_spec_add_node_with_control_specified_then_controller_in_comp_constructor(self):
+        # First add Mechanism with control specification to Composition,
+        #    then add controller WITH redundant control specification to Composition
+        # Control specification on controller should replace one on Mechanism
+        ddm = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
+                                drift_rate=(1.0,
+                                            pnl.ControlProjection(
+                                                  function=pnl.Linear,
+                                                  control_signal_params={ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}))))
+        comp = pnl.Composition()
+        comp.add_node(ddm)
+        comp.add_controller(pnl.ControlMechanism(control_signals=("drift_rate", ddm)))
+        assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_states['drift_rate']
+        assert ddm.parameter_states['drift_rate'].mod_afferents[0].sender.owner == comp.controller
+        assert comp.controller.control_signals[0].allocation_samples is None
+
+    def test_redundant_control_spec_add_controller_in_comp_constructor_then_add_node_with_control_specified(self):
+        # First create Composition with controller that has HAS control specification,
+        #    then add Mechanism with control specification to Composition;
+        # Control specification on controller should supercede one on Mechanism (which should be ignored)
+        ddm = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
+                                drift_rate=(1.0,
+                                            pnl.ControlProjection(
+                                                  function=pnl.Linear,
+                                                  control_signal_params={ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}))))
+        comp = pnl.Composition(controller=pnl.ControlMechanism(control_signals=("drift_rate", ddm)))
+        comp.add_node(ddm)
+        assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_states['drift_rate']
+        assert ddm.parameter_states['drift_rate'].mod_afferents[0].sender.owner == comp.controller
+        assert comp.controller.control_signals[0].allocation_samples is None
 
 class TestControlMechanisms:
+
+    def test_modulation_of_control_signal_intensity_cost_function_MULTIPLICATIVE(self):
+        # tests multiplicative modulation of default intensity_cost_function (Exponential) of
+        #    a ControlMechanism's default function (TransferWithCosts);
+        #    intensity_cost should = e ^ (allocation (3) * value of ctl_mech_B (also 3)) = e^9
+        mech = pnl.ProcessingMechanism()
+        ctl_mech_A = pnl.ControlMechanism(monitor_for_control=mech,
+                                      control_signals=pnl.ControlSignal(modulates=(pnl.INTERCEPT,mech),
+                                                                        cost_options=pnl.CostFunctions.INTENSITY))
+        ctl_mech_B = pnl.ControlMechanism(monitor_for_control=mech,
+                                          control_signals=pnl.ControlSignal(
+                                                              modulates=ctl_mech_A.control_signals[0],
+                                                              modulation=pnl.INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM))
+        comp = pnl.Composition()
+        comp.add_linear_processing_pathway(pathway=[mech,
+                                                    ctl_mech_A,
+                                                    ctl_mech_B
+                                                    ])
+
+        comp.run(inputs={mech:[3]}, num_trials=2)
+        assert np.allclose(ctl_mech_A.control_signals[0].intensity_cost, 8103.083927575384008)
+
+    def test_modulation_of_control_signal_intensity_cost_function_ADDITIVE(self):
+        # tests additive modulation of default intensity_cost_function (Exponential) of
+        #    a ControlMechanism's default function (TransferWithCosts)
+        #    intensity_cost should = e ^ (allocation (3) + value of ctl_mech_B (also 3)) = e^6
+        mech = pnl.ProcessingMechanism()
+        ctl_mech_A = pnl.ControlMechanism(monitor_for_control=mech,
+                                      control_signals=pnl.ControlSignal(modulates=(pnl.INTERCEPT,mech),
+                                                                        cost_options=pnl.CostFunctions.INTENSITY))
+        ctl_mech_B = pnl.ControlMechanism(monitor_for_control=mech,
+                                          control_signals=pnl.ControlSignal(
+                                                              modulates=ctl_mech_A.control_signals[0],
+                                                              modulation=pnl.INTENSITY_COST_FCT_ADDITIVE_PARAM))
+        comp = pnl.Composition()
+        comp.add_linear_processing_pathway(pathway=[mech,
+                                                    ctl_mech_A,
+                                                    ctl_mech_B
+                                                    ])
+
+        comp.run(inputs={mech:[3]}, num_trials=2)
+        assert np.allclose(ctl_mech_A.control_signals[0].intensity_cost, 403.428793492735123)
 
     def test_lvoc(self):
         m1 = pnl.TransferMechanism(input_states=["InputState A", "InputState B"])
@@ -55,7 +177,6 @@ class TestControlMechanisms:
                                                      ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
         c.add_node(lvoc)
         input_dict = {m1: [[1], [1]], m2: [1]}
-
 
         c.run(inputs=input_dict)
 
@@ -232,9 +353,7 @@ class TestControlMechanisms:
                                                    function=pnl.Linear,
                                                    variable=1.0,
                                                    intensity_cost_function=pnl.Linear(slope=0.0),
-                                                   allocation_samples=pnl.SampleSpec(start=1.0,
-                                                                                     stop=5.0,
-                                                                                     num=5))])
+                                                   allocation_samples=pnl.SampleSpec(start=1.0, stop=5.0, num=5))])
         )
         icomp.add_controller(
             pnl.OptimizationControlMechanism(
@@ -252,9 +371,7 @@ class TestControlMechanisms:
                                                    function=pnl.Linear,
                                                    variable=1.0,
                                                    intensity_cost_function=pnl.Linear(slope=0.0),
-                                                   allocation_samples=pnl.SampleSpec(start=1.0,
-                                                                                     stop=5.0,
-                                                                                     num=5))])
+                                                   allocation_samples=pnl.SampleSpec(start=1.0, stop=5.0, num=5))])
         )
         results = ocomp.run([5])
         assert np.allclose(results, [[50]])
@@ -622,25 +739,26 @@ class TestModelBasedOptimizationControlMechanisms:
         Input = pnl.TransferMechanism(name='Input')
         reward = pnl.TransferMechanism(output_states=[pnl.RESULT, pnl.OUTPUT_MEAN, pnl.OUTPUT_VARIANCE],
                                        name='reward')
-        Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate=(1.0,
-                                                                             pnl.ControlProjection(function=pnl.Linear,
-                                                                                                   control_signal_params={
-                                                                                                       pnl.ALLOCATION_SAMPLES: np.arange(
-                                                                                                           0.1, 1.01,
-                                                                                                           0.3)})),
-                                                                 threshold=(1.0,
-                                                                            pnl.ControlProjection(function=pnl.Linear,
-                                                                                                  control_signal_params={
-                                                                                                      pnl.ALLOCATION_SAMPLES: np.arange(
-                                                                                                          0.1, 1.01,
-                                                                                                          0.3)})),
-                                                                 noise=0.5,
-                                                                 starting_point=0,
-                                                                 t0=0.45),
-                           output_states=[pnl.DECISION_VARIABLE,
-                                          pnl.RESPONSE_TIME,
-                                          pnl.PROBABILITY_UPPER_THRESHOLD],
-                           name='Decision')
+        Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
+                                            drift_rate=(1.0,
+                                                        pnl.ControlProjection(function=pnl.Linear,
+                                                                              control_signal_params={
+                                                                                  pnl.ALLOCATION_SAMPLES: np.arange(
+                                                                                          0.1, 1.01,
+                                                                                          0.3)})),
+                                            threshold=(1.0,
+                                                       pnl.ControlProjection(function=pnl.Linear,
+                                                                             control_signal_params={
+                                                                                 pnl.ALLOCATION_SAMPLES: np.arange(
+                                                                                         0.1, 1.01,
+                                                                                         0.3)})),
+                                            noise=0.5,
+                                            starting_point=0,
+                                            t0=0.45),
+                                            output_states=[pnl.DECISION_VARIABLE,
+                                                                      pnl.RESPONSE_TIME,
+                                                                      pnl.PROBABILITY_UPPER_THRESHOLD],
+                                                       name='Decision')
 
         comp = pnl.Composition(name="evc", retain_old_simulation_data=True)
         comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])

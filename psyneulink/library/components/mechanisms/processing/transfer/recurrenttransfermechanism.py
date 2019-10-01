@@ -1553,7 +1553,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         # connect only to the first one?
         assert len(self.input_states) == 1
         for state in self.input_states:
-            s_type = ctx.get_input_struct_type(state)
+            # Extract the non-modulation portion of input state input struct
+            s_type = ctx.get_input_struct_type(state).elements[0]
             if isinstance(s_type, pnlvm.ir.ArrayType):
                 # Subtract one incoming mapping projections.
                 # Unless it's the only incoming projection (mechanism is standalone)
@@ -1563,10 +1564,10 @@ class RecurrentTransferMechanism(TransferMechanism):
             else:
                 assert False
             input_type_list.append(new_type)
-        for state in self.parameter_states:
-            state_input_type_list = []
-            for proj in state.mod_afferents:
-                state_input_type_list.append(ctx.get_output_struct_type(proj))
+        state_input_type_list = []
+        for proj in self.mod_afferents:
+            state_input_type_list.append(ctx.get_output_struct_type(proj))
+        if len(state_input_type_list) > 1:
             input_type_list.append(pnlvm.ir.LiteralStructType(state_input_type_list))
         return pnlvm.ir.LiteralStructType(input_type_list)
 
@@ -1627,12 +1628,11 @@ class RecurrentTransferMechanism(TransferMechanism):
             recurrent_in = builder.gep(old_val, [ctx.int32_ty(0), ctx.int32_ty(0)])
             builder.call(recurrent_f, [recurrent_params, recurrent_context, recurrent_in, real_last_ptr])
 
-        # Copy modulating inputs as well
-        for i, state in enumerate(self.parameter_states):
-            idx = i + len(self.input_states)
-            ps_real_input = builder.gep(real_in, [ctx.int32_ty(0), ctx.int32_ty(idx)])
-            ps_current_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(idx)])
-            builder.store(builder.load(ps_current_input), ps_real_input)
+        # Copy mod afferents. These are not impacted by the recurrent projection
+        if len(self.mod_afferents) > 1:
+            mod_afferent_arg_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(len(self.input_states))])
+            mod_afferent_in_ptr = builder.gep(real_in, [ctx.int32_ty(0), ctx.int32_ty(len(self.input_states))])
+            builder.store(builder.load(mod_afferent_arg_ptr), mod_afferent_in_ptr)
 
         transfer_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0)])
         transfer_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -1647,10 +1647,4 @@ class RecurrentTransferMechanism(TransferMechanism):
         return list(itertools.chain(
             super()._dependent_components,
             [self.recurrent_projection],
-            [self.combination_function] if (
-                self.combination_function is not None
-                and not isinstance(self.combination_function, MethodType)
-                and self.has_recurrent_input_state
-            )
-            else [],
         ))

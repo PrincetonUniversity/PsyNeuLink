@@ -8,6 +8,8 @@ import pytest
 import psyneulink as pnl
 
 from psyneulink.core.components.functions.transferfunctions import Logistic
+from psyneulink.core.globals import Context
+from psyneulink.core.globals.keywords import TRAINING_SET
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process
@@ -2330,3 +2332,259 @@ class TestNested:
         sem_net.learning_enabled = False
 
         parentComposition.run(inputs=no_training_input)
+
+@pytest.mark.pytorch
+class TestBatching:
+    def test_call_before_minibatch(self):
+        # SET UP MECHANISMS FOR COMPOSITION
+
+        xor_in = TransferMechanism(name='xor_in',
+                                   default_variable=np.zeros(2))
+
+        xor_hid = TransferMechanism(name='xor_hid',
+                                    default_variable=np.zeros(10),
+                                    function=Logistic())
+
+        xor_out = TransferMechanism(name='xor_out',
+                                    default_variable=np.zeros(1),
+                                    function=Logistic())
+
+        # SET UP PROJECTIONS FOR COMPOSITION
+
+        hid_map = MappingProjection(name='hid_map',
+                                    matrix=np.random.rand(2, 10),
+                                    sender=xor_in,
+                                    receiver=xor_hid)
+
+        out_map = MappingProjection(name='out_map',
+                                    matrix=np.random.rand(10, 1),
+                                    sender=xor_hid,
+                                    receiver=xor_out)
+
+        # SET UP COMPOSITION
+
+        xor = AutodiffComposition(param_init_from_pnl=True,
+                                  learning_rate=10)
+
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
+
+        xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+        xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+
+        # SET UP INPUTS AND TARGETS
+
+        xor_inputs_1 = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
+
+        xor_targets_1 = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
+
+        # TRAIN COMPOSITION
+        inputs_dict_1 = {"inputs": {xor_in: xor_inputs_1},
+                         "targets": {xor_out: xor_targets_1},
+                         "epochs": 1}
+
+        a = [0]
+
+        def cbm(a):
+            a[0] += 1
+
+        xor.run(
+            inputs=inputs_dict_1,
+            call_before_minibatch=lambda: cbm(a)
+        )
+
+        assert a[0] == 4
+
+    def test_call_after_minibatch(self):
+        # SET UP MECHANISMS FOR COMPOSITION
+
+        xor_in = TransferMechanism(name='xor_in',
+                                   default_variable=np.zeros(2))
+
+        xor_hid = TransferMechanism(name='xor_hid',
+                                    default_variable=np.zeros(10),
+                                    function=Logistic())
+
+        xor_out = TransferMechanism(name='xor_out',
+                                    default_variable=np.zeros(1),
+                                    function=Logistic())
+
+        # SET UP PROJECTIONS FOR COMPOSITION
+
+        hid_map = MappingProjection(name='hid_map',
+                                    matrix=np.random.rand(2, 10),
+                                    sender=xor_in,
+                                    receiver=xor_hid)
+
+        out_map = MappingProjection(name='out_map',
+                                    matrix=np.random.rand(10, 1),
+                                    sender=xor_hid,
+                                    receiver=xor_out)
+
+        # SET UP COMPOSITION
+
+        xor = AutodiffComposition(param_init_from_pnl=True,
+                                  learning_rate=10)
+
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
+
+        xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+        xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+
+        # SET UP INPUTS AND TARGETS
+
+        xor_inputs_1 = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
+
+        xor_targets_1 = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
+
+        # TRAIN COMPOSITION
+        inputs_dict_1 = {"inputs": {xor_in: xor_inputs_1},
+                         "targets": {xor_out: xor_targets_1},
+                         "epochs": 1}
+
+        a = [0]
+
+        def cam(a):
+            a[0] += 1
+
+        xor.run(
+            inputs=inputs_dict_1,
+            call_after_minibatch=lambda: cam(a)
+        )
+
+        assert a[0] == 4
+
+    @pytest.mark.parametrize(
+        'eps', (1, 5, 10, 100)
+    )
+    def test_batching_with_epochs_specified(self, eps):
+        # SET UP MECHANISMS FOR COMPOSITION
+
+        xor_in = TransferMechanism(name='xor_in',
+                                   default_variable=np.zeros(2))
+
+        xor_hid = TransferMechanism(name='xor_hid',
+                                    default_variable=np.zeros(10),
+                                    function=Logistic())
+
+        xor_out = TransferMechanism(name='xor_out',
+                                    default_variable=np.zeros(1),
+                                    function=Logistic())
+
+        # SET UP PROJECTIONS FOR COMPOSITION
+
+        hid_map = MappingProjection(name='hid_map',
+                                    matrix=np.random.rand(2, 10),
+                                    sender=xor_in,
+                                    receiver=xor_hid)
+
+        out_map = MappingProjection(name='out_map',
+                                    matrix=np.random.rand(10, 1),
+                                    sender=xor_hid,
+                                    receiver=xor_out)
+
+        # SET UP COMPOSITION
+
+        xor = AutodiffComposition(param_init_from_pnl=True,
+                                  learning_rate=10,
+                                  # optimizer_type=opt
+                                  )
+
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
+
+        xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+        xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+
+        # SET UP INPUTS AND TARGETS
+
+        xor_inputs_1 = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
+
+        xor_targets_1 = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
+
+        c1 = Context(execution_id='context1')
+
+        # TRAIN COMPOSITION
+        inputs_dict_1 = {"inputs": {xor_in: xor_inputs_1},
+                         "targets": {xor_out: xor_targets_1},
+                         "epochs": eps}
+
+        xor.run(
+            inputs=inputs_dict_1,
+            context=c1,
+            minibatch_size=2
+        )
+
+        c2 = Context(execution_id='context2')
+
+        xor_inputs_2 = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1]])
+
+        xor_targets_2 = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1]])
+
+        inputs_dict_2 = {"inputs": {xor_in: xor_inputs_2},
+                         "targets": {xor_out: xor_targets_2},
+                         "epochs": 1}
+
+        xor_inputs_3 = np.array(
+            [[1, 0],
+             [1, 1]]
+        )
+
+        xor_targets_3 = np.array(
+            [[1],
+             [0]]
+        )
+
+        inputs_dict_3 = {"inputs": {xor_in: xor_inputs_3},
+                         "targets": {xor_out: xor_targets_3},
+                         "epochs": 1}
+        for _ in range(eps):
+            xor.run(
+                inputs=inputs_dict_2,
+                context=c2,
+                minibatch_size=TRAINING_SET
+            )
+            xor.run(
+                inputs=inputs_dict_3,
+                context=c2,
+                minibatch_size=TRAINING_SET
+            )
+
+        c1_results = xor.parameters.results._get(c1)
+        c2_results = xor.parameters.results._get(c2)
+
+        assert np.allclose(c1_results[0][:2], c2_results[-2])
+        assert np.allclose(c1_results[0][2:], c2_results[-1])
+

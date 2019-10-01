@@ -14,17 +14,14 @@ Sections
   * `ControlMechanism_Overview`
   * `ControlMechanism_Composition_Controller`
   * `ControlMechanism_Creation`
-  COMMENT:
       - `ControlMechanism_Monitor_for_Control`
       - `ControlMechanism_ObjectiveMechanism`
       - `ControlMechanism_Control_Signals`
-  COMMENT
   * `ControlMechanism_Structure`
-  COMMENT:
       - `ControlMechanism_Input`
       - `ControlMechanism_Function`
+      - 'ControlMechanism_Output`
       - `ControlMechanism_Costs_NetOutcome`
-  COMMENT
   * `ControlMechanism_Execution`
   * `ControlMechanism_Examples`
   * `ControlMechanism_Class_Reference`
@@ -34,28 +31,30 @@ Sections
 Overview
 --------
 
-A ControlMechanism is an `AdaptiveMechanism <AdaptiveMechanism>` that `modulates the value(s)
-<ModulatorySignal_Modulation>` of one or more `ParameterStates <ParameterState>` of other Mechanisms in the
-`Composition` to which it belongs.  It's `function <ControlMechanism.function>` calculates a `control_allocation
-<ControlMechanism.control_allocation>`: a list of values provided to each of its `control_signals
-<ControlMechanism.control_signals>`.  Its control_signals are `ControlSignal` OutputStates that are used to that
-modulate the parameters of other Mechanisms' `function <Mechanism_Base.function>` (see `ControlSignal_Modulation` for a
-more detailed description of how modulation operates).  A ControlMechanism can be configured to monitor the outputs
-of other Mechanisms in order to determine its `control_allocation <ControlMechanism.control_allocation>`, by specifying
+A ControlMechanism is a `ModulatoryMechanism` that `modulates the value(s) <ModulatorySignal_Modulation>` of one or
+more `States <State>` of other Mechanisms in the `Composition` to which it belongs. In general, a ControlMechanism is
+used to modulate the `ParameterState(s) <ParameterState>` of one or more Mechanisms, that determine the value(s) of
+the parameter(s) of the `function(s) <Mechanism_Base.function>` of those Mechanism(s). However, a ControlMechanism
+can also be used to modulate the function of `InputStates <InputState>` and/or `OutputState <OutputStates>`,
+much like a `GatingMechanism`.  A ControlMechanism's `function <ControlMechanism.function>` calculates a
+`control_allocation <ControlMechanism.control_allocation>`: a list of values provided to each of its `control_signals
+<ControlMechanism.control_signals>`.  Its control_signals are `ControlSignal` OutputStates that are used to modulate
+the parameters of other Mechanisms' `function <Mechanism_Base.function>` (see `ControlSignal_Modulation` for a more
+detailed description of how modulation operates).  A ControlMechanism can be configured to monitor the outputs of
+other Mechanisms in order to determine its `control_allocation <ControlMechanism.control_allocation>`, by specifying
 these in the **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>` of its constructor,
 or in the **monitor** `argument <ObjectiveMechanism_Monitor>` of an ObjectiveMechanism` assigned to its
 **objective_mechanism** `argument <ControlMechanism_Objective_Mechanism_Argument>` (see `ControlMechanism_Creation`
-below).  A ControlMechanism can also be assigned as the `controller <Composition.controller>` of a `Composition`,  which
-has a special relation to that Composition: it generally executes either before or after all of the other Mechanisms in
-that Composition (see `Composition_Controller_Execution`).  The OutputStates monitored by the ControlMechanism or its
-`objective_mechanism <ControlMechanism.objective_mechanism>`, and the parameters it modulates can be listed using its
-`show <ControlMechanism.show>` method.
+below).  A ControlMechanism can also be assigned as the `controller <Composition.controller>` of a `Composition`,
+which has a special relation to that Composition: it generally executes either before or after all of the other
+Mechanisms in that Composition (see `Composition_Controller_Execution`).  The OutputStates monitored by the
+ControlMechanism or its `objective_mechanism <ControlMechanism.objective_mechanism>`, and the parameters it modulates
+can be listed using its `show <ControlMechanism.show>` method.
 
 Note that a ControlMechanism is a subclass of `ModulatoryMechanism` that is restricted to using only `ControlSignals
-<ControlSignal>` and not GatingSignals.  Accordingly, its constructor has a **control_signals** argument in place of
-a **modulatory_signals** argument, and is restricted to the modulation of `ParameterStates <ParameterState>`.  It also
-lacks any attributes related to gating.  In all other respects it is identical to its parent class,
-ModulatoryMechanism
+<ControlSignal>`.  Accordingly, its constructor has a **control_signals** argument in place of a **modulatory_signals**
+argument, and it lacks any attributes related to gating.  In all other respects it is identical to its parent class,
+ModulatoryMechanism.
 
 .. _ControlMechanism_Composition_Controller:
 
@@ -67,13 +66,17 @@ assigned as the `controller <Composition.controller>` of a `Composition`, that h
 to the Composition: it is used to control all of the parameters that have been `specified for control
 <ControlMechanism_Control_Signals>` in that Composition.  A ControlMechanism can be the `controller
 <Composition.controller>` for only one Composition, and a Composition can have only one `controller
-<Composition.controller>`.  The Composition's `controller <Composition.controller>` is executed either before or after
-all of the other Components in the Composition are executed, including any other ControlMechanisms that belong to it
-(see `Composition_Controller_Execution`).  A ControlMechanism can be assigned as the `controller
-<Composition.controller>` for a Composition by specifying it in the **controller** argument of the Composition's
-constructor, or by using the Composition's `add_controller <Composition.add_controller>` method.  A Composition's
-`controller <Composition.controller>` and its associated Components can be displayed using the Composition's
-`show_graph <Composition.show_graph>` method with its **show_control** argument assigned as `True`.
+<Composition.controller>`.  When a ControlMechanism is assigned as the `controller <Composition.controller>` of a
+Composition (either in the Composition's constructor, or using its `add_controller <Composition.add_controller>`
+method, the ControlMechanism assumes control over all of the parameters that have been `specified for control
+<ControlMechanism_Control_Signals>` for Components in the Composition.  The Composition's `controller
+<Composition.controller>` is executed either before or after all of the other Components in the Composition are
+executed, including any other ControlMechanisms that belong to it (see `Composition_Controller_Execution`).  A
+ControlMechanism can be assigned as the `controller <Composition.controller>` for a Composition by specifying it in
+the **controller** argument of the Composition's constructor, or by using the Composition's `add_controller
+<Composition.add_controller>` method.  A Composition's `controller <Composition.controller>` and its associated
+Components can be displayed using the Composition's `show_graph <Composition.show_graph>` method with its
+**show_control** argument assigned as `True`.
 
 
 .. _ControlMechanism_Creation:
@@ -81,8 +84,11 @@ constructor, or by using the Composition's `add_controller <Composition.add_cont
 Creating a ControlMechanism
 ---------------------------
 
-When a ControlMechanism is created, the OutputStates it monitors and the parameters it controls must be specified.
-Each can be done in several ways, as described below.
+A ControlMechanism is created by calling its constructor.  When a ControlMechanism is created, the OutputStates it
+monitors and the States it modulates can be specified in the **montior_for_control** and **objective_mechanism**
+arguments of its constructor, respectively.  Each can be specified in several ways, as described below. If neither of
+those arguments is specified, then only the ControlMechanism is constructed, and its inputs and the parameters it
+modulates must be specified in some other way.
 
 .. _ControlMechanism_Monitor_for_Control:
 
@@ -197,7 +203,7 @@ Note that the MappingProjections created by specification of a ControlMechanism'
 <ControlMechanism_Monitor_for_Control_Argument>` or the **monitor** argument in the constructor for an
 ObjectiveMechanism in the ControlMechanism's **objective_mechanism** `argument
 <ControlMechanism_Objective_Mechanism_Argument>` supercede any MappingProjections that would otherwise be created for
-them when included in the **pathway**  argumentof a Composition's `add_linear_processing_pathway
+them when included in the **pathway** argument of a Composition's `add_linear_processing_pathway
 <Composition.add_linear_processing_pathway>` method.
 
 .. _ControlMechanism_ObjectiveMechanism:
@@ -227,7 +233,7 @@ specified in the **monitor_for_control** `argument <ControlMechanism_Monitor_for
 ControlMechanism's constructor, as well as any specified in the **monitor** `argument <ObjectiveMechanism_Monitor>` of
 the ObjectiveMechanism's constructor.  Specifically, for each OutputState specified in either place, an `input_state
 <ObjectiveMechanism.input_states>` is added to the ObjectiveMechanism.  OutputStates to be monitored (and
-corresponding `input_states <ObjectiveMechanism.input_states>` can be added to the `objective_mechanism
+corresponding `input_states <ObjectiveMechanism.input_states>`) can be added to the `objective_mechanism
 <ControlMechanism.objective_mechanism>` later, by using its `add_to_monitor <ObjectiveMechanism.add_to_monitor>` method.
 The set of OutputStates monitored by the `objective_mechanism <ControlMechanism.objective_mechanism>` are listed in
 its `monitor <ObjectiveMechanism>` attribute, as well as in the ControlMechanism's `monitor_for_control
@@ -259,7 +265,7 @@ specified.  This is illustrated in the following examples.
 The following example specifies a `ControlMechanism` that automatically constructs its `objective_mechanism
 <ControlMechanism.objective_mechanism>`::
 
-    >>> from psyneulink import * 
+    >>> from psyneulink import *
     >>> my_ctl_mech = ControlMechanism(objective_mechanism=True)
     >>> assert isinstance(my_ctl_mech.objective_mechanism.function, LinearCombination)
     >>> assert my_ctl_mech.objective_mechanism.function.operation == PRODUCT
@@ -303,37 +309,34 @@ COMMENT
 *Specifying Parameters to Control*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The parameters controlled by a ControlMechanism are specified in one of two ways:
+This can be specified in either of two ways:
 
-  * in the **control_signals** argument of its constructor; the argument must be a `specification for one more
-    ControlSignals <ControlSignal_Specification>`.
+*On a ControlMechanism itself*
 
-  * in the constructor for the Mechanism to which the parameter belongs, where that `parameter is specified
-    <ParameterState_Specification>`, by including a `ControlProjection` or `ControlSignal` in a `tuple specification
-    <ParameterState_Tuple_Specification>` for the parameter.
+The parameters controlled by a ControlMechanism can be specified in the **control_signals** argument of its constructor;
+the argument must be a `specification for one more ControlSignals <ControlSignal_Specification>`.  The parameter to
+be controlled must belong to a Component in the same `Composition` as the ControlMechanism when it is added to the
+Composition, or an error will occur.
 
-A `ControlSignal` is created for each parameter specified to be controlled by a ControlMechanism.  These are a type of
-`OutputState` that send a `ControlProjection` to the `ParameterState` of the parameter to be controlled. All of the
-ControlSignals for a ControlMechanism are listed in its `control_signals  <ControlMechanism.control_signals>` attribute,
-and all of its ControlProjections are listed in its`control_projections <ControlMechanism.control_projections>`
-attribute. Additional parameters to be controlled can be added to a ControlMechanism by using its `assign_params`
-method to add a `ControlSignal` for each additional parameter.  See `ControlMechanism_Examples`.
+*On a Parameter to be controlled by the `controller <Composition.controller>` of a `Composition`*
 
-COMMENT:
-TBI FOR COMPOSITION
-If the ControlMechanism is created as part of a `System`, the parameters to be controlled by it can be specified in
-one of two ways:
+Control can also be specified for a parameter where the `parameter itself is specified <ParameterState_Specification>`,
+in the constructor for the Component to which it belongs, by including a `ControlProjection`, `ControlSignal` or
+the keyword `CONTROL` in a `tuple specification <ParameterState_Tuple_Specification>` for the parameter.  In this
+case, the specified parameter will be assigned for control by the `controller <controller.Composition>` of any
+`Composition` to which its Component belongs, when the Component is executed in that Composition (see
+`ControlMechanism_Composition_Controller`).  Conversely, when a ControlMechanism is assigned as the `controller
+<Composition.controller>` of a Composition, a `ControlSignal` is created and assigned to the ControlMechanism
+for every parameter of any `Component <Component>` in the Composition that has been `specified for control
+<ParameterState_Modulatory_Specification>`.
 
-  * in the **control_signals** argument of the System's constructor, using one or more `ControlSignal specifications
-    <ControlSignal_Specification>`;
-
-  * where the `parameter is specified <ParameterState_Specification>`, by including a `ControlProjection` or
-    `ControlSignal` in a `tuple specification <ParameterState_Tuple_Specification>` for the parameter.
-
-When a ControlMechanism is created as part of a System, a `ControlSignal` is created and assigned to the
-ControlMechanism for every parameter of any `Component <Component>` in the System that has been specified for control
-using either of the methods above.
-COMMENT
+In general, a `ControlSignal` is created for each parameter specified to be controlled by a ControlMechanism.  These
+are a type of `OutputState` that send a `ControlProjection` to the `ParameterState` of the parameter to be
+controlled. All of the ControlSignals for a ControlMechanism are listed in its `control_signals
+<ControlMechanism.control_signals>` attribute, and all of its ControlProjections are listed in
+its`control_projections <ControlMechanism.control_projections>` attribute. Additional parameters to be controlled can
+be added to a ControlMechanism by using its `assign_params` method to add a `ControlSignal` for each additional
+parameter.  See `ControlMechanism_Examples`.
 
 .. _ControlMechanism_Structure:
 
@@ -364,9 +367,9 @@ and is used as the input to the ControlMechanism's `function <ControlMechanism.f
 
 A ControlMechanism's `function <ControlMechanism.function>` uses its `outcome <ControlMechanism.outcome>`
 attribute (the `value <InputState.value>` of its *OUTCOME* `InputState`) to generate a `control_allocation
-<ControlMechanism.control_allocation>`.  By default, `function <ControlMechanism.function>` is assigned
+<ControlMechanism.control_allocation>`.  By default, its `function <ControlMechanism.function>` is assigned
 the `DefaultAllocationFunction`, which takes a single value as its input, and assigns that as the value of
-each item of `modulatory_allocation <ControlMechanism.control_allocation>`.  Each of these items is assigned as
+each item of `control_allocation <ControlMechanism.control_allocation>`.  Each of these items is assigned as
 the allocation for the corresponding  `ControlSignal` in `control_signals <ControlMechanism.control_signals>`. This
 distributes the ControlMechanism's input as the allocation to each of its `control_signals
 <ControlMechanism.control_signals>`.  This same behavior also applies to any custom function assigned to a
@@ -382,21 +385,22 @@ different items in `control_allocation` as their `variable <ControlSignal.variab
 *Output*
 ~~~~~~~~
 
-A ControlMechanism has a `ControlSignal` for each parameter specified in the **control_signals** argument of its
-constructor, that sends a `ControlProjection` to the `ParameterState` for the corresponding parameter.  The
-ControlSignals are listed in the `control_signals <ControlMechanism.control_signals>` attribute;  since they are a type
-of `OutputState`, they are also listed in the ControlMechanism's `output_states  <ControlMechanism.output_states>`
-attribute. The parameters modulated by a ControlMechanism's ControlSignals can be displayed using its `show
-<ControlMechanism.show>` method. By default, each `ControlSignal` is assigned as its `allocation
-<ControlSignal.allocation>` the value of the  corresponding item of the ControlMechanism's `control_allocation
-<ControlMechanism.control_allocation>`;  however, subtypes of ControlMechanism may assign allocations differently.
-The `default_allocation  <ControlMechanism.default_allocation>` attribute can be used to specify a  default allocation
-for ControlSignals that have not been assigned their own `default_allocation  <ControlSignal.default_allocation>`. The
-`allocation <ControlSignal.allocation>` is used by each ControlSignal to determine its `intensity
-<ControlSignal.intensity>`, which is then assigned to the `value <ControlProjection.value>` of the ControlSignal's
-`ControlProjection`.   The `value <ControlProjection.value>` of the ControlProjection is used by the `ParameterState`
-to which it projects to modify the value of the parameter it controls (see `ControlSignal_Modulation` for description
-of how a ControlSignal modulates the value of a parameter).
+The OutputStates of a ControlMechanism are `ControlSignals <ControlSignal>` (listed in its `control_signals
+<ControlMechanism.control_signals>` attribute). It has a `ControlSignal` for each parameter specified in the
+**control_signals** argument of its constructor, that sends a `ControlProjection` to the `ParameterState` for the
+corresponding parameter.  The ControlSignals are listed in the `control_signals <ControlMechanism.control_signals>`
+attribute;  since they are a type of `OutputState`, they are also listed in the ControlMechanism's `output_states
+<ControlMechanism.output_states>` attribute. The parameters modulated by a ControlMechanism's ControlSignals can be
+displayed using its `show <ControlMechanism.show>` method. By default, each `ControlSignal` is assigned as its
+`allocation <ControlSignal.allocation>` the value of the  corresponding item of the ControlMechanism's
+`control_allocation <ControlMechanism.control_allocation>`;  however, subtypes of ControlMechanism may assign
+allocations differently. The `default_allocation  <ControlMechanism.default_allocation>` attribute can be used to
+specify a  default allocation for ControlSignals that have not been assigned their own `default_allocation
+<ControlSignal.default_allocation>`. The `allocation <ControlSignal.allocation>` is used by each ControlSignal to
+determine its `intensity <ControlSignal.intensity>`, which is then assigned to the `value <ControlProjection.value>`
+of the ControlSignal's `ControlProjection`.   The `value <ControlProjection.value>` of the ControlProjection is used
+by the `ParameterState` to which it projects to modify the value of the parameter it controls (see
+`ControlSignal_Modulation` for description of how a ControlSignal modulates the value of a parameter).
 
 .. _ControlMechanism_Costs_NetOutcome:
 
@@ -413,11 +417,25 @@ that can be used to compute the `combined costs <ControlMechanism.combined_costs
 <ControlMechanism.control_signals>`, a `reconfiguration_cost <ControlSignal.reconfiguration_cost>` based on their change
 in value, and a `net_outcome <ControlMechanism.net_outcome>` (the `value <InputState.value>` of the ControlMechanism's
 *OUTCOME* `input_state <ControlMechanism_Input>` minus its `combined costs <ControlMechanism.combined_costs>`),
-respectively (see `description in Modulatory Mechanism <ModulatoryMechanism_Costs_Computation>` for more details).
-These methods are used by some subclasses of ControlMechanism (e.g., `OptimizationControlMechanism`) to compute their
-`control_allocation <ControlMechanism.control_allocation>`.  Each method is assigned a default function, but can be
-assigned a custom functions in a corrsponding argument of the ControlMechanism's constructor (see links to attributes
-for details).
+respectively (see `ControlMechanism_Costs_Computation` below for additional details). These methods are used by some
+subclasses of ControlMechanism (e.g., `OptimizationControlMechanism`) to compute their `control_allocation
+<ControlMechanism.control_allocation>`.  Each method is assigned a default function, but can be assigned a custom
+functions in a corrsponding argument of the ControlMechanism's constructor (see links to attributes for details).
+
+.. _ControlMechanism_Reconfiguration_Cost:
+
+*Reconfiguration Cost*
+
+A ControlMechanism's `reconfiguration_cost <ControlMechanism.reconfiguration_cost>` is distinct from the
+costs of the ControlMechanism's `ControlSignals <ControlSignal>`, and in particular it is not the same as their
+`adjustment_cost <ControlSignal.adjustment_cost>`.  The latter, if specified by a ControlSignal, is computed
+individually by that ControlSignal using its `adjustment_cost_function <ControlSignal.adjustment_cost_function>`, based
+on the change in its `intensity <ControlSignal.intensity>` from its last execution. In contrast, a ControlMechanism's
+`reconfiguration_cost  <ControlMechanism.reconfiguration_cost>` is computed by its `compute_reconfiguration_cost
+<ControlMechanism.compute_reconfiguration_cost>` function, based on the change in its `control_allocation
+ControlMechanism.control_allocation>` from the last execution, that will be applied to *all* of its
+`control_signals <ControlMechanism.control_signals>`. By default, `compute_reconfiguration_cost
+<ControlMechanism.compute_reconfiguration_cost>` is assigned as the `Distance` function with the `EUCLIDEAN` metric).
 
 .. _ControlMechanism_Execution:
 
@@ -440,21 +458,38 @@ COMMENT
 description of how to configure the initialization of feedback loops in a Composition; also see `Scheduler` for a
 description of detailed ways in which a GatingMechanism and its dependents can be scheduled to execute).
 
-The ControlMechanism's `function <ControlMechanism.function>` takes as its input
-the `value <InputState.value>` of its *OUTCOME* `input_state <ControlMechanism.input_state>` (also contained in
-`outcome <ControlSignal.outcome>`).  It uses that to determine the `control_allocation
-<ControlMechanism.control_allocation>`, which specifies the value assigned to the `allocation
-<ControlSignal.allocation>` of each of its `ControlSignals <ControlSignal>`.  Each ControlSignal uses that value to
-calculate its `intensity <ControlSignal.intensity>`, as well as its `cost <ControlSignal.cost>.  The `intensity
-<ControlSignal.intensity>`is used by its `ControlProjection(s) <ControlProjection>` to modulate the value of the
-ParameterState(s) for the parameter(s) it controls, which are then used in the subsequent `TRIAL` of execution.
+The ControlMechanism's `function <ControlMechanism.function>` takes as its input the `value <InputState.value>` of
+its *OUTCOME* `input_state <ControlMechanism.input_state>` (also contained in `outcome <ControlSignal.outcome>`).
+It uses that to determine the `control_allocation <ControlMechanism.control_allocation>`, which specifies the value
+assigned to the `allocation <ControlSignal.allocation>` of each of its `ControlSignals <ControlSignal>`.  Each
+ControlSignal uses that value to calculate its `intensity <ControlSignal.intensity>`, as well as its `cost
+<ControlSignal.cost>.  The `intensity <ControlSignal.intensity>`is used by its `ControlProjection(s)
+<ControlProjection>` to modulate the value of the ParameterState(s) for the parameter(s) it controls, which are then
+used in the subsequent `TRIAL` of execution.
 
 .. note::
-   A `ParameterState` that receives a `ControlProjection` does not update its value until its owner Mechanism
+   `States <State>` that receive a `ControlProjection` does not update its value until its owner Mechanism
    executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a
    ControlMechanism has executed, a parameter that it controls will not assume its new value until the Mechanism
    to which it belongs has executed.
 
+.. _ControlMechanism_Costs_Computation:
+
+*Computation of Costs and Net_Outcome*
+
+Once the ControlMechanism's `function <ControlMechanism.function>` has executed, if `compute_reconfiguration_cost
+<ControlMechanism.compute_reconfiguration_cost>` has been specified, then it is used to compute the
+`reconfiguration_cost <ControlMechanism.reconfiguration_cost>` for its `control_allocation
+<ControlMechanism.control_allocation>` (see `above <ControlMechanism_Reconfiguration_Cost>`. After that, each
+of the ControlMechanism's `control_signals <ControlMechanism.control_signals>` calculates its `cost
+<ControlSignal.cost>`, based on its `intensity  <ControlSignal/intensity>`.  The ControlMechanism then combines these
+with the `reconfiguration_cost <ControlMechanism.reconfiguration_cost>` using its `combine_costs
+<ControlMechanism.combine_costs>` function, and the result is assigned to the `costs <ControlMechanism.costs>`
+attribute.  Finally, the ControlMechanism uses this, together with its `outcome <ControlMechanism.outcome>` attribute,
+to compute a `net_outcome <ControlMechanism.net_outcome>` using its `compute_net_outcome
+<ControlMechanism.compute_net_outcome>` function.  This is used by some subclasses of ControlMechanism
+(e.g., `OptimizationControlMechanism`) to  compute its `control_allocation <ControlMechanism.control_allocation>`
+for the next `TRIAL` of execution.
 
 .. _ControlMechanism_Examples:
 
@@ -525,12 +560,11 @@ Class Reference
 ---------------
 
 """
-
 import numpy as np
 import typecheck as tc
 import warnings
 
-from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.mechanisms.adaptive.modulatorymechanism import ModulatoryMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.core.components.shellclasses import Composition_Base, System_Base
@@ -540,8 +574,9 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, \
-    GATING_SIGNALS, INIT_EXECUTE_METHOD_ONLY, PROJECTION_TYPE
+from psyneulink.core.globals.keywords import \
+    CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, \
+    INIT_EXECUTE_METHOD_ONLY, MULTIPLICATIVE, PROJECTION_TYPE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList, is_iterable
@@ -591,7 +626,7 @@ def _control_allocation_setter(value, owning_component=None, context=None):
 def _gating_allocation_getter(owning_component=None, context=None):
     from psyneulink.core.components.mechanisms.adaptive.gating import GatingMechanism
     from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
-    raise ControlMechanismError(f"'gating_allocation' attribute is not implemented on {owning_component.__name__};  "
+    raise ControlMechanismError(f"'gating_allocation' attribute is not implemented on {owning_component.name};  "
                                 f"consider using a {GatingMechanism.__name__} instead, "
                                 f"or a {ModulatoryMechanism.__name__} if both {ControlSignal.__name__}s and "
                                 f"{GatingSignal.__name__}s are needed.")
@@ -600,7 +635,7 @@ def _gating_allocation_getter(owning_component=None, context=None):
 def _gating_allocation_setter(value, owning_component=None, context=None, **kwargs):
     from psyneulink.core.components.mechanisms.adaptive.gating import GatingMechanism
     from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
-    raise ControlMechanismError(f"'gating_allocation' attribute is not implemented on {owning_component.__name__};  "
+    raise ControlMechanismError(f"'gating_allocation' attribute is not implemented on {owning_component.name};  "
                                 f"consider using a {GatingMechanism.__name__} instead, "
                                 f"or a {ModulatoryMechanism.__name__} if both {ControlSignal.__name__}s and "
                                 f"{GatingSignal.__name__}s are needed.")
@@ -615,7 +650,7 @@ class ControlMechanism(ModulatoryMechanism):
         function=Linear,                            \
         default_allocation=None,                    \
         control_signals=None,                       \
-        modulation=ModulationParam.MULTIPLICATIVE,  \
+        modulation=MULTIPLICATIVE,                  \
         combine_costs=np.sum,                       \
         compute_reconfiguration_cost=None,          \
         compute_net_outcome=lambda x,y:x-y,         \
@@ -698,7 +733,7 @@ class ControlMechanism(ModulatoryMechanism):
         specifies the parameters to be controlled by the ControlMechanism; a `ControlSignal` is created for each
         (see `ControlSignal_Specification` for details of specification).
 
-    modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
+    modulation : ModulationParam : MULTIPLICATIVE
         specifies the default form of modulation used by the ControlMechanism's `ControlSignals <ControlSignal>`,
         unless they are `individually specified <ControlSignal_Specification>`.
 
@@ -785,8 +820,8 @@ class ControlMechanism(ModulatoryMechanism):
 
     control_signals : ContentAddressableList[ControlSignal]
         list of the `ControlSignals <ControlSignals>` for the ControlMechanism, including any inherited from a
-        `system <ControlMechanism.system>` for which it is a `controller <System.controller>` (same as
-        ControlMechanism's `output_states <Mechanism_Base.output_states>` attribute); each sends a `ControlProjection`
+        `Composition` for which it is a `controller <Composition.controller>` (same as ControlMechanism's
+        `output_states <Mechanism_Base.output_states>` attribute); each sends a `ControlProjection`
         to the `ParameterState` for the parameter it controls
 
     compute_reconfiguration_cost : Function, function or method
@@ -803,8 +838,8 @@ class ControlMechanism(ModulatoryMechanism):
 
         .. note::
         A ControlMechanism's reconfiguration_cost is not the same as the `adjustment_cost
-        <ControlSignal.adjustment_cost>` of its ControlSignals (see `ModulatoryMechanism Reconfiguration Cost
-        <ModulatoryMechanism_Reconfiguration_Cost>` for additional detals).
+        <ControlSignal.adjustment_cost>` of its ControlSignals (see `Reconfiguration Cost
+        <ControlMechanism_Reconfiguration_Cost>` for additional details).
 
     costs : list
         current costs for the ControlMechanism's `control_signals <ControlMechanism.control_signals>`, computed
@@ -871,11 +906,24 @@ class ControlMechanism(ModulatoryMechanism):
             Attributes
             ----------
 
-                control_allocation
-                    see `control_allocation <ControlMechanism.control_allocation>
+                value
+                    see `value <ControlMechanism.value>`
 
-                    :default value: defaultControlAllocation
-                    :type:
+                    :default value: numpy.array([1.])
+                    :type: numpy.ndarray
+
+                control_allocation
+                    see `control_allocation <ControlMechanism.control_allocation>`
+
+                    :default value: numpy.array([1.])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                gating_allocation
+                    see `gating_allocation <ControlMechanism.gating_allocation>`
+
+                    :default value: NotImplemented
+                    :type: <class 'NotImplementedType'>
                     :read only: True
 
         """
@@ -901,7 +949,7 @@ class ControlMechanism(ModulatoryMechanism):
                  function=None,
                  default_allocation:tc.optional(tc.any(int, float, list, np.ndarray))=None,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
-                 modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
+                 modulation:tc.optional(str)=MULTIPLICATIVE,
                  combine_costs:is_function_type=np.sum,
                  compute_reconfiguration_cost:tc.optional(is_function_type)=None,
                  compute_net_outcome:is_function_type=lambda outcome, cost : outcome - cost,
@@ -986,7 +1034,7 @@ class ControlMechanism(ModulatoryMechanism):
             system.controller = self
             return
 
-        if self._objective_mechanism is None:
+        if self.objective_mechanism is None:
             self._instantiate_objective_mechanism(context=context)
 
         # NEED TO BUFFER OBJECTIVE_MECHANISM AND CONTROL_SIGNAL ARGUMENTS FOR USE IN REINSTANTIATION HERE
@@ -1038,6 +1086,8 @@ class ControlMechanism(ModulatoryMechanism):
         # Add any ControlSignals specified for System
         for control_signal_spec in system_control_signals:
             control_signal = self._instantiate_control_signal(control_signal=control_signal_spec, context=context)
+            if not control_signal:
+                continue
             # FIX: 1/18/18 - CHECK FOR SAME NAME IN _instantiate_control_signal
             # # Don't add any that are already on the ControlMechanism
             if control_signal.name in self.control_signals.names and (self.verbosePref or system.verbosePref):
@@ -1057,7 +1107,7 @@ class ControlMechanism(ModulatoryMechanism):
         self.system = system
 
         # Flag ObjectiveMechanism as associated with a ControlMechanism that is a controller for the System
-        self._objective_mechanism.for_controller = True
+        self.objective_mechanism.for_controller = True
 
         if context.source != ContextFlags.PROPERTY:
             system._controller = self
