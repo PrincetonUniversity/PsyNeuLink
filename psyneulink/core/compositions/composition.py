@@ -3111,10 +3111,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if existing_projections_in_composition:
                 return existing_projections_in_composition[0]
         else:
-            # MODIFIED 9/30/19 OLD:
-            if existing_projections:
-            # # MODIFIED 9/30/19 NEW: [JDC]
-            # if existing_projections and not existing_projections_in_composition:
+            # # MODIFIED 9/30/19 OLD:
+            # if existing_projections:
+            # MODIFIED 9/30/19 NEW: [JDC]
+            if existing_projections and not existing_projections_in_composition:
             # MODIFIED 9/30/19 END
                 return existing_projections
         return False
