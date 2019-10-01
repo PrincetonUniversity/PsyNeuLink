@@ -2701,22 +2701,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # existing_projections = False
 
         # MODIFIED 9/30/19 NEW: [JDC]
-        # existing_projections = False
+        existing_projections = False
         # If a sender and receiver have been specified but not a projection,
         #    check whether there is *any* projection like that
-        #    (i.e., whether it/they are already in the Composition or not);  if so:
+        #    (i.e., whether it/they are already in the current Composition or not);  if so:
         #    - if there is only one, use that;
         #    - if there are several, use the last in the list (on the assumption in that it is the most recent).
-        # Note:  Skip this if projection was specified, as it might include parameters that are different
+        # Note:  Skip this if **projection** was specified, as it might include parameters that are different
         #        than the existing ones, in which case should use that rather than any existing ones;
-        #        will handle any existing Projections that are in the Composition below.
+        #        will handle any existing Projections that are in the current Composition below.
         if sender and receiver and not projection:
             existing_projections = self._check_for_existing_projections(sender=sender,
                                                                receiver=receiver,
                                                                in_composition=False)
-
             # MODIFIED 9/30/19 OLDER:
-
             if existing_projections:
                 if isinstance(sender, State):
                     sender_check = sender.owner
@@ -2757,12 +2755,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #                But existing one could be within, in which case want to use that one
         #                existing Projection might be deferred_init, and want t
         try:
+            # Note: this does NOT initialize the Projection if it is in deferred_init
             projection = self._parse_projection_spec(projection, name)
         except DuplicateProjectionError:
             return projection
 
         # FIX: 9/30/19:  THIS SEEMS WEIRD, AS IT OVERRIDES ASSIGNMENT ABOVE, BUT MOVING IT BEFORE THAT CAUSES CRASH:
-        existing_projections = False
+        # existing_projections = False
         # MODIFIED 9/30/19 END
 
         # Parse sender and receiver specs
@@ -2777,9 +2776,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 sender = sender_mechanism
             if not isinstance(receiver, InputState):
                 receiver = receiver_mechanism
-            # Check if Projection to be initialized already exists;  if so, mark as existing_projections and skip
+            # Check if Projection to be initialized already exists in the current Composition;
+            #    if so, mark as existing_projections and skip
             existing_projections = self._check_for_existing_projections(sender=sender, receiver=receiver)
-            if not existing_projections:
+            if existing_projections:
+                return
+            else:
                 # Initialize Projection
                 projection.init_args['sender'] = sender
                 projection.init_args['receiver'] = receiver
@@ -2789,17 +2791,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     return projection
 
         # FIX: 9/30/19 - REDUNDANT WITH INITIAL TEST ABOVE?
-        elif self._check_for_existing_projections(projection, sender=sender, receiver=receiver):
-            # FIX: THE FOLLOWING IS REQUIRED SO AS NOT TO CRASH IN test_alias_equivalence_for_modulates_and_projections
-            #      - BLOCK OF CODE BELOW (KAM HACK) IS REQUIRED
-            # return projection
-            existing_projections = True
+        # # MODIFIED 9/30/19 OLD:
+        # elif self._check_for_existing_projections(projection, sender=sender, receiver=receiver):
+        #     # FIX: THE FOLLOWING IS REQUIRED SO AS NOT TO CRASH IN test_alias_equivalence_for_modulates_and_projections
+        #     #      - BLOCK OF CODE BELOW (KAM HACK) IS REQUIRED
+        #     # return projection
+        #     existing_projections = True
+        # MODIFIED 9/30/19 NEW: [JDC]
+        else:
+            existing_projections = self._check_for_existing_projections(projection, sender=sender, receiver=receiver)
+        # MODIFIED 9/30/19 END
 
-        # FIX: 9/30/19 - THIS SEEMS TO BE DONE FOR ALL PROJECTIONS, NOT JUST AUTOASSOCIATIVE ONES
+        # FIX: 9/30/19 - THIS SEEMS TO BE DONE FOR ALL PROJECTIONS, NOT JUST AUTOASSOCIATIVE ONES;
+        #                FILTERS OUT AUTOASSOCIATIVE?
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
-        if sender_mechanism != self.input_CIM and receiver_mechanism != self.output_CIM \
-                and projection not in [vertex.component for vertex in self.graph.vertices] and not learning_projection:
+        if (sender_mechanism != self.input_CIM
+                and receiver_mechanism != self.output_CIM
+                and projection not in [vertex.component for vertex in self.graph.vertices]
+                and not learning_projection):
 
             projection.is_processing = False
             # KDM 5/24/19: removing below rename because it results in several existing_projections
@@ -2813,6 +2823,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError(f"{c.args[0]} to {self.name}.")
 
         # FIX: 9/30/19 - THIS SEEMS TO BE NEEDED FOR ALL PROJECTIONS, NOT JUST AUTOASSOCIATIVE ONES
+        #                FILTERS OUT AUTOASSOCIATIVE?
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
         if not existing_projections:
