@@ -208,7 +208,7 @@ class TestTransferMechanismNoise:
         expected = [-0.10321885179355784, 0.41059850193837233, 0.144043571160878, 1.454273506962975]
         # expected = [0.7610377251469934, 0.12167501649282841, 0.44386323274542566, 0.33367432737426683]
         for i in range(len(val[0])):
-            assert val[0][i] ==  expected[i]
+            assert val[0][i] == expected[i]
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism

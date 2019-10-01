@@ -598,7 +598,7 @@ class ModulatorySignal(OutputState):
         """
         modulation = None
 
-    stateAttributes =  OutputState.stateAttributes | {MODULATION}
+    stateAttributes = OutputState.stateAttributes | {MODULATION}
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences

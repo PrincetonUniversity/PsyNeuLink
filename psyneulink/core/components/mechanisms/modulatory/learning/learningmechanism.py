@@ -612,7 +612,7 @@ ERROR_SIGNAL_INDEX = 2
 ACTIVATION_INPUT = 'activation_input'     # InputState
 ACTIVATION_OUTPUT = 'activation_output'   # InputState
 ERROR_SIGNAL = 'error_signal'
-input_state_names =  [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL]
+input_state_names = [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL]
 output_state_names = [LEARNING_SIGNAL, ERROR_SIGNAL]
 
 ERROR_SOURCES = 'error_sources'

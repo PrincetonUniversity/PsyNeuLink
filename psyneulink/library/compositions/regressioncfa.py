@@ -101,13 +101,13 @@ class PV(Enum):
     # FCC =  auto()
     # FFCC = auto()
     # COST = auto()
-    F =    0
-    C =    1
-    FF =   2
-    CC =   3
-    FC =   4
-    FFC =  5
-    FCC =  6
+    F    = 0
+    C    = 1
+    FF   = 2
+    CC   = 3
+    FC   = 4
+    FFC  = 5
+    FCC  = 6
     FFCC = 7
     COST = 8
 
@@ -345,7 +345,7 @@ class RegressionCFA(CompositionFunctionApproximator):
             # Concatenate values for each prediction term, and same for corresponding weights
             for term_label, term_value in term_values_dict.items():
                 if term_label in terms:
-                    pv_enum_val =  term_label.value
+                    pv_enum_val = term_label.value
                     item_idx = prediction_vector.idx[pv_enum_val]
                     v = np.append(v, term_value.reshape(-1))
                     w = np.append(w, weights[item_idx])
@@ -465,9 +465,9 @@ class RegressionCFA(CompositionFunctionApproximator):
             # RENAME THIS AS SPECIFIED_TERMS
             self.specified_terms = specified_terms
             self.terms = [None] * len(PV)
-            self.idx =  [None] * len(PV)
-            self.num =  [None] * len(PV)
-            self.num_elems =  [None] * len(PV)
+            self.idx = [None] * len(PV)
+            self.num = [None] * len(PV)
+            self.num_elems = [None] * len(PV)
             self.labels = [None] * len(PV)
 
             # MAIN EFFECT TERMS (unflattened)

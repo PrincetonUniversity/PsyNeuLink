@@ -856,7 +856,7 @@ class Projection_Base(Projection):
                 receiver = receiver.input_state
             assert isinstance(receiver, (State)), \
                 f"Illegal receiver ({receiver}) detected in _instantiate_sender() method for {self.name}"
-            dup =  receiver._check_for_duplicate_projections(self)
+            dup = receiver._check_for_duplicate_projections(self)
             # If duplicate is a deferred_init Projection, delete it and use one currently being instantiated
             # IMPLEMENTATION NOTE:  this gives precedence to a Projection to a Component specified by its sender
             #                      (e.g., controller of a Composition for a ControlProjection)
@@ -1398,7 +1398,7 @@ def _parse_connection_specs(connectee_state_type,
             else:
                 projection_spec = connectee_state_type
 
-            projection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
+            projection_tuple = (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
             connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, projection_tuple))
 
         # If a Projection specification is used to specify the connection:
@@ -1752,9 +1752,9 @@ def _validate_connection_request(
 
 
     if connectee_state:
-        connectee_str =  " {} of".format(connectee_state.__name__)
+        connectee_str = " {} of".format(connectee_state.__name__)
     else:
-        connectee_str =  ""
+        connectee_str = ""
 
     # Convert connect_with_states (a set of classes) into a tuple for use as second arg in isinstance()
     connect_with_states = tuple(connect_with_states)

@@ -414,9 +414,9 @@ class LogCondition(enum.IntFlag):
     # INITIALIZATION = ContextFlags.INITIALIZING
     INITIALIZATION = ContextFlags.INITIALIZING
     """Set during execution of the Component's constructor."""
-    VALIDATION =  ContextFlags.VALIDATING
+    VALIDATION = ContextFlags.VALIDATING
     """Set during validation of the value of a Component or its attribute."""
-    EXECUTION =  ContextFlags.EXECUTING
+    EXECUTION = ContextFlags.EXECUTING
     """Set during all `phases of execution <System_Execution>` of the Component."""
     PROCESSING = ContextFlags.PROCESSING
     """Set during the `processing phase <System_Execution_Processing>` of execution of a Composition."""
@@ -426,9 +426,9 @@ class LogCondition(enum.IntFlag):
     """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
     SIMULATION = ContextFlags.SIMULATION
     # Set during simulation by Composition.controller
-    TRIAL = ContextFlags.SIMULATION<<1
+    TRIAL = ContextFlags.SIMULATION << 1
     """Set at the end of a `TRIAL`."""
-    RUN = ContextFlags.SIMULATION<<2
+    RUN = ContextFlags.SIMULATION << 2
     """Set at the end of a `RUN`."""
     ALL_ASSIGNMENTS = (
         INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL

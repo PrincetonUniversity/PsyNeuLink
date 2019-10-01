@@ -132,7 +132,7 @@ class TestLCControlMechanism:
         Tx = pnl.TransferMechanism(name='Tx')
         Ty = pnl.TransferMechanism(name='Ty')
         Tz = pnl.TransferMechanism(name='Tz')
-        C =  pnl.ControlMechanism(
+        C = pnl.ControlMechanism(
                 # function=pnl.Linear,
                 default_variable=[1],
                 monitor_for_control=Ty,

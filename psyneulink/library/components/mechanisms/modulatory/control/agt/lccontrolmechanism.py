@@ -888,7 +888,7 @@ class LCControlMechanism(ControlMechanism):
         mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
         scaling_factor_ptr = builder.gep(mech_params, [ctx.int32_ty(0), ctx.int32_ty(0)])
         base_factor_ptr = builder.gep(mech_params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        scaling_factor =  builder.load(scaling_factor_ptr)
+        scaling_factor = builder.load(scaling_factor_ptr)
         base_factor = builder.load(base_factor_ptr)
 
         # Apply to the entire vector
