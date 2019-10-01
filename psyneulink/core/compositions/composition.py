@@ -2758,7 +2758,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Note: this does NOT initialize the Projection if it is in deferred_init
             projection = self._parse_projection_spec(projection, name)
         except DuplicateProjectionError:
-            return projection
+            # return projection
+            return
 
         # FIX: 9/30/19:  THIS SEEMS WEIRD, AS IT OVERRIDES ASSIGNMENT ABOVE, BUT MOVING IT BEFORE THAT CAUSES CRASH:
         # existing_projections = False
@@ -2788,7 +2789,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 try:
                     projection._deferred_init()
                 except DuplicateProjectionError:
-                    return projection
+                    # return projection
+                    return
 
         # FIX: 9/30/19 - REDUNDANT WITH INITIAL TEST ABOVE?
         # # MODIFIED 9/30/19 OLD:
