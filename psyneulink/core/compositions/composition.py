@@ -2714,15 +2714,31 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             existing_projections = self._check_for_existing_projections(sender=sender,
                                                                receiver=receiver,
                                                                in_composition=False)
+
             # MODIFIED 9/30/19 OLDER:
+
             if existing_projections:
+                if isinstance(sender, State):
+                    sender_check = sender.owner
+                else:
+                    sender_check = sender
+                if isinstance(receiver, State):
+                    receiver_check = receiver.owner
+                else:
+                    receiver_check = receiver
+                if sender_check not in self.nodes or receiver_check not in self.nodes:
+                    for proj in existing_projections:
+                        self.remove_projection(proj)
+                        sender_check.efferents.remove(proj)
+                        receiver_check.afferents.remove(proj)
+                else:
                 #  Need to do stuff at end, so can't just return
                 # # FIX: 9/30/19 ADD TEST FOR THIS:
                 # if self.verbosePref:
                 #     warnings.warn(f"Several existing projections were identified between "
                 #                   f"{sender.name} and {receiver.name}: {[p.name for p in existing_projections]}; "
                 #                   f"the last of these will be used in {self.name}.")
-                projection = existing_projections[-1]
+                    projection = existing_projections[-1]
             # # MODIFIED 9/30/19 NEWER: [JDC]
             # if existing_projections:
             #     existing_not_in_composition = [p for p in existing_projections if p in self.projections]
