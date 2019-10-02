@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Sampler &mdash; PsyNeuLink 0.6.0.1+7.g27e9788 documentation</title>
+  <title>Basics and Sampler &mdash; PsyNeuLink 0.6.0.2+8.g31ab630 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.1+7.g27e9788',
+              VERSION:'0.6.0.2+8.g31ab630',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.1+7
+                0.6.0.2+8
               </div>
             
           
@@ -203,16 +203,16 @@ of Components at different time scales (e.g., a recurrent network that needs tim
 information to a decision layer).</p>
 <p><strong>Mechanisms and Projections</strong></p>
 <p>Mechanisms and Projections fall into two broad categories:  <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a>
-<em>directly transmit</em> and possibly <em>transform</em> information, and are linked by <a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjections</span></a> that transmit the information between them. <em>AdaptiveMechanisms &lt;AdpativeMechanism&gt;` *modify</em>
+<em>directly transmit</em> and possibly <em>transform</em> information, and are linked by <a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjections</span></a> that transmit the information between them. <em>ModulatoryMechanisms &lt;ModulatoryMechanism&gt;` *modify</em>
 or <em>modulate</em> the transmission and transformation of information, by way of <code class="xref any docutils literal"><span class="pre">ModulatoryProjections</span></code> to the Components they modulate.  PsyNeuLink provides a library of Components of
 each type.  For example, there is a variety of ProcessingMechanisms that can be used to transform, integrate, and
 evaluate information in various ways (e.g., to implement layers of a feedforward or recurrent neural network, or a
-drift diffusion decision process); and there are <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanisms</span></a> and <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a> that can be used to modulate the functioning of ProcessingMechanisms and modify Projections,
-respectively.  The <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a Mechanism defines the operation it carries out.
-PsyNeuLink provides a rich <a class="reference internal" href="Functions.html"><span class="doc">library</span></a> of mathematical, statistical and matrix manipulation functions.
-However, a Mechanism can also be assigned any Python function that is consistent with that Mechanism’s type (see
-<a class="reference internal" href="#basicsandsampler-customization"><span class="std std-ref">Customization</span></a>).  Since Mechanisms can implement virtually any function, Projections ensure that
-they can “communicate” with each other seamlessly.</p>
+drift diffusion decision process); and there are <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanisms</span></a>, including
+<a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanisms</span></a>  that can be used modulate the functioning of ProcessingMechanisms, and
+<a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a> that can be used to modify Projections, respectively.  The <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a Mechanism defines the operation it carries out. PsyNeuLink provides a rich <a class="reference internal" href="Functions.html"><span class="doc">library</span></a> of mathematical, statistical and matrix manipulation functions. However, a Mechanism can also be
+assigned any Python function that is consistent with that Mechanism’s type (see <a class="reference internal" href="#basicsandsampler-customization"><span class="std std-ref">Customization</span></a>).
+Since Mechanisms can implement virtually any function, Projections ensure that they can “communicate” with each other
+seamlessly.</p>
 <p>Together, these elements allow PsyNeuLink to implement and integrate processes of different types, levels of analysis,
 and/or time scales of operation, composing them into a coherent system.  This affords modelers the flexibility to
 commit each part of their model to a form of processing and/or level of analysis that is appropriate for that part,
@@ -436,8 +436,8 @@ execute, simulating a situation in which the task instruction is processed befor
 <span class="n">task</span> <span class="o">=</span> <span class="n">LCAMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;TASK&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
 <span class="c1"># Assign conditions to scheduler:</span>
-<span class="n">Stroop_model</span><span class="o">.</span><span class="n">scheduler_processing</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">color_hidden</span><span class="p">,</span> <span class="n">EveryNExecutions</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
-<span class="n">Stroop_model</span><span class="o">.</span><span class="n">scheduler_processing</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">word_hidden</span><span class="p">,</span> <span class="n">EveryNExecutions</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="n">Stroop_model</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">color_hidden</span><span class="p">,</span> <span class="n">EveryNExecutions</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="n">Stroop_model</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">word_hidden</span><span class="p">,</span> <span class="n">EveryNExecutions</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
 
 <span class="c1"># Run with scheduler:</span>
 <span class="n">Stroop_model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">color_input</span><span class="p">:</span><span class="n">red</span><span class="p">,</span> <span class="n">word_input</span><span class="p">:</span><span class="n">green</span><span class="p">,</span> <span class="n">task_input</span><span class="p">:</span><span class="n">color</span><span class="p">})</span>
@@ -460,8 +460,8 @@ def converge(mech, thresh):
 
 # Add Conditions to the ``color_hidden`` and ``word_hidden`` Mechanisms that depend on the converge function:
 epsilon = 0.01
-Stroop_model.scheduler_processing.add_condition(color_hidden, When(converge, task, epsilon)))
-Stroop_model.scheduler_processing.add_condition(word_hidden, When(converge, task, epsilon)))
+Stroop_model.scheduler.add_condition(color_hidden, When(converge, task, epsilon)))
+Stroop_model.scheduler.add_condition(word_hidden, When(converge, task, epsilon)))
 </pre></div>
 </div>
 <p>PsyNeuLink provides a rich set of <a class="reference internal" href="Condition.html#condition-pre-specified-list"><span class="std std-ref">pre-defined Conditions</span></a> (such as <code class="docutils literal"><span class="pre">When</span></code> in the
@@ -674,7 +674,7 @@ backpropagation). LearningMechanisms take as their input a target and/or an erro
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the source of the error signal (either a ComparatorMechanism or another LearningMechanism).
 LearningMechanisms use <code class="xref any docutils literal"><span class="pre">LearningSignals</span></code> (a type of <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>) to send a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> to the
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that is being learned.  The type of learning implemented by a LearningMechanism is determined by
-the class of <a class="reference internal" href="LearningFunctions.html"><span class="doc">LearningFunction</span></a> assigned as its <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  In some
+the class of <a class="reference internal" href="LearningFunctions.html"><span class="doc">LearningFunction</span></a> assigned as its <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.function" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  In some
 cases (such as multilayered backpropagation networks), configuration of the LearningMechanisms and corresponding
 Projections can become complex; PsyNeuLink provides methods for implementing these automatically, which also serves
 to illustrate the flow of signals and errors implemented by the algorithm.  The example below implements learning in
@@ -791,7 +791,7 @@ receive as input from any other Mechanisms that project to it.  When a Python fu
 <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of Mechanism (or any other Component in PsyNeuLink), it is automatically
 “wrapped” as a <a class="reference internal" href="UserDefinedFunction.html"><span class="doc">UserDefinedFunction</span></a>, a special class of PsyNeuLink <a class="reference internal" href="Functions.html"><span class="doc">Function</span></a> that integrates it with
 PsyNeuLink:  in addition to making its first argument available as the input to the Component to which it is assigned,
-it also makes its parameters available for modulation by <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanisms</span></a>.  For example,
+it also makes its parameters available for modulation by <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanisms</span></a>.  For example,
 notice that <code class="docutils literal"><span class="pre">my_sinusoidal_fct</span></code> has two other arguments, in addition to its <code class="docutils literal"><span class="pre">input</span></code>: <code class="docutils literal"><span class="pre">phase</span></code> and <code class="docutils literal"><span class="pre">amplitude</span></code>.
 As a result, the phase and amplitude of <code class="docutils literal"><span class="pre">my_wave_mech</span></code> can be modulated in by referencing them in the constructor of a
 <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a>:</p>

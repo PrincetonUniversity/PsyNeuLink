@@ -4,7 +4,9 @@ ControlMechanisms
 **Core classes**:
 
 * `ControlMechanism`
+* `GatingMechanism`
 * `OptimizationControlMechanism`
+
 
 **ControlMechanism Subtypes**:
 

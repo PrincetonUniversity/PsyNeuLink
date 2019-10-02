@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.6.0.1+7.g27e9788 documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.6.0.2+8.g31ab630 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.1+7.g27e9788',
+              VERSION:'0.6.0.2+8.g31ab630',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.1+7
+                0.6.0.2+8
               </div>
             
           
@@ -592,7 +592,7 @@ used in naming, including for default and duplicate names).</p>
 
 <dl class="method">
 <dt id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.run">
-<code class="descname">run</code><span class="sig-paren">(</span><em>inputs=None</em>, <em>do_logging=False</em>, <em>scheduler_processing=None</em>, <em>termination_processing=None</em>, <em>context=None</em>, <em>num_trials=None</em>, <em>minibatch_size=1</em>, <em>call_before_time_step=None</em>, <em>call_after_time_step=None</em>, <em>call_before_pass=None</em>, <em>call_after_pass=None</em>, <em>call_before_trial=None</em>, <em>call_after_trial=None</em>, <em>call_before_minibatch=None</em>, <em>call_after_minibatch=None</em>, <em>clamp_input='soft_clamp'</em>, <em>bin_execute=False</em>, <em>initial_values=None</em>, <em>reinitialize_values=None</em>, <em>runtime_params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.run" title="Permalink to this definition">¶</a></dt>
+<code class="descname">run</code><span class="sig-paren">(</span><em>inputs=None</em>, <em>do_logging=False</em>, <em>scheduler=None</em>, <em>termination_processing=None</em>, <em>context=None</em>, <em>num_trials=None</em>, <em>minibatch_size=1</em>, <em>call_before_time_step=None</em>, <em>call_after_time_step=None</em>, <em>call_before_pass=None</em>, <em>call_after_pass=None</em>, <em>call_before_trial=None</em>, <em>call_after_trial=None</em>, <em>call_before_minibatch=None</em>, <em>call_after_minibatch=None</em>, <em>clamp_input='soft_clamp'</em>, <em>bin_execute=False</em>, <em>initial_values=None</em>, <em>reinitialize_values=None</em>, <em>runtime_params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Passes inputs to AutodiffComposition, then execute sets of nodes that are eligible to run until termination
 conditions are met.</p>
 <blockquote>
@@ -605,7 +605,7 @@ in the list corresponds to one <a class="reference internal" href="Time.html#psy
 key-value pair with keys for each terminal Node in the composition and a corresponding list of the Node’s
 target values for each trial. The value corresponding to the ‘epochs’ key is an int specifying how many
 times the Composition should run through the entire input set.</dd>
-<dt>scheduler_processing: Scheduler</dt>
+<dt>scheduler: Scheduler</dt>
 <dd>the scheduler object that owns the conditions that will instruct the execution of the Composition.
 If not specified, the Composition will use its automatically generated scheduler.</dd>
 <dt>context</dt>

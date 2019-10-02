@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ComparatorMechanism &mdash; PsyNeuLink 0.6.0.1+7.g27e9788 documentation</title>
+  <title>ComparatorMechanism &mdash; PsyNeuLink 0.6.0.2+8.g31ab630 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.1+7.g27e9788',
+              VERSION:'0.6.0.2+8.g31ab630',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.1+7
+                0.6.0.2+8
               </div>
             
           
@@ -109,7 +109,7 @@
 <li class="toctree-l5"><a class="reference internal" href="LeabraMechanism.html">LeabraMechanism</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="AdaptiveMechanisms.html">Adaptive Mechanisms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ModulatoryMechanisms.html">Modulatory Mechanisms</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="Projections.html">Projections</a></li>
@@ -317,7 +317,7 @@ more than one OutputState, and one of those was desired, it would have had to be
 by default they are named <em>SAMPLE</em> and <em>TARGET</em>, and their formats are match the value of the OutputStates
 specified in the <strong>sample</strong> and <strong>target</strong> arguments, respectively (see <a class="reference internal" href="#comparatormechanism-structure"><span class="std std-ref">Structure</span></a>
 for additional details).</li>
-<li><strong>function</strong> (<em>Function</em><em>, </em><a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.function" title="psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.function"><em>function</em></a><em> or </em><em>method : default Distance</em><em>(</em><em>metric=DIFFERENCE</em><em>)</em>) – specifies the <code class="xref any docutils literal"><span class="pre">function</span></code> used to compare the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal"><span class="pre">sample</span></code></a> with the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a>.</li>
+<li><strong>function</strong> (<em>Function</em><em>, </em><a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function"><em>function</em></a><em> or </em><em>method : default Distance</em><em>(</em><em>metric=DIFFERENCE</em><em>)</em>) – specifies the <code class="xref any docutils literal"><span class="pre">function</span></code> used to compare the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal"><span class="pre">sample</span></code></a> with the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a>.</li>
 <li><strong>output_states</strong> (<em>List</em><em>[</em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a><em>, </em><a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value"><em>value</em></a><em>, </em><em>str</em><em> or </em><em>dict</em><em>] or </em><em>Dict</em><em>[</em><em>] </em><em>: default</em><em> [</em><em>OUTCOME</em><em>]</em>) – specifies the OutputStates for the Mechanism;</li>
 <li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword: param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
 the Mechanism, its function, and/or a custom function and its parameters. Values specified for parameters in

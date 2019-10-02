@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutoAssociativeProjection &mdash; PsyNeuLink 0.6.0.1+7.g27e9788 documentation</title>
+  <title>AutoAssociativeProjection &mdash; PsyNeuLink 0.6.0.2+8.g31ab630 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.1+7.g27e9788',
+              VERSION:'0.6.0.2+8.g31ab630',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.1+7
+                0.6.0.2+8
               </div>
             
           
@@ -217,8 +217,8 @@ execution an AutoAssociativeProjection references parameters owned by its Recurr
 are <a class="reference internal" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.auto" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.auto"><code class="xref any py py-attr docutils literal"><span class="pre">auto</span></code></a> and <a class="reference internal" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.hetero" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.hetero"><code class="xref any py py-attr docutils literal"><span class="pre">hetero</span></code></a>.</p>
 <div class="section" id="configurable-attributes">
 <span id="auto-associative-configurable-attributes"></span><h3><em>Configurable Attributes</em><a class="headerlink" href="#configurable-attributes" title="Permalink to this headline">¶</a></h3>
-<p>Due to its specialized nature, most parameters of the AutoAssociativeProjection are not configurable: the <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable" title="psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is
-determined by the format of the output of the RecurrentTransferMechanism, the <a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.function" title="psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is always LinearMatrix, and so
+<p>Due to its specialized nature, most parameters of the AutoAssociativeProjection are not configurable: the <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is
+determined by the format of the output of the RecurrentTransferMechanism, the <a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is always LinearMatrix, and so
 on. The only configurable parameter is the matrix, configured through the <strong>matrix</strong>, <strong>auto</strong>, and/or <strong>hetero</strong>
 arguments for a RecurrentTransferMechanism:</p>
 <ul class="simple" id="auto-associative-matrix">
@@ -264,7 +264,7 @@ the context in which the Projection is used.</li>
 <li><strong>receiver</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState" title="psyneulink.core.components.states.inputstate.InputState"><em>InputState</em></a><em> or </em><em>Mechanism</em><em>]</em>) – specifies the destination of the Projection’s output.  If a Mechanism is specified, its
 <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a> will be used. If it is not specified, it will be assigned in
 the context in which the Projection is used.</li>
-<li><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.function" title="psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.function"><em>function</em></a><em> or </em><em>keyword : default DEFAULT_MATRIX</em>) – the matrix used by <code class="xref any docutils literal"><span class="pre">function</span></code> (default: <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>) to transform
+<li><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function"><em>function</em></a><em> or </em><em>keyword : default DEFAULT_MATRIX</em>) – the matrix used by <code class="xref any docutils literal"><span class="pre">function</span></code> (default: <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>) to transform
 the value of the <a class="reference internal" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
 the Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for

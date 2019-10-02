@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>UserDefinedFunction &mdash; PsyNeuLink 0.6.0.1+7.g27e9788 documentation</title>
+  <title>UserDefinedFunction &mdash; PsyNeuLink 0.6.0.2+8.g31ab630 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.1+7.g27e9788',
+              VERSION:'0.6.0.2+8.g31ab630',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.1+7
+                0.6.0.2+8
               </div>
             
           
@@ -343,7 +343,7 @@ execution count increments, when the input to the mechanism is 0.005 for 1000 ru
 <a class="reference internal image-reference" href="_images/sinusoid_005.png"><img alt="Sinusoid function" src="_images/sinusoid_005.png" style="width: 640.0px; height: 480.0px;" /></a>
 </div>
 <blockquote id="udf-modulatory-params-examples">
-<div><p>The parameters of a custom function assigned to an InputState or OutputState can also be used for <a class="reference internal" href="GatingMechanism.html#gatingmechanism-specifying-gating"><span class="std std-ref">gating</span></a>.  However, this requires that its <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">Modulatory Parameters</span></a> be specified
+<div><p>The parameters of a custom function assigned to an InputState or OutputState can also be used for <code class="xref any docutils literal"><span class="pre">gating</span></code>.  However, this requires that its <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">Modulatory Parameters</span></a> be specified
 (see <a class="reference internal" href="#udf-modulatory-params"><span class="std std-ref">above</span></a>). This can be done by including a <strong>params</strong> argument in the definition of
 the function itself:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">my_sinusoidal_fct</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span>
@@ -366,7 +366,7 @@ the function itself:</p>
 </div>
 <p>The <code class="docutils literal"><span class="pre">phase</span></code> and <code class="docutils literal"><span class="pre">amplitude</span></code> parameters of <code class="docutils literal"><span class="pre">my_sinusoidal_fct</span></code> can now be used as the
 <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">Modulatory Parameters</span></a> for gating any InputState or OutputState to which the function is assigned (see
-<a class="reference internal" href="GatingMechanism.html#gatingmechanism-specifying-gating"><span class="std std-ref">Specifying gating</span></a> and <a class="reference internal" href="GatingSignal.html#gatingsignal-examples"><span class="std std-ref">Examples</span></a>).</p>
+<code class="xref any docutils literal"><span class="pre">GatingMechanism_Specifying_Gating</span></code> and <a class="reference internal" href="GatingSignal.html#gatingsignal-examples"><span class="std std-ref">Examples</span></a>).</p>
 <p><strong>Class Definition:</strong></p>
 <dl class="docutils">
 <dt>custom_function <span class="classifier-delimiter">:</span> <span class="classifier">function</span></dt>

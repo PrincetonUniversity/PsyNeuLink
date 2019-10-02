@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Conventions and Definitions &mdash; PsyNeuLink 0.6.0.1+7.g27e9788 documentation</title>
+  <title>Conventions and Definitions &mdash; PsyNeuLink 0.6.0.2+8.g31ab630 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.1+7.g27e9788',
+              VERSION:'0.6.0.2+8.g31ab630',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.6.0.1+7
+                0.6.0.2+8
               </div>
             
           
@@ -227,7 +227,7 @@ and Compositions (combinations of Components that implement a model).</p>
 <li><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> - takes one or more inputs received from its afferent <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>,
 uses its <code class="xref any docutils literal"><span class="pre">function</span></code> to combine and/or transform these in some way, and makes the output
 available to other Components.  There are two primary types of Mechanisms in PsyNeuLink:
-ProcessingMechanisms and AdaptiveMechanisms:<ul>
+ProcessingMechanisms and ModulatoryMechanisms:<ul>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a></dt>
 <dd>Aggregates the inputs it receives from its afferent Projections, transforms them in some way,
@@ -235,23 +235,17 @@ and provides the result as output to its efferent Projections.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanisms</span></a></dt>
+<dt><a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">Modulatory Mechanisms</span></a></dt>
 <dd>Uses the input it receives from other Mechanisms to modify the parameters of one or more other
-PsyNeuLink Components.  There are three primary types:<ul class="last">
+PsyNeuLink Components.  There are two primary types:<ul class="last">
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a></dt>
+<dd>Modifies the input(s), parameter(s), and/or output(s) of other Mechanisms.</dd>
+</dl>
+</li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a></dt>
 <dd>Modifies the matrix of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a></dt>
-<dd>Modifies one or more parameters of other Mechanisms.</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a></dt>
-<dd>Modifies the value of one or more <a class="reference internal" href="InputState.html"><span class="doc">InputStates</span></a> and/or <code class="xref any docutils literal"><span class="pre">OutputStates</span></code>
-of other Mechanisms.</dd>
 </dl>
 </li>
 </ul>
@@ -274,26 +268,20 @@ ProcessingMechanism as the input to another.</dd>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="ModulatoryProjection.html"><span class="doc">Modulatory Projections</span></a></dt>
-<dd>Used in conjunction with AdaptiveMechanisms to regulate the function of other Components.
-Takes the output of an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanisms</span></a> and uses it to modify the input, output or parameter of
-another Component.  There are three types of ModulatoryProjections, corresponding to the three
-types of AdaptiveMechanisms:<ul class="last">
+<dd>Used in conjunction with <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanisms</span></a> to regulate the function of other
+Components. Takes the output of a ModulatoryMechanism and uses it to modify the input, output or parameter
+of another Component.  There are two types of ModulatoryProjections, corresponding to the two
+types of ModulatoryMechanisms:<ul class="last">
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a></dt>
+<dd>Takes a ControlSignal from a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a> and uses it to modify the input, parameter or output
+of a ProcessingMechanism.</dd>
+</dl>
+</li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a></dt>
 <dd>Takes a LearningSignal from a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> and uses it to modify the matrix of a
 MappingProjection.</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a></dt>
-<dd>Takes a ControlSignal from a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a> and uses it to modify the parameter of a
-ProcessingMechanism.</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a></dt>
-<dd>Takes a GatingSignal from a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> and uses it to modulate the input or output of a
-ProcessingMechanism</dd>
 </dl>
 </li>
 </ul>
@@ -315,9 +303,8 @@ each of which can receive and/or send a combination of PathwayProjections and/or
 <dd>Represents a set of inputs to the Mechanism.
 Receives one or more afferent PathwayProjections to a Mechanism, combines them using its
 <code class="xref any docutils literal"><span class="pre">function</span></code>, and assigns the result (its <code class="xref any docutils literal"><span class="pre">value</span></code>)as an item of the Mechanism’s
-<code class="xref any docutils literal"><span class="pre">variable</span></code>.  It can also receive one or more modulatory
-<a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a>, that modify the parameter(s) of the State’s function, and thereby the
-State’s <code class="xref any docutils literal"><span class="pre">value</span></code>.</dd>
+<code class="xref any docutils literal"><span class="pre">variable</span></code>.    It can also receive one or more <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">modulatory projections</span></a> (<a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> or <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a>), that modify the parameter(s) of the State’s
+function, and thereby the State’s <code class="xref any docutils literal"><span class="pre">value</span></code>.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
@@ -335,9 +322,8 @@ that modify the parameter(s) of the State’s function, and thereby the value of
 <dd>Represents an output of the Mechanism.
 Takes an item of the Mechanism’s <code class="xref any docutils literal"><span class="pre">value</span></code> as the <code class="xref any docutils literal"><span class="pre">variable</span></code> for the State’s
 <code class="xref any docutils literal"><span class="pre">function</span></code>, assigns the result as the State’s <a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState.value" title="psyneulink.core.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, and provides that
-to one or more efferent PathwayProjections.  It can also receive one or more modulatory
-<a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a>, that modify the parameter(s) of the State’s function, and thereby the
-State’s <code class="xref any docutils literal"><span class="pre">value</span></code>.</dd>
+to one or more efferent PathwayProjections.  It can also receive one or more <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">modulatory projections</span></a> (<a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> or <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a>), that modify the parameter(s) of the State’s
+function, and thereby the State’s <code class="xref any docutils literal"><span class="pre">value</span></code>.</dd>
 </dl>
 </li>
 </ul>

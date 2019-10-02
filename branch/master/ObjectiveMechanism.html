@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.6.0.1+7.g27e9788 documentation</title>
+  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.6.0.2+8.g31ab630 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.1+7.g27e9788',
+              VERSION:'0.6.0.2+8.g31ab630',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -45,7 +45,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Adaptive Mechanisms" href="AdaptiveMechanism.html" />
+    <link rel="next" title="Modulatory Mechanisms" href="ModulatoryMechanism.html" />
     <link rel="prev" title="IntegratorMechanism" href="IntegratorMechanism.html" /> 
 </head>
 
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.1+7
+                0.6.0.2+8
               </div>
             
           
@@ -107,7 +107,7 @@
 <li class="toctree-l5 current"><a class="current reference internal" href="#">ObjectiveMechanism</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="AdaptiveMechanism.html">Adaptive Mechanisms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ModulatoryMechanism.html">Modulatory Mechanisms</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="Projection.html">Projections</a></li>
@@ -201,12 +201,12 @@
 of one or more other ProcessingMechanisms specified in its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal"><span class="pre">monitor</span></code></a> attribute,
 and evaluates them using its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>. The result of the evaluation is placed in the
 ObjectiveMechanism’s <em>OUTCOME</em> (<a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary</span></a>) OutputState.  ObjectiveMechanisms are typically used
-closely with (and often created automatically by) <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanisms</span></a>.</p>
+closely with (and often created automatically by) <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanisms</span></a>.</p>
 </div>
 <div class="section" id="creating-an-objectivemechanism">
 <span id="objectivemechanism-creation"></span><h2>Creating an ObjectiveMechanism<a class="headerlink" href="#creating-an-objectivemechanism" title="Permalink to this headline">¶</a></h2>
 <p>ObjectiveMechanisms are often created automatically when other PsyNeuLink components are created (in particular,
-AdaptiveMechanisms, such as <a class="reference internal" href="LearningMechanism.html#learningmechanism-creation"><span class="std std-ref">LearningMechanisms</span></a> and
+ModulatoryMechanisms, such as <a class="reference internal" href="LearningMechanism.html#learningmechanism-creation"><span class="std std-ref">LearningMechanisms</span></a> and
 <a class="reference internal" href="ControlMechanism.html#controlmechanism-creation"><span class="std std-ref">ControlMechanisms</span></a>).  An ObjectiveMechanism can also be created directly by calling its
 constructor.  The primary attribute used to define an ObjectiveMechanism is its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal"><span class="pre">monitor</span></code></a>
 attribute, that is specified using the corresponding argument of its constructor as described below.</p>
@@ -430,7 +430,7 @@ As an example, the following mechanisms are equivalent:</p>
 </pre></div>
 </div>
 </li>
-<li><strong>function</strong> (<em>CombinationFunction</em><em>, </em><a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction" title="psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction"><em>ObjectiveFunction</em></a><em>, </em><a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.function" title="psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.function"><em>function</em></a><em> or </em><em>method : default LinearCombination</em>) – specifies the function used to evaluate the values listed in <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal"><span class="pre">monitor</span></code></a> &lt;ObjectiveMechanism.monitor&gt;`
+<li><strong>function</strong> (<em>CombinationFunction</em><em>, </em><a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction" title="psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction"><em>ObjectiveFunction</em></a><em>, </em><a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function"><em>function</em></a><em> or </em><em>method : default LinearCombination</em>) – specifies the function used to evaluate the values listed in <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal"><span class="pre">monitor</span></code></a> &lt;ObjectiveMechanism.monitor&gt;`
 (see <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for details).</li>
 <li><strong>output_states</strong> (<em>List</em><em>[</em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a><em>, </em><a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value"><em>value</em></a><em>, </em><em>str</em><em> or </em><em>dict</em><em>] or </em><em>Dict</em><em>[</em><em>] </em><em>: default</em><em> [</em><em>OUTCOME</em><em>]</em>) – specifies the OutputStates for the Mechanism;</li>
 <li><strong>role</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.LEARNING" title="psyneulink.core.globals.utilities.NodeRole.LEARNING"><em>LEARNING</em></a><em>, </em><em>CONTROL</em><em>]</em>) – specifies if the ObjectiveMechanism is being used for learning or control (see <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.role" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.role"><code class="xref any py py-attr docutils literal"><span class="pre">role</span></code></a> for details).</li>
@@ -567,7 +567,7 @@ If the item is a Mechanism, its <a class="reference internal" href="OutputState.
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="AdaptiveMechanism.html" class="btn btn-neutral float-right" title="Adaptive Mechanisms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="ModulatoryMechanism.html" class="btn btn-neutral float-right" title="Modulatory Mechanisms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="IntegratorMechanism.html" class="btn btn-neutral float-left" title="IntegratorMechanism" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
