@@ -2718,11 +2718,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     receiver_check = receiver.owner
                 else:
                     receiver_check = receiver
-                if sender_check not in self.nodes or receiver_check not in self.nodes:
+                if (not isinstance(sender_check, CompositionInterfaceMechanism) and sender_check not in self.nodes) or \
+                         (not isinstance(receiver_check, CompositionInterfaceMechanism) and receiver_check not in self.nodes):
                     for proj in existing_projections:
                         self.remove_projection(proj)
-                        sender_check.efferents.remove(proj)
-                        receiver_check.afferents.remove(proj)
+                        for state in receiver_check.input_states + \
+                            sender_check.output_states:
+                            if proj in state.afferents_info:
+                                del state.afferents_info[proj]
+                            if proj in state.projections:
+                                state.projections.remove(proj)
+                            if proj in state.path_afferents:
+                                state.path_afferents.remove(proj)
+                            if proj in state.mod_afferents:
+                                state.mod_afferents.remove(proj)
+                            if proj in state.efferents:
+                                state.efferents.remove(proj)
                 else:
                 #  Need to do stuff at end, so can't just return
                     if self.prefs.verbosePref:
