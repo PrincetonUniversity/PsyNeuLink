@@ -12,15 +12,17 @@
 
 import inspect
 
-from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import NAME, DEFAULT_PREFERENCE_SET_OWNER, PREF_LEVEL, PREFERENCE_SET_NAME, PREFS, PREFS_OWNER
+from psyneulink.core.globals.keywords import \
+    NAME, DEFAULT_PREFERENCE_SET_OWNER, PREF_LEVEL, PREFERENCE_SET_NAME, PREFS, PREFS_OWNER
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.core.globals.utilities import Modulation
 
 __all__ = [
-    'CategoryDefaultPreferencesDict', 'ComponentDefaultPrefDicts', 'ComponentPreferenceSet',
-    'ComponentPreferenceSetPrefs', 'InstanceDefaultPreferencesDict', 'is_pref', 'is_pref_set',
+    'CategoryDefaultPreferencesDict',
+    'ComponentDefaultPrefDicts', 'ComponentPreferenceSet', 'ComponentPreferenceSetPrefs',
+    'CompositionDefaultPreferencesDict',
+    'InstanceDefaultPreferencesDict', 'is_pref', 'is_pref_set',
     'CATEGORY_DEFAULT_PREFERENCES', 'INSTANCE_DEFAULT_PREFERENCES', 'SUBTYPE_DEFAULT_PREFERENCES',
     'SYSTEM_DEFAULT_PREFERENCES', 'TYPE_DEFAULT_PREFERENCES', 'LOG_PREF', 'PARAM_VALIDATION_PREF',
     'REPORT_OUTPUT_PREF', 'RUNTIME_PARAM_MODULATION_PREF', 'SubtypeDefaultPreferencesDict',
@@ -35,6 +37,7 @@ VERBOSE_PREF = kpVerbosePref = '_verbose_pref'
 RUNTIME_PARAM_MODULATION_PREF = kpRuntimeParamModulationPref = '_runtime_param_modulation_pref'
 
 # Keywords for generic level default preference sets
+COMPOSITION_DEFAULT_PREFERENCES = 'CompositionDefaultPreferences'
 SYSTEM_DEFAULT_PREFERENCES = 'SystemDefaultPreferences'
 CATEGORY_DEFAULT_PREFERENCES = 'CategoryDefaultPreferences'
 TYPE_DEFAULT_PREFERENCES = 'TypeDefaultPreferences'
@@ -50,6 +53,14 @@ ComponentPreferenceSetPrefs = {
     kpLogPref,
     kpRuntimeParamModulationPref
 }
+
+CompositionDefaultPreferencesDict = {
+    PREFERENCE_SET_NAME: COMPOSITION_DEFAULT_PREFERENCES,
+    kpVerbosePref: PreferenceEntry(False, PreferenceLevel.SYSTEM),
+    kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.SYSTEM),
+    kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.SYSTEM),
+    kpLogPref: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
+    kpRuntimeParamModulationPref: PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.SYSTEM)}
 
 SystemDefaultPreferencesDict = {
     PREFERENCE_SET_NAME: SYSTEM_DEFAULT_PREFERENCES,
@@ -93,6 +104,7 @@ InstanceDefaultPreferencesDict = {
 
 # Dict of default dicts
 ComponentDefaultPrefDicts = {
+    PreferenceLevel.COMPOSITION: CompositionDefaultPreferencesDict,
     PreferenceLevel.SYSTEM: SystemDefaultPreferencesDict,
     PreferenceLevel.CATEGORY: CategoryDefaultPreferencesDict,
     PreferenceLevel.TYPE: TypeDefaultPreferencesDict,

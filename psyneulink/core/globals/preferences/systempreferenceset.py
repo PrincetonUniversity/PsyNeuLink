@@ -13,11 +13,11 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, P
 
 __all__ = [
     'SystemPreferenceSet', 'recordSimulationPrefCategoryDefault', 'recordSimulationPrefInstanceDefault',
-    'recordSimulationPrefTypeDefault', 'RECORD_SIMULATION_PREF', 'kpRecordSimulationPref'
+    'recordSimulationPrefTypeDefault', 'RECORD_SIMULATION_PREF', 'RECORD_SIMULATION_PREF'
 ]
 
 
-RECORD_SIMULATION_PREF = kpRecordSimulationPref = '_record_simulation_pref'
+RECORD_SIMULATION_PREF = RECORD_SIMULATION_PREF = '_record_simulation_pref'
 
 # Defaults ffor recordSimulationPref:
 recordSimulationPrefInstanceDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
@@ -25,7 +25,7 @@ recordSimulationPrefTypeDefault = PreferenceEntry(False, PreferenceLevel.INSTANC
 recordSimulationPrefCategoryDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 
 SystemPreferenceSetPrefs = ComponentPreferenceSetPrefs.copy()
-SystemPreferenceSetPrefs.add(kpRecordSimulationPref)
+SystemPreferenceSetPrefs.add(RECORD_SIMULATION_PREF)
 
 def is_sys_pref(pref):
     return pref in SystemPreferenceSetPrefs
@@ -62,7 +62,7 @@ class SystemPreferenceSet(ComponentPreferenceSet):
                  **kargs):
         if kargs:
             try:
-                record_simulation_pref = kargs[kpRecordSimulationPref]
+                record_simulation_pref = kargs[RECORD_SIMULATION_PREF]
             except (KeyError, NameError):
                 pass
 
@@ -78,7 +78,7 @@ class SystemPreferenceSet(ComponentPreferenceSet):
         """
         # If the level of the object is below the Preference level,
         #    recursively calls super (closer to base) classes to get preference at specified level
-        return self.get_pref_setting_for_level(kpRecordSimulationPref, self._record_simulation_pref.level)[0]
+        return self.get_pref_setting_for_level(RECORD_SIMULATION_PREF, self._record_simulation_pref.level)[0]
 
 
     @recordSimulationPref.setter
@@ -87,4 +87,4 @@ class SystemPreferenceSet(ComponentPreferenceSet):
         :param setting:
         :return:
         """
-        self.set_preference(candidate_info=setting, pref_ivar_name=kpRecordSimulationPref)
+        self.set_preference(candidate_info=setting, pref_ivar_name=RECORD_SIMULATION_PREF)
