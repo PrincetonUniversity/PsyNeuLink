@@ -578,8 +578,8 @@ class PreferenceSet(object):
         :param reference_setting:
         :return:
         """
-        # from Globals.Preferences.ComponentPreferenceSet import kpLogPref
-        # if pref_ivar_name is kpLogPref:
+        # from Globals.Preferences.ComponentPreferenceSet import LOG_PREF
+        # if pref_ivar_name is LOG_PREF:
         #     self.validate_log(candidate_setting, self)
 
         setting_OK = iscompatible(candidate_setting, reference_setting, **{kwCompatibilityType:Enum})

@@ -98,7 +98,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CONTEXT, PROCESSING_MECHANISM, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
+from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
 __all__ = [
@@ -134,7 +134,7 @@ class ProcessingMechanism_Base(Mechanism_Base):
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
     #     PREFERENCE_SET_NAME: 'ProcessingMechanismClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     def __init__(self,
                  default_variable=None,
@@ -276,7 +276,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
     # These will override those specified in TYPE_DEFAULT_PREFERENCES
     classPreferences = {
         PREFERENCE_SET_NAME: 'ProcessingMechanismCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()
 

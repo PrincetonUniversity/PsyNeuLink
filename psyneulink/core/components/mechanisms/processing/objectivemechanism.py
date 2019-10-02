@@ -367,7 +367,7 @@ from psyneulink.core.globals.keywords import \
     OBJECTIVE_MECHANISM, OUTCOME, PARAMS, PROJECTION, PROJECTIONS, STATE_TYPE, VARIABLE, WEIGHT, WEIGHTS, \
     PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
+from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList, type_match
 
@@ -571,7 +571,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     # These will override those specified in TYPE_DEFAULT_PREFERENCES
     classPreferences = {
         PREFERENCE_SET_NAME: 'ObjectiveCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     # class_defaults.variable = None;  Must be specified using either **input_states** or **monitor**
     # kmantel: above needs to be clarified - can class_defaults.variable truly be anything? or should there be some format?

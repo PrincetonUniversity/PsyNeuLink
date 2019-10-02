@@ -762,7 +762,7 @@ from psyneulink.core.globals.keywords import \
     STATE, STATE_CONTEXT, STATE_NAME, STATE_PARAMS, STATE_PREFS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, WEIGHT, \
     STATE_COMPONENT_CATEGORY
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
-from psyneulink.core.globals.preferences.componentpreferenceset import kpVerbosePref
+from psyneulink.core.globals.preferences.componentpreferenceset import VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.socket import ConnectionInfo
@@ -1187,7 +1187,7 @@ class State_Base(State):
                         "should be a number, which is an integer or can be converted to integer.".
                         format(x, type(self), self.name))
                 if int_x != x:
-                    if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
+                    if hasattr(self, 'prefs') and hasattr(self.prefs, VERBOSE_PREF) and self.prefs.verbosePref:
                         warnings.warn("When size ({}) was cast to integer, its value changed to {}.".format(x, int_x))
                 return int_x
 

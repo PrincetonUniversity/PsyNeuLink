@@ -87,7 +87,7 @@ class DefaultControlMechanism(ControlMechanism):
     # Note: only need to specify setting;  level will be assigned to Type automatically
     # classPreferences = {
     #     PREFERENCE_SET_NAME: 'DefaultControlMechanismCustomClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     from psyneulink.core.components.functions.transferfunctions import Linear
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()

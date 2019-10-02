@@ -66,7 +66,7 @@ from psyneulink.core.globals.parameters import \
 from psyneulink.core.globals.utilities import parameter_spec, get_global_seed
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import \
-    kpReportOutputPref, PreferenceEntry, PreferenceLevel, is_pref_set
+    REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
 
 __all__ = ['Exponential', 'Gaussian', 'GaussianDistort', 'get_matrix', 'Identity', 'Linear', 'LinearMatrix',
            'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
@@ -220,7 +220,7 @@ class Identity(TransferFunction):  # -------------------------------------------
 
     classPreferences = {
         PREFERENCE_SET_NAME: 'IdentityClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
@@ -394,7 +394,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
     classPreferences = {
         PREFERENCE_SET_NAME: 'LinearClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
     class Parameters(TransferFunction.Parameters):
@@ -3623,7 +3623,7 @@ class TransferWithCosts(TransferFunction):
 
     classPreferences = {
         PREFERENCE_SET_NAME: 'TransferWithCostssClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
     class Parameters(TransferFunction.Parameters):

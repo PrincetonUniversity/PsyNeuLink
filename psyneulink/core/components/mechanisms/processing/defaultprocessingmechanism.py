@@ -54,7 +54,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
     # Note: only need to specify setting;  level will be assigned to SUBTYPE automatically
     # classPreferences = {
     #     PREFERENCE_SET_NAME: 'DefaultProcessingMechanismClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     class Parameters(Mechanism_Base.Parameters):
         variable = np.array([SystemDefaultInputValue])

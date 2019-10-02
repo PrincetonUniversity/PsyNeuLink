@@ -13,7 +13,7 @@
 import inspect
 
 from psyneulink.core.globals.keywords import NAME, PREF_LEVEL, PREFS_OWNER
-from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpLogPref, kpParamValidationPref, kpReportOutputPref, kpRuntimeParamModulationPref, kpVerbosePref
+from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, LOG_PREF, PARAM_VALIDATION_PREF, REPORT_OUTPUT_PREF, RUNTIME_PARAM_MODULATION_PREF, VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.utilities import Modulation
 
@@ -24,7 +24,7 @@ __all__ = [
 
 # MODIFIED 11/29/16 OLD:
 # # Keypaths for preferences:
-# kpRuntimeParamModulationPref = '_runtime_param_modulation_pref'
+# RUNTIME_PARAM_MODULATION_PREF = '_runtime_param_modulation_pref'
 # MODIFIED 11/29/16 END
 
 # Default PreferenceSets:
@@ -79,23 +79,23 @@ class MechanismPreferenceSet(ComponentPreferenceSet):
             except (KeyError, NameError):
                 pass
             try:
-                reportOutput_pref = kargs[kpReportOutputPref]
+                reportOutput_pref = kargs[REPORT_OUTPUT_PREF]
             except (KeyError, NameError):
                 pass
             try:
-                runtime_param_modulation_pref = kargs[kpRuntimeParamModulationPref]
+                runtime_param_modulation_pref = kargs[RUNTIME_PARAM_MODULATION_PREF]
             except (KeyError, NameError):
                 pass
             try:
-                log_pref = kargs[kpLogPref]
+                log_pref = kargs[LOG_PREF]
             except (KeyError, NameError):
                 pass
             try:
-                param_validation_pref = kargs[kpParamValidationPref]
+                param_validation_pref = kargs[PARAM_VALIDATION_PREF]
             except (KeyError, NameError):
                 pass
             try:
-                verbose_pref = kargs[kpVerbosePref]
+                verbose_pref = kargs[VERBOSE_PREF]
             except (KeyError, NameError):
                 pass
             try:
@@ -127,7 +127,7 @@ class MechanismPreferenceSet(ComponentPreferenceSet):
         """
         # If the level of the object is below the Preference level,
         #    recursively calls base (super) classes to get preference at specified level
-        return self.get_pref_setting_for_level(kpRuntimeParamModulationPref,
+        return self.get_pref_setting_for_level(RUNTIME_PARAM_MODULATION_PREF,
                                                self._runtime_param_modulation_pref.level)[0]
 
 

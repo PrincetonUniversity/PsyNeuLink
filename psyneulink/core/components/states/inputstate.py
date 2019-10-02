@@ -718,7 +718,7 @@ class InputState(State_Base):
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
     #     PREFERENCE_SET_NAME: 'InputStateCustomClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     # Note: the following enforce encoding as 1D np.ndarrays (one variable/value array per state)
     variableEncodingDim = 1

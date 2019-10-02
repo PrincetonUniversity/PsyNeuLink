@@ -1320,7 +1320,7 @@ class Mechanism_Base(Mechanism):
     # Note: only need to specify setting;  level will be assigned to CATEGORY automatically
     # classPreferences = {
     #     PREFERENCE_SET_NAME: 'MechanismCustomClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     # Class-specific loggable items
     @property

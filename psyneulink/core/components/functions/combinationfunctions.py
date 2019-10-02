@@ -47,7 +47,7 @@ from psyneulink.core.globals.utilities import is_numeric, np_array_less_than_2d,
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import \
-    kpReportOutputPref, is_pref_set, PreferenceEntry, PreferenceLevel
+    REPORT_OUTPUT_PREF, is_pref_set, PreferenceEntry, PreferenceLevel
 
 __all__ = ['CombinationFunction', 'Concatenate', 'CombineMeans', 'Rearrange', 'Reduce', 'LinearCombination',
            'PredictionErrorDeltaFunction']
@@ -1067,7 +1067,7 @@ class LinearCombination(
 
     classPreferences = {
         PREFERENCE_SET_NAME: 'LinearCombinationCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
@@ -1667,7 +1667,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
     classPreferences = {
         PREFERENCE_SET_NAME: 'CombineMeansCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
 
@@ -1953,7 +1953,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
 
     classPreferences = {
         PREFERENCE_SET_NAME: 'PredictionErrorDeltaCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
     class Parameters(CombinationFunction.Parameters):

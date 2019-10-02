@@ -183,7 +183,7 @@ class ModulatoryMechanism_Base(Mechanism_Base):
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
     #     PREFERENCE_SET_NAME: 'ModulatoryMechanismClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     def __init__(self,
                  default_variable,

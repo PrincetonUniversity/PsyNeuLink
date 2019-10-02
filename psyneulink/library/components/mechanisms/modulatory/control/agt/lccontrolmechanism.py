@@ -658,7 +658,7 @@ class LCControlMechanism(ControlMechanism):
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
     #     PREFERENCE_SET_NAME: 'ControlMechanismClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     class Parameters(ControlMechanism.Parameters):
         """

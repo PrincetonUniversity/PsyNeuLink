@@ -30,11 +30,11 @@ __all__ = [
 ]
 
 # Keypaths for preferences:
-REPORT_OUTPUT_PREF = kpReportOutputPref = '_report_output_pref'
-LOG_PREF = kpLogPref = '_log_pref'
-PARAM_VALIDATION_PREF = kpParamValidationPref = '_param_validation_pref'
-VERBOSE_PREF = kpVerbosePref = '_verbose_pref'
-RUNTIME_PARAM_MODULATION_PREF = kpRuntimeParamModulationPref = '_runtime_param_modulation_pref'
+REPORT_OUTPUT_PREF = '_report_output_pref'
+LOG_PREF = '_log_pref'
+PARAM_VALIDATION_PREF = '_param_validation_pref'
+VERBOSE_PREF = '_verbose_pref'
+RUNTIME_PARAM_MODULATION_PREF = '_runtime_param_modulation_pref'
 
 # Keywords for generic level default preference sets
 COMPOSITION_DEFAULT_PREFERENCES = 'CompositionDefaultPreferences'
@@ -47,60 +47,60 @@ INSTANCE_DEFAULT_PREFERENCES = 'InstanceDefaultPreferences'
 # Level default preferences dicts:
 
 ComponentPreferenceSetPrefs = {
-    kpVerbosePref,
-    kpParamValidationPref,
-    kpReportOutputPref,
-    kpLogPref,
-    kpRuntimeParamModulationPref
+    VERBOSE_PREF,
+    PARAM_VALIDATION_PREF,
+    REPORT_OUTPUT_PREF,
+    LOG_PREF,
+    RUNTIME_PARAM_MODULATION_PREF
 }
 
 CompositionDefaultPreferencesDict = {
     PREFERENCE_SET_NAME: COMPOSITION_DEFAULT_PREFERENCES,
-    kpVerbosePref: PreferenceEntry(False, PreferenceLevel.SYSTEM),
-    kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.SYSTEM),
-    kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.SYSTEM),
-    kpLogPref: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
-    kpRuntimeParamModulationPref: PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.SYSTEM)}
+    VERBOSE_PREF: PreferenceEntry(False, PreferenceLevel.SYSTEM),
+    PARAM_VALIDATION_PREF: PreferenceEntry(True, PreferenceLevel.SYSTEM),
+    REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.SYSTEM),
+    LOG_PREF: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
+    RUNTIME_PARAM_MODULATION_PREF: PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.SYSTEM)}
 
 SystemDefaultPreferencesDict = {
     PREFERENCE_SET_NAME: SYSTEM_DEFAULT_PREFERENCES,
-    kpVerbosePref: PreferenceEntry(False, PreferenceLevel.SYSTEM),
-    kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.SYSTEM),
-    kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.SYSTEM),
-    kpLogPref: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
-    kpRuntimeParamModulationPref: PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.SYSTEM)}
+    VERBOSE_PREF: PreferenceEntry(False, PreferenceLevel.SYSTEM),
+    PARAM_VALIDATION_PREF: PreferenceEntry(True, PreferenceLevel.SYSTEM),
+    REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.SYSTEM),
+    LOG_PREF: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
+    RUNTIME_PARAM_MODULATION_PREF: PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.SYSTEM)}
 
 CategoryDefaultPreferencesDict = {
     PREFERENCE_SET_NAME: CATEGORY_DEFAULT_PREFERENCES,
-    kpVerbosePref: PreferenceEntry(False, PreferenceLevel.CATEGORY),
-    kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.CATEGORY),
-    kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.CATEGORY),
-    kpLogPref: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
-    kpRuntimeParamModulationPref: PreferenceEntry(Modulation.MULTIPLY,PreferenceLevel.CATEGORY)}
+    VERBOSE_PREF: PreferenceEntry(False, PreferenceLevel.CATEGORY),
+    PARAM_VALIDATION_PREF: PreferenceEntry(True, PreferenceLevel.CATEGORY),
+    REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.CATEGORY),
+    LOG_PREF: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
+    RUNTIME_PARAM_MODULATION_PREF: PreferenceEntry(Modulation.MULTIPLY,PreferenceLevel.CATEGORY)}
 
 TypeDefaultPreferencesDict = {
     PREFERENCE_SET_NAME: TYPE_DEFAULT_PREFERENCES,
-    kpVerbosePref: PreferenceEntry(False, PreferenceLevel.TYPE),
-    kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.TYPE),
-    kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.TYPE),
-    kpLogPref: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
-    kpRuntimeParamModulationPref: PreferenceEntry(Modulation.ADD,PreferenceLevel.TYPE)}
+    VERBOSE_PREF: PreferenceEntry(False, PreferenceLevel.TYPE),
+    PARAM_VALIDATION_PREF: PreferenceEntry(True, PreferenceLevel.TYPE),
+    REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.TYPE),
+    LOG_PREF: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
+    RUNTIME_PARAM_MODULATION_PREF: PreferenceEntry(Modulation.ADD,PreferenceLevel.TYPE)}
 
 SubtypeDefaultPreferencesDict = {
     PREFERENCE_SET_NAME: SUBTYPE_DEFAULT_PREFERENCES,
-    kpVerbosePref: PreferenceEntry(False, PreferenceLevel.SUBTYPE),
-    kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.SUBTYPE),
-    kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.SUBTYPE),
-    kpLogPref: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
-    kpRuntimeParamModulationPref: PreferenceEntry(Modulation.ADD,PreferenceLevel.SUBTYPE)}
+    VERBOSE_PREF: PreferenceEntry(False, PreferenceLevel.SUBTYPE),
+    PARAM_VALIDATION_PREF: PreferenceEntry(True, PreferenceLevel.SUBTYPE),
+    REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.SUBTYPE),
+    LOG_PREF: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
+    RUNTIME_PARAM_MODULATION_PREF: PreferenceEntry(Modulation.ADD,PreferenceLevel.SUBTYPE)}
 
 InstanceDefaultPreferencesDict = {
     PREFERENCE_SET_NAME: INSTANCE_DEFAULT_PREFERENCES,
-    kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-    kpParamValidationPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-    kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-    kpLogPref: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
-    kpRuntimeParamModulationPref: PreferenceEntry(Modulation.OVERRIDE, PreferenceLevel.INSTANCE)}
+    VERBOSE_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+    PARAM_VALIDATION_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+    REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+    LOG_PREF: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
+    RUNTIME_PARAM_MODULATION_PREF: PreferenceEntry(Modulation.OVERRIDE, PreferenceLevel.INSTANCE)}
 
 # Dict of default dicts
 ComponentDefaultPrefDicts = {
@@ -173,13 +173,13 @@ class ComponentPreferenceSet(PreferenceSet):
                    however, since a PreferenceSet can be assigned to multiple objects, when accessing the preference
                    the owner is set dynamically, to insure context-relevant PreferenceLevels for returning the setting
         - prefs (dict):  a specification dict, each entry of which must have a:
-            key that is a keypath (kp<*>) corresponding to an attribute of the PreferenceSet, from the following set:
+            key that is a keypath (PREFERENCE_KEYWORD<*>) corresponding to an attribute of the PreferenceSet, from the following set:
                 + PREFERENCE_SET_NAME: specifies the name of the PreferenceSet
-                + kpVerbosePref: print non-exception-related information during execution
-                + kpParamValidationPref: validate parameters during execution
-                + kpReportOutputPref: report object's ouptut during execution
-                + kpLogPref: record attribute data for the object during execution
-                + kpRuntimeParamModulationPref: modulate parameters using runtime specification (in pathway)
+                + VERBOSE_PREF: print non-exception-related information during execution
+                + PARAM_VALIDATION_PREF: validate parameters during execution
+                + REPORT_OUTPUT_PREF: report object's ouptut during execution
+                + LOG_PREF: record attribute data for the object during execution
+                + RUNTIME_PARAM_MODULATION_PREF: modulate parameters using runtime specification (in pathway)
             value that is either a PreferenceSet, valid setting for the preference, or a PreferenceLevel; defaults
         - level (PreferenceLevel): ??
         - name (str): name of PreferenceSet
@@ -226,11 +226,11 @@ class ComponentPreferenceSet(PreferenceSet):
     # - a default set of preferences (where defaults are not otherwise specified)
     defaultPreferencesDict = {
             PREFERENCE_SET_NAME: 'ComponentPreferenceSetDefaults',
-            kpVerbosePref: PreferenceEntry(False, PreferenceLevel.SYSTEM),
-            kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.SYSTEM),
-            kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.SYSTEM),
-            kpLogPref: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
-            kpRuntimeParamModulationPref: PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.SYSTEM)
+            VERBOSE_PREF: PreferenceEntry(False, PreferenceLevel.SYSTEM),
+            PARAM_VALIDATION_PREF: PreferenceEntry(True, PreferenceLevel.SYSTEM),
+            REPORT_OUTPUT_PREF: PreferenceEntry(True, PreferenceLevel.SYSTEM),
+            LOG_PREF: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
+            RUNTIME_PARAM_MODULATION_PREF: PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.SYSTEM)
 
     }
 
@@ -328,7 +328,7 @@ class ComponentPreferenceSet(PreferenceSet):
         """
         # If the level of the object is below the Preference level,
         #    recursively calls base (super) classes to get preference at specified level
-        return self.get_pref_setting_for_level(kpVerbosePref, self._verbose_pref.level)[0]
+        return self.get_pref_setting_for_level(VERBOSE_PREF, self._verbose_pref.level)[0]
 
     @verbosePref.setter
     def verbosePref(self, setting):
@@ -336,7 +336,7 @@ class ComponentPreferenceSet(PreferenceSet):
         :param setting:
         :return:
         """
-        self.set_preference(candidate_info=setting, pref_ivar_name=kpVerbosePref)
+        self.set_preference(candidate_info=setting, pref_ivar_name=VERBOSE_PREF)
 
     @property
     def paramValidationPref(self):
@@ -346,7 +346,7 @@ class ComponentPreferenceSet(PreferenceSet):
         """
         # If the level of the object is below the Preference level,
         #    recursively call base (super) classes to get preference at specified level
-        return self.get_pref_setting_for_level(kpParamValidationPref, self._param_validation_pref.level)[0]
+        return self.get_pref_setting_for_level(PARAM_VALIDATION_PREF, self._param_validation_pref.level)[0]
 
 
     @paramValidationPref.setter
@@ -355,7 +355,7 @@ class ComponentPreferenceSet(PreferenceSet):
         :param setting:
         :return:
         """
-        self.set_preference(setting,kpParamValidationPref)
+        self.set_preference(setting,PARAM_VALIDATION_PREF)
 
     @property
     def reportOutputPref(self):
@@ -365,7 +365,7 @@ class ComponentPreferenceSet(PreferenceSet):
         """
         # If the level of the object is below the Preference level,
         #    recursively calls super (closer to base) classes to get preference at specified level
-        return self.get_pref_setting_for_level(kpReportOutputPref, self._report_output_pref.level)[0]
+        return self.get_pref_setting_for_level(REPORT_OUTPUT_PREF, self._report_output_pref.level)[0]
 
 
     @reportOutputPref.setter
@@ -374,7 +374,7 @@ class ComponentPreferenceSet(PreferenceSet):
         :param setting:
         :return:
         """
-        self.set_preference(candidate_info=setting, pref_ivar_name=kpReportOutputPref)
+        self.set_preference(candidate_info=setting, pref_ivar_name=REPORT_OUTPUT_PREF)
 
     @property
     def logPref(self):
@@ -384,7 +384,7 @@ class ComponentPreferenceSet(PreferenceSet):
         """
         # If the level of the object is below the Preference level,
         #    recursively calls base (super) classes to get preference at specified level
-        return self.get_pref_setting_for_level(kpLogPref, self._log_pref.level)[0]
+        return self.get_pref_setting_for_level(LOG_PREF, self._log_pref.level)[0]
 
     # # VERSION THAT USES OWNER'S logPref TO LIST ENTRIES TO BE RECORDED
     # @logPref.setter
@@ -394,7 +394,7 @@ class ComponentPreferenceSet(PreferenceSet):
     #     :return:
     #     """
     #
-    #     entries, level = self.set_preference(candidate_info=setting, pref_ivar_name=kpLogPref, [str, list])
+    #     entries, level = self.set_preference(candidate_info=setting, pref_ivar_name=LOG_PREF, [str, list])
     #
     #     if entries:
     #         # Add entries to owner's log
@@ -412,7 +412,7 @@ class ComponentPreferenceSet(PreferenceSet):
         :param setting:
         :return:
         """
-        self.set_preference(candidate_info=setting, pref_ivar_name=kpLogPref)
+        self.set_preference(candidate_info=setting, pref_ivar_name=LOG_PREF)
 
 
     @property
@@ -421,7 +421,7 @@ class ComponentPreferenceSet(PreferenceSet):
         :return:
         """
         # return self._runtime_param_modulation_pref
-        return self.get_pref_setting_for_level(kpRuntimeParamModulationPref,
+        return self.get_pref_setting_for_level(RUNTIME_PARAM_MODULATION_PREF,
                                                self._runtime_param_modulation_pref.level)[0]
 
 
@@ -432,4 +432,4 @@ class ComponentPreferenceSet(PreferenceSet):
         :param entry:
         :return:
         """
-        self.set_preference(candidate_info=setting, pref_ivar_name=kpRuntimeParamModulationPref)
+        self.set_preference(candidate_info=setting, pref_ivar_name=RUNTIME_PARAM_MODULATION_PREF)

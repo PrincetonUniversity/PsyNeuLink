@@ -621,7 +621,7 @@ class OptimizationControlMechanism(ControlMechanism):
     # Note: only need to specify setting;  level will be assigned to Type automatically
     # classPreferences = {
     #     PREFERENCE_SET_NAME: 'DefaultControlMechanismCustomClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     # FIX: ADD OTHER Parameters() HERE??
     class Parameters(ControlMechanism.Parameters):

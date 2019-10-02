@@ -852,10 +852,10 @@ class System(System_Base):
     # These will override those specified in CATEGORY_DEFAULT_PREFERENCES
     # classPreferences = {
     #     PREFERENCE_SET_NAME: 'SystemCustomClassPreferences',
-    #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
+    #     REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
     # classPreferences = {
     #     kwReportSimulationPref: 'SystemCustomClassPreferences',
-    #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
+    #     REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     # Use inputValueSystemDefault as default input to process
     class Parameters(System_Base.Parameters):

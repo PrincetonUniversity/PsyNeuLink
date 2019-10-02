@@ -822,7 +822,7 @@ class Process(Process_Base):
     # These will override those specified in TYPE_DEFAULT_PREFERENCES
     # classPreferences = {
     #     PREFERENCE_SET_NAME: 'ProcessCustomClassPreferences',
-    #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
+    #     REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
     # Use inputValueSystemDefault as default input to process
 
     class Parameters(Process_Base.Parameters):

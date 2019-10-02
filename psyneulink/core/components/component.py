@@ -424,7 +424,7 @@ from psyneulink.core.globals.keywords import \
     PARAMS, PARAMS_CURRENT, PREFS_ARG, REINITIALIZE_WHEN, SIZE, USER_PARAMS, VALUE, VARIABLE, FUNCTION_COMPONENT_CATEGORY
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase
-from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
+from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import \
     PreferenceEntry, PreferenceLevel, PreferenceSet, _assign_prefs
 from psyneulink.core.globals.registry import register_category
@@ -574,9 +574,9 @@ class ParamsDict(UserDict):
 parameter_keywords = set()
 
 # suppress_validation_preference_set = ComponentPreferenceSet(prefs = {
-#     kpParamValidationPref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
-#     kpVerbosePref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
-#     kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE)})
+#     PARAM_VALIDATION_PREF: PreferenceEntry(False,PreferenceLevel.INSTANCE),
+#     VERBOSE_PREF: PreferenceEntry(False,PreferenceLevel.INSTANCE),
+#     REPORT_OUTPUT_PREF: PreferenceEntry(True,PreferenceLevel.INSTANCE)})
 
 
 class dummy_class:
@@ -917,7 +917,7 @@ class Component(object, metaclass=ComponentsMeta):
     # Note: only need to specify setting;  level will be assigned to SYSTEM automatically
     # classPreferences = {
     #     PREFERENCE_SET_NAME: 'ComponentCustomClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     # Names and types of params required to be implemented in all subclass paramClassDefaults:
     # Notes:
@@ -1334,7 +1334,7 @@ class Component(object, metaclass=ComponentsMeta):
                         "should be a number, or iterable of numbers, which are integers or "
                         "can be converted to integers.".format(x, type(self), self.name))
                 if int_x != x:
-                    if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
+                    if hasattr(self, 'prefs') and hasattr(self.prefs, VERBOSE_PREF) and self.prefs.verbosePref:
                         warnings.warn("When an element ({}) in the size argument was cast to "
                                       "integer, its value changed to {}.".format(x, int_x))
                 return int_x
@@ -1356,7 +1356,7 @@ class Component(object, metaclass=ComponentsMeta):
                 if size is not None:
                     size = np.atleast_1d(size)
                     if len(np.shape(size)) > 1:  # number of dimensions of size > 1
-                        if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
+                        if hasattr(self, 'prefs') and hasattr(self.prefs, VERBOSE_PREF) and self.prefs.verbosePref:
                             warnings.warn(
                                 "size had more than one dimension (size had {} dimensions), so only the first "
                                 "element of its highest-numbered axis will be used".format(len(np.shape(size))))
@@ -1411,14 +1411,14 @@ class Component(object, metaclass=ComponentsMeta):
             if variable is not None and size is not None:
                 # If they conflict, give warning
                 if len(size) != len(variable):
-                    if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
+                    if hasattr(self, 'prefs') and hasattr(self.prefs, VERBOSE_PREF) and self.prefs.verbosePref:
                         warnings.warn("The size arg of {} conflicts with the length "
                                       "of its variable arg ({}) at element {}: variable takes precedence".
                                       format(self.name, size, variable))
                 else:
                     for i in range(len(size)):
                         if size[i] != len(variable[i]):
-                            if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
+                            if hasattr(self, 'prefs') and hasattr(self.prefs, VERBOSE_PREF) and self.prefs.verbosePref:
                                 warnings.warn("The size arg of {} ({}) conflicts with the length "
                                               "of its variable arg ({}) at element {}: variable takes precedence".
                                               format(self.name, size[i], variable[i], i))

@@ -820,7 +820,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     # These will override those specified in TYPE_DEFAULT_PREFERENCES
     # classPreferences = {
     #     PREFERENCE_SET_NAME: 'TransferCustomClassPreferences',
-    #     # kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+    #     # REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     #     }
 
     # TransferMechanism parameter and control signal assignments):

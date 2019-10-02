@@ -346,7 +346,7 @@ class LearningSignal(ModulatorySignal):
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
     #     PREFERENCE_SET_NAME: 'OutputStateCustomClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({

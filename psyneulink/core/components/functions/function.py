@@ -150,7 +150,7 @@ from psyneulink.core.globals.keywords import \
     ARGUMENT_THERAPY_FUNCTION, EXAMPLE_FUNCTION_TYPE, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION,\
     NAME, PARAMETER_STATE_PARAMS, FUNCTION_COMPONENT_CATEGORY, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
+from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import object_has_single_value, parameter_spec, safe_len
@@ -784,7 +784,7 @@ class ArgumentTherapy(Function_Base):
 
     classPreferences = {
         PREFERENCE_SET_NAME: 'ExampleClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
     # Mode indicators
@@ -958,7 +958,7 @@ class EVCAuxiliaryFunction(Function_Base):
 
     classPreferences = {
         PREFERENCE_SET_NAME: 'ValueFunctionCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
        }
 
     @tc.typecheck

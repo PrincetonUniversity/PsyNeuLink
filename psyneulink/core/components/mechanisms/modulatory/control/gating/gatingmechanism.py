@@ -418,7 +418,7 @@ class GatingMechanism(ControlMechanism):
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
     #     PREFERENCE_SET_NAME: 'GatingMechanismClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     # Override gating_allocatdion and suppress control_allocation
     class Parameters(ControlMechanism.Parameters):
