@@ -904,7 +904,7 @@ class Log:
         The context item of its `LogEntry` is assigned *COMMAND_LINE*.  If the call to log_values is made while a
         System to which the Component belongs is being run (e.g., in a **call_before..** or **call_after...** argument
         of its `run <System.run>` method), then the time of the LogEntry is assigned the value of the `Clock` of
-        the System's `scheduler_processing` or `scheduler_learning`, whichever is currently executing
+        the System's `scheduler` or `scheduler_learning`, whichever is currently executing
         (see `System_Scheduler`).
 
         Arguments
@@ -1758,9 +1758,9 @@ def _log_trials_and_runs(composition, curr_condition: tc.enum(LogCondition.TRIAL
     for mech in composition.mechanisms:
         for component in mech.log.loggable_components:
             if component.logPref & curr_condition:
-                # value = LogEntry((composition.scheduler_processing.clock.time.run,
-                #                   composition.scheduler_processing.clock.time.trial,
-                #                   composition.scheduler_processing.clock.time.time_step),
+                # value = LogEntry((composition.scheduler.clock.time.run,
+                #                   composition.scheduler.clock.time.trial,
+                #                   composition.scheduler.clock.time.time_step),
                 #                  # context,
                 #                  curr_condition,
                 #                  component.value)
@@ -1770,9 +1770,9 @@ def _log_trials_and_runs(composition, curr_condition: tc.enum(LogCondition.TRIAL
         for proj in mech.afferents:
             for component in proj.log.loggable_components:
                 if component.logPref & curr_condition:
-                    # value = LogEntry((composition.scheduler_processing.clock.time.run,
-                    #                   composition.scheduler_processing.clock.time.trial,
-                    #                   composition.scheduler_processing.clock.time.time_step),
+                    # value = LogEntry((composition.scheduler.clock.time.run,
+                    #                   composition.scheduler.clock.time.trial,
+                    #                   composition.scheduler.clock.time.time_step),
                     #                  context,
                     #                  component.value)
                     # component.log._log_value(value, context)
@@ -1782,9 +1782,9 @@ def _log_trials_and_runs(composition, curr_condition: tc.enum(LogCondition.TRIAL
     # for proj in composition.projections:
     #     for component in proj.log.loggable_components:
     #         if component.logPref & curr_condition:
-    #             value = LogEntry((composition.scheduler_processing.clock.time.run,
-    #                               composition.scheduler_processing.clock.time.trial,
-    #                               composition.scheduler_processing.clock.time.time_step),
+    #             value = LogEntry((composition.scheduler.clock.time.run,
+    #                               composition.scheduler.clock.time.trial,
+    #                               composition.scheduler.clock.time.time_step),
     #                              context,
     #                              component.value)
     #             component.log._log_value(value, context)

@@ -267,7 +267,7 @@ following two informational attributes:
 .. _Component_Current_Execution_Time:
 
 * **current_execution_time** -- maintains the `Time` of the last execution of the Component in the context of the
-  `Composition`'s current `scheduler_processing <Composition.scheduler_processing`, and is stored as a `time
+  `Composition`'s current `scheduler <Composition.scheduler`, and is stored as a `time
   <Context.time>` tuple of values indicating the `TimeScale.TRIAL`,  `TimeScale.PASS`, and `TimeScale.TIME_STEP` of the
   last execution.
 
@@ -3073,7 +3073,7 @@ class Component(object, metaclass=ComponentsMeta):
             return self.current_execution_time
         else:
             try:
-                return context.composition.scheduler_processing.get_clock(context).time
+                return context.composition.scheduler.get_clock(context).time
             except AttributeError:
                 return None
     # MODIFIED 9/22/19 END

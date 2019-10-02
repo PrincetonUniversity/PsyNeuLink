@@ -50,11 +50,11 @@ Stroop_model.add_controller(control)
 
 # Assign conditions:
 settling_time = 10
-Stroop_model.scheduler_processing.add_condition(color_hidden, EveryNCalls(task, settling_time))
-Stroop_model.scheduler_processing.add_condition(word_hidden, EveryNCalls(task, settling_time))
-Stroop_model.scheduler_processing.add_condition(output,All(EveryNCalls(color_hidden, 1),
+Stroop_model.scheduler.add_condition(color_hidden, EveryNCalls(task, settling_time))
+Stroop_model.scheduler.add_condition(word_hidden, EveryNCalls(task, settling_time))
+Stroop_model.scheduler.add_condition(output,All(EveryNCalls(color_hidden, 1),
                                                            EveryNCalls(word_hidden, 1)))
-Stroop_model.scheduler_processing.add_condition(decision, EveryNCalls(output, 1))
+Stroop_model.scheduler.add_condition(decision, EveryNCalls(output, 1))
 
 # SHOW_GRAPH ***********************************
 Stroop_model.show_graph(show_controller=True,

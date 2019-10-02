@@ -196,9 +196,9 @@ COMMENT
 ~~~~~~~~~~~
 
 Every System has two `Schedulers <Scheduler>`, one that handles the ordering of execution of its Components for
-`processing <System_Execution_Processing>` (assigned to its `scheduler_processing` attribute), and one that
+`processing <System_Execution_Processing>` (assigned to its `scheduler` attribute), and one that
 does the same for `learning <System_Execution_Learning>` (assigned to its `scheduler_learning` attribute).
-The `scheduler_processing` can be assigned in the **scheduler** argument of the System's constructor;  if it is not
+The `scheduler` can be assigned in the **scheduler** argument of the System's constructor;  if it is not
 specified, a default `Scheduler` is created automatically.   The `scheduler_learning` is always assigned automatically.
 The System's Schedulers base the ordering of execution of its Components based on the order in which they are listed
 in the `pathway <Process.pathway>`\\s of the `Processes <Process>` used to construct the System, constrained by any
@@ -941,7 +941,7 @@ class System(System_Base):
                                                   targets=targets,
                                                   params=params)
 
-        self.scheduler_processing = scheduler
+        self.scheduler = scheduler
         self.scheduler_learning = None
         self.termination_learning = None
 
@@ -973,8 +973,8 @@ class System(System_Base):
         self._instantiate_controller(control_mech_spec=controller, context=context)
 
         # Assign processing scheduler (learning_scheduler is assigned in _instantiate_learning_graph)
-        if self.scheduler_processing is None:
-            self.scheduler_processing = Scheduler(system=self, default_execution_id=self.default_execution_id)
+        if self.scheduler is None:
+            self.scheduler = Scheduler(system=self, default_execution_id=self.default_execution_id)
 
         # IMPLEMENT CORRECT REPORTING HERE
         # if self.prefs.reportOutputPref:
@@ -2595,9 +2595,9 @@ class System(System_Base):
 
         condition_set = {}
         for item in self.execution_list:
-            if hasattr(item, CONDITION) and item.condition and not item in self.scheduler_processing.conditions:
+            if hasattr(item, CONDITION) and item.condition and not item in self.scheduler.conditions:
                 condition_set[item] = item.condition
-        self.scheduler_processing.add_condition_set(condition_set)
+        self.scheduler.add_condition_set(condition_set)
 
         # FIX: DEAL WITH LEARNING PROJECTIONS HERE (ADD CONDITIONS ATTRIBUTE?)
         condition_set = {}
@@ -2688,8 +2688,8 @@ class System(System_Base):
 
         """
 
-        if self.scheduler_processing is None:
-            self.scheduler_processing = Scheduler(system=self, default_execution_id=self.default_execution_id)
+        if self.scheduler is None:
+            self.scheduler = Scheduler(system=self, default_execution_id=self.default_execution_id)
 
         if self.scheduler_learning is None:
             self.scheduler_learning = Scheduler(graph=self.learning_execution_graph, default_execution_id=self.default_execution_id)
@@ -2867,12 +2867,12 @@ class System(System_Base):
         # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
         # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update())
         # FIX:    FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
-        if self.scheduler_processing is None:
+        if self.scheduler is None:
             raise SystemError('System.py:_execute_processing - {0}\'s scheduler is None, '
                               'must be initialized before execution'.format(self.name))
         logger.debug('{0}.scheduler processing termination conditions: {1}'.format(self, termination_processing))
 
-        for next_execution_set in self.scheduler_processing.run(context=context, termination_conds=termination_processing):
+        for next_execution_set in self.scheduler.run(context=context, termination_conds=termination_processing):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
             i = 0
 
@@ -2890,7 +2890,7 @@ class System(System_Base):
                 execution_runtime_params = {}
                 if mechanism in runtime_params:
                     for param in runtime_params[mechanism]:
-                        if runtime_params[mechanism][param][1].is_satisfied(scheduler=self.scheduler_processing, context=context):
+                        if runtime_params[mechanism][param][1].is_satisfied(scheduler=self.scheduler, context=context):
                             execution_runtime_params[param] = runtime_params[mechanism][param][0]
 
                 # FIX: DO THIS LOCALLY IN LearningMechanism?? IF SO, NEEDS TO BE ABLE TO GET EXECUTION_ID
@@ -3313,7 +3313,7 @@ class System(System_Base):
         # replace this with updated Clock
         if False:
             print("\n\'{}\'{} executing with: **** (Time: {}) ".
-                  format(self.name, system_string, self.scheduler_processing.clock.simple_time))
+                  format(self.name, system_string, self.scheduler.clock.simple_time))
             processes = list(process.name for process in self.processes)
             print("- processes: {}".format(processes))
             print("self.input = ", self.input)
@@ -3325,9 +3325,9 @@ class System(System_Base):
 
         else:
             try:
-                time = self.scheduler_processing.get_clock(context).simple_time
+                time = self.scheduler.get_clock(context).simple_time
             except KeyError:
-                time = self.scheduler_processing.clock.simple_time
+                time = self.scheduler.clock.simple_time
 
             print("\n\'{}\'{} executing ********** (Time: {}) ".
                   format(self.name, system_string, time))
@@ -3343,7 +3343,7 @@ class System(System_Base):
 
         # Print output value of primary (first) outputState of each terminal Mechanism in System
         # IMPLEMENTATION NOTE:  add options for what to print (primary, all or monitored outputStates)
-        print("\n\'{}\'{} completed ***********(Time: {})".format(self.name, system_string, self.scheduler_processing.get_clock(context).simple_time))
+        print("\n\'{}\'{} completed ***********(Time: {})".format(self.name, system_string, self.scheduler.get_clock(context).simple_time))
         if self.learning:
             from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import MSE
             for mech in self.target_mechanisms:
@@ -3593,11 +3593,11 @@ class System(System_Base):
 
     @property
     def termination_processing(self):
-        return self.scheduler_processing.termination_conds
+        return self.scheduler.termination_conds
 
     @termination_processing.setter
     def termination_processing(self, termination_conds):
-        self.scheduler_processing.termination_conds = termination_conds
+        self.scheduler.termination_conds = termination_conds
 
 
     @property
@@ -4018,7 +4018,7 @@ class System(System_Base):
 
         """
 
-        # if active_item and self.scheduler_processing.clock.time.trial >= self._animate_num_trials:
+        # if active_item and self.scheduler.clock.time.trial >= self._animate_num_trials:
         #     return
 
         # IMPLEMENTATION NOTE:
@@ -4928,8 +4928,8 @@ class System(System_Base):
                     time_string = ''
                     phase_string = ''
                 elif execution_phase & (ContextFlags.PROCESSING | ContextFlags.IDLE):
-                    # time_string = repr(self.scheduler_processing.clock.simple_time)
-                    time = self.scheduler_processing.get_clock(context).time
+                    # time_string = repr(self.scheduler.clock.simple_time)
+                    time = self.scheduler.get_clock(context).time
                     time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}".\
                         format(time.run, time.trial, time.pass_, time.time_step)
                     phase_string = 'Processing Phase - '
@@ -4952,7 +4952,7 @@ class System(System_Base):
                     index = '-'
                 else:
                     index = repr(self._component_execution_count)
-                image_filename = repr(self.scheduler_processing.get_clock(context).simple_time.trial) + '-' + index + '-'
+                image_filename = repr(self.scheduler.get_clock(context).simple_time.trial) + '-' + index + '-'
                 image_file = self._animate_directory + '/' + image_filename + '.gif'
                 G.render(filename = image_filename,
                          directory=self._animate_directory,

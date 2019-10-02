@@ -877,7 +877,7 @@ def run(obj,
             # Reinitialize any mechanisms that has a 'reinitialize_when' condition and it is satisfied
             for mechanism in obj.mechanisms:
                 if hasattr(mechanism, "reinitialize_when") and mechanism.parameters.has_initializers._get(context):
-                    if mechanism.reinitialize_when.is_satisfied(scheduler=obj.scheduler_processing, context=context):
+                    if mechanism.reinitialize_when.is_satisfied(scheduler=obj.scheduler, context=context):
                         mechanism.reinitialize(None, context=context)
 
             input_num = execution % num_inputs_sets
@@ -937,10 +937,10 @@ def run(obj,
         )
 
     try:
-        obj.scheduler_processing.date_last_run_end = datetime.datetime.now()
+        obj.scheduler.date_last_run_end = datetime.datetime.now()
         obj.scheduler_learning.date_last_run_end = datetime.datetime.now()
 
-        for sched in [obj.scheduler_processing, obj.scheduler_learning]:
+        for sched in [obj.scheduler, obj.scheduler_learning]:
             try:
                 sched.get_clock(context)._increment_time(TimeScale.RUN)
             except KeyError:

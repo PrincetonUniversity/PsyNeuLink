@@ -66,7 +66,7 @@ class TestRuntimeParams:
         # ONLY mechanism value should reflect runtime param -- attr should be changed back by the time we inspect it
         C.run(inputs={T: 2.0},
               runtime_params={T: {"noise": (10.0, AtTrial(1))}},
-              # scheduler_processing=S,
+              # scheduler=S,
               num_trials=4)
 
         # Runtime param NOT used for noise

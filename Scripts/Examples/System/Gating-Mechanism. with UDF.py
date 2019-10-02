@@ -98,7 +98,7 @@ stim_list = {
 
 
 def print_header(system):
-    print("\n\n**** Time: ", system.scheduler_processing.get_clock(system).simple_time)
+    print("\n\n**** Time: ", system.scheduler.get_clock(system).simple_time)
 
 
 def show_target(context=None):

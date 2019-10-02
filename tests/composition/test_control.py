@@ -327,7 +327,7 @@ class TestControlMechanisms:
     #     comp.add_linear_processing_pathway([Tx, Tz])
     #     comp.add_linear_processing_pathway([Ty, C])
     #     comp._analyze_graph()
-    #     comp._scheduler_processing.add_condition(Tz, pnl.AllHaveRun(C))
+    #     comp._scheduler.add_condition(Tz, pnl.AllHaveRun(C))
     #
     #     # assert Tz.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == C
     #     result = comp.run(inputs={Tx: [1, 1],

@@ -319,8 +319,8 @@ execute, simulating a situation in which the task instruction is processed befor
     task = LCAMechanism(name='TASK', size=2)
 
     # Assign conditions to scheduler:
-    Stroop_model.scheduler_processing.add_condition(color_hidden, EveryNExecutions(task, 10))
-    Stroop_model.scheduler_processing.add_condition(word_hidden, EveryNExecutions(task, 10))
+    Stroop_model.scheduler.add_condition(color_hidden, EveryNExecutions(task, 10))
+    Stroop_model.scheduler.add_condition(word_hidden, EveryNExecutions(task, 10))
 
     # Run with scheduler:
     Stroop_model.run(inputs={color_input:red, word_input:green, task_input:color})
@@ -343,8 +343,8 @@ conditions for execution of the ``color_hidden`` and ``task_hidden`` Mechanism's
 
     # Add Conditions to the ``color_hidden`` and ``word_hidden`` Mechanisms that depend on the converge function:
     epsilon = 0.01
-    Stroop_model.scheduler_processing.add_condition(color_hidden, When(converge, task, epsilon)))
-    Stroop_model.scheduler_processing.add_condition(word_hidden, When(converge, task, epsilon)))
+    Stroop_model.scheduler.add_condition(color_hidden, When(converge, task, epsilon)))
+    Stroop_model.scheduler.add_condition(word_hidden, When(converge, task, epsilon)))
 
 PsyNeuLink provides a rich set of `pre-defined Conditions <Condition_Pre-Specified_List>` (such as ``When`` in the
 examples above), but Conditions can also be constructed using any Python function.  Together, these can be combined to
