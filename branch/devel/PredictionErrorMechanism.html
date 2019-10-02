@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>PredictionErrorMechanism &mdash; PsyNeuLink 0.6.0.1+11.g48b9a7a documentation</title>
+  <title>PredictionErrorMechanism &mdash; PsyNeuLink 0.6.0.1+12.ge4e6302 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.1+11.g48b9a7a',
+              VERSION:'0.6.0.1+12.ge4e6302',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.1+11
+                0.6.0.1+12
               </div>
             
           
@@ -109,7 +109,7 @@
 <li class="toctree-l5"><a class="reference internal" href="LeabraMechanism.html">LeabraMechanism</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="AdaptiveMechanisms.html">Adaptive Mechanisms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ModulatoryMechanisms.html">Modulatory Mechanisms</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="Projections.html">Projections</a></li>
@@ -315,7 +315,7 @@ array representing a full time series as an experiment. See
 the function</li>
 <li><strong>target</strong> (<a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a><em>, </em><a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base"><em>Mechanism_Base</em></a><em>, </em><em>dict</em><em>, </em><em>number</em><em>, or </em><em>str</em>) – specifies the TARGET InputState, which will be used by the function to
 evaluate the sample</li>
-<li><strong>function</strong> (<em>CombinationFunction</em><em>, </em><a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction" title="psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction"><em>ObjectiveFunction</em></a><em>, </em><a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.function" title="psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.function"><em>function</em></a><em>, or </em><em>method : default PredictionErrorDeltaFunction</em>) – the function used to evaluate the sample and target inputs.</li>
+<li><strong>function</strong> (<em>CombinationFunction</em><em>, </em><a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction" title="psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction"><em>ObjectiveFunction</em></a><em>, </em><a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function"><em>function</em></a><em>, or </em><em>method : default PredictionErrorDeltaFunction</em>) – the function used to evaluate the sample and target inputs.</li>
 <li><strong>output_states</strong> (<em>str</em><em>, </em><em>Iterable : default OUTCOME</em>) – by default, contains only the <em>OUTCOME</em> (<a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary</span></a>)
 OutputState of the PredictionErrorMechanism.</li>
 <li><strong>learning_rate</strong> (<em>Number : default 0.3</em>) – controls the weight of later timesteps compared to earlier ones. Higher

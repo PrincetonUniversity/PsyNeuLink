@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>States &mdash; PsyNeuLink 0.6.0.1+11.g48b9a7a documentation</title>
+  <title>States &mdash; PsyNeuLink 0.6.0.1+12.ge4e6302 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.1+11.g48b9a7a',
+              VERSION:'0.6.0.1+12.ge4e6302',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.1+11
+                0.6.0.1+12
               </div>
             
           
@@ -202,68 +202,6 @@
 provided by them.  The value of a State can be modulated by a <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a>. There are
 three primary types of States (InputStates, ParameterStates and OutputStates) as well as one subtype (ModulatorySignal,
 used to send ModulatoryProjections), as summarized in the table below:</p>
-<span id="state-types-table"></span><table border="1" class="docutils align-left" id="id4">
-<caption><span class="caption-text"><strong>State Types and Associated Projection Types</strong></span><a class="headerlink" href="#id4" title="Permalink to this table">¶</a></caption>
-<colgroup>
-<col width="17%" />
-<col width="18%" />
-<col width="22%" />
-<col width="15%" />
-<col width="28%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head"><em>State Type</em></th>
-<th class="head"><em>Owner</em></th>
-<th class="head"><em>Description</em></th>
-<th class="head"><em>Modulated by</em></th>
-<th class="head"><em>Specification</em></th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr class="row-even"><td><a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a></td>
-<td><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a></td>
-<td>receives input from
-<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a></td>
-<td><a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a></td>
-<td><a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> constructor;
-<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>
-constructor or its
-<a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.add_states" title="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a></td>
-<td><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or
-<a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a></td>
-<td>represents parameter
-value for a <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>
-or its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a></td>
-<td><a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a>
-and/or
-<a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a></td>
-<td>Implicitly whenever a
-parameter value is
-<a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">specified</span></a></td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a></td>
-<td><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a></td>
-<td>provides output to
-<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a></td>
-<td><a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a></td>
-<td><a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> constructor;
-<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>
-constructor or its
-<a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.add_states" title="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a></td>
-<td><a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a></td>
-<td>provides value for
-<a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a></td>
-<td>&#160;</td>
-<td><a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a>
-constructor; tuple in State
-or parameter specification</td>
-</tr>
-</tbody>
-</table>
 </div>
 <div class="section" id="creating-a-state">
 <span id="state-creation"></span><h2>Creating a State<a class="headerlink" href="#creating-a-state" title="Permalink to this headline">¶</a></h2>
@@ -415,8 +353,8 @@ details and compatibility requirements.</li>
 argument of its constructor, or a <em>PROJECTIONS</em> entry of a <a class="reference internal" href="#state-specification-dictionary"><span class="std std-ref">State specification dictionary</span></a> (or a dictionary assigned to the <strong>params</strong> argument of the State’s constructor).
 The following types of Projections can be specified for each type of State:</p>
 <blockquote>
-<div><span id="state-projections-table"></span><table border="1" class="docutils align-left" id="id5">
-<caption><span class="caption-text"><strong>Specifiable Projections for State Types</strong></span><a class="headerlink" href="#id5" title="Permalink to this table">¶</a></caption>
+<div><span id="state-projections-table"></span><table border="1" class="docutils align-left" id="id4">
+<caption><span class="caption-text"><strong>Specifiable Projections for State Types</strong></span><a class="headerlink" href="#id4" title="Permalink to this table">¶</a></caption>
 <colgroup>
 <col width="21%" />
 <col width="36%" />
@@ -505,7 +443,7 @@ functional (i.e., used during the execution of <code class="xref any docutils li
 <span id="state-owner"></span><h3><em>Owner</em><a class="headerlink" href="#owner" title="Permalink to this headline">¶</a></h3>
 <p>Every State has an <a class="reference internal" href="#psyneulink.core.components.states.state.State_Base.owner" title="psyneulink.core.components.states.state.State_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>.  For <a class="reference internal" href="InputState.html"><span class="doc">InputStates</span></a> and <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>, the
 owner must be a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>.  For <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterStates</span></a> it can be a Mechanism or a
-<a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjection</span></a>. For <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignals</span></a>, it must be an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a>. When a State is created as part of another Component, its <a class="reference internal" href="#psyneulink.core.components.states.state.State_Base.owner" title="psyneulink.core.components.states.state.State_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> is
+<a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjection</span></a>. For <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignals</span></a>, it must be a <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a>. When a State is created as part of another Component, its <a class="reference internal" href="#psyneulink.core.components.states.state.State_Base.owner" title="psyneulink.core.components.states.state.State_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> is
 assigned automatically to that Component.  It is also assigned automatically when the State is assigned to a
 <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> using that Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_states" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method.  Otherwise, it must be
 specified explicitly in the <strong>owner</strong> argument of the constructor for the State (in which case it is immediately
@@ -516,8 +454,8 @@ assigned to the specified Mechanism).  If the <strong>owner</strong> argument is
 <h3><em>Projections</em><a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <p>Every State has attributes that lists the <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> it sends and/or receives.  These depend on the
 type of State, listed below (and shown in the <a class="reference internal" href="#state-projections-table"><span class="std std-ref">table</span></a>):</p>
-<table border="1" class="docutils align-left" id="id6">
-<caption><span class="caption-text">State Projection Attributes</span><a class="headerlink" href="#id6" title="Permalink to this table">¶</a></caption>
+<table border="1" class="docutils align-left" id="id5">
+<caption><span class="caption-text">State Projection Attributes</span><a class="headerlink" href="#id5" title="Permalink to this table">¶</a></caption>
 <colgroup>
 <col width="42%" />
 <col width="58%" />
@@ -558,7 +496,7 @@ State receives (the default is <a class="reference internal" href="CombinationFu
 <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a>;  for a <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a>, it determines the value of the associated parameter, under the potential
 influence of a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> (for a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>) or a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> (for a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>);
 for an OutputState, it conveys the result  of the Mechanism’s function to its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a> attribute, under the potential influence of a <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a>.  See
-<a class="reference internal" href="ModulatorySignal.html#modulatorysignal-structure"><span class="std std-ref">ModulatorySignals</span></a> and the <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> associated with
+<a class="reference internal" href="ModulatorySignal.html#modulatorysignal-structure"><span class="std std-ref">ModulatorySignals</span></a> and the <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a> associated with
 each type for a description of how they can be used to modulate the <a class="reference internal" href="#psyneulink.core.components.states.state.State_Base.function" title="psyneulink.core.components.states.state.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a State.</li>
 </ul>
 <ul class="simple">

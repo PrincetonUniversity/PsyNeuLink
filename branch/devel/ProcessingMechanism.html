@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Processing Mechanisms &mdash; PsyNeuLink 0.6.0.1+11.g48b9a7a documentation</title>
+  <title>Processing Mechanisms &mdash; PsyNeuLink 0.6.0.1+12.ge4e6302 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.1+11.g48b9a7a',
+              VERSION:'0.6.0.1+12.ge4e6302',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.1+11
+                0.6.0.1+12
               </div>
             
           
@@ -107,7 +107,7 @@
 <li class="toctree-l5"><a class="reference internal" href="ObjectiveMechanism.html">ObjectiveMechanism</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="AdaptiveMechanism.html">Adaptive Mechanisms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ModulatoryMechanism.html">Modulatory Mechanisms</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="Projection.html">Projections</a></li>
@@ -210,10 +210,10 @@ or System.</p>
 specialized validation. Almost any PsyNeuLink Function, including the <a class="reference internal" href="UserDefinedFunction.html"><span class="doc">UserDefinedFunction</span></a>, may be the function of a
 ProcessingMechanism. Currently, the only exception is <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.BackPropagation" title="psyneulink.core.components.functions.learningfunctions.BackPropagation"><code class="xref any py py-class docutils literal"><span class="pre">BackPropagation</span></code></a>. Subtypes of
 ProcessingMechanism have more specialized features, and often have restrictions on which Functions are allowed.</p>
-<p>The output of a ProcessingMechanism may also be used by an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> to modify the
+<p>The output of a ProcessingMechanism may also be used by a <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a> to modify the
 parameters of other components (or its own parameters). ProcessingMechanisms are always executed before all
-AdaptiveMechanisms in the Process and/or System to which they belong, so that any modifications made by the
-AdaptiveMechanism are available to all ProcessingMechanisms in the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</p>
+ModulatoryMechanisms in the Process and/or System to which they belong, so that any modifications made by the
+ModulatoryMechanism are available to all ProcessingMechanisms in the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</p>
 </div>
 <div class="section" id="creating-a-processingmechanism">
 <span id="processingmechanism-creation"></span><h2>Creating a ProcessingMechanism<a class="headerlink" href="#creating-a-processingmechanism" title="Permalink to this headline">¶</a></h2>
@@ -252,7 +252,7 @@ ProcessingMechanism’s <code class="xref any docutils literal"><span class="pre
 </div>
 <p>This option is intended for testing and debugging purposes.</p>
 <p>More commonly, a mechanism is executed when the <a class="reference internal" href="Process.html#process-execution"><span class="std std-ref">Process</span></a> or <a class="reference internal" href="System.html#system-execution"><span class="std std-ref">System</span></a> to which it
-belongs is run. A ProcessingMechanism always executes before any <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanisms</span></a> in the same
+belongs is run. A ProcessingMechanism always executes before any <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanisms</span></a> in the same
 <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> or <a class="reference internal" href="System.html"><span class="doc">System</span></a>.</p>
 <dl class="class">
 <dt id="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism">
@@ -291,7 +291,7 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>value: default</em> – the input to Mechanism’s <a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.function" title="psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
+<dd><p><em>value: default</em> – the input to Mechanism’s <a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">

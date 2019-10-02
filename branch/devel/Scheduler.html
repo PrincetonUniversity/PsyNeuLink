@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Scheduler &mdash; PsyNeuLink 0.6.0.1+11.g48b9a7a documentation</title>
+  <title>Scheduler &mdash; PsyNeuLink 0.6.0.1+12.ge4e6302 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.1+11.g48b9a7a',
+              VERSION:'0.6.0.1+12.ge4e6302',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.1+11
+                0.6.0.1+12
               </div>
             
           
@@ -345,11 +345,11 @@ by passing a dictionary mapping <a class="reference internal" href="Time.html#ps
 <span class="go">[(TransferMechanism A), (MappingProjection MappingProjection from A[RESULTS] to B[InputState-0]), (TransferMechanism B), (MappingProjection MappingProjection from B[RESULTS] to C[InputState-0]), (TransferMechanism C)]</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># implicit condition of Always for A</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler_processing</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler_processing</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># implicit AllHaveRun Termination condition</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler_processing</span><span class="o">.</span><span class="n">run</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">run</span><span class="p">())</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span>
 <span class="go">[{(TransferMechanism A)}, {(TransferMechanism A)}, {(TransferMechanism B)}, {(TransferMechanism A)}, {(TransferMechanism A)}, {(TransferMechanism B)}, {(TransferMechanism A)}, {(TransferMechanism A)}, {(TransferMechanism B)}, {(TransferMechanism C)}]</span>
 </pre></div>
@@ -358,9 +358,9 @@ by passing a dictionary mapping <a class="reference internal" href="Time.html#ps
 <li><p class="first">Alternate basic phasing in a linear process:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">])</span>
-<span class="go">[(TransferMechanism A), (MappingProjection MappingProjection-2), (TransferMechanism B)]</span>
+<span class="go">[(TransferMechanism A), (MappingProjection MappingProjection from A[RESULTS] to B[InputState-0]), (TransferMechanism B)]</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler_processing</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="n">A</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">pnl</span><span class="o">.</span><span class="n">Any</span><span class="p">(</span>
 <span class="gp">... </span>        <span class="n">pnl</span><span class="o">.</span><span class="n">AtPass</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
@@ -368,7 +368,7 @@ by passing a dictionary mapping <a class="reference internal" href="Time.html#ps
 <span class="gp">... </span>    <span class="p">)</span>
 <span class="gp">... </span><span class="p">)</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler_processing</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="n">B</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">pnl</span><span class="o">.</span><span class="n">Any</span><span class="p">(</span>
 <span class="gp">... </span>        <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
@@ -378,7 +378,7 @@ by passing a dictionary mapping <a class="reference internal" href="Time.html#ps
 <span class="gp">&gt;&gt;&gt; </span><span class="n">termination_conds</span> <span class="o">=</span> <span class="p">{</span>
 <span class="gp">... </span>    <span class="n">pnl</span><span class="o">.</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">:</span> <span class="n">pnl</span><span class="o">.</span><span class="n">AfterNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">time_scale</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">)</span>
 <span class="gp">... </span><span class="p">}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler_processing</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">termination_conds</span><span class="o">=</span><span class="n">termination_conds</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">termination_conds</span><span class="o">=</span><span class="n">termination_conds</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span> 
 <span class="go">[{(TransferMechanism A)}, {(TransferMechanism B)}, {(TransferMechanism B)}, {(TransferMechanism A)}, {(TransferMechanism B)}, {(TransferMechanism B)}]</span>
 </pre></div>
@@ -390,11 +390,11 @@ by passing a dictionary mapping <a class="reference internal" href="Time.html#ps
 <span class="go">[(TransferMechanism A), (MappingProjection MappingProjection from A[RESULTS] to C[InputState-0]), (TransferMechanism C)]</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">])</span>
-<span class="go">[(TransferMechanism B), (MappingProjection MappingProjection-4), (TransferMechanism C)]</span>
+<span class="go">[(TransferMechanism B), (MappingProjection MappingProjection from B[RESULTS] to C[InputState-0]), (TransferMechanism C)]</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler_processing</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNPasses</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler_processing</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler_processing</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNPasses</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="n">C</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">pnl</span><span class="o">.</span><span class="n">Any</span><span class="p">(</span>
 <span class="gp">... </span>        <span class="n">pnl</span><span class="o">.</span><span class="n">AfterNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
@@ -404,7 +404,7 @@ by passing a dictionary mapping <a class="reference internal" href="Time.html#ps
 <span class="gp">&gt;&gt;&gt; </span><span class="n">termination_conds</span> <span class="o">=</span> <span class="p">{</span>
 <span class="gp">... </span>    <span class="n">pnl</span><span class="o">.</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">:</span> <span class="n">pnl</span><span class="o">.</span><span class="n">AfterNCalls</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">time_scale</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">)</span>
 <span class="gp">... </span><span class="p">}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler_processing</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">termination_conds</span><span class="o">=</span><span class="n">termination_conds</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">termination_conds</span><span class="o">=</span><span class="n">termination_conds</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span>  
 <span class="go">[{(TransferMechanism A)}, {(TransferMechanism A), (TransferMechanism B)}, {(TransferMechanism A)}, {(TransferMechanism C)}, {(TransferMechanism A), (TransferMechanism B)}, {(TransferMechanism C)}, {(TransferMechanism A)}, {(TransferMechanism C)}, {(TransferMechanism A), (TransferMechanism B)}, {(TransferMechanism C)}]</span>
 </pre></div>

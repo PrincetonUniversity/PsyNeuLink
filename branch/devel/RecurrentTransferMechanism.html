@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>RecurrentTransferMechanism &mdash; PsyNeuLink 0.6.0.1+11.g48b9a7a documentation</title>
+  <title>RecurrentTransferMechanism &mdash; PsyNeuLink 0.6.0.1+12.ge4e6302 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.1+11.g48b9a7a',
+              VERSION:'0.6.0.1+12.ge4e6302',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.1+11
+                0.6.0.1+12
               </div>
             
           
@@ -109,7 +109,7 @@
 <li class="toctree-l5"><a class="reference internal" href="LeabraMechanism.html">LeabraMechanism</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="AdaptiveMechanisms.html">Adaptive Mechanisms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ModulatoryMechanisms.html">Modulatory Mechanisms</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="Projections.html">Projections</a></li>
@@ -324,7 +324,7 @@ of the Mechanism</dd>
 <dt><em>ENTROPY</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
 <dd>The entropy of the result, which is calculated using the <code class="xref any docutils literal"><span class="pre">Stability</span>
 <span class="pre">Function</span></code> with the ENTROPY metric
-(Note: this is only present if the Mechanism’s <a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.function" title="psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is bounded
+(Note: this is only present if the Mechanism’s <a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is bounded
 between 0 and 1 (e.g. the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function)).</dd>
 </dl>
 </dd></dl>
@@ -632,7 +632,7 @@ ignored.</dd>
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a>.</dd>
 <dt>learning_rate <span class="classifier-delimiter">:</span> <span class="classifier">float, 1d or 2d np.array, or np.matrix of numeric values</span> <span class="classifier-delimiter">:</span> <span class="classifier">default None</span></dt>
 <dd>determines the learning rate used by the <code class="xref any docutils literal"><span class="pre">learning_function</span></code>
-of the <code class="xref any docutils literal"><span class="pre">learning_mechanism</span></code> (see <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_rate" title="psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for details concerning specification and default value
+of the <code class="xref any docutils literal"><span class="pre">learning_mechanism</span></code> (see <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_rate" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for details concerning specification and default value
 assignment).</dd>
 <dt>learning_function <span class="classifier-delimiter">:</span> <span class="classifier">function</span> <span class="classifier-delimiter">:</span> <span class="classifier">default Hebbian</span></dt>
 <dd>the function used by the <code class="xref any docutils literal"><span class="pre">learning_mechanism</span></code> to train the
@@ -697,7 +697,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 </table>
 <dl class="method">
 <dt id="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.configure_learning">
-<code class="descname">configure_learning</code><span class="sig-paren">(</span><em>learning_function: &lt;typecheck.framework.optional object at 0x118b2ea58&gt; = None</em>, <em>learning_rate: &lt;typecheck.framework.optional object at 0x118b2eb00&gt; = None</em>, <em>learning_condition: &lt;typecheck.tc_predicates.any object at 0x118b2ec50&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.configure_learning" title="Permalink to this definition">¶</a></dt>
+<code class="descname">configure_learning</code><span class="sig-paren">(</span><em>learning_function: &lt;typecheck.framework.optional object at 0x113c74978&gt; = None</em>, <em>learning_rate: &lt;typecheck.framework.optional object at 0x113c74a20&gt; = None</em>, <em>learning_condition: &lt;typecheck.tc_predicates.any object at 0x113c74b70&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.configure_learning" title="Permalink to this definition">¶</a></dt>
 <dd><p>Provide user-accessible-interface to _instantiate_learning_mechanism</p>
 <p>Configure RecurrentTransferMechanism for learning. Creates the following Components:</p>
 <ul class="simple">

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Projections &mdash; PsyNeuLink 0.6.0.1+11.g48b9a7a documentation</title>
+  <title>Projections &mdash; PsyNeuLink 0.6.0.1+12.ge4e6302 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.1+11.g48b9a7a',
+              VERSION:'0.6.0.1+12.ge4e6302',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -46,7 +46,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Pathway Projections" href="PathwayProjection.html" />
-    <link rel="prev" title="Gating Mechanism" href="GatingMechanism.html" /> 
+    <link rel="prev" title="Learning Mechanism" href="LearningMechanism.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.1+11
+                0.6.0.1+12
               </div>
             
           
@@ -234,18 +234,18 @@ each of which has subtypes that differ in the type of information they transmit,
 converts it by convolving it with the MappingProjection’s <code class="xref any docutils literal"><span class="pre">matrix</span></code>
 parameter, and transmits the result to the <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> of another ProcessingMechanism.  Typically,
 MappingProjections are used to connect Mechanisms in the <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.pathway" title="psyneulink.core.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>, though they can be use for
-other purposes as well (for example, to convey the output of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> to an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a>).</dd>
+other purposes as well (for example, to convey the output of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> to a <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a>).</dd>
 </dl>
 </li>
 </ul>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a></dt>
-<dd><p class="first last">takes the <a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState.value" title="psyneulink.core.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> of an <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">AdaptiveMechanism</span></a>, uses it to regulate modify the <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.value" title="psyneulink.core.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of an <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a>,
+<dd><p class="first last">takes the <a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState.value" title="psyneulink.core.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> of a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ModulatoryMechanism</span></a>, uses it to regulate modify the <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.value" title="psyneulink.core.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of an <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a>,
 <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> or <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of another Component.  ModulatorySignals are specialized types of <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>,
 that are used to specify how to modify the <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.value" title="psyneulink.core.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the <a class="reference internal" href="State.html"><span class="doc">State</span></a> to which a
 ModulatoryProjection projects. There are three types of ModulatoryProjections, corresponding to the three types
-of AdaptiveMechanisms (and corresponding ModulatorySignals; see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-anatomy-figure"><span class="std std-ref">figure</span></a>),
+of ModulatoryMechanisms (and corresponding ModulatorySignals; see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-anatomy-figure"><span class="std std-ref">figure</span></a>),
 that project to different types of <a class="reference internal" href="State.html"><span class="doc">States</span></a>:</p>
 </dd>
 </dl>
@@ -472,7 +472,7 @@ of a State are listed in its <a class="reference internal" href="State.html#psyn
 <p>This must be an <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> or a <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> (a subclass of OutputState specialized for
 <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a>).  The Projection is assigned to the OutputState or ModulatorySignal’s
 <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.efferents" title="psyneulink.core.components.states.state.State_Base.efferents"><code class="xref any py py-attr docutils literal"><span class="pre">efferents</span></code></a> list and, for ModulatoryProjections, to the list of ModulatorySignals specific to
-the <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> from which it projects.  The OutputState or ModulatorySignal’s <a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState.value" title="psyneulink.core.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> is used as the <code class="xref any docutils literal"><span class="pre">variable</span></code> for Projection’s <code class="xref any docutils literal"><span class="pre">function</span></code>.</p>
+the <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a> from which it projects.  The OutputState or ModulatorySignal’s <a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState.value" title="psyneulink.core.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> is used as the <code class="xref any docutils literal"><span class="pre">variable</span></code> for Projection’s <code class="xref any docutils literal"><span class="pre">function</span></code>.</p>
 <p>A sender can be specified as:</p>
 <blockquote>
 <div><ul class="simple">
@@ -651,7 +651,7 @@ details).</p>
         <a href="PathwayProjection.html" class="btn btn-neutral float-right" title="Pathway Projections" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="GatingMechanism.html" class="btn btn-neutral float-left" title="Gating Mechanism" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="LearningMechanism.html" class="btn btn-neutral float-left" title="Learning Mechanism" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

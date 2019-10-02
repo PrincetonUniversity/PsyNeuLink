@@ -6,7 +6,7 @@ Mechanisms
 
    *Subclasses:*
    Processing Mechanisms <ProcessingMechanism>
-   Adaptive Mechanisms <AdaptiveMechanism>
+   Modulatory Mechanisms <ModulatoryMechanism>
 
 .. automodule:: psyneulink.core.components.mechanisms.mechanism
    :members:

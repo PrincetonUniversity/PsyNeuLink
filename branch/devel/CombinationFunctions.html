@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>CombinationFunctions &mdash; PsyNeuLink 0.6.0.1+11.g48b9a7a documentation</title>
+  <title>CombinationFunctions &mdash; PsyNeuLink 0.6.0.1+12.ge4e6302 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.1+11.g48b9a7a',
+              VERSION:'0.6.0.1+12.ge4e6302',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.1+11
+                0.6.0.1+12
               </div>
             
           
@@ -272,7 +272,7 @@ or a list containing either or both.  Each integer must be an index of an item i
 1d array, and that 1d array is included in the resulting 2d array in the order it appears in <strong>arrangement</strong>.
 If <strong>arrangement</strong> is specified, then only the items of <code class="xref any docutils literal"><span class="pre">variable</span></code> referenced in the
 specification are included in the result; if <strong>arrangement</strong> is not specified, all of the items of <code class="xref any docutils literal"><span class="pre">variable</span></code> are concatenated into a single 1d array (i.e., it functions identically to <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.Concatenate" title="psyneulink.core.components.functions.combinationfunctions.Concatenate"><code class="xref any py py-class docutils literal"><span class="pre">Concatenate</span></code></a>).</p>
-<p><code class="xref any docutils literal"><span class="pre">function</span></code> returns a 2d array with the items of <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable" title="psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> rearranged
+<p><code class="xref any docutils literal"><span class="pre">function</span></code> returns a 2d array with the items of <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> rearranged
 (and possibly concatenated) as specified by <strong>arrangement</strong>.</p>
 <p class="rubric">Examples</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">Rearrange</span><span class="p">(</span><span class="n">arrangement</span><span class="o">=</span><span class="p">[(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">),(</span><span class="mi">0</span><span class="p">)])</span>
@@ -670,7 +670,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.combinationfunctions.</code><code class="descname">PredictionErrorDeltaFunction</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>gamma: &lt;typecheck.framework.optional object at 0x118a8b5f8&gt; = 1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x11696e8c8&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.combinationfunctions.</code><code class="descname">PredictionErrorDeltaFunction</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>gamma: &lt;typecheck.framework.optional object at 0x11395e518&gt; = 1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x11177b400&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate temporal difference prediction error.</p>
 <p><code class="xref any docutils literal"><span class="pre">function</span></code> returns the prediction error using arrays in <code class="xref any docutils literal"><span class="pre">variable</span></code>:</p>
 <div class="math">
