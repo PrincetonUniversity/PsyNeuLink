@@ -2212,12 +2212,12 @@ class Component(object, metaclass=ComponentsMeta):
                     attr_name = '_{0}'.format(p.name)
                     attr_value = getattr(self, attr_name)
                     if attr_value is None:
-                        attr_value = p.default_value
+                        attr_value = copy.deepcopy(p.default_value)
 
                     p._set(attr_value, context=context, skip_history=True)
                     delattr(self, attr_name)
                 except AttributeError:
-                    p._set(p.default_value, context=context, skip_history=True)
+                    p._set(copy.deepcopy(p.default_value), context=context, skip_history=True)
 
     @handle_external_context()
     def assign_params(self, request_set=None, context=None):
