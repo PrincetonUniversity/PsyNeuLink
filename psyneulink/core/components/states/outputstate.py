@@ -603,7 +603,7 @@ from psyneulink.core.globals.keywords import \
     RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_OUTPUT_STATES, STATE, VALUE, VARIABLE, \
     output_state_spec_to_parameter_name
 from psyneulink.core.globals.parameters import Parameter, ParameterError
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
     is_numeric, iscompatible, make_readonly_property, recursive_update, ContentAddressableList

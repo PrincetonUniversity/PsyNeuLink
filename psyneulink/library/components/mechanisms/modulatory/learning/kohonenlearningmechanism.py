@@ -98,7 +98,7 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE, CONTROL_PROJECTIONS, INPUT_STATES, KOHONEN_LEARNING_MECHANISM, \
     LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, parameter_spec
 

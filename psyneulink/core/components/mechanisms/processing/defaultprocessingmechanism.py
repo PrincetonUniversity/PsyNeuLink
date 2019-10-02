@@ -20,7 +20,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import SystemDefaultInputValue
 from psyneulink.core.globals.keywords import DEFAULT_PROCESSING_MECHANISM, FUNCTION, FUNCTION_PARAMS, INTERCEPT, SLOPE
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 # **************************************** DefaultProcessingMechanism ******************************************************

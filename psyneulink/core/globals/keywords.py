@@ -416,7 +416,7 @@ DEFAULT_PREFERENCE_SET_OWNER = 'DefaultPreferenceSetOwner'
 #region --------------------------------------------    PREFERENCES    -------------------------------------------------
 
 PREFERENCE_SET = 'PreferenceSet'
-COMPONENT_PREFERENCE_SET = 'ComponentPreferenceSet'
+COMPONENT_PREFERENCE_SET = 'BasePreferenceSet'
 # COMPONENT_PREFERENCE_SET = 'PreferenceSet'
 #endregion
 

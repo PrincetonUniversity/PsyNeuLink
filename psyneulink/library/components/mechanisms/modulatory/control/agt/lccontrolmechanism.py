@@ -289,7 +289,7 @@ from psyneulink.core.globals.keywords import \
     ALL, CONTROL, CONTROL_PROJECTIONS, FUNCTION, INIT_EXECUTE_METHOD_ONLY, \
     MULTIPLICATIVE, MULTIPLICATIVE_PARAM, PROJECTIONS
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable, convert_to_list
 

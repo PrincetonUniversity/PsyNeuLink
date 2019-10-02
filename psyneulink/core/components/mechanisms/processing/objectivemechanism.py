@@ -367,7 +367,7 @@ from psyneulink.core.globals.keywords import \
     OBJECTIVE_MECHANISM, OUTCOME, PARAMS, PROJECTION, PROJECTIONS, STATE_TYPE, VARIABLE, WEIGHT, WEIGHTS, \
     PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, REPORT_OUTPUT_PREF
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList, type_match
 

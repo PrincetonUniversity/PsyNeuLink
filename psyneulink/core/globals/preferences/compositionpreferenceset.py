@@ -8,7 +8,7 @@
 #
 # ***************************************** CompositionPreferenceSet ***************************************************
 
-from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, ComponentPreferenceSetPrefs
+from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, BasePreferenceSetPrefs
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
 __all__ = [
@@ -23,7 +23,7 @@ recordSimulationPrefInstanceDefault = PreferenceEntry(False, PreferenceLevel.INS
 recordSimulationPrefTypeDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 recordSimulationPrefCategoryDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 
-CompositionPreferenceSetPrefs = ComponentPreferenceSetPrefs.copy()
+CompositionPreferenceSetPrefs = BasePreferenceSetPrefs.copy()
 CompositionPreferenceSetPrefs.add(RECORD_SIMULATION_PREF)
 
 
@@ -34,7 +34,7 @@ def is_composition_pref(pref):
 def is_composition_pref_set(pref):
     if pref is None:
         return True
-    if isinstance(pref, (ComponentPreferenceSet, type(None))):
+    if isinstance(pref, (BasePreferenceSet, type(None))):
         return True
     if isinstance(pref, dict):
         if all(key in CompositionPreferenceSetPrefs for key in pref):
@@ -42,8 +42,8 @@ def is_composition_pref_set(pref):
     return False
 
 
-class CompositionPreferenceSet(ComponentPreferenceSet):
-    """Extends ComponentPreferenceSet to include Composition-specific preferences
+class CompositionPreferenceSet(BasePreferenceSet):
+    """Extends BasePreferenceSet to include Composition-specific preferences
     """
     def __init__(self,
                  record_simulation_pref=recordSimulationPrefInstanceDefault,

@@ -300,73 +300,73 @@ for projection_type in ProjectionRegistry:
 #endregion
 
 #region ***************************************** CLASS _PREFERENCES ***************************************************
-from psyneulink.core.globals.preferences.componentpreferenceset \
-    import ComponentPreferenceSet, ComponentDefaultPrefDicts, PreferenceLevel
+from psyneulink.core.globals.preferences.basepreferenceset \
+    import BasePreferenceSet, ComponentDefaultPrefDicts, PreferenceLevel
 
 from psyneulink.core.components.shellclasses import System_Base
-System_Base.classPreferences = ComponentPreferenceSet(owner=System_Base,
-                                                      prefs=ComponentDefaultPrefDicts[PreferenceLevel.INSTANCE],
-                                                      level=PreferenceLevel.INSTANCE,
-                                                      context=".__init__.py")
+System_Base.classPreferences = BasePreferenceSet(owner=System_Base,
+                                                 prefs=ComponentDefaultPrefDicts[PreferenceLevel.INSTANCE],
+                                                 level=PreferenceLevel.INSTANCE,
+                                                 context=".__init__.py")
 
 from psyneulink.core.components.shellclasses import Process_Base
-Process_Base.classPreferences = ComponentPreferenceSet(owner=Process_Base,
-                                                       prefs=ComponentDefaultPrefDicts[PreferenceLevel.INSTANCE],
-                                                       level=PreferenceLevel.INSTANCE,
-                                                       context=".__init__.py")
+Process_Base.classPreferences = BasePreferenceSet(owner=Process_Base,
+                                                  prefs=ComponentDefaultPrefDicts[PreferenceLevel.INSTANCE],
+                                                  level=PreferenceLevel.INSTANCE,
+                                                  context=".__init__.py")
 
 
 from psyneulink.core.components.shellclasses import Mechanism
-Mechanism.classPreferences = ComponentPreferenceSet(owner=Mechanism,
-                                                   prefs=ComponentDefaultPrefDicts[PreferenceLevel.CATEGORY],
-                                                   level=PreferenceLevel.TYPE,
-                                                   context=".__init__.py")
+Mechanism.classPreferences = BasePreferenceSet(owner=Mechanism,
+                                               prefs=ComponentDefaultPrefDicts[PreferenceLevel.CATEGORY],
+                                               level=PreferenceLevel.TYPE,
+                                               context=".__init__.py")
 
-DDM.classPreferences = ComponentPreferenceSet(owner=DDM,
-                                             prefs=ComponentDefaultPrefDicts[PreferenceLevel.TYPE],
-                                             level=PreferenceLevel.TYPE,
-                                             context=".__init__.py")
+DDM.classPreferences = BasePreferenceSet(owner=DDM,
+                                         prefs=ComponentDefaultPrefDicts[PreferenceLevel.TYPE],
+                                         level=PreferenceLevel.TYPE,
+                                         context=".__init__.py")
 
 
 from psyneulink.core.components.shellclasses import State
-State.classPreferences = ComponentPreferenceSet(owner=State,
-                                               prefs=ComponentDefaultPrefDicts[PreferenceLevel.CATEGORY],
-                                               level=PreferenceLevel.CATEGORY,
-                                               context=".__init__.py")
+State.classPreferences = BasePreferenceSet(owner=State,
+                                           prefs=ComponentDefaultPrefDicts[PreferenceLevel.CATEGORY],
+                                           level=PreferenceLevel.CATEGORY,
+                                           context=".__init__.py")
 
-ControlProjection.classPreferences = ComponentPreferenceSet(owner=ControlProjection,
+ControlProjection.classPreferences = BasePreferenceSet(owner=ControlProjection,
                                                        prefs=ComponentDefaultPrefDicts[PreferenceLevel.TYPE],
                                                        level=PreferenceLevel.TYPE,
                                                        context=".__init__.py")
 
-MappingProjection.classPreferences = ComponentPreferenceSet(owner=MappingProjection,
-                                                 prefs=ComponentDefaultPrefDicts[PreferenceLevel.TYPE],
-                                                 level=PreferenceLevel.TYPE,
-                                                 context=".__init__.py")
+MappingProjection.classPreferences = BasePreferenceSet(owner=MappingProjection,
+                                                       prefs=ComponentDefaultPrefDicts[PreferenceLevel.TYPE],
+                                                       level=PreferenceLevel.TYPE,
+                                                       context=".__init__.py")
 
 from psyneulink.core.components.shellclasses import Projection
-Projection.classPreferences = ComponentPreferenceSet(owner=Projection,
-                                                    prefs=ComponentDefaultPrefDicts[PreferenceLevel.CATEGORY],
-                                                    level=PreferenceLevel.CATEGORY,
-                                                    context=".__init__.py")
+Projection.classPreferences = BasePreferenceSet(owner=Projection,
+                                                prefs=ComponentDefaultPrefDicts[PreferenceLevel.CATEGORY],
+                                                level=PreferenceLevel.CATEGORY,
+                                                context=".__init__.py")
 
 from psyneulink.core.components.functions.function import Function
-Function.classPreferences = ComponentPreferenceSet(owner=Function,
-                                                 prefs=ComponentDefaultPrefDicts[PreferenceLevel.CATEGORY],
-                                                 level=PreferenceLevel.CATEGORY,
-                                                 context=".__init__.py")
+Function.classPreferences = BasePreferenceSet(owner=Function,
+                                              prefs=ComponentDefaultPrefDicts[PreferenceLevel.CATEGORY],
+                                              level=PreferenceLevel.CATEGORY,
+                                              context=".__init__.py")
 
-# InputState.classPreferences = ComponentPreferenceSet(owner=InputState,
+# InputState.classPreferences = BasePreferenceSet(owner=InputState,
 #                                              prefs=ComponentDefaultPrefDicts[PreferenceLevel.TYPE],
 #                                              level=PreferenceLevel.TYPE,
 #                                              context=".__init__.py")
 #
-# ParameterState.classPreferences = ComponentPreferenceSet(owner=ParameterState,
+# ParameterState.classPreferences = BasePreferenceSet(owner=ParameterState,
 #                                              prefs=ComponentDefaultPrefDicts[PreferenceLevel.TYPE],
 #                                              level=PreferenceLevel.TYPE,
 #                                              context=".__init__.py")
 #
-# OutputState.classPreferences = ComponentPreferenceSet(owner=OutputState,
+# OutputState.classPreferences = BasePreferenceSet(owner=OutputState,
 #                                              prefs=ComponentDefaultPrefDicts[PreferenceLevel.TYPE],
 #                                              level=PreferenceLevel.TYPE,
 #                                              context=".__init__.py")

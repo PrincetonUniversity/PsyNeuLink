@@ -494,7 +494,7 @@ from psyneulink.core.globals.keywords import \
     PARAMS, PROCESS_INPUT_STATE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, \
     SENDER, SIZE, STATE_TYPE, SUM, SYSTEM_INPUT_STATE, VALUE, VARIABLE, WEIGHT
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import append_type_to_name, is_numeric, iscompatible, kwCompatibilityLength
 
@@ -504,7 +504,7 @@ __all__ = [
 
 state_type_keywords = state_type_keywords.update({INPUT_STATE})
 
-# InputStatePreferenceSet = ComponentPreferenceSet(log_pref=logPrefTypeDefault,
+# InputStatePreferenceSet = BasePreferenceSet(log_pref=logPrefTypeDefault,
 #                                                          reportOutput_pref=reportOutputPrefTypeDefault,
 #                                                          verbose_pref=verbosePrefTypeDefault,
 #                                                          param_validation_pref=paramValidationTypeDefault,

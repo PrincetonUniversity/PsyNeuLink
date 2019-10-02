@@ -8,7 +8,7 @@
 #
 # ******************************************** SystemPreferenceSet **************************************************
 
-from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, ComponentPreferenceSetPrefs
+from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, BasePreferenceSetPrefs
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
 __all__ = [
@@ -24,7 +24,7 @@ recordSimulationPrefInstanceDefault = PreferenceEntry(False, PreferenceLevel.INS
 recordSimulationPrefTypeDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 recordSimulationPrefCategoryDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 
-SystemPreferenceSetPrefs = ComponentPreferenceSetPrefs.copy()
+SystemPreferenceSetPrefs = BasePreferenceSetPrefs.copy()
 SystemPreferenceSetPrefs.add(RECORD_SIMULATION_PREF)
 
 def is_sys_pref(pref):
@@ -34,7 +34,7 @@ def is_sys_pref(pref):
 def is_sys_pref_set(pref):
     if pref is None:
         return True
-    if isinstance(pref, (ComponentPreferenceSet, type(None))):
+    if isinstance(pref, (BasePreferenceSet, type(None))):
         return True
     if isinstance(pref, dict):
         if all(key in SystemPreferenceSetPrefs for key in pref):
@@ -42,8 +42,8 @@ def is_sys_pref_set(pref):
     return False
 
 
-class SystemPreferenceSet(ComponentPreferenceSet):
-    """Extends ComponentPreferenceSet to include Mechanism-specific preferences
+class SystemPreferenceSet(BasePreferenceSet):
+    """Extends BasePreferenceSet to include Mechanism-specific preferences
 
     Description:
         Implements the following preference:

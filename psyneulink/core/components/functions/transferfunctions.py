@@ -65,7 +65,7 @@ from psyneulink.core.globals.parameters import \
     Parameter, ParameterError, get_validator_by_type_only, get_validator_by_function
 from psyneulink.core.globals.utilities import parameter_spec, get_global_seed
 from psyneulink.core.globals.context import Context, ContextFlags
-from psyneulink.core.globals.preferences.componentpreferenceset import \
+from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
 
 __all__ = ['Exponential', 'Gaussian', 'GaussianDistort', 'get_matrix', 'Identity', 'Linear', 'LinearMatrix',

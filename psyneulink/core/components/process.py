@@ -475,7 +475,7 @@ from psyneulink.core.globals.keywords import \
     MAPPING_PROJECTION, MATRIX, NAME, OBJECTIVE_MECHANISM, ORIGIN, PARAMETER_STATE, PATHWAY, SENDER, SINGLETON, \
     TARGET, TERMINAL, PROCESS_COMPONENT_CATEGORY, RECEIVER_ARG
 from psyneulink.core.globals.parameters import Defaults, Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import append_type_to_name, convert_to_np_array, iscompatible

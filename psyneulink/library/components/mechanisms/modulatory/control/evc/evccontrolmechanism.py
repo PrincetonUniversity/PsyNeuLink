@@ -394,7 +394,7 @@ from psyneulink.core.globals.keywords import \
     CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM, INIT_FUNCTION_METHOD_ONLY, \
     MULTIPLICATIVE, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
 from psyneulink.library.components.mechanisms.modulatory.control.evc.evcauxiliary import ControlSignalGridSearch, PredictionMechanism, ValueFunction

@@ -6,7 +6,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 #
 #
-# ******************************************** ComponentPreferenceSet ***************************************************
+# ******************************************** BasePreferenceSet ***************************************************
 #
 #
 
@@ -20,7 +20,7 @@ from psyneulink.core.globals.utilities import Modulation
 
 __all__ = [
     'CategoryDefaultPreferencesDict',
-    'ComponentDefaultPrefDicts', 'ComponentPreferenceSet', 'ComponentPreferenceSetPrefs',
+    'ComponentDefaultPrefDicts', 'BasePreferenceSet', 'BasePreferenceSetPrefs',
     'CompositionDefaultPreferencesDict',
     'InstanceDefaultPreferencesDict', 'is_pref', 'is_pref_set',
     'CATEGORY_DEFAULT_PREFERENCES', 'INSTANCE_DEFAULT_PREFERENCES', 'SUBTYPE_DEFAULT_PREFERENCES',
@@ -46,7 +46,7 @@ INSTANCE_DEFAULT_PREFERENCES = 'InstanceDefaultPreferences'
 
 # Level default preferences dicts:
 
-ComponentPreferenceSetPrefs = {
+BasePreferenceSetPrefs = {
     VERBOSE_PREF,
     PARAM_VALIDATION_PREF,
     REPORT_OUTPUT_PREF,
@@ -112,21 +112,21 @@ ComponentDefaultPrefDicts = {
     PreferenceLevel.INSTANCE: InstanceDefaultPreferencesDict}
 
 def is_pref(pref):
-    return pref in ComponentPreferenceSetPrefs
+    return pref in BasePreferenceSetPrefs
 
 
 def is_pref_set(pref):
     if pref is None:
         return True
-    if isinstance(pref, (ComponentPreferenceSet, type(None))):
+    if isinstance(pref, (BasePreferenceSet, type(None))):
         return True
     if isinstance(pref, dict):
-        if all(key in ComponentPreferenceSetPrefs for key in pref):
+        if all(key in BasePreferenceSetPrefs for key in pref):
             return True
     return False
 
 
-class ComponentPreferenceSet(PreferenceSet):
+class BasePreferenceSet(PreferenceSet):
     # DOCUMENT: FOR EACH pref TO BE ACCESSIBLE DIRECTLY AS AN ATTRIBUTE OF AN OBJECT,
     #           MUST IMPLEMENT IT AS PROPERTY (WITH GETTER AND SETTER METHODS) IN FUNCTION MODULE
     """Implement and manage PreferenceSets for Component class hierarchy
@@ -225,7 +225,7 @@ class ComponentPreferenceSet(PreferenceSet):
     # - a template for the type of each preference (used for validation)
     # - a default set of preferences (where defaults are not otherwise specified)
     defaultPreferencesDict = {
-            PREFERENCE_SET_NAME: 'ComponentPreferenceSetDefaults',
+            PREFERENCE_SET_NAME: 'BasePreferenceSetDefaults',
             VERBOSE_PREF: PreferenceEntry(False, PreferenceLevel.SYSTEM),
             PARAM_VALIDATION_PREF: PreferenceEntry(True, PreferenceLevel.SYSTEM),
             REPORT_OUTPUT_PREF: PreferenceEntry(True, PreferenceLevel.SYSTEM),
@@ -297,7 +297,7 @@ class ComponentPreferenceSet(PreferenceSet):
 
         # If classPreferences have not be instantiated for owner's class, do so here:
         try:
-            # If classPreferences are still a dict, they need to be instantiated as a ComponentPreferenceSet
+            # If classPreferences are still a dict, they need to be instantiated as a BasePreferenceSet
             if isinstance(owner_class.classPreferences, dict):
                 raise AttributeError
         except AttributeError:
@@ -306,7 +306,7 @@ class ComponentPreferenceSet(PreferenceSet):
                 pass
             else:
                 # Instantiate the classPreferences
-                owner_class.classPreferences = ComponentPreferenceSet(
+                owner_class.classPreferences = BasePreferenceSet(
                                                     owner=owner_class,
                                                     level=owner_class.classPreferenceLevel,
                                                     prefs=ComponentDefaultPrefDicts[owner_class.classPreferenceLevel],

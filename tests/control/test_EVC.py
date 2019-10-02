@@ -9,7 +9,7 @@ from psyneulink.core.components.projections.modulatory.controlprojection import 
 from psyneulink.core.components.system import System
 from psyneulink.core.globals.keywords import \
     ALLOCATION_SAMPLES, IDENTITY_MATRIX, OUTPUT_MEAN, RESULT, OUTPUT_VARIANCE, PROJECTIONS
-from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, REPORT_OUTPUT_PREF, VERBOSE_PREF
+from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, REPORT_OUTPUT_PREF, VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.scheduling.condition import Never
 from psyneulink.library.components.mechanisms.modulatory.control.evc.evccontrolmechanism import EVCControlMechanism
@@ -195,14 +195,14 @@ def test_EVC_gratton():
         return result
 
     # Preferences:
-    mechanism_prefs = ComponentPreferenceSet(
+    mechanism_prefs = BasePreferenceSet(
         prefs={
             VERBOSE_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
             REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)
         }
     )
 
-    process_prefs = ComponentPreferenceSet(
+    process_prefs = BasePreferenceSet(
         reportOutput_pref=PreferenceEntry(False, PreferenceLevel.INSTANCE),
         verbose_pref=PreferenceEntry(True, PreferenceLevel.INSTANCE)
     )

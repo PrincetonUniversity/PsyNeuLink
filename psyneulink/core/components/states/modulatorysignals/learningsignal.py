@@ -180,7 +180,7 @@ from psyneulink.core.globals.keywords import \
     CONTEXT, LEARNED_PARAM, LEARNING_PROJECTION, LEARNING_SIGNAL, OUTPUT_STATE_PARAMS, \
     PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import parameter_spec
 

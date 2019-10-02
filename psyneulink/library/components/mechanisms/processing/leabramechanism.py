@@ -106,7 +106,7 @@ from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutpu
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import FUNCTION, INPUT_STATES, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, NETWORK, OUTPUT_STATES, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, REPORT_OUTPUT_PREF
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.scheduling.time import TimeScale
 

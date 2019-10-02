@@ -150,7 +150,7 @@ from psyneulink.core.globals.keywords import \
     ARGUMENT_THERAPY_FUNCTION, EXAMPLE_FUNCTION_TYPE, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION,\
     NAME, PARAMETER_STATE_PARAMS, FUNCTION_COMPONENT_CATEGORY, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, REPORT_OUTPUT_PREF
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import object_has_single_value, parameter_spec, safe_len
@@ -354,7 +354,7 @@ class Function_Base(Function):
             + className (str): kwMechanismFunctionCategory
             + suffix (str): " <className>"
             + registry (dict): FunctionRegistry
-            + classPreference (PreferenceSet): ComponentPreferenceSet, instantiated in __init__()
+            + classPreference (PreferenceSet): BasePreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
             + paramClassDefaults (dict): {FUNCTION_OUTPUT_TYPE_CONVERSION: :keyword:`False`}
 
@@ -369,7 +369,7 @@ class Function_Base(Function):
             + paramsCurrent (dict) - set currently in effect
             + value (value) - output of execute method
             + name (str) - if not specified as an arg, a default based on the class is assigned in register_category
-            + prefs (PreferenceSet) - if not specified as an arg, default is created by copying ComponentPreferenceSet
+            + prefs (PreferenceSet) - if not specified as an arg, default is created by copying BasePreferenceSet
 
         Instance methods:
             The following method MUST be overridden by an implementation in the subclass:

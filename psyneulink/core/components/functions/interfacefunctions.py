@@ -23,7 +23,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     FUNCTION_OUTPUT_TYPE_CONVERSION, PARAMETER_STATE_PARAMS, STATE_MAP_FUNCTION, TRANSFER_FUNCTION_TYPE, \
     PREFERENCE_SET_NAME
-from psyneulink.core.globals.preferences.componentpreferenceset import \
+from psyneulink.core.globals.preferences.basepreferenceset import \
     PreferenceEntry, PreferenceLevel, is_pref_set, REPORT_OUTPUT_PREF
 
 

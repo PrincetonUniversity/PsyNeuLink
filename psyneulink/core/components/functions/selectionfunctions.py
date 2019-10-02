@@ -36,7 +36,7 @@ from psyneulink.core.globals.keywords import \
     MODE, ONE_HOT_FUNCTION, PARAMETER_STATE_PARAMS, PROB, PROB_INDICATOR, SELECTION_FUNCTION_TYPE, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.preferences.componentpreferenceset import \
+from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
 from psyneulink.core.globals.utilities import get_global_seed
 

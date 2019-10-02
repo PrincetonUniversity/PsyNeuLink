@@ -185,7 +185,7 @@ from psyneulink.core.globals.keywords import \
     GATING, GATING_PROJECTION, GATING_PROJECTIONS,GATING_SIGNAL,GATING_SIGNALS,GATING_SIGNAL_SPECS, \
     INIT_EXECUTE_METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, MONITOR_FOR_CONTROL, MULTIPLICATIVE, PROJECTION_TYPE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_list
 

@@ -1131,7 +1131,7 @@ from psyneulink.core.scheduling.condition import All, Always, Condition, EveryNC
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, PreferenceSet, _assign_prefs
-from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet
+from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism, MSE
 from psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism import PredictionErrorMechanism
@@ -1703,7 +1703,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._compilation_data = self._CompilationData(owner=self)
 
         # If a PreferenceSet was provided, assign to instance
-        _assign_prefs(self, prefs, ComponentPreferenceSet)
+        _assign_prefs(self, prefs, BasePreferenceSet)
 
         self.log = CompositionLog(owner=self)
         self._terminal_backprop_sequences = {}

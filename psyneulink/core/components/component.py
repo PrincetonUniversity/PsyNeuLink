@@ -424,7 +424,7 @@ from psyneulink.core.globals.keywords import \
     PARAMS, PARAMS_CURRENT, PREFS_ARG, REINITIALIZE_WHEN, SIZE, USER_PARAMS, VALUE, VARIABLE, FUNCTION_COMPONENT_CATEGORY
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase
-from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, VERBOSE_PREF
+from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import \
     PreferenceEntry, PreferenceLevel, PreferenceSet, _assign_prefs
 from psyneulink.core.globals.registry import register_category
@@ -573,7 +573,7 @@ class ParamsDict(UserDict):
 
 parameter_keywords = set()
 
-# suppress_validation_preference_set = ComponentPreferenceSet(prefs = {
+# suppress_validation_preference_set = BasePreferenceSet(prefs = {
 #     PARAM_VALIDATION_PREF: PreferenceEntry(False,PreferenceLevel.INSTANCE),
 #     VERBOSE_PREF: PreferenceEntry(False,PreferenceLevel.INSTANCE),
 #     REPORT_OUTPUT_PREF: PreferenceEntry(True,PreferenceLevel.INSTANCE)})
@@ -1019,7 +1019,7 @@ class Component(object, metaclass=ComponentsMeta):
 
         # If a PreferenceSet was provided, assign to instance
         # If a PreferenceSet was provided, assign to instance
-        _assign_prefs(self, prefs, ComponentPreferenceSet)
+        _assign_prefs(self, prefs, BasePreferenceSet)
 
         # # MODIFIED 9/30/19 OLD:
         # if isinstance(prefs, PreferenceSet):
@@ -1027,7 +1027,7 @@ class Component(object, metaclass=ComponentsMeta):
         #     # FIX:  CHECK LEVEL HERE??  OR DOES IT NOT MATTER, AS OWNER WILL BE ASSIGNED DYNAMICALLY??
         # # Otherwise, if prefs is a specification dict instantiate it, or if it is None assign defaults
         # else:
-        #     self.prefs = ComponentPreferenceSet(owner=self, prefs=prefs, context=context)
+        #     self.prefs = BasePreferenceSet(owner=self, prefs=prefs, context=context)
         # try:
         #     # assign log conditions from preferences
         #     self.parameters.value.log_condition = self.prefs._log_pref.setting

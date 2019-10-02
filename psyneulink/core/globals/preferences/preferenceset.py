@@ -578,7 +578,7 @@ class PreferenceSet(object):
         :param reference_setting:
         :return:
         """
-        # from Globals.Preferences.ComponentPreferenceSet import LOG_PREF
+        # from Globals.Preferences.BasePreferenceSet import LOG_PREF
         # if pref_ivar_name is LOG_PREF:
         #     self.validate_log(candidate_setting, self)
 
@@ -681,10 +681,10 @@ class PreferenceSet(object):
                 # If classPreferences for level have not yet been assigned as PreferenceSet, assign them
                 if (not hasattr(next_level, 'classPreferences') or
                         not isinstance(next_level.classPreferences, PreferenceSet)):
-                    from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet
-                    next_level.classPreferences = ComponentPreferenceSet(owner=next_level,
-                                                                         prefs=next_level.classPreferences,
-                                                                         level=next_level.classPreferenceLevel)
+                    from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
+                    next_level.classPreferences = BasePreferenceSet(owner=next_level,
+                                                                    prefs=next_level.classPreferences,
+                                                                    level=next_level.classPreferenceLevel)
                 return_val = next_level.classPreferences.get_pref_setting_for_level(pref_ivar_name, requested_level)
                 return return_val[0],return_val[1]
             # Otherwise, return value for current level
@@ -743,10 +743,10 @@ class PreferenceSet(object):
                     next_level = self.owner.__bases__[0]
                     if (not hasattr(next_level, 'classPreferences') or
                             not isinstance(next_level.classPreferences, PreferenceSet)):
-                        from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet
-                        next_level.classPreferences = ComponentPreferenceSet(owner=next_level,
-                                                                             prefs=next_level.classPreferences,
-                                                                             level=next_level.classPreferenceLevel)
+                        from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
+                        next_level.classPreferences = BasePreferenceSet(owner=next_level,
+                                                                        prefs=next_level.classPreferences,
+                                                                        level=next_level.classPreferenceLevel)
                     return_val = self.owner.__bases__[0].classPreferences.get_pref_setting_for_level(pref_ivar_name,
                                                                                                requested_level)
                     return return_val[0], return_val[1]

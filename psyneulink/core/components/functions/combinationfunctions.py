@@ -46,7 +46,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.utilities import is_numeric, np_array_less_than_2d, parameter_spec
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import \
+from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, is_pref_set, PreferenceEntry, PreferenceLevel
 
 __all__ = ['CombinationFunction', 'Concatenate', 'CombineMeans', 'Rearrange', 'Reduce', 'LinearCombination',

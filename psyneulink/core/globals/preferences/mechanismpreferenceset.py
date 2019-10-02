@@ -13,7 +13,7 @@
 import inspect
 
 from psyneulink.core.globals.keywords import NAME, PREF_LEVEL, PREFS_OWNER
-from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, LOG_PREF, PARAM_VALIDATION_PREF, REPORT_OUTPUT_PREF, RUNTIME_PARAM_MODULATION_PREF, VERBOSE_PREF
+from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, LOG_PREF, PARAM_VALIDATION_PREF, REPORT_OUTPUT_PREF, RUNTIME_PARAM_MODULATION_PREF, VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.utilities import Modulation
 
@@ -39,8 +39,8 @@ verbosePrefInstanceDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 paramValidationPrefInstanceDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 
 
-class MechanismPreferenceSet(ComponentPreferenceSet):
-    """Extends ComponentPreferenceSet to include Mechanism-specific preferences
+class MechanismPreferenceSet(BasePreferenceSet):
+    """Extends BasePreferenceSet to include Mechanism-specific preferences
 
     Description:
         Implements the following preference:

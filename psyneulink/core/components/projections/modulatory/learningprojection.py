@@ -188,7 +188,7 @@ from psyneulink.core.globals.keywords import \
     CONTEXT, FUNCTION, FUNCTION_PARAMS, INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, \
     MATRIX, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE, ONLINE, AFTER
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import iscompatible, parameter_spec
 

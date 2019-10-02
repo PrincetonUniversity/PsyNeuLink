@@ -762,7 +762,7 @@ from psyneulink.core.globals.keywords import \
     STATE, STATE_CONTEXT, STATE_NAME, STATE_PARAMS, STATE_PREFS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, WEIGHT, \
     STATE_COMPONENT_CATEGORY
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
-from psyneulink.core.globals.preferences.componentpreferenceset import VERBOSE_PREF
+from psyneulink.core.globals.preferences.basepreferenceset import VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.socket import ConnectionInfo
@@ -2646,7 +2646,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
     # INSTANTIATE STATE:
 
     # IMPLEMENTATION NOTE:
-    # - setting prefs=NotImplemented causes TYPE_DEFAULT_PREFERENCES to be assigned (from ComponentPreferenceSet)
+    # - setting prefs=NotImplemented causes TYPE_DEFAULT_PREFERENCES to be assigned (from BasePreferenceSet)
     # - alternative would be prefs=owner.prefs, causing state to inherit the prefs of its owner;
     state_type = state_spec_dict.pop(STATE_TYPE, None)
     if REFERENCE_VALUE_NAME in state_spec_dict:

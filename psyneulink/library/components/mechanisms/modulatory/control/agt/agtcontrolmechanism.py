@@ -155,7 +155,7 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.globals.keywords import \
     CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, INIT_EXECUTE_METHOD_ONLY, \
     MECHANISM, MULTIPLICATIVE, OBJECTIVE_MECHANISM
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
