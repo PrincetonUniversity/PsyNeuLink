@@ -27,7 +27,7 @@ from psyneulink.core.components.mechanisms.processing.integratormechanism import
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION, defaultControlAllocation
 from psyneulink.core.globals.keywords import COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, FUNCTION, FUNCTION_PARAMS, NOISE, PREDICTION_MECHANISM, RATE, \
-    PREFERENCE_SET_NAME, kwProgressBarChar
+    PREFERENCE_SET_NAME, PROGRESS_BAR_CHAR
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -425,7 +425,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                 if controller.prefs.reportOutputPref:
                     increment_progress_bar = (progress_bar_rate < 1) or not (sample % progress_bar_rate)
                     if increment_progress_bar:
-                        print(kwProgressBarChar, end='', flush=True)
+                        print(PROGRESS_BAR_CHAR, end='', flush=True)
                 sample +=1
 
                 # Calculate EVC for specified allocation policy

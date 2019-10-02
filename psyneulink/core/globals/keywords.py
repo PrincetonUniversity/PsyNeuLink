@@ -101,17 +101,16 @@ __all__ = [
     'UNCHANGED', 'UNIFORM_DIST_FUNCTION', 'USER_DEFINED_FUNCTION', 'USER_DEFINED_FUNCTION_TYPE', 'USER_PARAMS',
     'VALUES', 'VALIDATE', 'VALIDATION', 'VALUE', 'VALUE_ASSIGNMENT', 'VALUE_FUNCTION', 'VARIABLE', 'VARIANCE',
     'VECTOR', 'WALD_DIST_FUNCTION', 'WEIGHT', 'WEIGHTS', 'X_0',
-    'kpMechanismControlAllocationsLogEntry', 'MECHANISM_EXECUTED_LOG_ENTRY', 'kpMechanismInputLogEntry',
-    'kpMechanismOutputLogEntry', 'kpMechanismTimeScaleLogEntry', 'ADD_INPUT_STATE', 'ADD_OUTPUT_STATE',
-    'kwAggregate', 'FUNCTION_COMPONENT_CATEGORY', 'COMPONENT_PREFERENCE_SET', 'DEFAULT_PREFERENCE_SET_OWNER',
+    'MECHANISM_EXECUTED_LOG_ENTRY', 'ADD_INPUT_STATE', 'ADD_OUTPUT_STATE',
+    'FUNCTION_COMPONENT_CATEGORY', 'COMPONENT_PREFERENCE_SET', 'DEFAULT_PREFERENCE_SET_OWNER',
     'MECHANISM_COMPONENT_CATEGORY',
     'MECHANISM_DEFAULT', 'MECHANISM_DEFAULTInputValue', 'MECHANISM_DEFAULTParams',
     'MECHANISM_NAME',
-    'MECHANISM_PARAM_VALUE', 'MECHANISM_TYPE', 'kwParams',
+    'MECHANISM_PARAM_VALUE', 'MECHANISM_TYPE',
     'PREF_BASE_VALUE', 'PREF_CURRENT_VALUE', 'PREFERENCE_SET', 'PREFERENCE_SET_NAME', 'PREF_LEVEL', 'PREFS',
     'PREFS_OWNER', 'PROCESS_COMPONENT_CATEGORY', 'PROCESS_DEFAULT_MECHANISM', 'PROCESS_DEFAULT_PROJECTION_FUNCTION',
-    'PROCESS_EXECUTE', 'kwProgressBarChar', 'PROJECTION_COMPONENT_CATEGORY',
-    'RECEIVER_ARG', 'kwSeparator', 'STATE_COMPONENT_CATEGORY',
+    'PROCESS_EXECUTE', 'PROGRESS_BAR_CHAR', 'PROJECTION_COMPONENT_CATEGORY',
+    'RECEIVER_ARG', 'STATE_COMPONENT_CATEGORY',
     'SYSTEM_COMPONENT_CATEGORY',
 ]
 
@@ -375,10 +374,9 @@ ALL = 'all'
 BOTH = 'both'
 MAYBE = 0.5
 
-kwSeparator = ': '
 SEPARATOR_BAR = ' | '
-kwProgressBarChar = '.'
-# kwValueSuffix = '_value'
+PROGRESS_BAR_CHAR = '.'
+# VALUE_SUFFIX = '_value'
 SELF = 'self'
 FLAGS = 'flags'
 INITIALIZATION_STATUS = 'initialization_status'
@@ -388,10 +386,8 @@ INITIALIZING = " INITIALIZING "  # Used as status and context for Log
 INITIALIZED = " INITIALIZED "  # Used as status
 EXECUTING = " EXECUTING " # Used in context for Log and ReportOutput pref
 ASSIGN_VALUE = ': Assign value'
-kwAggregate = ': Aggregate' # Used in context for Log
 VALIDATE = 'Validate'
 COMMAND_LINE = "COMMAND_LINE"
-kwParams = 'params'
 CHANGED = 'CHANGED'
 UNCHANGED = 'UNCHANGED'
 ENABLED = 'ENABLED'
@@ -442,14 +438,6 @@ VALUE_ASSIGNMENT = 'VALUE_ASSIGNMENT'
 FINAL = 'FINAL'
 
 
-#endregion
-
-#region -----------------------------------------------  UTILITIES  ----------------------------------------------------
-
-kpMechanismTimeScaleLogEntry = "Mechanism TimeScale"
-kpMechanismInputLogEntry = "Mechanism Input"
-kpMechanismOutputLogEntry = "Mechanism Output"
-kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 #endregion
 
 #region ----------------------------------------------   COMPONENT   ---------------------------------------------------
