@@ -1524,7 +1524,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
         return control_signal
 
     def _check_for_duplicates(self, control_signal, control_signals, context):
-        """ Check that control_signal is not a duplicate of one already instantiated for the ControlMechanism
+        """
+        Check that control_signal is not a duplicate of one already instantiated for the ControlMechanism
 
         Can happen if control of parameter is specified in constructor for a Mechanism
             and also in the ControlMechanism's **control** arg
