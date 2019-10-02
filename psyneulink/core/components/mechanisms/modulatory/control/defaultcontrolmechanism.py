@@ -36,13 +36,11 @@ COMMENT
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.core.components.states.inputstate import InputState
-from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import CONTROL, FUNCTION, FUNCTION_PARAMS, INPUT_STATES, INTERCEPT, MODULATION, NAME, OBJECTIVE_MECHANISM, SLOPE
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList
 
@@ -85,11 +83,11 @@ class DefaultControlMechanism(ControlMechanism):
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # classPreferenceLevel = PreferenceLevel.TYPE
 
-    # Any preferences specified below will override those specified in TypeDefaultPreferences
+    # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to Type automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_SET_NAME: 'DefaultControlMechanismCustomClassPreferences',
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     from psyneulink.core.components.functions.transferfunctions import Linear
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()

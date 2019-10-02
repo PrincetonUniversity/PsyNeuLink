@@ -39,8 +39,8 @@ types of Mechanisms in PsyNeuLink:
       System itself.  There are a variety of different types of ProcessingMechanism, that accept various forms of
       input and transform them in different ways (see `ProcessingMechanisms <ProcessingMechanism>` for a list).
     ..
-    * `AdaptiveMechanisms <AdaptiveMechanism>` monitor the output of one or more other Mechanisms, and use this
-      to modulate the parameters of other Mechanisms or Projections.  There are three basic AdaptiveMechanisms:
+    * `ModulatoryMechanisms <ModulatoryMechanism>` monitor the output of one or more other Mechanisms, and use this
+      to modulate the parameters of other Mechanisms or Projections.  There are three basic ModulatoryMechanisms:
 
       * `LearningMechanism <LearningMechanism>` - these receive training (target) values, and compare them with the
         output of a Mechanism to generate `LearningSignals <LearningSignal>` that are used to modify `MappingProjections
@@ -53,8 +53,8 @@ types of Mechanisms in PsyNeuLink:
         `value <State_Base.value>` of the `InputState(s) <InputState>` and/or `OutputState(s) <OutputState>` of other
         Mechanisms.
 
-      Each type of AdaptiveMechanism is associated with a corresponding type of `ModulatorySignal <ModulatorySignal>`
-      (a type of `OutputState` specialized for use with the AdaptiveMechanism) and `ModulatoryProjection
+      Each type of ModulatoryMechanism is associated with a corresponding type of `ModulatorySignal <ModulatorySignal>`
+      (a type of `OutputState` specialized for use with the ModulatoryMechanism) and `ModulatoryProjection
       <ModulatoryProjection>`.
 
 Every Mechanism is made up of four fundamental components:
@@ -661,7 +661,7 @@ Mechanisms that send/receive these:
     * `mod_afferents <Mechanism_Base.afferents>` -- all of the ModulatoryProjections received by the Mechanism;
     * `efferents <Mechanism_Base.efferents>` -- all of the Projections sent by the Mechanism;
     * `senders <Mechanism_Base.senders>` -- all of the Mechanisms that send a Projection to the Mechanism
-    * `modulators <Mechanism_Base.modulators>` -- all of the AdaptiveMechanisms that send a ModulatoryProjection to the
+    * `modulators <Mechanism_Base.modulators>` -- all of the ModulatoryMechanisms that send a ModulatoryProjection to the
       Mechanism
     * `receivers <Mechanism_Base.receivers>` -- all of the Mechanisms that receive a Projection from the Mechanism
 
@@ -961,7 +961,7 @@ from psyneulink.core.globals.keywords import \
     MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, MULTIPLICATIVE_PARAM, \
     OUTPUT_LABELS_DICT, OUTPUT_STATE, OUTPUT_STATES, OWNER_EXECUTION_COUNT, OWNER_EXECUTION_TIME, OWNER_VALUE, \
     PARAMETER_STATE, PARAMETER_STATES, PREVIOUS_VALUE, PROJECTIONS, REFERENCE_VALUE, \
-    TARGET_LABELS_DICT, VALUE, VARIABLE, kwMechanismComponentCategory
+    TARGET_LABELS_DICT, VALUE, VARIABLE, MECHANISM_COMPONENT_CATEGORY
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.scheduling.condition import Condition
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -1061,8 +1061,6 @@ class Mechanism_Base(Mechanism):
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
             + class_defaults.variable (list)
             + paramClassDefaults (dict):
-                + [TBI: kwMechanismExecutionSequenceTemplate (list of States):
-                    specifies order in which types of States are executed;  used by self.execute]
             + default_mechanism (str): Currently DDM_MECHANISM (class reference resolved in __init__.py)
 
         Class methods
@@ -1123,7 +1121,8 @@ class Mechanism_Base(Mechanism):
 
     external_input_values : list
         same as `input_values <Mechanism_Base.input_values>`, but containing the `value <InputState.value>` only of
-        InputStates that are not designated as `internal_only <InputState.internal_only>`.
+        InputStates that are **not** designated as `internal_only <InputState.internal_only>` (that is, ones that
+        receive external inputs).
 
     COMMENT:
     target_labels_dict : dict
@@ -1265,11 +1264,11 @@ class Mechanism_Base(Mechanism):
     senders : ContentAddressableList
         a list of all of the Mechanisms that send `Projections <Projection>` to the Mechanism (i.e., the senders of
         its `afferents <Mechanism_Base.afferents>`; this includes both `ProcessingMechanisms <ProcessingMechanism>`
-        (that send `MappingProjections <MappingProjection>` and `AdaptiveMechanisms <AdaptiveMechanism>` (that send
+        (that send `MappingProjections <MappingProjection>` and `ModulatoryMechanisms <ModulatoryMechanism>` (that send
         `ModulatoryProjections <ModulatoryProjection>` (also see `modulators <Mechanism_Base.modulators>`).
 
     modulators : ContentAddressableList
-        a list of all of the `AdapativeMechanisms <AdaptiveMechanism>` that send `ModulatoryProjections
+        a list of all of the `AdapativeMechanisms <ModulatoryMechanism>` that send `ModulatoryProjections
         <ModulatoryProjection>` to the Mechanism (i.e., the senders of its `mod_afferents
         <Mechanism_Base.mod_afferents>` (also see `senders <Mechanism_Base.senders>`).
 
@@ -1310,49 +1309,9 @@ class Mechanism_Base(Mechanism):
     """
 
     # CLASS ATTRIBUTES
-    componentCategory = kwMechanismComponentCategory
+    componentCategory = MECHANISM_COMPONENT_CATEGORY
     className = componentCategory
     suffix = " " + className
-
-    class Parameters(Mechanism.Parameters):
-        """
-            Attributes
-            ----------
-
-                variable
-                    see `variable <Mechanism_Base.variable>`
-
-                    :default value: numpy.array([[0]])
-                    :type: numpy.ndarray
-                    :read only: True
-
-                value
-                    see `value <Mechanism_Base.value>`
-
-                    :default value: numpy.array([[0]])
-                    :type: numpy.ndarray
-                    :read only: True
-
-                function
-                    see `function <Mechanism_Base.function>`
-
-                    :default value: `Linear`
-                    :type: `Function`
-
-                previous_value
-                    see `previous_value <Mechanism_Base.previous_value>`
-
-                    :default value: None
-                    :type:
-                    :read only: True
-
-        """
-        variable = Parameter(np.array([[0]]), read_only=True)
-        value = Parameter(np.array([[0]]), read_only=True)
-        previous_value = Parameter(None, read_only=True)
-        function = Linear
-
-        input_state_variables = Parameter(None, read_only=True, user=False, getter=_input_state_variables_getter)
 
     registry = MechanismRegistry
 
@@ -1360,8 +1319,8 @@ class Mechanism_Base(Mechanism):
     # Any preferences specified below will override those specified in CategoryDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to CATEGORY automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'MechanismCustomClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_SET_NAME: 'MechanismCustomClassPreferences',
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     # Class-specific loggable items
     @property
@@ -1405,11 +1364,47 @@ class Mechanism_Base(Mechanism):
         INPUT_LABELS_DICT: {},
         TARGET_LABELS_DICT: {},
         OUTPUT_LABELS_DICT: {}
-        # TBI - kwMechanismExecutionSequenceTemplate: [
-        #     Components.States.InputState.InputState,
-        #     Components.States.ParameterState.ParameterState,
-        #     Components.States.OutputState.OutputState]
         })
+
+    class Parameters(Mechanism.Parameters):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <Mechanism_Base.variable>`
+
+                    :default value: numpy.array([[0]])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                value
+                    see `value <Mechanism_Base.value>`
+
+                    :default value: numpy.array([[0]])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                function
+                    see `function <Mechanism_Base.function>`
+
+                    :default value: `Linear`
+                    :type: `Function`
+
+                previous_value
+                    see `previous_value <Mechanism_Base.previous_value>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+        """
+        variable = Parameter(np.array([[0]]), read_only=True)
+        value = Parameter(np.array([[0]]), read_only=True)
+        previous_value = Parameter(None, read_only=True)
+        function = Linear
+
+        input_state_variables = Parameter(None, read_only=True, user=False, getter=_input_state_variables_getter)
 
     # def __new__(cls, *args, **kwargs):
     # def __new__(cls, name=NotImplemented, params=NotImplemented, context=None):
@@ -2996,7 +2991,7 @@ class Mechanism_Base(Mechanism):
                     except KeyError:
                         # # mech_roles = r'\n[{}]'.format(self.system)
                         # mech_roles = r'\n[CONTROLLER]'
-                        from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+                        from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
                         from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
                         if isinstance(self, ControlMechanism) and hasattr(self, 'system'):
                             mech_roles = r'\n[CONTROLLER]'

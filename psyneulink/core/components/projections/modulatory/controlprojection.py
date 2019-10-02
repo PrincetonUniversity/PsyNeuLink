@@ -105,15 +105,15 @@ import typecheck as tc
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.transferfunctions import Linear
-from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    CONTEXT, CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, PARAMETER_STATE, PROJECTION_SENDER
+    CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, INPUT_STATE, OUTPUT_STATE, PARAMETER_STATE, PROJECTION_SENDER
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
@@ -287,7 +287,7 @@ class ControlProjection(ModulatoryProjection_Base):
 
     class sockets:
         sender=[CONTROL_SIGNAL]
-        receiver=[PARAMETER_STATE]
+        receiver=[PARAMETER_STATE, INPUT_STATE, OUTPUT_STATE]
 
     class Parameters(ModulatoryProjection_Base.Parameters):
         """

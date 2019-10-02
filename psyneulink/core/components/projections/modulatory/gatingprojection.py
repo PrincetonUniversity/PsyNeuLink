@@ -43,7 +43,7 @@ When a GatingProjection is created, its full initialization is `deferred <Compon
 a GatingProjection to be created before its `sender` and/or `receiver` have been created (e.g., before them in a
 script), by calling its constructor without specifying its **sender** or **receiver** arguments. However, for the
 GatingProjection to be operational, initialization must be completed by calling its `deferred_init` method.  This is
-not necessary if the State(s) to be gated are specified in the **gating_signals** argument of a `GatingMechanism
+not necessary if the State(s) to be gated are specified in the **gate** argument of a `GatingMechanism
 <GatingMechanism_Specifying_Gating>`, in which case deferred initialization is completed automatically by the
 GatingMechanism when it is created.
 
@@ -92,16 +92,16 @@ import typecheck as tc
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.function import FunctionOutputType
 from psyneulink.core.components.functions.transferfunctions import Linear
-from psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    CONTEXT, FUNCTION_OUTPUT_TYPE, GATING, GATING_MECHANISM, GATING_PROJECTION, GATING_SIGNAL, \
+    FUNCTION_OUTPUT_TYPE, GATING, GATING_MECHANISM, GATING_PROJECTION, GATING_SIGNAL, \
     INPUT_STATE, OUTPUT_STATE, PROJECTION_SENDER
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [

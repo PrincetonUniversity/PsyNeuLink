@@ -1,8 +1,8 @@
-from . import adaptive
+from . import modulatory
 from . import processing
 
-from .adaptive import *
+from .modulatory import *
 from .processing import *
 
-__all__ = list(adaptive.__all__)
+__all__ = list(modulatory.__all__)
 __all__.extend(processing.__all__)

@@ -60,13 +60,13 @@ from psyneulink.core.globals.keywords import \
     MATRIX_KEYWORD_NAMES, MATRIX, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE, MULTIPLICATIVE_PARAM, \
     OFF, OFFSET, ON, PARAMETER_STATE_PARAMS, PER_ITEM, PROB, PRODUCT, OUTPUT_TYPE, PROB_INDICATOR, \
     RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM,\
-    TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, kwPreferenceSetName
+    TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import \
     Parameter, ParameterError, get_validator_by_type_only, get_validator_by_function
 from psyneulink.core.globals.utilities import parameter_spec, get_global_seed
 from psyneulink.core.globals.context import Context, ContextFlags
-from psyneulink.core.globals.preferences.componentpreferenceset import \
-    kpReportOutputPref, PreferenceEntry, PreferenceLevel, is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import \
+    REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
 
 __all__ = ['Exponential', 'Gaussian', 'GaussianDistort', 'get_matrix', 'Identity', 'Linear', 'LinearMatrix',
            'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
@@ -219,8 +219,8 @@ class Identity(TransferFunction):  # -------------------------------------------
 
 
     classPreferences = {
-        kwPreferenceSetName: 'IdentityClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        PREFERENCE_SET_NAME: 'IdentityClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
@@ -393,8 +393,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
     bounds = None
 
     classPreferences = {
-        kwPreferenceSetName: 'LinearClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        PREFERENCE_SET_NAME: 'LinearClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
     class Parameters(TransferFunction.Parameters):
@@ -3622,8 +3622,8 @@ class TransferWithCosts(TransferFunction):
     bounds = None
 
     classPreferences = {
-        kwPreferenceSetName: 'TransferWithCostssClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        PREFERENCE_SET_NAME: 'TransferWithCostssClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
     class Parameters(TransferFunction.Parameters):

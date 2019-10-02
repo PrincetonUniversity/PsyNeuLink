@@ -148,14 +148,14 @@ Class Reference
 import typecheck as tc
 
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DualAdaptiveIntegrator
-from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import MONITORED_OUTPUT_STATES, ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Mechanism, System_Base
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.globals.keywords import \
     CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, INIT_EXECUTE_METHOD_ONLY, \
     MECHANISM, MULTIPLICATIVE, OBJECTIVE_MECHANISM
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
@@ -182,7 +182,7 @@ class AGTControlMechanism(ControlMechanism):
         name=None,                      \
         prefs=None)
 
-    Subclass of `ControlMechanism <AdaptiveMechanism>` that modulates the `multiplicative_param
+    Subclass of `ControlMechanism <ModulatoryMechanism>` that modulates the `multiplicative_param
     <Function_Modulatory_Params>` of the `function <Mechanism_Base.function>` of one or more `Mechanisms <Mechanism>`.
 
     Arguments
@@ -291,11 +291,11 @@ class AGTControlMechanism(ControlMechanism):
     initMethod = INIT_EXECUTE_METHOD_ONLY
 
     classPreferenceLevel = PreferenceLevel.TYPE
-    # Any preferences specified below will override those specified in TypeDefaultPreferences
+    # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'ControlMechanismClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_SET_NAME: 'ControlMechanismClassPreferences',
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({CONTROL_SIGNALS: None,

@@ -558,15 +558,15 @@ def _get_time(component, context):
         # If called from COMMAND_LINE, get context for last time value was assigned:
         system = component.most_recent_context.composition
 
-    if system and hasattr(system, 'scheduler_processing'):
+    if system and hasattr(system, 'scheduler'):
         execution_flags = context.execution_phase
         # # MODIFIED 7/15/19 OLD:
         # try:
         #     if execution_flags == ContextFlags.PROCESSING or not execution_flags:
-        #         t = system.scheduler_processing.get_clock(context).time
+        #         t = system.scheduler.get_clock(context).time
         #         t = time(t.run, t.trial, t.pass_, t.time_step)
         #     elif execution_flags == ContextFlags.CONTROL:
-        #         t = system.scheduler_processing.get_clock(context).time
+        #         t = system.scheduler.get_clock(context).time
         #         t = time(t.run, t.trial, t.pass_, t.time_step)
         #     elif execution_flags == ContextFlags.LEARNING:
         #         if hasattr(system, "scheduler_learning") and system.scheduler_learning is not None:
@@ -578,13 +578,13 @@ def _get_time(component, context):
         #             t = None
         #     else:
         #         t = None
-        # MODIFIED 7/15/19 NEW:  ACCOMODATE LEARNING IN COMPOSITION DONE WITH scheduler_processing
+        # MODIFIED 7/15/19 NEW:  ACCOMODATE LEARNING IN COMPOSITION DONE WITH scheduler
         try:
             if execution_flags & (ContextFlags.PROCESSING | ContextFlags.LEARNING | ContextFlags.IDLE):
-                t = system.scheduler_processing.get_clock(context).time
+                t = system.scheduler.get_clock(context).time
                 t = time(t.run, t.trial, t.pass_, t.time_step)
             elif execution_flags & ContextFlags.CONTROL:
-                t = system.scheduler_processing.get_clock(context).time
+                t = system.scheduler.get_clock(context).time
                 t = time(t.run, t.trial, t.pass_, t.time_step)
             # elif execution_flags == ContextFlags.LEARNING:
             #     if hasattr(system, "scheduler_learning") and system.scheduler_learning is not None:

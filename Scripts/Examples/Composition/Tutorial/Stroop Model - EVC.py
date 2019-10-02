@@ -56,8 +56,8 @@ Stroop_model.add_node(reward)
 # Assign Scheduler Conditions:
 settling_time = 1
 # scheduler = Scheduler(composition=Stroop_model)
-Stroop_model.scheduler_processing.add_condition(color_hidden, EveryNCalls(task, settling_time))
-Stroop_model.scheduler_processing.add_condition(word_hidden, EveryNCalls(task, settling_time))
+Stroop_model.scheduler.add_condition(color_hidden, EveryNCalls(task, settling_time))
+Stroop_model.scheduler.add_condition(word_hidden, EveryNCalls(task, settling_time))
 
 # Construct and add ControlMechanism
 control_signal_search_range = SampleSpec(start=1.0, stop=1.8, step=0.2)

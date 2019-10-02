@@ -489,12 +489,12 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    COMBINE, COMMAND_LINE, CONTEXT, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, INPUT_STATE_PARAMS, \
+    COMBINE, CONTROL_SIGNAL, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, INPUT_STATE_PARAMS, \
     LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, NAME, OPERATION, OUTPUT_STATE, OUTPUT_STATES, OWNER,\
     PARAMS, PROCESS_INPUT_STATE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, \
     SENDER, SIZE, STATE_TYPE, SUM, SYSTEM_INPUT_STATE, VALUE, VARIABLE, WEIGHT
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import append_type_to_name, is_numeric, iscompatible, kwCompatibilityLength
 
@@ -504,7 +504,7 @@ __all__ = [
 
 state_type_keywords = state_type_keywords.update({INPUT_STATE})
 
-# InputStatePreferenceSet = ComponentPreferenceSet(log_pref=logPrefTypeDefault,
+# InputStatePreferenceSet = BasePreferenceSet(log_pref=logPrefTypeDefault,
 #                                                          reportOutput_pref=reportOutputPrefTypeDefault,
 #                                                          verbose_pref=verbosePrefTypeDefault,
 #                                                          param_validation_pref=paramValidationTypeDefault,
@@ -704,19 +704,21 @@ class InputState(State_Base):
                     PROCESS_INPUT_STATE,
                     SYSTEM_INPUT_STATE,
                     LEARNING_SIGNAL,
-                    GATING_SIGNAL]
+                    GATING_SIGNAL,
+                    CONTROL_SIGNAL
+                    ]
     connectsWithAttribute = [OUTPUT_STATES]
     projectionSocket = SENDER
-    modulators = [GATING_SIGNAL]
+    modulators = [GATING_SIGNAL, CONTROL_SIGNAL]
     canReceive = modulators + [MAPPING_PROJECTION]
 
 
     classPreferenceLevel = PreferenceLevel.TYPE
-    # Any preferences specified below will override those specified in TypeDefaultPreferences
+    # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'InputStateCustomClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_SET_NAME: 'InputStateCustomClassPreferences',
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     # Note: the following enforce encoding as 1D np.ndarrays (one variable/value array per state)
     variableEncodingDim = 1

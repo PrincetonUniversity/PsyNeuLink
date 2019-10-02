@@ -174,7 +174,7 @@ from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.learningfunctions import BackPropagation
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
-from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ERROR_SIGNAL, LearningMechanism
+from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import ERROR_SIGNAL, LearningMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -188,7 +188,7 @@ from psyneulink.core.globals.keywords import \
     CONTEXT, FUNCTION, FUNCTION_PARAMS, INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, \
     MATRIX, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE, ONLINE, AFTER
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import iscompatible, parameter_spec
 
@@ -611,7 +611,7 @@ class LearningProjection(ModulatoryProjection_Base):
         self.sender = sender
 
         if not isinstance(self.sender, (OutputState, LearningMechanism)):
-            from psyneulink.core.components.mechanisms.adaptive.learning.learningauxiliary \
+            from psyneulink.core.components.mechanisms.modulatory.learning.learningauxiliary \
                 import _instantiate_learning_components
             context.source = ContextFlags.METHOD
             _instantiate_learning_components(learning_projection=self,

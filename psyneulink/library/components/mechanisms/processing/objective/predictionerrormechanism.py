@@ -160,8 +160,8 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.globals.keywords import INITIALIZING, OUTCOME, PREDICTION_ERROR_MECHANISM, SAMPLE, TARGET
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
-from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, kwPreferenceSetName
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
+from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PREFERENCE_SET_NAME
 from psyneulink.core.globals.utilities import is_numeric
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism, ComparatorMechanismError
 
@@ -254,8 +254,8 @@ class PredictionErrorMechanism(ComparatorMechanism):
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     classPreferences = {
-        kwPreferenceSetName: 'PredictionErrorMechanismCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
+        PREFERENCE_SET_NAME: 'PredictionErrorMechanismCustomClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
 
     class Parameters(ComparatorMechanism.Parameters):

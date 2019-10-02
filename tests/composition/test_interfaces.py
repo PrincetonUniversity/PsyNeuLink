@@ -75,7 +75,7 @@ class TestExecuteCIM:
         sched = Scheduler(composition=comp)
         output = comp.run(
             inputs=inputs_dict,
-            scheduler_processing=sched
+            scheduler=sched
         )
 
         assert np.allclose([30], output)
@@ -104,7 +104,7 @@ class TestExecuteCIM:
         sched = Scheduler(composition=comp)
         output = comp.run(
             inputs=inputs_dict,
-            scheduler_processing=sched
+            scheduler=sched
         )
 
         assert np.allclose([[30.], [36.]], output)
@@ -248,7 +248,7 @@ class TestConnectCompositionsViaCIMS:
         sched = Scheduler(composition=outer_composition)
         output = outer_composition.run(
             inputs={inner_composition_1: [[[5.0], [50.0]]]},
-            scheduler_processing=sched,
+            scheduler=sched,
             bin_execute=mode
         )
 
@@ -323,7 +323,7 @@ class TestConnectCompositionsViaCIMS:
                 inner_composition_1: {A: [2.0],
                                           B: [1.0]},
                 inner_composition_2: [[12.0]]},
-            scheduler_processing=sched,
+            scheduler=sched,
             bin_execute=mode
         )
         assert np.allclose(output, [[[36.]]])
@@ -414,7 +414,7 @@ class TestConnectCompositionsViaCIMS:
                 inner_composition_1: {A: [[2.0], [1.5], [2.5]],
                                       B: [[1.0], [1.5], [1.5]]},
                 inner_composition_2: [[12.0], [11.5], [12.5]]},
-            scheduler_processing=sched,
+            scheduler=sched,
             bin_execute=mode
         )
 
@@ -486,7 +486,7 @@ class TestConnectCompositionsViaCIMS:
         level_2.run(inputs={A2: [[1.0, 2.0]],
                             level_1: {A1: [[1.0]],
                                       level_0: {A0: [[1.0], [2.0]]}}},
-                    scheduler_processing=sched)
+                    scheduler=sched)
 
         # level_0 output = 2.0 * (1.0 + 2.0) = 6.0
         assert np.allclose(level_0.get_output_values(level_2), [6.0])

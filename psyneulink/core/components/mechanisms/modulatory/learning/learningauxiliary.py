@@ -138,7 +138,7 @@ from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.functions.combinationfunctions import PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.learningfunctions import BackPropagation, Hebbian, Reinforcement, TDLearning
 from psyneulink.core.components.functions.transferfunctions import Linear
-from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, \
+from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import ACTIVATION_INPUT, \
     ACTIVATION_OUTPUT, ERROR_SIGNAL, LearningMechanism, LearningType, LearningTiming
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism

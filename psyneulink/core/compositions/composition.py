@@ -31,8 +31,8 @@ It defines a common set of attributes possessed, and methods used by all Composi
 
 Composition "Nodes" are `Mechanisms <Mechanism>` and/or nested `Compositions <Composition>`. `Projections
 <Projection>` connect two Nodes. The Composition's `graph <Composition.graph>` stores the structural relationships
-among the Nodes of a Composition and the Projections that connect them.  The Composition's `scheduler_processing 
-<Composition.scheduler_processing>` generates an execution queue based on these structural dependencies, allowing 
+among the Nodes of a Composition and the Projections that connect them.  The Composition's `scheduler 
+<Composition.scheduler>` generates an execution queue based on these structural dependencies, allowing 
 for other user-specified scheduling and termination conditions to be specified.
 
 .. _Composition_Creation:
@@ -553,7 +553,7 @@ COMMENT
 Controlling a Composition
 -------------------------
 
-A Composition can be assigned a `controller <Composition.controller>`.  This is a `ModulatoryMechanism`, or a subclass
+A Composition can be assigned a `controller <Composition.controller>`.  This is a `ControlMechanism`, or a subclass
 of one, that modulates the parameters of Components within the Composition (including Components of nested Compositions).
 It typically does this based on the output of an `ObjectiveMechanism` that evaluates the value of other Mechanisms in
 the Composition, and provides the result to the `controller <Composition.controller>`.
@@ -661,9 +661,9 @@ or Mechanism.input_states, as these are added in the proper classes' _dependent_
 When `run <Composition.run>` is called by a Composition, it calls that Composition's `execute <Composition.execute>`
 method once for each `input <Composition_Run_Inputs>`  (or set of inputs) specified in the call to `run
 <Composition.run>`, which constitutes a `TRIAL` of execution.  For each `TRIAL`, the Component makes repeated calls
-to its `scheduler_processing <Composition.scheduler_processing>`, executing the Components it specifies in each 
+to its `scheduler <Composition.scheduler>`, executing the Components it specifies in each 
 `TIME_STEP`, until every Component has been executed at least once or another `termination condition 
-<Scheduler_Termination_Conditions>` is met.  The `scheduler_processing <Composition.scheduler_processing>` can be 
+<Scheduler_Termination_Conditions>` is met.  The `scheduler <Composition.scheduler>` can be 
 used in combination with `Condition` specifications for individual Components to execute different Components at 
 different time scales.
 
@@ -958,7 +958,7 @@ learning <Composition_Learning_Supervised>`, although it can be used for some fo
 <https://github.com/giannisnik/som>`_).  Second, all of the Components in the Composition are be subject to and must
 be with compatible with learning.   This means that it cannot be used with a Composition that contains any
 `modulatory components <ModulatorySignal_Anatomy_Figure>` or that are subject to modulation, whether by
-ModulatoryMechanisms within or outside the Composition;  this includes a `controller <Composition_Controller>`
+ControlMechanisms within or outside the Composition;  this includes a `controller <Composition_Controller>`
 or any LearningMechanisms.  An AutodiffComposition can be `nested in a Composition <Composition_Nested>`
 that has such other Components.  During learning, none of the internal Components of the AutodiffComposition (e.g.,
 intermediate layers of a neural network model) are accessible to the other Components of the outer Composition,
@@ -1087,7 +1087,6 @@ import numpy as np
 import typecheck as tc
 
 from PIL import Image
-from os import path, remove
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta
@@ -1097,12 +1096,11 @@ from psyneulink.core.components.functions.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
-from psyneulink.core.components.mechanisms.adaptive.modulatorymechanism import ModulatoryMechanism
-from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism import OptimizationControlMechanism
-from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import \
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import OptimizationControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
-from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.projection import DuplicateProjectionError
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -1111,7 +1109,7 @@ from psyneulink.core.components.projections.modulatory.controlprojection import 
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
-from psyneulink.core.components.states.state import State, _parse_state_spec
+from psyneulink.core.components.states.state import State
 from psyneulink.core.components.states.inputstate import InputState, SHADOW_INPUTS
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.outputstate import OutputState
@@ -1132,6 +1130,8 @@ from psyneulink.core.globals.utilities import ContentAddressableList, NodeRole, 
 from psyneulink.core.scheduling.condition import All, Always, Condition, EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
+from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, PreferenceSet, _assign_prefs
+from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism, MSE
 from psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism import PredictionErrorMechanism
@@ -1445,8 +1445,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Arguments
         ---------
 
-        name: str
-
         controller:   `OptimizationControlmechanism` : default None
             specifies the `OptimizationControlMechanism` to use as the Composition's `controller
             <Composition.controller>` (see `Composition_Controller` for details).
@@ -1467,6 +1465,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when it is
             executed.
 
+        name : str : default see `name <Composition.name>`
+            specifies the name of the Composition.
+
+        prefs : PreferenceSet or specification dict : default Composition.classPreferences
+            specifies the `PreferenceSet` for the Composition; see `prefs <Composition.prefs>` for details.
 
         Attributes
         ----------
@@ -1574,17 +1577,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if True, all Parameter values generated during simulations will be saved for later inspection;
             if False, simulation values will be deleted unless otherwise specified by individual Parameters
 
-        COMMENT:
         name : str
-            see `name <Composition_Name>`
+            the name of the Composition; if it is not specified in the **name** argument of the constructor, a default
+            is assigned by CompositionRegistry (see `Naming` for conventions used for default and duplicate names).
 
-        prefs : PreferenceSet
-            see `prefs <Composition_Prefs>`
-        COMMENT
+        prefs : PreferenceSet or specification dict
+            the `PreferenceSet` for the Composition; if it is not specified in the **prefs** argument of the
+            constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+            <LINK>` for details).
 
     """
     # Composition now inherits from Component, so registry inherits name None
     componentType = 'Composition'
+    classPreferenceLevel = PreferenceLevel.CATEGORY
 
     class Parameters(ParametersBase):
         """
@@ -1624,12 +1629,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def __init__(
             self,
             name=None,
-            controller:ModulatoryMechanism=None,
+            controller:ControlMechanism=None,
             enable_controller=None,
             controller_mode:tc.enum(BEFORE,AFTER)=AFTER,
             controller_condition:Condition=Always(),
             enable_learning=False,
             retain_old_simulation_data=None,
+            prefs=None,
             **param_defaults
     ):
         # also sets name
@@ -1662,18 +1668,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.shadows = {}
 
-        # self.enable_controller = enable_controller
-        # self.controller = controller
-        # self.controller_mode = controller_mode
-        # self.controller_condition = controller_condition
-        # self.controller_condition.owner = self.controller
-
         self.default_execution_id = self.name
         self.execution_ids = {self.default_execution_id}
 
         self.projections = ContentAddressableList(component_type=Component)
 
-        self._scheduler_processing = None
+        self._scheduler = None
 
         self.enable_learning = False
 
@@ -1681,7 +1681,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.graph_consistent = True  # Tracks if Composition is in runnable state (no dangling projections (what else?)
         self.needs_update_graph = True  # Tracks if Composition graph has been analyzed to assign roles to components
         self.needs_update_graph_processing = True  # Tracks if the processing graph is current with the full graph
-        self.needs_update_scheduler_processing = True  # Tracks if the scheduler_processing needs to be regenerated
+        self.needs_update_scheduler = True  # Tracks if the scheduler needs to be regenerated
 
         self.nodes_to_roles = collections.OrderedDict()
 
@@ -1701,6 +1701,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.__generated_sim_run = None
 
         self._compilation_data = self._CompilationData(owner=self)
+
+        # If a PreferenceSet was provided, assign to instance
+        _assign_prefs(self, prefs, BasePreferenceSet)
 
         self.log = CompositionLog(owner=self)
         self._terminal_backprop_sequences = {}
@@ -1732,47 +1735,47 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return self._graph_processing
 
     @property
-    def scheduler_processing(self):
+    def scheduler(self):
         """
             A default `Scheduler` automatically generated by the Composition, used for the
             (`processing <System_Execution_Processing>` phase of execution.
 
-            :getter: Returns the default scheduler_processing, and builds it if it needs updating since the last access.
+            :getter: Returns the default scheduler, and builds it if it needs updating since the last access.
         """
-        if self.needs_update_scheduler_processing or not isinstance(self._scheduler_processing, Scheduler):
-            old_scheduler = self._scheduler_processing
-            self._scheduler_processing = Scheduler(graph=self.graph_processing, default_execution_id=self.default_execution_id)
+        if self.needs_update_scheduler or not isinstance(self._scheduler, Scheduler):
+            old_scheduler = self._scheduler
+            self._scheduler = Scheduler(graph=self.graph_processing, default_execution_id=self.default_execution_id)
 
             if old_scheduler is not None:
-                self._scheduler_processing.add_condition_set(old_scheduler.conditions)
+                self._scheduler.add_condition_set(old_scheduler.conditions)
 
-            self.needs_update_scheduler_processing = False
+            self.needs_update_scheduler = False
 
-        return self._scheduler_processing
+        return self._scheduler
 
-    @scheduler_processing.setter
-    def scheduler_processing(self, value: Scheduler):
+    @scheduler.setter
+    def scheduler(self, value: Scheduler):
         warnings.warn(
-            f'If {self} is changed (nodes or projections are added or removed), scheduler_processing '
+            f'If {self} is changed (nodes or projections are added or removed), scheduler '
             ' will be rebuilt, and will be different than the Scheduler you are now setting it to.',
             stacklevel=2
         )
 
-        self._scheduler_processing = value
+        self._scheduler = value
 
     @property
     def termination_processing(self):
-        return self.scheduler_processing.termination_conds
+        return self.scheduler.termination_conds
 
     @termination_processing.setter
     def termination_processing(self, termination_conds):
-        self.scheduler_processing.termination_conds = termination_conds
+        self.scheduler.termination_conds = termination_conds
 
     # ******************************************************************************************************************
     #                                              GRAPH
     # ******************************************************************************************************************
 
-    def _analyze_graph(self, scheduler=None):
+    def _analyze_graph(self, scheduler=None, context=None):
         """
         Assigns `NodeRoles <NodeRoles>` to nodes based on the structure of the `Graph`.
 
@@ -1786,18 +1789,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         to set any node in the Composition to `OUTPUT <NodeRole.OUTPUT>`, then the `TERMINAL <NodeRole.TERMINAL>`
         nodes are not set to `OUTPUT <NodeRole.OUTPUT>` by default.
         """
-
         for n in self.nodes:
             try:
-                n._analyze_graph()
+                n._analyze_graph(context=context)
             except AttributeError:
                 pass
 
-        self._check_feedback(scheduler)
-        self._determine_node_roles()
-        self._create_CIM_states()
-        self._update_shadow_projections()
-        self._check_for_projection_assignments()
+        self._check_feedback(scheduler=scheduler, context=context)
+        self._determine_node_roles(context=context)
+        self._create_CIM_states(context=context)
+        self._update_shadow_projections(context=context)
+        self._check_for_projection_assignments(context=context)
         self.needs_update_graph = False
 
     def _update_processing_graph(self):
@@ -1894,7 +1896,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             self.needs_update_graph = True
             self.needs_update_graph_processing = True
-            self.needs_update_scheduler_processing = True
+            self.needs_update_scheduler = True
 
             try:
                 # activate any projections the node requires
@@ -1993,7 +1995,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.controller:
             deferred_init_control_specs = node._get_parameter_state_deferred_init_control_specs()
             if deferred_init_control_specs:
-                self.controller._remove_default_modulatory_signal(type=CONTROL_SIGNAL)
+                self.controller._remove_default_control_signal(type=CONTROL_SIGNAL)
                 for ctl_sig_spec in deferred_init_control_specs:
                     # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
                     self.controller._instantiate_control_signal(control_signal=ctl_sig_spec,
@@ -2156,7 +2158,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                               visited_compositions)
         return nested_compositions
 
-    def _determine_node_roles(self):
+    def _determine_node_roles(self, context=None):
 
         # Clear old roles
         self.nodes_to_roles.update({k: set() for k in self.nodes_to_roles})
@@ -2171,8 +2173,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._add_node_role(objective_mechanism, NodeRole.CONTROLLER_OBJECTIVE)
 
         # Use Scheduler.consideration_queue to check for ORIGIN and TERMINAL Nodes:
-        if self.scheduler_processing.consideration_queue:
-            self._analyze_consideration_queue(self.scheduler_processing.consideration_queue, objective_mechanism)
+        if self.scheduler.consideration_queue:
+            self._analyze_consideration_queue(self.scheduler.consideration_queue, objective_mechanism)
 
         # A ControlMechanism should not be the TERMINAL node of a Composition
         #    (unless it is specifed as a required_role, in which case it is reassigned below)
@@ -2184,7 +2186,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.nodes_to_roles[node].remove(NodeRole.OUTPUT)
 
         # Cycles
-        for node in self.scheduler_processing.cycle_nodes:
+        for node in self.scheduler.cycle_nodes:
             self._add_node_role(node, NodeRole.CYCLE)
 
         # "Feedback" projections
@@ -2211,7 +2213,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if self.get_nodes_by_role(NodeRole.LEARNING):
                 # FIX: ADD COMMENT HERE
                 # terminal_nodes = [[n for n in self.nodes if not NodeRole.LEARNING in self.nodes_to_roles[n]][-1]]
-                output_nodes = list([items for items in self.scheduler_processing.consideration_queue
+                output_nodes = list([items for items in self.scheduler.consideration_queue
                                        if any([item for item in items
                                                if not NodeRole.LEARNING in self.nodes_to_roles[item]])])[-1]
             else:
@@ -2223,10 +2225,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     #    - not ControlMechanisms or ObjectiveMechanisms that project to them;
                     #    - do not project to any other nodes.
 
-                    # First, find last consideration_set in scheduler_processing that does not contain only
+                    # First, find last consideration_set in scheduler that does not contain only
                     #    learning-related nodes, ControlMechanism(s) or control-related ObjectiveMechanism(s);
                     #    note: get copy of the consideration_set, as don't want to modify one actually used by scheduler
-                    output_nodes = list([items for items in self.scheduler_processing.consideration_queue
+                    output_nodes = list([items for items in self.scheduler.consideration_queue
                                            if any([item for item in items if
                                                    (not NodeRole.LEARNING in self.nodes_to_roles[item]
                                                     and not isinstance(item, ControlMechanism)
@@ -2287,7 +2289,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.nodes_to_roles[node].remove(role)
 
     tc.typecheck
-
     def _create_CIM_states(self, context=None):
         """
             - remove the default InputState and OutputState from the CIMs if this is the first time that real
@@ -2467,7 +2468,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             if afferent in state.mod_afferents:
                                 state.mod_afferents.remove(afferent)
 
-            for modulatory_signal in controller.modulatory_signals:
+            for modulatory_signal in controller.control_signals:
                 for projection in modulatory_signal.projections:
                     receiver = projection.receiver
                     mech = receiver.owner
@@ -2628,6 +2629,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
           they must match the `sender <MappingProjection.sender>` and `receiver <MappingProjection.receiver>`
           of **projection**.
 
+        • if **sender** and **receiver** are specified and one or more Projections already exists between them:
+          - if it is in the Composition:
+            - if there is only one, the request is ignored and the existing Projection is returned
+            - if there is more than one, an exception is raised as this should never be the case
+          - it is NOT in the Composition:
+            - if there is only one, that Projection is used;
+            - if there is more than one, the last in the list (presumably the most recent) is used;
+            in either case, processing continues, to activate it for the Compostion,
+            construct any "shadow" projections that may be specified, and assign feedback if specified,
+
         • if the status of **projection** is `deferred_init`:
 
           - if its `sender <Projection_Base.sender>` and/or `receiver <Projection_Base.receiver>` attributes are not
@@ -2641,7 +2652,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             a`feedback` Projection are implemented (in case it has not already been done for the existing Projection).
 
         .. note::
-           If **projection** is an instantiated projection (i.e., not in `deferred_init`) and one already exists between
+           If **projection** is an instantiated Projection (i.e., not in `deferred_init`) and one already exists between
            its `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>` a warning is generated.
 
         COMMENT:
@@ -2683,13 +2694,54 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         projection if added, else None
 
     """
-        # FIX 7/22/19 [JDC]: THIS COULD BE CLEANED UP MORE
+
+        existing_projections = False
+
+        # If a sender and receiver have been specified but not a projection,
+        #    check whether there is *any* projection like that
+        #    (i.e., whether it/they are already in the current Composition or not);  if so:
+        #    - if there is only one, use that;
+        #    - if there are several, use the last in the list (on the assumption in that it is the most recent).
+        # Note:  Skip this if **projection** was specified, as it might include parameters that are different
+        #        than the existing ones, in which case should use that rather than any existing ones;
+        #        will handle any existing Projections that are in the current Composition below.
+        if sender and receiver and not projection:
+            existing_projections = self._check_for_existing_projections(sender=sender,
+                                                               receiver=receiver,
+                                                               in_composition=False)
+            if existing_projections:
+                if isinstance(sender, State):
+                    sender_check = sender.owner
+                else:
+                    sender_check = sender
+                if isinstance(receiver, State):
+                    receiver_check = receiver.owner
+                else:
+                    receiver_check = receiver
+                if sender_check not in self.nodes or receiver_check not in self.nodes:
+                    for proj in existing_projections:
+                        self.remove_projection(proj)
+                        sender_check.efferents.remove(proj)
+                        receiver_check.afferents.remove(proj)
+                else:
+                #  Need to do stuff at end, so can't just return
+                    if self.prefs.verbosePref:
+                        warnings.warn(f"Several existing projections were identified between "
+                                      f"{sender.name} and {receiver.name}: {[p.name for p in existing_projections]}; "
+                                      f"the last of these will be used in {self.name}.")
+                    projection = existing_projections[-1]
+
+        # FIX: 9/30/19 - Why is this not an else?
+        #                Because above is only for existing Projections outside of Composition, which should be
+        #                used
+        #                But existing one could be within, in which case want to use that one
+        #                existing Projection might be deferred_init, and want t
         try:
-            # projection = self._parse_projection_spec(projection, sender, receiver, name)
+            # Note: this does NOT initialize the Projection if it is in deferred_init
             projection = self._parse_projection_spec(projection, name)
         except DuplicateProjectionError:
-            return projection
-        duplicate = False
+            # return projection
+            return
 
         # Parse sender and receiver specs
         sender, sender_mechanism, graph_sender, nested_compositions = self._parse_sender_spec(projection, sender)
@@ -2703,30 +2755,35 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 sender = sender_mechanism
             if not isinstance(receiver, InputState):
                 receiver = receiver_mechanism
-            # Check if Projection to be initialized already exists;  if so, mark as duplicate and skip
-            duplicate = self._check_for_existing_projection(sender=sender, receiver=receiver)
-            if not duplicate:
+            # Check if Projection to be initialized already exists in the current Composition;
+            #    if so, mark as existing_projections and skip
+            existing_projections = self._check_for_existing_projections(sender=sender, receiver=receiver)
+            if existing_projections:
+                return
+            else:
                 # Initialize Projection
                 projection.init_args['sender'] = sender
                 projection.init_args['receiver'] = receiver
                 try:
                     projection._deferred_init()
                 except DuplicateProjectionError:
-                    return projection
+                    # return projection
+                    return
 
-        elif self._check_for_existing_projection(projection, sender=sender, receiver=receiver):
-            # FIX: THE FOLLOWING IS REQUIRED SO AS NOT TO CRASH IN test_alias_equivalence_for_modulates_and_projections
-            #      - BLOCK OF CODE BELOW (KAM HACK) IS REQUIRED
-            # return projection
-            duplicate = True
+        else:
+            existing_projections = self._check_for_existing_projections(projection, sender=sender, receiver=receiver)
 
+        # FIX: 9/30/19 - THIS SEEMS TO BE DONE FOR ALL PROJECTIONS, NOT JUST AUTOASSOCIATIVE ONES;
+        #                FILTERS OUT AUTOASSOCIATIVE?
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
-        if sender_mechanism != self.input_CIM and receiver_mechanism != self.output_CIM \
-                and projection not in [vertex.component for vertex in self.graph.vertices] and not learning_projection:
+        if (sender_mechanism != self.input_CIM
+                and receiver_mechanism != self.output_CIM
+                and projection not in [vertex.component for vertex in self.graph.vertices]
+                and not learning_projection):
 
             projection.is_processing = False
-            # KDM 5/24/19: removing below rename because it results in several duplicates
+            # KDM 5/24/19: removing below rename because it results in several existing_projections
             # projection.name = f'{sender} to {receiver}'
             self.graph.add_component(projection, feedback=feedback)
 
@@ -2736,22 +2793,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except CompositionError as c:
                 raise CompositionError(f"{c.args[0]} to {self.name}.")
 
+        # FIX: 9/30/19 - THIS SEEMS TO BE NEEDED FOR ALL PROJECTIONS, NOT JUST AUTOASSOCIATIVE ONES
+        #                FILTERS OUT AUTOASSOCIATIVE?
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
-        if not duplicate:
+        if not existing_projections:
             self._validate_projection(projection,
                                       sender, receiver,
                                       sender_mechanism, receiver_mechanism,
                                       learning_projection)
-            self.needs_update_graph = True
-            self.needs_update_graph_processing = True
-            self.needs_update_scheduler_processing = True
+        self.needs_update_graph = True
+        self.needs_update_graph_processing = True
+        self.needs_update_scheduler = True
 
-            projection._activate_for_compositions(self)
-            for comp in nested_compositions:
-                projection._activate_for_compositions(comp)
+        projection._activate_for_compositions(self)
+        for comp in nested_compositions:
+            projection._activate_for_compositions(comp)
 
-        # Note: do all of the following even if Projection is a duplicate,
+        # Note: do all of the following even if Projection is a existing_projections,
         #   as these conditions shoud apply to the exisiting one (and it won't hurt to try again if they do)
 
         # Create "shadow" projections to any input states that are meant to shadow this projection's receiver
@@ -2980,7 +3039,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.add_projection(new_projection, sender=correct_sender, receiver=input_state)
         return original_senders
 
-    def _update_shadow_projections(self):
+    def _update_shadow_projections(self, context=None):
         for node in self.nodes:
             for input_state in node.input_states:
                 if input_state.shadow_inputs:
@@ -2993,7 +3052,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if len(self.get_roles_by_node(node)) == 0:
                 self._add_node_role(node, NodeRole.INTERNAL)
 
-    def _check_for_projection_assignments(self):
+    def _check_for_projection_assignments(self, context=None):
         """Check that all Projections and States with require_projection_in_composition attribute are configured.
 
         Validate that all InputStates with require_projection_in_composition == True have an afferent Projection.
@@ -3021,10 +3080,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not projection.receiver:
                 warnings.warn(f'{Projection.__name__} {projection.name} is missing a receiver')
 
-    def _check_for_existing_projection(self,
-                                         projection=None,
-                                         sender=None,
-                                         receiver=None):
+    def _check_for_existing_projections(self,
+                                       projection=None,
+                                       sender=None,
+                                       receiver=None,
+                                       in_composition:bool=True):
+        """Check for Projection with same sender and receiver
+        If **in_composition** is True, return only Projections found in the current Composition
+        If **in_composition** is False, return only Projections that are found outside the current Composition
+        
+        Return Projection or list of Projections that satisfies the conditions, else False
+        """
         assert projection or (sender and receiver), \
             f'_check_for_existing_projection must be passed a projection or a sender and receiver'
 
@@ -3040,12 +3106,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 receiver = receiver.input_state
             elif isinstance(receiver, Composition):
                 receiver = receiver.input_CIM.input_state
-
-        if [proj for proj in sender.efferents if proj.receiver is receiver and proj in self.projections]:
-            return True
+        existing_projections = [proj for proj in sender.efferents if proj.receiver is receiver]
+        existing_projections_in_composition = [proj for proj in existing_projections if proj in self.projections]
+        assert len(existing_projections_in_composition) <= 1, \
+            f"PROGRAM ERROR: More than one identical projection found " \
+            f"in {self.name}: {existing_projections_in_composition}."
+        if in_composition:
+            if existing_projections_in_composition:
+                return existing_projections_in_composition[0]
+        else:
+            if existing_projections and not existing_projections_in_composition:
+                return existing_projections
         return False
 
-    def _check_feedback(self, scheduler):
+    def _check_feedback(self, scheduler, context=None):
         """Check that feedback specification is required for projections to which it has been assigned
         Note:
         - graph_processing and graph_processing.dependency_dict are used as indications of structural dependencies
@@ -3060,7 +3134,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except ValueError:
                 pass
         else:
-            scheduler = self.scheduler_processing
+            scheduler = self.scheduler
 
         for vertex in [v for v in self.graph.vertices if v.feedback==MAYBE]:
             projection = vertex.component
@@ -3144,9 +3218,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Tuples (Mechanism, `NodeRoles <NodeRole>`) can be used to assign `required_roles
         <Composition.add_node.required_roles>` to Mechanisms.
 
-        Note that any specifications of a ModulatoryMechanism's **monitor_for_modulation** `argument
-        <ModulatoryMechanism_Monitor_for_Modulation_Argument>` or the **monitor** argument specified in the constructor
-        for an ObjectiveMechanism in the **objective_mechanism** `argument <ModulatoryMechanism_ObjectiveMechanism>`
+        Note that any specifications of a ControlMechanism's **monitor_for_control** `argument
+        <ControlMechanism_Monitor_for_Control_Argument>` or the **monitor** argument specified in the constructor
+        for an ObjectiveMechanism in the **objective_mechanism** `argument <ControlMechanism_ObjectiveMechanism>`
         supercede any MappingProjections that would otherwise be created for them when specified in the **pathway**
         argument.
         """
@@ -3193,7 +3267,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.add_nodes([pathway[c]])
                 nodes.append(pathway[c])
 
-        # FIX 8/27/19 [JDC]:  GENERALIZE TO ModulatoryMechanism
+        # FIX 8/27/19 [JDC]:  GENERALIZE TO ControlMechanism
         # MODIFIED 8/12/19 NEW: [JDC] - AVOID DUPLCIATE CONTROL_RELATED PROJECTIONS
         # Then, delete any ControlMechanism that has its monitor_for_control attribute assigned
         #    and any ObjectiveMechanism that projects to a ControlMechanism,
@@ -3202,7 +3276,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    instantiated by their constructors or, for a controller, _add_controller()
         items_to_delete = []
         for i, item in enumerate(pathway):
-            if ((isinstance(item, ControlMechanism) and item.monitor_for_modulation)
+            if ((isinstance(item, ControlMechanism) and item.monitor_for_control)
                     or (isinstance(item, ObjectiveMechanism) and item._role == CONTROL)):
                 items_to_delete.append(item)
                 # Delete any projections to the ControlMechanism or ObjectiveMechanism specified in pathway
@@ -4164,7 +4238,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #                                              CONTROL
     # ******************************************************************************************************************
 
-    def add_controller(self, controller:ModulatoryMechanism):
+    def add_controller(self, controller:ControlMechanism):
         """
         Add an `OptimizationControlMechanism` as the `controller
         <Composition.controller>` of the Composition, which gives the OCM access to the
@@ -4172,9 +4246,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         an optimal Control policy.
         """
 
-        if not isinstance(controller, ModulatoryMechanism):
+        if not isinstance(controller, ControlMechanism):
             raise CompositionError(f"Specification of {repr(CONTROLLER)} arg for {self.name} "
-                                   f"must be a {repr(ModulatoryMechanism.__name__)} ")
+                                   f"must be a {repr(ControlMechanism.__name__)} ")
 
         # VALIDATE AND ADD CONTROLLER
 
@@ -4244,7 +4318,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # ADD ANY ControlSignals SPECIFIED BY NODES IN COMPOSITION
 
         # Get rid of default ControlSignal if it has no ControlProjections
-        controller._remove_default_modulatory_signal(type=CONTROL_SIGNAL)
+        controller._remove_default_control_signal(type=CONTROL_SIGNAL)
 
         # Add any ControlSignals specified for ParameterStates of nodes already in the Composition
         control_signal_specs = self._get_control_signals_for_composition()
@@ -4252,7 +4326,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # FIX: 9/14/19: THIS SHOULD BE HANDLED IN _instantiate_projection_to_state
             #               CALLED FROM _instantiate_control_signal
             #               SHOULD TRAP THAT ERROR AND GENERATE CONTEXT-APPROPRIATE ERROR MESSAGE
-            # Don't add any that are already on the ModulatoryMechanism
+            # Don't add any that are already on the ControlMechanism
 
             # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
             controller._instantiate_control_signal(control_signal=ctl_sig_spec,
@@ -4677,8 +4751,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     node_shape = mechanism_shape
 
                 # Get condition if any associated with rcvr
-                if rcvr in self.scheduler_processing.conditions:
-                    condition = self.scheduler_processing.conditions[rcvr]
+                if rcvr in self.scheduler.conditions:
+                    condition = self.scheduler.conditions[rcvr]
                 else:
                     condition = None
 
@@ -5062,8 +5136,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 objmech_label = self._get_graph_node_label(objmech, show_dimensions)
                 if show_node_structure:
-                    if objmech in self.scheduler_processing.conditions:
-                        condition = self.scheduler_processing.conditions[obj_mech]
+                    if objmech in self.scheduler.conditions:
+                        condition = self.scheduler.conditions[obj_mech]
                     else:
                         condition = None
                     g.node(objmech_label,
@@ -5197,7 +5271,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       proj_color, proj_width,
                                       sndr_label=None,
                                       rcvr_label=None):
-            from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 
             proj_receiver = proj.receiver.owner
 
@@ -5371,8 +5444,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         active_items = active_items or []
         if active_items:
             active_items = convert_to_list(active_items)
-            if (self.scheduler_processing.get_clock(context).time.run >= self._animate_num_runs or
-                    self.scheduler_processing.get_clock(context).time.trial >= self._animate_num_trials):
+            if (self.scheduler.get_clock(context).time.run >= self._animate_num_runs or
+                    self.scheduler.get_clock(context).time.trial >= self._animate_num_trials):
                 return
 
             for item in active_items:
@@ -5456,7 +5529,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # get all Nodes
         # FIX: call to _analyze_graph in nested calls to show_graph cause trouble
         if output_fmt != 'gv':
-            self._analyze_graph()
+            self._analyze_graph(context=context)
         processing_graph = self.graph_processing.dependency_dict
         rcvrs = list(processing_graph.keys())
 
@@ -5638,7 +5711,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 except KeyError:
                     # # mech_role = r'\n[{}]'.format(self.system)
                     # mech_role = r'\n[CONTROLLER]'
-                    from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import \
+                    from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import \
                         ControlMechanism
                     from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
                         ObjectiveMechanism
@@ -5861,7 +5934,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         G.format = 'gif'
         execution_phase = context.execution_phase
-        time = self.scheduler_processing.get_clock(context).time
+        time = self.scheduler.get_clock(context).time
         run_num = time.run
         trial_num = time.trial
 
@@ -5918,7 +5991,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def run(
             self,
             inputs=None,
-            scheduler_processing=None,
+            scheduler=None,
             termination_processing=None,
             num_trials=None,
             call_before_time_step=None,
@@ -5950,7 +6023,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 the user. For each pair, the key is the Node and the value is a list of inputs. Each input in the
                 list corresponds to a certain `TRIAL`.
 
-            scheduler_processing : Scheduler
+            scheduler : Scheduler
                 the scheduler object that owns the conditions that will instruct the execution of the Composition.
                 If not specified, the Composition will use its automatically generated scheduler.
 
@@ -6081,8 +6154,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         output value of the final Node executed in the composition : various
         """
 
-        if scheduler_processing is None:
-            scheduler_processing = self.scheduler_processing
+        if scheduler is None:
+            scheduler = self.scheduler
 
         if termination_processing is None:
             termination_processing = self.termination_processing
@@ -6115,16 +6188,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # FIX: MODIFIED FEEDBACK -
         #      THIS IS NEEDED HERE (AND NO LATER) TO WORK WITH test_3_mechanisms_2_origins_1_additive_control_1_terminal
         # If a scheduler was passed in, first call _analyze_graph with default scheduler
-        if scheduler_processing is not self.scheduler_processing:
-            self._analyze_graph()
+        if scheduler is not self.scheduler:
+            self._analyze_graph(context=context)
         # Then call _analyze graph with scheduler actually being used (passed in or default)
         try:
             if ContextFlags.SIMULATION not in context.execution_phase:
-                self._analyze_graph(scheduler_processing)
+                self._analyze_graph(scheduler=scheduler, context=context)
         except AttributeError:
             # if context is None, it has not been created for this context yet,
             # so it is not in a simulation
-            self._analyze_graph(scheduler_processing)
+            self._analyze_graph(scheduler=scheduler, context=context)
         # MODIFIED 8/27/19 END
 
         # set auto logging if it's not already set, and if log argument is True
@@ -6148,7 +6221,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._assign_execution_ids(context)
 
-        scheduler_processing._init_counts(execution_id=context.execution_id)
+        scheduler._init_counts(execution_id=context.execution_id)
 
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
@@ -6192,7 +6265,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             num_trials = num_inputs_sets
 
-        scheduler_processing._reset_counts_total(TimeScale.RUN, context.execution_id)
+        scheduler._reset_counts_total(TimeScale.RUN, context.execution_id)
 
         # KDM 3/29/19: run the following not only during LLVM Run compilation, due to bug where TimeScale.RUN
         # termination condition is checked and no data yet exists. Adds slight overhead as long as run is not
@@ -6250,7 +6323,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 call_with_pruned_args(call_before_trial, context=context)
 
             if termination_processing[TimeScale.RUN].is_satisfied(
-                scheduler=scheduler_processing,
+                scheduler=scheduler,
                 context=context
             ):
                 break
@@ -6280,7 +6353,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             for node in self.nodes:
                 if hasattr(node, "reinitialize_when") and node.parameters.has_initializers._get(context):
-                    if node.reinitialize_when.is_satisfied(scheduler=self.scheduler_processing,
+                    if node.reinitialize_when.is_satisfied(scheduler=self.scheduler,
                                                            context=context):
                         node.reinitialize(None, context=context)
 
@@ -6288,7 +6361,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # pass along the stimuli for this trial
             trial_output = self.execute(inputs=execution_stimuli,
                                         autodiff_stimuli=execution_autodiff_stimuli,
-                                        scheduler_processing=scheduler_processing,
+                                        scheduler=scheduler,
                                         termination_processing=termination_processing,
                                         call_before_time_step=call_before_time_step,
                                         call_before_pass=call_before_pass,
@@ -6328,7 +6401,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if call_after_trial:
                 call_with_pruned_args(call_after_trial, context=context)
 
-        scheduler_processing.get_clock(context)._increment_time(TimeScale.RUN)
+        scheduler.get_clock(context)._increment_time(TimeScale.RUN)
 
         full_results = self.parameters.results._get(context)
         if full_results is None:
@@ -6362,7 +6435,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self,
             inputs=None,
             autodiff_stimuli=None,
-            scheduler_processing=None,
+            scheduler=None,
             termination_processing=None,
             call_before_time_step=None,
             call_before_pass=None,
@@ -6388,7 +6461,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 the user. For each pair, the key is the node (Mechanism or Composition) and the value is an input,
                 the shape of which must match the node's default variable.
 
-            scheduler_processing : Scheduler
+            scheduler : Scheduler
                 the scheduler object that owns the conditions that will instruct the execution of this Composition
                 If not specified, the Composition will use its automatically generated scheduler.
 
@@ -6448,7 +6521,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
-        execution_scheduler = scheduler_processing or self.scheduler_processing
+        execution_scheduler = scheduler or self.scheduler
 
         context.source = ContextFlags.COMPOSITION
 
@@ -6770,14 +6843,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         context)
 
                         node.function._runtime_params_reset[context.execution_id] = {}
-                    #
-                    # # TEST PRINT 7/22/19
-                    # print(f'Executed {node.name}: \n\tvariable: {node.parameters.variable.get(context)}'
-                    #       f'\n\tvalue: {node.parameters.value.get(context)}')
-
-                    # # TEST PRINT 7/22/19
-                    # print(f'Executed {node.name}: \n\tvariable: {node.parameters.variable.get(context)}'
-                    #       f'\n\tvalue: {node.parameters.value.get(context)}')
 
                     # Set execution_phase for node's context back to IDLE
                     if self.enable_learning:
@@ -6958,7 +7023,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_processing_condition_set(self, node):
         dep_group = []
-        for group in self.scheduler_processing.consideration_queue:
+        for group in self.scheduler.consideration_queue:
             if node in group:
                 break
             dep_group = group
@@ -6966,10 +7031,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # NOTE: This is not ideal we don't need to depend on
         # the entire previous group. Only our dependencies
         cond = [EveryNCalls(dep, 1) for dep in dep_group]
-        if node not in self.scheduler_processing.conditions:
+        if node not in self.scheduler.conditions:
             cond.append(Always())
         else:
-            node_conds = self.scheduler_processing.conditions[node]
+            node_conds = self.scheduler.conditions[node]
             cond.append(node_conds)
 
         return All(*cond)
@@ -7461,7 +7526,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _dict_summary(self):
         scheduler_dict = {
             'schedulers': {
-                str(ContextFlags.PROCESSING): self.scheduler_processing._dict_summary()
+                str(ContextFlags.PROCESSING): self.scheduler._dict_summary()
             }
         }
 

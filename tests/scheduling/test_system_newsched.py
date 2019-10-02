@@ -12,7 +12,7 @@ from psyneulink.core.scheduling.condition import AfterNCalls, All, Any, AtNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
-from psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism import EVCControlMechanism
+from psyneulink.library.components.mechanisms.modulatory.control.evc.evccontrolmechanism import EVCControlMechanism
 
 
 
@@ -165,7 +165,7 @@ class TestLinear:
 
         sched = Scheduler(system=s)
         sched.add_condition(B, EveryNCalls(A, 2))
-        s.scheduler_processing = sched
+        s.scheduler = sched
 
         s.run(
             inputs=stim_list,
@@ -212,7 +212,7 @@ class TestLinear:
         sched = Scheduler(system=s)
         sched.add_condition(A, Any(AtPass(0), AfterNCalls(B, 2)))
         sched.add_condition(B, Any(JustRan(A), JustRan(B)))
-        s.scheduler_processing = sched
+        s.scheduler = sched
 
         s.run(
             inputs=stim_list,
@@ -273,7 +273,7 @@ class TestBranching:
         sched = Scheduler(system=s)
         sched.add_condition(B, Any(AtNCalls(A, 1), EveryNCalls(A, 2)))
         sched.add_condition(C, EveryNCalls(A, 2))
-        s.scheduler_processing = sched
+        s.scheduler = sched
 
         s.run(
             inputs=stim_list,
@@ -334,8 +334,8 @@ class TestBranching:
         term_conds = {TimeScale.TRIAL: AfterNCalls(C, 1)}
         stim_list = {A: [[1]]}
 
-        s.scheduler_processing.add_condition(B, Any(AtNCalls(A, 1), EveryNCalls(A, 2)))
-        s.scheduler_processing.add_condition(C, EveryNCalls(A, 2))
+        s.scheduler.add_condition(B, Any(AtNCalls(A, 1), EveryNCalls(A, 2)))
+        s.scheduler.add_condition(C, EveryNCalls(A, 2))
 
         s.run(
             inputs=stim_list,
@@ -399,7 +399,7 @@ class TestBranching:
         sched = Scheduler(system=s)
         sched.add_condition(B, Any(AtNCalls(A, 1), EveryNCalls(A, 2)))
         sched.add_condition(C, EveryNCalls(A, 2))
-        s.scheduler_processing = sched
+        s.scheduler = sched
 
         s.run(
             inputs=stim_list,
@@ -465,7 +465,7 @@ class TestBranching:
 
         sched = Scheduler(system=s)
         sched.add_condition(C, All(EveryNCalls(A, 1), EveryNCalls(B, 1)))
-        s.scheduler_processing = sched
+        s.scheduler = sched
 
         s.run(
             inputs=stim_list,
@@ -528,7 +528,7 @@ class TestBranching:
 
         sched = Scheduler(system=s)
         sched.add_condition(C, All(EveryNCalls(A, 1), EveryNCalls(B, 1)))
-        s.scheduler_processing = sched
+        s.scheduler = sched
 
         s.run(
             inputs=stim_list,
@@ -594,7 +594,7 @@ class TestBranching:
         sched = Scheduler(system=s)
         sched.add_condition(B, EveryNCalls(A, 2))
         sched.add_condition(C, Any(EveryNCalls(A, 1), EveryNCalls(B, 1)))
-        s.scheduler_processing = sched
+        s.scheduler = sched
 
         s.run(
             inputs=stim_list,
@@ -671,7 +671,7 @@ class TestBranching:
         sched.add_condition(B, EveryNCalls(A, 1))
         sched.add_condition(C, EveryNCalls(A, 2))
         sched.add_condition(D, Any(EveryNCalls(B, 3), EveryNCalls(C, 3)))
-        s.scheduler_processing = sched
+        s.scheduler = sched
 
         s.run(
             inputs=stim_list,
@@ -758,7 +758,7 @@ class TestBranching:
         sched.add_condition(B, EveryNCalls(A, 2))
         sched.add_condition(C, EveryNCalls(A, 1))
         sched.add_condition(D, EveryNCalls(B, 1))
-        s.scheduler_processing = sched
+        s.scheduler = sched
 
         s.run(
             inputs=stim_list,
@@ -842,7 +842,7 @@ class TestBranching:
         sched.add_condition(C, Any(EveryNCalls(A, 1), EveryNCalls(B, 1)))
         sched.add_condition(D, EveryNCalls(C, 1))
         sched.add_condition(E, EveryNCalls(C, 1))
-        s.scheduler_processing = sched
+        s.scheduler = sched
 
         s.run(
             inputs=stim_list,
@@ -976,7 +976,7 @@ class TestBranching:
         sched.add_condition(D, EveryNCalls(B, 1))
         sched.add_condition(E, EveryNCalls(C, 1))
         sched.add_condition(F, EveryNCalls(D, 2))
-        s.scheduler_processing = sched
+        s.scheduler = sched
 
         s.run(
             inputs=stim_list,
@@ -1053,7 +1053,7 @@ class TestTermination:
 
         sched = Scheduler(system=s)
         sched.add_condition(B, EveryNCalls(A, 2))
-        s.scheduler_processing = sched
+        s.scheduler = sched
 
         s.run(
             inputs=stim_list,

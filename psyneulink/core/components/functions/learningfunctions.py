@@ -37,7 +37,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import is_numeric, scalar_distance
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 
 __all__ = ['LearningFunction', 'Kohonen', 'Hebbian', 'ContrastiveHebbian',
            'Reinforcement', 'BayesGLM', 'BackPropagation', 'TDLearning',
@@ -597,9 +597,6 @@ class BayesGLM(LearningFunction):
         self.parameters.mu_n._set(mu_n, context)
         self.parameters.gamma_shape_n._set(gamma_shape_n, context)
         self.parameters.gamma_size_n._set(gamma_size_n, context)
-
-        # # TEST PRINT:
-        # print(f'MEAN WEIGHTS FOR BayesGLM:\n{mu_n}')
 
         return self.sample_weights(gamma_shape_n, gamma_size_n, mu_n, Lambda_n)
 

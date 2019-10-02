@@ -35,8 +35,8 @@ def test_debug_comp(mode, debug_env):
     sched = Scheduler(composition=comp)
 
     inputs_dict = {A: [5]}
-    output1 = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
-    output2 = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
+    output1 = comp.run(inputs=inputs_dict, scheduler=sched, bin_execute=mode)
+    output2 = comp.run(inputs=inputs_dict, scheduler=sched, bin_execute=mode)
     # restore old debug env var and cleanup the debug configuration
     if old_env is None:
         del os.environ["PNL_LLVM_DEBUG"]

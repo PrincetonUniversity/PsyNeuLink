@@ -192,7 +192,7 @@ ocm = OptimizationControlMechanism(name='EVC',
 
 # VERSION WITH ocm AS REGULAR NODE:
 # agent_comp.add_node(ocm)
-# agent_comp.scheduler_processing.add_condition((ocm,CONTROLLER_CONDITION))
+# agent_comp.scheduler.add_condition((ocm,CONTROLLER_CONDITION))
 
 # VERSION WITH ocm AS controller:
 agent_comp.add_controller(ocm)
