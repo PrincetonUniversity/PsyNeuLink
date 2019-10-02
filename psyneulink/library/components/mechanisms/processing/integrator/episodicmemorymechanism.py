@@ -93,7 +93,7 @@ from psyneulink.core.components.states.inputstate import OutputState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CONTEXT, NAME, OWNER_VALUE, SIZE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 
 __all__ = ['EpisodicMemoryMechanism', 'CONTENT_INPUT', 'ASSOC_INPUT', 'CONTENT_OUTPUT', 'ASSOC_OUTPUT']
 
@@ -221,10 +221,10 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
 
     def _execute(self, variable=None, context=None, runtime_params=None):
 
-        value =  super()._execute(variable=variable,
-                                           context=context,
-                                           runtime_params=runtime_params,
-                                           )
+        value = super()._execute(variable=variable,
+                                 context=context,
+                                 runtime_params=runtime_params,
+                                )
         # Only return content if assoc has not been specified (in which case second element of value should be empty)
         if len(value[1]) == 0:
             return np.delete(value,1)

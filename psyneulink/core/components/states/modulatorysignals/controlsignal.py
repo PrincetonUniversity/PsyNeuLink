@@ -329,7 +329,7 @@ from psyneulink.core.globals.keywords import \
     PROJECTION_TYPE, RECEIVER, SUM
 from psyneulink.core.globals.parameters import Parameter, get_validator_by_function, get_validator_by_type_only
 from psyneulink.core.globals.sampleiterator import is_sample_spec
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
     is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
@@ -337,76 +337,12 @@ from psyneulink.core.globals.sampleiterator import SampleSpec, SampleIterator
 
 __all__ = ['ControlSignal', 'ControlSignalError', 'COST_OPTIONS']
 
-# class OutputStateLog(IntEnum):
-#     NONE            = 0
-#     TIME_STAMP      = 1 << 0
-#     ALL = TIME_STAMP
-#     DEFAULTS = NONE
-
-
-# -------------------------------------------    KEY WORDS  -------------------------------------------------------
-
-
-# class CostFunctions(IntEnum):
-#     """Options for selecting `cost functions <ControlSignal_Costs>` to be used by a ControlSignal.
-#
-#     These can be used alone or in combination with one another, by `enabling or disabling <ControlSignal_Toggle_Costs>`
-#     each using the ControlSignal's `toggle_cost_function` method.
-#
-#     Attributes
-#     ----------
-#
-#     NONE
-#         ControlSignal's `cost` is not computed.
-#
-#     INTENSITY
-#         `intensity_cost_function` is used to calculate a contribution to the ControlSignal's `cost
-#         <ControlSignal.cost>` based its current `intensity` value.
-#
-#     ADJUSTMENT
-#         `adjustment_cost_function` is used to calculate a contribution to the `cost` based on the change in its
-#         `intensity` from its last value.
-#
-#     DURATION
-#         `duration_cost_function` is used to calculate a contribitution to the `cost` based on an integral of the
-#         ControlSignal's `cost <ControlSignal.cost>` (i.e., it accumulated value over multiple executions).
-#
-#     ALL
-#         all of the `cost functions <ControlSignal_Costs> are used to calculate the ControlSignal's
-#         `cost <ControlSignal.cost>`.
-#
-#     DEFAULTS
-#         assign default set of `cost functions <ControlSignal_Costs>` as `INTENSITY`).
-#
-#     """
-#     NONE          = 0
-#     INTENSITY     = 1 << 1
-#     ADJUSTMENT    = 1 << 2
-#     DURATION      = 1 << 3
-#     ALL           = INTENSITY | ADJUSTMENT | DURATION
-#     DEFAULTS      = INTENSITY
-
-# Getters for cost attributes (from TransferWithCosts function)
-
 from psyneulink.core.components.functions.transferfunctions import \
     ENABLED_COST_FUNCTIONS, \
     INTENSITY_COST, INTENSITY_COST_FUNCTION, ADJUSTMENT_COST, ADJUSTMENT_COST_FUNCTION, \
     DURATION_COST, DURATION_COST_FUNCTION, COMBINED_COSTS, COMBINE_COSTS_FUNCTION, costFunctionNames
 
 COST_OPTIONS = 'cost_options'
-
-
-# # FIX: DOESN'T WORK SINCE DON'T HAVE ACCESS TO OTHER ARGS
-# def _function_parser(function):
-#     from psyneulink.core.components.functions.transferfunctions import TransferWithCosts
-#     return TransferWithCosts(default_variable=self.defaults.variable,
-#                              transfer_fct=function,
-#                              enabled_cost_functions=cost_options,
-#                              intensity_cost_fct=intensity_cost_function,
-#                              adjustment_cost_fct=adjustment_cost_function,
-#                              duration_cost_fct=duration_cost_function,
-#                              combine_costs_fct=combine_costs_function)
-
 
 def _cost_options_getter(owning_component=None, context=None):
     try:
@@ -641,9 +577,9 @@ class ControlSignal(ModulatorySignal):
         .. note::
 
         A ControlSignal's `adjustment_cost`, and its `adjustment_cost_function` are distinct from the
-        `reconfiguration_cost <ModulatoryMechanism.reconfiguration_cost>` and `compute_reconfiguration_cost
-        <ModulatoryMechanism.compute_reconfiguration_cost` function of the `ModulatoryMechanism` to which the
-        ControlSignal belongs (see `ModulatoryMechanism Reconfiguration Cost <ModulatoryMechanism_Reconfiguration_Cost>`
+        `reconfiguration_cost <ControlMechanism.reconfiguration_cost>` and `compute_reconfiguration_cost
+        <ControlMechanism.compute_reconfiguration_cost` function of the `ControlMechanism` to which the
+        ControlSignal belongs (see `ControlMechanism Reconfiguration Cost <ControlMechanism_Reconfiguration_Cost>`
         for additional details).
 
     duration_cost_function : IntegratorFunction : default Linear
@@ -818,11 +754,11 @@ class ControlSignal(ModulatorySignal):
     modulators = []
 
     classPreferenceLevel = PreferenceLevel.TYPE
-    # Any preferences specified below will override those specified in TypeDefaultPreferences
+    # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'OutputStateCustomClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_SET_NAME: 'OutputStateCustomClassPreferences',
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     # paramClassDefaults = OutputState.paramClassDefaults.copy()
@@ -865,7 +801,7 @@ class ControlSignal(ModulatorySignal):
         # This is included in case ControlSignal was created by another Component (such as ControlProjection)
         #    that specified ALLOCATION_SAMPLES in params
         if params and ALLOCATION_SAMPLES in params and params[ALLOCATION_SAMPLES] is not None:
-            allocation_samples =  params[ALLOCATION_SAMPLES]
+            allocation_samples = params[ALLOCATION_SAMPLES]
 
         # Note index and assign are not used by ControlSignal, but included here for consistency with OutputState
         # If index has not been specified, but the owner has, control_allocation has been determined, so use that

@@ -132,7 +132,7 @@ class TestLCControlMechanism:
         Tx = pnl.TransferMechanism(name='Tx')
         Ty = pnl.TransferMechanism(name='Ty')
         Tz = pnl.TransferMechanism(name='Tz')
-        C =  pnl.ControlMechanism(
+        C = pnl.ControlMechanism(
                 # function=pnl.Linear,
                 default_variable=[1],
                 monitor_for_control=Ty,
@@ -168,16 +168,17 @@ class TestLCControlMechanism:
         comp = pnl.Composition()
         comp.add_nodes([m1,m2,m3])
         comp.add_controller(c1)
-        assert c1.control_signals[0].value == [1]      # defaultControlAllocation assigned (as no default_allocation from pnl.ControlMechanism)
+        assert c1.control_signals[0].value == [10] # defaultControlAllocation should be assigned
+                                                   # (as no default_allocation from pnl.ControlMechanism)
         assert m1.parameter_states[pnl.SLOPE].value == [1]
         assert c1.control_signals[1].value == [2]      # default_allocation from pnl.ControlSignal (converted scalar)
         assert m2.parameter_states[pnl.SLOPE].value == [1]
         assert c1.control_signals[2].value == [3]      # default_allocation from pnl.ControlSignal
         assert m3.parameter_states[pnl.SLOPE].value == [1]
         result = comp.run(inputs={m1:[2],m2:[3],m3:[4]})
-        assert np.allclose(result, [[2.], [6.], [12.]])
+        assert np.allclose(result, [[20.], [6.], [12.]])
         assert c1.control_signals[0].value == [10]
-        assert m1.parameter_states[pnl.SLOPE].value == [1]
+        assert m1.parameter_states[pnl.SLOPE].value == [10]
         assert c1.control_signals[1].value == [10]
         assert m2.parameter_states[pnl.SLOPE].value == [2]
         assert c1.control_signals[2].value == [10]

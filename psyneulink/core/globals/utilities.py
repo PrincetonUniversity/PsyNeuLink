@@ -1011,7 +1011,7 @@ def append_type_to_name(object, type=None):
     if any(token in name for token in [type.lower(), type.upper(), type.capitalize()]):
         string = name
     else:
-        string = "\'" + name +  "\'" + ' ' + type.lower()
+        string = "\'" + name + "\'" + ' ' + type.lower()
         # string = name + ' ' + type.lower()
     return string
 #endregion
@@ -1449,7 +1449,9 @@ def insert_list(list1, position, list2):
     return list1[:position] + list2 + list1[position:]
 
 def convert_to_list(l):
-    if isinstance(l, list):
+    if l is None:
+        return None
+    elif isinstance(l, list):
         return l
     elif isinstance(l, set):
         return list(l)

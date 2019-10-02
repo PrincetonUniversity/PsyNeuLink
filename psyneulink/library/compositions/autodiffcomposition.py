@@ -524,7 +524,9 @@ class AutodiffComposition(Composition):
         self.min_delta = min_delta
 
         # CW 11/1/18: maybe we should make scheduler a property, like in Composition
-        self.scheduler = None
+        # # MODIFIED 10/2/19 OLD:
+        # self.scheduler = None
+        # MODIFIED 10/2/19 NEW: [JDC]
         if not disable_cuda and torch.cuda.is_available():
             if cuda_index is None:
                 self.device = torch.device('cuda')
@@ -810,7 +812,7 @@ class AutodiffComposition(Composition):
                 num_trials=None,
                 minibatch_size=1,
                 do_logging=False,
-                scheduler_processing=None,
+                scheduler=None,
                 termination_processing=None,
                 call_before_minibatch=None,
                 call_after_minibatch=None,
@@ -830,10 +832,10 @@ class AutodiffComposition(Composition):
         context.composition = self
         context.source = ContextFlags.COMPOSITION
 
-        if scheduler_processing is None:
-            scheduler_processing = self.scheduler_processing
+        if scheduler is None:
+            scheduler = self.scheduler
 
-        scheduler_processing._init_clock(context.execution_id, base_context.execution_id)
+        scheduler._init_clock(context.execution_id, base_context.execution_id)
 
         if self.learning_enabled:
             # TBI: How are we supposed to use base_context and statefulness here?
@@ -882,7 +884,7 @@ class AutodiffComposition(Composition):
                                                         current_epoch,
                                                         context,
                                                         do_logging,
-                                                        scheduler_processing)
+                                                        scheduler)
                         if call_after_minibatch:
                             call_after_minibatch()
                         self.most_recent_context = context
@@ -902,7 +904,7 @@ class AutodiffComposition(Composition):
             return results
 
         return super(AutodiffComposition, self).execute(inputs=inputs,
-                                                        scheduler_processing=scheduler_processing,
+                                                        scheduler=scheduler,
                                                         termination_processing=termination_processing,
                                                         call_before_time_step=call_before_time_step,
                                                         call_before_pass=call_before_pass,
@@ -922,7 +924,7 @@ class AutodiffComposition(Composition):
         self,
         inputs=None,
         do_logging=False,
-        scheduler_processing=None,
+        scheduler=None,
         termination_processing=None,
         context=None,
         num_trials=None,
@@ -956,7 +958,7 @@ class AutodiffComposition(Composition):
                 target values for each trial. The value corresponding to the 'epochs' key is an int specifying how many
                 times the Composition should run through the entire input set.
 
-            scheduler_processing: Scheduler
+            scheduler: Scheduler
                 the scheduler object that owns the conditions that will instruct the execution of the Composition.
                 If not specified, the Composition will use its automatically generated scheduler.
 
@@ -1062,16 +1064,16 @@ class AutodiffComposition(Composition):
         self._assign_execution_ids(context)
         context.composition = self
 
-        if scheduler_processing is None:
-            scheduler_processing = self.scheduler_processing
+        if scheduler is None:
+            scheduler = self.scheduler
 
-        scheduler_processing._init_clock(context)
+        scheduler._init_clock(context)
 
         if self.learning_enabled:
             if bin_execute is True or str(bin_execute).endswith('Run'):
                 # Since the automatically generated llvm function is overwritten in the event that learning_enabled is true, we can just rely on the super function
                 results = super(AutodiffComposition, self).run(inputs=inputs,
-                                                    scheduler_processing=scheduler_processing,
+                                                    scheduler=scheduler,
                                                     termination_processing=termination_processing,
                                                     context=context,
                                                     num_trials=num_trials,
@@ -1099,7 +1101,7 @@ class AutodiffComposition(Composition):
                         curr_input_dict[node] = [forward_inputs[node][input_num]]
                     results.append(self.run(
                         inputs=curr_input_dict,
-                        scheduler_processing=scheduler_processing,
+                        scheduler=scheduler,
                         termination_processing=termination_processing,
                         context=context,
                         num_trials=num_trials,
@@ -1148,7 +1150,7 @@ class AutodiffComposition(Composition):
 
         else:
             results = super(AutodiffComposition, self).run(inputs=inputs,
-                                                    scheduler_processing=scheduler_processing,
+                                                    scheduler=scheduler,
                                                     termination_processing=termination_processing,
                                                     context=context,
                                                     num_trials=num_trials,
@@ -1165,7 +1167,7 @@ class AutodiffComposition(Composition):
                                                     runtime_params=runtime_params,
                                                     )
 
-        scheduler_processing.get_clock(context)._increment_time(TimeScale.RUN)
+        scheduler.get_clock(context)._increment_time(TimeScale.RUN)
         return results
 
     # validates properties of the autodiff composition, and arguments to run, when run is called

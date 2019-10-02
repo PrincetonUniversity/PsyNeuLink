@@ -42,8 +42,8 @@ used to send ModulatoryProjections), as summarized in the table below:
    |                   |                    |                        |                 |constructor or its             |
    |                   |                    |                        |                 |`add_states` method            |
    +-------------------+--------------------+------------------------+-----------------+-------------------------------+
-   |`ModulatorySignal  |`AdaptiveMechanism  |provides value for      |                 |`AdaptiveMechanism             |
-   |<ModulatorySignal>`|<AdaptiveMechanism>`|`ModulatoryProjection   |                 |<AdaptiveMechanism>`           |
+   |`ModulatorySignal  |`ModulatoryMechanism  |provides value for      |                 |`ModulatoryMechanism             |
+   |<ModulatorySignal>`|<ModulatoryMechanism>`|`ModulatoryProjection   |                 |<ModulatoryMechanism>`           |
    |                   |                    |<ModulatoryProjection>` |                 |constructor; tuple in State    |
    |                   |                    |                        |                 |or parameter specification     |
    +-------------------+--------------------+------------------------+-----------------+-------------------------------+
@@ -52,7 +52,7 @@ COMMENT:
 
 * `InputState`:
     used by a Mechanism to receive input from `MappingProjections <MappingProjection>`;
-    its value can be modulated by a `GatingSignal`.
+    its value can be modulated by a `ControlSignal` or a `GatingSignal`.
 
 * `ParameterState`:
     * used by a Mechanism to represent the value of one of its parameters, or a parameter of its
@@ -65,10 +65,10 @@ COMMENT:
     `ProcessingMechanisms <ProcessingMechanism>` these are `PathwayProjections <PathwayProjection>`, most commonly
     `MappingProjections <MappingProjection>`.  For `ModulatoryMechanisms <ModulatoryMechanism>`, these are
     `ModulatoryProjections <ModulatoryProjection>` as described below. The `value <OutputState.value>` of an
-    OutputState can be modulated by a `GatingSignal`.
+    OutputState can be modulated by a `ControlSignal` or a `GatingSignal`.
 
 * `ModulatorySignal <ModulatorySignal>`:
-    a subclass of `OutputState` used by `AdaptiveMechanisms <AdaptiveMechanism>` to modulate the value of the primary
+    a subclass of `OutputState` used by `ModulatoryMechanisms <ModulatoryMechanism>` to modulate the value of the primary
     types of States listed above.  There are three types of ModulatorySignals:
 
     * `LearningSignal`, used by a `LearningMechanism` to modulate the *MATRIX* ParameterState of a `MappingProjection`;
@@ -279,8 +279,8 @@ Structure
 
 Every State has an `owner <State_Base.owner>`.  For `InputStates <InputState>` and `OutputStates <OutputState>`, the
 owner must be a `Mechanism <Mechanism>`.  For `ParameterStates <ParameterState>` it can be a Mechanism or a
-`PathwayProjection <PathwayProjection>`. For `ModulatorySignals <ModulatorySignal>`, it must be an `AdaptiveMechanism
-<AdaptiveMechanism>`. When a State is created as part of another Component, its `owner <State_Base.owner>` is
+`PathwayProjection <PathwayProjection>`. For `ModulatorySignals <ModulatorySignal>`, it must be a `ModulatoryMechanism
+<ModulatoryMechanism>`. When a State is created as part of another Component, its `owner <State_Base.owner>` is
 assigned automatically to that Component.  It is also assigned automatically when the State is assigned to a
 `Mechanism <Mechanism>` using that Mechanism's `add_states <Mechanism_Base.add_states>` method.  Otherwise, it must be
 specified explicitly in the **owner** argument of the constructor for the State (in which case it is immediately
@@ -326,7 +326,7 @@ In addition, like all PsyNeuLink Components, it also has the three following cor
       influence of a `ControlSignal` (for a `Mechanism <Mechanism>`) or a `LearningSignal` (for a `MappingProjection`);
       for an OutputState, it conveys the result  of the Mechanism's function to its `output_values
       <Mechanism_Base.output_values>` attribute, under the potential influence of a `GatingSignal`.  See
-      `ModulatorySignals <ModulatorySignal_Structure>` and the `AdaptiveMechanism <AdaptiveMechanism>` associated with
+      `ModulatorySignals <ModulatorySignal_Structure>` and the `ModulatoryMechanism <ModulatoryMechanism>` associated with
       each type for a description of how they can be used to modulate the `function <State_Base.function>` of a State.
     ..
     * `value <State_Base.value>`:  for an `InputState` this is the combined value of the `PathwayProjections` it
@@ -760,9 +760,9 @@ from psyneulink.core.globals.keywords import \
     PROJECTION_DIRECTION, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, \
     RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, STANDARD_OUTPUT_STATES, \
     STATE, STATE_CONTEXT, STATE_NAME, STATE_PARAMS, STATE_PREFS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, WEIGHT, \
-    kwStateComponentCategory
+    STATE_COMPONENT_CATEGORY
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
-from psyneulink.core.globals.preferences.componentpreferenceset import kpVerbosePref
+from psyneulink.core.globals.preferences.basepreferenceset import VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.socket import ConnectionInfo
@@ -840,7 +840,7 @@ class StateError(Exception):
 
 
 
-# DOCUMENT:  INSTANTATION CREATES AN ATTIRBUTE ON THE OWNER MECHANISM WITH THE STATE'S NAME + kwValueSuffix
+# DOCUMENT:  INSTANTATION CREATES AN ATTIRBUTE ON THE OWNER MECHANISM WITH THE STATE'S NAME + VALUE_SUFFIX
 #            THAT IS UPDATED BY THE STATE'S value setter METHOD (USED BY LOGGING OF MECHANISM ENTRIES)
 class State_Base(State):
     """
@@ -1017,7 +1017,7 @@ class State_Base(State):
 
     """
 
-    componentCategory = kwStateComponentCategory
+    componentCategory = STATE_COMPONENT_CATEGORY
     className = STATE
     suffix = " " + className
     paramsType = None
@@ -1187,7 +1187,7 @@ class State_Base(State):
                         "should be a number, which is an integer or can be converted to integer.".
                         format(x, type(self), self.name))
                 if int_x != x:
-                    if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
+                    if hasattr(self, 'prefs') and hasattr(self.prefs, VERBOSE_PREF) and self.prefs.verbosePref:
                         warnings.warn("When size ({}) was cast to integer, its value changed to {}.".format(x, int_x))
                 return int_x
 
@@ -2154,9 +2154,6 @@ class State_Base(State):
             raise StateError(f'Specification of {MODULATORY_PROJECTION} to {receiver.full_name} ({mod_proj}) '
                                 f'is not a {ModulatoryProjection_Base.__name__}')
 
-        # FIX: 9/17/19
-        # execution_id = parse_execution_context(context)
-
         # Get modulation specification from the Projection sender's modulation attribute
         mod_spec = mod_proj.sender.parameters.modulation._get(context)
 
@@ -2649,7 +2646,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
     # INSTANTIATE STATE:
 
     # IMPLEMENTATION NOTE:
-    # - setting prefs=NotImplemented causes TypeDefaultPreferences to be assigned (from ComponentPreferenceSet)
+    # - setting prefs=NotImplemented causes TYPE_DEFAULT_PREFERENCES to be assigned (from BasePreferenceSet)
     # - alternative would be prefs=owner.prefs, causing state to inherit the prefs of its owner;
     state_type = state_spec_dict.pop(STATE_TYPE, None)
     if REFERENCE_VALUE_NAME in state_spec_dict:
@@ -2776,7 +2773,7 @@ def _parse_state_spec(state_type=None,
     from psyneulink.core.components.projections.projection \
         import _is_projection_spec, _parse_projection_spec, _parse_connection_specs, ProjectionTuple
     from psyneulink.core.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
-    from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
+    from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
     from psyneulink.core.components.projections.projection import _get_projection_value_shape
 
 
@@ -2849,18 +2846,18 @@ def _parse_state_spec(state_type=None,
 
     # ModulatorySpecification of some kind
     if _is_modulatory_spec(state_specification):
-        # If it is an AdaptiveMechanism specification, get its ModulatorySignal class
+        # If it is a ModulatoryMechanism specification, get its ModulatorySignal class
         # (so it is recognized by _is_projection_spec below (Mechanisms are not for secondary reasons)
-        if isinstance(state_specification, type) and issubclass(state_specification, AdaptiveMechanism_Base):
+        if isinstance(state_specification, type) and issubclass(state_specification, ModulatoryMechanism_Base):
             state_specification = state_specification.outputStateTypes
             # IMPLEMENTATION NOTE:  The following is to accomodate GatingSignals on ControlMechanism
             # FIX: TRY ELIMINATING SIMILAR HANDLING IN Projection (and OutputState?)
             # FIX: AND ANY OTHER PLACES WHERE LISTS ARE DEALT WITH
             if isinstance(state_specification, list):
                 # If modulatory projection is specified as a Mechanism that allows more than one type of OutputState
-                #   (e.g., ModulatoryMechanism allows both ControlSignals or GatingSignals as its OutputStates)
-                #   make sure that only one of these is appropriate for state to be modulated (state_type.connectswith),
-                #   otherwise it is ambiguous which to assign as state_specification
+                #   (e.g., ModulatoryMechanism allows either ControlSignals or GatingSignals together with standard
+                #   OutputStates) make sure that only one of these is appropriate for state to be modulated
+                #   (state_type.connectswith), otherwise it is ambiguous which to assign as state_specification
                 specs = [s for s in state_specification if s.__name__ in state_type.connectsWith]
                 try:
                     state_specification, = specs
@@ -2887,13 +2884,43 @@ def _parse_state_spec(state_type=None,
                 state_specification = mech
                 projection = state_type
 
-        # Specication is a State with which connectee can connect, so assume it is a Projection specification
-        if state_specification.__class__.__name__ in state_type.connectsWith + state_type.modulators:
-            projection = state_type
+        # # MODIFIED 9/27/19 OLD:
+        # # Specication is a State with which connectee can connect, so assume it is a Projection specification
+        # if state_specification.__class__.__name__ in state_type.connectsWith + state_type.modulators:
+        #     projection = state_type
+        #
+        # # Specification is a State that is same as connectee's type (state_type),
+        # #    so assume it is a reference to the State itself that is being (or has been) instantiated
+        # elif isinstance(state_specification, state_type):
+        #     # Make sure that the specified State belongs to the Mechanism passed in the owner arg
+        #     if state_specification.initialization_status == ContextFlags.DEFERRED_INIT:
+        #         state_owner = state_specification.init_args[OWNER]
+        #     else:
+        #         state_owner = state_specification.owner
+        #     if owner is not None and state_owner is not None and state_owner is not owner:
+        #         try:
+        #             new_state_specification = state_type._parse_self_state_type_spec(state_type,
+        #                                                                              owner,
+        #                                                                              state_specification,
+        #                                                                              context)
+        #             state_specification = _parse_state_spec(state_type=state_type,
+        #                                                     owner=owner,
+        #                                                     state_spec=new_state_specification)
+        #             assert True
+        #         except AttributeError:
+        #             raise StateError("Attempt to assign a {} ({}) to {} that belongs to another {} ({})".
+        #                              format(State.__name__, state_specification.name, owner.name,
+        #                                     Mechanism.__name__, state_owner.name))
+        #     return state_specification
 
-        # Specified is a State that is same as connectee's type (state_type),
+        # MODIFIED 9/27/19 NEW: [JDC]
+        # Specification is a State that is same as connectee's type (state_type),
         #    so assume it is a reference to the State itself that is being (or has been) instantiated
-        elif isinstance(state_specification, state_type):
+        # # MODIFIED 9/27/19 OLD:
+        # if isinstance(state_specification, state_type):
+        # MODIFIED 9/27/19 NEWER: [JDC]
+        if state_specification.__class__ == state_type:
+        # MODIFIED 9/27/19 END
             # Make sure that the specified State belongs to the Mechanism passed in the owner arg
             if state_specification.initialization_status == ContextFlags.DEFERRED_INIT:
                 state_owner = state_specification.init_args[OWNER]
@@ -2914,6 +2941,11 @@ def _parse_state_spec(state_type=None,
                                      format(State.__name__, state_specification.name, owner.name,
                                             Mechanism.__name__, state_owner.name))
             return state_specification
+
+        # Specication is a State with which connectee can connect, so assume it is a Projection specification
+        elif state_specification.__class__.__name__ in state_type.connectsWith + state_type.modulators:
+            projection = state_type
+        # MODIFIED 9/27/19 END
 
         # Re-process with Projection specified
         state_dict = _parse_state_spec(state_type=state_type,

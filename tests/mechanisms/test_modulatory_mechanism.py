@@ -1,7 +1,7 @@
 from psyneulink import *
 import numpy as np
 
-class TestModulatoryMechanism:
+class TestControlMechanism:
 
     # def test_control_modulation_in_system(self):
     #     Tx = TransferMechanism(name='Tx')
@@ -23,29 +23,30 @@ class TestModulatoryMechanism:
     #     result = S.run(inputs={Tx:[1,1], Ty:[4,4]})
     #     assert result == [[[4.], [4.]], [[4.], [4.]]]
 
-    def test_assignment_of_control_and_gating_signals(self):
-        m = ProcessingMechanism(function=Logistic)
-        c = ModulatoryMechanism(
-                modulatory_signals=[
-                    ControlSignal(name="CS1", modulates=(GAIN, m)),
-                    GatingSignal(name="GS", modulates=m),
-                    ControlSignal(name="CS2", modulates=(BIAS, m)),
-                ]
-        )
-        assert  c.output_states.names == ['CS1', 'GS', 'CS2']
-        assert m.parameter_states['gain'].mod_afferents[0].sender.owner == c
-        assert m.parameter_states['bias'].mod_afferents[0].sender.owner == c
-        assert m.input_state.mod_afferents[0].sender.owner == c
+    # DEPRECATED FUNCTIONALITY 9/26/19
+    # def test_assignment_of_control_and_gating_signals(self):
+    #     m = ProcessingMechanism(function=Logistic)
+    #     c = ControlMechanism(
+    #             control_signals=[
+    #                 ControlSignal(name="CS1", modulates=(GAIN, m)),
+    #                 GatingSignal(name="GS", modulates=m),
+    #                 ControlSignal(name="CS2", modulates=(BIAS, m)),
+    #             ]
+    #     )
+    #     assert  c.output_states.names == ['CS1', 'GS', 'CS2']
+    #     assert m.parameter_states['gain'].mod_afferents[0].sender.owner == c
+    #     assert m.parameter_states['bias'].mod_afferents[0].sender.owner == c
+    #     assert m.input_state.mod_afferents[0].sender.owner == c
 
 
     def test_control_modulation_in_composition(self):
         Tx = TransferMechanism(name='Tx')
         Ty = TransferMechanism(name='Ty')
         Tz = TransferMechanism(name='Tz')
-        C =  ModulatoryMechanism(
+        C = ControlMechanism(
                 default_variable=[1],
                 monitor_for_modulation=Ty,
-                modulatory_signals=ControlSignal(modulation=OVERRIDE,
+                control_signals=ControlSignal(modulation=OVERRIDE,
                                                  modulates=(SLOPE, Tz)))
 
         comp = Composition(enable_controller=True)

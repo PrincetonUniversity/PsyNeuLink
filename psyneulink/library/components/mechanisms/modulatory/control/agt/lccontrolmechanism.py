@@ -16,13 +16,13 @@ Overview
 An LCControlMechanism is a `ControlMechanism <ControlMechanism>` that multiplicatively modulates the `function
 <Mechanism_Base.function>` of one or more `Mechanisms <Mechanism>` (usually `TransferMechanisms <TransferMechanism>`).
 It implements an abstract model of the `locus coeruleus (LC)  <https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_ that
-uses an `FitzHughNagumoIntegrator` Function to generate its output.  This is modulated by a `mode <LCControlMechanism.mode_FitzHughNagumo>`
-parameter that regulates its function between `"tonic" and "phasic" modes of operation
-<LCControlMechanism_Modes_Of_Operation>`.  The Mechanisms modulated by an LCControlMechanism can be listed using
-its `show <LCControlMechanism.show>` method.  When used with an `AGTControlMechanism` to regulate the `mode
-<FitzHughNagumoIntegrator.mode>` parameter of its `FitzHughNagumoIntegrator` Function, it implements a form of the `Adaptive Gain Theory
-<http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ of the locus coeruleus-norepinephrine
-(LC-NE) system.
+uses an `FitzHughNagumoIntegrator` Function to generate its output.  This is modulated by a `mode
+<LCControlMechanism.mode_FitzHughNagumo>` parameter that regulates its function between `"tonic" and "phasic" modes of
+operation <LCControlMechanism_Modes_Of_Operation>`.  The Mechanisms modulated by an LCControlMechanism can be listed
+using its `show <LCControlMechanism.show>` method.  When used with an `AGTControlMechanism` to regulate the `mode
+<FitzHughNagumoIntegrator.mode>` parameter of its `FitzHughNagumoIntegrator` Function, it implements a form of the
+`Adaptive Gain Theory <http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ of the locus
+coeruleus-norepinephrine (LC-NE) system.
 
 .. _LCControlMechanism_Creation:
 
@@ -133,33 +133,33 @@ displayed using the LCControlMechanism's `show <LCControlMechanism.show>` method
 *Function*
 ~~~~~~~~~~
 
-An LCControlMechanism uses the `FitzHughNagumoIntegrator` as its `function <LCControlMechanism.function>`; this implements a
-`FitzHugh-Nagumo model <https://en.wikipedia.org/wiki/FitzHugh–Nagumo_model>`_ often used to describe the spiking of
-a neuron, but in this case the population activity of the LC (see `Gilzenrat et al., 2002
-<http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_). The `FitzHughNagumoIntegrator` Function
-of an LCControlMechanism takes a scalar as its `variable <FitzHughNagumoIntegrator.variable>`, received from the
+An LCControlMechanism uses the `FitzHughNagumoIntegrator` as its `function <LCControlMechanism.function>`; this
+implements a `FitzHugh-Nagumo model <https://en.wikipedia.org/wiki/FitzHugh–Nagumo_model>`_ often used to describe
+the spiking of a neuron, but in this case the population activity of the LC (see `Gilzenrat et al., 2002
+<http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_). The `FitzHughNagumoIntegrator`
+Function of an LCControlMechanism takes a scalar as its `variable <FitzHughNagumoIntegrator.variable>`, received from
 the `input <LCControlMechanism_Input>` to the LCControlMechanism, and the result serves as the `control_allocation
-<LCControlMechanism.control_allocation>` for the LCControlMechanism. All of the parameters of the `FitzHughNagumoIntegrator`
-function are accessible as attributes of the LCControlMechanism.
+<LCControlMechanism.control_allocation>` for the LCControlMechanism. All of the parameters of the
+`FitzHughNagumoIntegrator` function are accessible as attributes of the LCControlMechanism.
 
 .. _LCControlMechanism_Modes_Of_Operation:
 
 LC Modes of Operation
 ^^^^^^^^^^^^^^^^^^^^^
 
-The `mode <FitzHughNagumoIntegrator.mode>` parameter of the LCControlMechanism's `FitzHughNagumoIntegrator` Function regulates its operation
-between `"tonic" and "phasic" modes <https://www.ncbi.nlm.nih.gov/pubmed/8027789>`_:
+The `mode <FitzHughNagumoIntegrator.mode>` parameter of the LCControlMechanism's `FitzHughNagumoIntegrator` Function
+regulates its operation between `"tonic" and "phasic" modes <https://www.ncbi.nlm.nih.gov/pubmed/8027789>`_:
 
-  * in the *tonic mode* (low value of `mode <FitzHughNagumoIntegrator.mode>`), the output of the LCControlMechanism is moderately
-    low and constant; that is, it is relatively unaffected by its `input <LCControlMechanism_Input`.  This blunts the
-    response of the Mechanisms that the LCControlMechanism controls to their inputs.
+  * in the *tonic mode* (low value of `mode <FitzHughNagumoIntegrator.mode>`), the output of the LCControlMechanism is
+    moderately low and constant; that is, it is relatively unaffected by its `input <LCControlMechanism_Input`.
+    This blunts the response of the Mechanisms that the LCControlMechanism controls to their inputs.
 
-  * in the *phasic mode* (high value of `mode <FitzHughNagumoIntegrator.mode>`), when the `input to the LCControlMechanism
-    <LCControlMechanism_Input>` is low, its `output <LCControlMechanism_Output>` is even lower than when it is in the
-    tonic regime, and thus the response of the Mechanisms it controls to their outputs is even more blunted.  However,
-    when the LCControlMechanism's input rises above a certain value (determined by the `threshold
-    <LCControlMechanism.threshold>` parameter), its output rises sharply generating a "phasic response", and inducing a
-    much sharper response of the Mechanisms it controls to their inputs.
+  * in the *phasic mode* (high value of `mode <FitzHughNagumoIntegrator.mode>`), when the `input to the
+    LCControlMechanism <LCControlMechanism_Input>` is low, its `output <LCControlMechanism_Output>` is even lower
+    than when it is in the tonic regime, and thus the response of the Mechanisms it controls to their outputs is even
+    more blunted.  However, when the LCControlMechanism's input rises above a certain value (determined by the
+    `threshold <LCControlMechanism.threshold>` parameter), its output rises sharply generating a "phasic response",
+    and inducing a much sharper response of the Mechanisms it controls to their inputs.
 
 .. _LCControlMechanism_Output:
 
@@ -279,7 +279,7 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import FitzHughNagumoIntegrator
-from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.shellclasses import Mechanism, System_Base
@@ -289,9 +289,9 @@ from psyneulink.core.globals.keywords import \
     ALL, CONTROL, CONTROL_PROJECTIONS, FUNCTION, INIT_EXECUTE_METHOD_ONLY, \
     MULTIPLICATIVE, MULTIPLICATIVE_PARAM, PROJECTIONS
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import is_iterable
+from psyneulink.core.globals.utilities import is_iterable, convert_to_list
 
 __all__ = [
     'CONTROL_SIGNAL_NAME', 'ControlMechanismRegistry', 'LCControlMechanism', 'LCControlMechanismError',
@@ -340,7 +340,7 @@ class LCControlMechanism(ControlMechanism):
         name=None,                                \
         prefs=None)
 
-    Subclass of `ControlMechanism <AdaptiveMechanism>` that modulates the `multiplicative_param
+    Subclass of `ControlMechanism <ModulatoryMechanism>` that modulates the `multiplicative_param
     <Function_Modulatory_Params>` of the `function <Mechanism_Base.function>` of one or more `Mechanisms <Mechanism>`.
 
     Arguments
@@ -654,11 +654,11 @@ class LCControlMechanism(ControlMechanism):
     initMethod = INIT_EXECUTE_METHOD_ONLY
 
     classPreferenceLevel = PreferenceLevel.TYPE
-    # Any preferences specified below will override those specified in TypeDefaultPreferences
+    # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'ControlMechanismClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_SET_NAME: 'ControlMechanismClassPreferences',
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     class Parameters(ControlMechanism.Parameters):
         """
@@ -699,8 +699,8 @@ class LCControlMechanism(ControlMechanism):
                  default_variable=None,
                  system:tc.optional(System_Base)=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
-                 # modulated_mechanisms:tc.optional(tc.any(list,str)) = None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
+                 # modulated_mechanisms:tc.optional(tc.any(list,str)) = None,
                  modulated_mechanisms=None,
                  modulation:tc.optional(str)=MULTIPLICATIVE,
                  integration_method="RK4",
@@ -831,8 +831,7 @@ class LCControlMechanism(ControlMechanism):
         # Get the name of the multiplicative_param of each Mechanism in self.modulated_mechanisms
         if self.modulated_mechanisms:
             # Create (param_name, Mechanism) specification for **control_signals** argument of ControlSignal constructor
-            if not isinstance(self.modulated_mechanisms, list):
-                self._modulated_mechanisms = [self.modulated_mechanisms]
+            self.modulated_mechanisms = convert_to_list(self.modulated_mechanisms)
             multiplicative_param_names = []
             for mech in self.modulated_mechanisms:
                 if isinstance(mech.function.parameters.multiplicative_param, ParameterAlias):
@@ -842,7 +841,8 @@ class LCControlMechanism(ControlMechanism):
             ctl_sig_projs = []
             for mech, mult_param_name in zip(self.modulated_mechanisms, multiplicative_param_names):
                 ctl_sig_projs.append((mult_param_name, mech))
-            self.control_signals = [{PROJECTIONS: ctl_sig_projs}]
+            self.control = [{PROJECTIONS: ctl_sig_projs}]
+            self.parameters.control_allocation.default_value = self.value[0]
 
         super()._instantiate_output_states(context=context)
 
@@ -888,7 +888,7 @@ class LCControlMechanism(ControlMechanism):
         mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
         scaling_factor_ptr = builder.gep(mech_params, [ctx.int32_ty(0), ctx.int32_ty(0)])
         base_factor_ptr = builder.gep(mech_params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        scaling_factor =  builder.load(scaling_factor_ptr)
+        scaling_factor = builder.load(scaling_factor_ptr)
         base_factor = builder.load(base_factor_ptr)
 
         # Apply to the entire vector

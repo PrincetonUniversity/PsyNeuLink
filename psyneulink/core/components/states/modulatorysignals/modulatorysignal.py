@@ -30,11 +30,11 @@ Sections
 Overview
 --------
 
-A ModulatorySignal is a subclas of `OutputState` that belongs to an `AdaptiveMechanism <AdaptiveMechanism>`, and is
+A ModulatorySignal is a subclas of `OutputState` that belongs to a `ModulatoryMechanism <ModulatoryMechanism>`, and is
 used to `modulate <ModulatorySignal_Modulation>` the `value <State_Base.value>` of one or more `States <State>` by way
 of one or more `ModulatoryProjctions <ModulatoryProjection>`. A ModulatorySignal modulates the value of a State by
 modifying a  parameter of thatState's `function <State_Base.function>`.  There are three types of ModulatorySignals,
-each of which is  associated wth a particular type of `AdaptiveMechanism <AdaptiveMechanism>` and `ModulatoryProjection
+each of which is  associated wth a particular type of `ModulatoryMechanism <ModulatoryMechanism>` and `ModulatoryProjection
 <ModulatoryProjection>`, and modifies the value of different types of States, as summarized `below:
 
 * `ControlSignal`
@@ -65,10 +65,10 @@ in the sections under `ModulatorySignal_Structure`.
 
 Modulatory Components and their attributes are named according to the category of modulation:
 
-    - AdaptiveMechanism name: <*Category*>Mechanism (e.g., ControlMechanism)
+    - ModulatoryMechanism name: <*Category*>Mechanism (e.g., ControlMechanism)
     - ModulatorySignal name: <*Category*>Signal (e.g., ControlSignal)
     - ModulatoryProjection name: <*Category*>Projection (e.g., ControlProjection)
-    - List of an AdaptiveMechanism's ModulatorySignals: <*CategoryMechanism*>.<category>_signals
+    - List of a ModulatoryMechanism's ModulatorySignals: <*CategoryMechanism*>.<category>_signals
       (e.g., ControlMechanism.control_signals)
     - Value of a ModulatorySignal: <*CategorySignal*>.<category>_signal (e.g., ControlSignal.control_signal)
 
@@ -79,11 +79,11 @@ Creating a ModulatorySignal
 
 ModulatorySignal is a base class, and cannot be instantiated directly.  However, the three types of ModulatorySignals
 listed above can be created directly, by calling the constructor for the desired type.  More commonly, however,
-ModulatorySignals are created automatically by the `AdaptiveMechanism <AdaptiveMechanism>` to which they belong, or by
-specifying them in the constructor for an `AdaptiveMechanism <AdaptiveMechanism>` (the details of which are described in
-the documentation for each type of ModulatorySignal).  If a ModulatorySignal is constructed explicitly, the type of
-modulation it uses is specifed in the **modulation** argument of its constructor, using a 2-item tuple that contains
-the State to be modulated as the first item, and either the name of the parameter of the State's `function
+ModulatorySignals are created automatically by the `ModulatoryMechanism <ModulatoryMechanism>` to which they belong, or
+by specifying them in the constructor for a `ModulatoryMechanism <ModulatoryMechanism>` (the details of which are
+described in the documentation for each type of ModulatorySignal).  If a ModulatorySignal is constructed explicitly,
+the type of modulation it uses is specifed in the **modulation** argument of its constructor, using a 2-item tuple
+that contains the State to be modulated as the first item, and either the name of the parameter of the State's `function
 <State_Base.function>` to be modulated, or a keyword specifying the type of modulation, as the second item (see
 `ModulatorySignal_Types` for additional details).
 
@@ -92,9 +92,9 @@ the State to be modulated as the first item, and either the name of the paramete
 Structure
 ---------
 
-A ModulatorySignal is always assigned to an `AdaptiveMechanism <AdaptiveMechanism>`, and must be assigned to an
-AdaptiveMechanism of the appropriate type (`see types of AdaptiveMechanism <AdaptiveMechanism_Types>`).  The
-ModulatorySignal receives a `modulatory_allocation` from the AdaptiveMechanism to which it is assigned, that it uses
+A ModulatorySignal is always assigned to a `ModulatoryMechanism <ModulatoryMechanism>`, and must be assigned to an
+ModulatoryMechanism of the appropriate type (`see types of ModulatoryMechanism <ModulatoryMechanism_Types>`).  The
+ModulatorySignal receives a `modulatory_allocation` from the ModulatoryMechanism to which it is assigned, that it uses
 as the `variable <Function_Base.variable>` for its `function <ModulatorySignal.function>`, the result of which is the
 modulatory `value <ModulatorySignal.value>` of the ModulatorySignal.  A ModulatorySignal is associated with one or more
 `ModulatoryProjections <ModulatoryProjection>` of the corresponding type, that that receive the ModulatorySignal's
@@ -142,7 +142,7 @@ ModulatorySignal's constructor, or in a *MODULATION* entry of a `State specifica
 <State_Specification>` used to create the ModulatorySignal (see `Type of Modualtion <ModulatorySignal_Types>` and
 `figure <ModulatorySignal_Detail_Figure>` below for details). If the type of `modulation <ModulatorySignal.modulation>`
 is not specified when a ModulatorySignal is created, it is assigned the value of the `modulation
-<AdaptiveMechanism_Base.modulation>` attribute for the `AdaptiveMechanism <AdaptiveMechanism>` to which it belongs.
+<ModulatoryMechanism_Base.modulation>` attribute for the `ModulatoryMechanism <ModulatoryMechanism>` to which it belongs.
 
 .. _ModulatorySignal_Uses:
 
@@ -300,7 +300,7 @@ in the figure below:
    `ModulatorySignal_Types` for additional details).
 
 Though this implementaton of modulation is indirect, it provides a standard for all forms of modulation, as well as
-considerable flexibility in the adaptive regulation of Components within a `Composition` (see
+considerable flexibility in the modulatory regulation of Components within a `Composition` (see
 `ModulatorySignal_Types` below).
 
 The types of States modulated by each type of ModulatorySignal are summarized in `ModulatorySignal_Uses`,
@@ -308,7 +308,7 @@ and the accompanying `table <ModulatorySignal_Table>` and `figure <ModulatorySig
 
 .. _ModulatorySignal_Multiple:
 
-Any `modulable <Parameter.modulable>` parameter of a State's `function <State_Base.function>` can modulated,
+Any `modulable <Parameter.modulable>` parameter of a State's `function <State_Base.function>` can be modulated,
 and different parameters of the same `function <State_Base.function>` of a State can be modulated by different
 ModulatorySignals. The same parameter can also be modulated by more than on ModulatorySignal. If more than one
 ModulatorySignal modulates the same parameter of a State's `function <State_Base.function>`, then that parameter's
@@ -324,7 +324,7 @@ a given parameter;  if there is more than, then an error is generated.
 Execution
 ---------
 
-ModulatorySignals cannot be executed directly.  This done when the `AdaptiveMechanism <AdaptiveMechanism>` to
+ModulatorySignals cannot be executed directly.  This done when the `ModulatoryMechanism <ModulatoryMechanism>` to
 which they belong is executed. When a ModulatorySignal is executed, it calculates its `value <ModulatorySignal.value>`,
 which is then assigned as the `variable <ModulatoryProjection_Base.variable>` of the `ModulatoryProjections
 <ModulatoryProjection>` listed in its `efferents <ModulatorySignal.efferents>` attribute.
@@ -397,20 +397,6 @@ ControlMechanism, or its ControlSignals.  For example, in the following, ``ctl_m
 
 FIX: EXAMPLE HERE
      THEN, AFTER EXAMPLE: MODULATORYSIGNAL'S VALUE IS ASSIGNED TO THE SPECIFIED PARAMETER.
-
-FIX: PUT THIS IN ModulatoryMechanism AND CROSS REFERENCE HERE? OR VICE VERSA?
-EXAMPLE OF MIXED MODULATORY SIGNALS IN MODULATORY MECHANISM
-
-        m = ProcessingMechanism(function=Logistic)
-        c = ModulatoryMechanism(
-                modulatory_signals=[
-                    ControlSignal(name="CS1", modulates=(GAIN, m)),
-                    GatingSignal(name="GS", modulates=m),
-                    ControlSignal(name="CS2", modulates=(BIAS, m)),
-                ]
-        )
-
-
 COMMENT
 
 Class Reference
@@ -431,9 +417,9 @@ __all__ = [
 
 
 def _is_modulatory_spec(spec, include_matrix_spec=True):
-    from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import _is_learning_spec
-    from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
-    from psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism import _is_gating_spec
+    from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import _is_learning_spec
+    from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import _is_control_spec
+    from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import _is_gating_spec
 
     if (_is_learning_spec(spec, include_matrix_spec=include_matrix_spec)
         or _is_control_spec(spec)
@@ -467,7 +453,7 @@ class ModulatorySignal(OutputState):
         name=None,                                     \
         prefs=None)
 
-    Subclass of `OutputState` used by an `AdaptiveMechanism <AdaptiveMechanism>` to modulate the value
+    Subclass of `OutputState` used by a `ModulatoryMechanism <ModulatoryMechanism>` to modulate the value
     of one more `States <State>`.
 
     .. note::
@@ -530,8 +516,8 @@ class ModulatorySignal(OutputState):
     Attributes
     ----------
 
-    owner : AdaptiveMechanism
-        the `AdaptiveMechanism <AdaptiveMechanism>` to which the ModulatorySignal belongs.
+    owner : ModulatoryMechanism
+        the `ModulatoryMechanism <ModulatoryMechanism>` to which the ModulatorySignal belongs.
 
     variable : scalar, list or np.ndarray
         same as `allocation <ModulatorySignal.allocation>`.
@@ -612,14 +598,14 @@ class ModulatorySignal(OutputState):
         """
         modulation = None
 
-    stateAttributes =  OutputState.stateAttributes | {MODULATION}
+    stateAttributes = OutputState.stateAttributes | {MODULATION}
 
     classPreferenceLevel = PreferenceLevel.TYPE
-    # Any preferences specified below will override those specified in TypeDefaultPreferences
+    # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'OutputStateCustomClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_SET_NAME: 'OutputStateCustomClassPreferences',
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
 

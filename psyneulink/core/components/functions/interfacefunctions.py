@@ -22,9 +22,9 @@ from psyneulink.core.components.functions.function import Function_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     FUNCTION_OUTPUT_TYPE_CONVERSION, PARAMETER_STATE_PARAMS, STATE_MAP_FUNCTION, TRANSFER_FUNCTION_TYPE, \
-    kwPreferenceSetName
-from psyneulink.core.globals.preferences.componentpreferenceset import \
-    PreferenceEntry, PreferenceLevel, is_pref_set, kpReportOutputPref
+    PREFERENCE_SET_NAME
+from psyneulink.core.globals.preferences.basepreferenceset import \
+    PreferenceEntry, PreferenceLevel, is_pref_set, REPORT_OUTPUT_PREF
 
 
 __all__ = ['InterfaceFunction', 'InterfaceStateMap']
@@ -91,8 +91,8 @@ class InterfaceStateMap(InterfaceFunction):
     componentName = STATE_MAP_FUNCTION
 
     classPreferences = {
-        kwPreferenceSetName: 'LinearClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        PREFERENCE_SET_NAME: 'LinearClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()

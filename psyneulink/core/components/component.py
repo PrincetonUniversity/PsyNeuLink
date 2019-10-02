@@ -267,7 +267,7 @@ following two informational attributes:
 .. _Component_Current_Execution_Time:
 
 * **current_execution_time** -- maintains the `Time` of the last execution of the Component in the context of the
-  `Composition`'s current `scheduler_processing <Composition.scheduler_processing`, and is stored as a `time
+  `Composition`'s current `scheduler <Composition.scheduler`, and is stored as a `time
   <Context.time>` tuple of values indicating the `TimeScale.TRIAL`,  `TimeScale.PASS`, and `TimeScale.TIME_STEP` of the
   last execution.
 
@@ -421,11 +421,12 @@ from psyneulink.core.globals.keywords import \
     COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, \
     FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, \
     LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, \
-    PARAMS, PARAMS_CURRENT, PREFS_ARG, REINITIALIZE_WHEN, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
+    PARAMS, PARAMS_CURRENT, PREFS_ARG, REINITIALIZE_WHEN, SIZE, USER_PARAMS, VALUE, VARIABLE, FUNCTION_COMPONENT_CATEGORY
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase
-from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
-from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
+from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
+from psyneulink.core.globals.preferences.preferenceset import \
+    PreferenceEntry, PreferenceLevel, PreferenceSet, _assign_prefs
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared, is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, unproxy_weakproxy
 from psyneulink.core.scheduling.condition import Never
@@ -572,10 +573,10 @@ class ParamsDict(UserDict):
 
 parameter_keywords = set()
 
-# suppress_validation_preference_set = ComponentPreferenceSet(prefs = {
-#     kpParamValidationPref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
-#     kpVerbosePref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
-#     kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE)})
+# suppress_validation_preference_set = BasePreferenceSet(prefs = {
+#     PARAM_VALIDATION_PREF: PreferenceEntry(False,PreferenceLevel.INSTANCE),
+#     VERBOSE_PREF: PreferenceEntry(False,PreferenceLevel.INSTANCE),
+#     REPORT_OUTPUT_PREF: PreferenceEntry(True,PreferenceLevel.INSTANCE)})
 
 
 class dummy_class:
@@ -912,16 +913,16 @@ class Component(object, metaclass=ComponentsMeta):
     initMethod = INIT_FULL_EXECUTE_METHOD
 
     classPreferenceLevel = PreferenceLevel.SYSTEM
-    # Any preferences specified below will override those specified in SystemDefaultPreferences
+    # Any preferences specified below will override those specified in SYSTEM_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to SYSTEM automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'ComponentCustomClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_SET_NAME: 'ComponentCustomClassPreferences',
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     # Names and types of params required to be implemented in all subclass paramClassDefaults:
     # Notes:
     # *  entry values here do NOT implement the param; they are simply used as type specs for checking (in __init__)
-    # * kwComponentCategory (below) is used as placemarker for Component.Function class; replaced in __init__ below
+    # * FUNCTION_COMPONENT_CATEGORY (below) is used as placemarker for Component.Function class; replaced in __init__ below
     #              (can't reference own class directly class block)
     requiredParamClassDefaultTypes = {}
 
@@ -1017,17 +1018,22 @@ class Component(object, metaclass=ComponentsMeta):
         # ASSIGN PREFS
 
         # If a PreferenceSet was provided, assign to instance
-        if isinstance(prefs, PreferenceSet):
-            self.prefs = prefs
-            # FIX:  CHECK LEVEL HERE??  OR DOES IT NOT MATTER, AS OWNER WILL BE ASSIGNED DYNAMICALLY??
-        # Otherwise, if prefs is a specification dict instantiate it, or if it is None assign defaults
-        else:
-            self.prefs = ComponentPreferenceSet(owner=self, prefs=prefs, context=context)
-        try:
-            # assign log conditions from preferences
-            self.parameters.value.log_condition = self.prefs._log_pref.setting
-        except AttributeError:
-            pass
+        # If a PreferenceSet was provided, assign to instance
+        _assign_prefs(self, prefs, BasePreferenceSet)
+
+        # # MODIFIED 9/30/19 OLD:
+        # if isinstance(prefs, PreferenceSet):
+        #     self.prefs = prefs
+        #     # FIX:  CHECK LEVEL HERE??  OR DOES IT NOT MATTER, AS OWNER WILL BE ASSIGNED DYNAMICALLY??
+        # # Otherwise, if prefs is a specification dict instantiate it, or if it is None assign defaults
+        # else:
+        #     self.prefs = BasePreferenceSet(owner=self, prefs=prefs, context=context)
+        # try:
+        #     # assign log conditions from preferences
+        #     self.parameters.value.log_condition = self.prefs._log_pref.setting
+        # except AttributeError:
+        #     pass
+        # MODIFIED 9/30/19 END
 
         # ASSIGN LOG
         from psyneulink.core.globals.log import Log
@@ -1044,10 +1050,10 @@ class Component(object, metaclass=ComponentsMeta):
             # # Replace 'Function' placemarker with class reference:
             # type_requirements = [self.__class__ if item=='Function' else item for item in type_requirements]
 
-            # get type for kwComponentCategory specification
+            # get type for FUNCTION_COMPONENT_CATEGORY specification
             from psyneulink.core.components.functions.function import Function_Base
-            if kwComponentCategory in type_requirements:
-               type_requirements[type_requirements.index(kwComponentCategory)] = \
+            if FUNCTION_COMPONENT_CATEGORY in type_requirements:
+               type_requirements[type_requirements.index(FUNCTION_COMPONENT_CATEGORY)] = \
                    type(Function_Base)
 
             if required_param not in self.paramClassDefaults.keys():
@@ -1328,7 +1334,7 @@ class Component(object, metaclass=ComponentsMeta):
                         "should be a number, or iterable of numbers, which are integers or "
                         "can be converted to integers.".format(x, type(self), self.name))
                 if int_x != x:
-                    if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
+                    if hasattr(self, 'prefs') and hasattr(self.prefs, VERBOSE_PREF) and self.prefs.verbosePref:
                         warnings.warn("When an element ({}) in the size argument was cast to "
                                       "integer, its value changed to {}.".format(x, int_x))
                 return int_x
@@ -1350,7 +1356,7 @@ class Component(object, metaclass=ComponentsMeta):
                 if size is not None:
                     size = np.atleast_1d(size)
                     if len(np.shape(size)) > 1:  # number of dimensions of size > 1
-                        if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
+                        if hasattr(self, 'prefs') and hasattr(self.prefs, VERBOSE_PREF) and self.prefs.verbosePref:
                             warnings.warn(
                                 "size had more than one dimension (size had {} dimensions), so only the first "
                                 "element of its highest-numbered axis will be used".format(len(np.shape(size))))
@@ -1405,14 +1411,14 @@ class Component(object, metaclass=ComponentsMeta):
             if variable is not None and size is not None:
                 # If they conflict, give warning
                 if len(size) != len(variable):
-                    if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
+                    if hasattr(self, 'prefs') and hasattr(self.prefs, VERBOSE_PREF) and self.prefs.verbosePref:
                         warnings.warn("The size arg of {} conflicts with the length "
                                       "of its variable arg ({}) at element {}: variable takes precedence".
                                       format(self.name, size, variable))
                 else:
                     for i in range(len(size)):
                         if size[i] != len(variable[i]):
-                            if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
+                            if hasattr(self, 'prefs') and hasattr(self.prefs, VERBOSE_PREF) and self.prefs.verbosePref:
                                 warnings.warn("The size arg of {} ({}) conflicts with the length "
                                               "of its variable arg ({}) at element {}: variable takes precedence".
                                               format(self.name, size[i], variable[i], i))
@@ -2212,12 +2218,12 @@ class Component(object, metaclass=ComponentsMeta):
                     attr_name = '_{0}'.format(p.name)
                     attr_value = getattr(self, attr_name)
                     if attr_value is None:
-                        attr_value = p.default_value
+                        attr_value = copy.deepcopy(p.default_value)
 
                     p._set(attr_value, context=context, skip_history=True)
                     delattr(self, attr_name)
                 except AttributeError:
-                    p._set(p.default_value, context=context, skip_history=True)
+                    p._set(copy.deepcopy(p.default_value), context=context, skip_history=True)
 
     @handle_external_context()
     def assign_params(self, request_set=None, context=None):
@@ -2335,7 +2341,7 @@ class Component(object, metaclass=ComponentsMeta):
                 visited.add(comp)
                 comp._initialize_from_context(context, base_context, override, visited=visited)
 
-        non_alias_params =  [p for p in self.stateful_parameters if not isinstance(p, ParameterAlias)]
+        non_alias_params = [p for p in self.stateful_parameters if not isinstance(p, ParameterAlias)]
         for param in non_alias_params:
             if param.setter is None:
                 param._initialize_from_context(context, base_context, override)
@@ -2730,12 +2736,12 @@ class Component(object, metaclass=ComponentsMeta):
     def _get_param_value_from_tuple(self, param_spec):
         """Returns param value (first item) of a (value, projection) tuple;
         """
-        from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
+        from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
         from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 
         ALLOWABLE_TUPLE_SPEC_KEYWORDS = MODULATORY_SPEC_KEYWORDS
-        ALLOWABLE_TUPLE_SPEC_CLASSES = (ModulatoryProjection_Base, ModulatorySignal, AdaptiveMechanism_Base)
+        ALLOWABLE_TUPLE_SPEC_CLASSES = (ModulatoryProjection_Base, ModulatorySignal, ModulatoryMechanism_Base)
 
         # If the 2nd item is a CONTROL or LEARNING SPEC, return the first item as the value
         if (isinstance(param_spec, tuple) and len(param_spec) is 2 and
@@ -2744,7 +2750,7 @@ class Component(object, metaclass=ComponentsMeta):
                  isinstance(param_spec[1], ALLOWABLE_TUPLE_SPEC_CLASSES) or
                  (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], ALLOWABLE_TUPLE_SPEC_CLASSES)))
             ):
-            value =  param_spec[0]
+            value = param_spec[0]
 
         # Otherwise, just return the tuple
         else:
@@ -3067,7 +3073,7 @@ class Component(object, metaclass=ComponentsMeta):
             return self.current_execution_time
         else:
             try:
-                return context.composition.scheduler_processing.get_clock(context).time
+                return context.composition.scheduler.get_clock(context).time
             except AttributeError:
                 return None
     # MODIFIED 9/22/19 END

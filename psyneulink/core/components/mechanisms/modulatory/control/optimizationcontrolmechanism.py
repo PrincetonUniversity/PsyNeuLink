@@ -387,17 +387,16 @@ Class Reference
 
 """
 import copy
-import itertools
 import numpy as np
 import typecheck as tc
 
 from collections.abc import Iterable
 
-from psyneulink.core.components.functions.function import Function_Base, is_function_type
+from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.optimizationfunctions import \
     OBJECTIVE_FUNCTION, SEARCH_SPACE, OptimizationFunction
 from psyneulink.core.components.functions.transferfunctions import CostFunctions
-from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.states.inputstate import InputState, _parse_shadow_inputs
@@ -618,11 +617,11 @@ class OptimizationControlMechanism(ControlMechanism):
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # classPreferenceLevel = PreferenceLevel.TYPE
-    # Any preferences specified below will override those specified in TypeDefaultPreferences
+    # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to Type automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_SET_NAME: 'DefaultControlMechanismCustomClassPreferences',
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     # FIX: ADD OTHER Parameters() HERE??
     class Parameters(ControlMechanism.Parameters):
@@ -808,17 +807,17 @@ class OptimizationControlMechanism(ControlMechanism):
                 control_signal.cost_options = CostFunctions.DEFAULTS
                 control_signal._instantiate_cost_attributes(context)
 
-    def _instantiate_modulatory_signals(self, context):
+    def _instantiate_control_signals(self, context):
         """Size control_allocation and assign modulatory_signals
         Set size of control_allocadtion equal to number of modulatory_signals.
         Assign each modulatory_signal sequentially to corresponding item of control_allocation.
         """
         from psyneulink.core.globals.keywords import OWNER_VALUE
-        for i, spec in enumerate(self.modulatory_signals):
-            modulatory_signal = self._instantiate_modulatory_signal(spec, context=context)
-            modulatory_signal._variable_spec = (OWNER_VALUE, i)
-            self._modulatory_signals[i] = modulatory_signal
-        self.defaults.value = np.tile(modulatory_signal.parameters.variable.default_value, (i+1, 1))
+        for i, spec in enumerate(self.control):
+            control_signal = self._instantiate_control_signal(spec, context=context)
+            control_signal._variable_spec = (OWNER_VALUE, i)
+            self.control_signals[i] = control_signal
+        self.defaults.value = np.tile(control_signal.parameters.variable.default_value, (i+1, 1))
         self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
 
     def _instantiate_attributes_after_function(self, context=None):

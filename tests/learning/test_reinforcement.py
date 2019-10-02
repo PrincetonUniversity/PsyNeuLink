@@ -47,7 +47,7 @@ def test_reinforcement():
     reward = lambda: [reward_values[int(np.nonzero(action_selection.output_state.value)[0])]]
 
     def print_header(system):
-        print("\n\n**** TRIAL: ", system.scheduler_processing.clock.simple_time)
+        print("\n\n**** TRIAL: ", system.scheduler.clock.simple_time)
 
     def show_weights():
         print('Reward prediction weights: \n', action_selection.input_states[0].path_afferents[0].get_mod_matrix(s))

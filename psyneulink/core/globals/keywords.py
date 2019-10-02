@@ -25,21 +25,20 @@ https://princetonuniversity.github.io/PsyNeuLink/Keywords.html
 
 __all__ = [
     'ACCUMULATOR_INTEGRATOR', 'ACCUMULATOR_INTEGRATOR_FUNCTION',
-    'ADAPTIVE', 'ADAPTIVE_INTEGRATOR_FUNCTION', 'ADAPTIVE_MECHANISM',
+    'ADAPTIVE', 'ADAPTIVE_INTEGRATOR_FUNCTION', 'ADAPTIVE_MECHANISM', 'ADD_INPUT_STATE', 'ADD_OUTPUT_STATE',
     'ADDITIVE', 'ADDITIVE_PARAM', 'AFTER', 'ALL', 'ALLOCATION_SAMPLES', 'ANGLE',
     'ARGUMENT_THERAPY_FUNCTION', 'ARRANGEMENT', 'ASSERT', 'ASSIGN', 'ASSIGN_VALUE', 'AUTO','AUTO_ASSIGN_MATRIX',
     'AUTO_ASSOCIATIVE_PROJECTION', 'HAS_INITIALIZERS', 'AUTOASSOCIATIVE_LEARNING_MECHANISM',
     'BACKPROPAGATION_FUNCTION', 'BEFORE', 'BETA', 'BIAS', 'BOLD', 'BOTH', 'BOUNDS', 'BUFFER_FUNCTION',
     'CHANGED', 'CLAMP_INPUT', 'COMBINATION_FUNCTION_TYPE', 'COMBINE', 'COMBINE_MEANS_FUNCTION',
     'COMBINE_OUTCOME_AND_COST_FUNCTION', 'COMMAND_LINE', 'COMPARATOR_MECHANISM', 'COMPONENT', 'COMPONENT_INIT',
-    'COMPOSITION', 'COMPOSITION_INTERFACE_MECHANISM', 'CONCATENATE_FUNCTION', 'CONDITION', 'CONDITIONS', 'CONSTANT',
-    'ContentAddressableMemory_FUNCTION', 'CONTEXT',
+    'COMPONENT_PREFERENCE_SET', 'COMPOSITION', 'COMPOSITION_INTERFACE_MECHANISM', 'CONCATENATE_FUNCTION',
+    'CONDITION', 'CONDITIONS', 'CONSTANT', 'ContentAddressableMemory_FUNCTION', 'CONTEXT',
     'CONTROL', 'CONTROL_MECHANISM', 'CONTROL_PROJECTION', 'CONTROL_PROJECTION_PARAMS', 'CONTROL_PROJECTIONS',
-    'CONTROL_SIGNAL', 'CONTROL_SIGNAL_SPECS', 'CONTROL_SIGNALS', 'CONTROLLED_PARAMS', 'CONTROLLER',
-    'CORRELATION', 'COSINE', 'COST_FUNCTION', 'COUNT', 'CROSS_ENTROPY', 'CURRENT_EXECUTION_TIME', 'CUSTOM_FUNCTION',
-    'CYCLE',
+    'CONTROL_SIGNAL', 'CONTROL_SIGNAL_SPECS', 'CONTROL_SIGNALS', 'CONTROLLED_PARAMS', 'CONTROLLER', 'CORRELATION',
+    'COSINE', 'COST_FUNCTION', 'COUNT', 'CROSS_ENTROPY', 'CURRENT_EXECUTION_TIME', 'CUSTOM_FUNCTION', 'CYCLE',
     'DDM_MECHANISM', 'DECAY', 'DEFAULT', 'DEFAULT_CONTROL_MECHANISM', 'DEFAULT_MATRIX',
-    'DEFAULT_PROCESSING_MECHANISM', 'DEFAULT_SYSTEM',
+    'DEFAULT_PREFERENCE_SET_OWNER', 'DEFAULT_PROCESSING_MECHANISM', 'DEFAULT_SYSTEM',
     'DEFERRED_ASSIGNMENT', 'DEFERRED_DEFAULT_NAME', 'DEFERRED_INITIALIZATION',
     'DIFFERENCE', 'DIFFERENCE', 'DIFFUSION', 'DISABLE', 'DISABLE_PARAM', 'DIST_FUNCTION_TYPE', 'DIST_MEAN',
     'DIST_SHAPE', 'DISTANCE_FUNCTION', 'DISTANCE_METRICS', 'DISTRIBUTION_FUNCTION_TYPE', 'DIVISION',
@@ -49,8 +48,8 @@ __all__ = [
     'EXECUTING', 'EXECUTION', 'EXECUTION_ID', 'EXECUTION_PHASE',
     'EXPONENTIAL', 'EXPONENT', 'EXPONENTIAL_DIST_FUNCTION', 'EXPONENTIAL_FUNCTION', 'EXPONENTS',
     'FITZHUGHNAGUMO_INTEGRATOR_FUNCTION', 'FINAL', 'FLAGS', 'FULL', 'FULL_CONNECTIVITY_MATRIX',
-    'FUNCTION', 'FUNCTIONS', 'FUNCTION_CHECK_ARGS', 'FUNCTION_OUTPUT_TYPE', 'FUNCTION_OUTPUT_TYPE_CONVERSION',
-    'FUNCTION_PARAMS',
+    'FUNCTION', 'FUNCTIONS', 'FUNCTION_COMPONENT_CATEGORY','FUNCTION_CHECK_ARGS',
+    'FUNCTION_OUTPUT_TYPE', 'FUNCTION_OUTPUT_TYPE_CONVERSION', 'FUNCTION_PARAMS',
     'GAIN', 'GAMMA_DIST_FUNCTION', 'GATE', 'GATING', 'GATING_MECHANISM', 'GATING_ALLOCATION', 'GATING_PROJECTION',
     'GATING_PROJECTION_PARAMS', 'GATING_PROJECTIONS', 'GATING_SIGNAL', 'GATING_SIGNAL_SPECS', 'GATING_SIGNALS',
     'GAUSSIAN', 'GAUSSIAN_FUNCTION', 'GILZENRAT_INTEGRATOR_FUNCTION',
@@ -62,19 +61,6 @@ __all__ = [
     'INPUTS_DIM', 'INSTANTANEOUS_MODE_VALUE', 'INTEGRATION_TYPE', 'INTEGRATOR_FUNCTION', 'INTEGRATOR_FUNCTION',
     'INTEGRATOR_FUNCTION_TYPE', 'INTEGRATOR_MECHANISM', 'INTEGRATOR_MODE_VALUE', 'INTERCEPT', 'INTERNAL',
     'INTERNAL_ONLY', 'K_VALUE', 'KOHONEN_FUNCTION', 'KOHONEN_MECHANISM', 'KOHONEN_LEARNING_MECHANISM', 'KWTA_MECHANISM',
-    'kpMechanismControlAllocationsLogEntry', 'kpMechanismExecutedLogEntry', 'kpMechanismInputLogEntry',
-    'kpMechanismOutputLogEntry', 'kpMechanismTimeScaleLogEntry', 'kwAddInputState', 'kwAddOutputState',
-    'kwAggregate', 'kwAssign', 'kwComponentCategory', 'kwComponentPreferenceSet', 'kwDefaultPreferenceSetOwner',
-    'kwInitialPoint', 'kwInstantiate', 'kwMechanismAdjustFunction', 'kwMechanismComponentCategory',
-    'kwMechanismConfidence', 'kwMechanismDefault', 'kwMechanismDefaultInputValue', 'kwMechanismDefaultParams',
-    'kwMechanismDuration', 'kwMechanismExecuteFunction', 'kwMechanismExecutionSequenceTemplate',
-    'kwMechanismInterrogateFunction', 'kwMechanismName', 'kwMechanismOutputValue', 'kwMechanismParams',
-    'kwMechanismParamValue', 'kwMechanismPerformance', 'kwMechanismTerminateFunction', 'kwMechanismType', 'kwParams',
-    'kwPrefBaseValue', 'kwPrefCurrentValue', 'kwPreferenceSet', 'kwPreferenceSetName', 'kwPrefLevel', 'kwPrefs',
-    'kwPrefsOwner', 'kwProcessComponentCategory', 'kwProcessDefaultMechanism', 'kwProcessDefaultProjectionFunction',
-    'kwProcessExecute', 'kwProgressBarChar', 'kwProjectionComponentCategory', 'kwProjectionReceiver', 'kwProjections',
-    'kwReceiverArg', 'kwSeparator', 'kwStateComponentCategory',
-    'kwSystemComponentCategory', 'kwThreshold',
     'LABELS', 'LCA_MECHANISM', 'LEAKY_COMPETING_INTEGRATOR_FUNCTION', 'LEAK', 'LEARNING', 'LEARNED_PARAM',
     'LEARNED_PROJECTION', 'LEARNING_FUNCTION_TYPE', 'LEARNING_MECHANISM', 'LEARNING_PROJECTION',
     'LEARNING_PROJECTION_PARAMS', 'LEARNING_RATE', 'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS', 'LEARNING_SIGNALS',
@@ -82,10 +68,12 @@ __all__ = [
     'LOGISTIC_FUNCTION', 'LOW', 'LVOC_CONTROL_MECHANISM', 'L0', 'L1',
     'MAKE_DEFAULT_GATING_MECHANISM', 'MAPPING_PROJECTION', 'MAPPING_PROJECTION_PARAMS', 'MASKED_MAPPING_PROJECTION',
     'MATRIX', 'MATRIX_KEYWORD_NAMES', 'MATRIX_KEYWORD_SET', 'MATRIX_KEYWORD_VALUES', 'MATRIX_KEYWORDS','MatrixKeywords',
-    'MAX_ABS_VAL', 'MAX_ABS_INDICATOR', 'MAX_ABS_DIFF', 'MAX_INDICATOR', 'MAX_VAL', 'MAYBE', 'MECHANISM', 'METRIC',
-    'MECHANISM_VALUE', 'MIN_VAL', 'MODE',
-    'MODULATES','MODULATION', 'MODULATORY_PROJECTION', 'MODULATORY_SIGNAL', 'MODULATORY_SIGNALS', 'MODULATORY_MECHANISM',
-    'MONITOR', 'MONITOR_FOR_CONTROL', 'MONITOR_FOR_LEARNING', 'MONITOR_FOR_MODULATION',
+    'MAX_ABS_VAL', 'MAX_ABS_INDICATOR', 'MAX_ABS_DIFF', 'MAX_INDICATOR', 'MAX_VAL', 'MAYBE',
+    'MECHANISM', 'MECHANISM_COMPONENT_CATEGORY', 'MECHANISM_DEFAULT', 'MECHANISM_DEFAULTInputValue',
+    'MECHANISM_DEFAULTParams', 'MECHANISM_EXECUTED_LOG_ENTRY', 'MECHANISM_NAME', 'MECHANISM_PARAM_VALUE',
+    'MECHANISM_TYPE', 'MECHANISM_VALUE',
+    'METRIC', 'MIN_VAL', 'MODE', 'MODULATES','MODULATION', 'MODULATORY_PROJECTION', 'MODULATORY_SIGNAL',
+    'MODULATORY_SIGNALS', 'MONITOR', 'MONITOR_FOR_CONTROL', 'MONITOR_FOR_LEARNING', 'MONITOR_FOR_MODULATION',
     'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM', 'MUTUAL_ENTROPY',
     'NAME', 'NEWEST',  'NODE', 'NodeRoles', 'NOISE', 'NORMAL_DIST_FUNCTION', 'NORMED_L0_SIMILARITY',
     'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT', 'OFF', 'OFFSET', 'OLDEST',
@@ -97,23 +85,27 @@ __all__ = [
     'PARAM_CLASS_DEFAULTS', 'PARAM_INSTANCE_DEFAULTS', 'PARAMETER_STATE', 'PARAMETER_STATE_PARAMS',
     'PARAMETER_STATES', 'PARAMS', 'PARAMS_DICT', 'PARAMS_CURRENT', 'PATHWAY', 'PATHWAY_PROJECTION', 'PEARSON',
     'PREDICTION_MECHANISM', 'PREDICTION_MECHANISMS', 'PREDICTION_MECHANISM_OUTPUT', 'PREDICTION_MECHANISM_PARAMS',
-    'PREDICTION_MECHANISM_TYPE', 'PREFS_ARG', 'PREVIOUS_VALUE', 'PRIMARY', 'PROB', 'PROB_INDICATOR',
-    'PROCESS', 'PROCESSING', 'PROCESS_INIT', 'PROCESSES', 'PROCESSES_DIM', 'PROCESSING_MECHANISM', 'PRODUCT',
-    'PROJECTION', 'PROJECTION_DIRECTION', 'PROJECTION_PARAMS', 'PROJECTION_SENDER', 'PROJECTION_TYPE', 'PROJECTIONS',
-    'QUOTIENT', 'RANDOM', 'RANDOM_CONNECTIVITY_MATRIX', 'RATE', 'RATIO', 'REARRANGE_FUNCTION', 'RECEIVER',
+    'PREDICTION_MECHANISM_TYPE', 'PREFS_ARG', 'PREF_BASE_VALUE', 'PREF_CURRENT_VALUE', 'PREFERENCE_SET',
+    'PREFERENCE_SET_NAME', 'PREF_LEVEL', 'PREFS', 'PREFS_OWNER', 'PREVIOUS_VALUE', 'PRIMARY', 'PROB', 'PROB_INDICATOR',
+    'PROCESS', 'PROCESS_COMPONENT_CATEGORY', 'PROCESS_DEFAULT_MECHANISM', 'PROCESS_DEFAULT_PROJECTION_FUNCTION',
+    'PROCESS_EXECUTE', 'PROCESS_INIT', 'PROCESSES', 'PROCESSES_DIM', 'PROCESSING', 'PROCESSING_MECHANISM',
+    'PRODUCT', 'PROGRESS_BAR_CHAR', 'PROJECTION', 'PROJECTION_DIRECTION', 'PROJECTION_PARAMS', 'PROJECTION_SENDER',
+    'PROJECTION_TYPE', 'PROJECTIONS', 'PROJECTION_COMPONENT_CATEGORY', 'QUOTIENT',
+    'RANDOM', 'RANDOM_CONNECTIVITY_MATRIX', 'RATE', 'RATIO', 'REARRANGE_FUNCTION', 'RECEIVER', 'RECEIVER_ARG',
     'RECURRENT_TRANSFER_MECHANISM', 'REDUCE_FUNCTION', 'REFERENCE_VALUE', 'REINITIALIZE', 'REINITIALIZE_WHEN',
     'RELU_FUNCTION', 'REST', 'RESULT', 'RESULTS', 'ROLES', 'RL_FUNCTION', 'RUN',
     'SAMPLE', 'SAVE_ALL_VALUES_AND_POLICIES', 'SCALAR', 'SCALE', 'SCHEDULER', 'SELF', 'SENDER',
     'SEPARATOR_BAR', 'SIMPLE', 'SIMPLE_INTEGRATOR_FUNCTION', 'SINGLETON', 'SIZE', 'SLOPE', 'SOFT_CLAMP',
     'SOFTMAX_FUNCTION', 'SOURCE', 'STABILITY_FUNCTION', 'STANDARD_ARGS', 'STANDARD_DEVIATION', 'STANDARD_OUTPUT_STATES',
-    'STATE', 'STATE_CONTEXT', 'STATE_NAME', 'STATE_PARAMS', 'STATE_PREFS', 'STATE_TYPE', 'STATE_VALUE', 'STATES',
-    'SUBTRACTION', 'SUM', 'SYSTEM', 'SYSTEM_DEFAULT_CONTROLLER', 'SYSTEM_INIT',
+    'STATE', 'STATE_COMPONENT_CATEGORY', 'STATE_CONTEXT', 'STATE_NAME', 'STATE_PARAMS', 'STATE_PREFS', 'STATE_TYPE',
+    'STATE_VALUE', 'STATES', 'SUBTRACTION', 'SUM',
+    'SYSTEM', 'SYSTEM_COMPONENT_CATEGORY', 'SYSTEM_DEFAULT_CONTROLLER', 'SYSTEM_INIT',
     'TARGET', 'TARGET_MECHANISM', 'TARGET_LABELS_DICT', 'TERMINAL', 'THRESHOLD', 'TIME', 'TIME_STEP_SIZE',
     'TIME_STEPS_DIM', 'TRAINING_SET', 'TRANSFER_FUNCTION_TYPE', 'TRANSFER_MECHANISM', 'TRANSFER_WITH_COSTS_FUNCTION',
     'TRIAL', 'TRIALS_DIM',
     'UNCHANGED', 'UNIFORM_DIST_FUNCTION', 'USER_DEFINED_FUNCTION', 'USER_DEFINED_FUNCTION_TYPE', 'USER_PARAMS',
     'VALUES', 'VALIDATE', 'VALIDATION', 'VALUE', 'VALUE_ASSIGNMENT', 'VALUE_FUNCTION', 'VARIABLE', 'VARIANCE',
-    'VECTOR', 'WALD_DIST_FUNCTION', 'WEIGHT', 'WEIGHTS', 'X_0'
+    'VECTOR', 'WALD_DIST_FUNCTION', 'WEIGHT', 'WEIGHTS', 'X_0',
 ]
 
 
@@ -376,10 +368,9 @@ ALL = 'all'
 BOTH = 'both'
 MAYBE = 0.5
 
-kwSeparator = ': '
 SEPARATOR_BAR = ' | '
-kwProgressBarChar = '.'
-# kwValueSuffix = '_value'
+PROGRESS_BAR_CHAR = '.'
+# VALUE_SUFFIX = '_value'
 SELF = 'self'
 FLAGS = 'flags'
 INITIALIZATION_STATUS = 'initialization_status'
@@ -387,14 +378,10 @@ EXECUTION_PHASE = 'execution_phase'
 SOURCE = 'source'
 INITIALIZING = " INITIALIZING "  # Used as status and context for Log
 INITIALIZED = " INITIALIZED "  # Used as status
-kwInstantiate = " INSTANTIATING "  # Used as context for Log
 EXECUTING = " EXECUTING " # Used in context for Log and ReportOutput pref
-kwAssign = '| Assign' # Used in context for Log
 ASSIGN_VALUE = ': Assign value'
-kwAggregate = ': Aggregate' # Used in context for Log
 VALIDATE = 'Validate'
 COMMAND_LINE = "COMMAND_LINE"
-kwParams = 'params'
 CHANGED = 'CHANGED'
 UNCHANGED = 'UNCHANGED'
 ENABLED = 'ENABLED'
@@ -406,7 +393,7 @@ AFTER = 'after'
 ONLINE = 'online'
 INPUT = 'input'
 OUTPUT = 'output'
-RANDOM =  'random'
+RANDOM = 'random'
 OLDEST = 'oldest'
 NEWEST = 'newest'
 
@@ -417,22 +404,20 @@ EID_FROZEN = '-frozen'
 
 #region -------------------------------------------    Preferences    --------------------------------------------------
 
-kwPrefs = "Prefs"
-kwPrefsOwner = "kwPrefsOwner"
-kwPrefLevel = 'kwPrefLevel'
-kwPrefCurrentValue = 'kwPrefCurrentValue'
-kwPrefBaseValue = 'kwPrefBaseValue'
-kwPreferenceSetName = 'kwPreferenceSetName'
-kwDefaultPreferenceSetOwner = 'DefaultPreferenceSetOwner'
-# kpLogPref = '_log_pref'
-# kpParamValidationPref = '_param_validation_pref'
-# kpVerbosePref = '_verbose_pref'
+PREFS = "Prefs"
+PREFS_OWNER = "PrefsOwner"
+PREF_LEVEL = 'PrefLevel'
+PREF_CURRENT_VALUE = 'PrefCurrentValue'
+PREF_BASE_VALUE = 'PrefBaseValue'
+PREFERENCE_SET_NAME = 'PreferenceSetName'
+DEFAULT_PREFERENCE_SET_OWNER = 'DefaultPreferenceSetOwner'
 #endregion
 
 #region --------------------------------------------    PREFERENCES    -------------------------------------------------
 
-kwPreferenceSet = 'PreferenceSet'
-kwComponentPreferenceSet = 'PreferenceSet'
+PREFERENCE_SET = 'PreferenceSet'
+COMPONENT_PREFERENCE_SET = 'BasePreferenceSet'
+# COMPONENT_PREFERENCE_SET = 'PreferenceSet'
 #endregion
 
 #region ------------------------------------------------   LOG    ------------------------------------------------------
@@ -447,14 +432,6 @@ VALUE_ASSIGNMENT = 'VALUE_ASSIGNMENT'
 FINAL = 'FINAL'
 
 
-#endregion
-
-#region -----------------------------------------------  UTILITIES  ----------------------------------------------------
-
-kpMechanismTimeScaleLogEntry = "Mechanism TimeScale"
-kpMechanismInputLogEntry = "Mechanism Input"
-kpMechanismOutputLogEntry = "Mechanism Output"
-kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 #endregion
 
 #region ----------------------------------------------   COMPONENT   ---------------------------------------------------
@@ -512,23 +489,22 @@ FUNCTION_OUTPUT_TYPE_CONVERSION = "enable_output_type_conversion"  # Used in Fun
 
 # Component Categories   -----------------
 
-kwSystemComponentCategory = "System"
-kwProcessComponentCategory = "Process"
-kwMechanismComponentCategory = "Mechanism_Base"
-kwStateComponentCategory = "State_Base"
-kwProjectionComponentCategory = "Projection_Base"
-kwComponentCategory = "Function_Base"
+SYSTEM_COMPONENT_CATEGORY = "System"
+PROCESS_COMPONENT_CATEGORY = "Process"
+MECHANISM_COMPONENT_CATEGORY = "Mechanism_Base"
+STATE_COMPONENT_CATEGORY = "State_Base"
+PROJECTION_COMPONENT_CATEGORY = "Projection_Base"
+FUNCTION_COMPONENT_CATEGORY = "Function_Base"
 
 # Component TYPES  -----------------
 
 # Mechanisms:
 PROCESSING_MECHANISM = "ProcessingMechanism"
-ADAPTIVE_MECHANISM = "AdaptiveMechanism"
+ADAPTIVE_MECHANISM = "ModulatoryMechanism"
 LEARNING_MECHANISM = "LearningMechanism"
 CONTROL_MECHANISM = "ControlMechanism"
 TARGET_MECHANISM = "TargetMechanism"
 GATING_MECHANISM = 'GatingMechanism'
-MODULATORY_MECHANISM = 'ModulatoryMechanism'
 AUTOASSOCIATIVE_LEARNING_MECHANISM = 'AutoAssociativeLearningMechanism'
 KOHONEN_LEARNING_MECHANISM = 'KohonenLearningMechanism'
 
@@ -717,24 +693,23 @@ NO_CLAMP = "no_clamp"
 LEARNING_RATE = "learning_rate"
 CONTROL = 'CONTROL'
 GATING = 'gating'
-kwProjections = "projections"
-kwProcessDefaultProjectionFunction = "Default Projection Function"
-kwProcessExecute = "ProcessExecute"
-kpMechanismExecutedLogEntry = "Mechanism Executed"
+PROCESS_DEFAULT_PROJECTION_FUNCTION = "Default Projection Function"
+PROCESS_EXECUTE = "ProcessExecute"
+MECHANISM_EXECUTED_LOG_ENTRY = "Mechanism Executed"
 #endregion
 
 #region ---------------------------------------------    MECHANISM   ---------------------------------------------------
 
 MECHANISM = 'MECHANISM'
 MECHANISMS = 'MECHANISMS'
-kwMechanismName = "MECHANISM NAME"
-kwMechanismDefault = "DEFAULT MECHANISM"
+MECHANISM_NAME = "MECHANISM NAME"
+MECHANISM_DEFAULT = "DEFAULT MECHANISM"
 DEFAULT_PROCESSING_MECHANISM = "DefaultProcessingMechanism"
-kwProcessDefaultMechanism = "ProcessDefaultMechanism"
-kwMechanismType = "Mechanism Type" # Used in mechanism dict specification (e.g., in process.pathway[])
-kwMechanismDefaultInputValue = "Mechanism Default Input Value " # Used in mechanism specification dict
-kwMechanismParamValue = "Mechanism Parameter Value"                 # Used to specify mechanism param value
-kwMechanismDefaultParams = "Mechanism Default Parameters"           # Used in mechanism specification dict
+PROCESS_DEFAULT_MECHANISM = "ProcessDefaultMechanism"
+MECHANISM_TYPE = "Mechanism Type" # Used in mechanism dict specification (e.g., in process.pathway[])
+MECHANISM_DEFAULTInputValue = "Mechanism Default Input Value " # Used in mechanism specification dict
+MECHANISM_PARAM_VALUE = "Mechanism Parameter Value"                 # Used to specify mechanism param value
+MECHANISM_DEFAULTParams = "Mechanism Default Parameters"           # Used in mechanism specification dict
 CONDITION = 'condition'
 
 # Keywords for OUTPUT_STATE_VARIABLE dict:
@@ -745,7 +720,7 @@ OWNER_EXECUTION_TIME = 'EXECUTION_TIME'
 INPUT_STATE_VARIABLES = 'INPUT_STATE_VARIABLES'
 PARAMS_DICT = 'PARAMS_DICT'
 
-# this exists because kws like OWNER_VALUE are set as properties
+# this exists because keywords like OWNER_VALUE are set as properties
 # on Mechanisms, so you can't just change the string value to map
 # as you want - the property "value" will be overwritten then
 output_state_spec_to_parameter_name = {
@@ -785,29 +760,9 @@ K_VALUE = 'k_value'
 THRESHOLD = 'threshold'
 RATIO = 'ratio'
 
-STATE_VALUE = "State value"   # Used in State specification dict
-                                                 #  to specify State value
+STATE_VALUE = "State value"   # Used in State specification dict                                                #  to specify State value
 STATE_PARAMS = "State params" # Used in State specification dict
 
-# ParamClassDefaults:
-kwMechanismExecutionSequenceTemplate = "Mechanism Execution Sequence Template"
-
-# Entries for output OrderedDict, describing the current state of the Mechanism
-kwMechanismOutputValue = "MechanismOutputValue" # points to <mechanism>.outputStateValue
-kwMechanismConfidence = "MechanismConfidence"   # contains confidence of current kwMechanismValue
-kwMechanismPerformance = "MechanismPerformance" # contains value from objective function
-kwMechanismDuration = "MechanismDuration"       # contains number of time steps since process.execute was called
-kwMechanismParams = "MechanismParams"           # dict of ParameterState objects in <mechanism>.params
-
-kwMechanismExecuteFunction = "MECHANISM EXECUTE FUNCTION"
-kwMechanismAdjustFunction = "MECHANISM ADJUST FUNCTION"
-kwMechanismInterrogateFunction = "MECHANISM INTERROGATE FUNCTION"
-kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
-# TBI: kwMechanismAccuracyFunction = "MECHANISM ACCURACY FUNCTION"
-
-#DDM
-kwThreshold = 'thresh'
-kwInitialPoint = 'initial_point'
 #endregion
 
 #region ----------------------------------------    MODULATORY MECHANISMS ----------------------------------------------
@@ -857,8 +812,7 @@ GATING_ALLOCATION = 'gating_allocation'
 
 MODULATORY_SPEC_KEYWORDS = {LEARNING, LEARNING_SIGNAL, LEARNING_PROJECTION, LEARNING_MECHANISM,
                             CONTROL, CONTROL_SIGNAL, CONTROL_PROJECTION, CONTROL_MECHANISM,
-                            GATING, GATING_SIGNAL, GATING_PROJECTION, GATING_MECHANISM,
-                            MODULATORY_MECHANISM}
+                            GATING, GATING_SIGNAL, GATING_PROJECTION, GATING_MECHANISM}
 
 MODULATED_PARAMETER_PREFIX = 'mod_'
 
@@ -876,8 +830,8 @@ CONNECTIONS = 'CONNECTIONS'
 STATE_NAME = "StateName"
 STATE_PREFS = "StatePrefs"
 STATE_CONTEXT = "StateContext"
-kwAddInputState = 'kwAddNewInputState'     # Used by Mechanism._add_projection_to()
-kwAddOutputState = 'kwAddNewOutputState'   # Used by Mechanism._add_projection_from()
+ADD_INPUT_STATE = 'AddNewInputState'     # Used by Mechanism._add_projection_to()
+ADD_OUTPUT_STATE = 'AddNewOutputState'   # Used by Mechanism._add_projection_from()
 FULL = 'FULL'
 OWNER = 'owner'
 REFERENCE_VALUE = 'reference_value'
@@ -928,9 +882,7 @@ SENDER = 'sender'
 RECEIVER = "receiver"
 PROJECTION_DIRECTION = {SENDER: 'to',
                         RECEIVER: 'from'}
-kwProjectionReceiver = 'projection_receiver'
-kwReceiverArg = 'receiver'
-# kpLog = "ProjectionLog"
+RECEIVER_ARG = 'receiver'
 MONITOR_FOR_LEARNING = 'monitor_for_learning'
 AUTO = 'auto'
 HETERO = 'hetero'
@@ -972,7 +924,7 @@ INSTANTANEOUS_MODE_VALUE = "instantaneous_mode_value"
 LINEAR = 'linear'
 CONSTANT = 'constant'
 SIMPLE = 'scaled'
-ADAPTIVE = 'adaptive'
+ADAPTIVE = 'modulatory'
 DIFFUSION = 'diffusion'
 EXPONENTIAL = 'exponential'
 GAUSSIAN = 'gaussian'

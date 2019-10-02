@@ -18,7 +18,7 @@ ancestor_child_data = [
 param_alias_data = [
     (pnl.Linear, 'slope', 'multiplicative_param'),
     (pnl.Linear, 'intercept', 'additive_param'),
-    (pnl.ControlMechanism, 'value', 'modulatory_allocation'),
+    (pnl.ControlMechanism, 'value', 'control_allocation'),
 ]
 
 

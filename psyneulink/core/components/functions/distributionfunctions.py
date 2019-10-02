@@ -35,7 +35,7 @@ from psyneulink.core.globals.keywords import \
     SCALE, STANDARD_DEVIATION, UNIFORM_DIST_FUNCTION, WALD_DIST_FUNCTION
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.utilities import parameter_spec
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 
 from psyneulink.core.globals.parameters import Parameter
 
@@ -1280,7 +1280,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                                  (csch(Z - X))**2 - 3 * (Z - X)*coth(Z - X))
 
             # divide third central moment by var_rt**1.5 to get skewness
-            moments['skew_rt_plus'] /=  moments['var_rt_plus']**1.5
+            moments['skew_rt_plus'] /= moments['var_rt_plus']**1.5
             moments['skew_rt_minus'] /= moments['var_rt_minus']**1.5
 
             # Add the non-decision time to the mean RTs

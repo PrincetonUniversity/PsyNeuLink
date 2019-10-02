@@ -279,7 +279,7 @@ from psyneulink.core.globals.keywords import \
     OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, SYSTEM_INPUT_STATE, VALUE
 from psyneulink.core.globals.log import ContextFlags
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
 __all__ = [

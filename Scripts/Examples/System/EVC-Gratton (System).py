@@ -6,14 +6,14 @@ import psyneulink as pnl
 import psyneulink.core.components.functions.distributionfunctions
 import psyneulink.core.components.functions.transferfunctions
 
-mechanism_prefs = pnl.ComponentPreferenceSet(
+mechanism_prefs = pnl.BasePreferenceSet(
     prefs={
         pnl.VERBOSE_PREF: pnl.PreferenceEntry(False, pnl.PreferenceLevel.INSTANCE),
         # pnl.REPORT_OUTPUT_PREF: pnl.PreferenceEntry(True, pnl.PreferenceLevel.INSTANCE)
     }
 )
 
-process_prefs = pnl.ComponentPreferenceSet(
+process_prefs = pnl.BasePreferenceSet(
     reportOutput_pref=pnl.PreferenceEntry(False, pnl.PreferenceLevel.INSTANCE),
     verbose_pref=pnl.PreferenceEntry(True, pnl.PreferenceLevel.INSTANCE)
 )

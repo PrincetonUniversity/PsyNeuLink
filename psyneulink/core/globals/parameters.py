@@ -107,7 +107,7 @@ To create new Parameters, reference this example of a new class *B*
 
 - setters and getters (used for more advanced behavior than parsing) should both return the final value to return (getter) or set (setter)
 
-    For example, `costs <ModulatoryMechanism.costs>` of `ModulatoryMechanism <ModulatoryMechanism>` has a special
+    For example, `costs <ControlMechanism.costs>` of `ControlMechanism <ControlMechanism>` has a special
     getter method, which computes the cost on-the-fly:
 
         ::

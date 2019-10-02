@@ -89,7 +89,7 @@ import typecheck as tc
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.learningfunctions import Hebbian
-from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import \
+from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism, LearningTiming, LearningType
 from psyneulink.core.components.projections.projection import Projection_Base, projection_keywords
 from psyneulink.core.components.states.parameterstate import ParameterState
@@ -98,7 +98,7 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE, CONTROL_PROJECTIONS, INPUT_STATES, KOHONEN_LEARNING_MECHANISM, \
     LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, parameter_spec
 
@@ -111,7 +111,7 @@ __all__ = [
 parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
 projection_keywords.update({LEARNING_PROJECTION, LEARNING})
 
-input_state_names =  [ACTIVATION_INPUT, ACTIVATION_OUTPUT]
+input_state_names = [ACTIVATION_INPUT, ACTIVATION_OUTPUT]
 output_state_names = [LEARNING_SIGNAL]
 
 # DefaultTrainingMechanism = ObjectiveMechanism

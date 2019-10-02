@@ -14,7 +14,7 @@
 Overview
 --------
 
-A LearningMechanism is an `AdaptiveMechanism <AdaptiveMechanism>` that modifies the `matrix <MappingProjection.matrix>`
+A LearningMechanism is a `ModulatoryMechanism <ModulatoryMechanism>` that modifies the `matrix <MappingProjection.matrix>`
 parameter of one or more `MappingProjections <MappingProjection>`.  Its function takes one or more `error_signals
 <LearningMechanism_Input_Error_Signal>` (usually the output of a `ComparatorMechanism` or one or more other
 `LearningMechanisms <LearningMechanism>`), as well as information about the `MappingProjection(s) and activity
@@ -514,7 +514,7 @@ from enum import Enum
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.learningfunctions import BackPropagation
-from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
+from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Mechanism
@@ -526,7 +526,7 @@ from psyneulink.core.globals.keywords import \
     LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
     MATRIX, NAME, ONLINE, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, STATE_TYPE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList, is_numeric, parameter_spec, convert_to_list
 
@@ -612,7 +612,7 @@ ERROR_SIGNAL_INDEX = 2
 ACTIVATION_INPUT = 'activation_input'     # InputState
 ACTIVATION_OUTPUT = 'activation_output'   # InputState
 ERROR_SIGNAL = 'error_signal'
-input_state_names =  [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL]
+input_state_names = [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL]
 output_state_names = [LEARNING_SIGNAL, ERROR_SIGNAL]
 
 ERROR_SOURCES = 'error_sources'
@@ -646,7 +646,7 @@ def _learning_mechanism_learning_rate_setter(value, owning_component=None, conte
             owning_component.function.parameters.learning_rate._set(value, context)
     return value
 
-class LearningMechanism(AdaptiveMechanism_Base):
+class LearningMechanism(ModulatoryMechanism_Base):
     """
     LearningMechanism(                        \
         variable,                             \
@@ -664,7 +664,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     COMMENT:
         Description:
-            LearningMechanism is a subtype of the AdaptiveMechanism Type of the Mechanism Category of Component
+            LearningMechanism is a subtype of the ModulatoryMechanism Type of the Mechanism Category of Component
             It implements a Mechanism that calculates changes to a Projection's parameters.
             Its function takes the output of an ObjectiveMechanism and generates a
             learning_signal (ndarray of parameter changes) to be used by the recipient of a LearningProjection
@@ -912,7 +912,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
-    class Parameters(AdaptiveMechanism_Base.Parameters):
+    class Parameters(ModulatoryMechanism_Base.Parameters):
         """
             Attributes
             ----------
@@ -963,7 +963,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         learning_rate = Parameter(None, modulable=True, setter=_learning_mechanism_learning_rate_setter)
         learning_enabled = True
 
-    paramClassDefaults = AdaptiveMechanism_Base.paramClassDefaults.copy()
+    paramClassDefaults = ModulatoryMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         CONTROL_PROJECTIONS: None,
         INPUT_STATES:input_state_names,
@@ -1154,7 +1154,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
             Projection with which each error_source is associated.
             :param function:
         """
-        from psyneulink.core.components.mechanisms.adaptive.learning.learningauxiliary \
+        from psyneulink.core.components.mechanisms.modulatory.learning.learningauxiliary \
             import _instantiate_error_signal_projection
 
         if self._error_sources:

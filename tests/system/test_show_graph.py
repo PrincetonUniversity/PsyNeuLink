@@ -4,7 +4,7 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.system import System
 from psyneulink.core.globals.keywords import ALL, ENABLED
-from psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism import LCControlMechanism
+from psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism import LCControlMechanism
 
 class TestSimpleSystems:
 

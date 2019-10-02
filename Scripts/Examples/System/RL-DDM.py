@@ -65,7 +65,7 @@ print('reward prediction weights: \n', action_selection.input_state.path_afferen
 # Used by *call_before_trial* and *call_after_trial* to generate printouts.
 # Note:  should be replaced by use of logging functionality that has now been implemented.
 def print_header(system):
-    print("\n\n**** Time: ", system.scheduler_processing.get_clock(system).simple_time)
+    print("\n\n**** Time: ", system.scheduler.get_clock(system).simple_time)
 
 
 def show_weights(context=None):
