@@ -414,10 +414,10 @@ class GatingMechanism(ControlMechanism):
 
 
     classPreferenceLevel = PreferenceLevel.TYPE
-    # Any preferences specified below will override those specified in TypeDefaultPreferences
+    # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'GatingMechanismClassPreferences',
+    #     PREFERENCE_SET_NAME: 'GatingMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
     # Override gating_allocatdion and suppress control_allocation

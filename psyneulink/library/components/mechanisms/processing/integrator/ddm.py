@@ -364,7 +364,7 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.states.outputstate import SEQUENTIAL, StandardOutputStates
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INPUT_STATE_VARIABLES, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE, kwPreferenceSetName
+from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INPUT_STATE_VARIABLES, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -778,9 +778,9 @@ class DDM(ProcessingMechanism):
     componentType = "DDM"
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
-    # These will override those specified in SubtypeDefaultPreferences
+    # These will override those specified in SUBTYPE_DEFAULT_PREFERENCES
     classPreferences = {
-        kwPreferenceSetName: 'DDMCustomClassPreferences',
+        PREFERENCE_SET_NAME: 'DDMCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     class Parameters(ProcessingMechanism.Parameters):

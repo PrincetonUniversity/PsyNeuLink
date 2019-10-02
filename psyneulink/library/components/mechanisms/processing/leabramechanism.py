@@ -104,7 +104,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutputStates, standard_output_states
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import FUNCTION, INPUT_STATES, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, NETWORK, OUTPUT_STATES, kwPreferenceSetName
+from psyneulink.core.globals.keywords import FUNCTION, INPUT_STATES, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, NETWORK, OUTPUT_STATES, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -190,7 +190,7 @@ class LeabraFunction(Function_Base):
     componentName = LEABRA_FUNCTION
 
     classPreferences = {
-        kwPreferenceSetName: 'LeabraFunctionClassPreferences',
+        PREFERENCE_SET_NAME: 'LeabraFunctionClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
 
@@ -477,9 +477,9 @@ class LeabraMechanism(ProcessingMechanism_Base):
     is_self_learner = True  # CW 11/27/17: a flag; "True" if the mechanism self-learns. Declared in ProcessingMechanism
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
-    # These will override those specified in TypeDefaultPreferences
+    # These will override those specified in TYPE_DEFAULT_PREFERENCES
     classPreferences = {
-        kwPreferenceSetName: 'TransferCustomClassPreferences',
+        PREFERENCE_SET_NAME: 'TransferCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
 

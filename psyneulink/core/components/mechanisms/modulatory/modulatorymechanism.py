@@ -179,10 +179,10 @@ class ModulatoryMechanism_Base(Mechanism_Base):
         modulation = None
 
     classPreferenceLevel = PreferenceLevel.TYPE
-    # Any preferences specified below will override those specified in TypeDefaultPreferences
+    # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'ModulatoryMechanismClassPreferences',
+    #     PREFERENCE_SET_NAME: 'ModulatoryMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
     def __init__(self,

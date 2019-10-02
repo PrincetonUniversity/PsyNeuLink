@@ -83,10 +83,10 @@ class DefaultControlMechanism(ControlMechanism):
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # classPreferenceLevel = PreferenceLevel.TYPE
 
-    # Any preferences specified below will override those specified in TypeDefaultPreferences
+    # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to Type automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
+    #     PREFERENCE_SET_NAME: 'DefaultControlMechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
     from psyneulink.core.components.functions.transferfunctions import Linear

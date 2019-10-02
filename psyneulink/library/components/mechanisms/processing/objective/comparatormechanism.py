@@ -139,7 +139,7 @@ from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates
 from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.globals.context import Context, ContextFlags
-from psyneulink.core.globals.keywords import COMPARATOR_MECHANISM, FUNCTION, INPUT_STATES, NAME, OUTCOME, SAMPLE, TARGET, VARIABLE, kwPreferenceSetName
+from psyneulink.core.globals.keywords import COMPARATOR_MECHANISM, FUNCTION, INPUT_STATES, NAME, OUTCOME, SAMPLE, TARGET, VARIABLE, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -306,9 +306,9 @@ class ComparatorMechanism(ObjectiveMechanism):
     componentType = COMPARATOR_MECHANISM
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
-    # These will override those specified in TypeDefaultPreferences
+    # These will override those specified in TYPE_DEFAULT_PREFERENCES
     classPreferences = {
-        kwPreferenceSetName: 'ComparatorCustomClassPreferences',
+        PREFERENCE_SET_NAME: 'ComparatorCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     class Parameters(ObjectiveMechanism.Parameters):

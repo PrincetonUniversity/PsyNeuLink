@@ -50,10 +50,10 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
     onlyFunctionOnInit = True
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
-    # Any preferences specified below will override those specified in SubtypeDefaultPreferences
+    # Any preferences specified below will override those specified in SUBTYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to SUBTYPE automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'DefaultProcessingMechanismClassPreferences',
+    #     PREFERENCE_SET_NAME: 'DefaultProcessingMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
     class Parameters(Mechanism_Base.Parameters):

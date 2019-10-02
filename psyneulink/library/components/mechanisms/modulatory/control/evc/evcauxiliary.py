@@ -27,7 +27,7 @@ from psyneulink.core.components.mechanisms.processing.integratormechanism import
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION, defaultControlAllocation
 from psyneulink.core.globals.keywords import COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, FUNCTION, FUNCTION_PARAMS, NOISE, PREDICTION_MECHANISM, RATE, \
-    kwPreferenceSetName, kwProgressBarChar
+    PREFERENCE_SET_NAME, kwProgressBarChar
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -95,7 +95,7 @@ class EVCAuxiliaryFunction(Function_Base):
         variable = Parameter(None, read_only=True)
 
     classPreferences = {
-        kwPreferenceSetName: 'ValueFunctionCustomClassPreferences',
+        PREFERENCE_SET_NAME: 'ValueFunctionCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
        }
 

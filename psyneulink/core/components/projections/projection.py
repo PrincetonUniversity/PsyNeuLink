@@ -399,7 +399,7 @@ from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Pro
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.states.state import StateError
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATING, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, NAME, OUTPUT_STATE, OUTPUT_STATES, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, STANDARD_ARGS, STATE, STATES, WEIGHT, kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
+from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATING, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, NAME, OUTPUT_STATE, OUTPUT_STATES, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, STANDARD_ARGS, STATE, STATES, WEIGHT, ADD_INPUT_STATE, ADD_OUTPUT_STATE, PROJECTION_COMPONENT_CATEGORY
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
@@ -589,7 +589,7 @@ class Projection_Base(Projection):
 
     color = 0
 
-    componentCategory = kwProjectionComponentCategory
+    componentCategory = PROJECTION_COMPONENT_CATEGORY
     className = componentCategory
     suffix = " " + className
 
@@ -1973,7 +1973,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
                 - InputState object;
                 - index for Mechanism.input_states;
                 - name of an existing InputState (i.e., key for Mechanism.input_states);
-                - the keyword kwAddInputState or the name for an InputState to be added;
+                - the keyword ADD_INPUT_STATE or the name for an InputState to be added;
        * specification of ParameterState must be a ParameterState object
        * projection_spec can be any valid specification of a projection_spec
            (see `State._instantiate_projections_to_state`).
@@ -2029,8 +2029,8 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
                               format(projection_spec.name, state, receiver.name))
             # return
 
-    # input_state is either the name for a new InputState or kwAddNewInputState
-    if not state is kwAddInputState:
+    # input_state is either the name for a new InputState or ADD_INPUT_STATE
+    if not state is ADD_INPUT_STATE:
         if receiver.prefs.verbosePref:
             reassign = input("\nAdd new InputState named {0} to {1} (as receiver for {2})? (y/n):".
                              format(input_state, receiver.name, projection_spec.name))
@@ -2077,7 +2077,7 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
             - OutputState object
             - index for Mechanism OutputStates OrderedDict
             - name of OutputState (i.e., key for Mechanism.OutputStates OrderedDict))
-            - the keyword kwAddOutputState or the name for an OutputState to be added
+            - the keyword ADD_OUTPUT_STATE or the name for an OutputState to be added
 
     Args:
         sender (Mechanism):
@@ -2140,8 +2140,8 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
                               format(projection_spec.name, state, sender.name))
             # return
 
-    # output_state is either the name for a new OutputState or kwAddNewOutputState
-    if not state is kwAddOutputState:
+    # output_state is either the name for a new OutputState or ADD_OUTPUT_STATE
+    if not state is ADD_OUTPUT_STATE:
         if sender.prefs.verbosePref:
             reassign = input("\nAdd new OutputState named {0} to {1} (as sender for {2})? (y/n):".
                              format(output_state, sender.name, projection_spec.name))

@@ -473,7 +473,7 @@ from psyneulink.core.globals.context import Context, ContextFlags, handle_extern
 from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, ENABLED, FUNCTION, FUNCTION_PARAMS, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, \
     MAPPING_PROJECTION, MATRIX, NAME, OBJECTIVE_MECHANISM, ORIGIN, PARAMETER_STATE, PATHWAY, SENDER, SINGLETON, \
-    TARGET, TERMINAL, kwProcessComponentCategory, kwReceiverArg
+    TARGET, TERMINAL, PROCESS_COMPONENT_CATEGORY, RECEIVER_ARG
 from psyneulink.core.globals.parameters import Defaults, Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -811,7 +811,7 @@ class Process(Process_Base):
 
     """
 
-    componentCategory = kwProcessComponentCategory
+    componentCategory = PROCESS_COMPONENT_CATEGORY
     className = componentCategory
     suffix = " " + className
     componentType = "Process"
@@ -819,9 +819,9 @@ class Process(Process_Base):
     registry = ProcessRegistry
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
-    # These will override those specified in TypeDefaultPreferences
+    # These will override those specified in TYPE_DEFAULT_PREFERENCES
     # classPreferences = {
-    #     kwPreferenceSetName: 'ProcessCustomClassPreferences',
+    #     PREFERENCE_SET_NAME: 'ProcessCustomClassPreferences',
     #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
     # Use inputValueSystemDefault as default input to process
 
@@ -1519,7 +1519,7 @@ class Process(Process_Base):
                                 )
                         # Check receiver arg
                         try:
-                            receiver_arg = item.init_args[kwReceiverArg]
+                            receiver_arg = item.init_args[RECEIVER_ARG]
                         except AttributeError:
                             raise ProcessError(
                                 "PROGRAM ERROR: initialization_status of {} is {} "
@@ -1531,14 +1531,14 @@ class Process(Process_Base):
                             raise ProcessError(
                                 "PROGRAM ERROR: initialization_status of {} is {} "
                                 "but init_args does not have entry for {}".format(
-                                    item.init_args[NAME], ContextFlags.DEFERRED_INIT, kwReceiverArg
+                                    item.init_args[NAME], ContextFlags.DEFERRED_INIT, RECEIVER_ARG
                                 )
                             )
                         else:
                             # If receiver is not specified for the Projection,
                             #    assign mechanism that follows it in the pathway
                             if receiver_arg is None:
-                                item.init_args[kwReceiverArg] = receiver_mech
+                                item.init_args[RECEIVER_ARG] = receiver_mech
                             elif receiver_arg is not receiver_mech:
                                 raise ProcessError(
                                     "Receiver of Projection ({}) specified in item {} of"

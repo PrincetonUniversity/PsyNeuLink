@@ -12,7 +12,7 @@
 
 import inspect
 
-from psyneulink.core.globals.keywords import NAME, kwPrefLevel, kwPrefsOwner
+from psyneulink.core.globals.keywords import NAME, PREF_LEVEL, PREFS_OWNER
 from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpLogPref, kpParamValidationPref, kpReportOutputPref, kpRuntimeParamModulationPref, kpVerbosePref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.utilities import Modulation
@@ -75,7 +75,7 @@ class MechanismPreferenceSet(ComponentPreferenceSet):
                  **kargs):
         if kargs:
             try:
-                owner = kargs[kwPrefsOwner]
+                owner = kargs[PREFS_OWNER]
             except (KeyError, NameError):
                 pass
             try:
@@ -103,7 +103,7 @@ class MechanismPreferenceSet(ComponentPreferenceSet):
             except (KeyError, NameError):
                 pass
             try:
-                level = kargs[kwPrefLevel]
+                level = kargs[PREF_LEVEL]
             except (KeyError, NameError):
                 pass
 

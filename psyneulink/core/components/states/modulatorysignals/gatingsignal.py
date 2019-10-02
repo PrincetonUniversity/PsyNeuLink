@@ -419,10 +419,10 @@ class GatingSignal(ControlSignal):
     modulators = []
 
     classPreferenceLevel = PreferenceLevel.TYPE
-    # Any preferences specified below will override those specified in TypeDefaultPreferences
+    # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'OutputStateCustomClassPreferences',
+    #     PREFERENCE_SET_NAME: 'OutputStateCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
     class Parameters(ControlSignal.Parameters):

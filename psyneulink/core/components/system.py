@@ -459,7 +459,7 @@ from psyneulink.core.globals.keywords import \
     ALL, BOLD, COMPONENT, CONDITION, CONTROL, CONTROLLER, CYCLE, FUNCTION, FUNCTIONS, \
     INITIALIZE_CYCLE, INITIAL_VALUES, INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, \
     OBJECTIVE_MECHANISM, ORIGIN, OUTCOME, PROJECTIONS, ROLES, SAMPLE, SINGLETON, TARGET, TERMINAL, VALUES, \
-    kwSystemComponentCategory
+    SYSTEM_COMPONENT_CATEGORY
 from psyneulink.core.globals.log import Log
 from psyneulink.core.globals.parameters import Defaults, Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -841,7 +841,7 @@ class System(System_Base):
 
     """
 
-    componentCategory = kwSystemComponentCategory
+    componentCategory = SYSTEM_COMPONENT_CATEGORY
     className = componentCategory
     suffix = " " + className
     componentType = "System"
@@ -849,9 +849,9 @@ class System(System_Base):
     registry = SystemRegistry
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
-    # These will override those specified in CategoryDefaultPreferences
+    # These will override those specified in CATEGORY_DEFAULT_PREFERENCES
     # classPreferences = {
-    #     kwPreferenceSetName: 'SystemCustomClassPreferences',
+    #     PREFERENCE_SET_NAME: 'SystemCustomClassPreferences',
     #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
     # classPreferences = {
     #     kwReportSimulationPref: 'SystemCustomClassPreferences',

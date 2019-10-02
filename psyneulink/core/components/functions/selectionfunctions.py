@@ -33,7 +33,7 @@ from psyneulink.core.components.functions.function import Function, Function_Bas
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, MULTIPLICATIVE_PARAM, MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, \
     MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR, \
-    MODE, ONE_HOT_FUNCTION, PARAMETER_STATE_PARAMS, PROB, PROB_INDICATOR, SELECTION_FUNCTION_TYPE, kwPreferenceSetName
+    MODE, ONE_HOT_FUNCTION, PARAMETER_STATE_PARAMS, PROB, PROB_INDICATOR, SELECTION_FUNCTION_TYPE, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import \
@@ -189,7 +189,7 @@ class OneHot(SelectionFunction):
     bounds = None
 
     classPreferences = {
-        kwPreferenceSetName: 'OneHotClassPreferences',
+        PREFERENCE_SET_NAME: 'OneHotClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 

@@ -961,7 +961,7 @@ from psyneulink.core.globals.keywords import \
     MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, MULTIPLICATIVE_PARAM, \
     OUTPUT_LABELS_DICT, OUTPUT_STATE, OUTPUT_STATES, OWNER_EXECUTION_COUNT, OWNER_EXECUTION_TIME, OWNER_VALUE, \
     PARAMETER_STATE, PARAMETER_STATES, PREVIOUS_VALUE, PROJECTIONS, REFERENCE_VALUE, \
-    TARGET_LABELS_DICT, VALUE, VARIABLE, kwMechanismComponentCategory
+    TARGET_LABELS_DICT, VALUE, VARIABLE, MECHANISM_COMPONENT_CATEGORY
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.scheduling.condition import Condition
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -1061,8 +1061,6 @@ class Mechanism_Base(Mechanism):
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
             + class_defaults.variable (list)
             + paramClassDefaults (dict):
-                + [TBI: kwMechanismExecutionSequenceTemplate (list of States):
-                    specifies order in which types of States are executed;  used by self.execute]
             + default_mechanism (str): Currently DDM_MECHANISM (class reference resolved in __init__.py)
 
         Class methods
@@ -1311,49 +1309,9 @@ class Mechanism_Base(Mechanism):
     """
 
     # CLASS ATTRIBUTES
-    componentCategory = kwMechanismComponentCategory
+    componentCategory = MECHANISM_COMPONENT_CATEGORY
     className = componentCategory
     suffix = " " + className
-
-    class Parameters(Mechanism.Parameters):
-        """
-            Attributes
-            ----------
-
-                variable
-                    see `variable <Mechanism_Base.variable>`
-
-                    :default value: numpy.array([[0]])
-                    :type: numpy.ndarray
-                    :read only: True
-
-                value
-                    see `value <Mechanism_Base.value>`
-
-                    :default value: numpy.array([[0]])
-                    :type: numpy.ndarray
-                    :read only: True
-
-                function
-                    see `function <Mechanism_Base.function>`
-
-                    :default value: `Linear`
-                    :type: `Function`
-
-                previous_value
-                    see `previous_value <Mechanism_Base.previous_value>`
-
-                    :default value: None
-                    :type:
-                    :read only: True
-
-        """
-        variable = Parameter(np.array([[0]]), read_only=True)
-        value = Parameter(np.array([[0]]), read_only=True)
-        previous_value = Parameter(None, read_only=True)
-        function = Linear
-
-        input_state_variables = Parameter(None, read_only=True, user=False, getter=_input_state_variables_getter)
 
     registry = MechanismRegistry
 
@@ -1361,7 +1319,7 @@ class Mechanism_Base(Mechanism):
     # Any preferences specified below will override those specified in CategoryDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to CATEGORY automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'MechanismCustomClassPreferences',
+    #     PREFERENCE_SET_NAME: 'MechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
     # Class-specific loggable items
@@ -1406,11 +1364,47 @@ class Mechanism_Base(Mechanism):
         INPUT_LABELS_DICT: {},
         TARGET_LABELS_DICT: {},
         OUTPUT_LABELS_DICT: {}
-        # TBI - kwMechanismExecutionSequenceTemplate: [
-        #     Components.States.InputState.InputState,
-        #     Components.States.ParameterState.ParameterState,
-        #     Components.States.OutputState.OutputState]
         })
+
+    class Parameters(Mechanism.Parameters):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <Mechanism_Base.variable>`
+
+                    :default value: numpy.array([[0]])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                value
+                    see `value <Mechanism_Base.value>`
+
+                    :default value: numpy.array([[0]])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                function
+                    see `function <Mechanism_Base.function>`
+
+                    :default value: `Linear`
+                    :type: `Function`
+
+                previous_value
+                    see `previous_value <Mechanism_Base.previous_value>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+        """
+        variable = Parameter(np.array([[0]]), read_only=True)
+        value = Parameter(np.array([[0]]), read_only=True)
+        previous_value = Parameter(None, read_only=True)
+        function = Linear
+
+        input_state_variables = Parameter(None, read_only=True, user=False, getter=_input_state_variables_getter)
 
     # def __new__(cls, *args, **kwargs):
     # def __new__(cls, name=NotImplemented, params=NotImplemented, context=None):

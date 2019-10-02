@@ -421,11 +421,12 @@ from psyneulink.core.globals.keywords import \
     COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, \
     FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, \
     LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, \
-    PARAMS, PARAMS_CURRENT, PREFS_ARG, REINITIALIZE_WHEN, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
+    PARAMS, PARAMS_CURRENT, PREFS_ARG, REINITIALIZE_WHEN, SIZE, USER_PARAMS, VALUE, VARIABLE, FUNCTION_COMPONENT_CATEGORY
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase
 from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
-from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
+from psyneulink.core.globals.preferences.preferenceset import \
+    PreferenceEntry, PreferenceLevel, PreferenceSet, _assign_prefs
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared, is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, unproxy_weakproxy
 from psyneulink.core.scheduling.condition import Never
@@ -912,16 +913,16 @@ class Component(object, metaclass=ComponentsMeta):
     initMethod = INIT_FULL_EXECUTE_METHOD
 
     classPreferenceLevel = PreferenceLevel.SYSTEM
-    # Any preferences specified below will override those specified in SystemDefaultPreferences
+    # Any preferences specified below will override those specified in SYSTEM_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to SYSTEM automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'ComponentCustomClassPreferences',
+    #     PREFERENCE_SET_NAME: 'ComponentCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
     # Names and types of params required to be implemented in all subclass paramClassDefaults:
     # Notes:
     # *  entry values here do NOT implement the param; they are simply used as type specs for checking (in __init__)
-    # * kwComponentCategory (below) is used as placemarker for Component.Function class; replaced in __init__ below
+    # * FUNCTION_COMPONENT_CATEGORY (below) is used as placemarker for Component.Function class; replaced in __init__ below
     #              (can't reference own class directly class block)
     requiredParamClassDefaultTypes = {}
 
@@ -1017,17 +1018,22 @@ class Component(object, metaclass=ComponentsMeta):
         # ASSIGN PREFS
 
         # If a PreferenceSet was provided, assign to instance
-        if isinstance(prefs, PreferenceSet):
-            self.prefs = prefs
-            # FIX:  CHECK LEVEL HERE??  OR DOES IT NOT MATTER, AS OWNER WILL BE ASSIGNED DYNAMICALLY??
-        # Otherwise, if prefs is a specification dict instantiate it, or if it is None assign defaults
-        else:
-            self.prefs = ComponentPreferenceSet(owner=self, prefs=prefs, context=context)
-        try:
-            # assign log conditions from preferences
-            self.parameters.value.log_condition = self.prefs._log_pref.setting
-        except AttributeError:
-            pass
+        # If a PreferenceSet was provided, assign to instance
+        _assign_prefs(self, prefs, ComponentPreferenceSet)
+
+        # # MODIFIED 9/30/19 OLD:
+        # if isinstance(prefs, PreferenceSet):
+        #     self.prefs = prefs
+        #     # FIX:  CHECK LEVEL HERE??  OR DOES IT NOT MATTER, AS OWNER WILL BE ASSIGNED DYNAMICALLY??
+        # # Otherwise, if prefs is a specification dict instantiate it, or if it is None assign defaults
+        # else:
+        #     self.prefs = ComponentPreferenceSet(owner=self, prefs=prefs, context=context)
+        # try:
+        #     # assign log conditions from preferences
+        #     self.parameters.value.log_condition = self.prefs._log_pref.setting
+        # except AttributeError:
+        #     pass
+        # MODIFIED 9/30/19 END
 
         # ASSIGN LOG
         from psyneulink.core.globals.log import Log
@@ -1044,10 +1050,10 @@ class Component(object, metaclass=ComponentsMeta):
             # # Replace 'Function' placemarker with class reference:
             # type_requirements = [self.__class__ if item=='Function' else item for item in type_requirements]
 
-            # get type for kwComponentCategory specification
+            # get type for FUNCTION_COMPONENT_CATEGORY specification
             from psyneulink.core.components.functions.function import Function_Base
-            if kwComponentCategory in type_requirements:
-               type_requirements[type_requirements.index(kwComponentCategory)] = \
+            if FUNCTION_COMPONENT_CATEGORY in type_requirements:
+               type_requirements[type_requirements.index(FUNCTION_COMPONENT_CATEGORY)] = \
                    type(Function_Base)
 
             if required_param not in self.paramClassDefaults.keys():

@@ -78,7 +78,7 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    DEFAULT_VARIABLE, INTEGRATOR_MECHANISM, RESULTS, VARIABLE, kwPreferenceSetName
+    DEFAULT_VARIABLE, INTEGRATOR_MECHANISM, RESULTS, VARIABLE, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -183,9 +183,9 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     componentType = INTEGRATOR_MECHANISM
 
     classPreferenceLevel = PreferenceLevel.TYPE
-    # These will override those specified in TypeDefaultPreferences
+    # These will override those specified in TYPE_DEFAULT_PREFERENCES
     classPreferences = {
-        kwPreferenceSetName: 'IntegratorMechanismCustomClassPreferences',
+        PREFERENCE_SET_NAME: 'IntegratorMechanismCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     class Parameters(ProcessingMechanism_Base.Parameters):

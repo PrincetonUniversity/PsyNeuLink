@@ -817,9 +817,9 @@ class TransferMechanism(ProcessingMechanism_Base):
     componentType = TRANSFER_MECHANISM
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
-    # These will override those specified in TypeDefaultPreferences
+    # These will override those specified in TYPE_DEFAULT_PREFERENCES
     # classPreferences = {
-    #     kwPreferenceSetName: 'TransferCustomClassPreferences',
+    #     PREFERENCE_SET_NAME: 'TransferCustomClassPreferences',
     #     # kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     #     }
 

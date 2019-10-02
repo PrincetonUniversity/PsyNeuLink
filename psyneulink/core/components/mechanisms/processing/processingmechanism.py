@@ -96,7 +96,7 @@ import typecheck as tc
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONTEXT, PROCESSING_MECHANISM, kwPreferenceSetName
+from psyneulink.core.globals.keywords import CONTEXT, PROCESSING_MECHANISM, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -130,10 +130,10 @@ class ProcessingMechanism_Base(Mechanism_Base):
     is_self_learner = False  # CW 11/27/17: a flag; "True" if this mech learns on its own. See use in LeabraMechanism
 
     classPreferenceLevel = PreferenceLevel.TYPE
-    # Any preferences specified below will override those specified in TypeDefaultPreferences
+    # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'ProcessingMechanismClassPreferences',
+    #     PREFERENCE_SET_NAME: 'ProcessingMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
     def __init__(self,
@@ -273,9 +273,9 @@ class ProcessingMechanism(ProcessingMechanism_Base):
     # MODIFIED 9/22/19 END
 
     classPreferenceLevel = PreferenceLevel.TYPE
-    # These will override those specified in TypeDefaultPreferences
+    # These will override those specified in TYPE_DEFAULT_PREFERENCES
     classPreferences = {
-        kwPreferenceSetName: 'ProcessingMechanismCustomClassPreferences',
+        PREFERENCE_SET_NAME: 'ProcessingMechanismCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()

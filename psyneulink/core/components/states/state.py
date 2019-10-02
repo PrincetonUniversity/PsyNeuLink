@@ -760,7 +760,7 @@ from psyneulink.core.globals.keywords import \
     PROJECTION_DIRECTION, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, \
     RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, STANDARD_OUTPUT_STATES, \
     STATE, STATE_CONTEXT, STATE_NAME, STATE_PARAMS, STATE_PREFS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, WEIGHT, \
-    kwStateComponentCategory
+    STATE_COMPONENT_CATEGORY
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.componentpreferenceset import kpVerbosePref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -1017,7 +1017,7 @@ class State_Base(State):
 
     """
 
-    componentCategory = kwStateComponentCategory
+    componentCategory = STATE_COMPONENT_CATEGORY
     className = STATE
     suffix = " " + className
     paramsType = None
@@ -2646,7 +2646,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
     # INSTANTIATE STATE:
 
     # IMPLEMENTATION NOTE:
-    # - setting prefs=NotImplemented causes TypeDefaultPreferences to be assigned (from ComponentPreferenceSet)
+    # - setting prefs=NotImplemented causes TYPE_DEFAULT_PREFERENCES to be assigned (from ComponentPreferenceSet)
     # - alternative would be prefs=owner.prefs, causing state to inherit the prefs of its owner;
     state_type = state_spec_dict.pop(STATE_TYPE, None)
     if REFERENCE_VALUE_NAME in state_spec_dict:

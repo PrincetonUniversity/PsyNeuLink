@@ -58,7 +58,7 @@ from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, kwPreferenceSetName
+from psyneulink.core.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, PREFERENCE_SET_NAME
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
@@ -133,9 +133,9 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     outputStateTypes = [OutputState, ControlSignal]
 
     classPreferenceLevel = PreferenceLevel.TYPE
-    # These will override those specified in TypeDefaultPreferences
+    # These will override those specified in TYPE_DEFAULT_PREFERENCES
     classPreferences = {
-        kwPreferenceSetName: 'CompositionInterfaceMechanismCustomClassPreferences',
+        PREFERENCE_SET_NAME: 'CompositionInterfaceMechanismCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()

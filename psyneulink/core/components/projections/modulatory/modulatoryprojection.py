@@ -82,7 +82,7 @@ Class Reference
 """
 
 from psyneulink.core.components.projections.projection import Projection_Base
-from psyneulink.core.globals.keywords import EXECUTING, INITIALIZATION_STATUS, INITIALIZING, MODULATORY_PROJECTION, NAME, kwAssign
+from psyneulink.core.globals.keywords import EXECUTING, INITIALIZATION_STATUS, INITIALIZING, MODULATORY_PROJECTION, NAME
 from psyneulink.core.globals.log import ContextFlags, LogEntry
 
 

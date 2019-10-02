@@ -1130,6 +1130,8 @@ from psyneulink.core.globals.utilities import ContentAddressableList, NodeRole, 
 from psyneulink.core.scheduling.condition import All, Always, Condition, EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
+from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, PreferenceSet, _assign_prefs
+from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism, MSE
 from psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism import PredictionErrorMechanism
@@ -1443,8 +1445,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Arguments
         ---------
 
-        name: str
-
         controller:   `OptimizationControlmechanism` : default None
             specifies the `OptimizationControlMechanism` to use as the Composition's `controller
             <Composition.controller>` (see `Composition_Controller` for details).
@@ -1465,6 +1465,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when it is
             executed.
 
+        name : str : default see `name <Composition.name>`
+            specifies the name of the Composition.
+
+        prefs : PreferenceSet or specification dict : default Composition.classPreferences
+            specifies the `PreferenceSet` for the Composition; see `prefs <Composition.prefs>` for details.
 
         Attributes
         ----------
@@ -1572,17 +1577,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if True, all Parameter values generated during simulations will be saved for later inspection;
             if False, simulation values will be deleted unless otherwise specified by individual Parameters
 
-        COMMENT:
         name : str
-            see `name <Composition_Name>`
+            the name of the Composition; if it is not specified in the **name** argument of the constructor, a default
+            is assigned by CompositionRegistry (see `Naming` for conventions used for default and duplicate names).
 
-        prefs : PreferenceSet
-            see `prefs <Composition_Prefs>`
-        COMMENT
+        prefs : PreferenceSet or specification dict
+            the `PreferenceSet` for the Composition; if it is not specified in the **prefs** argument of the
+            constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+            <LINK>` for details).
 
     """
     # Composition now inherits from Component, so registry inherits name None
     componentType = 'Composition'
+    classPreferenceLevel = PreferenceLevel.CATEGORY
 
     class Parameters(ParametersBase):
         """
@@ -1628,6 +1635,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             controller_condition:Condition=Always(),
             enable_learning=False,
             retain_old_simulation_data=None,
+            prefs=None,
             **param_defaults
     ):
         # also sets name
@@ -1659,12 +1667,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.parameter_CIM_states = {}
 
         self.shadows = {}
-
-        # self.enable_controller = enable_controller
-        # self.controller = controller
-        # self.controller_mode = controller_mode
-        # self.controller_condition = controller_condition
-        # self.controller_condition.owner = self.controller
 
         self.default_execution_id = self.name
         self.execution_ids = {self.default_execution_id}
@@ -1699,6 +1701,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.__generated_sim_run = None
 
         self._compilation_data = self._CompilationData(owner=self)
+
+        # If a PreferenceSet was provided, assign to instance
+        _assign_prefs(self, prefs, ComponentPreferenceSet)
 
         self.log = CompositionLog(owner=self)
         self._terminal_backprop_sequences = {}
@@ -1790,11 +1795,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except AttributeError:
                 pass
 
-        self._check_feedback(scheduler)
+        self._check_feedback(scheduler=scheduler, context=context)
         self._determine_node_roles(context=context)
-        self._create_CIM_states(context)
-        self._update_shadow_projections()
-        self._check_for_projection_assignments()
+        self._create_CIM_states(context=context)
+        self._update_shadow_projections(context=context)
+        self._check_for_projection_assignments(context=context)
         self.needs_update_graph = False
 
     def _update_processing_graph(self):
@@ -2720,11 +2725,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         receiver_check.afferents.remove(proj)
                 else:
                 #  Need to do stuff at end, so can't just return
-                # # FIX: 9/30/19 ADD TEST FOR THIS:
-                # if self.verbosePref:
-                #     warnings.warn(f"Several existing projections were identified between "
-                #                   f"{sender.name} and {receiver.name}: {[p.name for p in existing_projections]}; "
-                #                   f"the last of these will be used in {self.name}.")
+                    if self.prefs.verbosePref:
+                        warnings.warn(f"Several existing projections were identified between "
+                                      f"{sender.name} and {receiver.name}: {[p.name for p in existing_projections]}; "
+                                      f"the last of these will be used in {self.name}.")
                     projection = existing_projections[-1]
 
         # FIX: 9/30/19 - Why is this not an else?
@@ -3035,7 +3039,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.add_projection(new_projection, sender=correct_sender, receiver=input_state)
         return original_senders
 
-    def _update_shadow_projections(self):
+    def _update_shadow_projections(self, context=None):
         for node in self.nodes:
             for input_state in node.input_states:
                 if input_state.shadow_inputs:
@@ -3048,7 +3052,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if len(self.get_roles_by_node(node)) == 0:
                 self._add_node_role(node, NodeRole.INTERNAL)
 
-    def _check_for_projection_assignments(self):
+    def _check_for_projection_assignments(self, context=None):
         """Check that all Projections and States with require_projection_in_composition attribute are configured.
 
         Validate that all InputStates with require_projection_in_composition == True have an afferent Projection.
@@ -3082,8 +3086,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        receiver=None,
                                        in_composition:bool=True):
         """Check for Projection with same sender and receiver
-        If **in_composition** is True, only return Projection found in the current Composition
-        If **in_composition** is False, return any Projections that are found
+        If **in_composition** is True, return only Projections found in the current Composition
+        If **in_composition** is False, return only Projections that are found outside the current Composition
         
         Return Projection or list of Projections that satisfies the conditions, else False
         """
@@ -3111,16 +3115,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if existing_projections_in_composition:
                 return existing_projections_in_composition[0]
         else:
-            # # MODIFIED 9/30/19 OLD:
-            # if existing_projections:
-            # MODIFIED 9/30/19 NEW: [JDC]
             if existing_projections and not existing_projections_in_composition:
-            # MODIFIED 9/30/19 END
                 return existing_projections
         return False
-        # MODIFIED 9/29/19 END
 
-    def _check_feedback(self, scheduler):
+    def _check_feedback(self, scheduler, context=None):
         """Check that feedback specification is required for projections to which it has been assigned
         Note:
         - graph_processing and graph_processing.dependency_dict are used as indications of structural dependencies

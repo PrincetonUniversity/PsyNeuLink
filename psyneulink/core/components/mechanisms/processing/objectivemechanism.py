@@ -365,7 +365,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     CONTEXT, CONTROL, EXPONENT, EXPONENTS, FUNCTION, LEARNING, MATRIX, NAME, \
     OBJECTIVE_MECHANISM, OUTCOME, PARAMS, PROJECTION, PROJECTIONS, STATE_TYPE, VARIABLE, WEIGHT, WEIGHTS, \
-    kwPreferenceSetName
+    PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -568,9 +568,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     componentType = OBJECTIVE_MECHANISM
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
-    # These will override those specified in TypeDefaultPreferences
+    # These will override those specified in TYPE_DEFAULT_PREFERENCES
     classPreferences = {
-        kwPreferenceSetName: 'ObjectiveCustomClassPreferences',
+        PREFERENCE_SET_NAME: 'ObjectiveCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     # class_defaults.variable = None;  Must be specified using either **input_states** or **monitor**

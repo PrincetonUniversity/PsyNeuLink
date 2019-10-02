@@ -15,12 +15,12 @@ from collections import namedtuple
 from enum import Enum, IntEnum
 
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import kwDefaultPreferenceSetOwner, kwPreferenceSetName
+from psyneulink.core.globals.keywords import DEFAULT_PREFERENCE_SET_OWNER, PREFERENCE_SET_NAME
 from psyneulink.core.globals.utilities import iscompatible, kwCompatibilityType
 
 __all__ = [
     'PreferenceEntry', 'PreferenceLevel', 'PreferenceSet', 'PreferenceSetError', 'PreferenceSetRegistry',
-    'PreferenceSetVerbosity',
+    'PreferenceSetVerbosity'
 ]
 
 PreferenceSetRegistry = {}
@@ -221,7 +221,7 @@ class PreferenceSet(object):
         # ****** FIX: 9/10/16: MOVE TO REGISTRY **********
 
         # FIX: MAKE SURE DEFAULT NAMING SCHEME WORKS WITH CLASSES - 5/30/16
-        # FIX: INTEGRATE WITH NAME FROM kwPreferenceSetName ENTRY IN DICT BELOW - 5/30/16
+        # FIX: INTEGRATE WITH NAME FROM PREFERENCE_SET_NAME ENTRY IN DICT BELOW - 5/30/16
 
         if not name:
             # Assign name of preference set class as base of name
@@ -307,7 +307,7 @@ class PreferenceSet(object):
                     else:
                         prefs.update(class_prefs)
                 for pref_key in default_prefs_dict:
-                    if pref_key is kwPreferenceSetName:
+                    if pref_key is PREFERENCE_SET_NAME:
                         continue
                     try:
                         # Get pref from prefs arg;                                             # Condition 4
@@ -609,7 +609,7 @@ class PreferenceSet(object):
         # Note:
         # * this prevents use of LogEntry attributes not recognized by, or having different values from
         #     the LogEntry class in the owner object's module
-        if (not pref_set.owner.name is kwDefaultPreferenceSetOwner and
+        if (not pref_set.owner.name is DEFAULT_PREFERENCE_SET_OWNER and
                 not candidate_log_class.__module__ is pref_set.owner.__module__):
             raise PreferenceSetError("Attempt to assign logPref setting for {0} using value ({1}) from LogEntry"
                                      " in {2} which is different than the one defined in Globals.Log"
@@ -833,3 +833,17 @@ class PreferenceSet(object):
     #             IMPLEMENT USING **{kwCompatibilityType in call to iscompatible)
     #                       BUT WILL NEED TO IMPLEMENT SUPPORT FOR *LIST* OF TYPES FOR kwCompatibilityType
 
+
+def _assign_prefs(object, prefs, prefs_class:PreferenceSet):
+
+        if isinstance(prefs, PreferenceSet):
+            object.prefs = prefs
+            # FIX:  CHECK LEVEL HERE??  OR DOES IT NOT MATTER, AS OWNER WILL BE ASSIGNED DYNAMICALLY??
+        # Otherwise, if prefs is a specification dict instantiate it, or if it is None assign defaults
+        else:
+            object.prefs = prefs_class(owner=object, prefs=prefs)
+        try:
+            # assign log conditions from preferences
+            object.parameters.value.log_condition = object.prefs._log_pref.setting
+        except AttributeError:
+            pass

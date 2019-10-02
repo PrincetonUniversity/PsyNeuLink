@@ -148,7 +148,7 @@ from psyneulink.core.components.shellclasses import Function, Mechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ARGUMENT_THERAPY_FUNCTION, EXAMPLE_FUNCTION_TYPE, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION,\
-    NAME, PARAMETER_STATE_PARAMS, kwComponentCategory, kwPreferenceSetName
+    NAME, PARAMETER_STATE_PARAMS, FUNCTION_COMPONENT_CATEGORY, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -350,7 +350,7 @@ class Function_Base(Function):
             Function functions are named by their componentName attribute (usually = componentType)
 
         Class attributes:
-            + componentCategory: kwComponentCategory
+            + componentCategory: FUNCTION_COMPONENT_CATEGORY
             + className (str): kwMechanismFunctionCategory
             + suffix (str): " <className>"
             + registry (dict): FunctionRegistry
@@ -434,7 +434,7 @@ class Function_Base(Function):
 
     """
 
-    componentCategory = kwComponentCategory
+    componentCategory = FUNCTION_COMPONENT_CATEGORY
     className = componentCategory
     suffix = " " + className
 
@@ -783,7 +783,7 @@ class ArgumentTherapy(Function_Base):
     componentType = EXAMPLE_FUNCTION_TYPE
 
     classPreferences = {
-        kwPreferenceSetName: 'ExampleClassPreferences',
+        PREFERENCE_SET_NAME: 'ExampleClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
@@ -957,7 +957,7 @@ class EVCAuxiliaryFunction(Function_Base):
         variable = None
 
     classPreferences = {
-        kwPreferenceSetName: 'ValueFunctionCustomClassPreferences',
+        PREFERENCE_SET_NAME: 'ValueFunctionCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
        }
 

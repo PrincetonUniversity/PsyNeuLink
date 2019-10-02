@@ -534,10 +534,10 @@ class ParameterState(State_Base):
     canReceive = modulators
 
     classPreferenceLevel = PreferenceLevel.TYPE
-    # Any preferences specified below will override those specified in TypeDefaultPreferences
+    # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'ParameterStateCustomClassPreferences',
+    #     PREFERENCE_SET_NAME: 'ParameterStateCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()

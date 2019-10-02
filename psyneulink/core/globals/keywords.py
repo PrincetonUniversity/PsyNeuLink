@@ -62,19 +62,6 @@ __all__ = [
     'INPUTS_DIM', 'INSTANTANEOUS_MODE_VALUE', 'INTEGRATION_TYPE', 'INTEGRATOR_FUNCTION', 'INTEGRATOR_FUNCTION',
     'INTEGRATOR_FUNCTION_TYPE', 'INTEGRATOR_MECHANISM', 'INTEGRATOR_MODE_VALUE', 'INTERCEPT', 'INTERNAL',
     'INTERNAL_ONLY', 'K_VALUE', 'KOHONEN_FUNCTION', 'KOHONEN_MECHANISM', 'KOHONEN_LEARNING_MECHANISM', 'KWTA_MECHANISM',
-    'kpMechanismControlAllocationsLogEntry', 'kpMechanismExecutedLogEntry', 'kpMechanismInputLogEntry',
-    'kpMechanismOutputLogEntry', 'kpMechanismTimeScaleLogEntry', 'kwAddInputState', 'kwAddOutputState',
-    'kwAggregate', 'kwAssign', 'kwComponentCategory', 'kwComponentPreferenceSet', 'kwDefaultPreferenceSetOwner',
-    'kwInitialPoint', 'kwInstantiate', 'kwMechanismAdjustFunction', 'kwMechanismComponentCategory',
-    'kwMechanismConfidence', 'kwMechanismDefault', 'kwMechanismDefaultInputValue', 'kwMechanismDefaultParams',
-    'kwMechanismDuration', 'kwMechanismExecuteFunction', 'kwMechanismExecutionSequenceTemplate',
-    'kwMechanismInterrogateFunction', 'kwMechanismName', 'kwMechanismOutputValue', 'kwMechanismParams',
-    'kwMechanismParamValue', 'kwMechanismPerformance', 'kwMechanismTerminateFunction', 'kwMechanismType', 'kwParams',
-    'kwPrefBaseValue', 'kwPrefCurrentValue', 'kwPreferenceSet', 'kwPreferenceSetName', 'kwPrefLevel', 'kwPrefs',
-    'kwPrefsOwner', 'kwProcessComponentCategory', 'kwProcessDefaultMechanism', 'kwProcessDefaultProjectionFunction',
-    'kwProcessExecute', 'kwProgressBarChar', 'kwProjectionComponentCategory', 'kwProjectionReceiver', 'kwProjections',
-    'kwReceiverArg', 'kwSeparator', 'kwStateComponentCategory',
-    'kwSystemComponentCategory', 'kwThreshold',
     'LABELS', 'LCA_MECHANISM', 'LEAKY_COMPETING_INTEGRATOR_FUNCTION', 'LEAK', 'LEARNING', 'LEARNED_PARAM',
     'LEARNED_PROJECTION', 'LEARNING_FUNCTION_TYPE', 'LEARNING_MECHANISM', 'LEARNING_PROJECTION',
     'LEARNING_PROJECTION_PARAMS', 'LEARNING_RATE', 'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS', 'LEARNING_SIGNALS',
@@ -113,7 +100,19 @@ __all__ = [
     'TRIAL', 'TRIALS_DIM',
     'UNCHANGED', 'UNIFORM_DIST_FUNCTION', 'USER_DEFINED_FUNCTION', 'USER_DEFINED_FUNCTION_TYPE', 'USER_PARAMS',
     'VALUES', 'VALIDATE', 'VALIDATION', 'VALUE', 'VALUE_ASSIGNMENT', 'VALUE_FUNCTION', 'VARIABLE', 'VARIANCE',
-    'VECTOR', 'WALD_DIST_FUNCTION', 'WEIGHT', 'WEIGHTS', 'X_0'
+    'VECTOR', 'WALD_DIST_FUNCTION', 'WEIGHT', 'WEIGHTS', 'X_0',
+    'kpMechanismControlAllocationsLogEntry', 'MECHANISM_EXECUTED_LOG_ENTRY', 'kpMechanismInputLogEntry',
+    'kpMechanismOutputLogEntry', 'kpMechanismTimeScaleLogEntry', 'ADD_INPUT_STATE', 'ADD_OUTPUT_STATE',
+    'kwAggregate', 'FUNCTION_COMPONENT_CATEGORY', 'COMPONENT_PREFERENCE_SET', 'DEFAULT_PREFERENCE_SET_OWNER',
+    'MECHANISM_COMPONENT_CATEGORY',
+    'MECHANISM_DEFAULT', 'MECHANISM_DEFAULTInputValue', 'MECHANISM_DEFAULTParams',
+    'MECHANISM_NAME',
+    'MECHANISM_PARAM_VALUE', 'MECHANISM_TYPE', 'kwParams',
+    'PREF_BASE_VALUE', 'PREF_CURRENT_VALUE', 'PREFERENCE_SET', 'PREFERENCE_SET_NAME', 'PREF_LEVEL', 'PREFS',
+    'PREFS_OWNER', 'PROCESS_COMPONENT_CATEGORY', 'PROCESS_DEFAULT_MECHANISM', 'PROCESS_DEFAULT_PROJECTION_FUNCTION',
+    'PROCESS_EXECUTE', 'kwProgressBarChar', 'PROJECTION_COMPONENT_CATEGORY',
+    'RECEIVER_ARG', 'kwSeparator', 'STATE_COMPONENT_CATEGORY',
+    'SYSTEM_COMPONENT_CATEGORY',
 ]
 
 
@@ -387,9 +386,7 @@ EXECUTION_PHASE = 'execution_phase'
 SOURCE = 'source'
 INITIALIZING = " INITIALIZING "  # Used as status and context for Log
 INITIALIZED = " INITIALIZED "  # Used as status
-kwInstantiate = " INSTANTIATING "  # Used as context for Log
 EXECUTING = " EXECUTING " # Used in context for Log and ReportOutput pref
-kwAssign = '| Assign' # Used in context for Log
 ASSIGN_VALUE = ': Assign value'
 kwAggregate = ': Aggregate' # Used in context for Log
 VALIDATE = 'Validate'
@@ -417,22 +414,20 @@ EID_FROZEN = '-frozen'
 
 #region -------------------------------------------    Preferences    --------------------------------------------------
 
-kwPrefs = "Prefs"
-kwPrefsOwner = "kwPrefsOwner"
-kwPrefLevel = 'kwPrefLevel'
-kwPrefCurrentValue = 'kwPrefCurrentValue'
-kwPrefBaseValue = 'kwPrefBaseValue'
-kwPreferenceSetName = 'kwPreferenceSetName'
-kwDefaultPreferenceSetOwner = 'DefaultPreferenceSetOwner'
-# kpLogPref = '_log_pref'
-# kpParamValidationPref = '_param_validation_pref'
-# kpVerbosePref = '_verbose_pref'
+PREFS = "Prefs"
+PREFS_OWNER = "PrefsOwner"
+PREF_LEVEL = 'PrefLevel'
+PREF_CURRENT_VALUE = 'PrefCurrentValue'
+PREF_BASE_VALUE = 'PrefBaseValue'
+PREFERENCE_SET_NAME = 'PreferenceSetName'
+DEFAULT_PREFERENCE_SET_OWNER = 'DefaultPreferenceSetOwner'
 #endregion
 
 #region --------------------------------------------    PREFERENCES    -------------------------------------------------
 
-kwPreferenceSet = 'PreferenceSet'
-kwComponentPreferenceSet = 'PreferenceSet'
+PREFERENCE_SET = 'PreferenceSet'
+COMPONENT_PREFERENCE_SET = 'ComponentPreferenceSet'
+# COMPONENT_PREFERENCE_SET = 'PreferenceSet'
 #endregion
 
 #region ------------------------------------------------   LOG    ------------------------------------------------------
@@ -512,12 +507,12 @@ FUNCTION_OUTPUT_TYPE_CONVERSION = "enable_output_type_conversion"  # Used in Fun
 
 # Component Categories   -----------------
 
-kwSystemComponentCategory = "System"
-kwProcessComponentCategory = "Process"
-kwMechanismComponentCategory = "Mechanism_Base"
-kwStateComponentCategory = "State_Base"
-kwProjectionComponentCategory = "Projection_Base"
-kwComponentCategory = "Function_Base"
+SYSTEM_COMPONENT_CATEGORY = "System"
+PROCESS_COMPONENT_CATEGORY = "Process"
+MECHANISM_COMPONENT_CATEGORY = "Mechanism_Base"
+STATE_COMPONENT_CATEGORY = "State_Base"
+PROJECTION_COMPONENT_CATEGORY = "Projection_Base"
+FUNCTION_COMPONENT_CATEGORY = "Function_Base"
 
 # Component TYPES  -----------------
 
@@ -716,24 +711,23 @@ NO_CLAMP = "no_clamp"
 LEARNING_RATE = "learning_rate"
 CONTROL = 'CONTROL'
 GATING = 'gating'
-kwProjections = "projections"
-kwProcessDefaultProjectionFunction = "Default Projection Function"
-kwProcessExecute = "ProcessExecute"
-kpMechanismExecutedLogEntry = "Mechanism Executed"
+PROCESS_DEFAULT_PROJECTION_FUNCTION = "Default Projection Function"
+PROCESS_EXECUTE = "ProcessExecute"
+MECHANISM_EXECUTED_LOG_ENTRY = "Mechanism Executed"
 #endregion
 
 #region ---------------------------------------------    MECHANISM   ---------------------------------------------------
 
 MECHANISM = 'MECHANISM'
 MECHANISMS = 'MECHANISMS'
-kwMechanismName = "MECHANISM NAME"
-kwMechanismDefault = "DEFAULT MECHANISM"
+MECHANISM_NAME = "MECHANISM NAME"
+MECHANISM_DEFAULT = "DEFAULT MECHANISM"
 DEFAULT_PROCESSING_MECHANISM = "DefaultProcessingMechanism"
-kwProcessDefaultMechanism = "ProcessDefaultMechanism"
-kwMechanismType = "Mechanism Type" # Used in mechanism dict specification (e.g., in process.pathway[])
-kwMechanismDefaultInputValue = "Mechanism Default Input Value " # Used in mechanism specification dict
-kwMechanismParamValue = "Mechanism Parameter Value"                 # Used to specify mechanism param value
-kwMechanismDefaultParams = "Mechanism Default Parameters"           # Used in mechanism specification dict
+PROCESS_DEFAULT_MECHANISM = "ProcessDefaultMechanism"
+MECHANISM_TYPE = "Mechanism Type" # Used in mechanism dict specification (e.g., in process.pathway[])
+MECHANISM_DEFAULTInputValue = "Mechanism Default Input Value " # Used in mechanism specification dict
+MECHANISM_PARAM_VALUE = "Mechanism Parameter Value"                 # Used to specify mechanism param value
+MECHANISM_DEFAULTParams = "Mechanism Default Parameters"           # Used in mechanism specification dict
 CONDITION = 'condition'
 
 # Keywords for OUTPUT_STATE_VARIABLE dict:
@@ -784,29 +778,9 @@ K_VALUE = 'k_value'
 THRESHOLD = 'threshold'
 RATIO = 'ratio'
 
-STATE_VALUE = "State value"   # Used in State specification dict
-                                                 #  to specify State value
+STATE_VALUE = "State value"   # Used in State specification dict                                                #  to specify State value
 STATE_PARAMS = "State params" # Used in State specification dict
 
-# ParamClassDefaults:
-kwMechanismExecutionSequenceTemplate = "Mechanism Execution Sequence Template"
-
-# Entries for output OrderedDict, describing the current state of the Mechanism
-kwMechanismOutputValue = "MechanismOutputValue" # points to <mechanism>.outputStateValue
-kwMechanismConfidence = "MechanismConfidence"   # contains confidence of current kwMechanismValue
-kwMechanismPerformance = "MechanismPerformance" # contains value from objective function
-kwMechanismDuration = "MechanismDuration"       # contains number of time steps since process.execute was called
-kwMechanismParams = "MechanismParams"           # dict of ParameterState objects in <mechanism>.params
-
-kwMechanismExecuteFunction = "MECHANISM EXECUTE FUNCTION"
-kwMechanismAdjustFunction = "MECHANISM ADJUST FUNCTION"
-kwMechanismInterrogateFunction = "MECHANISM INTERROGATE FUNCTION"
-kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
-# TBI: kwMechanismAccuracyFunction = "MECHANISM ACCURACY FUNCTION"
-
-#DDM
-kwThreshold = 'thresh'
-kwInitialPoint = 'initial_point'
 #endregion
 
 #region ----------------------------------------    MODULATORY MECHANISMS ----------------------------------------------
@@ -874,8 +848,8 @@ CONNECTIONS = 'CONNECTIONS'
 STATE_NAME = "StateName"
 STATE_PREFS = "StatePrefs"
 STATE_CONTEXT = "StateContext"
-kwAddInputState = 'kwAddNewInputState'     # Used by Mechanism._add_projection_to()
-kwAddOutputState = 'kwAddNewOutputState'   # Used by Mechanism._add_projection_from()
+ADD_INPUT_STATE = 'AddNewInputState'     # Used by Mechanism._add_projection_to()
+ADD_OUTPUT_STATE = 'AddNewOutputState'   # Used by Mechanism._add_projection_from()
 FULL = 'FULL'
 OWNER = 'owner'
 REFERENCE_VALUE = 'reference_value'
@@ -926,8 +900,7 @@ SENDER = 'sender'
 RECEIVER = "receiver"
 PROJECTION_DIRECTION = {SENDER: 'to',
                         RECEIVER: 'from'}
-kwProjectionReceiver = 'projection_receiver'
-kwReceiverArg = 'receiver'
+RECEIVER_ARG = 'receiver'
 # kpLog = "ProjectionLog"
 MONITOR_FOR_LEARNING = 'monitor_for_learning'
 AUTO = 'auto'

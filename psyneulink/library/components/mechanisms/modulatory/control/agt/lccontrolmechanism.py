@@ -654,10 +654,10 @@ class LCControlMechanism(ControlMechanism):
     initMethod = INIT_EXECUTE_METHOD_ONLY
 
     classPreferenceLevel = PreferenceLevel.TYPE
-    # Any preferences specified below will override those specified in TypeDefaultPreferences
+    # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'ControlMechanismClassPreferences',
+    #     PREFERENCE_SET_NAME: 'ControlMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
     class Parameters(ControlMechanism.Parameters):
