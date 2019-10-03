@@ -913,7 +913,7 @@ class Component(object, metaclass=ComponentsMeta):
                     :read only: True
 
         """
-        variable = Parameter(np.array([0]), read_only=True, pnl_internal=True)
+        variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         value = Parameter(np.array([0]), read_only=True, pnl_internal=True)
         has_initializers = Parameter(False, setter=_has_initializers_setter, pnl_internal=True)
         # execution_count ios not stateful because it is a global counter;

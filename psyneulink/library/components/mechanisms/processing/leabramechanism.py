@@ -215,7 +215,7 @@ class LeabraFunction(Function_Base):
                     :type:
 
         """
-        variable = Parameter(np.array([[0], [0]]), read_only=True, pnl_internal=True)
+        variable = Parameter(np.array([[0], [0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         network = None
 
     def __init__(self,

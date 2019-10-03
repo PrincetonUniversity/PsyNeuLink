@@ -670,7 +670,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                     :type: int
 
         """
-        variable = Parameter([[0],[0]], pnl_internal=True)
+        variable = Parameter([[0],[0]], pnl_internal=True, constructor_argument='default_variable')
         retrieval_prob = Parameter(1.0, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         key_size = Parameter(1, stateful=True)

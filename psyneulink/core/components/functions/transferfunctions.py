@@ -2287,7 +2287,7 @@ class SoftMax(TransferFunction):
                     :type: bool
 
         """
-        variable = Parameter(np.array(0.0), read_only=True, pnl_internal=True)
+        variable = Parameter(np.array(0.0), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bounds = (0, 1)
         output = ALL
@@ -3783,7 +3783,7 @@ class TransferWithCosts(TransferFunction):
         _validate_cost_functions = get_validator_by_type_only([CostFunctions, list])
 
         # Create versions of cost functions' modulation params for TransferWithCosts
-        
+
         intensity_cost = None
         intensity_cost_fct = Parameter(Exponential, stateful=False)
         _validate_intensity_cost_fct = get_validator_by_function(is_function_type)

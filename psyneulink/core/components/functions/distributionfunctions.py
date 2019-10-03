@@ -291,7 +291,7 @@ class UniformToNormalDist(DistributionFunction):
                     :type: float
 
         """
-        variable = Parameter(np.array([0]), read_only=True, pnl_internal=True)
+        variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
 

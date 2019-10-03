@@ -712,7 +712,7 @@ class ControlSignal(ModulatorySignal):
             np.array([defaultControlAllocation]),
             aliases='allocation',
             getter=_output_state_variable_getter,
-            pnl_internal=True
+            pnl_internal=True, constructor_argument='default_variable'
         )
 
         # # FIX: DOESN'T WORK, SINCE DON'T HAVE ACCESS TO OTHER ARGS

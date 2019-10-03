@@ -1399,7 +1399,7 @@ class Mechanism_Base(Mechanism):
                     :read only: True
 
         """
-        variable = Parameter(np.array([[0]]), read_only=True, pnl_internal=True)
+        variable = Parameter(np.array([[0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         value = Parameter(np.array([[0]]), read_only=True, pnl_internal=True)
         previous_value = Parameter(None, read_only=True, pnl_internal=True)
         function = Linear

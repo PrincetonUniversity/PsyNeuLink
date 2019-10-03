@@ -2680,7 +2680,7 @@ class ProcessInputState(OutputState):
 
         """
         # just grabs input from the process
-        variable = Parameter(np.array([0]), read_only=True, pnl_internal=True)
+        variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         value = Parameter(np.array([0]), read_only=True, pnl_internal=True)
 
     def __init__(self, owner=None, variable=None, name=None, prefs=None):

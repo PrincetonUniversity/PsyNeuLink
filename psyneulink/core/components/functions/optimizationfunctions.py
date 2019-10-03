@@ -319,7 +319,7 @@ class OptimizationFunction(Function_Base):
                     :type: <class 'function'>
 
         """
-        variable = Parameter(np.array([0, 0, 0]), read_only=True, pnl_internal=True)
+        variable = Parameter(np.array([0, 0, 0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
         objective_function = Parameter(lambda x: 0, stateful=False, loggable=False)
         search_function = Parameter(lambda x: x, stateful=False, loggable=False)
@@ -830,10 +830,10 @@ class GradientOptimization(OptimizationFunction):
                     :type: float
 
         """
-        variable = Parameter([[0], [0]], read_only=True, pnl_internal=True)
+        variable = Parameter([[0], [0]], read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
         # these should be removed and use switched to .get_previous()
-        previous_variable = Parameter([[0], [0]], read_only=True, pnl_internal=True)
+        previous_variable = Parameter([[0], [0]], read_only=True, pnl_internal=True, constructor_argument='default_variable')
         previous_value = Parameter([[0], [0]], read_only=True, pnl_internal=True)
 
         gradient_function = Parameter(None, stateful=False, loggable=False)
@@ -1908,7 +1908,7 @@ class GaussianProcess(OptimizationFunction):
                     :type: bool
 
         """
-        variable = Parameter([[0], [0]], read_only=True, pnl_internal=True)
+        variable = Parameter([[0], [0]], read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
         save_samples = True
         save_values = True

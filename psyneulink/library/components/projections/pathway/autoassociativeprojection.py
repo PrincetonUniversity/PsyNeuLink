@@ -282,7 +282,7 @@ class AutoAssociativeProjection(MappingProjection):
                     :type: str
 
         """
-        variable = Parameter(np.array([[0]]), read_only=True, pnl_internal=True)
+        variable = Parameter(np.array([[0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         # function is always LinearMatrix that requires 1D input
         function = LinearMatrix
 

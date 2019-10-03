@@ -3640,7 +3640,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
                     :type: float
 
         """
-        variable = Parameter(np.array([1.0]), read_only=True, pnl_internal=True)
+        variable = Parameter(np.array([1.0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         time_step_size = Parameter(0.05, modulable=True)
         a_v = Parameter(1.0 / 3, modulable=True)
         b_v = Parameter(0.0, modulable=True)
