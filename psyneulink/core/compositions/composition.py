@@ -3197,7 +3197,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._update_processing_graph()
                 scheduler._init_consideration_queue_from_graph(self.graph_processing)
             already_tested.extend(v_set)
-            assert True
 
 
     # ******************************************************************************************************************
