@@ -211,7 +211,7 @@ class TestLCControlMechanism:
         mech = pnl.ProcessingMechanism(input_states=['A','B','C'])
         control_mech = pnl.ControlMechanism(control=mech.input_states)
         comp = pnl.Composition()
-        comp.add_nodes([mech, control_mech])
+        comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
         results = comp.run(inputs={mech:[[2],[2],[2]], control_mech:[2]}, num_trials=2)
         np.allclose(results, [[4],[4],[4]])
 
@@ -221,7 +221,7 @@ class TestLCControlMechanism:
                                                       {pnl.VARIABLE: (pnl.OWNER_VALUE, 0)}],)
         control_mech = pnl.ControlMechanism(control=mech.output_states)
         comp = pnl.Composition()
-        comp.add_nodes([mech, control_mech])
+        comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
         results = comp.run(inputs={mech:[[2]], control_mech:[3]}, num_trials=2)
         np.allclose(results, [[6],[6],[6]])
 

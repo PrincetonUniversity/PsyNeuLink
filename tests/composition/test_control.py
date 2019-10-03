@@ -129,6 +129,30 @@ class TestControlMechanisms:
         comp.run(inputs={mech:[3]}, num_trials=2)
         assert np.allclose(ctl_mech_A.control_signals[0].intensity_cost, 8103.083927575384008)
 
+    def test_feedback_assignment_for_multiple_control_projections_to_same_mechanism(self):
+        """Test that multiple ControlProjections from a ControlMechanism to the same Mechanism are treated
+        same as a single Controlprojection to that Mechanism.
+        Note: Even though both mech and control_mech don't receive pathway inputs, since control_mech projects to mech,
+        control_mech is assigned as NodeRole.INPUT (can be overridden with assignments in add_nodes)
+        """
+        mech = pnl.ProcessingMechanism(input_states=['A','B','C'])
+        control_mech = pnl.ControlMechanism(control=mech.input_states[0])
+        comp = pnl.Composition()
+        comp.add_nodes([mech, control_mech])
+        result = comp.run(inputs={control_mech:[2]}, num_trials=3)
+        # assert np.allclose(result, [[2],[2],[2]])
+        assert pnl.NodeRole.INPUT not in comp.get_roles_by_node(mech)
+        assert pnl.NodeRole.INPUT in comp.get_roles_by_node(control_mech)
+
+        # Should produce same result as above
+        mech = pnl.ProcessingMechanism(input_states=['A','B','C'])
+        control_mech = pnl.ControlMechanism(control=mech.input_states) # Note multiple parallel ControlProjections
+        comp = pnl.Composition()
+        comp.add_nodes([mech, control_mech])
+        comp.run(inputs={control_mech:[2]}, num_trials=3)
+        assert pnl.NodeRole.INPUT not in comp.get_roles_by_node(mech)
+        assert pnl.NodeRole.INPUT in comp.get_roles_by_node(control_mech)
+
     def test_modulation_of_control_signal_intensity_cost_function_ADDITIVE(self):
         # tests additive modulation of default intensity_cost_function (Exponential) of
         #    a ControlMechanism's default function (TransferWithCosts)
