@@ -3517,7 +3517,68 @@ class TestNestedCompositions:
         ret = outer_comp.run(inputs={inner_comp1: [[1.0]], inner_comp2: [[1.0]]}, bin_execute=mode)
         assert np.allclose(ret, [[[0.52497918747894]],[[0.52497918747894]]])
 
+    def test_invalid_projection_deletion_when_nesting_comps(self):
+        oa = pnl.TransferMechanism(name='oa')
+        ob = pnl.TransferMechanism(name='ob')
+        ocomp = pnl.Composition(name='ocomp', controller_mode=pnl.BEFORE)
+        ia = pnl.TransferMechanism(name='ia')
+        ib = pnl.ProcessingMechanism(name='ib',
+                                     function=lambda x: abs(x - 75))
+        icomp = pnl.Composition(name='icomp', controller_mode=pnl.BEFORE)
+        ocomp.add_node(oa, required_roles=pnl.NodeRole.INPUT)
+        ocomp.add_node(ob)
+        ocomp.add_node(icomp)
+        icomp.add_node(ia, required_roles=pnl.NodeRole.INPUT)
+        icomp.add_node(ib)
+        ocomp._analyze_graph()
+        icomp._analyze_graph()
+        ocomp.add_projection(pnl.MappingProjection(), sender=oa, receiver=ia)
+        icomp.add_projection(pnl.MappingProjection(), sender=ia, receiver=ib)
+        ocomp.add_projection(pnl.MappingProjection(), sender=ib, receiver=ob)
 
+        ocomp_objective_mechanism = pnl.ObjectiveMechanism(
+                    monitor=ib.output_state,
+                    function=pnl.SimpleIntegrator,
+                    name="oController Objective Mechanism"
+                )
+
+        ocomp.add_controller(
+            pnl.OptimizationControlMechanism(
+                agent_rep=ocomp,
+                features=[oa.input_state],
+                # feature_function=pnl.Buffer(history=2),
+                name="Controller",
+                objective_mechanism=ocomp_objective_mechanism,
+                function=pnl.GridSearch(direction=pnl.MINIMIZE),
+                control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
+                                                   function=pnl.Linear,
+                                                   variable=1.0,
+                                                   intensity_cost_function=pnl.Linear(slope=0.0),
+                                                   allocation_samples=pnl.SampleSpec(start=1.0, stop=5.0, num=5))])
+        )
+
+        icomp_objective_mechanism = pnl.ObjectiveMechanism(
+                    monitor=ib.output_state,
+                    function=pnl.SimpleIntegrator,
+                    name="iController Objective Mechanism"
+                )
+
+        icomp.add_controller(
+            pnl.OptimizationControlMechanism(
+                agent_rep=icomp,
+                features=[ia.input_state],
+                # feature_function=pnl.Buffer(history=2),
+                name="Controller",
+                objective_mechanism=icomp_objective_mechanism,
+                function=pnl.GridSearch(direction=pnl.MAXIMIZE),
+                control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
+                                                   function=pnl.Linear,
+                                                   variable=1.0,
+                                                   intensity_cost_function=pnl.Linear(slope=0.0),
+                                                   allocation_samples=pnl.SampleSpec(start=1.0, stop=5.0, num=5))])
+        )
+        assert not ocomp._check_for_existing_projections(sender=ib, receiver=ocomp_objective_mechanism)
+        return ocomp
     # Does not work yet due to initial_values bug that causes first recurrent projection to pass different values
     # to TranfserMechanism version vs Logistic fn + AdaptiveIntegrator fn version
     # def test_recurrent_transfer_mechanism_composition(self):
