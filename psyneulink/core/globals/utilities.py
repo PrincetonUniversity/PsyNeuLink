@@ -1448,11 +1448,14 @@ def insert_list(list1, position, list2):
     """Insert list2 into list1 at position"""
     return list1[:position] + list2 + list1[position:]
 
+
 def convert_to_list(l):
     if l is None:
         return None
     elif isinstance(l, list):
         return l
+    elif isinstance(l, ContentAddressableList):
+        return list(l)
     elif isinstance(l, set):
         return list(l)
     else:
@@ -1461,11 +1464,13 @@ def convert_to_list(l):
 def flatten_list(l):
     return [item for sublist in l for item in sublist]
 
+
 _seed = int(time.monotonic())
 def get_global_seed(offset=1):
     global _seed
     _seed += offset
     return _seed - offset
+
 
 def set_global_seed(new_seed):
     global _seed
