@@ -847,6 +847,8 @@ class Projection_Base(Projection):
 
         # Assign projection to self.sender's efferents list attribute
         # First make sure that projection is not already in efferents
+        # IMPLEMENTATON NOTE:  Currently disallows *ANY* Projections with same sender and receiver
+        #                      (even if they are in different Compositions)
         if self not in self.sender.efferents:
             # Then make sure there is not already a projection to its receiver
             receiver = self.receiver
@@ -861,6 +863,8 @@ class Projection_Base(Projection):
             # IMPLEMENTATION NOTE:  this gives precedence to a Projection to a Component specified by its sender
             #                      (e.g., controller of a Composition for a ControlProjection)
             #                       over its specification in the constructor for the receiver or its owner
+            # IMPLEMENTATION NOTE:  This should be removed if/when different Projections are permitted between
+            #                       the same sender and receiver in different Compositions
             if dup:
                 if dup.initialization_status == ContextFlags.DEFERRED_INIT:
                     del receiver.mod_afferents[receiver.mod_afferents.index(dup)]

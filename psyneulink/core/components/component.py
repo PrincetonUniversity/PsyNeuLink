@@ -2992,6 +2992,11 @@ class Component(object, metaclass=ComponentsMeta):
     def initialize(self, context=None):
         raise ComponentError("{} class does not support initialize() method".format(self.__class__.__name__))
 
+    def _check_for_composition(self, context=None):
+        """Allow Component to check whether it or its attributes are suitable for inclusion in a Composition
+        Called by Composition.add_node."""
+        pass
+
     @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, *args, context=None):
         """

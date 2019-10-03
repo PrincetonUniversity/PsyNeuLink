@@ -1865,7 +1865,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #                                               NODES
     # ******************************************************************************************************************
 
-    def add_node(self, node, required_roles=None):
+    def add_node(self, node, required_roles=None, context=None):
         """
             Add a Composition Node (`Mechanism` or `Composition`) to the Composition, if it is not already added
 
@@ -1885,6 +1885,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             node._analyze_graph()
         except AttributeError:
             pass
+
+        node._check_for_composition(context=context)
 
         # Add node to Composition's graph
         if node not in [vertex.component for vertex in
@@ -2705,7 +2707,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Note:  Skip this if **projection** was specified, as it might include parameters that are different
         #        than the existing ones, in which case should use that rather than any existing ones;
         #        will handle any existing Projections that are in the current Composition below.
-        if sender and receiver and not projection:
+        if sender and receiver and projection is None:
             existing_projections = self._check_for_existing_projections(sender=sender,
                                                                receiver=receiver,
                                                                in_composition=False)
@@ -3336,8 +3338,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         assert len(duplicate)==1, \
                             f"PROGRAM ERROR: Could not identify duplicate on DuplicateProjectionError " \
                                 f"for {Projection.__name__} between {sender.name} and {receiver.name} " \
-                                f"in call to {repr('add_linear_processing_pathway')} for {self.name}."
-                        proj = duplicate[0]
+                                f"in call to {repr('add_linear_processing_pathway')} for {self.name}."                            
+                        duplicate = duplicate[0]
+                        warning_msg = f"Projection specified between {sender.name} and {receiver.name} " \
+                                      f"in call to 'add_linear_projection' for {self.name} is a duplicate of one"
+                        # IMPLEMENTATION NOTE: Version that allows different Projections between same
+                        #                      sender and receiver in different Compositions
+                        # if duplicate in self.projections:
+                        #     warnings.warn(f"{warning_msg} already in the Composition ({duplicate.name}) "
+                        #                   f"and so will be ignored.")
+                        #     proj=duplicate
+                        # else:
+                        #     if self.prefs.verbosePref:
+                        #         warnings.warn(f" that already exists between those nodes ({duplicate.name}). The "
+                        #                       f"new one will be used; delete it if you want to use the existing one")
+                        # Version that forbids *any* duplicate Projections between same sender and receiver
+                        warnings.warn(f"{warning_msg} that already exists between those nodes ({duplicate.name}) "
+                                      f"and so will be ignored.")
+                        proj=duplicate
 
                     proj = self.add_projection(projection=proj,
                                                sender=sender,

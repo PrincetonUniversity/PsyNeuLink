@@ -579,6 +579,7 @@ class TestAnalyzeGraph:
         assert comp.controller.objective_mechanism in comp.get_nodes_by_role(NodeRole.OUTPUT)
         assert B not in comp.get_nodes_by_role(NodeRole.OUTPUT)
 
+
 class TestGraphCycles:
 
     def test_recurrent_transfer_mechanisms(self):
