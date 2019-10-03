@@ -207,6 +207,24 @@ class TestLCControlMechanism:
         expected_results = [[0.96801676, 0.98304415, 0.99225722]]
         assert np.allclose(results, expected_results)
 
+    def test_control_of_all_input_states(self):
+        mech = pnl.ProcessingMechanism(input_states=['A','B','C'])
+        control_mech = pnl.ControlMechanism(control=mech.input_states)
+        comp = pnl.Composition()
+        comp.add_nodes([mech, control_mech])
+        results = comp.run(inputs={mech:[[2],[2],[2]], control_mech:[2]}, num_trials=2)
+        np.allclose(results, [[4],[4],[4]])
+
+    def test_control_of_all_output_states(self):
+        mech = pnl.ProcessingMechanism(output_states=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 0)},
+                                                      {pnl.VARIABLE: (pnl.OWNER_VALUE, 0)},
+                                                      {pnl.VARIABLE: (pnl.OWNER_VALUE, 0)}],)
+        control_mech = pnl.ControlMechanism(control=mech.output_states)
+        comp = pnl.Composition()
+        comp.add_nodes([mech, control_mech])
+        results = comp.run(inputs={mech:[[2]], control_mech:[3]}, num_trials=2)
+        np.allclose(results, [[6],[6],[6]])
+
     def test_control_signal_default_allocation_specification(self):
 
         m1 = pnl.ProcessingMechanism()

@@ -2994,7 +2994,8 @@ class Component(object, metaclass=ComponentsMeta):
 
     def _check_for_composition(self, context=None):
         """Allow Component to check whether it or its attributes are suitable for inclusion in a Composition
-        Called by Composition.add_node."""
+        Called by Composition.add_node.
+        """
         pass
 
     @handle_external_context(execution_id=NotImplemented)
