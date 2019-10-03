@@ -1453,6 +1453,8 @@ def convert_to_list(l):
         return None
     elif isinstance(l, list):
         return l
+    elif isinstance(l, ContentAddressableList):
+        return list(l)
     elif isinstance(l, set):
         return list(l)
     else:
