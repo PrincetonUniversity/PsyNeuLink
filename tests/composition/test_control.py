@@ -153,7 +153,6 @@ class TestControlMechanisms:
         assert pnl.NodeRole.INPUT not in comp.get_roles_by_node(mech)
         assert pnl.NodeRole.INPUT in comp.get_roles_by_node(control_mech)
 
-
     def test_modulation_of_control_signal_intensity_cost_function_ADDITIVE(self):
         # tests additive modulation of default intensity_cost_function (Exponential) of
         #    a ControlMechanism's default function (TransferWithCosts)
