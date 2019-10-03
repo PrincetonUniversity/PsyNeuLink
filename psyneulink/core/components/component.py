@@ -2158,12 +2158,14 @@ class Component(object, metaclass=ComponentsMeta):
                                       context=context)
 
     def _initialize_parameters(self, context=None, **param_defaults):
+        alias_names = {p.name for p in self.class_parameters if isinstance(p, ParameterAlias)}
+
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
 
         # assign defaults based on pass in params and class defaults
         defaults = {
             k: copy.deepcopy(v) for (k, v) in self.class_defaults.values(show_all=True).items()
-            if not isinstance(getattr(self.class_parameters, k), ParameterAlias)
+            if not k in alias_names
         }
         try:
             function_params = param_defaults[FUNCTION_PARAMS]
@@ -2178,7 +2180,10 @@ class Component(object, metaclass=ComponentsMeta):
             d = {
                 k: v for (k, v) in param_defaults.items()
                 if (
-                    k not in defaults
+                    (
+                        k not in defaults
+                        and k not in alias_names
+                    )
                     or (
                         (function_params is None or k not in function_params)
                         and v is not None
