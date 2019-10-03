@@ -3133,10 +3133,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return False
 
     def _check_feedback(self, scheduler, context=None):
+        # FIX: 10/2/19 - SHOULD REALLY HANDLE THIS BY DETECTING LOOPS DIRECTLY
         """Check that feedback specification is required for projections to which it has been assigned
+        Rationale:
+            if, after removing the feedback designation of a Projection, structural and functional dependencies
+            are the same, then the designation is not needed so remove it.
         Note:
-        - graph_processing and graph_processing.dependency_dict are used as indications of structural dependencies
-        - scheduler.dependency_dict is used as indication of execution dependencies
+        - graph_processing.dependency_dict is used as indication of structural dependencies
+        - scheduler.dependency_dict is used as indication of functional (execution) dependencies
         """
 
         if scheduler:
@@ -3149,16 +3153,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             scheduler = self.scheduler
 
+        already_tested = []
         for vertex in [v for v in self.graph.vertices if v.feedback==MAYBE]:
-            projection = vertex.component
+            # projection = vertex.component
             # assert isinstance(projection, Projection), \
             #     f'PROGRAM ERROR: vertex identified with feedback=True that is not a Projection'
-            vertex.feedback = False
+            if vertex in already_tested:
+                continue
+
+            v_set = [v for v in self.graph.vertices
+                     if (v.feedback==MAYBE
+                         and v.component.sender.owner is vertex.component.sender.owner)]
+
+            for v in v_set:
+                v.feedback = False
 
             # Update Composition's graph_processing
             self._update_processing_graph()
 
-            # Update scheduler's consideration_queue based on update of graph_processing
+            # Update scheduler's consideration_queue based on update of graph_processing to detect any new cycles
             try:
                 scheduler._init_consideration_queue_from_graph(self.graph_processing)
             except ValueError:
@@ -3173,15 +3186,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 feedback = 'leave'
 
-            # Remove nodes that send and receive feedback projection from feedback_senders and feedback_receivers lists
+            # Remove nodes that send and receive feedback Projection from feedback_senders and feedback_receivers lists
             if feedback == 'remove':
-                self.feedback_senders.remove(projection.sender.owner)
-                self.feedback_receivers.remove(projection.receiver.owner)
+                self.feedback_senders.remove(v.component.sender.owner)
+                self.feedback_receivers.remove(v.component.receiver.owner)
             # Otherwise, restore feedback assignment and scheduler's consideration_queue
             else:
-                vertex.feedback = True
+                for v in v_set:
+                    v.feedback = True
                 self._update_processing_graph()
                 scheduler._init_consideration_queue_from_graph(self.graph_processing)
+            already_tested.extend(v_set)
+            assert True
 
 
     # ******************************************************************************************************************
