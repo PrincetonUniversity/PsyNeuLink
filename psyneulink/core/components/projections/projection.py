@@ -1607,10 +1607,7 @@ def _parse_connection_specs(connectee_state_type,
                 # FIX: 11/28/17 HACK TO DEAL WITH GatingSignal Projection to OutputState
                 # FIX: 5/11/19: CORRECTED TO HANDLE ControlMechanism SPECIFIED FOR GATING
                 if ((_is_gating_spec(first_item) or _is_control_spec(first_item))
-                    and (isinstance(last_item, OutputState) or last_item == OutputState
-                        # # FIX: 9/27/19:  ADDED TO DEAL WITH ControlMechanism SPECIFIED FOR GATING OF INPUTSTATE
-                        #  or isinstance(last_item, InputState) or last_item == InputState
-                        )
+                    and (isinstance(last_item, OutputState) or last_item == OutputState)
                 ):
                     projection_socket = SENDER
                     state_types = [OutputState]
@@ -1665,7 +1662,6 @@ def _parse_connection_specs(connectee_state_type,
             if _is_projection_spec(projection_spec) or _is_modulatory_spec(projection_spec) or projection_spec is None:
 
                 # FIX: 11/21/17 THIS IS A HACK TO DEAL WITH GatingSignal Projection TO InputState or OutputState
-                # FIX: 9/27/19 AUGMENT TO INCLUDE ControlSignal Projection??
                 from psyneulink.core.components.states.inputstate import InputState
                 from psyneulink.core.components.states.outputstate import OutputState
                 from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
@@ -1687,14 +1683,8 @@ def _parse_connection_specs(connectee_state_type,
                 ):
                     projection_spec = state
 
-                # # MODIFIED 9/27/19 OLD:
-                # elif _is_gating_spec(first_item):
-                # # MODIFIED 9/27/19 NEW: [JDC]
-                # elif _is_gating_spec(first_item) or _is_control_spec((first_item)):
-                # MODIFIED 9/27/19 NEWER: [JDC] XYZ
                 elif (_is_gating_spec(first_item) or _is_control_spec((first_item))
                       and not isinstance(last_item, (GatingProjection, ControlProjection))):
-                # MODIFIED 9/27/19 END
                     projection_spec = first_item
                 projection_spec = _parse_projection_spec(projection_spec,
                                                          owner=owner,

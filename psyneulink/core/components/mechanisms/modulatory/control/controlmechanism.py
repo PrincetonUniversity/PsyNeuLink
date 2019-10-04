@@ -1512,23 +1512,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         allocation_parameter_default = self.parameters.control_allocation.default_value
 
-        # FIX: 10/2/19 -- MOVE THIS TO _instantiate_state, AND POSSIBLY EVEN _parse_state_spec
-        # # MODIFIED 10/2/19 NEW: [JDC]
-        # # FIX: 10/2/19 - CHECK IF control_signal_spec IS A DICT AND, IF SO, IT HAS A PROJECTIONS SPEC AND, IF SO
-        # #                GET ITS SENDER AND IF THAT IS IN DEFERRED INIT, USE THAT;
-        # #                THIS HAPPENS IF A ControlSignal IS USED TO SPECIFY CONTROL OF A PARAMETER
-        # #                AND IT IS USED TO SPECIFY ITS OWN PARAMETERS (E.G., allocation_samples OR THE LIKE)
-        # if isinstance(control_signal_spec, dict) and PROJECTIONS in control_signal_spec:
-        #     assert len(control_signal_spec[PROJECTIONS])==1, f"More than one Projection found in control_signal_spec"
-        #     # control_signal = control_signal_spec[PROJECTIONS][0]._deferred_init(context=context)
-        #     # return control_signal
-        #     control_signal = control_signal_spec[PROJECTIONS][0].sender
-        #     control_signal._deferred_init(context=context)
-        #     return control_signal
-        #     # return control_signal
-
-        # MODIFIED 10/2/19 END
-
         control_signal = _instantiate_state(state_type=ControlSignal,
                                                owner=self,
                                                variable=self.default_allocation           # User specified value

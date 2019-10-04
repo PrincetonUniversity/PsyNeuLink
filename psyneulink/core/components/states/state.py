@@ -2547,7 +2547,6 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
         # Its value is assigned to the VARIABLE entry (including if it was originally just a value)
         reference_value = reference_value_dict[VARIABLE]
 
-    # MODIFIED 10/3/19 OLD:
     parsed_state_spec = _parse_state_spec(state_type=state_type,
                                           owner=owner,
                                           reference_value=reference_value,
@@ -2890,43 +2889,7 @@ def _parse_state_spec(state_type=None,
                 state_specification = mech
                 projection = state_type
 
-        # # MODIFIED 9/27/19 OLD:
-        # # Specication is a State with which connectee can connect, so assume it is a Projection specification
-        # if state_specification.__class__.__name__ in state_type.connectsWith + state_type.modulators:
-        #     projection = state_type
-        #
-        # # Specification is a State that is same as connectee's type (state_type),
-        # #    so assume it is a reference to the State itself that is being (or has been) instantiated
-        # elif isinstance(state_specification, state_type):
-        #     # Make sure that the specified State belongs to the Mechanism passed in the owner arg
-        #     if state_specification.initialization_status == ContextFlags.DEFERRED_INIT:
-        #         state_owner = state_specification.init_args[OWNER]
-        #     else:
-        #         state_owner = state_specification.owner
-        #     if owner is not None and state_owner is not None and state_owner is not owner:
-        #         try:
-        #             new_state_specification = state_type._parse_self_state_type_spec(state_type,
-        #                                                                              owner,
-        #                                                                              state_specification,
-        #                                                                              context)
-        #             state_specification = _parse_state_spec(state_type=state_type,
-        #                                                     owner=owner,
-        #                                                     state_spec=new_state_specification)
-        #             assert True
-        #         except AttributeError:
-        #             raise StateError("Attempt to assign a {} ({}) to {} that belongs to another {} ({})".
-        #                              format(State.__name__, state_specification.name, owner.name,
-        #                                     Mechanism.__name__, state_owner.name))
-        #     return state_specification
-
-        # MODIFIED 9/27/19 NEW: [JDC]
-        # Specification is a State that is same as connectee's type (state_type),
-        #    so assume it is a reference to the State itself that is being (or has been) instantiated
-        # # MODIFIED 9/27/19 OLD:
-        # if isinstance(state_specification, state_type):
-        # MODIFIED 9/27/19 NEWER: [JDC]
         if state_specification.__class__ == state_type:
-        # MODIFIED 9/27/19 END
             # Make sure that the specified State belongs to the Mechanism passed in the owner arg
             if state_specification.initialization_status == ContextFlags.DEFERRED_INIT:
                 state_owner = state_specification.init_args[OWNER]
@@ -2951,7 +2914,6 @@ def _parse_state_spec(state_type=None,
         # Specication is a State with which connectee can connect, so assume it is a Projection specification
         elif state_specification.__class__.__name__ in state_type.connectsWith + state_type.modulators:
             projection = state_type
-        # MODIFIED 9/27/19 END
 
         # Re-process with Projection specified
         state_dict = _parse_state_spec(state_type=state_type,

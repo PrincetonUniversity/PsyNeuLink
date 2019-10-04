@@ -2786,8 +2786,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             existing_projections = self._check_for_existing_projections(projection, sender=sender, receiver=receiver)
 
-        # FIX: 9/30/19 - THIS SEEMS TO BE DONE FOR ALL PROJECTIONS, NOT JUST AUTOASSOCIATIVE ONES;
-        #                FILTERS OUT AUTOASSOCIATIVE?
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
         if (sender_mechanism != self.input_CIM
@@ -2806,8 +2804,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except CompositionError as c:
                 raise CompositionError(f"{c.args[0]} to {self.name}.")
 
-        # FIX: 9/30/19 - THIS SEEMS TO BE NEEDED FOR ALL PROJECTIONS, NOT JUST AUTOASSOCIATIVE ONES
-        #                FILTERS OUT AUTOASSOCIATIVE?
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
         if not existing_projections:
