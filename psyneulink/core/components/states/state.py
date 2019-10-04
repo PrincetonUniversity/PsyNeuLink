@@ -2487,17 +2487,6 @@ def _instantiate_state_list(owner,
         for proj in state.path_afferents:
             owner.aux_components.append(proj)
 
-        # # Get name of state, and use as index to assign to states ContentAddressableList
-        # default_name = state._assign_default_state_name()
-        # if default_name:
-        #      state_name = default_name
-        # elif state.initialization_status is ContextFlags.DEFERRED_INIT
-        #     state_name = state.init_args[NAME]
-        # else:
-        #     state_name = state.name
-        #
-        # states[state_name] = state
-
         states[state.name] = state
 
     return states
@@ -2789,6 +2778,22 @@ def _parse_state_spec(state_type=None,
 
         # If it is a State specification dictionary
         if isinstance(state_spec[STATE_SPEC_ARG], dict):
+
+            # If the State specification is a Projection that has a sender already assigned,
+            #    then return that State with the Projection assigned to it
+            #    (this occurs, for example, if an instantiated ControlSignal is used to specify a parameter
+            try:
+                assert len(state_spec[STATE_SPEC_ARG][PROJECTIONS])==1
+                projection = state_spec[STATE_SPEC_ARG][PROJECTIONS][0]
+                state = projection.sender
+                if state.initialization_status == ContextFlags.DEFERRED_INIT:
+                    state.init_args[PARAMS][PROJECTIONS]=projection
+                else:
+                    state._instantiate_projections_to_state(projections=projection, context=context)
+                return state
+            except:
+                pass
+
             # Use the value of any standard args specified in the State specification dictionary
             #    to replace those explicitly specified in the call to _instantiate_state (i.e., passed in standard_args)
             #    (use copy so that items in state_spec dict are not deleted when called from _validate_params)
@@ -2884,43 +2889,7 @@ def _parse_state_spec(state_type=None,
                 state_specification = mech
                 projection = state_type
 
-        # # MODIFIED 9/27/19 OLD:
-        # # Specication is a State with which connectee can connect, so assume it is a Projection specification
-        # if state_specification.__class__.__name__ in state_type.connectsWith + state_type.modulators:
-        #     projection = state_type
-        #
-        # # Specification is a State that is same as connectee's type (state_type),
-        # #    so assume it is a reference to the State itself that is being (or has been) instantiated
-        # elif isinstance(state_specification, state_type):
-        #     # Make sure that the specified State belongs to the Mechanism passed in the owner arg
-        #     if state_specification.initialization_status == ContextFlags.DEFERRED_INIT:
-        #         state_owner = state_specification.init_args[OWNER]
-        #     else:
-        #         state_owner = state_specification.owner
-        #     if owner is not None and state_owner is not None and state_owner is not owner:
-        #         try:
-        #             new_state_specification = state_type._parse_self_state_type_spec(state_type,
-        #                                                                              owner,
-        #                                                                              state_specification,
-        #                                                                              context)
-        #             state_specification = _parse_state_spec(state_type=state_type,
-        #                                                     owner=owner,
-        #                                                     state_spec=new_state_specification)
-        #             assert True
-        #         except AttributeError:
-        #             raise StateError("Attempt to assign a {} ({}) to {} that belongs to another {} ({})".
-        #                              format(State.__name__, state_specification.name, owner.name,
-        #                                     Mechanism.__name__, state_owner.name))
-        #     return state_specification
-
-        # MODIFIED 9/27/19 NEW: [JDC]
-        # Specification is a State that is same as connectee's type (state_type),
-        #    so assume it is a reference to the State itself that is being (or has been) instantiated
-        # # MODIFIED 9/27/19 OLD:
-        # if isinstance(state_specification, state_type):
-        # MODIFIED 9/27/19 NEWER: [JDC]
         if state_specification.__class__ == state_type:
-        # MODIFIED 9/27/19 END
             # Make sure that the specified State belongs to the Mechanism passed in the owner arg
             if state_specification.initialization_status == ContextFlags.DEFERRED_INIT:
                 state_owner = state_specification.init_args[OWNER]
@@ -2945,7 +2914,6 @@ def _parse_state_spec(state_type=None,
         # Specication is a State with which connectee can connect, so assume it is a Projection specification
         elif state_specification.__class__.__name__ in state_type.connectsWith + state_type.modulators:
             projection = state_type
-        # MODIFIED 9/27/19 END
 
         # Re-process with Projection specified
         state_dict = _parse_state_spec(state_type=state_type,

@@ -1016,24 +1016,7 @@ class Component(object, metaclass=ComponentsMeta):
                                     format(self.__class__.__bases__[0].__name__))
 
         # ASSIGN PREFS
-
-        # If a PreferenceSet was provided, assign to instance
-        # If a PreferenceSet was provided, assign to instance
         _assign_prefs(self, prefs, BasePreferenceSet)
-
-        # # MODIFIED 9/30/19 OLD:
-        # if isinstance(prefs, PreferenceSet):
-        #     self.prefs = prefs
-        #     # FIX:  CHECK LEVEL HERE??  OR DOES IT NOT MATTER, AS OWNER WILL BE ASSIGNED DYNAMICALLY??
-        # # Otherwise, if prefs is a specification dict instantiate it, or if it is None assign defaults
-        # else:
-        #     self.prefs = BasePreferenceSet(owner=self, prefs=prefs, context=context)
-        # try:
-        #     # assign log conditions from preferences
-        #     self.parameters.value.log_condition = self.prefs._log_pref.setting
-        # except AttributeError:
-        #     pass
-        # MODIFIED 9/30/19 END
 
         # ASSIGN LOG
         from psyneulink.core.globals.log import Log

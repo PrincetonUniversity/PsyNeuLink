@@ -47,10 +47,13 @@ class TestControlSpecification:
         # ControlProjection specified on Mechanism should initially be in deferred_init,
         #    but then initialized and added to controller when the Mechanism is added.
         ddm = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
+                                # drift_rate=(1.0,
+                                #             pnl.ControlProjection(
+                                #                   function=pnl.Linear,
+                                #                   control_signal_params={ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}))))
                                 drift_rate=(1.0,
-                                            pnl.ControlProjection(
-                                                  function=pnl.Linear,
-                                                  control_signal_params={ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}))))
+                                            pnl.ControlSignal(allocation_samples=np.arange(0.1, 1.01, 0.3),
+                                                              intensity_cost_function=pnl.Linear))))
         ctl_mech = pnl.ControlMechanism()
         comp = pnl.Composition(controller=ctl_mech)
         comp.add_node(ddm)

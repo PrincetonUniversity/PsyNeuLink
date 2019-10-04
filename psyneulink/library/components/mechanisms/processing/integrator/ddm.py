@@ -1059,12 +1059,6 @@ class DDM(ProcessingMechanism):
                 raise DDMError("PROGRAM ERROR: unrecognized specification for {} of {} ({})".
                                format(THRESHOLD, self.name, threshold))
 
-    def _instantiate_attributes_before_function(self, function=None, context=None):
-        """Delete params not in use, call super.instantiate_execute_method
-        """
-
-        super()._instantiate_attributes_before_function(function=function, context=context)
-
     def _instantiate_plotting_functions(self, context=None):
         if "DriftDiffusionIntegrator" in str(self.function):
             self.get_axes_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],

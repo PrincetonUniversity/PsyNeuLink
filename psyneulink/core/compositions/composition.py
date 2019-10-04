@@ -2786,8 +2786,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             existing_projections = self._check_for_existing_projections(projection, sender=sender, receiver=receiver)
 
-        # FIX: 9/30/19 - THIS SEEMS TO BE DONE FOR ALL PROJECTIONS, NOT JUST AUTOASSOCIATIVE ONES;
-        #                FILTERS OUT AUTOASSOCIATIVE?
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
         if (sender_mechanism != self.input_CIM
@@ -2806,8 +2804,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except CompositionError as c:
                 raise CompositionError(f"{c.args[0]} to {self.name}.")
 
-        # FIX: 9/30/19 - THIS SEEMS TO BE NEEDED FOR ALL PROJECTIONS, NOT JUST AUTOASSOCIATIVE ONES
-        #                FILTERS OUT AUTOASSOCIATIVE?
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
         if not existing_projections:
@@ -3999,7 +3995,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                         learned_projection,
                                                                                         learning_rate,
                                                                                         learning_update)
-
             learning_mechanisms.append(learning_mechanism)
             learned_projections.append(learned_projection)
 
@@ -4009,9 +4004,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 projections = self._add_error_projection_to_dependent_learning_mechs(lm)
                 self.add_projections(projections)
 
-        # Suppress no efferent connections warning for error_signal OutputState of last LearningMechanism in sequence
+        # Suppress "no efferent connections" warning for:
+        #    - error_signal OutputState of last LearningMechanism in sequence
+        #    - comparator
         learning_mechanisms[-1].output_states[ERROR_SIGNAL].parameters.require_projection_in_composition.set(False,
                                                                                                              override=True)
+        if comparator:
+            for s in comparator.output_states:
+                s.parameters.require_projection_in_composition.set(False,
+                                                                   override=True)
 
         learning_related_components = {LEARNING_MECHANISM: learning_mechanisms,
                                        COMPARATOR_MECHANISM: comparator,

@@ -1466,7 +1466,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                             f"of {self.name} ({control_signal.owner_value_index})is not an int."
 
     def _instantiate_control_signal(self,  control_signal, context=None):
-        """Parse and instantiate ControlSignal (or subclass relveant to ControlMechanism subclass)
+        """Parse and instantiate ControlSignal (or subclass relevant to ControlMechanism subclass)
 
         Temporarily assign variable to default allocation value to avoid chicken-and-egg problem:
            value, output_states and control_signals haven't been expanded yet to accomodate the new
@@ -1511,6 +1511,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         from psyneulink.core.components.projections.projection import ProjectionError
 
         allocation_parameter_default = self.parameters.control_allocation.default_value
+
         control_signal = _instantiate_state(state_type=ControlSignal,
                                                owner=self,
                                                variable=self.default_allocation           # User specified value

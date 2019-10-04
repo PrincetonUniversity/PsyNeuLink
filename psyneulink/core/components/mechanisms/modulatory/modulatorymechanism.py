@@ -22,26 +22,22 @@ this need not be the case.
 .. _ModulatoryMechanism_Types:
 
 
-# FIX 9/27/19
-There are three types of ModulatoryMechanism:
+There are two primary types of ModulatoryMechanism:
 
-* `ModulatoryMechanism`
-    takes an evaluative signal (generally received from an `ObjectiveMechanism`) and generates an
-    `modulatory_allocation <ModulatoryMechanism.modulatory_allocation>`, each item of which is assigned to one of its
-    `ModulatorySignals <ModulatorySignal>`;  each of those generates a `modulatory_signal
-    <ModulatorySignal.modulatory_signal>` that is used by its `ModulatoryProjection(s) <ModulatoryProjection>` to
-    modulate the parameter of a `function <State_Base.function>` (and thereby the `value <State_Base.value>`) of a
-    `State`.  A ModulatoryMechanism can be assigned any combination of `ControlSignals <ControlSignal>` and
-    `GatingSignals <GatingSignal>`.
-..
 * `ControlMechanism`
-    a subclsass of `ModulatoryMechanism` that adds support for `costs <ControlMechanism.costs>`;  it takes an
-    evaluative signal (generally received from an `ObjectiveMechanism`) and generates a `control_allocation
+    modulates the `value <State_Base.value>` of a `State` of a `Mechanism`.  Takes an evaluative signal (generally
+    received from an `ObjectiveMechanism`) and generates a `control_allocation
     <ControlMechanism.control_allocation>`, each item of which is assigned to one of its `ControlSignals
     <ControlSignal>`;  each of those generates a `control_signal <ControlSignal.control_signal>` that is used by its
     `ControlProjection(s) <ControlProjection>` to modulate the parameter of a `function <State_Base.function>` (and
-    thereby the `value <State_Base.value>`) of a `State`.  A ControlMechanism can be assigned only the `ControlSignal`
-    class of `ModulatorySignal`, but can be also be assigned other generic `OutputStates <OutputState>`.
+    thereby the `value <State_Base.value>`) of a `State`.  ControlSignals have `costs <ControlSignal_Costs>`,
+    and a ControlMechanism has a `costs <ControlMechanism.costs>` and a `net_outcome <ControlMechanism.net_outcome>`
+    that is computed based on the `costs <ControlSignal.costs>` of its ControlSignals. A ControlMechanism can be
+    assigned only the `ControlSignal` class of `ModulatorySignal`, but can be also be assigned other generic
+    `OutputStates <OutputState>` that appear after its ControlSignals in its `output_states
+    <ControlMechanism.output_states>` attribute.
+
+COMMENT:
 ..
 * `GatingMechanism`
     a subclsass of `ModulatoryMechanism` that is specialized for modulating the input to or ouput from a `Mechanism`;
@@ -52,26 +48,24 @@ There are three types of ModulatoryMechanism:
     <State_Base.function>` (and thereby the `value <State_Base.value>`) of an `InputState` or `OutputState`.
     A GatingMechanism can be assigned only the `GatingSignal` class of `ModulatorySignal`, but can be also be assigned
     other generic `OutputStates <OutputState>`.
-.
+COMMENT.
 ..
 * `LearningMechanism`
-    takes an error signal (received from an `ObjectiveMechanism` or another `LearningMechanism`) and generates a
-    `learning_signal <LearningMechanism.learning_signal>` that is provided to its `LearningSignal(s)
-    <LearningSignal>`, and used by their `LearningProjections <LearningProjection>` to modulate the `matrix
-    <MappingProjection.matrix>` parameter of a `MappingProjection`. A LearningMechanism can be assigned only
-    `LearningSignals <LearningSignal>` as its `OuputStates <OutputState>`.
+    modulates the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`.  Takes an error signal
+    (received from an `ObjectiveMechanism` or another `LearningMechanism`) and generates a `learning_signal
+    <LearningMechanism.learning_signal>` that is provided to its `LearningSignal(s) <LearningSignal>`, and used by
+    their `LearningProjections <LearningProjection>` to modulate the `matrix <MappingProjection.matrix>` parameter
+    of a `MappingProjection`. A LearningMechanism can be assigned only the `LearningSignal` class of `ModulatorySignal`
+    as its `OuputStates <OutputState>`, but can be also be assigned other generic `OutputStates <OutputState>`,
+    that appear after its LearningSignals in its `output_states <LearningMechanism.output_states>` attribute.
 
 See `ModulatorySignal <ModulatorySignal_Naming>` for conventions used for the names of Modulatory components.
 
-A single `ModulatoryMechanism` can be assigned more than one ModulatorySignal of the appropriate
-
-which, each of which can
-be assigned
-different `allocations <ModulatorySignal.allocation>` (for ControlSignals and GatingSignals) or `learning_signals
-<LearningMechanism.learning_signal>` (for LearningSignals).  A single ModulatorySignal can also be assigned multiple
-ModulatoryProjections; however, as described  under `_ModulatorySignal_Projections`, they will all be assigned the
-same `variable <ModulatoryProjection_Base.variable>`.
-
+A single `ModulatoryMechanism` can be assigned more than one ModulatorySignal of the appropriate type, each of which
+can be assigned different `control_allocations <ControlSignal.control_allocation>` (for ControlSignals) or
+`learning_signals <LearningMechanism.learning_signal>` (for LearningSignals).  A single ModulatorySignal can also be
+assigned multiple ModulatoryProjections; however, as described  in `ModulatorySignal_Projections`, they will all
+be assigned the same `variable <ModulatoryProjection_Base.variable>`.
 
 COMMENT:
 ModulatoryMechanisms are always executed after all `ProcessingMechanisms <ProcessingMechanism>` in the `Process` or

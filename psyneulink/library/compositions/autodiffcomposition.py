@@ -523,10 +523,6 @@ class AutodiffComposition(Composition):
 
         self.min_delta = min_delta
 
-        # CW 11/1/18: maybe we should make scheduler a property, like in Composition
-        # # MODIFIED 10/2/19 OLD:
-        # self.scheduler = None
-        # MODIFIED 10/2/19 NEW: [JDC]
         if not disable_cuda and torch.cuda.is_available():
             if cuda_index is None:
                 self.device = torch.device('cuda')
