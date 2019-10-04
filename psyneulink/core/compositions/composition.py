@@ -3999,7 +3999,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                         learned_projection,
                                                                                         learning_rate,
                                                                                         learning_update)
-
             learning_mechanisms.append(learning_mechanism)
             learned_projections.append(learned_projection)
 
@@ -4009,9 +4008,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 projections = self._add_error_projection_to_dependent_learning_mechs(lm)
                 self.add_projections(projections)
 
-        # Suppress no efferent connections warning for error_signal OutputState of last LearningMechanism in sequence
+        # Suppress "no efferent connections" warning for:
+        #    - error_signal OutputState of last LearningMechanism in sequence
+        #    - comparator
         learning_mechanisms[-1].output_states[ERROR_SIGNAL].parameters.require_projection_in_composition.set(False,
                                                                                                              override=True)
+        if comparator:
+            for s in comparator.output_states:
+                s.parameters.require_projection_in_composition.set(False,
+                                                                   override=True)
 
         learning_related_components = {LEARNING_MECHANISM: learning_mechanisms,
                                        COMPARATOR_MECHANISM: comparator,
@@ -4053,6 +4058,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                WEIGHT: -1},
                                                        function=error_function,
                                                        output_states=[OUTCOME, MSE])
+            # for s in comparator_mechanism.output_states:
+            #     s.require_projection_in_composition = False
 
         learning_function = BackPropagation(default_variable=[input_source.output_states[0].value,
                                                               output_source.output_states[0].value,
