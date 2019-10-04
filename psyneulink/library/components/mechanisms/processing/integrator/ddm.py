@@ -830,12 +830,13 @@ class DDM(ProcessingMechanism):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_format:tc.optional(tc.enum(SCALAR, ARRAY, VECTOR))=SCALAR,
+                 input_format:tc.optional(tc.enum(SCALAR, ARRAY, VECTOR))=None,
                  function=DriftDiffusionAnalytical(drift_rate=1.0,
                                                    starting_point=0.0,
                                                    threshold=1.0,
                                                    noise=0.5,
                                                    t0=.200),
+                 input_states=None,
                  output_states:tc.optional(tc.any(str, Iterable))=(DECISION_VARIABLE, RESPONSE_TIME),
                  params=None,
                  name=None,
@@ -845,6 +846,13 @@ class DDM(ProcessingMechanism):
         self.standard_output_states = StandardOutputStates(self,
                                                            DDM_standard_output_states,
                                                            indices=SEQUENTIAL)
+
+        if input_format is not None and input_states is not None:
+            raise DDMError(
+                'Only one of input_format and input_states should be specified.'
+            )
+        elif input_format is None:
+            input_format = SCALAR
 
         # If input_format is specified to be ARRAY or VECTOR, instantiate:
         #    InputState with:
@@ -886,9 +894,6 @@ class DDM(ProcessingMechanism):
                  }
 
             ])
-
-        else:
-            input_states = None
 
         # Default output_states is specified in constructor as a tuple rather than a list
         # to avoid "gotcha" associated with mutable default arguments
