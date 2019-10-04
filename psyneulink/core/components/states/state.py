@@ -2558,6 +2558,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
         # Its value is assigned to the VARIABLE entry (including if it was originally just a value)
         reference_value = reference_value_dict[VARIABLE]
 
+    # MODIFIED 10/3/19 OLD:
     parsed_state_spec = _parse_state_spec(state_type=state_type,
                                           owner=owner,
                                           reference_value=reference_value,
@@ -2567,6 +2568,29 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
                                           prefs=prefs,
                                           context=context,
                                           **state_spec)
+    # # MODIFIED 10/3/19 NEW: [JDC]
+    # # Check if state_spec is
+    # if (isinstance(state_spec, dict)
+    #         and 'state_spec' in state_spec
+    #         and isinstance(state_spec['state_spec'], dict)
+    #         and PROJECTIONS in state_spec['state_spec']
+    #         and state_spec['state_spec'][PROJECTIONS]
+    #         and isinstance(state_spec['state_spec'][PROJECTIONS][0], Projection)
+    #         and isinstance(state_spec['state_spec'][PROJECTIONS][0].sender, state_type)):
+    #     parsed_state_spec = state_spec['state_spec'][PROJECTIONS][0].sender
+    #     parsed_state_spec.init_args[PARAMS][PROJECTIONS]=state_spec['state_spec'][PROJECTIONS][0]
+    #
+    # else:
+    #     parsed_state_spec = _parse_state_spec(state_type=state_type,
+    #                                           owner=owner,
+    #                                           reference_value=reference_value,
+    #                                           name=name,
+    #                                           variable=variable,
+    #                                           params=params,
+    #                                           prefs=prefs,
+    #                                           context=context,
+    #                                           **state_spec)
+    # MODIFIED 10/3/19 END
 
     # STATE SPECIFICATION IS A State OBJECT ***************************************
     # Validate and return
@@ -2789,6 +2813,24 @@ def _parse_state_spec(state_type=None,
 
         # If it is a State specification dictionary
         if isinstance(state_spec[STATE_SPEC_ARG], dict):
+
+            # If the State specification is a Projection that has a sender already assigned,
+            #    then return that State with the Projection assigned to it
+            #    (this occurs, for example, if an instantiated ControlSignal is used to specify a parameter
+            if (PROJECTIONS in state_spec[STATE_SPEC_ARG]
+                    and state_spec[STATE_SPEC_ARG][PROJECTIONS]
+                    and isinstance(state_spec[STATE_SPEC_ARG][PROJECTIONS], list)
+                    and isinstance(state_spec[STATE_SPEC_ARG][PROJECTIONS][0], Projection)
+                    and isinstance(state_spec[STATE_SPEC_ARG][PROJECTIONS][0].sender, state_type)
+            ):
+                projection = state_spec[STATE_SPEC_ARG][PROJECTIONS][0]
+                state = projection.sender
+                if state.initialization_status == ContextFlags.DEFERRED_INIT:
+                    state.init_args[PARAMS][PROJECTIONS]=projection
+                else:
+                    state._instantiate_projections_to_state(projections=projection, context=context)
+                return state
+
             # Use the value of any standard args specified in the State specification dictionary
             #    to replace those explicitly specified in the call to _instantiate_state (i.e., passed in standard_args)
             #    (use copy so that items in state_spec dict are not deleted when called from _validate_params)
