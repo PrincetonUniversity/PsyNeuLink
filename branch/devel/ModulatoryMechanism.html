@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Modulatory Mechanisms &mdash; PsyNeuLink 0.6.0.2+2.g2c91e6a documentation</title>
+  <title>Modulatory Mechanisms &mdash; PsyNeuLink 0.6.0.2+3.g9557995 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.2+2.g2c91e6a',
+              VERSION:'0.6.0.2+3.g9557995',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.2+2
+                0.6.0.2+3
               </div>
             
           
@@ -202,63 +202,39 @@
 <span id="modulatorymechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A ModulatoryMechanism is a type of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that modifies the operation of one or more other <a class="reference internal" href="Component.html"><span class="doc">Components</span></a>.  In general, a ModulatoryMechanism receives its input from an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>, however
 this need not be the case.</p>
-<p id="modulatorymechanism-types"># FIX 9/27/19
-There are three types of ModulatoryMechanism:</p>
-<ul class="simple">
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="#"><span class="doc">Modulatory Mechanisms</span></a></dt>
-<dd>takes an evaluative signal (generally received from an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>) and generates an
-<code class="xref any docutils literal"><span class="pre">modulatory_allocation</span></code>, each item of which is assigned to one of its
-<a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignals</span></a>;  each of those generates a <code class="xref any docutils literal"><span class="pre">modulatory_signal</span></code> that is used by its <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection(s)</span></a> to
-modulate the parameter of a <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.function" title="psyneulink.core.components.states.state.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (and thereby the <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.value" title="psyneulink.core.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>) of a
-<a class="reference internal" href="State.html"><span class="doc">States</span></a>.  A ModulatoryMechanism can be assigned any combination of <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a> and
-<a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignals</span></a>.</dd>
-</dl>
-</li>
-</ul>
+<p id="modulatorymechanism-types">There are two primary types of ModulatoryMechanism:</p>
 <ul class="simple">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a></dt>
-<dd>a subclsass of <a class="reference internal" href="#"><span class="doc">Modulatory Mechanisms</span></a> that adds support for <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.costs" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.costs"><code class="xref any py py-attr docutils literal"><span class="pre">costs</span></code></a>;  it takes an
-evaluative signal (generally received from an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>) and generates a <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a>, each item of which is assigned to one of its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>;  each of those generates a <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.control_signal" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.control_signal"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal</span></code></a> that is used by its
+<dd>modulates the <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.value" title="psyneulink.core.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a <a class="reference internal" href="State.html"><span class="doc">States</span></a> of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>.  Takes an evaluative signal (generally
+received from an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>) and generates a <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a>, each item of which is assigned to one of its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>;  each of those generates a <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.control_signal" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.control_signal"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal</span></code></a> that is used by its
 <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a> to modulate the parameter of a <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.function" title="psyneulink.core.components.states.state.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (and
-thereby the <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.value" title="psyneulink.core.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>) of a <a class="reference internal" href="State.html"><span class="doc">States</span></a>.  A ControlMechanism can be assigned only the <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a>
-class of <a class="reference internal" href="ModulatorySignal.html"><span class="doc">Modulatory Signals</span></a>, but can be also be assigned other generic <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>.</dd>
+thereby the <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.value" title="psyneulink.core.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>) of a <a class="reference internal" href="State.html"><span class="doc">States</span></a>.  ControlSignals have <a class="reference internal" href="ControlSignal.html#controlsignal-costs"><span class="std std-ref">costs</span></a>,
+and a ControlMechanism has a <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.costs" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.costs"><code class="xref any py py-attr docutils literal"><span class="pre">costs</span></code></a> and a <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a>
+that is computed based on the <code class="xref any docutils literal"><span class="pre">costs</span></code> of its ControlSignals. A ControlMechanism can be
+assigned only the <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> class of <a class="reference internal" href="ModulatorySignal.html"><span class="doc">Modulatory Signals</span></a>, but can be also be assigned other generic
+<a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> that appear after its ControlSignals in its <code class="xref any docutils literal"><span class="pre">output_states</span></code> attribute.</dd>
 </dl>
 </li>
 </ul>
-<ul class="simple">
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a></dt>
-<dd>a subclsass of <a class="reference internal" href="#"><span class="doc">Modulatory Mechanisms</span></a> that is specialized for modulating the input to or ouput from a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>;
-it takes an evaluative signal (generally received from an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>) and generates a
-<code class="xref any docutils literal"><span class="pre">gating_allocation</span></code>, each item of which is assigned to one of its
-<a class="reference internal" href="ControlSignal.html"><span class="doc">GatingSignals</span></a>;  each of those generates a <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.control_signal" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.control_signal"><code class="xref any py py-attr docutils literal"><span class="pre">gating_signal</span></code></a>
-that is used by its <a class="reference internal" href="ControlProjection.html"><span class="doc">GatingProjection(s)</span></a> to modulate the parameter of a <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.function" title="psyneulink.core.components.states.state.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (and thereby the <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.value" title="psyneulink.core.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>) of an <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> or <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>.
-A GatingMechanism can be assigned only the <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a> class of <a class="reference internal" href="ModulatorySignal.html"><span class="doc">Modulatory Signals</span></a>, but can be also be assigned
-other generic <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>.</dd>
-</dl>
-</li>
-</ul>
-<div class="section" id="id1">
-<h3>.<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a></dt>
-<dd>takes an error signal (received from an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> or another <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>) and generates a
-<a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> that is provided to its <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal(s)</span></a>, and used by their <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> to modulate the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>. A LearningMechanism can be assigned only
-<a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignals</span></a> as its <a class="reference internal" href="OutputState.html"><span class="doc">OuputStates</span></a>.</dd>
+<dd>modulates the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.  Takes an error signal
+(received from an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> or another <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>) and generates a <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> that is provided to its <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal(s)</span></a>, and used by
+their <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> to modulate the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter
+of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>. A LearningMechanism can be assigned only the <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> class of <a class="reference internal" href="ModulatorySignal.html"><span class="doc">Modulatory Signals</span></a>
+as its <a class="reference internal" href="OutputState.html"><span class="doc">OuputStates</span></a>, but can be also be assigned other generic <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>,
+that appear after its LearningSignals in its <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.output_states" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> attribute.</dd>
 </dl>
 </li>
 </ul>
 <p>See <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-naming"><span class="std std-ref">ModulatorySignal</span></a> for conventions used for the names of Modulatory components.</p>
-<p>A single <a class="reference internal" href="#"><span class="doc">Modulatory Mechanisms</span></a> can be assigned more than one ModulatorySignal of the appropriate</p>
-<p>which, each of which can
-be assigned
-different <a class="reference internal" href="ModulatorySignal.html#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.allocation" title="psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocations</span></code></a> (for ControlSignals and GatingSignals) or <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signals</span></code></a> (for LearningSignals).  A single ModulatorySignal can also be assigned multiple
-ModulatoryProjections; however, as described  under <code class="xref any docutils literal"><span class="pre">_ModulatorySignal_Projections</span></code>, they will all be assigned the
-same <a class="reference internal" href="ModulatoryProjection.html#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.variable" title="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
-</div>
+<p>A single <a class="reference internal" href="#"><span class="doc">Modulatory Mechanisms</span></a> can be assigned more than one ModulatorySignal of the appropriate type, each of which
+can be assigned different <code class="xref any docutils literal"><span class="pre">control_allocations</span></code> (for ControlSignals) or
+<a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signals</span></code></a> (for LearningSignals).  A single ModulatorySignal can also be
+assigned multiple ModulatoryProjections; however, as described  in <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-projections"><span class="std std-ref">ModulatoryProjections</span></a>, they will all
+be assigned the same <a class="reference internal" href="ModulatoryProjection.html#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.variable" title="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
 </div>
 <div class="section" id="creating-a-modulatorymechanism">
 <span id="modulatorymechanism-creation"></span><h2>Creating a ModulatoryMechanism<a class="headerlink" href="#creating-a-modulatorymechanism" title="Permalink to this headline">¶</a></h2>
