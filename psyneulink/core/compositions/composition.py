@@ -4058,8 +4058,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                WEIGHT: -1},
                                                        function=error_function,
                                                        output_states=[OUTCOME, MSE])
-            # for s in comparator_mechanism.output_states:
-            #     s.require_projection_in_composition = False
 
         learning_function = BackPropagation(default_variable=[input_source.output_states[0].value,
                                                               output_source.output_states[0].value,
