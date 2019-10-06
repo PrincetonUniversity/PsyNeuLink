@@ -93,4 +93,7 @@ script:
   - pytest -n auto --strict-markers -p no:logging --cov=psyneulink
 
 after_script:
-  - coveralls
+  - COVERALLS_PARALLEL=true coveralls
+
+notifications:
+  webhooks: https://coveralls.io/webhook
