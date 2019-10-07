@@ -1129,14 +1129,6 @@ class Component(object, metaclass=ComponentsMeta):
         self._validate(context=context)
 
         self.initialization_status = ContextFlags.INITIALIZED
-        # MODIFIED 12/4/18 NEW [JDC]:
-        from psyneulink.core.components.functions.function import Function_Base
-        if (
-            isinstance(self.function, Function_Base)
-            and self.function.initialization_status != ContextFlags.DEFERRED_INIT
-        ):
-            self.function.initialization_status = ContextFlags.INITIALIZED
-        # MODIFIED 12/4/18 END
 
         self._compilation_data = self._CompilationData(owner=self)
 
@@ -1449,8 +1441,6 @@ class Component(object, metaclass=ComponentsMeta):
             # Otherwise, allow class to replace std default name with class-specific one if it has a method for doing so
             else:
                 self._assign_default_name()
-
-            self.initialization_status = ContextFlags.INITIALIZED
 
     def _assign_deferred_init_name(self, name, context):
 
@@ -2864,6 +2854,7 @@ class Component(object, metaclass=ComponentsMeta):
         if isinstance(function, types.FunctionType):
             self.function = UserDefinedFunction(default_variable=function_variable,
                                                 custom_function=function,
+                                                owner=self,
                                                 context=context)
             self.function_params = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
             for param_name in self.function.cust_fct_params:
@@ -2896,13 +2887,9 @@ class Component(object, metaclass=ComponentsMeta):
             else:
                 self.function = copy.deepcopy(function)
 
-            # setting init status because many mechanisms change execution or validation behavior
-            # during initialization
-            self.function.initialization_status = ContextFlags.INITIALIZING
-
+            # set owner first because needed for is_initializing calls
+            self.function.owner = self
             self.function._update_default_variable(function_variable, context)
-
-            self.function.initialization_status = ContextFlags.INITIALIZED
 
         # Specification is Function class
         # Note:  parameter_states for function's parameters will be created in_instantiate_attributes_after_function
@@ -2928,12 +2915,10 @@ class Component(object, metaclass=ComponentsMeta):
                         pass
 
             _, kwargs = prune_unused_args(function.__init__, args=[], kwargs=kwargs_to_instantiate)
-            self.function = function(default_variable=function_variable, **kwargs)
+            self.function = function(default_variable=function_variable, owner=self, **kwargs)
 
         else:
             raise ComponentError(f'Unsupported function type: {type(function)}, function={function}.')
-
-        self.function.owner = self
 
         # KAM added 6/14/18 for functions that do not pass their has_initializers status up to their owner via property
         # FIX: need comprehensive solution for has_initializers; need to determine whether states affect mechanism's

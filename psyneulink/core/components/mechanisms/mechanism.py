@@ -1997,9 +1997,7 @@ class Mechanism_Base(Mechanism):
             self.function.output_type = FunctionOutputType.NP_2D_ARRAY
             self.function.enable_output_type_conversion = True
 
-        self.function.initialization_status = ContextFlags.INITIALIZING
         self.function._instantiate_value(context)
-        self.function.initialization_status = ContextFlags.INITIALIZED
 
     def _instantiate_attributes_after_function(self, context=None):
         from psyneulink.core.components.states.parameterstate import _instantiate_parameter_state

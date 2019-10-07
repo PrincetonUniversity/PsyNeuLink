@@ -1288,10 +1288,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                     f"size ({variable.shape[-1]}) of the innermost dimension (axis 0) of its "
                                     f"{repr(VARIABLE)} (i.e., the length of its items .")
             self.integrator_function.parameters.variable.default_value = variable
-            function_context_buffer = self.integrator_function.initialization_status
-            self.integrator_function.initialization_status = ContextFlags.INITIALIZING
             self.integrator_function.parameters.value.default_value = self.integrator_function(variable, context=context)
-            self.integrator_function.initialization_status = function_context_buffer
         # MODIFIED 6/24/19 END
 
         self.has_integrated = True

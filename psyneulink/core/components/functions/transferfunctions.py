@@ -2750,8 +2750,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         # proxy for checking whether the owner is a projection
         if hasattr(self.owner, "receiver"):
             sender = self.defaults.variable
-            # Note: this assumes variable is a 1D array, as enforced by _validate_variable
-            sender_len = sender.size
+            sender_len = np.size(np.atleast_2d(self.defaults.variable), 1)
 
             # FIX: RELABEL sender -> input AND receiver -> output
             # FIX: THIS NEEDS TO BE CLEANED UP:
