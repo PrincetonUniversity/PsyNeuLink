@@ -1742,8 +1742,7 @@ class GridSearch(OptimizationFunction):
         """Get next sample from grid.
         This is assigned as the `search_function <OptimizationFunction.search_function>` of the `OptimizationFunction`.
         """
-        initialization_status = self.initialization_status
-        if initialization_status == ContextFlags.INITIALIZING:
+        if self.is_initializing:
             return [signal.start for signal in self.search_space]
         try:
             sample = next(self.grid)
