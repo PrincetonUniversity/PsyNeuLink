@@ -51,11 +51,6 @@ Mechanisms in that Composition (see `Composition_Controller_Execution`).  The Ou
 ControlMechanism or its `objective_mechanism <ControlMechanism.objective_mechanism>`, and the parameters it modulates
 can be listed using its `show <ControlMechanism.show>` method.
 
-Note that a ControlMechanism is a subclass of `ModulatoryMechanism` that is restricted to using only `ControlSignals
-<ControlSignal>`.  Accordingly, its constructor has a **control_signals** argument in place of a **modulatory_signals**
-argument, and it lacks any attributes related to gating.  In all other respects it is identical to its parent class,
-ModulatoryMechanism.
-
 .. _ControlMechanism_Composition_Controller:
 
 *ControlMechanisms and a Composition*
@@ -560,88 +555,148 @@ Class Reference
 ---------------
 
 """
+
+import copy
+import itertools
 import numpy as np
+import threading
 import typecheck as tc
 import warnings
 
-from psyneulink.core.components.functions.function import is_function_type
-from psyneulink.core.components.mechanisms.adaptive.modulatorymechanism import ModulatoryMechanism
+from psyneulink.core import llvm as pnlvm
+from psyneulink.core.components.functions.function import Function_Base, is_function_type
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination
+from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.core.components.shellclasses import Composition_Base, System_Base
+from psyneulink.core.components.states.state import State, _parse_state_spec
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
-    CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, \
-    INIT_EXECUTE_METHOD_ONLY, MULTIPLICATIVE, PROJECTION_TYPE
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+    AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, \
+    EID_SIMULATION, GATING_SIGNAL, INIT_EXECUTE_METHOD_ONLY, \
+    MODULATORY_SIGNALS, MONITOR_FOR_CONTROL, MONITOR_FOR_MODULATION, MULTIPLICATIVE, \
+    OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, STATE_TYPE, SYSTEM
+from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import ContentAddressableList, is_iterable
+from psyneulink.core.globals.utilities import ContentAddressableList, is_iterable, convert_to_list
 
 __all__ = [
-    'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry'
+    'CONTROL_ALLOCATION', 'GATING_ALLOCATION', 'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry'
 ]
 
+CONTROL_ALLOCATION = 'control_allocation'
+GATING_ALLOCATION = 'gating_allocation'
 
 ControlMechanismRegistry = {}
 
 def _is_control_spec(spec):
     from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
-    from psyneulink.core.components.mechanisms.adaptive.modulatorymechanism import ModulatoryMechanism
     if isinstance(spec, tuple):
         return any(_is_control_spec(item) for item in spec)
     if isinstance(spec, dict) and PROJECTION_TYPE in spec:
         return _is_control_spec(spec[PROJECTION_TYPE])
     elif isinstance(spec, (ControlMechanism,
                            ControlSignal,
-                           ControlProjection,
-                           ModulatoryMechanism)):
+                           ControlProjection)):
         return True
     elif isinstance(spec, type) and issubclass(spec, (ControlMechanism,
                                                       ControlSignal,
-                                                      ControlProjection,
-                                                      ModulatoryMechanism)):
+                                                      ControlProjection)):
         return True
     elif isinstance(spec, str) and spec in {CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL}:
         return True
     else:
         return False
 
-
 class ControlMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
 
-def _control_allocation_getter(owning_component=None, context=None):
-    return owning_component.parameters.modulatory_allocation._get(context)
+def _control_mechanism_costs_getter(owning_component=None, context=None):
+    # NOTE: In cases where there is a reconfiguration_cost, that cost is not returned by this method
+    try:
+        costs = [c.compute_costs(c.parameters.value._get(context), context=context)
+                 for c in owning_component.control_signals
+                 if hasattr(c, 'compute_costs')] # GatingSignals don't have cost fcts
+        return costs
 
-def _control_allocation_setter(value, owning_component=None, context=None):
-    owning_component.parameters.modulatory_allocation._set(np.array(value), context)
-    return value
+    except TypeError:
+        return None
 
-def _gating_allocation_getter(owning_component=None, context=None):
-    from psyneulink.core.components.mechanisms.adaptive.gating import GatingMechanism
-    from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
-    raise ControlMechanismError(f"'gating_allocation' attribute is not implemented on {owning_component.name};  "
-                                f"consider using a {GatingMechanism.__name__} instead, "
-                                f"or a {ModulatoryMechanism.__name__} if both {ControlSignal.__name__}s and "
-                                f"{GatingSignal.__name__}s are needed.")
+def _outcome_getter(owning_component=None, context=None):
+    try:
+        return owning_component.parameters.variable._get(context)[0]
+    except TypeError:
+        return None
+
+def _net_outcome_getter(owning_component=None, context=None):
+    # NOTE: In cases where there is a reconfiguration_cost, that cost is not included in the net_outcome
+    try:
+        c = owning_component
+        return c.compute_net_outcome(c.parameters.outcome._get(context),
+                                     c.combine_costs(c.parameters.costs._get(context)))
+    except TypeError:
+        return [0]
+
+class DefaultAllocationFunction(Function_Base):
+    """Take a single 1d item and return a 2d array with n identical items
+    Takes the default input (a single value in the *OUTCOME* InputState of the ControlMechanism),
+    and returns the same allocation for each of its `control_signals <ControlMechanism.control_signals>`.
+    """
+    componentName = 'Default Control Function'
+    class Parameters(Function_Base.Parameters):
+        """
+            Attributes
+            ----------
+
+                num_control_signals
+                    see `num_control_signals <DefaultAllocationFunction.num_control_signals>`
+
+                    :default value: 1
+                    :type: int
+
+        """
+        num_control_signals = Parameter(1, stateful=False)
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 params=None,
+                 owner=None
+                 ):
+        # Assign args to params and functionParams dicts
+        params = self._assign_args_to_param_dicts(params=params)
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         )
+
+    def _function(self,
+                 variable=None,
+                 context=None,
+                 params=None,
+                 ):
+        num_ctl_sigs = self.get_current_function_param('num_control_signals')
+        result = np.array([variable[0]] * num_ctl_sigs)
+        return self.convert_output_type(result)
+
+    def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out):
+        val_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        val = builder.load(val_ptr)
+        with pnlvm.helpers.array_ptr_loop(builder, arg_out, "alloc_loop") as (b, idx):
+            out_ptr = builder.gep(arg_out, [ctx.int32_ty(0), idx])
+            builder.store(val, out_ptr)
+        return builder
 
 
-def _gating_allocation_setter(value, owning_component=None, context=None, **kwargs):
-    from psyneulink.core.components.mechanisms.adaptive.gating import GatingMechanism
-    from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
-    raise ControlMechanismError(f"'gating_allocation' attribute is not implemented on {owning_component.name};  "
-                                f"consider using a {GatingMechanism.__name__} instead, "
-                                f"or a {ModulatoryMechanism.__name__} if both {ControlSignal.__name__}s and "
-                                f"{GatingSignal.__name__}s are needed.")
-
-
-class ControlMechanism(ModulatoryMechanism):
+class ControlMechanism(ModulatoryMechanism_Base):
     """
     ControlMechanism(                               \
         system=None,                                \
@@ -658,7 +713,7 @@ class ControlMechanism(ModulatoryMechanism):
         name=None,                                  \
         prefs=None)
 
-    Subclass of `AdaptiveMechanism <AdaptiveMechanism>` that modulates the parameter(s)
+    Subclass of `ModulatoryMechanism <ModulatoryMechanism>` that modulates the parameter(s)
     of one or more `Component(s) <Component>`.
 
 
@@ -709,10 +764,11 @@ class ControlMechanism(ModulatoryMechanism):
         <System.controller>`.
 
     monitor_for_control : List[OutputState or Mechanism] : default None
-        specifies the `OutputStates <OutputState>` to be monitored by the `ObjectiveMechanism` specified in the
-        **objective_mechanism** argument; if any specification is a Mechanism (rather than its OutputState),
-        its `primary OutputState <OutputState_Primary>` is used (see `ControlMechanism_Monitor_for_Control` for
-        additional details).
+        specifies the `OutputStates <OutputState>` to be monitored by the `ObjectiveMechanism`, if specified in the
+        **objective_mechanism** argument (see `ControlMechanism_ObjectiveMechanism`), or directly by the
+        ControlMechanism itself if an **objective_mechanism** is not specified.  If any specification is a Mechanism
+        (rather than its OutputState), its `primary OutputState <OutputState_Primary>` is used (see
+        `ControlMechanism_Monitor_for_Control` for additional details).
 
     objective_mechanism : ObjectiveMechanism or List[OutputState specification] : default None
         specifies either an `ObjectiveMechanism` to use for the ControlMechanism, or a list of the OutputStates it
@@ -890,27 +946,50 @@ class ControlMechanism(ModulatoryMechanism):
     initMethod = INIT_EXECUTE_METHOD_ONLY
 
     outputStateTypes = ControlSignal
-    stateListAttr = ModulatoryMechanism.stateListAttr.copy()
+    stateListAttr = Mechanism_Base.stateListAttr.copy()
     stateListAttr.update({ControlSignal:CONTROL_SIGNALS})
 
     classPreferenceLevel = PreferenceLevel.TYPE
-    # Any preferences specified below will override those specified in TypeDefaultPreferences
+    # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'ControlMechanismClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_SET_NAME: 'ControlMechanismClassPreferences',
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
-    # Override control_allocation and suppress gating_allocation
-    class Parameters(ModulatoryMechanism.Parameters):
+    class Parameters(ModulatoryMechanism_Base.Parameters):
         """
             Attributes
             ----------
 
+                variable
+                    see `variable <ControlMechanism.variable>`
+
+                    :default value: numpy.array([[1.]])
+                    :type: numpy.ndarray
+
                 value
                     see `value <ControlMechanism.value>`
 
-                    :default value: numpy.array([1.])
+                    :default value: numpy.array([[1.]])
                     :type: numpy.ndarray
+
+                combine_costs
+                    see `combine_costs <ControlMechanism.combine_costs>`
+
+                    :default value: numpy.core.fromnumeric.sum
+                    :type: <class 'function'>
+
+                compute_net_outcome
+                    see `compute_net_outcome <ControlMechanism.compute_net_outcome>`
+
+                    :default value: lambda outcome, cost: outcome - cost
+                    :type: <class 'function'>
+
+                compute_reconfiguration_cost
+                    see `compute_reconfiguration_cost <ControlMechanism.compute_reconfiguration_cost>`
+
+                    :default value: None
+                    :type:
 
                 control_allocation
                     see `control_allocation <ControlMechanism.control_allocation>`
@@ -919,25 +998,84 @@ class ControlMechanism(ModulatoryMechanism):
                     :type: numpy.ndarray
                     :read only: True
 
+                control_signal_costs
+                    see `control_signal_costs <ControlMechanism.control_signal_costs>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                costs
+                    see `costs <ControlMechanism.costs>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                default_allocation
+                    see `default_allocation <ControlMechanism.default_allocation>`
+
+                    :default value: (None,)
+                    :type: <class 'tuple'>
+
                 gating_allocation
                     see `gating_allocation <ControlMechanism.gating_allocation>`
 
-                    :default value: NotImplemented
-                    :type: <class 'NotImplementedType'>
+                    :default value: numpy.array([0.5])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                modulation
+                    see `modulation <ControlMechanism.modulation>`
+
+                    :default value: MULTIPLICATIVE
+                    :type: `ModulationParam`
+
+                net_outcome
+                    see `net_outcome <ControlMechanism.net_outcome>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                outcome
+                    see `outcome <ControlMechanism.outcome>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                reconfiguration_cost
+                    see `reconfiguration_cost <ControlMechanism.reconfiguration_cost>`
+
+                    :default value: None
+                    :type:
                     :read only: True
 
         """
         # This must be a list, as there may be more than one (e.g., one per control_signal)
-        value = Parameter(np.array([defaultControlAllocation]), aliases='modulatory_allocation')
-        control_allocation = Parameter(np.array([defaultControlAllocation]),
-                                      getter=_control_allocation_getter,
-                                      setter=_control_allocation_setter,
-                                      read_only=True)
+        variable = np.array([[defaultControlAllocation]])
+        value = Parameter(np.array([[defaultControlAllocation]]), aliases='control_allocation')
+        default_allocation = None,
 
-        gating_allocation = Parameter(NotImplemented,
-                                      getter=_gating_allocation_getter,
-                                      setter=_gating_allocation_setter,
-                                      read_only=True)
+        combine_costs = Parameter(np.sum, stateful=False, loggable=False)
+        costs = Parameter(None, read_only=True, getter=_control_mechanism_costs_getter)
+        control_signal_costs = Parameter(None, read_only=True)
+        compute_reconfiguration_cost = Parameter(None, stateful=False, loggable=False)
+        reconfiguration_cost = Parameter(None, read_only=True)
+        outcome = Parameter(None, read_only=True, getter=_outcome_getter)
+        compute_net_outcome = Parameter(lambda outcome, cost: outcome - cost, stateful=False, loggable=False)
+        net_outcome = Parameter(None, read_only=True,
+                                getter=_net_outcome_getter)
+        simulation_ids = Parameter([], user=False)
+        modulation = MULTIPLICATIVE
+
+        objective_mechanism = Parameter(None, stateful=False, loggable=False)
+
+    paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({
+        OBJECTIVE_MECHANISM: None,
+        CONTROL_PROJECTIONS: None})
 
     @tc.typecheck
     def __init__(self,
@@ -948,7 +1086,11 @@ class ControlMechanism(ModulatoryMechanism):
                  objective_mechanism=None,
                  function=None,
                  default_allocation:tc.optional(tc.any(int, float, list, np.ndarray))=None,
-                 control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
+                 control:tc.optional(tc.any(is_iterable,
+                                            ParameterState,
+                                            InputState,
+                                            OutputState,
+                                            ControlSignal))=None,
                  modulation:tc.optional(str)=MULTIPLICATIVE,
                  combine_costs:is_function_type=np.sum,
                  compute_reconfiguration_cost:tc.optional(is_function_type)=None,
@@ -959,44 +1101,534 @@ class ControlMechanism(ModulatoryMechanism):
                  **kwargs
                  ):
 
-        # if kwargs:
-        #         for i in kwargs.keys():
-        #             raise ControlMechanismError("Unrecognized arg in constructor for {}: {}".
-        #                                         format(self.__class__.__name__, repr(i)))
+        monitor_for_control = convert_to_list(monitor_for_control) or []
+        control = convert_to_list(control) or []
+
+        # For backward compatibility:
+        if kwargs:
+            if MONITOR_FOR_MODULATION in kwargs:
+                args = kwargs.pop(MONITOR_FOR_MODULATION)
+                if args:
+                    monitor_for_control.extend(convert_to_list(args))
+            if MODULATORY_SIGNALS in kwargs:
+                args = kwargs.pop(MODULATORY_SIGNALS)
+                if args:
+                    control.extend(convert_to_list(args))
+            if CONTROL_SIGNALS in kwargs:
+                args = kwargs.pop(CONTROL_SIGNALS)
+                if args:
+                    control.extend(convert_to_list(args))
+
+        function = function or DefaultAllocationFunction
+        self.combine_costs = combine_costs
+        self.compute_net_outcome = compute_net_outcome
+        self.compute_reconfiguration_cost = compute_reconfiguration_cost
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(system=system,
+                                                  monitor_for_control=monitor_for_control,
+                                                  objective_mechanism=objective_mechanism,
+                                                  function=function,
+                                                  default_allocation=default_allocation,
+                                                  control=control,
+                                                  modulation=modulation,
                                                   params=params)
+        self._sim_counts = {}
 
-        # FIX: REMOVE system ARGUMENT
-        super(ControlMechanism, self).__init__(system=system,
-                                               default_variable=default_variable,
-                                               size=size,
-                                               monitor_for_modulation=monitor_for_control,
-                                               objective_mechanism=objective_mechanism,
-                                               function=function,
-                                               default_allocation=default_allocation,
-                                               combine_costs=combine_costs,
-                                               compute_reconfiguration_cost=compute_reconfiguration_cost,
-                                               compute_net_outcome=compute_net_outcome,
-                                               modulatory_signals=control_signals,
-                                               modulation=modulation,
-                                               params=params,
-                                               name=name,
-                                               prefs=prefs,
+        super(ControlMechanism, self).__init__(default_variable=default_variable,
+                                                  size=size,
+                                                  modulation=modulation,
+                                                  params=params,
+                                                  name=name,
+                                                  function=function,
+                                                  prefs=prefs,
+                                                  **kwargs)
 
-                                               **kwargs)
+        if system is not None:
+            self._activate_projections_for_compositions(system)
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate SYSTEM, monitor_for_control, CONTROL_SIGNALS and GATING_SIGNALS
+
+        If System is specified, validate it
+        Check that all items in monitor_for_control are Mechanisms or OutputStates for Mechanisms in self.system
+        Check that all items in CONTROL_SIGNALS are parameters or ParameterStates for Mechanisms in self.system
+        Check that all items in GATING_SIGNALS are States for Mechanisms in self.system
+        """
+        from psyneulink.core.components.system import MonitoredOutputStateTuple
+        from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+        from psyneulink.core.components.states.inputstate import InputState
+
+        super(ControlMechanism, self)._validate_params(request_set=request_set,
+                                                       target_set=target_set,
+                                                       context=context)
+
+        def validate_monitored_state_spec(spec_list):
+            for spec in spec_list:
+                if isinstance(spec, MonitoredOutputStateTuple):
+                    spec = spec.output_state
+                elif isinstance(spec, tuple):
+                    spec = spec[0]
+                elif isinstance(spec, dict):
+                    # If it is a dict, parse to validate that it is an InputState specification dict
+                    #    (for InputState of ObjectiveMechanism to be assigned to the monitored_output_state)
+                    spec = _parse_state_spec(owner=self,
+                                             state_type=InputState,
+                                             state_spec=spec,
+                                             context=context)
+                    # Get the OutputState, to validate that it is in the ControlMechanism's Composition (below);
+                    #    presumes that the monitored_output_state is the first in the list of projection_specs
+                    #    in the InputState state specification dictionary returned from the parse,
+                    #    and that it is specified as a projection_spec (parsed into that in the call
+                    #    to _parse_connection_specs by _parse_state_spec)
+
+                    spec = spec[PROJECTIONS][0][0]
+
+                if not isinstance(spec, (OutputState, Mechanism)):
+                    if isinstance(spec, type) and issubclass(spec, Mechanism):
+                        raise ControlMechanismError(
+                                f"Mechanism class ({spec.__name__}) specified in '{MONITOR_FOR_CONTROL}' arg "
+                                f"of {self.name}; it must be an instantiated {Mechanism.__name__} or "
+                                f"{OutputState.__name__} of one.")
+                    elif isinstance(spec, State):
+                        raise ControlMechanismError(
+                                f"{spec.__class__.__name__} specified in '{MONITOR_FOR_CONTROL}' arg of {self.name} "
+                                f"({spec.name} of {spec.owner.name}); "
+                                f"it must be an {OutputState.__name__} or {Mechanism.__name__}.")
+                    else:
+                        raise ControlMechanismError(
+                                f"Erroneous specification of '{MONITOR_FOR_CONTROL}' arg for {self.name} ({spec}); "
+                                f"it must be an {OutputState.__name__} or a {Mechanism.__name__}.")
+                # If ControlMechanism has been assigned to a System, check that
+                #    all the items in the list used to specify objective_mechanism are in the same System
+                # FIX: TBI FOR COMPOSITION
+                if self.system:
+                    if not isinstance(spec, (list, ContentAddressableList)):
+                        spec = [spec]
+                    self.system._validate_monitored_states_in_system(spec, context=context)
+
+        if SYSTEM in target_set:
+            if not isinstance(target_set[SYSTEM], System_Base):
+                raise KeyError
+            else:
+                self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
+
+        if MONITOR_FOR_CONTROL in target_set and target_set[MONITOR_FOR_CONTROL] is not None:
+            spec = target_set[MONITOR_FOR_CONTROL]
+            if not isinstance(spec, (list, ContentAddressableList)):
+                spec = [spec]
+            validate_monitored_state_spec(spec)
+
+        if OBJECTIVE_MECHANISM in target_set and \
+                target_set[OBJECTIVE_MECHANISM] is not None and\
+                target_set[OBJECTIVE_MECHANISM] is not False:
+
+            if isinstance(target_set[OBJECTIVE_MECHANISM], list):
+
+                obj_mech_spec_list = target_set[OBJECTIVE_MECHANISM]
+
+                # Check if there is any ObjectiveMechanism is in the list;
+                #    incorrect but possibly forgivable mis-specification --
+                #    if an ObjectiveMechanism is specified, it should be "exposed" (i.e., not in a list)
+                if any(isinstance(spec, ObjectiveMechanism) for spec in obj_mech_spec_list):
+                    # If an ObjectiveMechanism is the *only* item in the list, forgive the mis-spsecification and use it
+                    if len(obj_mech_spec_list)==1 and isinstance(obj_mech_spec_list[0], ObjectiveMechanism):
+                        if self.verbosePref:
+                            warnings.warn("Specification of {} arg for {} is an {} in a list; it will be used, "
+                                                        "but, for future reference, it should not be in a list".
+                                                        format(OBJECTIVE_MECHANISM,
+                                                               ObjectiveMechanism.__name__,
+                                                               self.name))
+                        target_set[OBJECTIVE_MECHANISM] = target_set[OBJECTIVE_MECHANISM][0]
+                    else:
+                        raise ControlMechanismError("Ambigusous specification of {} arg for {}; "
+                                                    " it is in a list with other items ({})".
+                                                    format(OBJECTIVE_MECHANISM, self.name, obj_mech_spec_list))
+                else:
+                    validate_monitored_state_spec(obj_mech_spec_list)
+
+            if not isinstance(target_set[OBJECTIVE_MECHANISM], (ObjectiveMechanism, list, bool)):
+                raise ControlMechanismError("Specification of {} arg for {} ({}) must be an {}"
+                                            "or a list of Mechanisms and/or OutputStates to be monitored for control".
+                                            format(OBJECTIVE_MECHANISM,
+                                                   self.name, target_set[OBJECTIVE_MECHANISM],
+                                                   ObjectiveMechanism.componentName))
+
+        if CONTROL in target_set and target_set[CONTROL]:
+            control = target_set[CONTROL]
+            assert isinstance(control, list), \
+                f"PROGRAM ERROR: control arg {control} of {self.name} should have been converted to a list."
+            # # MODIFIED 9/26/19 OLD:
+            # from psyneulink.core.components.projections.projection import ProjectionError
+            # for ctl_spec in control:
+            #     # _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=control_signal)
+            #     try:
+            #         _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=ctl_spec)
+            #     except ProjectionError:
+            #         _parse_state_spec(state_type=GatingSignal, owner=self, state_spec=ctl_spec)
+            # MODIFIED 9/26/19 NEW:
+            for ctl_spec in control:
+                ctl_spec = _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=ctl_spec)
+                if not (isinstance(ctl_spec, ControlSignal)
+                        or (isinstance(ctl_spec, dict) and ctl_spec[STATE_TYPE]==ControlSignal.__name__)):
+                    raise ControlMechanismError(f"Invalid specification for '{CONTROL}' argument of {self.name}:"
+                                                f"({ctl_spec})")
+            # MODIFIED 9/26/19 END
+
+    # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
+    def _instantiate_objective_mechanism(self, context=None):
+        """
+        # FIX: ??THIS SHOULD BE IN OR MOVED TO ObjectiveMechanism
+        Assign InputState to ObjectiveMechanism for each OutputState to be monitored;
+            uses _instantiate_monitoring_input_state and _instantiate_control_mechanism_input_state to do so.
+            For each item in self.monitored_output_states:
+            - if it is a OutputState, call _instantiate_monitoring_input_state()
+            - if it is a Mechanism, call _instantiate_monitoring_input_state for relevant Mechanism.output_states
+                (determined by whether it is a `TERMINAL` Mechanism and/or MonitoredOutputStatesOption specification)
+            - each InputState is assigned a name with the following format:
+                '<name of Mechanism that owns the monitoredOutputState>_<name of monitoredOutputState>_Monitor'
+
+        Notes:
+        * self.monitored_output_states is a list, each item of which is a Mechanism.output_state from which a
+          Projection will be instantiated to a corresponding InputState of the ControlMechanism
+        * self.input_states is the usual ordered dict of states,
+            each of which receives a Projection from a corresponding OutputState in self.monitored_output_states
+        """
+        from psyneulink.core.components.system import MonitoredOutputStateTuple
+        from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+        from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism, ObjectiveMechanismError
+        from psyneulink.core.components.states.inputstate import EXPONENT_INDEX, WEIGHT_INDEX
+        from psyneulink.core.components.functions.function import FunctionError
+
+        # GET OutputStates to Monitor (to specify as or add to ObjectiveMechanism's monitored_output_states attribute
+
+        monitored_output_states = []
+
+        # If the ControlMechanism has already been assigned to a System
+        #    get OutputStates in System specified as monitor_for_control or already being monitored:
+        #        do this by calling _get_monitored_output_states_for_system(),
+        #        which also gets any OutputStates already being monitored by the ControlMechanism
+        if self.system:
+            monitored_output_states.extend(self.system._get_monitored_output_states_for_system(self,context=context))
+
+        self.monitor_for_control = self.monitor_for_control or []
+        if not isinstance(self.monitor_for_control, list):
+            self.monitor_for_control = [self.monitor_for_control]
+
+        # If objective_mechanism is used to specify OutputStates to be monitored (legacy feature)
+        #    move them to monitor_for_control
+        if isinstance(self.objective_mechanism, list):
+            self.monitor_for_control.extend(self.objective_mechanism)
+
+        # Add items in monitor_for_control to monitored_output_states
+        for i, item in enumerate(self.monitor_for_control):
+            # If it is already in the list received from System, ignore
+            if item in monitored_output_states:
+                # NOTE: this can happen if ControlMechanisms is being constructed by System
+                #       which passed its monitor_for_control specification
+                continue
+            monitored_output_states.extend([item])
+
+        # INSTANTIATE ObjectiveMechanism
+
+        # If *objective_mechanism* argument is an ObjectiveMechanism, add monitored_output_states to it
+        if isinstance(self.objective_mechanism, ObjectiveMechanism):
+            if monitored_output_states:
+                self.objective_mechanism.add_to_monitor(monitor_specs=monitored_output_states,
+                                                        context=context)
+        # Otherwise, instantiate ObjectiveMechanism with list of states in monitored_output_states
+        else:
+            try:
+                self.objective_mechanism = ObjectiveMechanism(monitor=monitored_output_states,
+                                                               function=LinearCombination(operation=PRODUCT),
+                                                               name=self.name + '_ObjectiveMechanism')
+            except (ObjectiveMechanismError, FunctionError) as e:
+                raise ObjectiveMechanismError(f"Error creating {OBJECTIVE_MECHANISM} for {self.name}: {e}")
+
+        # Print monitored_output_states
+        if self.prefs.verbosePref:
+            print("{0} monitoring:".format(self.name))
+            for state in self.monitored_output_states:
+                weight = self.monitored_output_states_weights_and_exponents[
+                                                         self.monitored_output_states.index(state)][WEIGHT_INDEX]
+                exponent = self.monitored_output_states_weights_and_exponents[
+                                                         self.monitored_output_states.index(state)][EXPONENT_INDEX]
+                print(f"\t{weight} (exp: {weight}; wt: {exponent})")
+
+        # Assign ObjectiveMechanism's role as CONTROL
+        self.objective_mechanism._role = CONTROL
+
+        # Instantiate MappingProjection from ObjectiveMechanism to ControlMechanism
+        projection_from_objective = MappingProjection(sender=self.objective_mechanism,
+                                                      receiver=self,
+                                                      matrix=AUTO_ASSIGN_MATRIX,
+                                                      context=context)
+
+        # CONFIGURE FOR ASSIGNMENT TO COMPOSITION
+
+        # Insure that ObjectiveMechanism's input_states are not assigned projections from a Composition's input_CIM
+        for input_state in self.objective_mechanism.input_states:
+            input_state.internal_only = True
+        # Flag ObjectiveMechanism and its Projection to ControlMechanism for inclusion in Composition
+        self.aux_components.append(self.objective_mechanism)
+        self.aux_components.append(projection_from_objective)
+
+        # ASSIGN ATTRIBUTES
+
+        self._objective_projection = projection_from_objective
+        self.monitor_for_control = self.monitored_output_states
+
+    def _instantiate_input_states(self, context=None):
+
+        super()._instantiate_input_states(context=context)
+        self.input_state.name = OUTCOME
+        self.input_state.name = OUTCOME
+
+        # If objective_mechanism is specified, instantiate it,
+        #     including Projections to it from monitor_for_control
+        if self.objective_mechanism:
+            self._instantiate_objective_mechanism(context=context)
+
+        # Otherwise, instantiate Projections from monitor_for_control to ControlMechanism
+        elif self.monitor_for_control:
+            from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+            for sender in convert_to_list(self.monitor_for_control):
+                self.aux_components.append(MappingProjection(sender=sender, receiver=self.input_states[OUTCOME]))
 
     def _instantiate_output_states(self, context=None):
-        self._register_modulatory_signal_type(ControlSignal,context)
-        super()._instantiate_output_states(context)
 
-    def _instantiate_control_signal(self, control_signal, context):
-        return super()._instantiate_modulatory_signal(modulatory_signal=control_signal, context=context)
+    # ---------------------------------------------------
+    # FIX 5/23/17: PROJECTIONS AND PARAMS SHOULD BE PASSED BY ASSIGNING TO STATE SPECIFICATION DICT
+    # FIX          UPDATE parse_state_spec TO ACCOMODATE (param, ControlSignal) TUPLE
+    # FIX          TRACK DOWN WHERE PARAMS ARE BEING HANDED OFF TO ControlProjection
+    # FIX                   AND MAKE SURE THEY ARE NOW ADDED TO ControlSignal SPECIFICATION DICT
+    # ---------------------------------------------------
+
+        self._register_control_signal_type(context=None)
+
+        if self.control:
+            self._instantiate_control_signals(context=context)
+
+        super()._instantiate_output_states(context=context)
+
+        # # Reassign control_signals, control_signals and gating_signals to backing fields of corresponding params
+        # # to capture any user_defined ControlSignals and/or GatingSignals instantiated in call to super
+        # # and assign to ContentAddressableLists
+        # self._control_signals = ContentAddressableList(component_type=ControlSignal,
+        #                                                list=[state for state in self.output_states
+        #                                                      if isinstance(state, (ControlSignal, GatingSignal))])
+
+    def _register_control_signal_type(self, context=None):
+        from psyneulink.core.globals.registry import register_category
+        from psyneulink.core.components.states.state import State_Base
+
+        # Create registry for ControlSignals (to manage names)
+        register_category(entry=ControlSignal,
+                          base_class=State_Base,
+                          registry=self._stateRegistry,
+                          context=context)
+
+    def _instantiate_control_signals(self, context):
+        """Subclassess can override for class-specific implementation (see OptimiziationControlMechanism for example)"""
+        for i, control_signal in enumerate(self.control):
+            self.control[i] = self._instantiate_control_signal(control_signal, context=context)
+        num_control_signals = i+1
+
+        # For DefaultAllocationFunction, set defaults.value to have number of items equal to num control_signals
+        if isinstance(self.function, DefaultAllocationFunction):
+            self.defaults.value = np.tile(self.function.value, (num_control_signals, 1))
+            self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
+            self.function.num_control_signals = num_control_signals
+
+        # For other functions, assume that if its value has:
+        # - one item, all control_signals should get it (i.e., the default: (OWNER_VALUE, 0));
+        # - same number of items as the number of control_signals;
+        #     assign each control_signal to the corresponding item of the function's value
+        # - a different number of items than number of control_signals,
+        #     leave things alone, and allow any errant indices for control_signals to be caught later.
+        else:
+            self.defaults.value = np.array(self.function.value)
+            self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
+
+            len_fct_value = len(self.function.value)
+
+            # Assign each ControlSignal's variable_spec to index of ControlMechanism's value
+            for i, control_signal in enumerate(self.control):
+
+                # If number of control_signals is same as number of items in function's value,
+                #    assign each ControlSignal to the corresponding item of the function's value
+                if len_fct_value == num_control_signals:
+                    control_signal._variable_spec = [(OWNER_VALUE, i)]
+
+                if not isinstance(control_signal.owner_value_index, int):
+                    assert False, \
+                        f"PROGRAM ERROR: The \'owner_value_index\' attribute for {control_signal.name} " \
+                            f"of {self.name} ({control_signal.owner_value_index})is not an int."
+
+    def _instantiate_control_signal(self,  control_signal, context=None):
+        """Parse and instantiate ControlSignal (or subclass relevant to ControlMechanism subclass)
+
+        Temporarily assign variable to default allocation value to avoid chicken-and-egg problem:
+           value, output_states and control_signals haven't been expanded yet to accomodate the new
+           ControlSignal; reassign control_signal.variable to actual OWNER_VALUE below,
+           once value has been expanded
+        """
+
+        if self._output_states is None:
+            self._output_states = []
+
+        control_signal = self._instantiate_control_signal_type(control_signal, context)
+        control_signal.owner = self
+
+        self._check_for_duplicates(control_signal, self.control_signals, context)
+
+        # Update control_signal_costs to accommodate instantiated Projection
+        control_signal_costs = self.parameters.control_signal_costs._get(context)
+        try:
+            control_signal_costs = np.append(control_signal_costs, np.zeros((1, 1)), axis=0)
+        except (AttributeError, ValueError):
+            control_signal_costs = np.zeros((1, 1))
+        self.parameters.control_signal_costs._set(control_signal_costs, context)
+
+        # UPDATE output_states AND control_projections -------------------------------------------------------------
+
+        # FIX: 9/14/19 - THIS SHOULD BE IMPLEMENTED
+        # TBI: For ControlMechanisms that accumulate, starting output must be equal to the initial "previous value"
+        # so that modulation that occurs BEFORE the control mechanism executes is computed appropriately
+        # if (isinstance(self.function, IntegratorFunction)):
+        #     control_signal._intensity = function.initializer
+
+        # Add ControlSignal to end of list of ControlSignals at start of output_states list
+        # FIX: 9/25/19 - PUT ALL ControlSignals AT THE BEGINNING OF THE LIST;
+        #                ALLOW OTHERS OUTPUTSTATES TO BE SPECIFIED
+        self._output_states.append(control_signal)
+
+        return control_signal
+
+    def _instantiate_control_signal_type(self, control_signal_spec, context):
+        """Instantiate actual ControlSignal, or subclass if overridden"""
+        from psyneulink.core.components.states.state import _instantiate_state
+        from psyneulink.core.components.projections.projection import ProjectionError
+
+        allocation_parameter_default = self.parameters.control_allocation.default_value
+
+        control_signal = _instantiate_state(state_type=ControlSignal,
+                                               owner=self,
+                                               variable=self.default_allocation           # User specified value
+                                                        or allocation_parameter_default,  # Parameter default
+                                               reference_value=allocation_parameter_default,
+                                               modulation=self.modulation,
+                                               state_spec=control_signal_spec,
+                                               context=context)
+        if not type(control_signal) in convert_to_list(self.outputStateTypes):
+            raise ProjectionError(f'{type(control_signal)} inappropriate for {self.name}')
+        return control_signal
+
+    def _check_for_duplicates(self, control_signal, control_signals, context):
+        """
+        Check that control_signal is not a duplicate of one already instantiated for the ControlMechanism
+
+        Can happen if control of parameter is specified in constructor for a Mechanism
+            and also in the ControlMechanism's **control** arg
+
+        control_signals arg passed in to allow override by subclasses
+        """
+
+        for existing_ctl_sig in control_signals:
+            # OK if control_signal is one already assigned to ControlMechanism (i.e., let it get processed below);
+            # this can happen if it was in deferred_init status and initalized in call to _instantiate_state above.
+            if control_signal == existing_ctl_sig:
+                continue
+
+            # Return if *all* projections from control_signal are identical to ones in an existing control_signal
+            for proj in control_signal.efferents:
+                if proj not in existing_ctl_sig.efferents:
+                    # A Projection in control_signal is not in this existing one: it is different,
+                    #    so break and move on to next existing_mod_sig
+                    break
+                return
+
+            # Warn if *any* projections from control_signal are identical to ones in an existing control_signal
+            projection_type = existing_ctl_sig.paramClassDefaults[PROJECTION_TYPE]
+            if any(
+                    any(new_p.receiver == existing_p.receiver
+                        for existing_p in existing_ctl_sig.efferents) for new_p in control_signal.efferents):
+                warnings.warn(f"Specification of {control_signal.name} for {self.name} "
+                              f"has one or more {projection_type}s redundant with ones already on "
+                              f"an existing {ControlSignal.__name__} ({existing_ctl_sig.name}).")
+
+    def show(self):
+        """Display the OutputStates monitored by ControlMechanism's `objective_mechanism
+        <ControlMechanism.objective_mechanism>` and the parameters modulated by its `control_signals
+        <ControlMechanism.control_signals>`.
+        """
+
+        print("\n---------------------------------------------------------")
+
+        print("\n{0}".format(self.name))
+        print("\n\tMonitoring the following Mechanism OutputStates:")
+        for state in self.objective_mechanism.input_states:
+            for projection in state.path_afferents:
+                monitored_state = projection.sender
+                monitored_state_mech = projection.sender.owner
+                # ContentAddressableList
+                monitored_state_index = self.monitored_output_states.index(monitored_state)
+
+                weight = self.monitored_output_states_weights_and_exponents[monitored_state_index][0]
+                exponent = self.monitored_output_states_weights_and_exponents[monitored_state_index][1]
+
+                print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
+                       format(monitored_state_mech.name, monitored_state.name, weight, exponent))
+
+        try:
+            if self.control_signals:
+                print ("\n\tControlling the following Mechanism parameters:".format(self.name))
+                # Sort for consistency of output:
+                state_names_sorted = sorted(self.control_signals.names)
+                for state_name in state_names_sorted:
+                    for projection in self.control_signals[state_name].efferents:
+                        print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
+        except:
+            pass
+
+        try:
+            if self.gating_signals:
+                print ("\n\tGating the following States:".format(self.name))
+                # Sort for consistency of output:
+                state_names_sorted = sorted(self.gating_signals.names)
+                for state_name in state_names_sorted:
+                    for projection in self.gating_signals[state_name].efferents:
+                        print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
+        except:
+            pass
+
+        print ("\n---------------------------------------------------------")
+
+    def add_to_monitor(self, monitor_specs, context=None):
+        """Instantiate OutputStates to be monitored by ControlMechanism's `objective_mechanism
+        <ControlMechanism.objective_mechanism>`.
+
+        **monitored_output_states** can be any of the following:
+            - `Mechanism`;
+            - `OutputState`;
+            - `tuple specification <InputState_Tuple_Specification>`;
+            - `State specification dictionary <InputState_Specification_Dictionary>`;
+            - list with any of the above.
+        If any item is a Mechanism, its `primary OutputState <OutputState_Primary>` is used.
+        OutputStates must belong to Mechanisms in the same `System` as the ControlMechanism.
+        """
+        output_states = self.objective_mechanism.add_to_monitor(monitor_specs=monitor_specs, context=context)
+        if self.system:
+            self.system._validate_monitored_states_in_system(output_states, context=context)
+
+    def _add_process(self, process, role:str):
+        super()._add_process(process, role)
+        if self.objective_mechanism:
+            self.objective_mechanism._add_process(process, role)
 
     # FIX: TBI FOR COMPOSITION
-    @handle_external_context()
     @tc.typecheck
+    @handle_external_context()
     def assign_as_controller(self, system:System_Base, context=None):
         """Assign ControlMechanism as `controller <System.controller>` for a `System`.
 
@@ -1052,7 +1684,7 @@ class ControlMechanism(ModulatoryMechanism):
 
         # Get any and all OutputStates specified in:
         # - **monitored_output_states** argument of the System's constructor
-        # - in a MONITOR_FOR_CONTROL specification for individual OutputStates and/or Mechanisms
+        # - in a monitor_for_control specification for individual OutputStates and/or Mechanisms
         # - already being montiored by the ControlMechanism being assigned
         monitored_output_states = list(system._get_monitored_output_states_for_system(controller=self, context=context))
 
@@ -1064,7 +1696,7 @@ class ControlMechanism(ModulatoryMechanism):
         # Add all other monitored_output_states to the ControlMechanism's monitored_output_states attribute
         #    and to its ObjectiveMechanisms monitored_output_states attribute
         if monitored_output_states:
-            self.add_to_monitor(monitored_output_states, context=context)
+            self.add_to_monitor(monitored_output_states)
 
         # The system does NOT already have a controller,
         #    so assign it ControlSignals for any parameters in the System specified for control
@@ -1081,16 +1713,18 @@ class ControlMechanism(ModulatoryMechanism):
         if (len(self.control_signals)==1
                 and self.control_signals[0].name=='ControlSignal-0'
                 and not self.control_signals[0].efferents):
+            # FIX: REPLACE WITH remove_states
             del self._output_states[0]
+            # del self.control_signals[0]
 
         # Add any ControlSignals specified for System
         for control_signal_spec in system_control_signals:
             control_signal = self._instantiate_control_signal(control_signal=control_signal_spec, context=context)
-            if not control_signal:
-                continue
             # FIX: 1/18/18 - CHECK FOR SAME NAME IN _instantiate_control_signal
             # # Don't add any that are already on the ControlMechanism
-            if control_signal.name in self.control_signals.names and (self.verbosePref or system.verbosePref):
+            # if control_signal.name in self.control_signals.names and (self.verbosePref or system.verbosePref):
+            if ((self.verbosePref or system.verbosePref)
+                    and control_signal.name in [cs.name for cs in self.control_signals]):
                 warnings.warn("{} specified for {} has same name (\'{}\') "
                               "as one in controller ({}) being assigned to the {}."
                               "".format(ControlSignal.__name__, system.name,
@@ -1114,40 +1748,156 @@ class ControlMechanism(ModulatoryMechanism):
 
         self._activate_projections_for_compositions(system)
 
-    def _apply_control_allocation(self, control_allocation, runtime_params, context):
-        self._apply_modulatory_allocation(modulatory_allocation=control_allocation,
-                                          runtime_params=runtime_params,
-                                          context=context)
+    def _remove_default_control_signal(self, type:tc.enum(CONTROL_SIGNAL, GATING_SIGNAL)):
+        if type == CONTROL_SIGNAL:
+            ctl_sig_attribute = self.control_signals
+        elif type == GATING_SIGNAL:
+            ctl_sig_attribute = self.gating_signals
+        else:
+            assert False, \
+                f"PROGRAM ERROR:  bad 'type' arg ({type})passed to " \
+                    f"{ControlMechanism.__name__}._remove_default_control_signal" \
+                    f"(should have been caught by typecheck"
 
-    # Override control_signals
+        if (len(ctl_sig_attribute)==1
+                and ctl_sig_attribute[0].name==type+'-0'
+                and not ctl_sig_attribute[0].efferents):
+            self.remove_states(ctl_sig_attribute[0])
+
+    def _activate_projections_for_compositions(self, composition=None):
+        """Activate eligible Projections to or from nodes in Composition.
+        If Projection is to or from a node NOT (yet) in the Composition,
+        assign it the node's aux_components attribute but do not activate it.
+        """
+        dependent_projections = set()
+
+        if self.objective_mechanism:
+            # Safe to add this, as it is already in the ControlMechanism's aux_components
+            #    and will therefore be added to the Composition along with the ControlMechanism
+            assert self.objective_mechanism in self.aux_components, \
+                f"PROGRAM ERROR:  {OBJECTIVE_MECHANISM} for {self.name} not listed in its 'aux_components' attribute."
+            dependent_projections.add(self._objective_projection)
+
+            for aff in self.objective_mechanism.afferents:
+                dependent_projections.add(aff)
+
+        for ms in self.control_signals:
+            for eff in ms.efferents:
+                dependent_projections.add(eff)
+
+        # FIX: 9/15/19 - HOW IS THIS DIFFERENT THAN objective_mechanism's AFFERENTS ABOVE?
+        # assign any deferred init objective mech monitored output state projections to this system
+        if self.objective_mechanism:
+            for output_state in self.objective_mechanism.monitored_output_states:
+                for eff in output_state.efferents:
+                    dependent_projections.add(eff)
+
+        # FIX: 9/15/19 - HOW IS THIS DIFFERENT THAN control_signal's EFFERENTS ABOVE?
+        for eff in self.efferents:
+            dependent_projections.add(eff)
+
+        for proj in dependent_projections:
+            proj._activate_for_compositions(composition)
+
+    def _apply_control_allocation(self, control_allocation, runtime_params, context):
+        """Update values to `control_signals <ControlMechanism.control_signals>`
+        based on specified `control_allocation <ControlMechanism.control_allocation>`
+        (used by controller of a Composition in simulations)
+        """
+        value = [np.atleast_1d(a) for a in control_allocation]
+        self.parameters.value._set(value, context)
+        self._update_output_states(context=context,
+                                   runtime_params=runtime_params,)
+
     @property
-    def control_signals(self):
+    def monitored_output_states(self):
         try:
-            return ContentAddressableList(component_type=ControlSignal,
-                                          list=[state for state in self.output_states
-                                                if isinstance(state, ControlSignal)])
+            return self.objective_mechanism.monitored_output_states
+        except AttributeError:
+            return None
+
+    @monitored_output_states.setter
+    def monitored_output_states(self, value):
+        try:
+            self.objective_mechanism._monitored_output_states = value
+        except AttributeError:
+            return None
+
+    @property
+    def monitored_output_states_weights_and_exponents(self):
+        try:
+            return self.objective_mechanism.monitored_output_states_weights_and_exponents
         except:
             return None
 
-    @control_signals.setter
-    def control_signals(self, value):
-        self._modulatory_signals = value
-
-    # Suppress gating_signals
     @property
-    def gating_signals(self):
-        from psyneulink.core.components.mechanisms.adaptive.gating import GatingMechanism
-        from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
-        raise ControlMechanismError(f"'gating_signals' attribute is not implemented on {self.name} (a "
-                                    f"{self.__class__.__name__}); consider using a {GatingMechanism.__name__} instead, "
-                                    f"or a {ModulatoryMechanism.__name__} if both {ControlSignal.__name__}s and "
-                                    f"{GatingSignal.__name__}s are needed.")
+    def control_signals(self):
+        """Get ControlSignals from OutputStates"""
+        try:
+            # # MODIFIED 9/25/19 OLD:
+            # return ContentAddressableList(component_type=ControlSignal,
+            #                               list=[state for state in self.output_states
+            #                                     if isinstance(state, (ControlSignal, GatingSignal))])
+            # # MODIFIED 9/25/19 NEW: [JDC]
+            # return [state for state in self.output_states if isinstance(state, (ControlSignal, GatingSignal))]
+            # # MODIFIED 9/25/19 NEWER: [JDC]
+            # return [state for state in self.output_states if isinstance(state, ControlSignal)]
+            # MODIFIED 9/26/19 NEWEST: [JDC]
+            return ContentAddressableList(component_type=ControlSignal,
+                                          list=[state for state in self.output_states
+                                                if isinstance(state, (ControlSignal))])
+            # MODIFIED 9/25/19 END
+        except:
+            return []
 
-    @gating_signals.setter
-    def gating_signals(self, value):
-        from psyneulink.core.components.mechanisms.adaptive.gating import GatingMechanism
-        from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
-        raise ControlMechanismError(f"'gating_signals' attribute is not implemented on {self.name} (a "
-                                    f"{self.__class__.__name__}); consider using a {GatingMechanism.__name__} instead, "
-                                    f"or a {ModulatoryMechanism.__name__} if both {ControlSignal.__name__}s and "
-                                    f"{GatingSignal.__name__}s are needed.")
+    @property
+    def control_projections(self):
+        try:
+            return [projection for control_signal in self.control_signals for projection in control_signal.efferents]
+        except:
+            return None
+
+    # # MODIFIED 9/26/19 OLD:
+    # @property
+    # def gating_signals(self):
+    #     try:
+    #         return ContentAddressableList(component_type=GatingSignal,
+    #                                       list=[state for state in self.output_states
+    #                                             if isinstance(state, GatingSignal)])
+    #     except:
+    #         return None
+    #
+    # @property
+    # def gating_projections(self):
+    #     try:
+    #         return [projection for gating_signal in self.gating_signals for projection in gating_signal.efferents]
+    #     except:
+    #         return None
+    # MODIFIED 9/26/19 END
+
+    @property
+    def _sim_count_lock(self):
+        try:
+            return self.__sim_count_lock
+        except AttributeError:
+            self.__sim_count_lock = threading.Lock()
+            return self.__sim_count_lock
+
+    def get_next_sim_id(self, context):
+        with self._sim_count_lock:
+            try:
+                sim_num = self._sim_counts[context.execution_id]
+                self._sim_counts[context.execution_id] += 1
+            except KeyError:
+                sim_num = 0
+                self._sim_counts[context.execution_id] = 1
+
+        return '{0}{1}-{2}'.format(context.execution_id, EID_SIMULATION, sim_num)
+
+    @property
+    def _dependent_components(self):
+        return list(itertools.chain(
+            super()._dependent_components,
+            # [self.objective_mechanism],
+            [self.objective_mechanism] if self.objective_mechanism else [],
+        ))

@@ -24,10 +24,10 @@ specialized validation. Almost any PsyNeuLink Function, including the `UserDefin
 ProcessingMechanism. Currently, the only exception is `BackPropagation`. Subtypes of
 ProcessingMechanism have more specialized features, and often have restrictions on which Functions are allowed.
 
-The output of a ProcessingMechanism may also be used by an `AdaptiveMechanism <AdaptiveMechanism>` to modify the
+The output of a ProcessingMechanism may also be used by a `ModulatoryMechanism <ModulatoryMechanism>` to modify the
 parameters of other components (or its own parameters). ProcessingMechanisms are always executed before all
-AdaptiveMechanisms in the Process and/or System to which they belong, so that any modifications made by the
-AdaptiveMechanism are available to all ProcessingMechanisms in the next `TRIAL`.
+ModulatoryMechanisms in the Process and/or System to which they belong, so that any modifications made by the
+ModulatoryMechanism are available to all ProcessingMechanisms in the next `TRIAL`.
 
 .. _ProcessingMechanism_Creation:
 
@@ -84,7 +84,7 @@ A ProcessingMechanism may be executed by calling its execute method directly:
 This option is intended for testing and debugging purposes.
 
 More commonly, a mechanism is executed when the `Process <Process_Execution>` or `System <System_Execution>` to which it
-belongs is run. A ProcessingMechanism always executes before any `AdaptiveMechanisms <AdaptiveMechanism>` in the same
+belongs is run. A ProcessingMechanism always executes before any `ModulatoryMechanisms <ModulatoryMechanism>` in the same
 `Process` or `System`.
 
 """
@@ -96,9 +96,9 @@ import typecheck as tc
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONTEXT, PROCESSING_MECHANISM, kwPreferenceSetName
+from psyneulink.core.globals.keywords import CONTEXT, PROCESSING_MECHANISM, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
 __all__ = [
@@ -130,11 +130,11 @@ class ProcessingMechanism_Base(Mechanism_Base):
     is_self_learner = False  # CW 11/27/17: a flag; "True" if this mech learns on its own. See use in LeabraMechanism
 
     classPreferenceLevel = PreferenceLevel.TYPE
-    # Any preferences specified below will override those specified in TypeDefaultPreferences
+    # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'ProcessingMechanismClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_SET_NAME: 'ProcessingMechanismClassPreferences',
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     def __init__(self,
                  default_variable=None,
@@ -273,10 +273,10 @@ class ProcessingMechanism(ProcessingMechanism_Base):
     # MODIFIED 9/22/19 END
 
     classPreferenceLevel = PreferenceLevel.TYPE
-    # These will override those specified in TypeDefaultPreferences
+    # These will override those specified in TYPE_DEFAULT_PREFERENCES
     classPreferences = {
-        kwPreferenceSetName: 'ProcessingMechanismCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
+        PREFERENCE_SET_NAME: 'ProcessingMechanismCustomClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()
 

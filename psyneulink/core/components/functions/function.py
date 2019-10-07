@@ -35,7 +35,7 @@ more numpy functions).  There are two reasons PsyNeuLink packages functions in a
   PsyNeuLink Function has a set of attributes corresponding to the parameters of the function, that can be specified at
   the time the Function is created (in arguments to its constructor), and can be modified independently
   of a call to its :keyword:`function`. Modifications can be directly (e.g., in a script), or by the operation of other
-  PsyNeuLink Components (e.g., `AdaptiveMechanisms`) by way of `ControlProjections <ControlProjection>`.
+  PsyNeuLink Components (e.g., `ModulatoryMechanisms`) by way of `ControlProjections <ControlProjection>`.
 ..
 * **Modularity** -- by providing a standard interface, any Function assigned to a Components in PsyNeuLink can be
   replaced with other PsyNeuLink Functions, or with user-written custom functions so long as they adhere to certain
@@ -148,9 +148,9 @@ from psyneulink.core.components.shellclasses import Function, Mechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ARGUMENT_THERAPY_FUNCTION, EXAMPLE_FUNCTION_TYPE, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION,\
-    NAME, PARAMETER_STATE_PARAMS, kwComponentCategory, kwPreferenceSetName
+    NAME, PARAMETER_STATE_PARAMS, FUNCTION_COMPONENT_CATEGORY, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import object_has_single_value, parameter_spec, safe_len
@@ -350,11 +350,11 @@ class Function_Base(Function):
             Function functions are named by their componentName attribute (usually = componentType)
 
         Class attributes:
-            + componentCategory: kwComponentCategory
+            + componentCategory: FUNCTION_COMPONENT_CATEGORY
             + className (str): kwMechanismFunctionCategory
             + suffix (str): " <className>"
             + registry (dict): FunctionRegistry
-            + classPreference (PreferenceSet): ComponentPreferenceSet, instantiated in __init__()
+            + classPreference (PreferenceSet): BasePreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
             + paramClassDefaults (dict): {FUNCTION_OUTPUT_TYPE_CONVERSION: :keyword:`False`}
 
@@ -369,7 +369,7 @@ class Function_Base(Function):
             + paramsCurrent (dict) - set currently in effect
             + value (value) - output of execute method
             + name (str) - if not specified as an arg, a default based on the class is assigned in register_category
-            + prefs (PreferenceSet) - if not specified as an arg, default is created by copying ComponentPreferenceSet
+            + prefs (PreferenceSet) - if not specified as an arg, default is created by copying BasePreferenceSet
 
         Instance methods:
             The following method MUST be overridden by an implementation in the subclass:
@@ -434,7 +434,7 @@ class Function_Base(Function):
 
     """
 
-    componentCategory = kwComponentCategory
+    componentCategory = FUNCTION_COMPONENT_CATEGORY
     className = componentCategory
     suffix = " " + className
 
@@ -783,8 +783,8 @@ class ArgumentTherapy(Function_Base):
     componentType = EXAMPLE_FUNCTION_TYPE
 
     classPreferences = {
-        kwPreferenceSetName: 'ExampleClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        PREFERENCE_SET_NAME: 'ExampleClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
     # Mode indicators
@@ -957,8 +957,8 @@ class EVCAuxiliaryFunction(Function_Base):
         variable = None
 
     classPreferences = {
-        kwPreferenceSetName: 'ValueFunctionCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        PREFERENCE_SET_NAME: 'ValueFunctionCustomClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
        }
 
     @tc.typecheck

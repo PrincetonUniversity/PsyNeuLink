@@ -47,10 +47,13 @@ class TestControlSpecification:
         # ControlProjection specified on Mechanism should initially be in deferred_init,
         #    but then initialized and added to controller when the Mechanism is added.
         ddm = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
+                                # drift_rate=(1.0,
+                                #             pnl.ControlProjection(
+                                #                   function=pnl.Linear,
+                                #                   control_signal_params={ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}))))
                                 drift_rate=(1.0,
-                                            pnl.ControlProjection(
-                                                  function=pnl.Linear,
-                                                  control_signal_params={ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}))))
+                                            pnl.ControlSignal(allocation_samples=np.arange(0.1, 1.01, 0.3),
+                                                              intensity_cost_function=pnl.Linear))))
         ctl_mech = pnl.ControlMechanism()
         comp = pnl.Composition(controller=ctl_mech)
         comp.add_node(ddm)
@@ -90,6 +93,22 @@ class TestControlSpecification:
         assert ddm.parameter_states['drift_rate'].mod_afferents[0].sender.owner == comp.controller
         assert comp.controller.control_signals[0].allocation_samples is None
 
+    def test_redundant_control_spec_add_controller_in_comp_constructor_then_add_node_with_alloc_samples_specified(self):
+        # First create Composition with controller that has HAS control specification,
+        #    then add Mechanism with control specification to Composition;
+        # Control specification on controller should supercede one on Mechanism (which should be ignored)
+        ddm = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
+                                drift_rate=(1.0,
+                                            pnl.ControlProjection(
+                                                  function=pnl.Linear,
+                                                  control_signal_params={ALLOCATION_SAMPLES: np.arange(0.1, 1.01,0.3)}))))
+        comp = pnl.Composition(controller=pnl.ControlMechanism(control_signals={ALLOCATION_SAMPLES:np.arange(0.2,1.01, 0.3),
+                                                                                PROJECTIONS:('drift_rate', ddm)}))
+        comp.add_node(ddm)
+        assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_states['drift_rate']
+        assert ddm.parameter_states['drift_rate'].mod_afferents[0].sender.owner == comp.controller
+        assert np.allclose(comp.controller.control_signals[0].allocation_samples(), [0.2, 0.5, 0.8])
+
 class TestControlMechanisms:
 
     def test_modulation_of_control_signal_intensity_cost_function_MULTIPLICATIVE(self):
@@ -112,6 +131,30 @@ class TestControlMechanisms:
 
         comp.run(inputs={mech:[3]}, num_trials=2)
         assert np.allclose(ctl_mech_A.control_signals[0].intensity_cost, 8103.083927575384008)
+
+    def test_feedback_assignment_for_multiple_control_projections_to_same_mechanism(self):
+        """Test that multiple ControlProjections from a ControlMechanism to the same Mechanism are treated
+        same as a single Controlprojection to that Mechanism.
+        Note: Even though both mech and control_mech don't receive pathway inputs, since control_mech projects to mech,
+        control_mech is assigned as NodeRole.INPUT (can be overridden with assignments in add_nodes)
+        """
+        mech = pnl.ProcessingMechanism(input_states=['A','B','C'])
+        control_mech = pnl.ControlMechanism(control=mech.input_states[0])
+        comp = pnl.Composition()
+        comp.add_nodes([mech, control_mech])
+        result = comp.run(inputs={control_mech:[2]}, num_trials=3)
+        # assert np.allclose(result, [[2],[2],[2]])
+        assert pnl.NodeRole.INPUT not in comp.get_roles_by_node(mech)
+        assert pnl.NodeRole.INPUT in comp.get_roles_by_node(control_mech)
+
+        # Should produce same result as above
+        mech = pnl.ProcessingMechanism(input_states=['A','B','C'])
+        control_mech = pnl.ControlMechanism(control=mech.input_states) # Note multiple parallel ControlProjections
+        comp = pnl.Composition()
+        comp.add_nodes([mech, control_mech])
+        comp.run(inputs={control_mech:[2]}, num_trials=3)
+        assert pnl.NodeRole.INPUT not in comp.get_roles_by_node(mech)
+        assert pnl.NodeRole.INPUT in comp.get_roles_by_node(control_mech)
 
     def test_modulation_of_control_signal_intensity_cost_function_ADDITIVE(self):
         # tests additive modulation of default intensity_cost_function (Exponential) of
@@ -311,7 +354,7 @@ class TestControlMechanisms:
     #     comp.add_linear_processing_pathway([Tx, Tz])
     #     comp.add_linear_processing_pathway([Ty, C])
     #     comp._analyze_graph()
-    #     comp._scheduler_processing.add_condition(Tz, pnl.AllHaveRun(C))
+    #     comp._scheduler.add_condition(Tz, pnl.AllHaveRun(C))
     #
     #     # assert Tz.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == C
     #     result = comp.run(inputs={Tx: [1, 1],
@@ -701,7 +744,7 @@ class TestControlMechanisms:
         oComp.add_projection(pnl.MappingProjection(), oA, iComp)
         oComp.add_projection(pnl.MappingProjection(), iB, oB)
         oController = pnl.ControlMechanism(
-            name='Controller',
+            name='Outer Controller',
             control_signals=[
                 pnl.ControlSignal(
                     name='ControllerTransfer',
@@ -713,7 +756,7 @@ class TestControlMechanisms:
         oComp.add_controller(oController)
         assert oComp.controller == oController
         iController = pnl.ControlMechanism(
-            name='Controller___',
+            name='Inner Controller',
             control_signals=[
                 pnl.ControlSignal(
                     name='ControllerTransfer',

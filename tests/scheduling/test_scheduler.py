@@ -34,21 +34,21 @@ class TestScheduler:
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
         comp.add_node(A)
 
-        comp.scheduler_processing.clock._increment_time(TimeScale.TRIAL)
+        comp.scheduler.clock._increment_time(TimeScale.TRIAL)
 
         eid = 'eid'
         eid1 = 'eid1'
-        comp.scheduler_processing._init_counts(execution_id=eid)
+        comp.scheduler._init_counts(execution_id=eid)
 
-        assert comp.scheduler_processing.clocks[eid].time.trial == 0
+        assert comp.scheduler.clocks[eid].time.trial == 0
 
-        comp.scheduler_processing.clock._increment_time(TimeScale.TRIAL)
+        comp.scheduler.clock._increment_time(TimeScale.TRIAL)
 
-        assert comp.scheduler_processing.clocks[eid].time.trial == 0
+        assert comp.scheduler.clocks[eid].time.trial == 0
 
-        comp.scheduler_processing._init_counts(execution_id=eid1, base_execution_id=comp.scheduler_processing.default_execution_id)
+        comp.scheduler._init_counts(execution_id=eid1, base_execution_id=comp.scheduler.default_execution_id)
 
-        assert comp.scheduler_processing.clocks[eid1].time.trial == 2
+        assert comp.scheduler.clocks[eid1].time.trial == 2
 
     def test_two_compositions_one_scheduler(self):
         comp1 = Composition()
@@ -66,7 +66,7 @@ class TestScheduler:
         termination_conds[TimeScale.TRIAL] = AfterNPasses(1)
         comp1.run(
             inputs={A: [[0], [1], [2], [3], [4], [5]]},
-            scheduler_processing=sched,
+            scheduler=sched,
             termination_processing=termination_conds
         )
         output = sched.execution_list[comp1.default_execution_id]
@@ -79,7 +79,7 @@ class TestScheduler:
 
         comp2.run(
             inputs={A: [[0], [1], [2], [3], [4], [5]]},
-            scheduler_processing=sched,
+            scheduler=sched,
             termination_processing=termination_conds
         )
         output = sched.execution_list[comp2.default_execution_id]
@@ -105,7 +105,7 @@ class TestScheduler:
         eid = 'eid'
         comp.run(
             inputs={A: [[0], [1], [2], [3], [4], [5]]},
-            scheduler_processing=sched,
+            scheduler=sched,
             termination_processing=termination_conds,
             context=eid,
         )
@@ -119,7 +119,7 @@ class TestScheduler:
 
         comp.run(
             inputs={A: [[0], [1], [2], [3], [4], [5]]},
-            scheduler_processing=sched,
+            scheduler=sched,
             termination_processing=termination_conds,
             context=eid,
         )
@@ -134,7 +134,7 @@ class TestScheduler:
         eid = 'eid1'
         comp.run(
             inputs={A: [[0], [1], [2], [3], [4], [5]]},
-            scheduler_processing=sched,
+            scheduler=sched,
             termination_processing=termination_conds,
             context=eid,
         )
@@ -155,13 +155,13 @@ class TestScheduler:
 
         def change_termination_processing():
             if S.termination_processing is None:
-                S.scheduler_processing.termination_conds = {TimeScale.TRIAL: WhenFinished(D)}
+                S.scheduler.termination_conds = {TimeScale.TRIAL: WhenFinished(D)}
                 S.termination_processing = {TimeScale.TRIAL: WhenFinished(D)}
             elif isinstance(S.termination_processing[TimeScale.TRIAL], AllHaveRun):
-                S.scheduler_processing.termination_conds = {TimeScale.TRIAL: WhenFinished(D)}
+                S.scheduler.termination_conds = {TimeScale.TRIAL: WhenFinished(D)}
                 S.termination_processing = {TimeScale.TRIAL: WhenFinished(D)}
             else:
-                S.scheduler_processing.termination_conds = {TimeScale.TRIAL: AllHaveRun()}
+                S.scheduler.termination_conds = {TimeScale.TRIAL: AllHaveRun()}
                 S.termination_processing = {TimeScale.TRIAL: AllHaveRun()}
 
         change_termination_processing()
@@ -369,7 +369,7 @@ class TestLinear:
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 3)
         comp.run(
                 inputs={A: [[0], [1], [2], [3], [4], [5]]},
-                scheduler_processing=sched,
+                scheduler=sched,
                 termination_processing=termination_conds
         )
         output = sched.execution_list[comp.default_execution_id]

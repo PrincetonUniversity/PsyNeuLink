@@ -27,19 +27,18 @@ Creating a GatingSignal
 -----------------------
 
 A GatingSignal is created automatically whenever an `InputState` or `OutputState` of a `Mechanism <Mechanism>` is
-specified for gating.  This can be done either in the **gating_signals** argument of the constructor for a
-`GatingMechanism <GatingMechanism_GatingSignals>`, or in the `specification of projections <State_Projections>` to
-the InputState or OutputState.  Although a GatingSignal can be created directly using its constructor (or any of the
-other ways for `creating an OutputState <OutputStates_Creation>`), this is usually not necessary nor is it advisable,
-as a GatingSignal has dedicated components and requirements for configuration that must be met for it to function
-properly.
+specified for gating.  This can be done either in the **gate** argument of the constructor for a `GatingMechanism
+<GatingMechanism_GatingSignals>`, or in the `specification of projections <State_Projections>` to the InputState or
+OutputState.  Although a GatingSignal can be created directly using its constructor (or any of the other ways for
+`creating an OutputState <OutputStates_Creation>`), this is usually not necessary nor is it advisable, as a GatingSignal
+has dedicated components and requirements for configuration that must be met for it to function properly.
 
 .. _GatingSignal_Specification:
 
 *Specifying GatingSignals*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When a GatingSignal is specified in the **gating_signals** argument of the constructor for a `GatingMechanism`, the
+When a GatingSignal is specified in the **gate** argument of the constructor for a `GatingMechanism`, the
 InputState(s) and/or OutputState(s) it gates must be specified. This can take any of the following forms:
 
   * **InputState** or **OutputState** of a Mechanism;
@@ -149,10 +148,10 @@ of another::
     >>> import psyneulink as pnl
     >>> my_mechanism_A = pnl.TransferMechanism(name="Mechanism A")
     >>> my_mechanism_B = pnl.TransferMechanism(name="Mechanism B")
-    >>> my_gating_mechanism = pnl.GatingMechanism(gating_signals=[my_mechanism_A.input_state,
-    ...                                                           my_mechanism_B.output_state])
+    >>> my_gating_mechanism = pnl.GatingMechanism(gate=[my_mechanism_A.input_state,
+    ...                                                 my_mechanism_B.output_state])
 
-Note that, in the **gating_signals** argument, the first item references a Mechanism (``my_mechanism_A``) rather than
+Note that, in the **gate** argument, the first item references a Mechanism (``my_mechanism_A``) rather than
 one of its states -- this is all that is necessary, since the default for a `GatingSignal` is to modulate the
 `primary InputState <InputState_Primary>` of a Mechanism.  The second item explicitly specifies the State to be gated,
 since it is an OutputState.  This will generate two GatingSignals, each of which will multiplicatively modulate the
@@ -176,17 +175,16 @@ it *adds* the `value <GatingSignal.value>` of the `GatingSignal` to the `value <
     ...                                                                              my_output_layer]}],
     ...                                           modulation=pnl.ADDITIVE)
 
-Note that, again, the **gating_signals** are listed as Mechanisms, since in this case it is their primary InputStates
-that are to be gated. Since they are all listed in a single entry of a
-`specification dictionary <GatingSignal_Specification>`, they will all be gated by a single GatingSignal named
-``GATE_ALL``, that will send a `GatingProjection` to the InputState of each of the Mechanisms listed (the next example
-shows how different InputStates can be differentially gated by a `GatingMechanism`). Finally, note that the
-`ModulationParam` specified for the `GatingMechanism` (and therefore the default for its GatingSignals) pertains to
-the `function <InputState.function>` of each `InputState`. By default that is a `Linear` function, the *ADDITIVE_PARAM*
-of which is its `intercept <Linear.intercept>` parameter. Therefore, in the example above, each time the InputStates
-are updated, the value of the GatingSignal will be assigned as the `intercept` of each InputState's
-`function <InputState.function>`, thus adding that amount to the input to the State before determining its
-`value <InputState.value>`.
+Note that, again, the **gate** are listed as Mechanisms, since in this case it is their primary InputStates that are
+to be gated. Since they are all listed in a single entry of a `specification dictionary <GatingSignal_Specification>`,
+they will all be gated by a single GatingSignal named ``GATE_ALL``, that will send a `GatingProjection` to the
+InputState of each of the Mechanisms listed (the next example shows how different InputStates can be differentially
+gated by a `GatingMechanism`). Finally, note that the `ModulationParam` specified for the `GatingMechanism` (and
+therefore the default for its GatingSignals) pertains to the `function <InputState.function>` of each `InputState`.
+By default that is a `Linear` function, the *ADDITIVE_PARAM* of which is its `intercept <Linear.intercept>`
+parameter. Therefore, in the example above, each time the InputStates are updated, the value of the GatingSignal will
+be assigned as the `intercept` of each InputState's `function <InputState.function>`, thus adding that amount to the
+input to the State before determining its `value <InputState.value>`.
 
 **Gate InputStates differentially**.  In the example above, the InputStates for all of the Mechanisms were gated
 using a single GatingSignal.  In the example below, a different GatingSignal is assigned to the InputState of each
@@ -232,7 +230,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.functions.transferfunctions import Linear
-from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal, modulatory_signal_keywords
+from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.states.outputstate import PRIMARY, SEQUENTIAL, _output_state_variable_getter
 from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
@@ -241,7 +239,7 @@ from psyneulink.core.globals.keywords import \
     CONTEXT, GATE, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, \
     OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTIONS, PROJECTION_TYPE, RECEIVER, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
@@ -257,10 +255,10 @@ class GatingSignalError(Exception):
         return repr(self.error_value)
 
 gating_signal_keywords = {GATE}
-gating_signal_keywords.update(modulatory_signal_keywords)
+# gating_signal_keywords.update(modulatory_signal_keywords)
 
 
-class GatingSignal(ModulatorySignal):
+class GatingSignal(ControlSignal):
     """
     GatingSignal(                                   \
         owner,                                      \
@@ -413,7 +411,7 @@ class GatingSignal(ModulatorySignal):
     componentName = 'GatingSignal'
     paramsType = OUTPUT_STATE_PARAMS
 
-    stateAttributes = ModulatorySignal.stateAttributes | {GATE}
+    stateAttributes = ControlSignal.stateAttributes | {GATE}
 
     connectsWith = [INPUT_STATE, OUTPUT_STATE]
     connectsWithAttribute = [INPUT_STATES, OUTPUT_STATES]
@@ -421,13 +419,13 @@ class GatingSignal(ModulatorySignal):
     modulators = []
 
     classPreferenceLevel = PreferenceLevel.TYPE
-    # Any preferences specified below will override those specified in TypeDefaultPreferences
+    # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'OutputStateCustomClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_SET_NAME: 'OutputStateCustomClassPreferences',
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
-    class Parameters(ModulatorySignal.Parameters):
+    class Parameters(ControlSignal.Parameters):
         """
             Attributes
             ----------
@@ -457,6 +455,18 @@ class GatingSignal(ModulatorySignal):
                              getter=_output_state_variable_getter)
         value = Parameter(np.array([defaultGatingAllocation]), read_only=True, aliases=['intensity'])
         allocation_samples = Parameter(None, modulable=True)
+        modulation = None
+
+        # # Override ControlSignal cost-related attributes and functions
+        # cost_options = None
+        # intensity_cost = None
+        # adjustment_cost = None
+        # duration_cost = None
+        # cost = None
+        # intensity_cost_function = None
+        # adjustment_cost_function = None
+        # duration_cost_function = None
+        # combine_costs_function = None
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -472,7 +482,7 @@ class GatingSignal(ModulatorySignal):
                  default_allocation=defaultGatingAllocation,
                  size=None,
                  index=None,
-                 assign=None,
+                 # assign=None,
                  function=Linear(),
                  modulation:tc.optional(str)=None,
                  modulates=None,
@@ -504,7 +514,7 @@ class GatingSignal(ModulatorySignal):
                          size=size,
                          modulation=modulation,
                          index=index,
-                         assign=assign,
+                         # assign=assign,
                          modulates=modulates,
                          params=params,
                          name=name,
@@ -544,6 +554,10 @@ class GatingSignal(ModulatorySignal):
                                          "with specification of {}, {} or GatingProjection(s) to it".
                                             format(GATING_SIGNAL, INPUT_STATE, OUTPUT_STATE, owner.name))
             return state_spec, params_dict
+
+    def _instantiate_cost_functions(self, context):
+        """Override ControlSignal as GatingSignal has not cost functions"""
+        pass
 
     def _get_primary_state(self, mechanism):
         return mechanism.input_state

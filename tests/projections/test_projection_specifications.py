@@ -6,8 +6,51 @@ import psyneulink.core.components.functions.distributionfunctions
 import psyneulink.core.components.functions.statefulfunctions.integratorfunctions
 import psyneulink.core.components.functions.transferfunctions
 
-
 class TestProjectionSpecificationFormats:
+
+    def test_projection_specification_formats(self):
+        """Test various matrix and Projection specifications
+        Also tests assignment of Projections to pathay of Composition using add_linear_processing_pathway:
+        - Projection explicitly specified in sequence (M1_M2_proj)
+        - Projection pre-constructed and assigned to Mechanisms, but not specified in pathway(M2_M3_proj)
+        - Projection specified in pathway that is duplicate one preconstructed and assigned to Mechanisms (M3_M4_proj)
+          (currently it should be ignored; in the future, if/when Projections between the same sender and receiver
+           in different Compositions are allowed, then it should be used)
+        """
+        M1 = pnl.ProcessingMechanism(size=2)
+        M2 = pnl.ProcessingMechanism(size=5)
+        M3 = pnl.ProcessingMechanism(size=4)
+        M4 = pnl.ProcessingMechanism(size=3)
+
+        M1_M2_matrix = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
+        M2_M3_matrix = (np.arange(5 * 4).reshape((5, 4)) + 1) / (5 * 4)
+        M3_M4_matrix_A = (np.arange(4 * 3).reshape((4, 3)) + 1) / (4 * 5)
+        M3_M4_matrix_B = (np.arange(4 * 3).reshape((4, 3)) + 1) / (4 * 3)
+
+        M1_M2_proj = pnl.MappingProjection(matrix=M1_M2_matrix)
+        M2_M3_proj = pnl.MappingProjection(sender=M2,
+                                           receiver=M3,
+                                           matrix={pnl.VALUE: M2_M3_matrix,
+                                                   pnl.FUNCTION: pnl.AccumulatorIntegrator,
+                                                   pnl.FUNCTION_PARAMS: {pnl.DEFAULT_VARIABLE: M2_M3_matrix,
+                                                                         pnl.INITIALIZER: M2_M3_matrix}})
+        M3_M4_proj_A = pnl.MappingProjection(sender=M3, receiver=M4, matrix=M3_M4_matrix_A)
+        c = pnl.Composition()
+        c.add_linear_processing_pathway(pathway=[M1,
+                                                 M1_M2_proj,
+                                                 M2,
+                                                 M3,
+                                                 M3_M4_matrix_B,
+                                                 M4])
+
+        assert np.allclose(M2_M3_proj.matrix, M2_M3_matrix)
+        assert M2.efferents[0] is M2_M3_proj
+        assert np.allclose(M3.efferents[0].matrix, M3_M4_matrix_A)
+        # This is if different Projections are allowed between the same sender and receiver in different Compositions:
+        # assert np.allclose(M3.efferents[1].matrix, M3_M4_matrix_B)
+        c.run(inputs={M1:[2, -30]})
+        # assert np.allclose(c.results, [[-130.19166667, -152.53333333, -174.875]])
+        assert np.allclose(c.results, [[ -78.115,  -91.52 , -104.925]])
 
     def test_multiple_modulatory_projection_specs(self):
 
@@ -185,7 +228,7 @@ class TestProjectionSpecificationFormats:
             "CP_OBJECT",
             pnl.ControlMechanism,
             pnl.ControlMechanism(),
-            pnl.ModulatoryMechanism,
+            pnl.ControlMechanism,
             (0.3, pnl.CONTROL),
             (0.3, pnl.CONTROL_SIGNAL),
             (0.3, pnl.CONTROL_PROJECTION),
@@ -195,7 +238,7 @@ class TestProjectionSpecificationFormats:
             (0.3, "CP_OBJECT"),
             (0.3, pnl.ControlMechanism),
             (0.3, pnl.ControlMechanism()),
-            (0.3, pnl.ModulatoryMechanism)
+            (0.3, pnl.ControlMechanism)
         ]
         for i, ctl_tuple in enumerate([j for j in zip(control_spec_list, reversed(control_spec_list))]):
             C1, C2 = ctl_tuple
@@ -221,59 +264,90 @@ class TestProjectionSpecificationFormats:
 
         gating_spec_list = [
             pnl.GATING,
+            pnl.CONTROL,
             pnl.GATING_SIGNAL,
+            pnl.CONTROL_SIGNAL,
             pnl.GATING_PROJECTION,
+            pnl.CONTROL_PROJECTION,
             pnl.GatingSignal,
-            pnl.GatingSignal,
+            pnl.ControlSignal,
             pnl.GatingSignal(),
+            pnl.ControlSignal(),
             pnl.GatingProjection,
             "GP_OBJECT",
             pnl.GatingMechanism,
-            pnl.ModulatoryMechanism,
+            pnl.ControlMechanism,
             pnl.GatingMechanism(),
+            pnl.ControlMechanism(),
             (0.3, pnl.GATING),
+            (0.3, pnl.CONTROL),
             (0.3, pnl.GATING_SIGNAL),
+            (0.3, pnl.CONTROL_SIGNAL),
             (0.3, pnl.GATING_PROJECTION),
+            (0.3, pnl.CONTROL_PROJECTION),
             (0.3, pnl.GatingSignal),
+            (0.3, pnl.ControlSignal),
             (0.3, pnl.GatingSignal()),
+            (0.3, pnl.ControlSignal()),
             (0.3, pnl.GatingProjection),
+            (0.3, pnl.ControlProjection),
             (0.3, "GP_OBJECT"),
             (0.3, pnl.GatingMechanism),
-            (0.3, pnl.ModulatoryMechanism),
-            (0.3, pnl.GatingMechanism())
+            (0.3, pnl.ControlMechanism),
+            (0.3, pnl.GatingMechanism()),
+            (0.3, pnl.ControlMechanism())
         ]
         for i, gating_tuple in enumerate([j for j in zip(gating_spec_list, reversed(gating_spec_list))]):
-            G1, G2 = gating_tuple
+            G_IN, G_OUT = gating_tuple
 
             # This shenanigans is to avoid assigning the same instantiated ControlProjection more than once
-            if G1 is 'GP_OBJECT':
-                G1 = pnl.GatingProjection()
-            elif isinstance(G1, tuple) and G1[1] is 'GP_OBJECT':
-                G1 = (G1[0], pnl.GatingProjection())
-            if G2 is 'GP_OBJECT':
-                G2 = pnl.GatingProjection()
-            elif isinstance(G2, tuple) and G2[1] is 'GP_OBJECT':
-                G2 = (G2[0], pnl.GatingProjection())
+            if G_IN is 'GP_OBJECT':
+                G_IN = pnl.GatingProjection()
+            elif isinstance(G_IN, tuple) and G_IN[1] is 'GP_OBJECT':
+                G_IN = (G_IN[0], pnl.GatingProjection())
+            if G_OUT is 'GP_OBJECT':
+                G_OUT = pnl.GatingProjection()
+            elif isinstance(G_OUT, tuple) and G_OUT[1] is 'GP_OBJECT':
+                G_OUT = (G_OUT[0], pnl.GatingProjection())
+
+            if isinstance(G_IN, tuple):
+                IN_NAME = G_IN[1]
+            else:
+                IN_NAME = G_IN
+            IN_CONTROL = pnl.CONTROL in repr(IN_NAME).split(".")[-1].upper()
+            if isinstance(G_OUT, tuple):
+                OUT_NAME = G_OUT[1]
+            else:
+                OUT_NAME = G_OUT
+            OUT_CONTROL = pnl.CONTROL in repr(OUT_NAME).split(".")[-1].upper()
 
             T = pnl.TransferMechanism(name='T-GATING-{}'.format(i),
-                                      input_states=[G1],
-                                      output_states=[G2])
-            assert T.input_states[0].mod_afferents[0].name in \
-                   'GatingProjection for T-GATING-{}[InputState-0]'.format(i)
+                                      input_states=[G_IN],
+                                      output_states=[G_OUT])
 
-            assert T.output_states[0].mod_afferents[0].name in \
-                   'GatingProjection for T-GATING-{}[OutputState-0]'.format(i)
+            if IN_CONTROL:
+                assert T.input_states[0].mod_afferents[0].name in \
+                       'ControlProjection for T-GATING-{}[InputState-0]'.format(i)
+            else:
+                assert T.input_states[0].mod_afferents[0].name in \
+                       'GatingProjection for T-GATING-{}[InputState-0]'.format(i)
 
-        with pytest.raises(pnl.ProjectionError) as error_text:
-            T1 = pnl.ProcessingMechanism(name='T1', input_states=[pnl.ModulatoryMechanism()])
-        assert 'Primary OutputState of ModulatoryMechanism-0 (ControlSignal-0) ' \
-               'cannot be used as a sender of a Projection to InputState of T1' in error_text.value.args[0]
+            if OUT_CONTROL:
+                assert T.output_states[0].mod_afferents[0].name in \
+                       'ControlProjection for T-GATING-{}[OutputState-0]'.format(i)
+            else:
+                assert T.output_states[0].mod_afferents[0].name in \
+                       'GatingProjection for T-GATING-{}[OutputState-0]'.format(i)
 
-        with pytest.raises(pnl.ProjectionError) as error_text:
-            T2 = pnl.ProcessingMechanism(name='T2', output_states=[pnl.ModulatoryMechanism()])
-        assert 'Primary OutputState of ModulatoryMechanism-1 (ControlSignal-0) ' \
-               'cannot be used as a sender of a Projection to OutputState of T2' in error_text.value.args[0]
-
+        # with pytest.raises(pnl.ProjectionError) as error_text:
+        #     T1 = pnl.ProcessingMechanism(name='T1', input_states=[pnl.ControlMechanism()])
+        # assert 'Primary OutputState of ControlMechanism-0 (ControlSignal-0) ' \
+        #        'cannot be used as a sender of a Projection to InputState of T1' in error_text.value.args[0]
+        #
+        # with pytest.raises(pnl.ProjectionError) as error_text:
+        #     T2 = pnl.ProcessingMechanism(name='T2', output_states=[pnl.ControlMechanism()])
+        # assert 'Primary OutputState of ControlMechanism-1 (ControlSignal-0) ' \
+        #        'cannot be used as a sender of a Projection to OutputState of T2' in error_text.value.args[0]
 
     # KDM: this is a good candidate for pytest.parametrize
     def test_masked_mapping_projection(self):

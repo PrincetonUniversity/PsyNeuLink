@@ -251,5 +251,5 @@ pprint(a)
 # Distractor_Rep.log.print_entries()
 #
 Decision.log.print_entries()
-mySystem.controller.control_signals.values
+# mySystem.controller.control_signals.values
 

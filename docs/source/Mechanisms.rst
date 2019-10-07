@@ -6,4 +6,4 @@ Mechanisms
 
    *Subclasses:*
    ProcessingMechanisms
-   AdaptiveMechanisms
+   ModulatoryMechanisms

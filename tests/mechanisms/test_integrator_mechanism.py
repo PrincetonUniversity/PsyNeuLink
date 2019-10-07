@@ -950,7 +950,7 @@ class TestIntegratorRate:
         val = list(I.execute([10.0, 10.0, 10.0])[0])
         assert val == [5.0, 5.0, 5.0]
 
-    # rate = float, integration_type = adaptive
+    # rate = float, integration_type = modulatory
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -966,7 +966,7 @@ class TestIntegratorRate:
         val = list(I.execute([10.0, 10.0, 10.0])[0])
         assert val == [5.0, 5.0, 5.0]
 
-    # rate = float, integration_type = adaptive
+    # rate = float, integration_type = modulatory
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism

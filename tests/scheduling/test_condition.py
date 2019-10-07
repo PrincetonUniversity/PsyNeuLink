@@ -405,7 +405,7 @@ class TestCondition:
             termination_conds[TimeScale.TRIAL] = AtPass(1)
             comp.run(
                 inputs={A: range(6)},
-                scheduler_processing=sched,
+                scheduler=sched,
                 termination_processing=termination_conds
             )
             output = sched.execution_list[comp.default_execution_id]
@@ -426,7 +426,7 @@ class TestCondition:
             termination_conds[TimeScale.TRIAL] = AtPass(1)
             comp.run(
                 inputs={A: range(6)},
-                scheduler_processing=sched,
+                scheduler=sched,
                 termination_processing=termination_conds
             )
             output = sched.execution_list[comp.default_execution_id]
@@ -447,7 +447,7 @@ class TestCondition:
             termination_conds[TimeScale.TRIAL] = AtPass(1)
             comp.run(
                 inputs={A: range(6)},
-                scheduler_processing=sched,
+                scheduler=sched,
                 termination_processing=termination_conds
             )
             output = sched.execution_list[comp.default_execution_id]

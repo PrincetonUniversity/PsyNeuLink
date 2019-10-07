@@ -374,7 +374,6 @@ Class Reference
 
 """
 
-import itertools
 import copy
 import numpy as np
 import typecheck as tc
@@ -382,12 +381,12 @@ import warnings
 
 from psyneulink.core.components.component import function_type
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
-from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismList
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.shellclasses import Function, System_Base
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal, CostFunctions
+from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
@@ -395,10 +394,10 @@ from psyneulink.core.globals.keywords import \
     CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM, INIT_FUNCTION_METHOD_ONLY, \
     MULTIPLICATIVE, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
-from psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary import ControlSignalGridSearch, PredictionMechanism, ValueFunction
+from psyneulink.library.components.mechanisms.modulatory.control.evc.evcauxiliary import ControlSignalGridSearch, PredictionMechanism, ValueFunction
 
 __all__ = [
     'EVCControlMechanism', 'EVCError',
@@ -747,11 +746,11 @@ class EVCControlMechanism(ControlMechanism):
     classPreferenceLevel = PreferenceLevel.SUBTYPE
 
     # classPreferenceLevel = PreferenceLevel.TYPE
-    # Any preferences specified below will override those specified in TypeDefaultPreferences
+    # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to Type automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_SET_NAME: 'DefaultControlMechanismCustomClassPreferences',
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     class Parameters(ControlMechanism.Parameters):
         """
@@ -931,17 +930,17 @@ class EVCControlMechanism(ControlMechanism):
             self._instantiate_prediction_mechanisms(system=self.system, context=context)
         super()._instantiate_input_states(context=context)
 
-    def _instantiate_modulatory_signals(self, context):
+    def _instantiate_control_signals(self, context):
         """Size control_allocation and assign modulatory_signals
         Set size of control_allocadtion equal to number of modulatory_signals.
         Assign each modulatory_signal sequentially to corresponding item of control_allocation.
         """
         from psyneulink.core.globals.keywords import OWNER_VALUE
-        for i, spec in enumerate(self.modulatory_signals):
-            modulatory_signal = self._instantiate_modulatory_signal(spec, context=context)
-            modulatory_signal._variable_spec = (OWNER_VALUE, i)
-            self._modulatory_signals[i] = modulatory_signal
-        self.defaults.value = np.tile(modulatory_signal.parameters.variable.default_value, (i+1, 1))
+        for i, spec in enumerate(self.control):
+            control_signal = self._instantiate_control_signal(spec, context=context)
+            control_signal._variable_spec = (OWNER_VALUE, i)
+            self.control_signals[i] = control_signal
+        self.defaults.value = np.tile(control_signal.parameters.variable.default_value, (i+1, 1))
         self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
 
     def _instantiate_prediction_mechanisms(self, system:System_Base, context=None):
@@ -1117,19 +1116,21 @@ class EVCControlMechanism(ControlMechanism):
                                           self.name,
                                           num_control_projections))
 
-    def _instantiate_control_signal(self, control_signal, context=None):
-        """Implement CostFunctions.DEFAULTS as default for cost_option of ControlSignals
-        EVCControlMechanism requires use of at least one of the cost options
-        """
-        control_signal = super()._instantiate_control_signal(control_signal, context)
-
-        if not control_signal:
-            return
-
-        if control_signal.cost_options is None:
-            control_signal.cost_options = CostFunctions.DEFAULTS
-            control_signal._instantiate_cost_attributes()
-        return control_signal
+    # MODIFIED 9/26/19 OLD:
+    # def _instantiate_control_signal(self, control_signal, context=None):
+    #     """Implement CostFunctions.DEFAULTS as default for cost_option of ControlSignals
+    #     EVCControlMechanism requires use of at least one of the cost options
+    #     """
+    #     control_signal = super()._instantiate_control_signal(control_signal, context)
+    #
+    #     if not control_signal:
+    #         return
+    #
+    #     if control_signal.cost_options is None:
+    #         control_signal.cost_options = CostFunctions.DEFAULTS
+    #         control_signal._instantiate_cost_attributes()
+    #     return control_signal
+    # MODIFIED 9/26/19 END
 
     @handle_external_context()
     @tc.typecheck

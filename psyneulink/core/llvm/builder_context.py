@@ -525,7 +525,7 @@ class LLVMBuilderContext:
         iters = builder.add(iters, self.int32_ty(1), name="iterw_inc")
         builder.store(iters, iter_ptr)
 
-        max_iters = len(composition.scheduler_processing.consideration_queue)
+        max_iters = len(composition.scheduler.consideration_queue)
         completed_pass = builder.icmp_unsigned("==", iters,
                                                self.int32_ty(max_iters),
                                                name="completed_pass")

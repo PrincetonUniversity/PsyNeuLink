@@ -27,9 +27,9 @@ from psyneulink.core.components.mechanisms.processing.integratormechanism import
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION, defaultControlAllocation
 from psyneulink.core.globals.keywords import COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, FUNCTION, FUNCTION_PARAMS, NOISE, PREDICTION_MECHANISM, RATE, \
-    kwPreferenceSetName, kwProgressBarChar
+    PREFERENCE_SET_NAME, PROGRESS_BAR_CHAR
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
 __all__ = [
@@ -95,8 +95,8 @@ class EVCAuxiliaryFunction(Function_Base):
         variable = Parameter(None, read_only=True)
 
     classPreferences = {
-        kwPreferenceSetName: 'ValueFunctionCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        PREFERENCE_SET_NAME: 'ValueFunctionCustomClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
        }
 
     @tc.typecheck
@@ -417,12 +417,6 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
             EVC_values = np.array([])
             EVC_policies = np.array([[]])
 
-            # # TEST PRINT EVC:
-            # inputs = []
-            # for i in controller.predicted_input.values():
-            #     inputs.append(repr(i).replace('\n', ''))
-            # print("\nEVC SIMULATION for Inputs: {}".format(inputs))
-
             for allocation_vector in control_signal_search_space[start:end,:]:
 
             # for iter in range(rank, len(control_signal_search_space), size):
@@ -431,7 +425,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                 if controller.prefs.reportOutputPref:
                     increment_progress_bar = (progress_bar_rate < 1) or not (sample % progress_bar_rate)
                     if increment_progress_bar:
-                        print(kwProgressBarChar, end='', flush=True)
+                        print(PROGRESS_BAR_CHAR, end='', flush=True)
                 sample +=1
 
                 # Calculate EVC for specified allocation policy
@@ -465,9 +459,6 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                     EVC_max_state_values = controller.get_input_values(context)
                     EVC_max_policy = allocation_vector
                     max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
-
-            # # TEST PRINT EVC:
-            # print("EVC_max: {}\tASSOCIATED control_allocation: {}\n".format(EVC_max, EVC_max_policy))
 
             #endregion
 

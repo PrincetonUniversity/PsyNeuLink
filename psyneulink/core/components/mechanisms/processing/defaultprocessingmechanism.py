@@ -20,7 +20,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import SystemDefaultInputValue
 from psyneulink.core.globals.keywords import DEFAULT_PROCESSING_MECHANISM, FUNCTION, FUNCTION_PARAMS, INTERCEPT, SLOPE
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 # **************************************** DefaultProcessingMechanism ******************************************************
@@ -50,11 +50,11 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
     onlyFunctionOnInit = True
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
-    # Any preferences specified below will override those specified in SubtypeDefaultPreferences
+    # Any preferences specified below will override those specified in SUBTYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to SUBTYPE automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'DefaultProcessingMechanismClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_SET_NAME: 'DefaultProcessingMechanismClassPreferences',
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     class Parameters(Mechanism_Base.Parameters):
         variable = np.array([SystemDefaultInputValue])

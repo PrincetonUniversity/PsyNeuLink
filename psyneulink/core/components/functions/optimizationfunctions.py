@@ -1030,10 +1030,6 @@ class GradientOptimization(OptimizationFunction):
                                                                                   context=context,
                                                                                   params=params,
                                                                                   )
-        # # TEST PRINT 5/30/19:
-        # print(f'optimal_sample: {optimal_sample}')
-        # print(f'optimal_value: {optimal_value}')
-
         return_all_samples = return_all_values = []
         if self.parameters.save_samples._get(context):
             return_all_samples = all_samples
@@ -1631,11 +1627,6 @@ class GridSearch(OptimizationFunction):
                 start = len(self.search_space)
             if stop > len(self.search_space):
                 stop = len(self.search_space)
-
-            # # TEST PRINT
-            # print("search_space length: {}".format(len(self.search_space)))
-            # print("Rank: {}\tSize: {}\tChunk size: {}".format(rank, size, chunk_size))
-            # print("START: {0}\tEND: {1}\tPROCESSED: {2}".format(start,stop,stop-start))
 
             # FIX:  INITIALIZE TO FULL LENGTH AND ASSIGN DEFAULT VALUES (MORE EFFICIENT):
             samples = np.array([[]])

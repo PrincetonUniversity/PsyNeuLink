@@ -42,7 +42,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.utilities import all_within_range, parameter_spec, get_global_seed
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 
 __all__ = ['MemoryFunction', 'Buffer', 'ContentAddressableMemory']
 

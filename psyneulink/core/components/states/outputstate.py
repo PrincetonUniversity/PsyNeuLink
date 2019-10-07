@@ -596,14 +596,14 @@ from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.states.state import State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ALL, ASSIGN, CALCULATE, CONTEXT, FUNCTION, GATING_SIGNAL, INDEX, INPUT_STATE, INPUT_STATES, \
+    ALL, ASSIGN, CALCULATE, CONTEXT, CONTROL_SIGNAL, FUNCTION, GATING_SIGNAL, INDEX, INPUT_STATE, INPUT_STATES, \
     MAPPING_PROJECTION, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MECHANISM_VALUE, NAME, \
     OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, OUTPUT_STD_DEV, OUTPUT_VARIANCE, \
     OWNER_VALUE, PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, PROJECTION_TYPE, \
     RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_OUTPUT_STATES, STATE, VALUE, VARIABLE, \
     output_state_spec_to_parameter_name
 from psyneulink.core.globals.parameters import Parameter, ParameterError
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
     is_numeric, iscompatible, make_readonly_property, recursive_update, ContentAddressableList
@@ -950,19 +950,19 @@ class OutputState(State_Base):
 
     # stateAttributes = State_Base.stateAttributes | {INDEX, ASSIGN}
 
-    connectsWith = [INPUT_STATE, GATING_SIGNAL]
+    connectsWith = [INPUT_STATE, GATING_SIGNAL, CONTROL_SIGNAL]
     connectsWithAttribute = [INPUT_STATES]
     projectionSocket = RECEIVER
-    modulators = [GATING_SIGNAL]
+    modulators = [GATING_SIGNAL, CONTROL_SIGNAL]
     canReceive = modulators
 
 
     classPreferenceLevel = PreferenceLevel.TYPE
-    # Any preferences specified below will override those specified in TypeDefaultPreferences
+    # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'OutputStateCustomClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_SET_NAME: 'OutputStateCustomClassPreferences',
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     class Parameters(State_Base.Parameters):
         """
@@ -1086,7 +1086,7 @@ class OutputState(State_Base):
         Assume specification in projections as ModulatoryProjection if it is a:
             ModulatoryProjection
             ModulatorySignal
-            AdaptiveMechanism
+            ModulatoryMechanism
         Call _instantiate_projections_to_state to assign ModulatoryProjections to .mod_afferents
 
         Assume all remaining specifications in projections are for outgoing MappingProjections;

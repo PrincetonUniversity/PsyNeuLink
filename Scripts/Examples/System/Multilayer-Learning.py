@@ -81,7 +81,7 @@ z = pnl.Process(
 
 
 def print_header(system):
-    print("\n\n**** Time: ", system.scheduler_processing.clock.simple_time)
+    print("\n\n**** Time: ", system.scheduler.clock.simple_time)
 
 
 def show_target(system):

@@ -42,16 +42,16 @@ each of which has subtypes that differ in the type of information they transmit,
       converts it by convolving it with the MappingProjection's `matrix <MappingProjection.MappingProjection.matrix>`
       parameter, and transmits the result to the `InputState` of another ProcessingMechanism.  Typically,
       MappingProjections are used to connect Mechanisms in the `pathway` of a `Process`, though they can be use for
-      other purposes as well (for example, to convey the output of an `ObjectiveMechanism` to an `AdaptiveMechanism
-      <AdaptiveMechanism>`).
+      other purposes as well (for example, to convey the output of an `ObjectiveMechanism` to a `ModulatoryMechanism
+      <ModulatoryMechanism>`).
 
 * `ModulatoryProjection <ModulatoryProjection>`
-    takes the `value <OutputState.value>` of a `ModulatorySignal <ModulatorySignal>` of an `AdaptiveMechanism
+    takes the `value <OutputState.value>` of a `ModulatorySignal <ModulatorySignal>` of a `ModulatoryMechanism
     <ProcessingMechanism>`, uses it to regulate modify the `value <State_Base.value>` of an `InputState`,
     `ParameterState` or `OutputState` of another Component.  ModulatorySignals are specialized types of `OutputState`,
     that are used to specify how to modify the `value <State_Base.value>` of the `State <State>` to which a
     ModulatoryProjection projects. There are three types of ModulatoryProjections, corresponding to the three types
-    of AdaptiveMechanisms (and corresponding ModulatorySignals; see `figure <ModulatorySignal_Anatomy_Figure>`),
+    of ModulatoryMechanisms (and corresponding ModulatorySignals; see `figure <ModulatorySignal_Anatomy_Figure>`),
     that project to different types of `States <State>`:
 
   * `LearningProjection`
@@ -285,7 +285,7 @@ of a State are listed in its `projections <State_Base.projections>` attribute.
 This must be an `OutputState` or a `ModulatorySignal <ModulatorySignal>` (a subclass of OutputState specialized for
 `ModulatoryProjections <ModulatoryProjection>`).  The Projection is assigned to the OutputState or ModulatorySignal's
 `efferents <State_Base.efferents>` list and, for ModulatoryProjections, to the list of ModulatorySignals specific to
-the `AdaptiveMechanism <AdaptiveMechanism>` from which it projects.  The OutputState or ModulatorySignal's `value
+the `ModulatoryMechanism <ModulatoryMechanism>` from which it projects.  The OutputState or ModulatorySignal's `value
 <OutputState.value>` is used as the `variable <Function.variable>` for Projection's `function
 <Projection_Base.function>`.
 
@@ -399,12 +399,12 @@ from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Pro
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.states.state import StateError
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATING, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, NAME, OUTPUT_STATE, OUTPUT_STATES, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, STANDARD_ARGS, STATE, STATES, WEIGHT, kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
+from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATING, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, NAME, OUTPUT_STATE, OUTPUT_STATES, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, STANDARD_ARGS, STATE, STATES, WEIGHT, ADD_INPUT_STATE, ADD_OUTPUT_STATE, PROJECTION_COMPONENT_CATEGORY
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.socket import ConnectionInfo
-from psyneulink.core.globals.utilities import ContentAddressableList, is_matrix, is_numeric, type_match
+from psyneulink.core.globals.utilities import ContentAddressableList, is_matrix, is_numeric
 
 __all__ = [
     'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS',
@@ -589,7 +589,7 @@ class Projection_Base(Projection):
 
     color = 0
 
-    componentCategory = kwProjectionComponentCategory
+    componentCategory = PROJECTION_COMPONENT_CATEGORY
     className = componentCategory
     suffix = " " + className
 
@@ -819,8 +819,6 @@ class Projection_Base(Projection):
         Assign projection to sender's efferents attribute
         """
         from psyneulink.core.compositions.composition import Composition
-        from psyneulink.core.components.states.inputstate import InputState
-        from psyneulink.core.components.states.parameterstate import ParameterState
         from psyneulink.core.components.states.outputstate import OutputState
 
         if not (
@@ -849,6 +847,8 @@ class Projection_Base(Projection):
 
         # Assign projection to self.sender's efferents list attribute
         # First make sure that projection is not already in efferents
+        # IMPLEMENTATON NOTE:  Currently disallows *ANY* Projections with same sender and receiver
+        #                      (even if they are in different Compositions)
         if self not in self.sender.efferents:
             # Then make sure there is not already a projection to its receiver
             receiver = self.receiver
@@ -863,6 +863,8 @@ class Projection_Base(Projection):
             # IMPLEMENTATION NOTE:  this gives precedence to a Projection to a Component specified by its sender
             #                      (e.g., controller of a Composition for a ControlProjection)
             #                       over its specification in the constructor for the receiver or its owner
+            # IMPLEMENTATION NOTE:  This should be removed if/when different Projections are permitted between
+            #                       the same sender and receiver in different Compositions
             if dup:
                 if dup.initialization_status == ContextFlags.DEFERRED_INIT:
                     del receiver.mod_afferents[receiver.mod_afferents.index(dup)]
@@ -1040,6 +1042,7 @@ def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_s
     + specification dict containing:
         + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
     + valid matrix specification (if include_matrix_spec is set to `True`)
+    + state
 
     Otherwise, return :keyword:`False`
     """
@@ -1262,7 +1265,7 @@ def _parse_connection_specs(connectee_state_type,
 
     Connection attributes declared for each type (subclass) of State that are used here:
         connectsWith : State
-           - specifies the type (subclass) of State to which the connectee_state_type should be assigned projection(s)
+           - specifies the type (subclass) of State with which the connectee_state_type should be connected
         connectsWithAttribute : str
            - specifies the name of the attribute of the Mechanism that holds the states of the connectsWith's type
         projectionSocket : [SENDER or RECEIVER]
@@ -1326,9 +1329,9 @@ def _parse_connection_specs(connectee_state_type,
     from psyneulink.core.components.states.inputstate import InputState
     from psyneulink.core.components.states.outputstate import OutputState
     from psyneulink.core.components.states.parameterstate import ParameterState
-    from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
-    from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
-    from psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism import _is_gating_spec
+    from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
+    from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import _is_control_spec
+    from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import _is_gating_spec
 
     if not inspect.isclass(connectee_state_type):
         raise ProjectionError("Called for {} with \'connectee_state_type\' arg ({}) that is not a class".
@@ -1369,16 +1372,16 @@ def _parse_connection_specs(connectee_state_type,
             # FIX: 10/3/17 - REPLACE THIS (AND ELSEWHERE) WITH ProjectionTuple THAT HAS BOTH SENDER AND RECEIVER
             # FIX: 11/28/17 - HACKS TO HANDLE PROJECTION FROM GatingSignal TO InputState or OutputState
             # FIX:            AND PROJECTION FROM ControlSignal to ParameterState
-            # # If it is an AdaptiveMechanism specification, get its ModulatorySignal class
+            # # If it is a ModulatoryMechanism specification, get its ModulatorySignal class
             # # (so it is recognized by _is_projection_spec below (Mechanisms are not for secondary reasons)
-            # if isinstance(connection, type) and issubclass(connection, AdaptiveMechanism_Base):
+            # if isinstance(connection, type) and issubclass(connection, ModulatoryMechanism_Base):
             #     connection = connection.outputStateTypes
             if ((isinstance(connectee_state_type, (InputState, OutputState, ParameterState))
                  or isinstance(connectee_state_type, type)
                 and issubclass(connectee_state_type, (InputState, OutputState, ParameterState)))
                 and _is_modulatory_spec(connection)):
-                # Convert AdaptiveMechanism spec to corresponding ModulatorySignal spec
-                if isinstance(connection, type) and issubclass(connection, AdaptiveMechanism_Base):
+                # Convert ModulatoryMechanism spec to corresponding ModulatorySignal spec
+                if isinstance(connection, type) and issubclass(connection, ModulatoryMechanism_Base):
                     # If the connection supports multiple outputStateTypes,
                     #    get the one compatible with the current connectee:
                     output_state_types = connection.outputStateTypes
@@ -1391,7 +1394,7 @@ def _parse_connection_specs(connectee_state_type,
                             f"({output_state_types}) that can be assigned a modulatory {Projection.__name__} " \
                             f"to {connectee_state_type.__name__} of {owner.name}"
                     connection = output_state_type[0]
-                elif isinstance(connection, AdaptiveMechanism_Base):
+                elif isinstance(connection, ModulatoryMechanism_Base):
                     connection = connection.output_state
 
                 projection_spec = connection
@@ -1604,7 +1607,8 @@ def _parse_connection_specs(connectee_state_type,
                 # FIX: 11/28/17 HACK TO DEAL WITH GatingSignal Projection to OutputState
                 # FIX: 5/11/19: CORRECTED TO HANDLE ControlMechanism SPECIFIED FOR GATING
                 if ((_is_gating_spec(first_item) or _is_control_spec(first_item))
-                    and (isinstance(last_item, OutputState) or last_item == OutputState)):
+                    and (isinstance(last_item, OutputState) or last_item == OutputState)
+                ):
                     projection_socket = SENDER
                     state_types = [OutputState]
                     mech_state_attribute = [OUTPUT_STATES]
@@ -1621,7 +1625,7 @@ def _parse_connection_specs(connectee_state_type,
                                               projection_socket=projection_socket)
             except StateError as e:
                 raise ProjectionError(f"Problem with specification for {State.__name__} in {Projection.__name__} "
-                                      f"specification for {owner.name}: " + e.error_value)
+                                      f"specification{(' for ' + owner.name) if owner else ' '}: " + e.error_value)
 
             # Check compatibility with any State(s) returned by _get_state_for_socket
 
@@ -1630,11 +1634,11 @@ def _parse_connection_specs(connectee_state_type,
             else:
                 states = [state]
 
-            for state_spec in states:
-                if inspect.isclass(state_spec):
-                    state_type = state_spec
+            for item in states:
+                if inspect.isclass(item):
+                    state_type = item
                 else:
-                    state_type = state_spec.__class__
+                    state_type = item.__class__
 
                 # # Test that state_type is in the list for state's connects_with
                 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
@@ -1662,12 +1666,25 @@ def _parse_connection_specs(connectee_state_type,
                 from psyneulink.core.components.states.outputstate import OutputState
                 from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
                 from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
+                from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
                 if (not isinstance(projection_spec, GatingProjection)
                     and isinstance(state, GatingSignal)
                     and connectee_state_type in {InputState, OutputState}):
                     projection_spec = state
-                # FIX: 11/29/17  GENERALIZE TO _is_modulatory_spec??
-                elif _is_gating_spec(first_item):
+                if (
+                        (not isinstance(projection_spec, GatingProjection)
+                         and state.__class__ == GatingSignal
+                         and connectee_state_type in {InputState, OutputState})
+                # # MODIFIED 9/27/19 NEW: [JDC]
+                #     or
+                #         (not isinstance(projection_spec, ControlProjection)
+                #          and state.__class__ == ControlSignal
+                #          and connectee_state_type in {InputState, OutputState})
+                ):
+                    projection_spec = state
+
+                elif (_is_gating_spec(first_item) or _is_control_spec((first_item))
+                      and not isinstance(last_item, (GatingProjection, ControlProjection))):
                     projection_spec = first_item
                 projection_spec = _parse_projection_spec(projection_spec,
                                                          owner=owner,
@@ -1788,7 +1805,8 @@ def _validate_connection_request(
             # FIX:               THEN THE projection_socket MUST BE SENDER
             from psyneulink.core.components.states.outputstate import OutputState
             from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
-            if connectee_state is OutputState and isinstance(projection_spec, GatingProjection):
+            from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
+            if connectee_state is OutputState and isinstance(projection_spec, (GatingProjection, ControlProjection)):
                 projection_socket = SENDER
             projection_socket_state = getattr(projection_spec, projection_socket)
             if  issubclass(projection_socket_state.__class__, connect_with_states):
@@ -1949,7 +1967,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
                 - InputState object;
                 - index for Mechanism.input_states;
                 - name of an existing InputState (i.e., key for Mechanism.input_states);
-                - the keyword kwAddInputState or the name for an InputState to be added;
+                - the keyword ADD_INPUT_STATE or the name for an InputState to be added;
        * specification of ParameterState must be a ParameterState object
        * projection_spec can be any valid specification of a projection_spec
            (see `State._instantiate_projections_to_state`).
@@ -2005,8 +2023,8 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
                               format(projection_spec.name, state, receiver.name))
             # return
 
-    # input_state is either the name for a new InputState or kwAddNewInputState
-    if not state is kwAddInputState:
+    # input_state is either the name for a new InputState or ADD_INPUT_STATE
+    if not state is ADD_INPUT_STATE:
         if receiver.prefs.verbosePref:
             reassign = input("\nAdd new InputState named {0} to {1} (as receiver for {2})? (y/n):".
                              format(input_state, receiver.name, projection_spec.name))
@@ -2053,7 +2071,7 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
             - OutputState object
             - index for Mechanism OutputStates OrderedDict
             - name of OutputState (i.e., key for Mechanism.OutputStates OrderedDict))
-            - the keyword kwAddOutputState or the name for an OutputState to be added
+            - the keyword ADD_OUTPUT_STATE or the name for an OutputState to be added
 
     Args:
         sender (Mechanism):
@@ -2116,8 +2134,8 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
                               format(projection_spec.name, state, sender.name))
             # return
 
-    # output_state is either the name for a new OutputState or kwAddNewOutputState
-    if not state is kwAddOutputState:
+    # output_state is either the name for a new OutputState or ADD_OUTPUT_STATE
+    if not state is ADD_OUTPUT_STATE:
         if sender.prefs.verbosePref:
             reassign = input("\nAdd new OutputState named {0} to {1} (as sender for {2})? (y/n):".
                              format(output_state, sender.name, projection_spec.name))

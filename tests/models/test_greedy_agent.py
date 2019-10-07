@@ -4,7 +4,7 @@ import numpy as np
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.core.components.mechanisms.adaptive.control import OptimizationControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control import OptimizationControlMechanism
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.components.functions.optimizationfunctions import GridSearch, MINIMIZE
@@ -116,12 +116,12 @@ def test_simplified_greedy_agent_random(benchmark, mode):
 @pytest.mark.model
 @pytest.mark.benchmark(group="Predator Prey")
 @pytest.mark.parametrize("mode", ['Python',
-    pytest.param('LLVM', marks=[pytest.mark.llvm]),
-    pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
-    pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
-    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-    pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-    pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    # pytest.param('LLVM', marks=[pytest.mark.llvm]),
+    # pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
+    # pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
+    # pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    # pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    # pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
 ])
 @pytest.mark.parametrize("samples", [[0,10],
     pytest.param([0,3,6,10], marks=pytest.mark.stress),

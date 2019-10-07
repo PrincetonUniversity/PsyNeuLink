@@ -460,7 +460,6 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import Component, function_type
-from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import MechanismList, Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
@@ -471,9 +470,12 @@ from psyneulink.core.components.states.modulatorysignals.learningsignal import L
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import _instantiate_state, _instantiate_state_list
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, ENABLED, EXECUTING, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, NAME, OBJECTIVE_MECHANISM, ORIGIN, PARAMETER_STATE, PATHWAY, PROCESS, PROCESS_INIT, SENDER, SINGLETON, TARGET, TERMINAL, kwProcessComponentCategory, kwReceiverArg, kwSeparator
+from psyneulink.core.globals.keywords import \
+    AUTO_ASSIGN_MATRIX, ENABLED, FUNCTION, FUNCTION_PARAMS, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, \
+    MAPPING_PROJECTION, MATRIX, NAME, OBJECTIVE_MECHANISM, ORIGIN, PARAMETER_STATE, PATHWAY, SENDER, SINGLETON, \
+    TARGET, TERMINAL, PROCESS_COMPONENT_CATEGORY, RECEIVER_ARG
 from psyneulink.core.globals.parameters import Defaults, Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import append_type_to_name, convert_to_np_array, iscompatible
@@ -809,7 +811,7 @@ class Process(Process_Base):
 
     """
 
-    componentCategory = kwProcessComponentCategory
+    componentCategory = PROCESS_COMPONENT_CATEGORY
     className = componentCategory
     suffix = " " + className
     componentType = "Process"
@@ -817,10 +819,10 @@ class Process(Process_Base):
     registry = ProcessRegistry
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
-    # These will override those specified in TypeDefaultPreferences
+    # These will override those specified in TYPE_DEFAULT_PREFERENCES
     # classPreferences = {
-    #     kwPreferenceSetName: 'ProcessCustomClassPreferences',
-    #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
+    #     PREFERENCE_SET_NAME: 'ProcessCustomClassPreferences',
+    #     REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
     # Use inputValueSystemDefault as default input to process
 
     class Parameters(Process_Base.Parameters):
@@ -1013,7 +1015,7 @@ class Process(Process_Base):
         #    and assign the Mechanism's status in the Process to its entry in the Mechanism's processes dict
 
         # Move any ControlMechanisms in the pathway to the end
-        from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+        from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
         for i, item in enumerate(pathway):
             if len(pathway)>1 and isinstance(item, ControlMechanism):
                 pathway += [pathway.pop(i)]
@@ -1175,7 +1177,7 @@ class Process(Process_Base):
                                              append_type_to_name(mech)))
 
     def _parse_and_instantiate_projection_entries(self, pathway, context=None):
-        from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+        from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 
         # ASSIGN DEFAULT PROJECTION PARAMS
 
@@ -1517,7 +1519,7 @@ class Process(Process_Base):
                                 )
                         # Check receiver arg
                         try:
-                            receiver_arg = item.init_args[kwReceiverArg]
+                            receiver_arg = item.init_args[RECEIVER_ARG]
                         except AttributeError:
                             raise ProcessError(
                                 "PROGRAM ERROR: initialization_status of {} is {} "
@@ -1529,14 +1531,14 @@ class Process(Process_Base):
                             raise ProcessError(
                                 "PROGRAM ERROR: initialization_status of {} is {} "
                                 "but init_args does not have entry for {}".format(
-                                    item.init_args[NAME], ContextFlags.DEFERRED_INIT, kwReceiverArg
+                                    item.init_args[NAME], ContextFlags.DEFERRED_INIT, RECEIVER_ARG
                                 )
                             )
                         else:
                             # If receiver is not specified for the Projection,
                             #    assign mechanism that follows it in the pathway
                             if receiver_arg is None:
-                                item.init_args[kwReceiverArg] = receiver_mech
+                                item.init_args[RECEIVER_ARG] = receiver_mech
                             elif receiver_arg is not receiver_mech:
                                 raise ProcessError(
                                     "Receiver of Projection ({}) specified in item {} of"
@@ -2023,7 +2025,7 @@ class Process(Process_Base):
         """
 
         from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-        from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism \
+        from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism \
             import ACTIVATION_INPUT
         def trace_learning_objective_mechanism_projections(mech):
             """Recursively trace projections to Objective mechanisms;
@@ -2227,7 +2229,7 @@ class Process(Process_Base):
         COMMENT
 
         """
-        from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
+        from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
 
         if context.execution_id is None:
             context.execution_id = self.default_execution_id
