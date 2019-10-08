@@ -79,8 +79,6 @@ before_install:
   - pip --version
 
 install:
-  # Downgrade numpy early if needed.
-  - pip install -U 'numpy<1.17'
   - pip install coveralls
   - pip install git+https://github.com/benureau/leabra.git@master
   # Travis bundles pytest 4.3.1 in Linux Xenial, new pytest-xdist
