@@ -16,10 +16,10 @@ SEED = 0
 def test_random(benchmark, mode):
     res = []
     if mode == 'numpy':
-        # Python treats every seed as array, and numpy promotes elements to int64
+        # Numpy promotes elements to int64
         state = np.random.RandomState(np.asarray([SEED]))
-        res += [state.randint(0xffffffff, dtype=np.int64)]
-        res += [state.randint(0xffffffff, dtype=np.int64)]
+        res.append(state.randint(0xffffffff, dtype=np.int64))
+        res.append(state.randint(0xffffffff, dtype=np.int64))
         benchmark(state.randint, 0xffffffff, dtype=np.int64)
     elif mode == 'LLVM':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
@@ -29,9 +29,9 @@ def test_random(benchmark, mode):
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_int32')
         out = ctypes.c_longlong()
         gen_fun(state, out)
-        res += [out.value]
+        res.append(out.value)
         gen_fun(state, out)
-        res += [out.value]
+        res.append(out.value)
         benchmark(gen_fun, state, out)
     elif mode == 'PTX':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
@@ -43,9 +43,9 @@ def test_random(benchmark, mode):
         out = np.asarray([0], dtype=np.int64)
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
         gen_fun.cuda_call(gpu_state, gpu_out)
-        res += [out[0]]
+        res.append(out[0])
         gen_fun.cuda_call(gpu_state, gpu_out)
-        res += [out[0]]
+        res.append(out[0])
         benchmark(gen_fun.cuda_call, gpu_state, gpu_out)
 
     assert np.allclose(res, [3626764237, 1654615998])
@@ -61,14 +61,14 @@ def test_random_float(benchmark, mode):
     if mode == 'Python':
         # Python treats every seed as array
         state = random.Random(SEED)
-        res += [state.random()]
-        res += [state.random()]
+        res.append(state.random())
+        res.append(state.random())
         benchmark(state.random)
     elif mode == 'numpy':
-        # Python treats every seed as array, and numpy promotes elements to int64
+        # numpy promotes elements to int64
         state = np.random.RandomState(np.asarray([SEED]))
-        res += [state.random_sample()]
-        res += [state.random_sample()]
+        res.append(state.random_sample())
+        res.append(state.random_sample())
         benchmark(state.random_sample)
     elif mode == 'LLVM':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
@@ -78,9 +78,9 @@ def test_random_float(benchmark, mode):
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_double')
         out = ctypes.c_double()
         gen_fun(state, out)
-        res += [out.value]
+        res.append(out.value)
         gen_fun(state, out)
-        res += [out.value]
+        res.append(out.value)
         benchmark(gen_fun, state, out)
     elif mode == 'PTX':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
@@ -92,9 +92,9 @@ def test_random_float(benchmark, mode):
         out = np.asfarray([0.0], dtype=np.float64)
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
         gen_fun.cuda_call(gpu_state, gpu_out)
-        res += [out[0]]
+        res.append(out[0])
         gen_fun.cuda_call(gpu_state, gpu_out)
-        res += [out[0]]
+        res.apped(out[0])
         benchmark(gen_fun.cuda_call, gpu_state, gpu_out)
 
     assert np.allclose(res, [0.8444218515250481, 0.7579544029403025])
