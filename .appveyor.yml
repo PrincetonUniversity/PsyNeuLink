@@ -32,8 +32,7 @@ install:
   - pip install --user -U pip
   - pip --version
   # certifi upgrade is needed by pytest-profiling (it does not set the dependencies right)
-  # numpy gets pulled by leabra below and pnl downgrades later
-  - pip install --user -U certifi "numpy<1.17"
+  - pip install --user -U certifi
   - pip install --user git+https://github.com/benureau/leabra.git@master
 
   # pytorch does not distribute windows packages over pypi.
