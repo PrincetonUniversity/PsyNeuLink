@@ -2900,8 +2900,7 @@ class Component(object, metaclass=ComponentsMeta):
             # during initialization
             self.function.initialization_status = ContextFlags.INITIALIZING
 
-            self.function.defaults.variable = function_variable
-            self.function._instantiate_value(context)
+            self.function._update_default_variable(function_variable, context)
 
             self.function.initialization_status = ContextFlags.INITIALIZED
 
@@ -2977,6 +2976,19 @@ class Component(object, metaclass=ComponentsMeta):
         except AttributeError:
             # Immutable, so just assign value
             self.defaults.value = value
+
+    def _update_default_variable(self, new_default_variable, context=None):
+        self.defaults.variable = copy.deepcopy(new_default_variable)
+        self._instantiate_value(context)
+
+        function_variable = self._parse_function_variable(
+            new_default_variable,
+            context
+        )
+        try:
+            self.function._update_default_variable(function_variable, context)
+        except AttributeError:
+            pass
 
     def initialize(self, context=None):
         raise ComponentError("{} class does not support initialize() method".format(self.__class__.__name__))
