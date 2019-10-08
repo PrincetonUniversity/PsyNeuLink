@@ -2020,7 +2020,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         if seed is None:
             seed = get_global_seed()
 
-        random_state = np.random.RandomState(np.asarray([seed]))
+        random_state = np.random.RandomState([seed])
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["random_state"]
 

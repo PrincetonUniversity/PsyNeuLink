@@ -717,7 +717,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
         if seed is None:
             seed = get_global_seed()
-        random_state = np.random.RandomState(np.asarray([seed]))
+        random_state = np.random.RandomState([seed])
 
         self._memory = []
 

@@ -17,7 +17,7 @@ def test_random(benchmark, mode):
     res = []
     if mode == 'numpy':
         # Numpy promotes elements to int64
-        state = np.random.RandomState(np.asarray([SEED]))
+        state = np.random.RandomState([SEED])
         res.append(state.randint(0xffffffff, dtype=np.int64))
         res.append(state.randint(0xffffffff, dtype=np.int64))
         benchmark(state.randint, 0xffffffff, dtype=np.int64)
@@ -66,7 +66,7 @@ def test_random_float(benchmark, mode):
         benchmark(state.random)
     elif mode == 'numpy':
         # numpy promotes elements to int64
-        state = np.random.RandomState(np.asarray([SEED]))
+        state = np.random.RandomState([SEED])
         res.append(state.random_sample())
         res.append(state.random_sample())
         benchmark(state.random_sample)
@@ -108,7 +108,7 @@ def test_random_float(benchmark, mode):
 def test_random_normal(benchmark, mode):
     if mode == 'numpy':
         # Python treats every seed as array, and numpy promotes elements to int64
-        state = np.random.RandomState(np.asarray([SEED]))
+        state = np.random.RandomState([SEED])
         res = state.normal()
         benchmark(state.normal)
     elif mode == 'LLVM':

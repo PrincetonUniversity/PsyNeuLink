@@ -28,7 +28,7 @@ gaussian_helper = e**(-(test_var-RAND2)**2/(2*RAND1**2)) / sqrt(2*pi*RAND1)
 gaussian_helper = RAND3 * gaussian_helper + RAND4
 
 def gaussian_distort_helper(seed):
-    state = np.random.RandomState(np.asarray([seed]))
+    state = np.random.RandomState([seed])
     # compensate for construction
     state.normal(test_var + RAND1, RAND2)
     return RAND4 * state.normal(test_var + RAND1, RAND2) + RAND3
