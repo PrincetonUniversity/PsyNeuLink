@@ -334,11 +334,16 @@ class Stability(ObjectiveFunction):
         :param function:
 
         """
-
-        size = len(self.defaults.variable)
-
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.core.components.states.parameterstate import ParameterState
+
+        # this mirrors the transformation in _function
+        # it is a hack, and a general solution should be found
+        squeezed = np.array(self.defaults.variable)
+        if squeezed.ndim > 1:
+            squeezed = np.squeeze(squeezed)
+
+        size = safe_len(squeezed)
 
         matrix = self.parameters.matrix._get(context)
 
