@@ -187,6 +187,9 @@ class TestReinitializeValues:
                         B.parameters.value.get(S)[0],
                         C.parameters.value.get(S)]
 
-        assert np.allclose(run_2_values, run_3_values)
-        assert np.allclose(run_1_values, [np.array([[0.36]]), np.array([[0.056]]), np.array([[0.056]])])
-        assert np.allclose(run_2_values, [np.array([[0.5904]]), np.array([[0.16384]]), np.array([[0.16384]])])
+        assert np.allclose(np.asfarray(run_2_values),
+                           np.asfarray(run_3_values))
+        assert np.allclose(np.asfarray(run_1_values),
+                           [np.array([[0.36]]), np.array([[0.056]]), np.array([[0.056]])])
+        assert np.allclose(np.asfarray(run_2_values),
+                           [np.array([[0.5904]]), np.array([[0.16384]]), np.array([[0.16384]])])
