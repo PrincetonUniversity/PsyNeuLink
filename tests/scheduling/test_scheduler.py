@@ -179,7 +179,7 @@ class TestScheduler:
                             [np.array([[2.]]), np.array([[1.]])],
                             [np.array([[10.]]), np.array([[10.]])],
                             [np.array([[2.]]), np.array([[1.]])]]
-        assert np.allclose(expected_results, S.results)
+        assert np.allclose(expected_results, np.asfarray(S.results))
 
 
 

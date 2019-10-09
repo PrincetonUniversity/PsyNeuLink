@@ -732,7 +732,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
                     :type: str
 
         """
-        variable = Parameter([[0, 0], [0, 0], [[0, 0], [0, 0]]], read_only=True)
+        variable = Parameter([[0, 0], [0, 0], np.array([[0, 0], [0, 0]])], read_only=True)
         distance_function = Parameter(GAUSSIAN, stateful=False)
 
         def _validate_distance_function(self, distance_function):
