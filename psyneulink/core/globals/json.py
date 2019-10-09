@@ -1,3 +1,179 @@
+"""
+
+Sections
+--------
+
+  * `JSON_Overview`
+  * `JSON_Examples`
+  * `JSON_Model_Specification`
+
+.. _JSON_Overview:
+
+Overview
+--------
+
+The developers of PsyNeuLink are collaborating with the scientific
+community to create a common data format for sharing and replicating
+models. As part of this effort, PsyNeuLink includes the ability to
+export models into JSON, and generate valid Python scripts from this
+JSON.
+
+Each Component can be dumped to JSON using its `json_summary`
+method, which uses its `_dict_summary <Component._dict_summary>`.
+Passing this output into `generate_script_from_json` will produce a
+valid Python script replicating the original model.
+
+.. _JSON_Examples:
+
+Model Examples
+--------------
+
+Below is a Stroop model with conflict monitoring and its output
+in JSON. Running `generate_script_from_json` on the output will produce
+another PsyNeuLink script which will give the same results when run
+on the same input as the original.
+
+:download:`Download stroop_conflict_monitoring.py
+<../../tests/json/stroop_conflict_monitoring.py>`
+
+:download:`Download stroop_conflict_monitoring.json
+<../../docs/source/_static/stroop_conflict_monitoring.json>`
+
+.. _JSON_Model_Specification:
+
+JSON Model Specification
+------------------------
+
+.. note::
+    The JSON format is in early development, and is subject to change.
+
+
+The outermost level of a JSON model is a dictionary with entry \
+``graphs``, a list of Composition objects.
+
+Each Component's JSON object contains multiple entries. Those that are
+common to all are:
+
+* ``name`` : a label for the Component
+
+* ``parameters`` (non-`Function`\\ s) / ``args`` (`Function`\\ s) : a \
+dictionary where each entry is either a `Parameter` name and value, or \
+a subdictionary of modeling-environment specific parameters. For \
+PsyNeuLink, this is indicated by `PNL`:
+
+
+.. code-block:: javascript
+
+    "args": {
+        "PNL": {
+            "execution_count": 0,
+            "has_initializers": false,
+            "variable": [
+                0.01
+            ]
+        },
+        "bounds": null,
+        "intercept": 0.0,
+        "slope": 1.0
+    }
+
+Note that the value of a parameter may be a long-form dictionary when \
+it corresponds to a `ParameterState`. In this case, it will indicate \
+the ParameterState in a `source<>` field:
+
+.. code-block:: javascript
+
+    "intercept": {
+        "source": "A.input_ports.intercept",
+        "type": "float",
+        "value": 2.0
+    }
+
+* ``type`` : a dictionary with entries based on modeling environment \
+to describe the type of the object. The `generic` entry is \
+populated if the object has a universal name (such as a linear \
+function). Modeling-environment-specific entries are populated when \
+relevant.
+
+.. code-block:: javascript
+
+    "type": {
+        "PNL": "Composition",
+        "generic": "graph"
+    }
+
+
+**Mechanisms**, **Projections**, and **States** each have:
+
+* ``functions`` : a list of primary `Function` JSON objects. In \
+PsyNeuLink, only one primary function is allowed.
+
+.. code-block:: javascript
+
+    "functions": [
+        {
+            "args": {
+                "intercept": {
+                    "source": "A.input_ports.intercept",
+                    "type": "float",
+                    "value": 2.0
+                },
+                "slope": {
+                    "source": "A.input_ports.slope",
+                    "type": "float",
+                    "value": 5.0
+                }
+            },
+            "name": "Linear Function-1",
+            "type": {
+                "generic": "Linear"
+            }
+        }
+    ]
+
+**Mechanisms** have:
+
+* ``input_ports`` : a list of InputState and ParameterState JSON objects
+
+* ``output_ports`` : a list of OutputState JSON objects
+
+**Projections** have:
+
+* ``sender`` : the name of the Component it projects from
+
+* ``sender_port`` : the name of the port on the ``sender`` to which it \
+connects
+
+* ``receiver`` : the name of the Component it projects to
+
+* ``receiver_port`` : the name of the port on the ``receiver`` to \
+which it connects
+
+**States** have:
+
+* ``dtype`` : the type of accepted input/output for the State. This \
+corresponds to `numpy.dtype <https://docs.scipy.org/doc/numpy/ \
+reference/generated/numpy.dtype.html>`_
+
+* ``shape`` : the shape of the accepted input/output. This corresponds \
+to numpy ndarray shapes. (`numpy.zeros(<shape>)` would produce an \
+array with the correct shape)
+
+**Compositions** have:
+
+* ``nodes`` : a dictionary of Mechanisms or Compositions keyed on \
+their names that are part of the Composition
+
+* ``edges`` : a dictionary of Projections keyed on their names that \
+connect nodes of the Composition
+
+* ``controller`` : the name of the Mechanism in the Composition's \
+nodes that serves as the Composition's \
+`controller <Composition_Controller>`, if it exists
+
+
+"""
+
 import abc
 import base64
 import binascii
@@ -688,6 +864,17 @@ def _generate_composition_string(composition_list, component_identifiers):
 
 
 def generate_script_from_json(model_input):
+    """
+        Generates a Python script from JSON **model_input** in the
+        `general JSON format <JSON_Model_Specification>`
+
+        Arguments
+        ---------
+
+            model_input : str
+                a JSON string in the proper format, or a filename
+                containing such
+    """
 
     def get_declared_identifiers(composition_list):
         names = set()
