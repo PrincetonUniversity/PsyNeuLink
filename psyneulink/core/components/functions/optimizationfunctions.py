@@ -1285,7 +1285,7 @@ class GridSearch(OptimizationFunction):
 
         if seed is None:
             seed = get_global_seed()
-        random_state = np.random.RandomState(np.asarray([seed]))
+        random_state = np.random.RandomState([seed])
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(params=params,
@@ -1745,8 +1745,7 @@ class GridSearch(OptimizationFunction):
         """Get next sample from grid.
         This is assigned as the `search_function <OptimizationFunction.search_function>` of the `OptimizationFunction`.
         """
-        initialization_status = self.initialization_status
-        if initialization_status == ContextFlags.INITIALIZING:
+        if self.is_initializing:
             return [signal.start for signal in self.search_space]
         try:
             sample = next(self.grid)

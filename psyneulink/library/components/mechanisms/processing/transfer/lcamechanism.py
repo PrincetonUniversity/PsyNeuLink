@@ -536,12 +536,6 @@ class LCAMechanism(RecurrentTransferMechanism):
                     :default value: 0.5
                     :type: float
 
-                matrix
-                    see `matrix <LCAMechanism.matrix>`
-
-                    :default value: None
-                    :type:
-
                 self_excitation
                     see `self_excitation <LCAMechanism.self_excitation>`
 
@@ -557,10 +551,10 @@ class LCAMechanism(RecurrentTransferMechanism):
         """
         function = Parameter(Logistic, stateful=False, loggable=False)
 
-        matrix = Parameter(None, modulable=True)
         leak = Parameter(0.5, modulable=True)
+        auto = Parameter(0.0, modulable=True, aliases='self_excitation')
+        hetero = Parameter(-1.0, modulable=True)
         competition = Parameter(1.0, modulable=True)
-        self_excitation = Parameter(0.0, modulable=True)
         time_step_size = Parameter(0.1, modulable=True)
 
         initial_value = None
@@ -583,8 +577,9 @@ class LCAMechanism(RecurrentTransferMechanism):
                  function=Logistic,
                  initial_value=None,
                  leak=0.5,
-                 competition=1.0,
-                 self_excitation=0.0,
+                 competition=None,
+                 hetero=None,
+                 self_excitation=None,
                  noise=0.0,
                  integrator_mode=True,
                  time_step_size=0.1,
@@ -608,6 +603,20 @@ class LCAMechanism(RecurrentTransferMechanism):
                           "args")
         # matrix = np.full((size[0], size[0]), -inhibition) * get_matrix(HOLLOW_MATRIX,size[0],size[0])
 
+        if competition is not None and hetero is not None:
+            if competition != -1.0 * hetero:
+                raise LCAError(
+                    'Both competition and hetero are specified. competition '
+                    'must have the same magnitude but opposite sign of hetero. '
+                    'Provided values: competition = {0} , hetero = {1}'.format(
+                        competition,
+                        hetero
+                    )
+                )
+        elif competition is not None:
+            hetero = -competition
+        elif hetero is not None:
+            competition = -hetero
 
         integrator_function = LeakyCompetingIntegrator
 
@@ -615,6 +624,7 @@ class LCAMechanism(RecurrentTransferMechanism):
         params = self._assign_args_to_param_dicts(input_states=input_states,
                                                   leak=leak,
                                                   self_excitation=self_excitation,
+                                                  hetero=hetero,
                                                   competition=competition,
                                                   integrator_mode=integrator_mode,
                                                   time_step_size=time_step_size,
@@ -630,7 +640,7 @@ class LCAMechanism(RecurrentTransferMechanism):
                          size=size,
                          input_states=input_states,
                          auto=self_excitation,
-                         hetero=-competition,
+                         hetero=hetero,
                          function=function,
                          integrator_function=LeakyCompetingIntegrator,
                          initial_value=initial_value,

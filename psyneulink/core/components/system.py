@@ -966,7 +966,6 @@ class System(System_Base):
                          prefs=prefs,
                          context=context)
 
-        self.initialization_status = ContextFlags.INITIALIZED
         self.reinitialize_mechanisms_when = reinitialize_mechanisms_when
 
         # Assign controller

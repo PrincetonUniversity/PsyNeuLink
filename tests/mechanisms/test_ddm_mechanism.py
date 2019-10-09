@@ -23,42 +23,42 @@ class TestReinitialize:
         #  returns previous_value + rate * variable * time_step_size  + noise
         #  0.0 + 1.0 * 1.0 * 1.0 + 0.0
         D.execute(1.0)
-        assert np.allclose(D.value,  [[1.0], [1.0]])
-        assert np.allclose(D.output_states[0].value, 1.0)
-        assert np.allclose(D.output_states[1].value, 1.0)
+        assert np.allclose(np.asfarray(D.value),  [[1.0], [1.0]])
+        assert np.allclose(D.output_states[0].value[0][0], 1.0)
+        assert np.allclose(D.output_states[1].value[0][0], 1.0)
 
         # reinitialize function
         D.function.reinitialize(2.0, 0.1)
         assert np.allclose(D.function.value[0], 2.0)
         assert np.allclose(D.function.previous_value, 2.0)
         assert np.allclose(D.function.previous_time, 0.1)
-        assert np.allclose(D.value,  [[1.0], [1.0]])
-        assert np.allclose(D.output_states[0].value, 1.0)
-        assert np.allclose(D.output_states[1].value, 1.0)
+        assert np.allclose(np.asfarray(D.value),  [[1.0], [1.0]])
+        assert np.allclose(D.output_states[0].value[0][0], 1.0)
+        assert np.allclose(D.output_states[1].value[0][0], 1.0)
 
         # reinitialize function without value spec
         D.function.reinitialize()
         assert np.allclose(D.function.value[0], 0.0)
         assert np.allclose(D.function.previous_value, 0.0)
         assert np.allclose(D.function.previous_time, 0.0)
-        assert np.allclose(D.value, [[1.0], [1.0]])
-        assert np.allclose(D.output_states[0].value, 1.0)
-        assert np.allclose(D.output_states[1].value, 1.0)
+        assert np.allclose(np.asfarray(D.value), [[1.0], [1.0]])
+        assert np.allclose(D.output_states[0].value[0][0], 1.0)
+        assert np.allclose(D.output_states[1].value[0][0], 1.0)
 
         # reinitialize mechanism
         D.reinitialize(2.0, 0.1)
         assert np.allclose(D.function.value[0], 2.0)
         assert np.allclose(D.function.previous_value, 2.0)
         assert np.allclose(D.function.previous_time, 0.1)
-        assert np.allclose(D.value, [[2.0], [0.1]])
+        assert np.allclose(np.asfarray(D.value), [[2.0], [0.1]])
         assert np.allclose(D.output_states[0].value, 2.0)
         assert np.allclose(D.output_states[1].value, 0.1)
 
         D.execute(1.0)
         #  2.0 + 1.0 = 3.0 ; 0.1 + 1.0 = 1.1
-        assert np.allclose(D.value, [[[3.0]], [[1.1]]])
-        assert np.allclose(D.output_states[0].value, 3.0)
-        assert np.allclose(D.output_states[1].value, 1.1)
+        assert np.allclose(np.asfarray(D.value), [[[3.0]], [[1.1]]])
+        assert np.allclose(D.output_states[0].value[0][0], 3.0)
+        assert np.allclose(D.output_states[1].value[0][0], 1.1)
 
         # reinitialize mechanism without value spec
         D.reinitialize()
@@ -685,12 +685,12 @@ def test_DDM_time():
     np.testing.assert_allclose(time_0, 0.5, atol=1e-08)
 
     time_1 = D.execute(10)[1][0]   # t_1  = 0.5 + 0.2 = 0.7
-    np.testing.assert_allclose(time_1, 0.7, atol=1e-08)
+    np.testing.assert_allclose(time_1[0], 0.7, atol=1e-08)
 
     for i in range(10):                                     # t_11 = 0.7 + 10*0.2 = 2.7
         D.execute(10)
     time_12 = D.execute(10)[1][0]                              # t_12 = 2.7 + 0.2 = 2.9
-    np.testing.assert_allclose(time_12, 2.9, atol=1e-08)
+    np.testing.assert_allclose(time_12[0], 2.9, atol=1e-08)
 
 
 def test_WhenFinished_DDM_Analytical():
