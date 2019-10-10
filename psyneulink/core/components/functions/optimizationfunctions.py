@@ -2272,7 +2272,7 @@ class ParamEstimationFunction(OptimizationFunction):
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set=request_set, target_set=target_set,context=context)
 
-    def _make_simulator_function(self, execution_id):
+    def _make_simulator_function(self, context):
 
         # If the objective function hasn't been setup yet, we can simulate anything.
         if self.objective_function is None:
@@ -2287,7 +2287,7 @@ class ParamEstimationFunction(OptimizationFunction):
             # Call the objective_function and check its return type
             zero_input = np.zeros(len(self.search_space))
             ret = self.objective_function(zero_input,
-                                          execution_id=execution_id,
+                                          context=context,
                                           return_results=True)
         except TypeError as ex:
             return None
@@ -2296,37 +2296,6 @@ class ParamEstimationFunction(OptimizationFunction):
         # is an int.
         if type(ret) is int:
             return None
-
-        # Define a function that simulates a 2nd order moving average, assuming mean zero:
-        # y_t = w_t + t1*w_t-1 + t2*w_t-2
-        # where t1 and t2 are real and w_k is i.i.d sequence white noise with N(0,1)
-        def MA2(t1, t2, n_obs=100, batch_size=1, random_state=None):
-            r"""Generate a sequence of samples from the MA2 model.
-
-            The sequence is a moving average
-
-                x_i = w_i + \theta_1 w_{i-1} + \theta_2 w_{i-2}
-
-            where w_i are white noise ~ N(0,1).
-
-            Parameters
-            ----------
-            t1 : float, array_like
-            t2 : float, array_like
-            n_obs : int, optional
-            batch_size : int, optional
-            random_state : RandomState, optional
-
-            """
-            # Make inputs 2d arrays for broadcasting with w
-            t1 = np.asanyarray(t1).reshape((-1, 1))
-            t2 = np.asanyarray(t2).reshape((-1, 1))
-            random_state = random_state or np.random
-
-            # i.i.d. sequence ~ N(0,1)
-            w = random_state.randn(batch_size, n_obs + 2)
-            x = w[:, 2:] + t1 * w[:, 1:-1] + t2 * w[:, :-2]
-            return x
 
         # Things are ready, create a function for the simulator that invokes
         # the objective function.
@@ -2361,35 +2330,11 @@ class ParamEstimationFunction(OptimizationFunction):
             # optimization control mechanism.
             # self.owner.parameters.num_estimates.set(batch_size, execution_id)
 
-            # TODO: This is hardcoded in here for memory profiling, remove later.
-            # if False:
-            #     import tracemalloc
-            #     try:
-            #         if self.num_calls % 100 == 0:
-            #             print(f"objective_function: num_calls={self.num_calls}")
-            #             #self.memory_tracker.print_diff()
-            #             self.old_snapshot = self.new_snapshot
-            #             self.new_snapshot = tracemalloc.take_snapshot()
-            #             top_stats = self.new_snapshot.compare_to(self.old_snapshot, 'lineno')
-            #
-            #             print("[ Top 10 ]")
-            #             for stat in top_stats[:10]:
-            #                 print(stat)
-            #
-            #         self.num_calls = self.num_calls + 1
-            #     except AttributeError:
-            #         print("Creating memory tracker.")
-            #         # from pympler import tracker
-            #         # self.memory_tracker = tracker.SummaryTracker()
-            #         tracemalloc.start()
-            #         self.new_snapshot = tracemalloc.take_snapshot()
-            #         self.num_calls = 0
-
             # Run batch_size simulations of the PsyNeuLink composition
             results = []
             for i in range(batch_size):
                 net_outcome, result = self.objective_function(control_allocation,
-                                                           execution_id=execution_id,
+                                                           context=context,
                                                            return_results=True)
                 results.append(result[0])
 
@@ -2399,13 +2344,12 @@ class ParamEstimationFunction(OptimizationFunction):
             return results
 
         return simulator
-        #return MA2
 
-    def _initialize_model(self, execution_id):
+    def _initialize_model(self, context):
         """
         Setup the ELFI model for sampling.
 
-        :param execution_id: The current execution id, we need to pass this to
+        :param context: The current context, we need to pass this to
         the objective function so it must be passed to our simulator function
         implicitly.
         :return: None
@@ -2418,7 +2362,7 @@ class ParamEstimationFunction(OptimizationFunction):
 
             # Try to make the simulator function we will pass to ELFI, this will fail
             # when we are in psyneulink intializaztion phases.
-            self._sim_func = self._make_simulator_function(execution_id=execution_id)
+            self._sim_func = self._make_simulator_function(context=context)
 
             # If it did fail, we return early without initializing, hopefully next time.
             if self._sim_func is None:
@@ -2448,7 +2392,6 @@ class ParamEstimationFunction(OptimizationFunction):
 
     def function(self,
                  variable=None,
-                 execution_id=None,
                  params=None,
                  context=None,
                  **kwargs):
@@ -2481,7 +2424,7 @@ class ParamEstimationFunction(OptimizationFunction):
 
         # Try to initialize the model if it hasn't been.
         if not self._is_model_initialized:
-            self._initialize_model(execution_id)
+            self._initialize_model(context)
 
         # Intialization can fail for reasons silenty, mainly that PsyNeuLink needs to
         # invoke these functions multiple times during initialization. We only want
