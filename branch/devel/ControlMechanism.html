@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Control Mechanisms &mdash; PsyNeuLink 0.6.0.2+26.g1edadaf documentation</title>
+  <title>Control Mechanisms &mdash; PsyNeuLink 0.6.0.2+32.g6c794b8 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.2+26.g1edadaf',
+              VERSION:'0.6.0.2+32.g6c794b8',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.2+26
+                0.6.0.2+32
               </div>
             
           
@@ -441,7 +441,7 @@ and is used as the input to the ControlMechanism’s <a class="reference interna
 <span id="controlmechanism-function"></span><h3><em>Function</em><a class="headerlink" href="#function" title="Permalink to this headline">¶</a></h3>
 <p>A ControlMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.function" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> uses its <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.outcome"><code class="xref any py py-attr docutils literal"><span class="pre">outcome</span></code></a>
 attribute (the <a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState.value" title="psyneulink.core.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <em>OUTCOME</em> <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a>) to generate a <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a>.  By default, its <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.function" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is assigned
-the <code class="xref any docutils literal"><span class="pre">DefaultAllocationFunction</span></code>, which takes a single value as its input, and assigns that as the value of
+the <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.DefaultAllocationFunction" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.DefaultAllocationFunction"><code class="xref any py py-class docutils literal"><span class="pre">DefaultAllocationFunction</span></code></a>, which takes a single value as its input, and assigns that as the value of
 each item of <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a>.  Each of these items is assigned as
 the allocation for the corresponding  <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> in <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>. This
 distributes the ControlMechanism’s input as the allocation to each of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>.  This same behavior also applies to any custom function assigned to a
@@ -834,6 +834,14 @@ for that System.</p>
 <dd><p>Display the OutputStates monitored by ControlMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> and the parameters modulated by its <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>.</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.DefaultAllocationFunction">
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.</code><code class="descname">DefaultAllocationFunction</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>params=None</em>, <em>owner=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.DefaultAllocationFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a single 1d item and return a 2d array with n identical items
+Takes the default input (a single value in the <em>OUTCOME</em> InputState of the ControlMechanism),
+and returns the same allocation for each of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>.</p>
 </dd></dl>
 
 </div>
