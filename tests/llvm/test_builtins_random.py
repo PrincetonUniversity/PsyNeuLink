@@ -94,7 +94,7 @@ def test_random_float(benchmark, mode):
         gen_fun.cuda_call(gpu_state, gpu_out)
         res.append(out[0])
         gen_fun.cuda_call(gpu_state, gpu_out)
-        res.apped(out[0])
+        res.append(out[0])
         benchmark(gen_fun.cuda_call, gpu_state, gpu_out)
 
     assert np.allclose(res, [0.8444218515250481, 0.7579544029403025])
