@@ -757,7 +757,7 @@ from psyneulink.core.globals.keywords import \
     MODULATORY_PROJECTION, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, MULTIPLICATIVE, MULTIPLICATIVE_PARAM, \
     NAME, OUTPUT_STATES, OVERRIDE, OWNER, \
     PARAMETER_STATES, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, \
-    PROJECTION_DIRECTION, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, \
+    PROJECTION_DIRECTION, PROJECTION, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, \
     RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, STANDARD_OUTPUT_STATES, \
     STATE, STATE_CONTEXT, STATE_NAME, STATE_PARAMS, STATE_PREFS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, WEIGHT, \
     STATE_COMPONENT_CATEGORY
@@ -2804,6 +2804,18 @@ def _parse_state_spec(state_type=None,
             # Delete them from the State specification dictionary, leaving only state-specific items there
             for key in standard_args:
                 state_specific_args.pop(key, None)
+
+            try:
+                spec = state_spec[STATE_SPEC_ARG]
+                state_tuple = [spec[STATE_SPEC_ARG], spec[WEIGHT], spec[EXPONENT]]
+                try:
+                    state_tuple.append(spec[PROJECTION])
+                except KeyError:
+                    pass
+                state_specification = tuple(state_tuple)
+            except KeyError:
+                pass
+
         else:
             state_specification = state_spec[STATE_SPEC_ARG]
 
@@ -3069,7 +3081,11 @@ def _parse_state_spec(state_type=None,
             if MECHANISM in state_specific_args:
 
                 if not PROJECTIONS in params:
-                    params[PROJECTIONS] = []
+                    if NAME in spec:
+                        # substitute into tuple spec
+                        params[PROJECTIONS] = (spec[NAME], params[MECHANISM])
+                    else:
+                        params[PROJECTIONS] = []
 
                 mech = state_specific_args[MECHANISM]
                 if not isinstance(mech, Mechanism):

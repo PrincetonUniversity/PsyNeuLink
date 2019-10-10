@@ -392,6 +392,7 @@ import typecheck as tc
 
 from collections.abc import Iterable
 
+from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.optimizationfunctions import \
     OBJECTIVE_FUNCTION, SEARCH_SPACE, OptimizationFunction
@@ -819,6 +820,18 @@ class OptimizationControlMechanism(ControlMechanism):
             self.control_signals[i] = control_signal
         self.defaults.value = np.tile(control_signal.parameters.variable.default_value, (i+1, 1))
         self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
+
+    def _instantiate_function(self, function, function_params=None, context=None):
+        # this indicates a significant peculiarity of OCM, in that its function
+        # corresponds to its value (control_allocation) rather than anything to
+        # do with its variable. see _instantiate_attributes_after_function
+
+        # Workaround this issue here, and explicitly allow the function's
+        # default variable to be modified
+        if isinstance(function, Function):
+            function._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
+
+        super()._instantiate_function(function, function_params, context)
 
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate OptimizationControlMechanism's OptimizatonFunction attributes"""

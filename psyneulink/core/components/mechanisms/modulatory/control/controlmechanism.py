@@ -587,7 +587,8 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList, is_iterable, convert_to_list
 
 __all__ = [
-    'CONTROL_ALLOCATION', 'GATING_ALLOCATION', 'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry'
+    'CONTROL_ALLOCATION', 'GATING_ALLOCATION', 'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry',
+    'DefaultAllocationFunction'
 ]
 
 CONTROL_ALLOCATION = 'control_allocation'
