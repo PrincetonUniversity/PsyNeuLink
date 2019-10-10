@@ -561,7 +561,10 @@ class AutodiffComposition(Composition):
         if self.loss is not None:
             logger.warning("Overwriting loss function for AutodiffComposition {}! Old loss function: {}".format(
                 self, self.loss))
-        self.loss = self._get_loss(self.loss_spec)
+        if callable(self.loss_spec):
+            self.loss = self.loss_spec
+        else:
+            self.loss = self._get_loss(self.loss_spec)
 
     def _make_optimizer(self, optimizer_type, learning_rate, weight_decay, context):
         if not isinstance(learning_rate, (int, float)):
@@ -730,17 +733,18 @@ class AutodiffComposition(Composition):
 
         # backpropagate to compute gradients and perform learning update for parameters
         optimizer.zero_grad()
-        curr_loss = curr_loss / num_inputs / 2
+        curr_loss = curr_loss / \
+                    num_inputs / \
+                    2
         printable = {}
         for component in curr_tensor_outputs.keys():
             printable[component] = curr_tensor_outputs[component].detach().numpy()
-        np.set_printoptions(precision=3)
         if self.force_no_retain_graph:
             curr_loss.backward(retain_graph=False)
         else:
             curr_loss.backward(retain_graph=True)
-        self.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
         optimizer.step()
+        self.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
 
         if curr_epoch == total_epochs - 1 and not do_logging:
             self.parameters.pytorch_representation._get(context).\
