@@ -2395,7 +2395,7 @@ class ParamEstimationFunction(OptimizationFunction):
                  params=None,
                  context=None,
                  **kwargs):
-        '''Return the sample that yields the optimal value of `objective_function <ParamEstimationFunction.objective_function>`,
+        """Return the sample that yields the optimal value of `objective_function <ParamEstimationFunction.objective_function>`,
         and possibly all samples evaluated and their corresponding values.
 
         Optimal value is defined by `direction <ParamEstimationFunction.direction>`:
@@ -2413,7 +2413,7 @@ class ParamEstimationFunction(OptimizationFunction):
             evaluated; otherwise it is empty.  If `save_values <ParamEstimationFunction.save_values>` is `True`, second list
             contains the values returned by `objective_function <ParamEstimationFunction.objective_function>` for all the
             samples in the order they were evaluated; otherwise it is empty.
-        '''
+        """
 
         # Initialize the list of all samples and values
         return_all_samples = return_all_values = []
