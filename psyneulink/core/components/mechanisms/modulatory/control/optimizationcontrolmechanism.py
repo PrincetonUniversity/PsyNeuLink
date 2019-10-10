@@ -931,7 +931,7 @@ class OptimizationControlMechanism(ControlMechanism):
         if not self.agent_rep.parameters.retain_old_simulation_data._get():
             self.agent_rep._delete_contexts(sim_context, check_simulation_storage=True)
 
-    def evaluation_function(self, control_allocation, execution_id=None, return_results=False):
+    def evaluation_function(self, control_allocation, context=None, return_results=False):
         """Compute `net_outcome <ControlMechanism.net_outcome>` for current set of `feature_values
         <OptimizationControlMechanism.feature_values>` and a specified `control_allocation
         <ControlMechanism.control_allocation>`.
@@ -961,15 +961,15 @@ class OptimizationControlMechanism(ControlMechanism):
 
             result = self.agent_rep.evaluate(self.parameters.feature_values._get(context),
                                              control_allocation,
-                                             self.parameters.num_estimates._get(execution_id),
-                                             base_execution_id=execution_id,
-                                             execution_id=new_execution_id,
-                                             context=self.function.parameters.context._get(execution_id),
-                                             execution_mode=self.parameters.comp_execution_mode._get(execution_id),
+                                             self.parameters.num_estimates._get(context),
+                                             base_context=context,
+                                             context=new_context,
+                                             execution_mode=self.parameters.comp_execution_mode._get(context),
                                              return_results=return_results)
+            context.composition = old_composition
 
             if self.defaults.search_statefulness:
-                self._tear_down_simulation(new_execution_id)
+                self._tear_down_simulation(new_context)
 
             # If results of the simulation shoudld be returned then, do so. Agent Rep Evaluate will
             # return a tuple in this case where the first element is the outcome as usual and the

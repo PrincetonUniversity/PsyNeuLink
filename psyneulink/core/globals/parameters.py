@@ -951,8 +951,6 @@ class Parameter(types.SimpleNamespace):
 
     def _set_value(self, value, execution_id=None, context=None, skip_history=False, skip_log=False):
         # store history
-        skip_history = True
-        skip_log = True
         if not skip_history:
             if execution_id in self.values:
                 try:

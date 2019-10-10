@@ -7,9 +7,9 @@ from psyneulink.core.compositions import Composition
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.globals.sampleiterator import SampleSpec
-from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism import OptimizationControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import OptimizationControlMechanism
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.core.components.functions.function import OVERRIDE
+from psyneulink.core.globals.keywords import OVERRIDE
 from psyneulink.core.components.functions.optimizationfunctions import ParamEstimationFunction
 
 def test_moving_average():
