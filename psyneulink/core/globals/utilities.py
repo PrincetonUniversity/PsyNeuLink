@@ -809,10 +809,18 @@ def copy_iterable_with_shared(obj, shared_types=None):
             except UtilitiesError:
                 # handle ReadOnlyOrderedDict
                 result.__additem__(new_k, new_v)
+
     elif isinstance(obj, list_types + tuple_types):
         is_tuple = isinstance(obj, tuple_types)
         if is_tuple:
             result = list()
+
+        # If this is a deque, make sure we copy the maxlen parameter as well
+        elif isinstance(obj, collections.deque):
+            # FIXME: Should have a better method for supporting properties like this in general
+            # We could do something like result = copy(obj); result.clear() but that would be
+            # wasteful copying I guess.
+            result = obj.__class__(maxlen=obj.maxlen)
         else:
             result = obj.__class__()
 

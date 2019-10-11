@@ -511,7 +511,7 @@ class Function_Base(Function):
                          function=function,
                          param_defaults=params,
                          name=name,
-                         prefs=prefs)
+                            prefs=prefs)
 
     def __call__(self, *args, **kwargs):
         return self.function(*args, **kwargs)
