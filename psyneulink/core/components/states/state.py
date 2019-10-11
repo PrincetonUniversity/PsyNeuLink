@@ -1522,10 +1522,6 @@ class State_Base(State):
                         raise StateError("Output of function for {} ({}) is not compatible with value of {} ({}).".
                                              format(projection.name, projection.defaults.value, self.name, self.defaults.value))
 
-                # projection._assign_default_projection_name(state=self,
-                #                                            sender_name=projection.sender.name,
-                #                                            receiver_name=self.name)
-
             # ASSIGN TO STATE
 
             # Avoid duplicates, since instantiation of projection may have already called this method
@@ -1782,20 +1778,19 @@ class State_Base(State):
                 else:
                     raise StateError("RECEIVER of {} to {} of {} is neither a State or State class".
                                      format(projection_type.__name__, self.name, self.owner.name))
-                if isinstance(projection, PathwayProjection_Base):
-                    projection_name = projection_type.__name__ + " from " + self.owner.name + " to " + receiver_name
-
-                else:
-                    if isinstance(receiver, State):
-                        receiver_name = receiver.owner.name + " " + receiver.name
-                    else:
-                        receiver_name = receiver.__name__
-                    projection_name = projection_type.__name__ + " for " + receiver_name
-                # projection._init_args[NAME] = projection._init_args[NAME] or projection_name
-                projection._assign_default_projection_name(state=self,
-                                                           sender_name=self.name,
-                                                           receiver_name=receiver_name)
-
+                # if isinstance(projection, PathwayProjection_Base):
+                #     projection_name = projection_type.__name__ + " from " + self.owner.name + " to " + receiver_name
+                #
+                # else:
+                #     if isinstance(receiver, State):
+                #         receiver_name = receiver.owner.name + " " + receiver.name
+                #     else:
+                #         receiver_name = receiver.__name__
+                #     projection_name = projection_type.__name__ + " for " + receiver_name
+                # # projection._init_args[NAME] = projection._init_args[NAME] or projection_name
+                # projection._assign_default_projection_name(state=self,
+                #                                            sender_name=self.name,
+                #                                            receiver_name=receiver_name)
 
                 # If receiver has been instantiated, try to complete initialization
                 # If not, assume it will be handled later (by Mechanism or Composition)
