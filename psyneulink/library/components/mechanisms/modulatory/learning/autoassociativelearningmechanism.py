@@ -342,9 +342,9 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
         # # USE FOR IMPLEMENTATION OF deferred_init()
         # # Store args for deferred initialization
-        # self.init_args = locals().copy()
-        # self.init_args['context'] = self
-        # self.init_args['name'] = name
+        # self._init_args = locals().copy()
+        # self._init_args['context'] = self
+        # self._init_args['name'] = name
 
         # # Flag for deferred initialization
         # self.initialization_status = ContextFlags.DEFERRED_INIT

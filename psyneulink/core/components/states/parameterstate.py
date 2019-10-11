@@ -652,7 +652,7 @@ class ParameterState(State_Base):
         duplicate = next(iter([proj for proj in self.mod_afferents
                                if ((proj.sender == projection.sender and proj != projection)
                                    or (proj.initialization_status == ContextFlags.DEFERRED_INIT
-                                       and proj.init_args[SENDER] == type(projection.sender)))]), None)
+                                       and proj._init_args[SENDER] == type(projection.sender)))]), None)
         if duplicate and self.verbosePref or self.owner.verbosePref:
             from psyneulink.core.components.projections.projection import Projection
             warnings.warn(f'{Projection.__name__} from {projection.sender.name}  {projection.sender.__class__.__name__}'

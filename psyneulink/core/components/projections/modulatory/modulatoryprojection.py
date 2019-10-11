@@ -214,8 +214,8 @@ class ModulatoryProjection_Base(Projection_Base):
 
         elif self.initialization_status == ContextFlags.DEFERRED_INIT:
             projection_name = template.format(self.className, state.owner.name, state.name)
-            # self.init_args[NAME] = self.init_args[NAME] or projection_name
-            self.name = self.init_args[NAME] or projection_name
+            # self._init_args[NAME] = self._init_args[NAME] or projection_name
+            self.name = self._init_args[NAME] or projection_name
 
         else:
             raise ModulatoryProjectionError("PROGRAM ERROR: {} has unrecognized initialization_status ({})".

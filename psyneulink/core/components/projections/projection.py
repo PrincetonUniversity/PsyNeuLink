@@ -696,12 +696,12 @@ class Projection_Base(Projection):
 
         if self.initialization_status == ContextFlags.DEFERRED_INIT:
             self._assign_deferred_init_name(name, context)
-            self.init_args = locals().copy()
-            self.init_args[NAME] = name
+            self._init_args = locals().copy()
+            self._init_args[NAME] = name
 
             # remove local imports
-            del self.init_args['ParameterState']
-            del self.init_args['State_Base']
+            del self._init_args['ParameterState']
+            del self._init_args['State_Base']
             return
 
         self.receiver = receiver
@@ -979,8 +979,8 @@ class Projection_Base(Projection):
     def socket_assignments(self):
 
         if self.initialization_status == ContextFlags.DEFERRED_INIT:
-            sender = self.init_args[SENDER]
-            receiver = self.init_args[RECEIVER]
+            sender = self._init_args[SENDER]
+            receiver = self._init_args[RECEIVER]
         else:
             sender = self.sender
             receiver = self.receiver
@@ -1203,7 +1203,7 @@ def _parse_projection_spec(projection_spec,
         projection._weight = proj_spec_dict[WEIGHT] or projection.weight
         projection._exponent = proj_spec_dict[EXPONENT] or projection.exponent
         if projection.initialization_status == ContextFlags.DEFERRED_INIT:
-            projection.init_args[NAME] = proj_spec_dict[NAME] or projection.init_args[NAME]
+            projection._init_args[NAME] = proj_spec_dict[NAME] or projection._init_args[NAME]
         else:
             projection.name = proj_spec_dict[NAME] or projection.name
 
@@ -1761,7 +1761,7 @@ def _validate_connection_request(
 
     If projection_spec is a Projection:
         - if it is instantiated, compare the projection_socket specified (sender or receiver) with connect_with_state
-        - if it in deferred_init, check to see if the specified projection_socket has been specified in init_args;
+        - if it in deferred_init, check to see if the specified projection_socket has been specified in _init_args;
             otherwise, use Projection's type
     If projection_spec is a class specification, use Projection's type
     If projection_spec is a dict:
@@ -1816,7 +1816,7 @@ def _validate_connection_request(
                     # Projection's socket has been assigned to a State
             else:
                 # if both SENDER and RECEIVER are specified:
-                if projection_spec.init_args[SENDER] and projection_spec.init_args[RECEIVER]:
+                if projection_spec._init_args[SENDER] and projection_spec._init_args[RECEIVER]:
                     # Validate that the State is a class in connect_with_states
                     if (isinstance(projection_socket_state, connect_with_states) or
                             (inspect.isclass(projection_socket_state)
@@ -1925,8 +1925,8 @@ def _validate_receiver(sender_mech:Mechanism,
     spec_type = " in the {} arg ".format(spec_type) or ""
 
     if projection.initialization_status == ContextFlags.DEFERRED_INIT:
-        # receiver = projection.init_args['receiver'].owner
-        state = projection.init_args['receiver']
+        # receiver = projection._init_args['receiver'].owner
+        state = projection._init_args['receiver']
         receiver = state.owner
     else:
         # receiver = projection.receiver.owner

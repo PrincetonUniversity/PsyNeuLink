@@ -2774,8 +2774,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 return
             else:
                 # Initialize Projection
-                projection.init_args['sender'] = sender
-                projection.init_args['receiver'] = receiver
+                projection._init_args['sender'] = sender
+                projection._init_args['receiver'] = receiver
                 try:
                     projection._deferred_init()
                 except DuplicateProjectionError:

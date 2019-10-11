@@ -1021,12 +1021,12 @@ class OutputState(State_Base):
             # Temporarily name OutputState
             self._assign_deferred_init_name(name, context)
             # Store args for deferred initialization
-            self.init_args = locals().copy()
-            del self.init_args['kwargs']
-            self.init_args['variable'] = variable
-            self.init_args['context'] = context
-            self.init_args['name'] = name
-            self.init_args['projections'] = projections
+            self._init_args = locals().copy()
+            del self._init_args['kwargs']
+            self._init_args['variable'] = variable
+            self._init_args['context'] = context
+            self._init_args['name'] = name
+            self._init_args['projections'] = projections
 
             # Flag for deferred initialization
             self.initialization_status = ContextFlags.DEFERRED_INIT
@@ -1124,7 +1124,7 @@ class OutputState(State_Base):
         duplicate = next(iter([proj for proj in self.efferents
                                if ((proj.receiver == projection.receiver and proj != projection)
                                    or (proj.initialization_status == ContextFlags.DEFERRED_INIT
-                                       and proj.init_args[RECEIVER] == type(projection.receiver)))]), None)
+                                       and proj._init_args[RECEIVER] == type(projection.receiver)))]), None)
         if duplicate and self.verbosePref or self.owner.verbosePref:
             from psyneulink.core.components.projections.projection import Projection
             warnings.warn(f'{Projection.__name__} from {projection.sender.name} of {projection.sender.owner.name} '
@@ -1446,9 +1446,9 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                                                                                    # MODIFIED 9/22/19 OLD:
                                                                                    # output_state.function,
                                                                                    # MODIFIED 9/22/19 NEW: [JDC]
-                                                                                   output_state.init_args[FUNCTION],
+                                                                                   output_state._init_args[FUNCTION],
                                                                                    # MODIFIED 9/22/19 END
-                                                                                   output_state.init_args[VARIABLE])
+                                                                                   output_state._init_args[VARIABLE])
                     # For backward compatibility with INDEX and ASSIGN
                     except AttributeError:
                         index = output_state.index

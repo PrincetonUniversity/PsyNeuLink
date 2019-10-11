@@ -77,19 +77,19 @@ class PathwayProjection_Base(Projection_Base):
         projection_name_template = "{} from {} to {}"
 
         if self.initialization_status == ContextFlags.DEFERRED_INIT:
-            if self.init_args[SENDER]:
-                sender = self.init_args[SENDER]
+            if self._init_args[SENDER]:
+                sender = self._init_args[SENDER]
                 if isinstance(sender, type):
                     sender_name = f"({sender.__name__})"
                 elif isinstance(sender.owner, Mechanism):
                     sender_name = name_template.format(sender.owner.name, sender_name)
-            if self.init_args[RECEIVER]:
-                receiver = self.init_args[RECEIVER]
+            if self._init_args[RECEIVER]:
+                receiver = self._init_args[RECEIVER]
                 if isinstance(receiver.owner, Mechanism):
                     receiver_name = name_template.format(receiver.owner.name, receiver_name)
             projection_name = projection_name_template.format(self.className, sender_name, receiver_name)
-            self.init_args[NAME] = self.init_args[NAME] or projection_name
-            self.name = self.init_args[NAME]
+            self._init_args[NAME] = self._init_args[NAME] or projection_name
+            self.name = self._init_args[NAME]
 
         # If the name is not a default name, leave intact
         elif not self.className + '-' in self.name:

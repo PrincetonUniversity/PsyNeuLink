@@ -1009,10 +1009,10 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
         # # USE FOR IMPLEMENTATION OF deferred_init()
         # # Store args for deferred initialization
-        # self.init_args = locals().copy()
-        # self.init_args['context'] = self
-        # self.init_args['name'] = name
-        # delete self.init_args[ERROR_SOURCES]
+        # self._init_args = locals().copy()
+        # self._init_args['context'] = self
+        # self._init_args['name'] = name
+        # delete self._init_args[ERROR_SOURCES]
 
         # # Flag for deferred initialization
         # self.initialization_status = ContextFlags.DEFERRED_INIT

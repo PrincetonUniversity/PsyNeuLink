@@ -1489,62 +1489,62 @@ class Process(Process_Base):
                     if item.initialization_status == ContextFlags.DEFERRED_INIT:
                         # Check sender arg
                         try:
-                            sender_arg = item.init_args[SENDER]
+                            sender_arg = item._init_args[SENDER]
                         except AttributeError:
                             raise ProcessError(
                                 "PROGRAM ERROR: initialization_status of {} is {} but "
-                                "it does not have init_args".format(
+                                "it does not have _init_args".format(
                                     item, ContextFlags.DEFERRED_INIT.name
                                 )
                             )
                         except KeyError:
                             raise ProcessError(
                                 "PROGRAM ERROR: Value of {} is {} but "
-                                "init_args does not have entry for {}".format(
-                                    item.init_args[NAME], ContextFlags.DEFERRED_INIT.name, SENDER
+                                "_init_args does not have entry for {}".format(
+                                    item._init_args[NAME], ContextFlags.DEFERRED_INIT.name, SENDER
                                 )
                             )
                         else:
                             # If sender is not specified for the Projection,
                             #    assign mechanism that precedes in pathway
                             if sender_arg is None:
-                                item.init_args[SENDER] = sender_mech
+                                item._init_args[SENDER] = sender_mech
                             elif sender_arg is not sender_mech:
                                 raise ProcessError(
                                     "Sender of Projection ({}) specified in item {} of"
                                     " pathway for {} is not the Mechanism ({}) "
                                     "that precedes it in the pathway".format(
-                                        item.init_args[NAME], i, self.name, sender_mech.name
+                                        item._init_args[NAME], i, self.name, sender_mech.name
                                     )
                                 )
                         # Check receiver arg
                         try:
-                            receiver_arg = item.init_args[RECEIVER_ARG]
+                            receiver_arg = item._init_args[RECEIVER_ARG]
                         except AttributeError:
                             raise ProcessError(
                                 "PROGRAM ERROR: initialization_status of {} is {} "
-                                "but it does not have init_args".format(
+                                "but it does not have _init_args".format(
                                     item, ContextFlags.DEFERRED_INIT
                                 )
                             )
                         except KeyError:
                             raise ProcessError(
                                 "PROGRAM ERROR: initialization_status of {} is {} "
-                                "but init_args does not have entry for {}".format(
-                                    item.init_args[NAME], ContextFlags.DEFERRED_INIT, RECEIVER_ARG
+                                "but _init_args does not have entry for {}".format(
+                                    item._init_args[NAME], ContextFlags.DEFERRED_INIT, RECEIVER_ARG
                                 )
                             )
                         else:
                             # If receiver is not specified for the Projection,
                             #    assign mechanism that follows it in the pathway
                             if receiver_arg is None:
-                                item.init_args[RECEIVER_ARG] = receiver_mech
+                                item._init_args[RECEIVER_ARG] = receiver_mech
                             elif receiver_arg is not receiver_mech:
                                 raise ProcessError(
                                     "Receiver of Projection ({}) specified in item {} of"
                                     " pathway for {} is not the Mechanism ({}) "
                                     "that follows it in the pathway". format(
-                                        item.init_args[NAME], i, self.name, receiver_mech.name
+                                        item._init_args[NAME], i, self.name, receiver_mech.name
                                     )
                                 )
 

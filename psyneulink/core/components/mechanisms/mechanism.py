@@ -1712,7 +1712,7 @@ class Mechanism_Base(Mechanism):
                     pass
             elif isinstance(parsed_input_state_spec, (Projection, Mechanism, State)):
                 if parsed_input_state_spec.initialization_status == ContextFlags.DEFERRED_INIT:
-                    args = parsed_input_state_spec.init_args
+                    args = parsed_input_state_spec._init_args
                     if REFERENCE_VALUE in args and args[REFERENCE_VALUE] is not None:
                         mech_variable_item = args[REFERENCE_VALUE]
                     elif VALUE in args and args[VALUE] is not None:

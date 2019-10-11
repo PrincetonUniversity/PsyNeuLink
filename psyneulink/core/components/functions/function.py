@@ -493,7 +493,7 @@ class Function_Base(Function):
 
         if self.initialization_status == ContextFlags.DEFERRED_INIT:
             self._assign_deferred_init_name(name, context)
-            self.init_args[NAME] = name
+            self._init_args[NAME] = name
             return
 
 

@@ -823,10 +823,10 @@ class InputState(State_Base):
             # Temporarily name InputState
             self._assign_deferred_init_name(name, context)
             # Store args for deferred initialization
-            self.init_args = locals().copy()
-            self.init_args['context'] = context
-            self.init_args['name'] = name
-            self.init_args['projections'] = projections
+            self._init_args = locals().copy()
+            self._init_args['context'] = context
+            self._init_args['name'] = name
+            self._init_args['projections'] = projections
 
             # Flag for deferred initialization
             self.initialization_status = ContextFlags.DEFERRED_INIT
@@ -975,7 +975,7 @@ class InputState(State_Base):
         duplicate = next(iter([proj for proj in self.path_afferents
                                if ((proj.sender == projection.sender and proj != projection)
                                    or (proj.initialization_status == ContextFlags.DEFERRED_INIT
-                                       and proj.init_args[SENDER] == type(projection.sender)))]), None)
+                                       and proj._init_args[SENDER] == type(projection.sender)))]), None)
         if duplicate and self.verbosePref or self.owner.verbosePref:
             from psyneulink.core.components.projections.projection import Projection
             warnings.warn(f'{Projection.__name__} from {projection.sender.name}  {projection.sender.__class__.__name__}'

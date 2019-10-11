@@ -966,7 +966,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     name = None
 
     _deepcopy_shared_keys = frozenset([
-        'init_args',
+        '_init_args',
     ])
 
     class _CompilationData(ParametersBase):
@@ -1439,29 +1439,29 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             #       (usually in _instantiate_function)
             self.initialization_status = ContextFlags.INITIALIZING
 
-            del self.init_args['self']
+            del self._init_args['self']
 
             try:
-                del self.init_args['__class__']
+                del self._init_args['__class__']
             except KeyError:
                 pass
 
             # Delete reference to dict created by paramsCurrent -> ParamsDict
             try:
-                del self.init_args['__pydevd_ret_val_dict']
+                del self._init_args['__pydevd_ret_val_dict']
             except KeyError:
                 pass
 
-            self.init_args['context'] = context
+            self._init_args['context'] = context
 
             # Complete initialization
             # MODIFIED 10/27/18 OLD:
-            super(self.__class__,self).__init__(**self.init_args)
+            super(self.__class__,self).__init__(**self._init_args)
             # MODIFIED 10/27/18 NEW:  FOLLOWING IS NEEDED TO HANDLE FUNCTION DEFERRED INIT (JDC)
             # try:
-            #     super(self.__class__,self).__init__(**self.init_args)
+            #     super(self.__class__,self).__init__(**self._init_args)
             # except:
-            #     self.__init__(**self.init_args)
+            #     self.__init__(**self._init_args)
             # MODIFIED 10/27/18 END
 
             # If name was assigned, "[DEFERRED INITIALIZATION]" was appended to it, so remove it
@@ -3384,7 +3384,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         deferred_init_values = {}
 
         if self.initialization_status is ContextFlags.DEFERRED_INIT:
-            deferred_init_values = copy.copy(self.init_args)
+            deferred_init_values = copy.copy(self._init_args)
             try:
                 deferred_init_values.update(deferred_init_values['params'])
             except KeyError:

@@ -1422,14 +1422,14 @@ class State_Base(State):
             # Deferred init
             if projection.initialization_status == ContextFlags.DEFERRED_INIT:
 
-                proj_sender = projection.init_args[SENDER]
-                proj_receiver = projection.init_args[RECEIVER]
+                proj_sender = projection._init_args[SENDER]
+                proj_receiver = projection._init_args[RECEIVER]
 
                 # validate receiver
                 if proj_receiver is not None and proj_receiver != self:
                     raise StateError("Projection ({}) assigned to {} of {} already has a receiver ({})".
                                      format(projection_type.__name__, self.name, self.owner.name, proj_receiver.name))
-                projection.init_args[RECEIVER] = self
+                projection._init_args[RECEIVER] = self
 
 
                 # parse/validate sender
@@ -1459,16 +1459,16 @@ class State_Base(State):
                         sender = proj_sender
                 else:
                     sender = state
-                projection.init_args[SENDER] = sender
+                projection._init_args[SENDER] = sender
 
                 projection.sender = sender
-                projection.receiver = projection.init_args[RECEIVER]
+                projection.receiver = projection._init_args[RECEIVER]
                 projection.receiver.afferents_info[projection] = ConnectionInfo()
 
                 # Construct and assign name
                 if isinstance(sender, State):
                     if sender.initialization_status == ContextFlags.DEFERRED_INIT:
-                        sender_name = sender.init_args[NAME]
+                        sender_name = sender._init_args[NAME]
                     else:
                         sender_name = sender.name
                     sender_name = sender_name or sender.__class__.__name__
@@ -1721,8 +1721,8 @@ class State_Base(State):
                 projection_type = projection.__class__
 
                 if projection.initialization_status == ContextFlags.DEFERRED_INIT:
-                    projection.init_args[RECEIVER] = projection.init_args[RECEIVER] or receiver
-                    proj_recvr = projection.init_args[RECEIVER]
+                    projection._init_args[RECEIVER] = projection._init_args[RECEIVER] or receiver
+                    proj_recvr = projection._init_args[RECEIVER]
                 else:
                     projection.receiver = projection.receiver or receiver
                     proj_recvr = projection.receiver
@@ -1769,12 +1769,12 @@ class State_Base(State):
             # Deferred init
             if projection.initialization_status == ContextFlags.DEFERRED_INIT:
 
-                projection.init_args[SENDER] = self
+                projection._init_args[SENDER] = self
 
                 # Construct and assign name
                 if isinstance(receiver, State):
                     if receiver.initialization_status == ContextFlags.DEFERRED_INIT:
-                        receiver_name = receiver.init_args[NAME]
+                        receiver_name = receiver._init_args[NAME]
                     else:
                         receiver_name = receiver.name
                 elif inspect.isclass(receiver) and issubclass(receiver, State):
@@ -1791,7 +1791,7 @@ class State_Base(State):
                     else:
                         receiver_name = receiver.__name__
                     projection_name = projection_type.__name__ + " for " + receiver_name
-                # projection.init_args[NAME] = projection.init_args[NAME] or projection_name
+                # projection._init_args[NAME] = projection._init_args[NAME] or projection_name
                 projection._assign_default_projection_name(state=self,
                                                            sender_name=self.name,
                                                            receiver_name=receiver_name)
@@ -2581,22 +2581,22 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
         # State initialization was deferred (owner or reference_value was missing), so
         #    assign owner, variable, and/or reference_value if they were not already specified
         if state.initialization_status == ContextFlags.DEFERRED_INIT:
-            if not state.init_args[OWNER]:
-                state.init_args[OWNER] = owner
+            if not state._init_args[OWNER]:
+                state._init_args[OWNER] = owner
             # If variable was not specified by user or State's constructor:
-            if not VARIABLE in state.init_args or state.init_args[VARIABLE] is None:
+            if not VARIABLE in state._init_args or state._init_args[VARIABLE] is None:
                 # If call to _instantiate_state specified variable, use that
                 if variable is not None:
-                    state.init_args[VARIABLE] = variable
+                    state._init_args[VARIABLE] = variable
                 # Otherwise, use State's owner's default variable as default
                 else:
-                    state.init_args[VARIABLE] = owner.defaults.variable[0]
+                    state._init_args[VARIABLE] = owner.defaults.variable[0]
             if not hasattr(state, REFERENCE_VALUE):
-                if REFERENCE_VALUE in state.init_args and state.init_args[REFERENCE_VALUE] is not None:
-                    state.reference_value = state.init_args[REFERENCE_VALUE]
+                if REFERENCE_VALUE in state._init_args and state._init_args[REFERENCE_VALUE] is not None:
+                    state.reference_value = state._init_args[REFERENCE_VALUE]
                 else:
                     # state.reference_value = owner.defaults.variable[0]
-                    state.reference_value = state.init_args[VARIABLE]
+                    state.reference_value = state._init_args[VARIABLE]
             state._deferred_init(context=context)
 
         # # FIX: 10/3/17 - CHECK THE FOLLOWING BY CALLING STATE-SPECIFIC METHOD?
@@ -2797,7 +2797,7 @@ def _parse_state_spec(state_type=None,
                 projection = state_spec[STATE_SPEC_ARG][PROJECTIONS][0]
                 state = projection.sender
                 if state.initialization_status == ContextFlags.DEFERRED_INIT:
-                    state.init_args[PARAMS][PROJECTIONS]=projection
+                    state._init_args[PARAMS][PROJECTIONS]=projection
                 else:
                     state._instantiate_projections_to_state(projections=projection, context=context)
                 return state
@@ -2914,7 +2914,7 @@ def _parse_state_spec(state_type=None,
         if state_specification.__class__ == state_type:
             # Make sure that the specified State belongs to the Mechanism passed in the owner arg
             if state_specification.initialization_status == ContextFlags.DEFERRED_INIT:
-                state_owner = state_specification.init_args[OWNER]
+                state_owner = state_specification._init_args[OWNER]
             else:
                 state_owner = state_specification.owner
             if owner is not None and state_owner is not None and state_owner is not owner:
@@ -2970,8 +2970,8 @@ def _parse_state_spec(state_type=None,
             # If deferred_init, need to get sender and matrix to determine value
             else:
                 try:
-                    sender = projection_spec.init_args[SENDER]
-                    matrix = projection_spec.init_args[PARAMS][FUNCTION_PARAMS][MATRIX]
+                    sender = projection_spec._init_args[SENDER]
+                    matrix = projection_spec._init_args[PARAMS][FUNCTION_PARAMS][MATRIX]
                 except KeyError:
                     pass
         # Projection specification dict:
