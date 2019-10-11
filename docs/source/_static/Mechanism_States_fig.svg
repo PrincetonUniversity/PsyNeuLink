@@ -1366,7 +1366,7 @@
                x="0 3.6113999 11.5518 19.492201 27.4326 31.7616 40.432598 44.7616 51.992199 56.321201"
                y="0"
                sodipodi:role="line"
-               id="tspan4121">InputState</tspan></text>
+               id="tspan4121">InputPort</tspan></text>
 </g></g></g><g
        id="g4123"><g
          id="g4125"
@@ -1527,7 +1527,7 @@
                x="0 3.6113999 11.5518 19.492201 27.4326 31.7616 40.432598 44.7616 51.992199 56.321201"
                y="0"
                sodipodi:role="line"
-               id="tspan4315">InputState</tspan></text>
+               id="tspan4315">InputPort</tspan></text>
 </g></g></g><g
        id="g4317"><g
          id="g4319"

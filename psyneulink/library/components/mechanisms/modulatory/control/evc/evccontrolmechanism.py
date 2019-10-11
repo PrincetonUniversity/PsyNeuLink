@@ -103,8 +103,8 @@ ObjectiveMechanism
 ^^^^^^^^^^^^^^^^^^
 
 Like any ControlMechanism, an EVCControlMechanism receives its input from the *OUTCOME* `OutputState
-<ObjectiveMechanism_Output>` of an `ObjectiveMechanism`, via a MappingProjection to its `primary InputState
-<InputState_Primary>`.  The ObjectiveMechanism is listed in the EVCControlMechanism's `objective_mechanism
+<ObjectiveMechanism_Output>` of an `ObjectiveMechanism`, via a MappingProjection to its `primary InputPort
+<InputPort_Primary>`.  The ObjectiveMechanism is listed in the EVCControlMechanism's `objective_mechanism
 <EVCControlMechanism.objective_mechanism>` attribute.  By default, the ObjectiveMechanism's function is a
 `LinearCombination` function with its `operation <LinearCombination.operation>` attribute assigned as *PRODUCT*;
 this takes the product of the `value <OutputState.value>`\\s of the OutputStates that it monitors (listed in its
@@ -115,7 +115,7 @@ in a variety of ways:
       (see `Objective Mechanism Examples <ObjectiveMechanism_Weights_and_Exponents_Example>` for an example);
     ..
     * using a list to specify the OutputStates to be monitored  (and the `tuples format
-      <InputState_Tuple_Specification>` to specify weights and/or exponents for them) in either the
+      <InputPort_Tuple_Specification>` to specify weights and/or exponents for them) in either the
       **monitor_for_control** or **objective_mechanism** arguments of the EVCControlMechanism's constructor;
     ..
     * using the  **monitored_output_states** argument for an ObjectiveMechanism specified in the `objective_mechanism
@@ -162,19 +162,19 @@ created that projects to the corresponding prediction Mechanism.  By default, th
 used for all prediction mechanisms, which calculates an exponentially weighted time-average of its input over (
 non-simuated) trials, that is provided as input to the corresponding `ORIGIN` Mechanism on each simulated trial.
 However, any other type of Mechanism can be used as a prediction mechanism, so long as it has the same number of
-`InputStates <InputState>` as the `ORIGIN` Mechanism to which it corresponds, and an `OutputState` corresponding to
+`InputPorts <InputPort>` as the `ORIGIN` Mechanism to which it corresponds, and an `OutputState` corresponding to
 each.  The default type is a `PredictionMechanism`, that calculates an exponentially weighted time-average of its
 input. The prediction mechanisms can be customized using the *prediction_mechanisms* argument of the
 EVCControlMechanism's constructor, which can be specified using any of the following formats:
 
   * **Mechanism** -- convenience format for cases in which the EVCControlMechanism's `system
     <EVCControlMechanism.system>` has a single `ORIGIN` Mechanism;  the Mechanism must have the same number of
-    `InputStates <InputState>` as the `system <EVCControlMechanism.system>`\\'s `ORIGIN` Mechanism, and
+    `InputPorts <InputPort>` as the `system <EVCControlMechanism.system>`\\'s `ORIGIN` Mechanism, and
     an `OutputState` for each.
   ..
   * **Mechanism subclass** -- used as the class for all prediction mechanisms; a default instance of that class
-    is created for each prediction mechanism, with a number of InputStates and OutputStates equal to the number of
-    InputStates of the `ORIGIN` Mechanism to which it corresponds.
+    is created for each prediction mechanism, with a number of InputPorts and OutputStates equal to the number of
+    InputPorts of the `ORIGIN` Mechanism to which it corresponds.
   ..
   * **dict** -- a `parameter specification dictionary <ParameterState_Specification>` specifying the parameters to be
     assigned to all prediction mechanisms, all of which are instances of a `PredictionMechanism` (thus, the parameters
@@ -451,16 +451,16 @@ class EVCControlMechanism(ControlMechanism):
         # TBI: - CONTROL_PROJECTIONS:
         #         list of projections to add (and for which outputStates should be added)
 
-        # - input_states: one for each performance/environment variable monitored
+        # - input_ports: one for each performance/environment variable monitored
 
         ControlProjection Specification:
         #    - wherever a ControlProjection is specified, using kwEVC instead of CONTROL_PROJECTION
         #     this should override the default sender SYSTEM_DEFAULT_CONTROLLER in ControlProjection._instantiate_sender
-        #    ? expclitly, in call to "EVC.monitor(input_state, parameter_state=NotImplemented) method
+        #    ? expclitly, in call to "EVC.monitor(input_port, parameter_state=NotImplemented) method
 
         # - specification of function: default is default allocation policy (BADGER/GUMBY)
-        #   constraint:  if specified, number of items in variable must match number of input_states in INPUT_STATES
-        #                  and names in list in kwMonitor must match those in INPUT_STATES
+        #   constraint:  if specified, number of items in variable must match number of input_ports in INPUT_PORTS
+        #                  and names in list in kwMonitor must match those in INPUT_PORTS
 
        **********************************************************************************************
 
@@ -597,7 +597,7 @@ class EVCControlMechanism(ControlMechanism):
     [TBI]
         monitored_output_states : 3D np.array
             an array of values of the outputStates in `monitored_output_states` (equivalent to the values of
-            the EVCControlMechanism's `input_states <EVCControlMechanism.input_states>`).
+            the EVCControlMechanism's `input_ports <EVCControlMechanism.input_ports>`).
     COMMENT
 
     monitored_output_states_weights_and_exponents: List[Tuple[scalar, scalar]]
@@ -923,12 +923,12 @@ class EVCControlMechanism(ControlMechanism):
                                        "and parameter specification dictionary".
                                        format(pm, repr(PREDICTION_MECHANISMS), self.name))
 
-    def _instantiate_input_states(self, context=None):
+    def _instantiate_input_ports(self, context=None):
         """Instantiate PredictionMechanisms
         """
         if self.system is not None:
             self._instantiate_prediction_mechanisms(system=self.system, context=context)
-        super()._instantiate_input_states(context=context)
+        super()._instantiate_input_ports(context=context)
 
     def _instantiate_control_signals(self, context):
         """Size control_allocation and assign modulatory_signals
@@ -954,20 +954,20 @@ class EVCControlMechanism(ControlMechanism):
         For each `ORIGIN` Mechanism in system:
             - instantiate a corresponding PredictionMechanism
             - instantiate a MappingProjection to the PredictionMechanism
-                that shadows the one from the SystemInputState to the ORIGIN Mechanism
+                that shadows the one from the SystemInputPort to the ORIGIN Mechanism
 
         Instantiate self.predicted_input dict:
             - key for each entry is an `ORIGIN` Mechanism of system
             - value of each entry is a list of the values of the corresponding predictionMechanism,
                 one for each trial to be simulated; each value is a 2d array, each item of which is the value of an
-                InputState of the predictionMechanism
+                InputPort of the predictionMechanism
 
         Args:
             context:
         """
 
-        from psyneulink.core.components.process import ProcessInputState
-        from psyneulink.core.components.system import SystemInputState
+        from psyneulink.core.components.process import ProcessInputPort
+        from psyneulink.core.components.system import SystemInputPort
 
         # FIX: 1/16/18 - Should should check for any new origin_mechs? What if origin_mech deleted?
         # If system's controller already has prediction_mechanisms, use those
@@ -1018,10 +1018,10 @@ class EVCControlMechanism(ControlMechanism):
         for origin_mech, pm_spec in zip(system.origin_mechanisms.mechanisms, prediction_mech_specs):
             state_names = []
             variable = []
-            for state_name in origin_mech.input_states.names:
+            for state_name in origin_mech.input_ports.names:
                 state_names.append(state_name)
-                # variable.append(origin_mech.input_states[state_name].defaults.variable)
-                variable.append(origin_mech.input_states[state_name].value)
+                # variable.append(origin_mech.input_ports[state_name].defaults.variable)
+                variable.append(origin_mech.input_ports[state_name].value)
 
             # Instantiate PredictionMechanism
             if isinstance(pm_spec, Mechanism):
@@ -1032,7 +1032,7 @@ class EVCControlMechanism(ControlMechanism):
                 prediction_mechanism = mech_class(
                         name=origin_mech.name + " " + PREDICTION_MECHANISM,
                         default_variable=variable,
-                        input_states=state_names,
+                        input_ports=state_names,
                         # params = mech_params
                         **mech_params,
                         context=context
@@ -1045,15 +1045,15 @@ class EVCControlMechanism(ControlMechanism):
             prediction_mechanism.origin_mech = origin_mech
 
             # Assign projections to prediction_mechanism that duplicate those received by origin_mech
-            #    (this includes those from ProcessInputState, SystemInputState and/or recurrent ones
-            for orig_input_state, prediction_input_state in zip(origin_mech.input_states,
-                                                            prediction_mechanism.input_states):
-                for projection in orig_input_state.path_afferents:
+            #    (this includes those from ProcessInputPort, SystemInputPort and/or recurrent ones
+            for orig_input_port, prediction_input_port in zip(origin_mech.input_ports,
+                                                            prediction_mechanism.input_ports):
+                for projection in orig_input_port.path_afferents:
                     proj = MappingProjection(sender=projection.sender,
-                                      receiver=prediction_input_state,
+                                      receiver=prediction_input_port,
                                       matrix=projection.matrix)
 
-                    if isinstance(proj.sender, (ProcessInputState, SystemInputState)):
+                    if isinstance(proj.sender, (ProcessInputPort, SystemInputPort)):
                         proj._activate_for_compositions(proj.sender.owner)
                     else:
                         proj._activate_for_compositions(system)
@@ -1288,9 +1288,9 @@ class EVCControlMechanism(ControlMechanism):
         self.system._animate = animate_buffer
 
         # Get outcomes for current control_allocation
-        #    = the values of the monitored output states (self.input_states)
+        #    = the values of the monitored output states (self.input_ports)
         # self.objective_mechanism.execute(context=EVC_SIMULATION)
-        monitored_states = self._update_input_states(context=context, runtime_params=runtime_params)
+        monitored_states = self._update_input_ports(context=context, runtime_params=runtime_params)
 
         # # MODIFIED 9/18/18 OLD:
         # for i in range(len(self.control_signals)):

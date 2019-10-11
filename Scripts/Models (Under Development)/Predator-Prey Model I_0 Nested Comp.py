@@ -104,7 +104,7 @@ if PERCEPTUAL_DISTORT:
 else:
     CTL_PARAM = SLOPE
 # agent_comp._analyze_graph()
-ocm = OptimizationControlMechanism(features=[player_obs.input_state, predator_obs.input_state, prey_obs.input_state],
+ocm = OptimizationControlMechanism(features=[player_obs.input_port, predator_obs.input_port, prey_obs.input_port],
                                    agent_rep=agent_comp,
                                    function=GridSearch(direction=MAXIMIZE,
                                                        save_values=True),
@@ -112,24 +112,24 @@ ocm = OptimizationControlMechanism(features=[player_obs.input_state, predator_ob
                                            # function=diff_fct,
                                            function=test_fct,
                                            monitor=[player_obs,
-                                                    player_obs.input_state,
+                                                    player_obs.input_port,
                                                     predator_obs,
-                                                    predator_obs.input_state,
+                                                    predator_obs.input_port,
                                                     prey_obs,
-                                                    prey_obs.input_state
+                                                    prey_obs.input_port
                                                     ]
                                            # monitored_output_states=[player_input, player_obs,
                                            #                          predator_input, predator_obs,
                                            #                          prey_input, prey_obs
                                            #                          ]
                                            # monitored_output_states=[agent_comp.input_CIM_states[
-                                           #                              player_obs.input_state][1],
+                                           #                              player_obs.input_port][1],
                                            #                          player_obs,
                                            #                          agent_comp.input_CIM_states[
-                                           #                              predator_obs.input_state][1],
+                                           #                              predator_obs.input_port][1],
                                            #                          predator_obs,
                                            #                          agent_comp.input_CIM_states[
-                                           #                              prey_obs.input_state][1],
+                                           #                              prey_obs.input_port][1],
                                            #                          prey_obs
                                            #                          ]
                                    ),

@@ -24,7 +24,7 @@ reward_in = ProcessingMechanism(name='Reward',
 
 perceptual_state = ProcessingMechanism(name='Current State',
                             function=Concatenate,
-                            input_states=[{NAME:'STIM',
+                            input_ports=[{NAME:'STIM',
                                            SIZE:stim_size,
                                            PROJECTIONS:stim_in},
                                           {NAME:'CONTEXT',
@@ -33,7 +33,7 @@ perceptual_state = ProcessingMechanism(name='Current State',
 
 # action = ProcessingMechanism(name='Action',
 #                              size=num_actions,
-#                              input_states={NAME: 'Q values',
+#                              input_ports={NAME: 'Q values',
 #                                            PROJECTIONS:perceptual_state})
 action = ProcessingMechanism(name='Action',
                              size=num_actions)

@@ -159,7 +159,7 @@ The four types of Components in PsyNeuLink, Mechanisms, Projections, States and 
 
        + `MappingProjection`
          Takes the value of the `OutputState` of one Mechanism, and converts it as necessary to provide it as
-         the variable for the `InputState` of another Mechanism.
+         the variable for the `InputPort` of another Mechanism.
 
    + `ModulatoryProjection`
        Used in conjunction with ModulatoryMechanisms to regulate the functioning of one or more other Components.
@@ -182,7 +182,7 @@ The four types of Components in PsyNeuLink, Mechanisms, Projections, States and 
    (see `figure <Mechanism_Figure>`), each of which can receive and/or send `PathwayProjections <PathwayProjection>`
    and/or `ModulatoryProjections <ModulatoryProjection>` (see `figure <ModulatorySignal_Anatomy_Figure>`):
 
-   + `InputState`
+   + `InputPort`
        Represents a set of inputs to the Mechanism.
        Receives one or more afferent PathwayProjections to a Mechanism, combines them using its `function
        <State_Base.function>`, and assigns the result (its `value <State_Base.value>`)as an item of the Mechanism's

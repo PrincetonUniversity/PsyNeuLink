@@ -175,9 +175,9 @@ class AutoAssociativeProjection(MappingProjection):
         `primary OutputState <OutputState_Primary>` will be used. If it is not specified, it will be assigned in
         the context in which the Projection is used.
 
-    receiver : Optional[InputState or Mechanism]
+    receiver : Optional[InputPort or Mechanism]
         specifies the destination of the Projection's output.  If a Mechanism is specified, its
-        `primary InputState <InputState_Primary>` will be used. If it is not specified, it will be assigned in
+        `primary InputPort <InputPort_Primary>` will be used. If it is not specified, it will be assigned in
         the context in which the Projection is used.
 
     matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX
@@ -207,7 +207,7 @@ class AutoAssociativeProjection(MappingProjection):
     sender : OutputState
         identifies the source of the Projection's input.
 
-    receiver: InputState
+    receiver: InputPort
         identifies the destination of the Projection.
 
     learning_mechanism : LearningMechanism
@@ -231,7 +231,7 @@ class AutoAssociativeProjection(MappingProjection):
         <ParameterState>`.
 
     value : np.ndarray
-        Output of AutoAssociativeProjection, transmitted to `variable <InputState.variable>` of `receiver`.
+        Output of AutoAssociativeProjection, transmitted to `variable <InputPort.variable>` of `receiver`.
 
     name : str
         a string used for the name of the AutoAssociativeProjection (see `Registry <LINK>` for conventions used in

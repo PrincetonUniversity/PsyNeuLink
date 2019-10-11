@@ -109,7 +109,7 @@ Some classes of Functions also implement a pair of modulatory parameters: `multi
 Each of these is assigned the name of one of the function's parameters. These are used by `ModulatorySignals
 <ModulatorySignal>` to modulate the output of the function (see `figure <ModulatorySignal_Detail_Figure>`).  For
 example, they are used by `GatingSignals <GatingSignal>` to modulate the `function <State_Base.function>` of an
-`InputState` or `OutputState`, and thereby its `value <State_Base.value>`; and by the `ControlSignal(s) <ControlSignal>`
+`InputPort` or `OutputState`, and thereby its `value <State_Base.value>`; and by the `ControlSignal(s) <ControlSignal>`
 of an `LCControlMechanism` to modulate the `multiplicative_param` of the `function <TransferMechanism.function>` of a
 `TransferMechanism`.
 

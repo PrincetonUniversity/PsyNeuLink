@@ -69,7 +69,7 @@ Decision = pnl.DDM(function=psyneulink.core.components.functions.distributionfun
 Decision.set_log_conditions('DECISION_VARIABLE')
 Decision.set_log_conditions('value')
 Decision.set_log_conditions('PROBABILITY_UPPER_THRESHOLD')
-Decision.set_log_conditions('InputState-0')
+Decision.set_log_conditions('InputPort-0')
 Decision.set_log_conditions('drift_rate')
 
 Decision.set_log_conditions('OFFSET_RT')
@@ -140,7 +140,7 @@ mySystem.show_graph(show_control=pnl.ALL, show_mechanism_structure=True)# show_c
 
 #log input state of mySystem
 mySystem.controller.loggable_items
-mySystem.controller.set_log_conditions('InputState-0')
+mySystem.controller.set_log_conditions('InputPort-0')
 mySystem.controller.set_log_conditions('value')
 
 mySystem.controller.set_log_conditions('Flanker Representation[slope] ControlSignal')
@@ -150,7 +150,7 @@ mySystem.controller.objective_mechanism.set_log_conditions('value')
 mySystem.controller.objective_mechanism.set_log_conditions('PROBABILITY_UPPER_THRESHOLD')
 mySystem.controller.objective_mechanism.set_log_conditions('OFFSET_RT')
 
-# print('current input value',mySystem.controller.input_states.values)
+# print('current input value',mySystem.controller.input_ports.values)
 # print('current objective mech output value',mySystem.controller.objective_mechanism.output_states.values)
 #
 
@@ -225,7 +225,7 @@ mySystem.run(num_trials=nTrials,inputs=stim_list_dict)
 
 # print('output state of objective mechanism', mySystem.controller.objective_mechanism.output_states.values)
 #
-# print('input state of EVC Control mechanism', mySystem.controller.input_state.value)
+# print('input state of EVC Control mechanism', mySystem.controller.input_port.value)
 #
 # print('mapping projection from objective mechanism to EVC Control mechanism',mySystem.controller.projections[0].matrix)
 

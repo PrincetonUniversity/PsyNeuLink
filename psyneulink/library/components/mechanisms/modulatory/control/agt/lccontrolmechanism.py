@@ -83,7 +83,7 @@ Structure
 *Input*
 ~~~~~~~
 
-An LCControlMechanism has a single (primary) `InputState <InputState_Primary>`, the `value <InputState.value>` of
+An LCControlMechanism has a single (primary) `InputPort <InputPort_Primary>`, the `value <InputPort.value>` of
 which is a scalar that is provided by a `MappingProjection` from the *OUTCOME* `OutputState <ObjectiveMechanism_Output>`
 of the LCControlMechanism's `ObjectiveMechanism`.  That value is used as the input to the LCControlMechanism's
 `function <LCControlMechanism.function>`, which drives its `phasic response <LCControlMechanism_Modes_Of_Operation>`.
@@ -242,8 +242,8 @@ ADDITIONAL EXAMPLES HERE OF THE DIFFERENT FORMS OF SPECIFICATION FOR
 **monitor_for_control** and **modulated_mechanisms**
 
 STRUCTURE:
-MODE INPUT_STATE <- NAMED ONE, LAST?
-SIGNAL INPUT_STATE(S) <- PRIMARY;  MUST BE FROM PROCESSING MECHANISMS
+MODE INPUT_PORT <- NAMED ONE, LAST?
+SIGNAL INPUT_PORT(S) <- PRIMARY;  MUST BE FROM PROCESSING MECHANISMS
 CONTROL SIGNALS
 
 COMMENT
@@ -256,7 +256,7 @@ Execution
 An LCControlMechanism executes within a `Composition` at a point specified in the Composition's `Scheduler` or, if it
 is the `controller <System>` for a `Composition`, after all of the other Mechanisms in the Composition have `executed
 <Composition_Execution>` in a `TRIAL`. It's `function <LCControlMechanism.function>` takes the `value
-<InputState.value>` of the LCControlMechanism's `primary InputState <InputState_Primary>` as its input, and generates a
+<InputPort.value>` of the LCControlMechanism's `primary InputPort <InputPort_Primary>` as its input, and generates a
 response -- under the influence of its `mode <FitzHughNagumoIntegrator.mode>` parameter -- that is assigned as the
 `allocation <LCControlSignal.allocation>` of its `ControlSignals <ControlSignal>`.  The latter are used by its
 `ControlProjections <ControlProjection>` to modulate the response -- in the next `TRIAL` of execution --  of the
@@ -986,7 +986,7 @@ class LCControlMechanism(ControlMechanism):
         if self.objective_mechanism is None:
             print("\t\tNone")
         else:
-            for state in self.objective_mechanism.input_states:
+            for state in self.objective_mechanism.input_ports:
                 for projection in state.path_afferents:
                     monitored_state = projection.sender
                     monitored_state_mech = projection.sender.owner

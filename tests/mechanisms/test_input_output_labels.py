@@ -54,7 +54,7 @@ class TestMechanismInputLabels:
         S.run(inputs=['red'])
         assert np.allclose(S.results, [[[1, 0, 0]], [[0, 1, 0]], [[0, 0, 1]], [[1, 0, 0]], [[1, 0, 0]], [[1, 0, 0]]])
 
-    # def test_dict_of_arrays_2_input_states(self):
+    # def test_dict_of_arrays_2_input_ports(self):
     #     input_labels_dict = {"red": [0],
     #                          "green": [1]}
     #
@@ -104,7 +104,7 @@ class TestMechanismInputLabels:
     #     S.run(inputs='red')
     #     assert np.allclose(S.results, [[[1, 0], [1, 0]], [[0, 1], [0, 1]], [[0, 1], [1, 0]], [[1, 0], [1, 0]]])
 
-    def test_dict_of_dicts_1_input_state(self):
+    def test_dict_of_dicts_1_input_port(self):
         input_labels_dict = {0: {"red": [1, 0],
                                  "green": [0, 1]}}
 
@@ -147,7 +147,7 @@ class TestMechanismInputLabels:
         S.run(inputs=[['red', [1, 0]], ['green', 'red'], [[0,1], 'green']])
         assert np.allclose(S.results, [[[1, 0], [1, 0]], [[0, 1], [0, 1]], [[0, 1], [1, 0]], [[1, 0], [1, 0]], [[0, 1], [0, 1]], [[0, 1], [1, 0]]])
 
-    def test_3_input_states_2_label_dicts(self):
+    def test_3_input_ports_2_label_dicts(self):
         input_labels_dict = {0: {"red": [1, 0],
                                  "green": [0, 1]},
                              2: {"red": [0, 1],

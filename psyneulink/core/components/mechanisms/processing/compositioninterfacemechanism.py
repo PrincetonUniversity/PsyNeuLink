@@ -54,7 +54,7 @@ from psyneulink.core.components.functions.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.core.components.states.inputstate import InputState
+from psyneulink.core.components.states.inputport import InputPort
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.globals.context import ContextFlags
@@ -146,7 +146,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_states: tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState)) = None,
+                 input_ports: tc.optional(tc.any(Iterable, Mechanism, OutputState, InputPort)) = None,
                  function=Identity(),
                  composition=None,
                  params=None,
@@ -160,12 +160,12 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
-                                                  input_states=input_states,
+                                                  input_ports=input_ports,
                                                   params=params)
 
         super(CompositionInterfaceMechanism, self).__init__(default_variable=default_variable,
                                                             size=size,
-                                                            input_states=input_states,
+                                                            input_ports=input_ports,
                                                             function=function,
                                                             params=params,
                                                             name=name,

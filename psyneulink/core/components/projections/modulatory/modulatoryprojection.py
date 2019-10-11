@@ -32,7 +32,7 @@ that modulate different types of Components and their States:
 ..
 * `GatingProjection`
     takes the `value <GatingSignal.value>` of a `GatingSignal` belonging to a `GatingMechanism`, and conveys it
-    to the `InputState` or `OutputState` of a `ProcessingMechanism <ProcessingMechanism>` for use by the State's
+    to the `InputPort` or `OutputState` of a `ProcessingMechanism <ProcessingMechanism>` for use by the State's
     `function <State_Base.function>` in modulating its `value <State_Base.value>`.
 
 .. _Projection_Creation:
@@ -192,7 +192,7 @@ class ModulatoryProjection_Base(Projection_Base):
         ModulatoryProjection with the same base name (see `Naming`). If the name is not specified in the **name**
         argument of its constructor, a default name is assigned using the following format:
         '<ModualatorySignal type> for <receiver owner Mechanism's name>[<receiver's name>]'
-        (for example, ``'GatingSignal for my_mech[InputState-0]'``).
+        (for example, ``'GatingSignal for my_mech[InputPort-0]'``).
 
     prefs : PreferenceSet or specification dict
         the `PreferenceSet` for the ModulatoryProjection; if it is not specified in the **prefs** argument of the

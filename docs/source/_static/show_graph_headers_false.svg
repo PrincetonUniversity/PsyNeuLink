@@ -130,7 +130,7 @@
            x="0 3.3239999 10.644 17.964001 25.284 29.280001 37.271999 41.268002 47.939999 51.936001 58.608002 62.604"
            y="0"
            sodipodi:role="line"
-           id="tspan3972">InputState-0</tspan></text>
+           id="tspan3972">InputPort-0</tspan></text>
 <path
          d="m 49.5,172.5 h 106 v -127 h -106 z"
          style="fill:none;stroke:#00ff00;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1"
@@ -217,7 +217,7 @@
            x="0 3.3239999 10.644 17.964001 25.284 29.280001 37.271999 41.268002 47.939999 51.936001 58.608002 62.604"
            y="0"
            sodipodi:role="line"
-           id="tspan4016">InputState-0</tspan></text>
+           id="tspan4016">InputPort-0</tspan></text>
 <path
          d="m 49.5,346.5 h 106 v -127 h -106 z"
          style="fill:none;stroke:#ff0000;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1"

@@ -14,7 +14,7 @@ https://princetonuniversity.github.io/PsyNeuLink/Component.html
 """
 
 #
-# __all__ = ['INPUT_STATES',
+# __all__ = ['INPUT_PORTS',
 #            'OUTPUT_STATES',
 #            'PARAMETER_STATE',
 #            'MAPPING_PROJECTION',
@@ -122,9 +122,9 @@ SystemDefaultControlMechanism = DefaultControlMechanism
 from psyneulink.core.components.states.state import StateRegistry
 from psyneulink.core.components.states.state import State_Base
 
-# InputState
-from psyneulink.core.components.states.inputstate import InputState
-register_category(entry=InputState,
+# InputPort
+from psyneulink.core.components.states.inputport import InputPort
+register_category(entry=InputPort,
                   base_class=State_Base,
                   registry=StateRegistry,
                   context=kwInitPy)
@@ -143,16 +143,16 @@ register_category(entry=OutputState,
                   registry=StateRegistry,
                   context=kwInitPy)
 
-# ProcessInputState
-from psyneulink.core.components.process import ProcessInputState
-register_category(entry=ProcessInputState,
+# ProcessInputPort
+from psyneulink.core.components.process import ProcessInputPort
+register_category(entry=ProcessInputPort,
                   base_class=State_Base,
                   registry=StateRegistry,
                   context=kwInitPy)
 
-# ProcessInputState
-from psyneulink.core.components.system import SystemInputState
-register_category(entry=SystemInputState,
+# ProcessInputPort
+from psyneulink.core.components.system import SystemInputPort
+register_category(entry=SystemInputPort,
                   base_class=State_Base,
                   registry=StateRegistry,
                   context=kwInitPy)
@@ -356,7 +356,7 @@ Function.classPreferences = BasePreferenceSet(owner=Function,
                                               level=PreferenceLevel.CATEGORY,
                                               context=".__init__.py")
 
-# InputState.classPreferences = BasePreferenceSet(owner=InputState,
+# InputPort.classPreferences = BasePreferenceSet(owner=InputPort,
 #                                              prefs=ComponentDefaultPrefDicts[PreferenceLevel.TYPE],
 #                                              level=PreferenceLevel.TYPE,
 #                                              context=".__init__.py")

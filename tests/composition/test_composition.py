@@ -19,12 +19,12 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TRANSFER_OUTPUT, TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.components.states.inputstate import InputState
+from psyneulink.core.components.states.inputport import InputPort
 from psyneulink.core.compositions.composition import Composition, CompositionError
 from psyneulink.core.compositions.pathwaycomposition import PathwayComposition
 from psyneulink.core.compositions.systemcomposition import SystemComposition
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, ALLOCATION_SAMPLES, DISABLE, INPUT_STATE, NAME, PROJECTIONS, OVERRIDE, TARGET_MECHANISM
+    ADDITIVE, ALLOCATION_SAMPLES, DISABLE, INPUT_PORT, NAME, PROJECTIONS, OVERRIDE, TARGET_MECHANISM
 from psyneulink.core.globals.utilities import NodeRole
 from psyneulink.core.scheduling.condition import AfterNCalls
 from psyneulink.core.scheduling.condition import EveryNCalls
@@ -303,8 +303,8 @@ class TestAddProjection:
     #     comp.add_node(A)
     #     comp.add_node(B)
     #
-    #     comp.add_projection(sender=A.output_states[0], receiver=B.input_states[0])
-    #     comp.add_projection(sender=A.output_states[1], receiver=B.input_states[1])
+    #     comp.add_projection(sender=A.output_states[0], receiver=B.input_ports[0])
+    #     comp.add_projection(sender=A.output_states[1], receiver=B.input_ports[1])
     #
     #     print(comp.run(inputs={A: [[1.0], [2.0]]}))
 
@@ -529,7 +529,7 @@ class TestAnalyzeGraph:
         B = ProcessingMechanism(name='B')
         comp.add_linear_processing_pathway([A, B])
         comp.add_controller(controller=pnl.OptimizationControlMechanism(agent_rep=comp,
-                                                                        features=[A.input_state],
+                                                                        features=[A.input_port],
                                                                         objective_mechanism=pnl.ObjectiveMechanism(
                                                                                 function=pnl.LinearCombination(
                                                                                         operation=pnl.PRODUCT),
@@ -557,7 +557,7 @@ class TestAnalyzeGraph:
         comp.add_linear_processing_pathway([A, B])
 
         comp.add_controller(controller=pnl.OptimizationControlMechanism(agent_rep=comp,
-                                                                        features=[A.input_state],
+                                                                        features=[A.input_port],
                                                                         objective_mechanism=pnl.ObjectiveMechanism(
                                                                                 function=pnl.LinearCombination(
                                                                                         operation=pnl.PRODUCT),
@@ -1961,9 +1961,9 @@ class TestRun:
             error_text.value)
 
     def test_LPP_wrong_component(self):
-        from psyneulink.core.components.states.inputstate import InputState
+        from psyneulink.core.components.states.inputport import InputPort
         comp = Composition()
-        Nonsense = InputState()
+        Nonsense = InputPort()
         A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=2.0))
         B = TransferMechanism(name="composition-pytests-B", function=Linear(slope=2.0))
         with pytest.raises(CompositionError) as error_text:
@@ -2163,12 +2163,12 @@ class TestRun:
         comp = Composition()
         C = TransferMechanism(name="C", function=Linear(slope=5.0))
         D = TransferMechanism(name="D", function=Linear(slope=5.0))
-        E = TransferMechanism(name="E", input_states=['a', 'b'], function=Linear(slope=5.0))
+        E = TransferMechanism(name="E", input_ports=['a', 'b'], function=Linear(slope=5.0))
         comp.add_node(C)
         comp.add_node(D)
         comp.add_node(E)
-        comp.add_projection(MappingProjection(sender=C, receiver=E.input_states['a']), C, E)
-        comp.add_projection(MappingProjection(sender=D, receiver=E.input_states['b']), D, E)
+        comp.add_projection(MappingProjection(sender=C, receiver=E.input_ports['a']), C, E)
+        comp.add_projection(MappingProjection(sender=D, receiver=E.input_ports['b']), D, E)
         inputs_dict = {C: [6.0],
                        D: [8.0]}
         sched = Scheduler(composition=comp)
@@ -2195,16 +2195,16 @@ class TestRun:
         # [7, 8] x 5 = [35, 40] --
 
         comp = Composition()
-        C = TransferMechanism(name="C", input_states=['a', 'b'], function=Linear(slope=5.0))
-        D = TransferMechanism(name="D", input_states=['a', 'b'], function=Linear(slope=5.0))
-        E = TransferMechanism(name="E", input_states=['a', 'b'], function=Linear(slope=5.0))
+        C = TransferMechanism(name="C", input_ports=['a', 'b'], function=Linear(slope=5.0))
+        D = TransferMechanism(name="D", input_ports=['a', 'b'], function=Linear(slope=5.0))
+        E = TransferMechanism(name="E", input_ports=['a', 'b'], function=Linear(slope=5.0))
         comp.add_node(C)
         comp.add_node(D)
         comp.add_node(E)
-        comp.add_projection(MappingProjection(sender=C.output_states[0], receiver=E.input_states['a']), C, E)
-        comp.add_projection(MappingProjection(sender=C.output_states[1], receiver=E.input_states['b']), C, E)
-        comp.add_projection(MappingProjection(sender=D.output_states[0], receiver=E.input_states['a']), D, E)
-        comp.add_projection(MappingProjection(sender=D.output_states[1], receiver=E.input_states['b']), D, E)
+        comp.add_projection(MappingProjection(sender=C.output_states[0], receiver=E.input_ports['a']), C, E)
+        comp.add_projection(MappingProjection(sender=C.output_states[1], receiver=E.input_ports['b']), C, E)
+        comp.add_projection(MappingProjection(sender=D.output_states[0], receiver=E.input_ports['a']), D, E)
+        comp.add_projection(MappingProjection(sender=D.output_states[1], receiver=E.input_ports['b']), D, E)
         inputs_dict = {C: [[5.0], [6.0]],
                        D: [[7.0], [8.0]]}
         sched = Scheduler(composition=comp)
@@ -2231,8 +2231,8 @@ class TestRun:
         # [7, 8] x 5 = [35, 40] --
 
         comp = Composition()
-        C = TransferMechanism(name="C", input_states=['a', 'b'], function=Linear(slope=5.0))
-        D = TransferMechanism(name="D", input_states=['a', 'b'], function=Linear(slope=5.0))
+        C = TransferMechanism(name="C", input_ports=['a', 'b'], function=Linear(slope=5.0))
+        D = TransferMechanism(name="D", input_ports=['a', 'b'], function=Linear(slope=5.0))
         E = TransferMechanism(name="E", function=Linear(slope=5.0))
         comp.add_node(C)
         comp.add_node(D)
@@ -3545,7 +3545,7 @@ class TestNestedCompositions:
         ocomp.add_controller(
             pnl.OptimizationControlMechanism(
                 agent_rep=ocomp,
-                features=[oa.input_state],
+                features=[oa.input_port],
                 # feature_function=pnl.Buffer(history=2),
                 name="Controller",
                 objective_mechanism=ocomp_objective_mechanism,
@@ -3566,7 +3566,7 @@ class TestNestedCompositions:
         icomp.add_controller(
             pnl.OptimizationControlMechanism(
                 agent_rep=icomp,
-                features=[ia.input_state],
+                features=[ia.input_port],
                 # feature_function=pnl.Buffer(history=2),
                 name="Controller",
                 objective_mechanism=icomp_objective_mechanism,
@@ -3967,7 +3967,7 @@ class TestOverloadedCompositions:
 
 class TestCompositionInterface:
 
-    def test_one_input_state_per_origin_two_origins(self):
+    def test_one_input_port_per_origin_two_origins(self):
 
         # 5 -#1-> A --^ --> C --
         #                       ==> E
@@ -4123,15 +4123,15 @@ class TestCompositionInterface:
         output2 = comp.run(inputs=inputs_dict2, scheduler=sched)
 
         connections_to_A = []
-        expected_connections_to_A = [(F.output_states[0], A.input_states[0])]
-        for input_state in A.input_states:
-            for p_a in input_state.path_afferents:
+        expected_connections_to_A = [(F.output_states[0], A.input_ports[0])]
+        for input_port in A.input_ports:
+            for p_a in input_port.path_afferents:
                 connections_to_A.append((p_a.sender, p_a.receiver))
 
         assert connections_to_A == expected_connections_to_A
         assert np.allclose(np.array([[30.]]), output2)
 
-    def test_two_input_states_new_inputs_second_trial(self):
+    def test_two_input_ports_new_inputs_second_trial(self):
 
         comp = Composition()
         my_fun = Linear(
@@ -4140,7 +4140,7 @@ class TestCompositionInterface:
             slope=1.0)
         A = TransferMechanism(name="composition-pytests-A",
                               default_variable=[[0], [0]],
-                              input_states=[{NAME: "Input State 1",
+                              input_ports=[{NAME: "Input State 1",
                                              },
                                             {NAME: "Input State 2",
                                              }],
@@ -4156,12 +4156,12 @@ class TestCompositionInterface:
 
         output = comp.run(inputs=inputs_dict2, scheduler=sched)
 
-        assert np.allclose(A.input_states[0].parameters.value.get(comp), [2.])
-        assert np.allclose(A.input_states[1].parameters.value.get(comp), [4.])
+        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.])
+        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.])
         assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.], [4.]])
         assert np.allclose(output, np.array([[2.], [4.]]))
 
-    def test_two_input_states_new_origin_second_trial(self):
+    def test_two_input_ports_new_origin_second_trial(self):
 
         # A --> B --> C
 
@@ -4173,7 +4173,7 @@ class TestCompositionInterface:
         A = TransferMechanism(
             name="composition-pytests-A",
             default_variable=[[0], [0]],
-            input_states=[
+            input_ports=[
                 {NAME: "Input State 1", },
                 {NAME: "Input State 2", }
             ],
@@ -4192,8 +4192,8 @@ class TestCompositionInterface:
 
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched)
-        assert np.allclose(A.input_states[0].parameters.value.get(comp), [5.])
-        assert np.allclose(A.input_states[1].parameters.value.get(comp), [5.])
+        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [5.])
+        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [5.])
         assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[5.], [5.]])
         assert np.allclose(output, [[50.]])
 
@@ -4204,7 +4204,7 @@ class TestCompositionInterface:
         D = TransferMechanism(
             name="composition-pytests-D",
             default_variable=[[0], [0]],
-            input_states=[
+            input_ports=[
                 {NAME: "Input State 1", },
                 {NAME: "Input State 2", }
             ],
@@ -4219,12 +4219,12 @@ class TestCompositionInterface:
         inputs_dict2 = {A: [[2.], [4.]],
                         D: [[2.], [4.]]}
         output2 = comp.run(inputs=inputs_dict2, scheduler=sched)
-        assert np.allclose(A.input_states[0].parameters.value.get(comp), [2.])
-        assert np.allclose(A.input_states[1].parameters.value.get(comp), [4.])
+        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.])
+        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.])
         assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.], [4.]])
 
-        assert np.allclose(D.input_states[0].parameters.value.get(comp), [2.])
-        assert np.allclose(D.input_states[1].parameters.value.get(comp), [4.])
+        assert np.allclose(D.input_ports[0].parameters.value.get(comp), [2.])
+        assert np.allclose(D.input_ports[1].parameters.value.get(comp), [4.])
         assert np.allclose(D.parameters.variable.get(comp.default_execution_id), [[2.], [4.]])
 
         assert np.allclose(np.array([[40.]]), output2)
@@ -4251,7 +4251,7 @@ class TestCompositionInterface:
 
         for terminal_state in comp.output_CIM_states:
             # all CIM output state keys in the CIM --> Terminal mapping dict are on the actual output CIM
-            assert (comp.output_CIM_states[terminal_state][0] in comp.output_CIM.input_states) and \
+            assert (comp.output_CIM_states[terminal_state][0] in comp.output_CIM.input_ports) and \
                    (comp.output_CIM_states[terminal_state][1] in comp.output_CIM.output_states)
 
         # all Terminal Output states are in the CIM --> Terminal mapping dict
@@ -4288,7 +4288,7 @@ class TestCompositionInterface:
 
         for terminal_state in comp.output_CIM_states:
             # all CIM output state keys in the CIM --> Terminal mapping dict are on the actual output CIM
-            assert (comp.output_CIM_states[terminal_state][0] in comp.output_CIM.input_states) and \
+            assert (comp.output_CIM_states[terminal_state][0] in comp.output_CIM.input_ports) and \
                    (comp.output_CIM_states[terminal_state][1] in comp.output_CIM.output_states)
 
         # all Terminal Output states are in the CIM --> Terminal mapping dict
@@ -4366,15 +4366,15 @@ class TestCompositionInterface:
         assert len(outer_comp.results[0]) == 1
 
 
-class TestInputStateSpecifications:
+class TestInputPortSpecifications:
 
-    def test_two_input_states_created_with_dictionaries(self):
+    def test_two_input_ports_created_with_dictionaries(self):
 
         comp = Composition()
         A = ProcessingMechanism(
             name="composition-pytests-A",
             default_variable=[[0], [0]],
-            # input_states=[
+            # input_ports=[
             #     {NAME: "Input State 1", },
             #     {NAME: "Input State 2", }
             # ],
@@ -4389,26 +4389,26 @@ class TestInputStateSpecifications:
         sched = Scheduler(composition=comp)
         comp.run(inputs=inputs_dict, scheduler=sched)
 
-        assert np.allclose(A.input_states[0].parameters.value.get(comp), [2.0])
-        assert np.allclose(A.input_states[1].parameters.value.get(comp), [4.0])
+        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
+        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
         assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
-    def test_two_input_states_created_first_with_deferred_init(self):
+    def test_two_input_ports_created_first_with_deferred_init(self):
         comp = Composition()
 
         # create mechanism A
-        I1 = InputState(
+        I1 = InputPort(
             name="Input State 1",
             reference_value=[0]
         )
-        I2 = InputState(
+        I2 = InputPort(
             name="Input State 2",
             reference_value=[0]
         )
         A = TransferMechanism(
             name="composition-pytests-A",
             default_variable=[[0], [0]],
-            input_states=[I1, I2],
+            input_ports=[I1, I2],
             function=Linear(slope=1.0)
         )
 
@@ -4421,11 +4421,11 @@ class TestInputStateSpecifications:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched)
 
-        assert np.allclose(A.input_states[0].parameters.value.get(comp), [2.0])
-        assert np.allclose(A.input_states[1].parameters.value.get(comp), [4.0])
+        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
+        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
         assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
-    def test_two_input_states_created_with_keyword(self):
+    def test_two_input_ports_created_with_keyword(self):
         comp = Composition()
 
         # create mechanism A
@@ -4433,7 +4433,7 @@ class TestInputStateSpecifications:
         A = TransferMechanism(
             name="composition-pytests-A",
             default_variable=[[0], [0]],
-            input_states=[INPUT_STATE, INPUT_STATE],
+            input_ports=[INPUT_PORT, INPUT_PORT],
             function=Linear(slope=1.0)
         )
 
@@ -4446,13 +4446,13 @@ class TestInputStateSpecifications:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched)
 
-        assert np.allclose(A.input_states[0].parameters.value.get(comp), [2.0])
-        assert np.allclose(A.input_states[1].parameters.value.get(comp), [4.0])
+        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
+        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
         assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
         assert np.allclose([[2], [4]], output)
 
-    def test_two_input_states_created_with_strings(self):
+    def test_two_input_ports_created_with_strings(self):
         comp = Composition()
 
         # create mechanism A
@@ -4460,7 +4460,7 @@ class TestInputStateSpecifications:
         A = TransferMechanism(
             name="composition-pytests-A",
             default_variable=[[0], [0]],
-            input_states=["Input State 1", "Input State 2"],
+            input_ports=["Input State 1", "Input State 2"],
             function=Linear(slope=1.0)
         )
 
@@ -4474,11 +4474,11 @@ class TestInputStateSpecifications:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched)
 
-        assert np.allclose(A.input_states[0].parameters.value.get(comp), [2.0])
-        assert np.allclose(A.input_states[1].parameters.value.get(comp), [4.0])
+        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
+        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
         assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
-    def test_two_input_states_created_with_values(self):
+    def test_two_input_ports_created_with_values(self):
         comp = Composition()
 
         # create mechanism A
@@ -4486,7 +4486,7 @@ class TestInputStateSpecifications:
         A = TransferMechanism(
             name="composition-pytests-A",
             default_variable=[[0], [0]],
-            input_states=[[0.], [0.]],
+            input_ports=[[0.], [0.]],
             function=Linear(slope=1.0)
         )
 
@@ -4499,8 +4499,8 @@ class TestInputStateSpecifications:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched)
 
-        assert np.allclose(A.input_states[0].parameters.value.get(comp), [2.0])
-        assert np.allclose(A.input_states[1].parameters.value.get(comp), [4.0])
+        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
+        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
         assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
 
@@ -4521,18 +4521,18 @@ class TestInputSpecifications:
 
     def test_3_origins(self):
         comp = Composition()
-        I1 = InputState(
+        I1 = InputPort(
                         name="Input State 1",
                         reference_value=[0]
         )
-        I2 = InputState(
+        I2 = InputPort(
                         name="Input State 2",
                         reference_value=[0]
         )
         A = TransferMechanism(
                             name="composition-pytests-A",
                             default_variable=[[0], [0]],
-                            input_states=[I1, I2],
+                            input_ports=[I1, I2],
                             function=Linear(slope=1.0)
         )
         B = TransferMechanism(
@@ -4814,7 +4814,7 @@ class TestShadowInputs:
         A = ProcessingMechanism(name='A')
         comp.add_node(A)
         B = ProcessingMechanism(name='B',
-                                input_states=[A.input_state])
+                                input_ports=[A.input_port])
 
         comp.add_node(B)
         comp.run(inputs={A: [[1.0]]})
@@ -4836,12 +4836,12 @@ class TestShadowInputs:
         assert len(B.path_afferents) == 1
         assert B.path_afferents[0].sender.owner == C
 
-    def test_two_origins_two_input_states(self):
+    def test_two_origins_two_input_ports(self):
         comp = Composition(name='comp')
         A = ProcessingMechanism(name='A',
                                 function=Linear(slope=2.0))
         B = ProcessingMechanism(name='B',
-                                input_states=[A.input_state, A.output_state])
+                                input_ports=[A.input_port, A.output_state])
         comp.add_node(A)
         comp.add_node(B)
         comp.run(inputs={A: [[1.0]]})
@@ -4870,7 +4870,7 @@ class TestShadowInputs:
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C',
-                                input_states=[B.input_state])
+                                input_ports=[B.input_port])
 
         comp.add_linear_processing_pathway([A, B])
         comp.add_node(C)
@@ -4895,14 +4895,14 @@ class TestShadowInputs:
         assert B.value == [[2.0]]
         assert C.value == [[2.0]]
 
-    def test_monitor_input_states(self):
+    def test_monitor_input_ports(self):
         comp = Composition(name='comp')
 
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
 
         obj = ObjectiveMechanism(name='A_input_plus_B_input',
-                                 monitor=[A.input_state, B.input_state],
+                                 monitor=[A.input_port, B.input_port],
                                  function=LinearCombination())
 
         comp.add_node(A)

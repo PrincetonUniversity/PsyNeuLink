@@ -59,7 +59,7 @@ s = pnl.System(
 # EXECUTION:
 
 # Prints initial weight matrix for the Projection from the input_layer to the action_selection Mechanism
-print('reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
+print('reward prediction weights: \n', action_selection.input_port.path_afferents[0].matrix)
 
 
 # Used by *call_before_trial* and *call_after_trial* to generate printouts.
@@ -69,7 +69,7 @@ def print_header(system):
 
 
 def show_weights(context=None):
-    print('\nReward prediction weights: \n', action_selection.input_state.path_afferents[0].get_mod_matrix(context))
+    print('\nReward prediction weights: \n', action_selection.input_port.path_afferents[0].get_mod_matrix(context))
     # print(
     #     '\nAction selected:  {}; predicted reward: {}'.format(
     #         np.nonzero(action_selection.output_state.value)[0][0],
@@ -91,15 +91,15 @@ def show_weights(context=None):
           '\nlearning mech learning_sig: {} '
           # '\npredicted reward:           {} '
         .format(
-            action_selection.input_states[0].parameters.variable.get(context),
-            action_selection.input_states[0].parameters.value.get(context),
+            action_selection.input_ports[0].parameters.variable.get(context),
+            action_selection.input_ports[0].parameters.value.get(context),
             action_selection.parameters.variable.get(context),
             action_selection.output_state.parameters.value.get(context),
-            comparator.input_states[pnl.SAMPLE].parameters.value.get(context),
-            comparator.input_states[pnl.TARGET].parameters.value.get(context),
-            learn_mech.input_states[pnl.ACTIVATION_INPUT].parameters.value.get(context),
-            learn_mech.input_states[pnl.ACTIVATION_OUTPUT].parameters.value.get(context),
-            learn_mech.input_states[pnl.ERROR_SIGNAL].parameters.value.get(context),
+            comparator.input_ports[pnl.SAMPLE].parameters.value.get(context),
+            comparator.input_ports[pnl.TARGET].parameters.value.get(context),
+            learn_mech.input_ports[pnl.ACTIVATION_INPUT].parameters.value.get(context),
+            learn_mech.input_ports[pnl.ACTIVATION_OUTPUT].parameters.value.get(context),
+            learn_mech.input_ports[pnl.ERROR_SIGNAL].parameters.value.get(context),
             learn_mech.output_states[pnl.ERROR_SIGNAL].parameters.value.get(context),
             learn_mech.output_states[pnl.LEARNING_SIGNAL].parameters.value.get(context),
             # action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0]

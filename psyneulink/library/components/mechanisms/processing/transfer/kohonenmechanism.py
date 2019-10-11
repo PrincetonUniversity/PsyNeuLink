@@ -500,7 +500,7 @@ class KohonenMechanism(TransferMechanism):
           KohonenMechanism's constructor are used;
         ..
         * a `MappingProjection` from the KohonenMechanism's `primary OutputState <OutputState_Primary>`
-          to the LearningMechanism's *ACTIVATION_INPUT* InputState;
+          to the LearningMechanism's *ACTIVATION_INPUT* InputPort;
         ..
         * a `LearningProjection` from the LearningMechanism's *LEARNING_SIGNAL* OutputState to the learned_projection;
           by default this is the KohonenMechanism's `learned_projection <KohonenMechanism.learned_projection>`;
@@ -515,9 +515,9 @@ class KohonenMechanism(TransferMechanism):
         if learned_projection:
             self.learned_projection = learned_projection
 
-        # Assign learned_projection, using as default the first Projection to the Mechanism's primary InputState
+        # Assign learned_projection, using as default the first Projection to the Mechanism's primary InputPort
         try:
-            self.learned_projection = self.learned_projection or self.input_state.path_afferents[0]
+            self.learned_projection = self.learned_projection or self.input_port.path_afferents[0]
         except:
             self.learned_projection = None
         if not self.learned_projection:
@@ -567,13 +567,13 @@ class KohonenMechanism(TransferMechanism):
 
         # Instantiate Projection from learned_projection's sender to LearningMechanism
         MappingProjection(sender=self.learned_projection.sender,
-                          receiver=learning_mechanism.input_states[ACTIVATION_INPUT],
+                          receiver=learning_mechanism.input_ports[ACTIVATION_INPUT],
                           matrix=IDENTITY_MATRIX,
                           name="Error Projection for {}".format(learning_mechanism.name))
 
         # Instantiate Projection from learned_projection's receiver (Mechanism's input) to LearningMechanism
         MappingProjection(sender=self.output_states[INPUT_PATTERN],
-                          receiver=learning_mechanism.input_states[ACTIVATION_OUTPUT],
+                          receiver=learning_mechanism.input_ports[ACTIVATION_OUTPUT],
                           matrix=IDENTITY_MATRIX,
                           name="Error Projection for {}".format(learning_mechanism.name))
 

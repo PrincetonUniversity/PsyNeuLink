@@ -69,7 +69,7 @@ Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
         }
     ],) #drift_rate=(1.0),threshold=(0.2645),noise=(0.5),starting_point=(0), t0=0.15
 
-Decision.set_log_conditions('InputState-0')
+Decision.set_log_conditions('InputPort-0')
 
 # Outcome Mechanisms:
 Reward = pnl.TransferMechanism(name='Reward')

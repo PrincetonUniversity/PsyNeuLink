@@ -15,7 +15,7 @@
     * :ref:`Mechanism_Structure`
      * :ref:`Mechanism_Function`
      * :ref:`Mechanism_States`
-        * :ref:`Mechanism_InputStates`
+        * :ref:`Mechanism_InputPorts`
         * :ref:`Mechanism_ParameterStates`
         * :ref:`Mechanism_OutputStates`
      * :ref:`Mechanism_Additional_Attributes`
@@ -50,7 +50,7 @@ types of Mechanisms in PsyNeuLink:
         generate `ControlSignals <ControlSignal>` used to modify the parameters of those or other Mechanisms.
 
       * `GatingMechanism <GatingMechanism>` - these use their input(s) to determine whether and how to modify the
-        `value <State_Base.value>` of the `InputState(s) <InputState>` and/or `OutputState(s) <OutputState>` of other
+        `value <State_Base.value>` of the `InputPort(s) <InputPort>` and/or `OutputState(s) <OutputState>` of other
         Mechanisms.
 
       Each type of ModulatoryMechanism is associated with a corresponding type of `ModulatorySignal <ModulatorySignal>`
@@ -59,7 +59,7 @@ types of Mechanisms in PsyNeuLink:
 
 Every Mechanism is made up of four fundamental components:
 
-    * `InputState(s) <InputState>` used to receive and represent its input(s);
+    * `InputPort(s) <InputPort>` used to receive and represent its input(s);
     ..
     * `Function <Function>` used to transform its input(s) into its output(s);
     ..
@@ -68,7 +68,7 @@ Every Mechanism is made up of four fundamental components:
     ..
     * `OutputState(s) <OutputState>` used to represent its output(s)
 
-These are described in the sections on `Mechanism_Function` and `Mechanism_States` (`Mechanism_InputStates`,
+These are described in the sections on `Mechanism_Function` and `Mechanism_States` (`Mechanism_InputPorts`,
 `Mechanism_ParameterStates`, and `Mechanism_OutputStates`), and shown graphically in a `figure <Mechanism_Figure>`,
 under `Mechanism_Structure` below.
 
@@ -119,34 +119,34 @@ mentioned above, or using one of the following:
 *Specifying States*
 ~~~~~~~~~~~~~~~~~~~
 
-Every Mechanism has one or more `InputStates <InputState>`, `ParameterStates <ParameterState>`, and `OutputStates
+Every Mechanism has one or more `InputPorts <InputPort>`, `ParameterStates <ParameterState>`, and `OutputStates
 <OutputState>` (described `below <Mechanism_States>`) that allow it to receive and send `Projections <Projection>`,
 and to execute its `function <Mechanism_Base.function>`).  When a Mechanism is created, it automatically creates the
 ParameterStates it needs to represent its parameters, including those of its `function <Mechanism_Base.function>`.
-It also creates any InputStates and OutputStates required for the Projections it has been assigned. InputStates and
+It also creates any InputPorts and OutputStates required for the Projections it has been assigned. InputPorts and
 OutputStates, and corresponding Projections (including those from `ModulatorySignals <ModulatorySignal>`) can also be
-specified explicitly in the **input_states** and **output_states** arguments of the Mechanism's constructor (see
-`Mechanism_InputStates` and `Mechanism_OutputStates`, respectively, as well as the `first example <Mechanism_Example_1>`
+specified explicitly in the **input_ports** and **output_states** arguments of the Mechanism's constructor (see
+`Mechanism_InputPorts` and `Mechanism_OutputStates`, respectively, as well as the `first example <Mechanism_Example_1>`
 below, and `State_Examples`).  They can also be specified in a `parameter specification dictionary
 <ParameterState_Specification>` assigned to the Mechanism's **params** argument, using entries with the keys
-*INPUT_STATES* and *OUTPUT_STATES*, respectively (see `second example <Mechanism_Example_2>` below).  While
-specifying the **input_states** and **output_states** arguments directly is simpler and more convenient,
+*INPUT_PORTS* and *OUTPUT_STATES*, respectively (see `second example <Mechanism_Example_2>` below).  While
+specifying the **input_ports** and **output_states** arguments directly is simpler and more convenient,
 the dictionary format allows parameter sets to be created elsewhere and/or re-used.  The value of each entry can be
-any of the allowable forms for `specifying a state <State_Specification>`. InputStates and OutputStates can also be
+any of the allowable forms for `specifying a state <State_Specification>`. InputPorts and OutputStates can also be
 added to an existing Mechanism using its `add_states <Mechanism_Base.add_states>` method, although this is generally
-not needed and can have consequences that must be considered (e.g., see `note <Mechanism_Add_InputStates_Note>`),
+not needed and can have consequences that must be considered (e.g., see `note <Mechanism_Add_InputPorts_Note>`),
 and therefore is not recommended.
 
 .. _Mechanism_Default_State_Suppression_Note:
 
     .. note::
-       When States are specified in the **input_states** or **output_states** arguments of a Mechanism's constructor,
+       When States are specified in the **input_ports** or **output_states** arguments of a Mechanism's constructor,
        they replace any default States generated by the Mechanism when it is created (if no States were specified).
        This is particularly relevant for OutputStates, as most Mechanisms create one or more `Standard OutputStates
        <OutputState_Standard>` by default, that have useful properties.  To retain those States if any are specified in
        the **output_states** argument, they must be included along with those states in the **output_states** argument
-       (see `examples <State_Standard_OutputStates_Example>`).  The same is true for default InputStates and the
-       **input_states** argument.
+       (see `examples <State_Standard_OutputStates_Example>`).  The same is true for default InputPorts and the
+       **input_ports** argument.
 
        This behavior differs from adding a State once the Mechanism is created.  States added to Mechanism using the
        Mechanism's `add_states <Mechanism_Base.add_states>` method, or by assigning the Mechanism in the **owner**
@@ -160,11 +160,11 @@ Examples
 
 .. _Mechanism_Example_1:
 
-The following example creates an instance of a TransferMechanism that names the default InputState ``MY_INPUT``,
+The following example creates an instance of a TransferMechanism that names the default InputPort ``MY_INPUT``,
 and assigns three `Standard OutputStates <OutputState_Standard>`::
 
     >>> import psyneulink as pnl
-    >>> my_mech = pnl.TransferMechanism(input_states=['MY_INPUT'],
+    >>> my_mech = pnl.TransferMechanism(input_ports=['MY_INPUT'],
     ...                                 output_states=[pnl.RESULT, pnl.OUTPUT_MEAN, pnl.OUTPUT_VARIANCE])
 
 
@@ -172,7 +172,7 @@ and assigns three `Standard OutputStates <OutputState_Standard>`::
 
 This shows how the same Mechanism can be specified using a dictionary assigned to the **params** argument::
 
-     >>> my_mech = pnl.TransferMechanism(params={pnl.INPUT_STATES: ['MY_INPUT'],
+     >>> my_mech = pnl.TransferMechanism(params={pnl.INPUT_PORTS: ['MY_INPUT'],
      ...                                         pnl.OUTPUT_STATES: [pnl.RESULT, pnl.OUTPUT_MEAN, pnl.OUTPUT_VARIANCE]})
 
 See `State <State_Examples>` for additional examples of specifying the States of a Mechanism.
@@ -278,7 +278,7 @@ COMMENT:
     FOR DEVELOPERS:
     + FUNCTION : function or method :  method used to transform Mechanism input to its output;
         This must be implemented by the subclass, or an exception will be raised;
-        each item in the variable of this method must be compatible with a corresponding InputState;
+        each item in the variable of this method must be compatible with a corresponding InputPort;
         each item in the output of this method must be compatible  with the corresponding OutputState;
         for any parameter of the method that has been assigned a ParameterState,
         the output of the ParameterState's own execute method must be compatible with
@@ -333,8 +333,8 @@ COMMENT
 
 The input to a Mechanism's `function <Mechanism_Base.function>` is provided by the Mechanism's `variable
 <Mechanism_Base.variable>` attribute.  This is an ndarray that is at least 2d, with one item of its outermost
-dimension (axis 0) for each of the Mechanism's `input_states <Mechanism_Base.input_states>` (see
-`below <Mechanism_InputStates>`).  The result of the  `function <Mechanism_Base.function>` is placed in the
+dimension (axis 0) for each of the Mechanism's `input_ports <Mechanism_Base.input_ports>` (see
+`below <Mechanism_InputPorts>`).  The result of the  `function <Mechanism_Base.function>` is placed in the
 Mechanism's `value <Mechanism_Base.value>` attribute which is  also at least a 2d array.  The Mechanism's `value
 <Mechanism_Base.value>` is referenced by its `OutputStates <Mechanism_OutputStates>` to generate their own `value
 <OutputState.value>` attributes, each of which is assigned as the value of an item of the list in the Mechanism's
@@ -342,7 +342,7 @@ Mechanism's `value <Mechanism_Base.value>` attribute which is  also at least a 2
 
 .. note::
    The input to a Mechanism is not necessarily the same as the input to its `function <Mechanism_Base.function>`. The
-   input to a Mechanism is first processed by its `InputState(s) <Mechanism_InputStates>`, and then assigned to the
+   input to a Mechanism is first processed by its `InputPort(s) <Mechanism_InputPorts>`, and then assigned to the
    Mechanism's `variable <Mechanism_Base>` attribute, which is used as the input to its `function
    <Mechanism_Base.function>`. Similarly, the result of a Mechanism's function is not necessarily the same as the
    Mechanism's output.  The result of the `function <Mechanism_Base.function>` is assigned to the Mechanism's  `value
@@ -354,9 +354,9 @@ Mechanism's `value <Mechanism_Base.value>` attribute which is  also at least a 2
 *States*
 ~~~~~~~~
 
-Every Mechanism has one or more of each of three types of States:  `InputState(s) <InputState>`,
+Every Mechanism has one or more of each of three types of States:  `InputPort(s) <InputPort>`,
 `ParameterState(s) <ParameterState>`, `and OutputState(s) <OutputState>`.  Generally, these are created automatically
-when the Mechanism is created.  InputStates and OutputStates (but not ParameterStates) can also be specified explicitly
+when the Mechanism is created.  InputPorts and OutputStates (but not ParameterStates) can also be specified explicitly
 for a Mechanism, or added to an existing Mechanism using its `add_states <Mechanism_Base.add_states>` method, as
 described `above <Mechanism_State_Specification>`).
 
@@ -369,119 +369,119 @@ The three types of States are shown schematically in the figure below, and descr
    :scale: 75 %
    :align: left
 
-   **Schematic of a Mechanism showing its three types of States** (`InputState`, `ParameterState` and `OutputState`).
-   Every Mechanism has at least one (`primary <InputState_Primary>`) InputState and one (`primary
+   **Schematic of a Mechanism showing its three types of States** (`InputPort`, `ParameterState` and `OutputState`).
+   Every Mechanism has at least one (`primary <InputPort_Primary>`) InputPort and one (`primary
    <OutputState_Primary>`) OutputState, but can have additional states of each type.  It also has one
    `ParameterState` for each of its parameters and the parameters of its `function <Mechanism_Base.function>`.
-   The `value <InputState.value>` of each InputState is assigned as an item of the Mechanism's `variable
+   The `value <InputPort.value>` of each InputPort is assigned as an item of the Mechanism's `variable
    <Mechanism_Base.variable>`, and the result of its `function <Mechanism_Base.function>` is assigned as the Mechanism's
    `value <Mechanism_Base.value>`, the items of which are referenced by its OutputStates to determine their own
    `value <OutputState.value>`\\s (see `Mechanism_Variable_and_Value` above, and more detailed descriptions below).
 
-.. _Mechanism_InputStates:
+.. _Mechanism_InputPorts:
 
-InputStates
+InputPorts
 ^^^^^^^^^^^
 
 These receive, potentially combine, and represent the input to a Mechanism, and provide this to the Mechanism's
-`function <Mechanism_Base.function>`. Usually, a Mechanism has only one (`primary <InputState_Primary>`) `InputState`,
-identified in its `input_state <Mechanism_Base.input_state>` attribute. However some Mechanisms have more than one
-InputState. For example, a `ComparatorMechanism` has one InputState for its **SAMPLE** and another for its **TARGET**
-input. All of the Mechanism's InputStates (including its primary InputState <InputState_Primary>` are listed in its
-`input_states <Mechanism_Base.input_states>` attribute (note the plural).  The `input_states
-<Mechanism_Base.input_states>` attribute is a ContentAddressableList -- a PsyNeuLink-defined subclass of the Python
+`function <Mechanism_Base.function>`. Usually, a Mechanism has only one (`primary <InputPort_Primary>`) `InputPort`,
+identified in its `input_port <Mechanism_Base.input_port>` attribute. However some Mechanisms have more than one
+InputPort. For example, a `ComparatorMechanism` has one InputPort for its **SAMPLE** and another for its **TARGET**
+input. All of the Mechanism's InputPorts (including its primary InputPort <InputPort_Primary>` are listed in its
+`input_ports <Mechanism_Base.input_ports>` attribute (note the plural).  The `input_ports
+<Mechanism_Base.input_ports>` attribute is a ContentAddressableList -- a PsyNeuLink-defined subclass of the Python
 class `UserList <https://docs.python.org/3.6/library/collections.html?highlight=userlist#collections.UserList>`_ --
-that allows a specific InputState in the list to be accessed using its name as the index for the list (e.g.,
-``my_mechanism['InputState name']``).
+that allows a specific InputPort in the list to be accessed using its name as the index for the list (e.g.,
+``my_mechanism['InputPort name']``).
 
-.. _Mechanism_Variable_and_InputStates:
+.. _Mechanism_Variable_and_InputPorts:
 
-The `value <InputState.value>` of each InputState for a Mechanism is assigned to a different item of the Mechanism's
+The `value <InputPort.value>` of each InputPort for a Mechanism is assigned to a different item of the Mechanism's
 `variable <Mechanism_Base.variable>` attribute (a 2d np.array), as well as to a corresponding item of its `input_values
 <Mechanism_Base.input_values>` attribute (a list).  The `variable <Mechanism_Base.variable>` provides the input to the
 Mechanism's `function <Mechanism_Base.function>`, while its `input_values <Mechanism_Base.input_values>` provides a
 convenient way of accessing the value of its individual items.  Because there is a one-to-one correspondence between
-a Mechanism's InputStates and the items of its `variable <Mechanism_Base.variable>`, their size along their outermost
+a Mechanism's InputPorts and the items of its `variable <Mechanism_Base.variable>`, their size along their outermost
 dimension (axis 0) must be equal; that is, the number of items in the Mechanism's `variable <Mechanism_Base.variable>`
-attribute must equal the number of InputStates in its `input_states <Mechanism_Base.input_states>` attribute. A
+attribute must equal the number of InputPorts in its `input_ports <Mechanism_Base.input_ports>` attribute. A
 Mechanism's constructor does its best to insure this:  if its **default_variable** and/or its **size** argument is
-specified, it constructs a number of InputStates (and each with a `value <InputState.value>`) corresponding to the
+specified, it constructs a number of InputPorts (and each with a `value <InputPort.value>`) corresponding to the
 items specified for the Mechanism's `variable <Mechanism_Base.variable>`, as in the examples below::
 
     my_mech_A = pnl.TransferMechanism(default_variable=[[0],[0,0]])
-    print(my_mech_A.input_states)
-    > [(InputState InputState-0), (InputState InputState-1)]
-    print(my_mech_A.input_states[0].value)
+    print(my_mech_A.input_ports)
+    > [(InputPort InputPort-0), (InputPort InputPort-1)]
+    print(my_mech_A.input_ports[0].value)
     > [ 0.]
-    print(my_mech_A.input_states[1].value)
+    print(my_mech_A.input_ports[1].value)
     > [ 0.  0.]
 
     my_mech_B = pnl.TransferMechanism(default_variable=[[0],[0],[0]])
-    print(my_mech_B.input_states)
-    > [(InputState InputState-0), (InputState InputState-1), (InputState InputState-2)]
+    print(my_mech_B.input_ports)
+    > [(InputPort InputPort-0), (InputPort InputPort-1), (InputPort InputPort-2)]
 
-Conversely, if the **input_states** argument is used to specify InputStates for the Mechanism, they are used to format
+Conversely, if the **input_ports** argument is used to specify InputPorts for the Mechanism, they are used to format
 the Mechanism's variable::
 
-    my_mech_C = pnl.TransferMechanism(input_states=[[0,0], 'Hello'])
-    print(my_mech_C.input_states)
-    > [(InputState InputState-0), (InputState Hello)]
+    my_mech_C = pnl.TransferMechanism(input_ports=[[0,0], 'Hello'])
+    print(my_mech_C.input_ports)
+    > [(InputPort InputPort-0), (InputPort Hello)]
     print(my_mech_C.variable)
     > [array([0, 0]) array([0])]
 
-If both the **default_variable** (or **size**) and **input_states** arguments are specified, then the number and format
+If both the **default_variable** (or **size**) and **input_ports** arguments are specified, then the number and format
 of their respective items must be the same (see `State <State_Examples>` for additional examples of specifying States).
 
-If InputStates are added using the Mechanism's `add_states <Mechanism_Base.add_states>` method, then its
-`variable <Mechanism_Base.variable>` is extended to accommodate the number of InputStates added (note that this must
+If InputPorts are added using the Mechanism's `add_states <Mechanism_Base.add_states>` method, then its
+`variable <Mechanism_Base.variable>` is extended to accommodate the number of InputPorts added (note that this must
 be coordinated with the Mechanism's `function <Mechanism_Base.function>`, which takes the Mechanism's `variable
-<Mechanism_Base.variable>` as its input (see `note <Mechanism_Add_InputStates_Note>`).
+<Mechanism_Base.variable>` as its input (see `note <Mechanism_Add_InputPorts_Note>`).
 
-The order in which `InputStates are specified <Mechanism_InputState_Specification>` in the Mechanism's constructor,
-and/or `added <Mechanism_Add_InputStates>` using its `add_states <Mechanism_Base.add_states>` method,  determines the
+The order in which `InputPorts are specified <Mechanism_InputPort_Specification>` in the Mechanism's constructor,
+and/or `added <Mechanism_Add_InputPorts>` using its `add_states <Mechanism_Base.add_states>` method,  determines the
 order of the items to which they are assigned assigned in he Mechanism's `variable  <Mechanism_Base.variable>`,
-and are listed in its `input_states <Mechanism_Base.input_states>` and `input_values <Mechanism_Base.input_values>`
+and are listed in its `input_ports <Mechanism_Base.input_ports>` and `input_values <Mechanism_Base.input_values>`
 attribute.  Note that a Mechanism's `input_values <Mechanism_Base.input_values>` attribute has the same information as
 the Mechanism's `variable <Mechanism_Base.variable>`, but in the form of a list rather than an ndarray.
 
-.. _Mechanism_InputState_Specification:
+.. _Mechanism_InputPort_Specification:
 
-**Specifying InputStates and a Mechanism's** `variable <Mechanism_Base.variable>` **Attribute**
+**Specifying InputPorts and a Mechanism's** `variable <Mechanism_Base.variable>` **Attribute**
 
 When a Mechanism is created, the number and format of the items in its `variable <Mechanism_Base.variable>`
-attribute, as well as the number of InputStates it has and their `variable <InputState.variable>` and `value
-<InputState.value>` attributes, are determined by one of the following arguments in the Mechanism's constructor:
+attribute, as well as the number of InputPorts it has and their `variable <InputPort.variable>` and `value
+<InputPort.value>` attributes, are determined by one of the following arguments in the Mechanism's constructor:
 
 * **default_variable** (at least 2d ndarray) -- determines the number and format of the items of the Mechanism's
   `variable <Mechanism_Base>` attribute.  The number of items in its outermost dimension (axis 0) determines the
-  number of InputStates created for the Mechanism, and the format of each item determines the format for the
-  `variable <InputState.variable>` and `value  <InputState.value>` attributes of the corresponding InputState.
-  If any InputStates are specified in the **input_states** argument or an *INPUT_STATES* entry of
+  number of InputPorts created for the Mechanism, and the format of each item determines the format for the
+  `variable <InputPort.variable>` and `value  <InputPort.value>` attributes of the corresponding InputPort.
+  If any InputPorts are specified in the **input_ports** argument or an *INPUT_PORTS* entry of
   a specification dictionary assigned to the **params** argument of the Mechanism's constructor, then the number
   must match the number of items in **default_variable**, or an error is generated.  The format of the items in
-  **default_variable** are used to specify the format of the `variable <InputState.variable>` or `value
-  <InputState.value>` of the corresponding InputStates for any that are not explicitly specified in the
-  **input_states** argument or *INPUT_STATES* entry (see below).
+  **default_variable** are used to specify the format of the `variable <InputPort.variable>` or `value
+  <InputPort.value>` of the corresponding InputPorts for any that are not explicitly specified in the
+  **input_ports** argument or *INPUT_PORTS* entry (see below).
 ..
 * **size** (int, list or ndarray) -- specifies the number and length of items in the Mechanism's variable,
   if **default_variable** is not specified. For example, the following mechanisms are equivalent::
     T1 = TransferMechanism(size = [3, 2])
     T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
-  The relationship to any specifications in the **input_states** argument or
-  *INPUT_STATES* entry of a **params** dictionary is the same as for the **default_variable** argument,
+  The relationship to any specifications in the **input_ports** argument or
+  *INPUT_PORTS* entry of a **params** dictionary is the same as for the **default_variable** argument,
   with the latter taking precedence (see above).
 ..
-* **input_states** (list) -- this can be used to explicitly `specify the InputStates <InputState_Specification>`
-  created for the Mechanism. Each item must be an `InputState specification <InputState_Specification>`, and the number
+* **input_ports** (list) -- this can be used to explicitly `specify the InputPorts <InputPort_Specification>`
+  created for the Mechanism. Each item must be an `InputPort specification <InputPort_Specification>`, and the number
   of items must match the number of items in the **default_variable** argument or **size** argument
-  if either of those is specified.  If the `variable <InputState.variable>` and/or `value <InputState.value>`
-  is `explicitly specified for an InputState <InputState_Variable_and_Value>` in the **input_states** argument or
-  *INPUT_STATES* entry of a **params** dictionary, it must be compatible with the value of the corresponding
+  if either of those is specified.  If the `variable <InputPort.variable>` and/or `value <InputPort.value>`
+  is `explicitly specified for an InputPort <InputPort_Variable_and_Value>` in the **input_ports** argument or
+  *INPUT_PORTS* entry of a **params** dictionary, it must be compatible with the value of the corresponding
   item of **default_variable**; otherwise, the format of the item in **default_variable** corresponding to the
-  InputState is used to specify the format of the InputState's `variable <InputState.variable>` (e.g., the InputState is
-  `specified using an OutputState <InputState_Projection_Source_Specification>` to project to it;).  If
-  **default_variable** is not specified, a default value is specified by the Mechanism.  InputStates can also be
-  specifed that `shadow the inputs <InputState_Shadow_Inputs>` of other InputStates and/or Mechanisms; that is, receive
+  InputPort is used to specify the format of the InputPort's `variable <InputPort.variable>` (e.g., the InputPort is
+  `specified using an OutputState <InputPort_Projection_Source_Specification>` to project to it;).  If
+  **default_variable** is not specified, a default value is specified by the Mechanism.  InputPorts can also be
+  specifed that `shadow the inputs <InputPort_Shadow_Inputs>` of other InputPorts and/or Mechanisms; that is, receive
   Projections from all of the same `senders <Projection_Base.sender>` as those specified.
 
 COMMENT:
@@ -490,60 +490,60 @@ COMMENT
 
 COMMENT:
 *** ADD THESE TO ABOVE WHEN IMPLEMENTED:
-    If more InputStates are specified than there are items in `variable <Mechanism_Base.variable>,
+    If more InputPorts are specified than there are items in `variable <Mechanism_Base.variable>,
         the latter is extended to  match the former.
     If the Mechanism's `variable <Mechanism_Base.variable>` has more than one item, it may still be assigned
-        a single InputState;  in that case, the `value <InputState.value>` of that InputState must have the same
+        a single InputPort;  in that case, the `value <InputPort.value>` of that InputPort must have the same
         number of items as the Mechanisms's `variable <Mechanism_Base.variable>`.
 COMMENT
 ..
-* *INPUT_STATES* entry of a params dict (list) -- specifications are treated in the same manner as those in the
-  **input_states** argument, and take precedence over those.
+* *INPUT_PORTS* entry of a params dict (list) -- specifications are treated in the same manner as those in the
+  **input_ports** argument, and take precedence over those.
 
-.. _Mechanism_Add_InputStates:
+.. _Mechanism_Add_InputPorts:
 
-**Adding InputStates**
+**Adding InputPorts**
 
-InputStates can be added to a Mechanism using its `add_states <Mechanism_Base.add_states>` method;  this extends its
-`variable <Mechanism_Base.variable>` by a number of items equal to the number of InputStates added, and each new item
-is assigned a format compatible with the `value <InputState.value>` of the corresponding InputState added;  if the
-InputState's `variable <InputState.variable>` is not specified, it is assigned the default format for an item of the
-owner's `variable <Mechanism_Base.variable>` attribute. The InputStates are appended to the end of the list in the
-Mechanism's `input_states <Mechanism_Base.input_states>` attribute.  Adding in States in this manner does **not**
+InputPorts can be added to a Mechanism using its `add_states <Mechanism_Base.add_states>` method;  this extends its
+`variable <Mechanism_Base.variable>` by a number of items equal to the number of InputPorts added, and each new item
+is assigned a format compatible with the `value <InputPort.value>` of the corresponding InputPort added;  if the
+InputPort's `variable <InputPort.variable>` is not specified, it is assigned the default format for an item of the
+owner's `variable <Mechanism_Base.variable>` attribute. The InputPorts are appended to the end of the list in the
+Mechanism's `input_ports <Mechanism_Base.input_ports>` attribute.  Adding in States in this manner does **not**
 replace any existing States, including any default States generated when the Mechanism was constructed (this is
 contrast to States specified in a Mechanism's constructor which **do** `replace any default State(s) of the same type
 <Mechanism_Default_State_Suppression_Note>`).
 
-.. _Mechanism_Add_InputStates_Note:
+.. _Mechanism_Add_InputPorts_Note:
 
 .. note::
-    Adding InputStates to a Mechanism using its `add_states <Mechanism_Base.add_states>` method may introduce an
+    Adding InputPorts to a Mechanism using its `add_states <Mechanism_Base.add_states>` method may introduce an
     incompatibility with the Mechanism's `function <Mechanism_Base.function>`, which takes the Mechanism's `variable
     <Mechanism_Base.variable>` as its input; such an incompatibility will generate an error.  It may also influence
     the number of OutputStates created for the Mechanism. It is the user's responsibility to ensure that the
-    assignment of InputStates to a Mechanism using the `add_states <Mechanism_Base.add_states>` is coordinated with
-    the specification of its `function <Mechanism_Base.function>`, so that the total number of InputStates (listed
-    in the Mechanism's `input_states <Mechanism_Base.input_states>` attribute matches the number of items expected
+    assignment of InputPorts to a Mechanism using the `add_states <Mechanism_Base.add_states>` is coordinated with
+    the specification of its `function <Mechanism_Base.function>`, so that the total number of InputPorts (listed
+    in the Mechanism's `input_ports <Mechanism_Base.input_ports>` attribute matches the number of items expected
     for the input to the function specified in the Mechanism's `function <Mechanism_Base.function>` attribute
     (i.e., its length along axis 0).
 
-.. _Mechanism_InputState_Projections:
+.. _Mechanism_InputPort_Projections:
 
-**Projections to InputStates**
+**Projections to InputPorts**
 
-Each InputState of a Mechanism can receive one or more `Projections <Projection>` from other Mechanisms.  When a
+Each InputPort of a Mechanism can receive one or more `Projections <Projection>` from other Mechanisms.  When a
 Mechanism is created, a `MappingProjection` is created automatically for any OutputStates or Projections from them
-that are in its `InputState specification <InputState_Specification>`, using `AUTO_ASSIGN_MATRIX` as the Projection's
-`matrix specification <Mapping_Matrix_Specification>`.  However, if a specification in the **input_states** argument
-or an *INPUT_STATES* entry of a **params** dictionary cannot be resolved to an instantiated OutputState at the time the
-Mechanism is created, no MappingProjection is assigned to the InputState, and this must be done by some other means;
-any specifications in the Mechanism's `input_states <Mechanism_Base.input_states>` attribute that are not
+that are in its `InputPort specification <InputPort_Specification>`, using `AUTO_ASSIGN_MATRIX` as the Projection's
+`matrix specification <Mapping_Matrix_Specification>`.  However, if a specification in the **input_ports** argument
+or an *INPUT_PORTS* entry of a **params** dictionary cannot be resolved to an instantiated OutputState at the time the
+Mechanism is created, no MappingProjection is assigned to the InputPort, and this must be done by some other means;
+any specifications in the Mechanism's `input_ports <Mechanism_Base.input_ports>` attribute that are not
 associated with an instantiated OutputState at the time the Mechanism is executed are ignored.
 
 The `PathwayProjections <PathwayProjection>` (e.g., `MappingProjections <MappingProjection>`) it receives are listed
-in its `path_afferents <InputState.path_afferents>` attribute.  If the Mechanism is an `ORIGIN` Mechanism of a
-`Process`, this includes a Projection from the `ProcessInputState <Process_Input_And_Output>` for that Process.  Any
-`GatingProjections <GatingProjection>` it receives are listed in its `mod_afferents <InputState.mod_afferents>`
+in its `path_afferents <InputPort.path_afferents>` attribute.  If the Mechanism is an `ORIGIN` Mechanism of a
+`Process`, this includes a Projection from the `ProcessInputPort <Process_Input_And_Output>` for that Process.  Any
+`GatingProjections <GatingProjection>` it receives are listed in its `mod_afferents <InputPort.mod_afferents>`
 attribute.
 
 
@@ -634,8 +634,8 @@ Mechanism's constructor, by direct reference to the corresponding attribute of t
 constructed (e.g., ``my_mechanism.param``), or using the Mechanism's `assign_params` method. The Mechanism-specific
 attributes are listed below by their argument names / keywords, along with a description of how they are specified:
 
-    * **input_states** / *INPUT_STATES* - a list specifying the Mechanism's input_states
-      (see `InputState_Specification` for details of specification).
+    * **input_ports** / *INPUT_PORTS* - a list specifying the Mechanism's input_ports
+      (see `InputPort_Specification` for details of specification).
     ..
     * **output_states** / *OUTPUT_STATES* - specifies specialized OutputStates required by a Mechanism subclass
       (see `OutputState_Specification` for details of specification).
@@ -677,10 +677,10 @@ Value Label Dictionaries
 
 *Overview*
 
-Mechanisms have two attributes that can be used to specify labels for the values of its InputState(s) and
+Mechanisms have two attributes that can be used to specify labels for the values of its InputPort(s) and
 OutputState(s):
 
-    * *INPUT_LABELS_DICT* -- used to specify labels for values of the InputState(s) of the Mechanism;  if specified,
+    * *INPUT_LABELS_DICT* -- used to specify labels for values of the InputPort(s) of the Mechanism;  if specified,
       the dictionary is contained in the Mechanism's `input_labels_dict <Mechanism_Base.input_labels_dict>` attribute.
 
     * *OUTPUT_LABELS_DICT* -- used to specify labels for values of the OutputState(s) of the Mechanism;  if specified,
@@ -690,7 +690,7 @@ The labels specified in these dictionaries can be used to:
 
     - specify items in the `inputs <Composition_Run_Inputs>` and `targets <Run_Targets>` arguments of the `run <System.run>` method
       of a `System`
-    - report the values of the InputState(s) and OutputState(s) of a Mechanism
+    - report the values of the InputPort(s) and OutputState(s) of a Mechanism
     - visualize the inputs and outputs of the System's Mechanisms
 
 *Specifying Label Dictionaries*
@@ -702,14 +702,14 @@ the following form:
     * *<state name or index>:<sub-dictionary>* -- this is used to specify labels that are specific to individual States
       of the type corresponding to the dictionary;
         - *key* - either the name of a State of that type, or its index in the list of States of that type (i.e,
-          `input_states <Mechanism_Base.input_states>` or `output_states <Mechanism_Base.output_states>`);
+          `input_ports <Mechanism_Base.input_ports>` or `output_states <Mechanism_Base.output_states>`);
         - *value* - a dictionary containing *label:value* entries to be used for that State, where the label is a string
-          and the shape of the value matches the shape of the `InputState value <InputState.value>` or `OutputState
+          and the shape of the value matches the shape of the `InputPort value <InputPort.value>` or `OutputState
           value <OutputState.value>` for which it is providing a *label:value* mapping.
 
-      For example, if a Mechanism has two InputStates, named *SAMPLE* and *TARGET*, then *INPUT_LABELS_DICT* could be
+      For example, if a Mechanism has two InputPorts, named *SAMPLE* and *TARGET*, then *INPUT_LABELS_DICT* could be
       assigned two entries, *SAMPLE*:<dict> and *TARGET*:<dict> or, correspondingly, 0:<dict> and 1:<dict>, in which
-      each dictionary contains separate *label:value* entries for the *SAMPLE* and *TARGET* InputStates.
+      each dictionary contains separate *label:value* entries for the *SAMPLE* and *TARGET* InputPorts.
 
 >>> input_labels_dictionary = {pnl.SAMPLE: {"red": [0],
 ...                                         "green": [1]},
@@ -718,13 +718,13 @@ the following form:
 
 In the following two cases, a shorthand notation is allowed:
 
-    - a Mechanism has only one state of a particular type (only one InputState or only one OutputState)
-    - only the index zero InputState or index zero OutputState needs labels
+    - a Mechanism has only one state of a particular type (only one InputPort or only one OutputState)
+    - only the index zero InputPort or index zero OutputState needs labels
 
 In these cases, a label dictionary for that type of state may simply contain the *label:value* entries described above.
 The *label:value* mapping will **only** apply to the index zero state of the state type for which this option is used.
 Any additional states of that type will not have value labels. For example, if the input_labels_dictionary below were
-applied to a Mechanism with multiple InputState, only the index zero InputState would use the labels "red" and "green".
+applied to a Mechanism with multiple InputPort, only the index zero InputPort would use the labels "red" and "green".
 
 >>> input_labels_dictionary = {"red": [0],
 ...                            "green": [1]}
@@ -732,7 +732,7 @@ applied to a Mechanism with multiple InputState, only the index zero InputState 
 *Using Label Dictionaries*
 
 When using labels to specify items in the `inputs <Composition_Run_Inputs>` arguments of the `run <System.run>` method, labels may
-directly replace any or all of the `InputState values <InputState.value>` in an input specification dictionary. Keep in
+directly replace any or all of the `InputPort values <InputPort.value>` in an input specification dictionary. Keep in
 mind that each label must be specified in the `input_labels_dict <Mechanism_Base.input_labels_dict>` of the Origin
 Mechanism to which inputs are being specified, and must map to a value that would have been valid in that position of
 the input dictionary.
@@ -772,14 +772,14 @@ to specify target values for a particular learning sequence in the `targets dict
         >>> results = S.run(inputs=input_dictionary,
         ...                 targets=target_dictionary)
 
-Several attributes are available for viewing the labels for the current value(s) of a Mechanism's InputState(s) and
+Several attributes are available for viewing the labels for the current value(s) of a Mechanism's InputPort(s) and
 OutputState(s).
 
-    - The `label <InputState.label>` attribute of an InputState or OutputState returns the current label of
+    - The `label <InputPort.label>` attribute of an InputPort or OutputState returns the current label of
       its value, if one exists, and its value otherwise.
 
     - The `input_labels <Mechanism_Base.input_labels>` and `output_labels <Mechanism_Base.output_labels>` attributes of
-      Mechanisms return a list containing the labels corresponding to the value(s) of the InputState(s) or
+      Mechanisms return a list containing the labels corresponding to the value(s) of the InputPort(s) or
       OutputState(s) of the Mechanism, respectively. If the current value of a state does not have a corresponding
       label, then its numeric value is used instead.
 
@@ -805,7 +805,7 @@ System's `show_graph <System.show_graph>` method with the keyword **LABELS**.
 .. note::
 
     A given label dictionary only applies to the Mechanism to which it belongs, and a given label only applies to its
-    corresponding InputState. For example, the label 'red', may translate to different values on different InputStates
+    corresponding InputPort. For example, the label 'red', may translate to different values on different InputPorts
     of the same Mechanism, and on different Mechanisms of a System.
 
 .. Mechanism_Attribs_Dicts:
@@ -826,7 +826,7 @@ Mechanisms that are part of one or more `Processes <Process>` are assigned desig
 `role <Process_Mechanisms>` they play in those Processes, and similarly for `role <System_Mechanisms>` they play in
 any `Systems <System>` to which they belong. These designations are listed in the Mechanism's `processes
 <Mechanism_Base.processes>` and `systems <Mechanism_Base.systems>` attributes, respectively.  Any Mechanism
-designated as `ORIGIN` receives a `MappingProjection` to its `primary InputState <InputState_Primary>` from the
+designated as `ORIGIN` receives a `MappingProjection` to its `primary InputPort <InputPort_Primary>` from the
 Process(es) to which it belongs.  Accordingly, when the Process (or System of which the Process is a part) is
 executed, those Mechanisms receive the input provided to the Process (or System).  The `output_values
 <Mechanism_Base.output_values>` of any Mechanism designated as the `TERMINAL` Mechanism for a Process is assigned as
@@ -872,7 +872,7 @@ is for a parameter of the Mechanism or its  `function <Mechanism_Base.function>`
 standard format for `parameter specification dictionaries <ParameterState_Specification>`. Entries for the Mechanism's
 States can be used to specify runtime parameters of the corresponding State, its `function <State_Base.function>`, or
 any of the `Projections to that state <State_Projections>`. Each entry for the parameters of a State uses a key
-corresponding to the type of State (*INPUT_STATE_PARAMS*, *OUTPUT_STATE_PARAMS* or *PARAMETER_STATE_PARAMS*), and a
+corresponding to the type of State (*INPUT_PORT_PARAMS*, *OUTPUT_STATE_PARAMS* or *PARAMETER_STATE_PARAMS*), and a
 value that is a sub-dictionary containing a dictionary with the runtime  parameter specifications for all States of that
 type). Within that sub-dictionary, specification of parameters for the State or its `function <State_Base.function>` use
 the  standard format for a `parameter specification dictionary <ParameterState_Specification>`.  Parameters for all of
@@ -895,7 +895,7 @@ State keyword: dict for State's params
         parameter keyword: vaue of param
 
     dict: can be one (or more) of the following:
-        + INPUT_STATE_PARAMS:<dict>
+        + INPUT_PORT_PARAMS:<dict>
         + PARAMETER_STATE_PARAMS:<dict>
    [TBI + OUTPUT_STATE_PARAMS:<dict>]
         - each dict will be passed to the corresponding State
@@ -948,7 +948,7 @@ from psyneulink.core.components.component import Component, function_type, metho
 from psyneulink.core.components.functions.function import FunctionOutputType
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Function, Mechanism, Projection, State
-from psyneulink.core.components.states.inputstate import DEFER_VARIABLE_SPEC_TO_MECH_MSG, InputState
+from psyneulink.core.components.states.inputport import DEFER_VARIABLE_SPEC_TO_MECH_MSG, InputPort
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
@@ -957,7 +957,7 @@ from psyneulink.core.globals.context import Context, ContextFlags, handle_extern
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, EXECUTION_PHASE, FUNCTION, FUNCTION_PARAMS, \
     INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, \
-    INPUT_LABELS_DICT, INPUT_STATE, INPUT_STATES, INPUT_STATE_VARIABLES, \
+    INPUT_LABELS_DICT, INPUT_PORT, INPUT_PORTS, INPUT_PORT_VARIABLES, \
     MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, MULTIPLICATIVE_PARAM, \
     OUTPUT_LABELS_DICT, OUTPUT_STATE, OUTPUT_STATES, OWNER_EXECUTION_COUNT, OWNER_EXECUTION_TIME, OWNER_VALUE, \
     PARAMETER_STATE, PARAMETER_STATES, PREVIOUS_VALUE, PROJECTIONS, REFERENCE_VALUE, \
@@ -992,9 +992,9 @@ class MechParamsDict(UserDict):
     pass
 
 
-def _input_state_variables_getter(owning_component=None, context=None):
+def _input_port_variables_getter(owning_component=None, context=None):
     try:
-        return [input_state.parameters.variable._get(context) for input_state in owning_component.input_states]
+        return [input_port.parameters.variable._get(context) for input_port in owning_component.input_ports]
     except TypeError:
         return None
 
@@ -1013,18 +1013,18 @@ class Mechanism_Base(Mechanism):
         -----------
             Mechanism is a Category of the Component class.
             A Mechanism is associated with a name and:
-            - one or more input_states:
-                two ways to get multiple input_states, if supported by Mechanism subclass being instantiated:
-                    • specify 2d variable for Mechanism (i.e., without explicit InputState specifications)
-                        once the variable of the Mechanism has been converted to a 2d array, an InputState is assigned
-                        for each item of axis 0, and the corresponding item is assigned as the InputState's variable
-                    • explicitly specify input_states in params[*INPUT_STATES*] (each with its own variable
+            - one or more input_ports:
+                two ways to get multiple input_ports, if supported by Mechanism subclass being instantiated:
+                    • specify 2d variable for Mechanism (i.e., without explicit InputPort specifications)
+                        once the variable of the Mechanism has been converted to a 2d array, an InputPort is assigned
+                        for each item of axis 0, and the corresponding item is assigned as the InputPort's variable
+                    • explicitly specify input_ports in params[*INPUT_PORTS*] (each with its own variable
                         specification); those variables will be concantenated into a 2d array to create the Mechanism's
                         variable
                 if both methods are used, they must generate the same sized variable for the mechanims
-                ?? WHERE IS THIS CHECKED?  WHICH TAKES PRECEDENCE: InputState SPECIFICATION (IN _instantiate_state)??
+                ?? WHERE IS THIS CHECKED?  WHICH TAKES PRECEDENCE: InputPort SPECIFICATION (IN _instantiate_state)??
             - an execute method:
-                coordinates updating of input_states, parameter_states (and params), execution of the function method
+                coordinates updating of input_ports, parameter_states (and params), execution of the function method
                 implemented by the subclass, (by calling its _execute method), and updating of the OutputStates
             - one or more parameters, each of which must be (or resolve to) a reference to a ParameterState
                 these determine the operation of the function of the Mechanism subclass being instantiated
@@ -1040,8 +1040,8 @@ class Mechanism_Base(Mechanism):
 
         Constraints
         -----------
-            - the number of input_states must correspond to the length of the variable of the Mechanism's execute method
-            - the value of each InputState must be compatible with the corresponding item in the
+            - the number of input_ports must correspond to the length of the variable of the Mechanism's execute method
+            - the value of each InputPort must be compatible with the corresponding item in the
                 variable of the Mechanism's execute method
             - the value of each ParameterState must be compatible with the corresponding parameter of  the Mechanism's
                  execute method
@@ -1085,50 +1085,50 @@ class Mechanism_Base(Mechanism):
 
     variable : at least ndarray : default self.defaults.variable
         used as input to the Mechanism's `function <Mechanism_Base.function>`.  It is always at least a 2d np.array,
-        with each item of axis 0 corresponding to a `value <InputState.value>` of one of the Mechanism's `InputStates
-        <InputState>` (in the order they are listed in its `input_states <Mechanism_Base.input_states>` attribute), and
-        the first item (i.e., item 0) corresponding to the `value <InputState.value>` of the `primary InputState
-        <InputState_Primary>`.  When specified in the **variable** argument of the constructor for the Mechanism,
+        with each item of axis 0 corresponding to a `value <InputPort.value>` of one of the Mechanism's `InputPorts
+        <InputPort>` (in the order they are listed in its `input_ports <Mechanism_Base.input_ports>` attribute), and
+        the first item (i.e., item 0) corresponding to the `value <InputPort.value>` of the `primary InputPort
+        <InputPort_Primary>`.  When specified in the **variable** argument of the constructor for the Mechanism,
         it is used as a template to define the format (shape and type of elements) of the input the Mechanism's
         `function <Mechanism_Base.function>`.
 
         .. _receivesProcessInput (bool): flags if Mechanism (as first in Pathway) receives Process input Projection
 
-    input_state : InputState : default default InputState
-        `primary InputState <InputState_Primary>` for the Mechanism;  same as first entry of its `input_states
-        <Mechanism_Base.input_states>` attribute.  Its `value <InputState.value>` is assigned as the first item of the
+    input_port : InputPort : default default InputPort
+        `primary InputPort <InputPort_Primary>` for the Mechanism;  same as first entry of its `input_ports
+        <Mechanism_Base.input_ports>` attribute.  Its `value <InputPort.value>` is assigned as the first item of the
         Mechanism's `variable <Mechanism_Base.variable>`.
 
-    input_states : ContentAddressableList[str, InputState]
-        a list of the Mechanism's `InputStates <Mechanism_InputStates>`. The first (and possibly only) entry is always
-        the Mechanism's `primary InputState <InputState_Primary>` (i.e., the one in the its `input_state
-        <Mechanism_Base.input_state>` attribute).
+    input_ports : ContentAddressableList[str, InputPort]
+        a list of the Mechanism's `InputPorts <Mechanism_InputPorts>`. The first (and possibly only) entry is always
+        the Mechanism's `primary InputPort <InputPort_Primary>` (i.e., the one in the its `input_port
+        <Mechanism_Base.input_port>` attribute).
 
     input_values : List[List or 1d np.array] : default self.defaults.variable
-        each item in the list corresponds to the `value <InputState.value>` of one of the Mechanism's `InputStates
-        <Mechanism_InputStates>` listed in its `input_states <Mechanism_Base.input_states>` attribute.  The value of
+        each item in the list corresponds to the `value <InputPort.value>` of one of the Mechanism's `InputPorts
+        <Mechanism_InputPorts>` listed in its `input_ports <Mechanism_Base.input_ports>` attribute.  The value of
         each item is the same as the corresponding item in the Mechanism's `variable <Mechanism_Base.variable>`
         attribute.  The latter is a 2d np.array; the `input_values <Mechanism_Base.input_values>` attribute provides
         this information in a simpler list format.
 
     input_labels_dict : dict
         contains entries that are either label:value pairs, or sub-dictionaries containing label:value pairs,
-        in which each label (key) specifies a string associated with a value for the InputState(s) of the
+        in which each label (key) specifies a string associated with a value for the InputPort(s) of the
         Mechanism; see `Mechanism_Labels_Dicts` for additional details.
 
     input_labels : list
-        contains the labels corresponding to the value(s) of the InputState(s) of the Mechanism. If the current value
-        of an InputState does not have a corresponding label, then its numeric value is used instead.
+        contains the labels corresponding to the value(s) of the InputPort(s) of the Mechanism. If the current value
+        of an InputPort does not have a corresponding label, then its numeric value is used instead.
 
     external_input_values : list
-        same as `input_values <Mechanism_Base.input_values>`, but containing the `value <InputState.value>` only of
-        InputStates that are **not** designated as `internal_only <InputState.internal_only>` (that is, ones that
+        same as `input_values <Mechanism_Base.input_values>`, but containing the `value <InputPort.value>` only of
+        InputPorts that are **not** designated as `internal_only <InputPort.internal_only>` (that is, ones that
         receive external inputs).
 
     COMMENT:
     target_labels_dict : dict
         contains entries that are either label:value pairs, or sub-dictionaries containing label:value pairs,
-        in which each label (key) specifies a string associated with a value for the InputState(s) of the
+        in which each label (key) specifies a string associated with a value for the InputPort(s) of the
         Mechanism if it is the `TARGET` Mechanism for a System; see `Mechanism_Labels_Dicts` and
         `target mechanism <LearningMechanism_Targets>` for additional details.
     COMMENT
@@ -1231,31 +1231,31 @@ class Mechanism_Base(Mechanism):
     COMMENT
 
     states : ContentAddressableList
-        a list of all of the Mechanism's `States <State>`, composed from its `input_states
-        <Mechanism_Base.input_states>`, `parameter_states <Mechanism_Base.parameter_states>`, and
+        a list of all of the Mechanism's `States <State>`, composed from its `input_ports
+        <Mechanism_Base.input_ports>`, `parameter_states <Mechanism_Base.parameter_states>`, and
         `output_states <Mechanism_Base.output_states>` attributes.
 
     projections : ContentAddressableList
         a list of all of the Mechanism's `Projections <Projection>`, composed from the
-        `path_afferents <InputStates.path_afferents>` of all of its `input_states <Mechanism_Base.input_states>`,
-        the `mod_afferents` of all of its `input_states <Mechanism_Base.input_states>`,
+        `path_afferents <InputPorts.path_afferents>` of all of its `input_ports <Mechanism_Base.input_ports>`,
+        the `mod_afferents` of all of its `input_ports <Mechanism_Base.input_ports>`,
         `parameter_states <Mechanism)Base.parameter_states>`, and `output_states <Mechanism_Base.output_states>`,
         and the `efferents <OutputState.efferents>` of all of its `output_states <Mechanism_Base.output_states>`.
 
     afferents : ContentAddressableList
         a list of all of the Mechanism's afferent `Projections <Projection>`, composed from the
-        `path_afferents <InputStates.path_afferents>` of all of its `input_states <Mechanism_Base.input_states>`,
-        and the `mod_afferents` of all of its `input_states <Mechanism_Base.input_states>`,
+        `path_afferents <InputPorts.path_afferents>` of all of its `input_ports <Mechanism_Base.input_ports>`,
+        and the `mod_afferents` of all of its `input_ports <Mechanism_Base.input_ports>`,
         `parameter_states <Mechanism)Base.parameter_states>`, and `output_states <Mechanism_Base.output_states>`.,
 
     path_afferents : ContentAddressableList
         a list of all of the Mechanism's afferent `PathwayProjections <PathwayProjection>`, composed from the
-        `path_afferents <InputStates.path_afferents>` attributes of all of its `input_states
-        <Mechanism_Base.input_states>`.
+        `path_afferents <InputPorts.path_afferents>` attributes of all of its `input_ports
+        <Mechanism_Base.input_ports>`.
 
     mod_afferents : ContentAddressableList
         a list of all of the Mechanism's afferent `ModulatoryProjections <ModulatoryProjection>`, composed from the
-        `mod_afferents` attributes of all of its `input_states <Mechanism_Base.input_states>`, `parameter_states
+        `mod_afferents` attributes of all of its `input_ports <Mechanism_Base.input_ports>`, `parameter_states
         <Mechanism)Base.parameter_states>`, and `output_states <Mechanism_Base.output_states>`.
 
     efferents : ContentAddressableList
@@ -1301,7 +1301,7 @@ class Mechanism_Base(Mechanism):
         <LINK>` for details).
 
         .. _stateRegistry : Registry
-               registry containing dicts for each State type (InputState, OutputState and ParameterState) with instance
+               registry containing dicts for each State type (InputPort, OutputState and ParameterState) with instance
                dicts for the instances of each type and an instance count for each State type in the Mechanism.
                Note: registering instances of State types with the Mechanism (rather than in the StateRegistry)
                      allows the same name to be used for instances of a State type belonging to different Mechanisms
@@ -1327,7 +1327,7 @@ class Mechanism_Base(Mechanism):
     @property
     def _loggable_items(self):
         # States, afferent Projections are loggable for a Mechanism
-        #     - this allows the value of InputStates and OutputStates to be logged
+        #     - this allows the value of InputPorts and OutputStates to be logged
         #     - for MappingProjections, this logs the value of the Projection's matrix parameter
         #     - for ModulatoryProjections, this logs the value of the Projection
         # IMPLEMENTATION NOTE: this needs to be a property as Projections may be added after instantiation
@@ -1348,19 +1348,19 @@ class Mechanism_Base(Mechanism):
     variableEncodingDim = 2
     valueEncodingDim = 2
 
-    stateListAttr = {InputState:INPUT_STATES,
-                       ParameterState:PARAMETER_STATES,
-                       OutputState:OUTPUT_STATES}
+    stateListAttr = {InputPort:INPUT_PORTS,
+                     ParameterState:PARAMETER_STATES,
+                     OutputState:OUTPUT_STATES}
 
     # Category specific defaults:
     paramClassDefaults = Component.paramClassDefaults.copy()
     paramClassDefaults.update({
-        INPUT_STATES:None,
+        INPUT_PORTS:None,
         OUTPUT_STATES:None,
         MONITOR_FOR_CONTROL: NotImplemented,  # This has to be here to "register" it as a valid param for the class
                                               # but is set to NotImplemented so that it is ignored if it is not
                                               # assigned;  setting it to None actively disallows assignment
-                                              # (see EVCControlMechanism_instantiate_input_states for more details)
+                                              # (see EVCControlMechanism_instantiate_input_ports for more details)
         MONITOR_FOR_LEARNING: None,
         INPUT_LABELS_DICT: {},
         TARGET_LABELS_DICT: {},
@@ -1405,16 +1405,16 @@ class Mechanism_Base(Mechanism):
         previous_value = Parameter(None, read_only=True, pnl_internal=True)
         function = Linear
 
-        input_state_variables = Parameter(None, read_only=True, user=False, getter=_input_state_variables_getter, pnl_internal=True)
+        input_port_variables = Parameter(None, read_only=True, user=False, getter=_input_port_variables_getter, pnl_internal=True)
 
-        input_states_spec = Parameter(
+        input_ports_spec = Parameter(
             None,
             stateful=False,
             loggable=False,
             read_only=True,
             user=False,
             pnl_internal=True,
-            constructor_argument='input_states'
+            constructor_argument='input_ports'
         )
 
         output_states_spec = Parameter(
@@ -1427,15 +1427,15 @@ class Mechanism_Base(Mechanism):
             constructor_argument='output_states'
         )
 
-        def _parse_input_states_spec(self, input_states_spec):
-            if input_states_spec is None:
-                return input_states_spec
-            elif not isinstance(input_states_spec, list):
-                input_states_spec = [input_states_spec]
+        def _parse_input_ports_spec(self, input_ports_spec):
+            if input_ports_spec is None:
+                return input_ports_spec
+            elif not isinstance(input_ports_spec, list):
+                input_ports_spec = [input_ports_spec]
 
             spec_list = []
 
-            for state in input_states_spec:
+            for state in input_ports_spec:
                 # handle tuple specification only because it cannot
                 # be translated to and from JSON (converts to list, which is
                 # not accepted as a valid specification)
@@ -1479,7 +1479,7 @@ class Mechanism_Base(Mechanism):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_states=None,
+                 input_ports=None,
                  function=None,
                  output_states=None,
                  params=None,
@@ -1496,7 +1496,7 @@ class Mechanism_Base(Mechanism):
         NOTES:
         * Since Mechanism is a subclass of Component, it calls super.__init__
             to validate size and default_variable and param_defaults, and assign params to paramInstanceDefaults;
-            it uses INPUT_STATE as the default_variable
+            it uses INPUT_PORT as the default_variable
         * registers Mechanism with MechanismRegistry
 
         """
@@ -1518,9 +1518,9 @@ class Mechanism_Base(Mechanism):
         from psyneulink.core.components.states.state import State_Base
         self._stateRegistry = {}
 
-        # InputState
-        from psyneulink.core.components.states.inputstate import InputState
-        register_category(entry=InputState,
+        # InputPort
+        from psyneulink.core.components.states.inputport import InputPort
+        register_category(entry=InputPort,
                           base_class=State_Base,
                           registry=self._stateRegistry,
                           context=context)
@@ -1539,16 +1539,16 @@ class Mechanism_Base(Mechanism):
                           registry=self._stateRegistry,
                           context=context)
 
-        default_variable = self._handle_default_variable(default_variable, size, input_states, function, params)
+        default_variable = self._handle_default_variable(default_variable, size, input_ports, function, params)
 
         try:
-            input_states_spec = (
-                copy_iterable_with_shared(input_states, shared_types=Component)
-                if input_states is not None
+            input_ports_spec = (
+                copy_iterable_with_shared(input_ports, shared_types=Component)
+                if input_ports is not None
                 else None
             )
         except TypeError:
-            input_states_spec = input_states
+            input_ports_spec = input_ports
 
         try:
             output_states_spec = (
@@ -1561,7 +1561,7 @@ class Mechanism_Base(Mechanism):
 
         params = self._assign_args_to_param_dicts(
             params=params,
-            input_states_spec=input_states_spec,
+            input_ports_spec=input_ports_spec,
             output_states_spec=output_states_spec,
         )
 
@@ -1595,7 +1595,7 @@ class Mechanism_Base(Mechanism):
     # Handlers
     # ------------------------------------------------------------------------------------------------------------------
 
-    def _handle_default_variable(self, default_variable=None, size=None, input_states=None, function=None, params=None):
+    def _handle_default_variable(self, default_variable=None, size=None, input_ports=None, function=None, params=None):
         """
             Finds whether default_variable can be determined using **default_variable** and **size**
             arguments.
@@ -1605,114 +1605,114 @@ class Mechanism_Base(Mechanism):
                 a default variable if possible
                 None otherwise
         """
-        default_variable_from_input_states = None
+        default_variable_from_input_ports = None
 
         # handle specifying through params dictionary
         try:
-            default_variable_from_input_states, input_states_variable_was_specified = self._handle_arg_input_states(params[INPUT_STATES])
+            default_variable_from_input_ports, input_ports_variable_was_specified = self._handle_arg_input_ports(params[INPUT_PORTS])
 
-            # updated here in case it was parsed in _handle_arg_input_states
-            params[INPUT_STATES] = self.input_states
+            # updated here in case it was parsed in _handle_arg_input_ports
+            params[INPUT_PORTS] = self.input_ports
         except (TypeError, KeyError):
             pass
         except AttributeError as e:
             if DEFER_VARIABLE_SPEC_TO_MECH_MSG in e.args[0]:
                 pass
 
-        if default_variable_from_input_states is None:
+        if default_variable_from_input_ports is None:
             # fallback to standard arg specification
             try:
-                default_variable_from_input_states, input_states_variable_was_specified = self._handle_arg_input_states(input_states)
+                default_variable_from_input_ports, input_ports_variable_was_specified = self._handle_arg_input_ports(input_ports)
             except AttributeError as e:
                 if DEFER_VARIABLE_SPEC_TO_MECH_MSG in e.args[0]:
                     pass
 
-        if default_variable_from_input_states is not None:
+        if default_variable_from_input_ports is not None:
             if default_variable is None:
                 if size is None:
-                    default_variable = default_variable_from_input_states
+                    default_variable = default_variable_from_input_ports
                 else:
-                    if input_states_variable_was_specified:
+                    if input_ports_variable_was_specified:
                         size_variable = self._handle_size(size, None)
-                        if iscompatible(size_variable, default_variable_from_input_states):
-                            default_variable = default_variable_from_input_states
+                        if iscompatible(size_variable, default_variable_from_input_ports):
+                            default_variable = default_variable_from_input_ports
                         else:
                             raise MechanismError(
-                                'default variable determined from the specified input_states spec ({0}) '
+                                'default variable determined from the specified input_ports spec ({0}) '
                                 'is not compatible with the default variable determined from size parameter ({1})'.
-                                    format(default_variable_from_input_states, size_variable,
+                                    format(default_variable_from_input_ports, size_variable,
                                 )
                             )
                     else:
-                        # do not pass input_states variable as default_variable, fall back to size specification
+                        # do not pass input_ports variable as default_variable, fall back to size specification
                         pass
             else:
-                if input_states_variable_was_specified:
-                    if not iscompatible(self._parse_arg_variable(default_variable), default_variable_from_input_states):
+                if input_ports_variable_was_specified:
+                    if not iscompatible(self._parse_arg_variable(default_variable), default_variable_from_input_ports):
                         raise MechanismError(
-                            'Default variable determined from the specified input_states spec ({0}) for {1} '
+                            'Default variable determined from the specified input_ports spec ({0}) for {1} '
                             'is not compatible with its specified default variable ({2})'.format(
-                                default_variable_from_input_states, self.name, default_variable
+                                default_variable_from_input_ports, self.name, default_variable
                             )
                         )
                 else:
-                    # do not pass input_states variable as default_variable, fall back to default_variable specification
+                    # do not pass input_ports variable as default_variable, fall back to default_variable specification
                     pass
 
         return super()._handle_default_variable(default_variable=default_variable, size=size)
 
-    def _handle_arg_input_states(self, input_states):
+    def _handle_arg_input_ports(self, input_ports):
         """
-        Takes user-inputted argument **input_states** and returns an defaults.variable-like
+        Takes user-inputted argument **input_ports** and returns an defaults.variable-like
         object that it represents
 
         Returns
         -------
             A, B where
             A is an defaults.variable-like object
-            B is True if **input_states** contained an explicit variable specification, False otherwise
+            B is True if **input_ports** contained an explicit variable specification, False otherwise
         """
 
-        if input_states is None:
+        if input_ports is None:
             return None, False
 
-        default_variable_from_input_states = []
-        input_state_variable_was_specified = None
+        default_variable_from_input_ports = []
+        input_port_variable_was_specified = None
 
-        if not isinstance(input_states, list):
-            input_states = [input_states]
-            # KDM 6/28/18: you can't set to self.input_states because this triggers
+        if not isinstance(input_ports, list):
+            input_ports = [input_ports]
+            # KDM 6/28/18: you can't set to self.input_ports because this triggers
             # a check for validation pref, but self.prefs does not exist yet so this fails
-            self._input_states = input_states
+            self._input_ports = input_ports
 
-        for i, s in enumerate(input_states):
+        for i, s in enumerate(input_ports):
 
 
             try:
-                parsed_input_state_spec = _parse_state_spec(owner=self,
-                                                            state_type=InputState,
+                parsed_input_port_spec = _parse_state_spec(owner=self,
+                                                            state_type=InputPort,
                                                             state_spec=s,
-                )
+                                                            )
             except AttributeError as e:
                 if DEFER_VARIABLE_SPEC_TO_MECH_MSG in e.args[0]:
-                    default_variable_from_input_states.append(InputState.defaults.variable)
+                    default_variable_from_input_ports.append(InputPort.defaults.variable)
                     continue
                 else:
                     raise MechanismError("PROGRAM ERROR: Problem parsing {} specification ({}) for {}".
-                                         format(InputState.__name__, s, self.name))
+                                         format(InputPort.__name__, s, self.name))
 
             mech_variable_item = None
 
-            if isinstance(parsed_input_state_spec, dict):
+            if isinstance(parsed_input_port_spec, dict):
                 try:
-                    mech_variable_item = parsed_input_state_spec[VALUE]
-                    if parsed_input_state_spec[VARIABLE] is None:
-                        input_state_variable_was_specified = False
+                    mech_variable_item = parsed_input_port_spec[VALUE]
+                    if parsed_input_port_spec[VARIABLE] is None:
+                        input_port_variable_was_specified = False
                 except KeyError:
                     pass
-            elif isinstance(parsed_input_state_spec, (Projection, Mechanism, State)):
-                if parsed_input_state_spec.initialization_status == ContextFlags.DEFERRED_INIT:
-                    args = parsed_input_state_spec._init_args
+            elif isinstance(parsed_input_port_spec, (Projection, Mechanism, State)):
+                if parsed_input_port_spec.initialization_status == ContextFlags.DEFERRED_INIT:
+                    args = parsed_input_port_spec._init_args
                     if REFERENCE_VALUE in args and args[REFERENCE_VALUE] is not None:
                         mech_variable_item = args[REFERENCE_VALUE]
                     elif VALUE in args and args[VALUE] is not None:
@@ -1721,27 +1721,27 @@ class Mechanism_Base(Mechanism):
                         mech_variable_item = args[VARIABLE]
                 else:
                     try:
-                        mech_variable_item = parsed_input_state_spec.value
+                        mech_variable_item = parsed_input_port_spec.value
                     except AttributeError:
-                        mech_variable_item = parsed_input_state_spec.defaults.mech_variable_item
+                        mech_variable_item = parsed_input_port_spec.defaults.mech_variable_item
             else:
-                mech_variable_item = parsed_input_state_spec.defaults.mech_variable_item
+                mech_variable_item = parsed_input_port_spec.defaults.mech_variable_item
 
             if mech_variable_item is None:
-                mech_variable_item = InputState.defaults.variable
-            elif input_state_variable_was_specified is None and not InputState._state_spec_allows_override_variable(s):
-                input_state_variable_was_specified = True
+                mech_variable_item = InputPort.defaults.variable
+            elif input_port_variable_was_specified is None and not InputPort._state_spec_allows_override_variable(s):
+                input_port_variable_was_specified = True
 
-            default_variable_from_input_states.append(mech_variable_item)
+            default_variable_from_input_ports.append(mech_variable_item)
 
-        return default_variable_from_input_states, input_state_variable_was_specified
+        return default_variable_from_input_ports, input_port_variable_was_specified
 
     # ------------------------------------------------------------------------------------------------------------------
     # Validation methods
     # ------------------------------------------------------------------------------------------------------------------
 
     def _validate_variable(self, variable, context=None):
-        """Convert variable to 2D np.array: one 1D value for each InputState
+        """Convert variable to 2D np.array: one 1D value for each InputPort
 
         # VARIABLE SPECIFICATION:                                        ENCODING:
         # Simple value variable:                                         0 -> [array([0])]
@@ -1755,33 +1755,33 @@ class Mechanism_Base(Mechanism):
 
         variable = super(Mechanism_Base, self)._validate_variable(variable, context)
 
-        # Force Mechanism variable specification to be a 2D array (to accomodate multiple InputStates - see above):
+        # Force Mechanism variable specification to be a 2D array (to accomodate multiple InputPorts - see above):
         variable = convert_to_np_array(variable, 2)
 
         return variable
 
     def _filter_params(self, params):
-        """Add rather than override INPUT_STATES and/or OUTPUT_STATES
+        """Add rather than override INPUT_PORTS and/or OUTPUT_STATES
 
-        Allows specification of INPUT_STATES or OUTPUT_STATES in params dictionary to be added to,
+        Allows specification of INPUT_PORTS or OUTPUT_STATES in params dictionary to be added to,
         rather than override those in paramClassDefaults (the default behavior)
         """
 
         import copy
 
-        # INPUT_STATES:
+        # INPUT_PORTS:
 
-        # Check if input_states is in params (i.e., was specified in arg of constructor)
-        if not INPUT_STATES in params or params[INPUT_STATES] is None:
-            # If it wasn't, assign from paramClassDefaults (even if it is None) to force creation of input_states attrib
-            if self.paramClassDefaults[INPUT_STATES] is not None:
-                params[INPUT_STATES] = copy.deepcopy(self.paramClassDefaults[INPUT_STATES])
+        # Check if input_ports is in params (i.e., was specified in arg of constructor)
+        if not INPUT_PORTS in params or params[INPUT_PORTS] is None:
+            # If it wasn't, assign from paramClassDefaults (even if it is None) to force creation of input_ports attrib
+            if self.paramClassDefaults[INPUT_PORTS] is not None:
+                params[INPUT_PORTS] = copy.deepcopy(self.paramClassDefaults[INPUT_PORTS])
             else:
-                params[INPUT_STATES] = None
-        # Convert input_states_spec to list if it is not one
-        if params[INPUT_STATES] is not None and not isinstance(params[INPUT_STATES], (list, dict)):
-            params[INPUT_STATES] = [params[INPUT_STATES]]
-        self.user_params.__additem__(INPUT_STATES, params[INPUT_STATES])
+                params[INPUT_PORTS] = None
+        # Convert input_ports_spec to list if it is not one
+        if params[INPUT_PORTS] is not None and not isinstance(params[INPUT_PORTS], (list, dict)):
+            params[INPUT_PORTS] = [params[INPUT_PORTS]]
+        self.user_params.__additem__(INPUT_PORTS, params[INPUT_PORTS])
 
         # OUTPUT_STATES:
 
@@ -1797,40 +1797,40 @@ class Mechanism_Base(Mechanism):
         self.user_params.__additem__(OUTPUT_STATES, params[OUTPUT_STATES])
 
         # try:
-        #     input_states_spec = params[INPUT_STATES]
+        #     input_ports_spec = params[INPUT_PORTS]
         # except KeyError:
         #     pass
         # else:
-        #     # Convert input_states_spec to list if it is not one
-        #     if not isinstance(input_states_spec, list):
-        #         input_states_spec = [input_states_spec]
-        #     # # Get input_states specified in paramClassDefaults
-        #     # if self.paramClassDefaults[INPUT_STATES] is not None:
-        #     #     default_input_states = self.paramClassDefaults[INPUT_STATES].copy()
+        #     # Convert input_ports_spec to list if it is not one
+        #     if not isinstance(input_ports_spec, list):
+        #         input_ports_spec = [input_ports_spec]
+        #     # # Get input_ports specified in paramClassDefaults
+        #     # if self.paramClassDefaults[INPUT_PORTS] is not None:
+        #     #     default_input_ports = self.paramClassDefaults[INPUT_PORTS].copy()
         #     # else:
-        #     #     default_input_states = None
-        #     # # Convert input_states from paramClassDefaults to a list if it is not one
-        #     # if default_input_states is not None and not isinstance(default_input_states, list):
-        #     #     default_input_states = [default_input_states]
-        #     # # Add InputState specified in params to those in paramClassDefaults
+        #     #     default_input_ports = None
+        #     # # Convert input_ports from paramClassDefaults to a list if it is not one
+        #     # if default_input_ports is not None and not isinstance(default_input_ports, list):
+        #     #     default_input_ports = [default_input_ports]
+        #     # # Add InputPort specified in params to those in paramClassDefaults
         #     # #    Note: order is important here;  new ones should be last, as paramClassDefaults defines the
-        #     # #          the primary InputState which must remain first for the input_states ContentAddressableList
-        #     # default_input_states.extend(input_states_spec)
+        #     # #          the primary InputPort which must remain first for the input_ports ContentAddressableList
+        #     # default_input_ports.extend(input_ports_spec)
         #     # # Assign full set back to params_arg
-        #     # params[INPUT_STATES] = default_input_states
+        #     # params[INPUT_PORTS] = default_input_ports
         #
-        #     # Get inputStates specified in paramClassDefaults
-        #     if self.paramClassDefaults[INPUT_STATES] is not None:
-        #         default_input_states = self.paramClassDefaults[INPUT_STATES].copy()
-        #         # Convert inputStates from paramClassDefaults to a list if it is not one
-        #         if not isinstance(default_input_states, list):
-        #             default_input_states = [default_input_states]
-        #         # Add input_states specified in params to those in paramClassDefaults
+        #     # Get inputPorts specified in paramClassDefaults
+        #     if self.paramClassDefaults[INPUT_PORTS] is not None:
+        #         default_input_ports = self.paramClassDefaults[INPUT_PORTS].copy()
+        #         # Convert inputPorts from paramClassDefaults to a list if it is not one
+        #         if not isinstance(default_input_ports, list):
+        #             default_input_ports = [default_input_ports]
+        #         # Add input_ports specified in params to those in paramClassDefaults
         #         #    Note: order is important here;  new ones should be last, as paramClassDefaults defines the
-        #         #          the primary InputState which must remain first for the input_states ContentAddressableList
-        #         default_input_states.extend(input_states_spec)
+        #         #          the primary InputPort which must remain first for the input_ports ContentAddressableList
+        #         default_input_ports.extend(input_ports_spec)
         #         # Assign full set back to params_arg
-        #         params[INPUT_STATES] = default_input_states
+        #         params[INPUT_PORTS] = default_input_ports
 
         # # OUTPUT_STATES:
         # try:
@@ -1854,11 +1854,11 @@ class Mechanism_Base(Mechanism):
         #     params[OUTPUT_STATES] = default_output_states
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """validate TimeScale, INPUT_STATES, FUNCTION_PARAMS, OUTPUT_STATES and MONITOR_FOR_CONTROL
+        """validate TimeScale, INPUT_PORTS, FUNCTION_PARAMS, OUTPUT_STATES and MONITOR_FOR_CONTROL
 
         Go through target_set params (populated by Component._validate_params) and validate values for:
-            + INPUT_STATES:
-                <MechanismsInputState or Projection object or class,
+            + INPUT_PORTS:
+                <MechanismsInputPort or Projection object or class,
                 specification dict for one, 2-item tuple, or numeric value(s)>;
                 if it is missing or not one of the above types, it is set to self.defaults.variable
             + FUNCTION_PARAMS:  <dict>, every entry of which must be one of the following:
@@ -1883,7 +1883,7 @@ class Mechanism_Base(Mechanism):
         """
 
         from psyneulink.core.components.states.state import _parse_state_spec
-        from psyneulink.core.components.states.inputstate import InputState
+        from psyneulink.core.components.states.inputport import InputPort
 
         # Perform first-pass validation in Function.__init__():
         # - returns full set of params based on subclass paramClassDefaults
@@ -1893,11 +1893,11 @@ class Mechanism_Base(Mechanism):
 
         # VALIDATE INPUT STATE(S)
 
-        # INPUT_STATES is specified, so validate:
-        if INPUT_STATES in params and params[INPUT_STATES] is not None:
+        # INPUT_PORTS is specified, so validate:
+        if INPUT_PORTS in params and params[INPUT_PORTS] is not None:
             try:
-                for state_spec in params[INPUT_STATES]:
-                    _parse_state_spec(owner=self, state_type=InputState, state_spec=state_spec)
+                for state_spec in params[INPUT_PORTS]:
+                    _parse_state_spec(owner=self, state_type=InputPort, state_spec=state_spec)
             except AttributeError as e:
                 if DEFER_VARIABLE_SPEC_TO_MECH_MSG in e.args[0]:
                     pass
@@ -1988,8 +1988,8 @@ class Mechanism_Base(Mechanism):
                                          format(label, value, type, self.name))
         def validate_subdict_key(state_type, key, dict_type):
             # IMPLEMENTATION NOTE:
-            #    can't yet validate that string is a legit InputState name or that index is within
-            #    bounds of the number of InputStates;  that is done in _get_state_value_labels()
+            #    can't yet validate that string is a legit InputPort name or that index is within
+            #    bounds of the number of InputPorts;  that is done in _get_state_value_labels()
             if not isinstance(key, (int, str)):
                 raise MechanismError("Key ({}) for {} of {} must the name of an {} or the index for one".
                                      format(key, dict_type, self.name, state_type.__name__))
@@ -1998,7 +1998,7 @@ class Mechanism_Base(Mechanism):
             labels_dict = params[INPUT_LABELS_DICT]
             if isinstance(list(labels_dict.values())[0], dict):
                 for key, ld in labels_dict.values():
-                    validate_subdict_key(InputState, key, INPUT_LABELS_DICT)
+                    validate_subdict_key(InputPort, key, INPUT_LABELS_DICT)
                     validate_labels_dict(ld, INPUT_LABELS_DICT)
             else:
                 validate_labels_dict(labels_dict, INPUT_LABELS_DICT)
@@ -2027,7 +2027,7 @@ class Mechanism_Base(Mechanism):
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         self.parameters.previous_value._set(None, context)
-        self._instantiate_input_states(context=context)
+        self._instantiate_input_ports(context=context)
         self._instantiate_parameter_states(function=function, context=context)
         super()._instantiate_attributes_before_function(function=function, context=context)
 
@@ -2042,12 +2042,12 @@ class Mechanism_Base(Mechanism):
             self.attributes_dict_entries.update({'PREVIOUS_VALUE': PREVIOUS_VALUE})
 
     def _instantiate_function(self, function, function_params=None, context=None):
-        """Assign weights and exponents if specified in input_states
+        """Assign weights and exponents if specified in input_ports
         """
 
         super()._instantiate_function(function=function, function_params=function_params, context=context)
 
-        if self.input_states and any(input_state.weight is not None for input_state in self.input_states):
+        if self.input_ports and any(input_port.weight is not None for input_port in self.input_ports):
 
             # Construct defaults:
             #    from function.weights if specified else 1's
@@ -2056,14 +2056,14 @@ class Mechanism_Base(Mechanism):
             except AttributeError:
                 default_weights = None
             if default_weights is None:
-                default_weights = default_weights or [1.0] * len(self.input_states)
+                default_weights = default_weights or [1.0] * len(self.input_ports)
 
-            # Assign any weights specified in input_state spec
-            weights = [[input_state.weight if input_state.weight is not None else default_weight]
-                       for input_state, default_weight in zip(self.input_states, default_weights)]
+            # Assign any weights specified in input_port spec
+            weights = [[input_port.weight if input_port.weight is not None else default_weight]
+                       for input_port, default_weight in zip(self.input_ports, default_weights)]
             self.function._weights = weights
 
-        if self.input_states and any(input_state.exponent is not None for input_state in self.input_states):
+        if self.input_ports and any(input_port.exponent is not None for input_port in self.input_ports):
 
             # Construct defaults:
             #    from function.weights if specified else 1's
@@ -2072,11 +2072,11 @@ class Mechanism_Base(Mechanism):
             except AttributeError:
                 default_exponents = None
             if default_exponents is None:
-                default_exponents = default_exponents or [1.0] * len(self.input_states)
+                default_exponents = default_exponents or [1.0] * len(self.input_ports)
 
-            # Assign any exponents specified in input_state spec
-            exponents = [[input_state.exponent if input_state.exponent is not None else default_exponent]
-                       for input_state, default_exponent in zip(self.input_states, default_exponents)]
+            # Assign any exponents specified in input_port spec
+            exponents = [[input_port.exponent if input_port.exponent is not None else default_exponent]
+                       for input_port, default_exponent in zip(self.input_ports, default_exponents)]
             self.function._exponents = exponents
 
         # this may be removed when the restriction making all Mechanism values 2D np arrays is lifted
@@ -2104,15 +2104,15 @@ class Mechanism_Base(Mechanism):
 
         super()._instantiate_attributes_after_function(context=context)
 
-    def _instantiate_input_states(self, input_states=None, reference_value=None, context=None):
-        """Call State._instantiate_input_states to instantiate orderedDict of InputState(s)
+    def _instantiate_input_ports(self, input_ports=None, reference_value=None, context=None):
+        """Call State._instantiate_input_ports to instantiate orderedDict of InputPort(s)
 
-        This is a stub, implemented to allow Mechanism subclasses to override _instantiate_input_states
-            or process InputStates before and/or after call to _instantiate_input_states
+        This is a stub, implemented to allow Mechanism subclasses to override _instantiate_input_ports
+            or process InputPorts before and/or after call to _instantiate_input_ports
         """
-        from psyneulink.core.components.states.inputstate import _instantiate_input_states
-        return _instantiate_input_states(owner=self,
-                                         input_states=input_states or self.input_states,
+        from psyneulink.core.components.states.inputport import _instantiate_input_ports
+        return _instantiate_input_ports(owner=self,
+                                         input_ports=input_ports or self.input_ports,
                                          reference_value=reference_value,
                                          context=context)
 
@@ -2120,7 +2120,7 @@ class Mechanism_Base(Mechanism):
         """Call State._instantiate_parameter_states to instantiate a ParameterState for each parameter in user_params
 
         This is a stub, implemented to allow Mechanism subclasses to override _instantiate_parameter_states
-            or process InputStates before and/or after call to _instantiate_parameter_states
+            or process InputPorts before and/or after call to _instantiate_parameter_states
             :param function:
         """
         from psyneulink.core.components.states.parameterstate import _instantiate_parameter_states
@@ -2130,7 +2130,7 @@ class Mechanism_Base(Mechanism):
         """Call State._instantiate_output_states to instantiate orderedDict of OutputState(s)
 
         This is a stub, implemented to allow Mechanism subclasses to override _instantiate_output_states
-            or process InputStates before and/or after call to _instantiate_output_states
+            or process InputPorts before and/or after call to _instantiate_output_states
         """
         from psyneulink.core.components.states.outputstate import _instantiate_output_states
         # self._update_parameter_states(context=context)
@@ -2262,20 +2262,20 @@ class Mechanism_Base(Mechanism):
         """Carry out a single `execution <Mechanism_Execution>` of the Mechanism.
 
         COMMENT:
-            Update InputState(s) and parameter(s), call subclass _execute, update OutputState(s), and assign self.value
+            Update InputPort(s) and parameter(s), call subclass _execute, update OutputState(s), and assign self.value
 
             Execution sequence:
-            - Call self.input_state.execute() for each entry in self.input_states:
-                + execute every self.input_state.path_afferents.[<Projection>.execute()...]
-                + combine results and/or gate state using self.input_state.function()
-                + assign the result in self.input_state.value
+            - Call self.input_port.execute() for each entry in self.input_ports:
+                + execute every self.input_port.path_afferents.[<Projection>.execute()...]
+                + combine results and/or gate state using self.input_port.function()
+                + assign the result in self.input_port.value
             - Call every self.params[<ParameterState>].execute(); for each:
                 + execute self.params[<ParameterState>].mod_afferents.[<Projection>.execute()...]
                     (usually this is just a single ControlProjection)
                 + combine results for each ModulationParam or assign value from an OVERRIDE specification
                 + assign the result to self.params[<ParameterState>].value
             - Call subclass' self.execute(params):
-                - use self.input_state.value as its variable,
+                - use self.input_port.value as its variable,
                 - use self.params[<ParameterState>].value for each param of subclass' self.function
                 - call self._update_output_states() to assign the output to each self.output_states[<OutputState>].value
                 Note:
@@ -2288,11 +2288,11 @@ class Mechanism_Base(Mechanism):
 
         input : List[value] or ndarray : default self.defaults.variable
             input to use for execution of the Mechanism.
-            This must be consistent with the format of the Mechanism's `InputState(s) <Mechanism_InputStates>`:
+            This must be consistent with the format of the Mechanism's `InputPort(s) <Mechanism_InputPorts>`:
             the number of items in the  outermost level of the list, or axis 0 of the ndarray, must equal the number
-            of the Mechanism's `input_states  <Mechanism_Base.input_states>`, and each item must be compatible with the
-            format (number and type of elements) of the `variable <InputState.InputState.variable>` of the
-            corresponding InputState (see `Run Inputs <Composition_Run_Inputs>` for details of input
+            of the Mechanism's `input_ports  <Mechanism_Base.input_ports>`, and each item must be compatible with the
+            format (number and type of elements) of the `variable <InputPort.InputPort.variable>` of the
+            corresponding InputPort (see `Run Inputs <Composition_Run_Inputs>` for details of input
             specification formats).
 
         runtime_params : Optional[Dict[str, Dict[str, Dict[str, value]]]]:
@@ -2379,14 +2379,14 @@ class Mechanism_Base(Mechanism):
 
         # UPDATE VARIABLE and INPUT STATE(S)
 
-        # Executing or simulating Process, System or Composition, so get input by updating input_states
+        # Executing or simulating Process, System or Composition, so get input by updating input_ports
 
         if (input is None
             and (context.execution_phase is not ContextFlags.IDLE)
-            and (self.input_state.path_afferents != [])):
-            variable = self._update_input_states(context=context, runtime_params=runtime_params)
+            and (self.input_port.path_afferents != [])):
+            variable = self._update_input_ports(context=context, runtime_params=runtime_params)
 
-        # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_states
+        # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_ports
         else:
             if context.source & ContextFlags.COMMAND_LINE:
                 context.execution_phase = ContextFlags.PROCESSING
@@ -2497,41 +2497,41 @@ class Mechanism_Base(Mechanism):
     def _get_variable_from_input(self, input, context=None):
         input = np.atleast_2d(input)
         num_inputs = np.size(input, 0)
-        num_input_states = len(self.input_states)
-        if num_inputs != num_input_states:
+        num_input_ports = len(self.input_ports)
+        if num_inputs != num_input_ports:
             # Check if inputs are of different lengths (indicated by dtype == np.dtype('O'))
             num_inputs = np.size(input)
-            if isinstance(input, np.ndarray) and input.dtype is np.dtype('O') and num_inputs == num_input_states:
+            if isinstance(input, np.ndarray) and input.dtype is np.dtype('O') and num_inputs == num_input_ports:
                 # Reduce input back down to sequence of arrays (to remove extra dim added by atleast_2d above)
                 input = np.squeeze(input)
             else:
                 num_inputs = np.size(input, 0)  # revert num_inputs to its previous value, when printing the error
                 raise MechanismError("Number of inputs ({0}) to {1} does not match "
-                                  "its number of input_states ({2})".
-                                  format(num_inputs, self.name,  num_input_states ))
-        for input_item, input_state in zip(input, self.input_states):
-            if len(input_state.defaults.value) == len(input_item):
-                input_state.parameters.value._set(input_item, context)
+                                  "its number of input_ports ({2})".
+                                  format(num_inputs, self.name,  num_input_ports ))
+        for input_item, input_port in zip(input, self.input_ports):
+            if len(input_port.defaults.value) == len(input_item):
+                input_port.parameters.value._set(input_item, context)
             else:
                 raise MechanismError(f"Length ({len(input_item)}) of input ({input_item}) does not match "
-                                     f"required length ({len(input_state.defaults.variable)}) for input "
-                                     f"to {input_state.name} {InputState.__name__} of {self.name}.")
+                                     f"required length ({len(input_port.defaults.variable)}) for input "
+                                     f"to {input_port.name} {InputPort.__name__} of {self.name}.")
 
         return np.array(self.get_input_values(context))
 
     def _update_previous_value(self, context=None):
         self.parameters.previous_value._set(self.parameters.value._get(context), context)
 
-    def _update_input_states(self, context=None, runtime_params=None):
-        """Update value for each InputState in self.input_states:
+    def _update_input_ports(self, context=None, runtime_params=None):
+        """Update value for each InputPort in self.input_ports:
 
-        Call execute method for all (MappingProjection) Projections in InputState.path_afferents
-        Aggregate results (using InputState execute method)
-        Update InputState.value
+        Call execute method for all (MappingProjection) Projections in InputPort.path_afferents
+        Aggregate results (using InputPort execute method)
+        Update InputPort.value
         """
 
-        for i in range(len(self.input_states)):
-            state = self.input_states[i]
+        for i in range(len(self.input_ports)):
+            state = self.input_ports[i]
             state._update(context=context, params=runtime_params)
         return np.array(self.get_input_values(context))
 
@@ -2644,7 +2644,7 @@ class Mechanism_Base(Mechanism):
 
     def _get_input_struct_type(self, ctx):
         input_type_list = []
-        for state in self.input_states:
+        for state in self.input_ports:
             # Extract the non-modulation portion of input state input struct
             input_type_list.append(ctx.get_input_struct_type(state).elements[0])
         mod_input_type_list = []
@@ -2712,7 +2712,7 @@ class Mechanism_Base(Mechanism):
             for idx, s_mod in enumerate(state.mod_afferents):
                 mech_mod_afferent_idx = mod_afferents.index(s_mod)
                 mod_in_ptr = builder.gep(mech_input, [ctx.int32_ty(0),
-                                                      ctx.int32_ty(len(self.input_states)),
+                                                      ctx.int32_ty(len(self.input_ports)),
                                                       ctx.int32_ty(mech_mod_afferent_idx)])
                 mod_out_ptr = builder.gep(s_input, [ctx.int32_ty(0), ctx.int32_ty(1 + idx)])
                 afferent_val = builder.load(mod_in_ptr)
@@ -2730,12 +2730,12 @@ class Mechanism_Base(Mechanism):
 
         return builder
 
-    def _gen_llvm_input_states(self, ctx, builder,
+    def _gen_llvm_input_ports(self, ctx, builder,
                                mech_params, mech_state, mech_input):
         # Allocate temporary storage. We rely on the fact that series
         # of input state results should match the main function input.
         is_output_list = []
-        for state in self.input_states:
+        for state in self.input_ports:
             is_function = ctx.get_llvm_function(state)
             is_output_list.append(is_function.args[3].type.pointee)
 
@@ -2756,7 +2756,7 @@ class Mechanism_Base(Mechanism):
             b.store(b.load(is_in), data_ptr)
             return b
 
-        builder = self._gen_llvm_states(ctx, builder, self.input_states,
+        builder = self._gen_llvm_states(ctx, builder, self.input_ports,
                                         _get_output_ptr, _fill_input,
                                         mech_params, mech_state, mech_input)
 
@@ -2831,7 +2831,7 @@ class Mechanism_Base(Mechanism):
 
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
 
-        is_output, builder = self._gen_llvm_input_states(ctx, builder, params, context, arg_in)
+        is_output, builder = self._gen_llvm_input_ports(ctx, builder, params, context, arg_in)
 
         mf_params_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
         mf_params, builder = self._gen_llvm_param_states(self.function, mf_params_ptr, ctx, builder, params, context, arg_in)
@@ -2883,8 +2883,8 @@ class Mechanism_Base(Mechanism):
             for param_name in params_keys_sorted:
                 # No need to report:
                 #    function_params here, as they will be reported for the function itself below;
-                #    input_states or output_states, as these are not really params
-                if param_name in {FUNCTION_PARAMS, INPUT_STATES, OUTPUT_STATES}:
+                #    input_ports or output_states, as these are not really params
+                if param_name in {FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_STATES}:
                     continue
                 param_is_function = False
                 param_value = params[param_name]
@@ -2961,11 +2961,11 @@ class Mechanism_Base(Mechanism):
 
         use_labels : bool : default False
             use labels for values if **show_values** is `True`; labels must be specified in the `input_labels_dict
-            <Mechanism.input_labels_dict>` (for InputState values) and `output_labels_dict
+            <Mechanism.input_labels_dict>` (for InputPort values) and `output_labels_dict
             <Mechanism.output_labels_dict>` (for OutputState values), otherwise the value is used.
 
         show_headers : bool : default False
-            show the Mechanism, InputState, ParameterState and OutputState headers.
+            show the Mechanism, InputPort, ParameterState and OutputState headers.
 
             **composition** argument (if **composition** is not specified, show_roles is ignored).
 
@@ -2978,7 +2978,7 @@ class Mechanism_Base(Mechanism):
             if this is not specified, the **show_roles** argument is ignored.
 
         compact_cim : bool : default False
-            specifies whether to suppress InputState fields for input_CIM and OutputState fields for output_CIM
+            specifies whether to suppress InputPort fields for input_CIM and OutputState fields for output_CIM
 
         output_fmt : keyword : default 'pdf'
             'pdf': generate and open a pdf with the visualization;\n
@@ -3021,16 +3021,16 @@ class Mechanism_Base(Mechanism):
             </table></td>
         </tr>
 
-        <tr>                                                                      <- BEGIN INPUTSTATES
-            <td colspan="2"><table border="0" cellborder="0" BGCOLOR="bisque">    <- INPUTSTATES OUTER TABLE
+        <tr>                                                                      <- BEGIN InputPortS
+            <td colspan="2"><table border="0" cellborder="0" BGCOLOR="bisque">    <- InputPortS OUTER TABLE
                 <tr>
-                    <td colspan="1"><b>InputStates</b></td>                       <- INPUTSTATES HEADER
+                    <td colspan="1"><b>InputPorts</b></td>                       <- InputPortS HEADER
                 </tr>
                 <tr>
-                    <td><table border="0" cellborder="1">                         <- INPUTSTATE CELLS TABLE
+                    <td><table border="0" cellborder="1">                         <- InputPort CELLS TABLE
                         <tr>
-                            <td port="InputStatePort1">InputState 1<br/><i>function 1</i><br/><i>= value</i></td>
-                            <td port="InputStatePort2">InputState 2<br/><i>function 2</i><br/><i>= value</i></td>
+                            <td port="InputPortPort1">InputPort 1<br/><i>function 1</i><br/><i>= value</i></td>
+                            <td port="InputPortPort2">InputPort 2<br/><i>function 2</i><br/><i>= value</i></td>
                         </tr>
                     </table></td>
                 </tr>
@@ -3053,7 +3053,7 @@ class Mechanism_Base(Mechanism):
         outer_table_spec = '<table border="0" cellborder="0" bgcolor="#FAFAD0">' # NEAR LIGHTGOLDENRODYELLOW
 
         # Header cell of outer State table:
-        input_states_header     = f'<tr><td colspan="1" valign="middle"><b><i>{InputState.__name__}s</i></b></td></tr>'
+        input_ports_header     = f'<tr><td colspan="1" valign="middle"><b><i>{InputPort.__name__}s</i></b></td></tr>'
         parameter_states_header = f'<tr><td rowspan="1" valign="middle"><b><i>{ParameterState.__name__}s</i></b></td>'
         output_states_header    = f'<tr><td colspan="1" valign="middle"><b><i>{OutputState.__name__}s</i></b></td></tr>'
 
@@ -3122,11 +3122,11 @@ class Mechanism_Base(Mechanism):
 
         @tc.typecheck
         def state_table(state_list:ContentAddressableList,
-                        state_type:tc.enum(InputState, ParameterState, OutputState)):
+                        state_type:tc.enum(InputPort, ParameterState, OutputState)):
             """Return html with table for each state in state_list, including functions and/or values as specified
 
             Each table has a header cell and and inner table with cells for each state in the list
-            InputState and OutputState cells are aligned horizontally;  ParameterState cells are aligned vertically.
+            InputPort and OutputState cells are aligned horizontally;  ParameterState cells are aligned vertically.
             Use show_functions, show_values and include_labels arguments from call to _show_structure()
             See _show_structure docstring for full template.
             """
@@ -3155,10 +3155,10 @@ class Mechanism_Base(Mechanism):
                 return f'<td port="{self._get_port_name(state)}"><b>{state.name}</b>{function}{value}</td>'
 
 
-            # InputStates
-            if state_type is InputState:
+            # InputPorts
+            if state_type is InputPort:
                 if show_headers:
-                    states_header = input_states_header
+                    states_header = input_ports_header
                 else:
                     states_header = ''
                 table = f'<td colspan="2"> {outer_table_spec} {states_header}<tr><td>{inner_table_spec}<tr>'
@@ -3191,12 +3191,12 @@ class Mechanism_Base(Mechanism):
             return table
 
 
-        # Construct InputStates table
-        if len(self.input_states) and (not compact_cim or self is not composition.input_CIM):
-            input_states_table = f'<tr>{state_table(self.input_states, InputState)}</tr>'
+        # Construct InputPorts table
+        if len(self.input_ports) and (not compact_cim or self is not composition.input_CIM):
+            input_ports_table = f'<tr>{state_table(self.input_ports, InputPort)}</tr>'
 
         else:
-            input_states_table = ''
+            input_ports_table = ''
 
         # Construct ParameterStates table
         if len(self.parameter_states):
@@ -3215,7 +3215,7 @@ class Mechanism_Base(Mechanism):
         m_node_struct = '<' + node_table_spec + \
                         output_states_table + \
                         '<tr>' + mech_cell() + parameter_states_table + '</tr>' + \
-                        input_states_table + \
+                        input_ports_table + \
                         '</table>>'
 
         if output_fmt == 'struct':
@@ -3240,15 +3240,15 @@ class Mechanism_Base(Mechanism):
 
     @tc.typecheck
     def _get_port_name(self, state:State):
-        if isinstance(state, InputState):
-            state_type = InputState.__name__
+        if isinstance(state, InputPort):
+            state_type = InputPort.__name__
         elif isinstance(state, ParameterState):
             state_type = ParameterState.__name__
         elif isinstance(state, OutputState):
             state_type = OutputState.__name__
         else:
             assert False, f'Mechanism._get_port_name() must be called with an ' \
-                f'{InputState.__name__}, {ParameterState.__name__} or {OutputState.__name__}'
+                f'{InputPort.__name__}, {ParameterState.__name__} or {OutputState.__name__}'
         return state_type + '-' + state.name
 
     def plot(self, x_range=None):
@@ -3293,7 +3293,7 @@ class Mechanism_Base(Mechanism):
         """
         add_states(states)
 
-        Add one or more `States <State>` to the Mechanism.  Only `InputStates <InputState>` and `OutputStates
+        Add one or more `States <State>` to the Mechanism.  Only `InputPorts <InputPort>` and `OutputStates
         <OutputState>` can be added; `ParameterStates <ParameterState>` cannot be added to a Mechanism after it has
         been constructed.
 
@@ -3304,27 +3304,27 @@ class Mechanism_Base(Mechanism):
         belongs to the Mechanism, the request is ignored.
 
         .. note::
-            Adding InputStates to a Mechanism changes the size of its `variable <Mechanism_Base.variable>` attribute,
+            Adding InputPorts to a Mechanism changes the size of its `variable <Mechanism_Base.variable>` attribute,
             which may produce an incompatibility with its `function <Mechanism_Base.function>` (see
-            `Mechanism InputStates <Mechanism_InputStates>` for a more detailed explanation).
+            `Mechanism InputPorts <Mechanism_InputPorts>` for a more detailed explanation).
 
         Arguments
         ---------
 
         states : State or List[State]
-            one more `InputStates <InputState>` or `OutputStates <OutputState>` to be added to the Mechanism.
-            State specification(s) can be an InputState or OutputState object, class reference, class keyword, or
+            one more `InputPorts <InputPort>` or `OutputStates <OutputState>` to be added to the Mechanism.
+            State specification(s) can be an InputPort or OutputState object, class reference, class keyword, or
             `State specification dictionary <State_Specification>` (the latter must have a *STATE_TYPE* entry
-            specifying the class or keyword for InputState or OutputState).
+            specifying the class or keyword for InputPort or OutputState).
 
-        Returns a dictionary with two entries, containing the list of InputStates and OutputStates added.
+        Returns a dictionary with two entries, containing the list of InputPorts and OutputStates added.
         -------
 
-        Dictionary with entries containing InputStates and/or OutputStates added
+        Dictionary with entries containing InputPorts and/or OutputStates added
 
         """
         from psyneulink.core.components.states.state import _parse_state_type
-        from psyneulink.core.components.states.inputstate import InputState, _instantiate_input_states
+        from psyneulink.core.components.states.inputport import InputPort, _instantiate_input_ports
         from psyneulink.core.components.states.outputstate import OutputState, _instantiate_output_states
 
         context = Context(source=ContextFlags.METHOD)
@@ -3333,36 +3333,36 @@ class Mechanism_Base(Mechanism):
         if not isinstance(states, list):
             states = [states]
 
-        input_states = []
+        input_ports = []
         output_states = []
-        instantiated_input_states = None
+        instantiated_input_ports = None
         instantiated_output_states = None
 
         for state in states:
             # FIX: 11/9/17: REFACTOR USING _parse_state_spec
             state_type = _parse_state_type(self, state)
-            if (isinstance(state_type, InputState) or
-                    (inspect.isclass(state_type) and issubclass(state_type, InputState))):
-                input_states.append(state)
+            if (isinstance(state_type, InputPort) or
+                    (inspect.isclass(state_type) and issubclass(state_type, InputPort))):
+                input_ports.append(state)
 
             elif (isinstance(state_type, OutputState) or
                     (inspect.isclass(state_type) and issubclass(state_type, OutputState))):
                 output_states.append(state)
 
-        if input_states:
-            added_variable, added_input_state = self._handle_arg_input_states(input_states)
-            if added_input_state:
+        if input_ports:
+            added_variable, added_input_port = self._handle_arg_input_ports(input_ports)
+            if added_input_port:
                 if not isinstance(self.defaults.variable, list):
                     old_variable = self.defaults.variable.tolist()
                 else:
                     old_variable = self.defaults.variable
                 old_variable.extend(added_variable)
                 self.defaults.variable = np.array(old_variable)
-            instantiated_input_states = _instantiate_input_states(self,
-                                                                  input_states,
+            instantiated_input_ports = _instantiate_input_ports(self,
+                                                                  input_ports,
                                                                   added_variable,
                                                                   context=context)
-            for state in instantiated_input_states:
+            for state in instantiated_input_ports:
                 if state.name is state.componentName or state.componentName + '-' in state.name:
                         state._assign_default_state_name(context=context)
             # self._instantiate_function(function=self.function)
@@ -3371,7 +3371,7 @@ class Mechanism_Base(Mechanism):
 
         self.defaults.variable = self.input_values
 
-        return {INPUT_STATES: instantiated_input_states,
+        return {INPUT_PORTS: instantiated_input_ports,
                 OUTPUT_STATES: instantiated_output_states}
 
     @tc.typecheck
@@ -3379,15 +3379,15 @@ class Mechanism_Base(Mechanism):
         """
         remove_states(states)
 
-        Remove one or more `States <State>` from the Mechanism.  Only `InputStates <InputState> and `OutputStates
+        Remove one or more `States <State>` from the Mechanism.  Only `InputPorts <InputPort> and `OutputStates
         <OutputState>` can be removed; `ParameterStates <ParameterState>` cannot be removed from a Mechanism.
 
         Each Specified state must be owned by the Mechanism, otherwise the request is ignored.
 
         .. note::
-            Removing InputStates from a Mechanism changes the size of its `variable <Mechanism_Base.variable>`
+            Removing InputPorts from a Mechanism changes the size of its `variable <Mechanism_Base.variable>`
             attribute, which may produce an incompatibility with its `function <Mechanism_Base.function>` (see
-            `Mechanism InputStates <Mechanism_InputStates>` for more detailed information).
+            `Mechanism InputPorts <Mechanism_InputPorts>` for more detailed information).
 
         Arguments
         ---------
@@ -3397,7 +3397,7 @@ class Mechanism_Base(Mechanism):
             State specification(s) can be an State object or the name of one.
 
         """
-        # from psyneulink.core.components.states.inputstate import INPUT_STATE
+        # from psyneulink.core.components.states.inputPort import INPUT_PORT
         from psyneulink.core.components.states.outputstate import OutputState
 
         # Put in list to standardize treatment below
@@ -3412,17 +3412,17 @@ class Mechanism_Base(Mechanism):
 
             delete_state_projections(state.mod_afferents)
 
-            if state in self.input_states:
+            if state in self.input_ports:
                 if isinstance(state, str):
-                    state = self.input_states[state]
-                index = self.input_states.index(state)
+                    state = self.input_ports[state]
+                index = self.input_ports.index(state)
                 delete_state_projections(state.path_afferents)
-                del self.input_states[index]
+                del self.input_ports[index]
                 # If state is subclass of OutputState:
                 #    check if regsistry has category for that class, and if so, use that
-                category = INPUT_STATE
+                category = INPUT_PORT
                 class_name = state.__class__.__name__
-                if class_name != INPUT_STATE and class_name in self._stateRegistry:
+                if class_name != INPUT_PORT and class_name in self._stateRegistry:
                     category = class_name
                 remove_instance_from_registry(registry=self._stateRegistry,
                                               category=category,
@@ -3462,7 +3462,7 @@ class Mechanism_Base(Mechanism):
         self.defaults.variable = self.input_values
 
     def _delete_mechanism(mechanism):
-        mechanism.remove_states(mechanism.input_states)
+        mechanism.remove_states(mechanism.input_ports)
         mechanism.remove_states(mechanism.parameter_states)
         mechanism.remove_states(mechanism.output_states)
         # del mechanism.function
@@ -3479,21 +3479,21 @@ class Mechanism_Base(Mechanism):
         return dict((param, value.value) for param, value in self.paramsCurrent.items()
                     if isinstance(value, ParameterState) )
 
-    def get_input_state_position(self, state):
-        if state in self.input_states:
-            return self.input_states.index(state)
-        raise MechanismError("{} is not an InputState of {}.".format(state.name, self.name))
+    def get_input_port_position(self, state):
+        if state in self.input_ports:
+            return self.input_ports.index(state)
+        raise MechanismError("{} is not an InputPort of {}.".format(state.name, self.name))
 
     # @tc.typecheck
-    # def _get_state_value_labels(self, state_type:tc.any(InputState, OutputState)):
+    # def _get_state_value_labels(self, state_type:tc.any(InputPort, OutputState)):
     def _get_state_value_labels(self, state_type, context=None):
         """Return list of labels for the value of each State of specified state_type.
         If the labels_dict has subdicts (one for each State), get label for the value of each State from its subdict.
         If the labels dict does not have subdicts, then use the same dict for the only (or all) State(s)
         """
 
-        if state_type is InputState:
-            states = self.input_states
+        if state_type is InputPort:
+            states = self.input_ports
 
         elif state_type is OutputState:
             states = self.output_states
@@ -3528,58 +3528,58 @@ class Mechanism_Base(Mechanism):
         return self._is_finished
 
     @property
-    def input_state(self):
-        return self.input_states[0]
+    def input_port(self):
+        return self.input_ports[0]
 
     @property
     def input_values(self):
         try:
-            return self.input_states.values
+            return self.input_ports.values
         except (TypeError, AttributeError):
             return None
 
     def get_input_values(self, context=None):
         input_values = []
-        for input_state in self.input_states:
-            if "LearningSignal" in input_state.name:
-                input_values.append(input_state.parameters.value.get(context).flatten())
+        for input_port in self.input_ports:
+            if "LearningSignal" in input_port.name:
+                input_values.append(input_port.parameters.value.get(context).flatten())
             else:
-                input_values.append(input_state.parameters.value.get(context))
+                input_values.append(input_port.parameters.value.get(context))
         return input_values
 
     @property
-    def external_input_states(self):
+    def external_input_ports(self):
         try:
-            return [input_state for input_state in self.input_states if not input_state.internal_only]
+            return [input_port for input_port in self.input_ports if not input_port.internal_only]
         except (TypeError, AttributeError):
             return None
 
     @property
     def external_input_values(self):
         try:
-            return [input_state.value for input_state in self.input_states if not input_state.internal_only]
+            return [input_port.value for input_port in self.input_ports if not input_port.internal_only]
         except (TypeError, AttributeError):
             return None
 
     @property
     def default_external_input_values(self):
         try:
-            return [input_state.defaults.value for input_state in self.input_states if not input_state.internal_only]
+            return [input_port.defaults.value for input_port in self.input_ports if not input_port.internal_only]
         except (TypeError, AttributeError):
             return None
 
     @property
     def input_labels(self):
         """
-        Returns a list with as many items as there are InputStates of the Mechanism. Each list item represents the value
-        of the corresponding InputState, and is populated by a string label (from the input_labels_dict) when one
+        Returns a list with as many items as there are InputPorts of the Mechanism. Each list item represents the value
+        of the corresponding InputPort, and is populated by a string label (from the input_labels_dict) when one
         exists, and the numeric value otherwise.
         """
         return self.get_input_labels()
 
     def get_input_labels(self, context=None):
         if self.input_labels_dict:
-            return self._get_state_value_labels(InputState, context)
+            return self._get_state_value_labels(InputPort, context)
         else:
             return self.get_input_values(context)
 
@@ -3624,24 +3624,24 @@ class Mechanism_Base(Mechanism):
         """Return list of all of the Mechanism's States"""
         return ContentAddressableList(
                 component_type=State,
-                list=list(self.input_states) +
+                list=list(self.input_ports) +
                      list(self.parameter_states) +
                      list(self.output_states))
 
     @property
     def path_afferents(self):
-        """Return list of path_afferent Projections to all of the Mechanism's input_states"""
+        """Return list of path_afferent Projections to all of the Mechanism's input_ports"""
         projs = []
-        for input_state in self.input_states:
-            projs.extend(input_state.path_afferents)
+        for input_port in self.input_ports:
+            projs.extend(input_port.path_afferents)
         return ContentAddressableList(component_type=Projection, list=projs)
 
     @property
     def mod_afferents(self):
         """Return all of the Mechanism's afferent modulatory Projections"""
         projs = []
-        for input_state in self.input_states:
-            projs.extend(input_state.mod_afferents)
+        for input_port in self.input_ports:
+            projs.extend(input_port.mod_afferents)
         for parameter_state in self.parameter_states:
             projs.extend(parameter_state.mod_afferents)
         for output_state in self.output_states:
@@ -3702,7 +3702,7 @@ class Mechanism_Base(Mechanism):
         # Construct attributes_dict from entries specified in attributes_dict_entries
         #   (which is assigned in _instantiate_attributes_before_function)
         attribs_dict = MechParamsDict({key:getattr(self, value) for key,value in self.attributes_dict_entries.items()})
-        attribs_dict.update({INPUT_STATE_VARIABLES: [input_state.variable for input_state in self.input_states]})
+        attribs_dict.update({INPUT_PORT_VARIABLES: [input_port.variable for input_port in self.input_ports]})
 
         attribs_dict.update(self.user_params)
         del attribs_dict[FUNCTION]
@@ -3710,7 +3710,7 @@ class Mechanism_Base(Mechanism):
             del attribs_dict[FUNCTION_PARAMS]
         except KeyError:
             pass
-        del attribs_dict[INPUT_STATES]
+        del attribs_dict[INPUT_PORTS]
         del attribs_dict[OUTPUT_STATES]
         try:
             attribs_dict.update(self.function_params)
@@ -3722,7 +3722,7 @@ class Mechanism_Base(Mechanism):
     def _dependent_components(self):
         return list(itertools.chain(
             super()._dependent_components,
-            self.input_states,
+            self.input_ports,
             self.output_states,
             self.parameter_states,
         ))
@@ -3731,7 +3731,7 @@ class Mechanism_Base(Mechanism):
     def _dict_summary(self):
         inputs_dict = {
             MODEL_SPEC_ID_INPUT_PORTS: [
-                s._dict_summary for s in self.input_states
+                s._dict_summary for s in self.input_ports
             ]
         }
         inputs_dict[MODEL_SPEC_ID_INPUT_PORTS].extend(

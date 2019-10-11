@@ -87,6 +87,6 @@ comp.add_projection(sender=ContentAddressableMemory, projection=w_dh, receiver=h
 
 # comp.show_graph()
 
-print(ContentAddressableMemory.input_states.names)
-print(ContentAddressableMemory.input_states[pnl.CUE_INPUT].path_afferents[0].sender.owner.name)
-print(hidden.input_states[0].path_afferents[0].sender.owner.name)
+print(ContentAddressableMemory.input_ports.names)
+print(ContentAddressableMemory.input_ports[pnl.CUE_INPUT].path_afferents[0].sender.owner.name)
+print(hidden.input_ports[0].path_afferents[0].sender.owner.name)

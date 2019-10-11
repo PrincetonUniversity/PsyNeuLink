@@ -26,7 +26,7 @@ p = pnl.Process(
     target=0
 )
 
-print('reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
+print('reward prediction weights: \n', action_selection.input_port.path_afferents[0].matrix)
 print('target_mechanism weights: \n', action_selection.output_state.efferents[0].matrix)
 
 actions = ['left', 'middle', 'right']
@@ -64,11 +64,11 @@ def show_weights(system):
         '\npredicted reward:           {} '.format(
             action_selection.parameters.value.get(system),
             action_selection.output_state.parameters.value.get(system),
-            comparator.input_states[pnl.SAMPLE].parameters.value.get(system),
-            comparator.input_states[pnl.TARGET].parameters.value.get(system),
-            learn_mech.input_states[pnl.ACTIVATION_INPUT].parameters.value.get(system),
-            learn_mech.input_states[pnl.ACTIVATION_OUTPUT].parameters.value.get(system),
-            learn_mech.input_states[pnl.ERROR_SIGNAL].parameters.value.get(system),
+            comparator.input_ports[pnl.SAMPLE].parameters.value.get(system),
+            comparator.input_ports[pnl.TARGET].parameters.value.get(system),
+            learn_mech.input_ports[pnl.ACTIVATION_INPUT].parameters.value.get(system),
+            learn_mech.input_ports[pnl.ACTIVATION_OUTPUT].parameters.value.get(system),
+            learn_mech.input_ports[pnl.ERROR_SIGNAL].parameters.value.get(system),
             learn_mech.output_states[pnl.ERROR_SIGNAL].parameters.value.get(system),
             learn_mech.output_states[pnl.LEARNING_SIGNAL].parameters.value.get(system),
             action_selection.output_state.parameters.value.get(system)[np.nonzero(action_selection.output_state.parameters.value.get(system))][0]

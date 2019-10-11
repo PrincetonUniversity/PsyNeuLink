@@ -156,9 +156,9 @@ agent_comp.add_nodes([player_percept, predator_percept, prey_percept, trial_type
 
 agent_comp.add_node(action_mech, required_roles=[NodeRole.OUTPUT])
 
-a = MappingProjection(sender=player_percept, receiver=action_mech.input_states[0])
-b = MappingProjection(sender=predator_percept, receiver=action_mech.input_states[1])
-c = MappingProjection(sender=prey_percept, receiver=action_mech.input_states[2])
+a = MappingProjection(sender=player_percept, receiver=action_mech.input_ports[0])
+b = MappingProjection(sender=predator_percept, receiver=action_mech.input_ports[1])
+c = MappingProjection(sender=prey_percept, receiver=action_mech.input_ports[2])
 agent_comp.add_projections([a,b,c])
 
 

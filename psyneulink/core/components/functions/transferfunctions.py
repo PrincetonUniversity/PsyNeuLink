@@ -279,7 +279,7 @@ class Identity(TransferFunction):  # -------------------------------------------
         #       does not udpate its defaults shape
         from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
         if isinstance(self.owner, CompositionInterfaceMechanism):
-            variable = [state.defaults.value for state in self.owner.input_states]
+            variable = [state.defaults.value for state in self.owner.input_ports]
             # Python list does not care about ndarrays of different lengths
             # we do care, so convert to tuple to create struct
             if all(type(x) == np.ndarray for x in variable) and not all(len(x) == len(variable[0]) for x in variable):

@@ -103,7 +103,7 @@ def test_multilayer():
 
     def show_target():
         i = s.input
-        t = s.target_input_states[0].parameters.value.get(s)
+        t = s.target_input_ports[0].parameters.value.get(s)
         print('\nOLD WEIGHTS: \n')
         print('- Input Weights: \n', Input_Weights.get_mod_matrix(s))
         print('- Middle Weights: \n', Middle_Weights.get_mod_matrix(s))
@@ -280,7 +280,7 @@ def test_multilayer_log():
 
     def show_target():
         i = s.input
-        t = s.target_input_states[0].parameters.value.get(s)
+        t = s.target_input_ports[0].parameters.value.get(s)
         print('\nOLD WEIGHTS: \n')
         print('- Input Weights: \n', Input_Weights.get_mod_matrix(s))
         print('- Middle Weights: \n', Middle_Weights.get_mod_matrix(s))

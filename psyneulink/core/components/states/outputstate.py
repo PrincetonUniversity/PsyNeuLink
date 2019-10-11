@@ -44,7 +44,7 @@ If its **owner* is not specified, `initialization is deferred.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An OutputState must be owned by a `Mechanism <Mechanism>`.  When OutputState is specified in the constructor for a
-`Mechanism <Mechanism>` (see `below <InputState_Specification>`), it is automatically assigned to that Mechanism as
+`Mechanism <Mechanism>` (see `below <InputPort_Specification>`), it is automatically assigned to that Mechanism as
 its owner. If the OutputState is created directly, its `owner <OutputState.owner>` Mechanism can specified in the
 **owner** argument of its constructor, in which case it is assigned to the specified Mechanism.  Otherwise, its
 initialization is `deferred <State_Deferred_Initialization>` until
@@ -185,7 +185,7 @@ which it should project. Each of these is described below:
       * *PROJECTIONS* or *MECHANISMS*:<list of `Projections <Projection>` and/or `Mechanisms <Mechanism>`> - specifies
         one or more efferent `MappingProjections <MappingProjection>` from the OutputState, Mechanims that should
         receive them, and/or `ModulatoryProjections <ModulatoryProjection>` for it to receive;  this may be constrained
-        by or have consequences for the OutputState's `variable <InputState.variable>` and/or its `value
+        by or have consequences for the OutputState's `variable <InputPort.variable>` and/or its `value
         <OutputState.value>` (see `OutputState_Compatibility_and_Constraints`).
 
         .. note::
@@ -238,14 +238,14 @@ which it should project. Each of these is described below:
     Projection(s). Specifying an OutputState in this way creates both the OutputState and any of the specified or
     implied Projection(s) (if they don't already exist). `MappingProjections <MappingProjection>`
     are assigned to the OutputState's `efferents <OutputState.efferents>` attribute, and `GatingProjections
-    <GatingProjection>` to its `mod_afferents <InputState.mod_afferents>` attribute. Any of the following can be used
-    to specify an InputState by the Components that projection to it (see `below
+    <GatingProjection>` to its `mod_afferents <InputPort.mod_afferents>` attribute. Any of the following can be used
+    to specify an InputPort by the Components that projection to it (see `below
     <OutputState_Compatability_and_Constraints>` for an explanation of the relationship between the `variable` of these
     Components and the OutputState's `value <OutputState.value>`):
 
-    * **InputState, GatingSignal, Mechanism, or list with any of these** -- creates an OutputState with
-      the relevant Projection(s).  A `MappingProjection` is created to each InputState or ProcessingMechanism specified
-      (for a Mechanism, its `primary InputState <InputState_Primary>` is used). A `GatingProjection` is created for
+    * **InputPort, GatingSignal, Mechanism, or list with any of these** -- creates an OutputState with
+      the relevant Projection(s).  A `MappingProjection` is created to each InputPort or ProcessingMechanism specified
+      (for a Mechanism, its `primary InputPort <InputPort_Primary>` is used). A `GatingProjection` is created for
       each GatingSignal or GatingMechamism specified (for a GatingMechanism, its first GatingSignal is used).
     ..
     * **Projection** -- any form of `Projection specification <Projection_Specification>` can be used; creates an
@@ -258,7 +258,7 @@ which it should project. Each of these is described below:
       OutputState along with Projections to or from it in any of the following ways:
 
         * **2-item tuple:** *(<State name or list of State names>, <Mechanism>)* -- 1st item must be the name of an
-          `InputState` or `ModulatorySignal`, or a list of such names, and the 2nd item must be the Mechanism to
+          `InputPort` or `ModulatorySignal`, or a list of such names, and the 2nd item must be the Mechanism to
           which they all belong.  Projections of the relevant types are created for each of the specified States
           (see `State 2-item tuple <State_2_Item_Tuple>` for additional details).
 
@@ -273,9 +273,9 @@ which it should project. Each of these is described below:
           order listed), and can include the third:
 
             * **value, State specification, or list of State specifications** -- specifies either the `variable
-              <InputState.variable>` of the InputState, or one or more States that should project to it.  The State
+              <InputPort.variable>` of the InputPort, or one or more States that should project to it.  The State
               specification(s) can be a (State name, Mechanism) tuple (see above), and/or include Mechanisms, in which
-              case their `primary InputState <InputStatePrimary>` is used.  All of the State specifications must be
+              case their `primary InputPort <InputPortPrimary>` is used.  All of the State specifications must be
               consistent with (that is, their `value <State_Base.value>` must be compatible with the `variable
               <Projection_Base.variable>` of) the Projection specified in the fourth item if that is included.
 
@@ -285,7 +285,7 @@ which it should project. Each of these is described below:
             * **Projection specification** (optional) -- `specifies a Projection <Projection_Specification>` that
               must be compatible with the State specification(s) in the 1st item; if there is more than one
               State specified, and the Projection specification is used, all of the States
-              must be of the same type (i.e.,either InputStates or GatingSignals), and the `Projection
+              must be of the same type (i.e.,either InputPorts or GatingSignals), and the `Projection
               Specification <Projection_Specification>` cannot be an instantiated Projection (since a
               Projection cannot be assigned more than one `receiver <Projection_Base.receiver>`).
 
@@ -305,7 +305,7 @@ below, starting with constraints that are given the highest precedence:
     <OutputState.value>` (see `above <OutputState_Variable_and_Value>`).  Therefore, any specifications of the
     OutputState relevant to its `value <OutputState.value>` must also be compatible with these factors (for example,
     `specifying it by variable <OutputState_Specification_by_Variable>` or by a `MappingProjection` or an
-    `InputState` to which it should project (see `above <OutputState_Projection_Destination_Specification>`).
+    `InputPort` to which it should project (see `above <OutputState_Projection_Destination_Specification>`).
 
     COMMENT:
     ***XXX EXAMPLE HERE
@@ -329,10 +329,10 @@ below, starting with constraints that are given the highest precedence:
     Component is a:
 
 
-    * **InputState or Mechanism** (for which its `primary InputState <InputState_Primary>` is used) -- if its
+    * **InputPort or Mechanism** (for which its `primary InputPort <InputPort_Primary>` is used) -- if its
       `variable <State_Base.variable>` matches the format of the OutputState's `value <OutputState.value>`, a
       `MappingProjection` is created using an `IDENTITY_MATRIX`;  otherwise, a `FULL_CONNECTIVITY_MATRIX` is used
-      that maps the OutputState's `value <OutputState.value>` to the InputState's `variable <State_Base.variable>`.
+      that maps the OutputState's `value <OutputState.value>` to the InputPort's `variable <State_Base.variable>`.
 
     * **MappingProjection** -- if its `matrix <MappingProjection.matrix>` is specified, then the `sender dimensionality
       <Mapping_Matrix_Dimensionality>` of the matrix must be the same as that of the OutputState's `value
@@ -343,7 +343,7 @@ below, starting with constraints that are given the highest precedence:
       <MappingProjection_Deferred_Initialization>` until its `receiver <MappingProjection.receiver>` is specified.
 
     * **GatingProjection, GatingSignal or GatingMechanism** -- any of these can be used to specify an OutputState;
-      their `value` does not need to be compatible with the OutputState's `variable <InputState.variable>` or
+      their `value` does not need to be compatible with the OutputState's `variable <InputPort.variable>` or
       `value <OutputState.value>`, however it does have to be compatible with the `modulatory parameter
       <Function_Modulatory_Params>` of the OutputState's `function <OutputState.function>`.
 
@@ -553,7 +553,7 @@ COMMENT
 .. _OutputState_Modulatory_Projections:
 
 * `mod_afferents <OutputState.mod_afferents>` -- `GatingProjections <GatingProjection>` that project to the OutputState,
-  the `value <GatingProjection.value>` of which can modify the OutputState's `value <InputState.value>` (see the
+  the `value <GatingProjection.value>` of which can modify the OutputState's `value <InputPort.value>` (see the
   descriptions of Modulation under `ModulatorySignals <ModulatorySignal_Modulation>` and `GatingSignals
   <GatingSignal_Modulation>` for additional details).  If the OutputState receives more than one GatingProjection,
   their values are combined before they are used to modify the `value <OutputState.value>` of the OutputState.
@@ -596,7 +596,7 @@ from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.states.state import State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ALL, ASSIGN, CALCULATE, CONTEXT, CONTROL_SIGNAL, FUNCTION, GATING_SIGNAL, INDEX, INPUT_STATE, INPUT_STATES, \
+    ALL, ASSIGN, CALCULATE, CONTEXT, CONTROL_SIGNAL, FUNCTION, GATING_SIGNAL, INDEX, INPUT_PORT, INPUT_PORTS, \
     MAPPING_PROJECTION, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MECHANISM_VALUE, NAME, \
     OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, OUTPUT_STD_DEV, OUTPUT_VARIANCE, \
     OWNER_VALUE, PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, PROJECTION_TYPE, \
@@ -856,7 +856,7 @@ class OutputState(State_Base):
     projections : list of Projection specifications
         species the `MappingProjection(s) <MappingProjection>` to be sent by the OutputState, and/or
         `GatingProjections(s) <GatingProjection>` to be received (see `OutputState_Projections` for additional details);
-        these will be listed in its `efferents <OutputState.efferents>` and `mod_afferents <InputState.mod_afferents>`
+        these will be listed in its `efferents <OutputState.efferents>` and `mod_afferents <InputPort.mod_afferents>`
         attributes, respectively (see `OutputState_Projections` for additional details).
 
     params : Dict[param keyword: param value] : default None
@@ -925,7 +925,7 @@ class OutputState(State_Base):
         the name of the OutputState; if it is not specified in the **name** argument of the constructor, a default is
         assigned by the OutputStateRegistry of the Mechanism to which the OutputState belongs.  Note that most
         Mechanisms automatically create one or more `Standard OutputStates <OutputState_Standard>`, that have
-        pre-specified names.  However, if any OutputStates are specified in the **input_states** argument of the
+        pre-specified names.  However, if any OutputStates are specified in the **input_ports** argument of the
         Mechanism's constructor, those replace its Standard OutputStates (see `note
         <Mechanism_Default_State_Suppression_Note>`);  `standard naming conventions <Naming>` apply to the
         OutputStates specified, as well as any that are added to the Mechanism once it is created.
@@ -950,8 +950,8 @@ class OutputState(State_Base):
 
     # stateAttributes = State_Base.stateAttributes | {INDEX, ASSIGN}
 
-    connectsWith = [INPUT_STATE, GATING_SIGNAL, CONTROL_SIGNAL]
-    connectsWithAttribute = [INPUT_STATES]
+    connectsWith = [INPUT_PORT, GATING_SIGNAL, CONTROL_SIGNAL]
+    connectsWithAttribute = [INPUT_PORTS]
     projectionSocket = RECEIVER
     modulators = [GATING_SIGNAL, CONTROL_SIGNAL]
     canReceive = modulators
@@ -1120,7 +1120,7 @@ class OutputState(State_Base):
         Returns redundant Projection if found, otherwise False.
         """
 
-        # FIX: 7/22/19 - CHECK IF RECEIVER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_INPUT_STATE
+        # FIX: 7/22/19 - CHECK IF RECEIVER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_INPUT_PORT
         duplicate = next(iter([proj for proj in self.efferents
                                if ((proj.receiver == projection.receiver and proj != projection)
                                    or (proj.initialization_status == ContextFlags.DEFERRED_INIT
@@ -1158,8 +1158,8 @@ class OutputState(State_Base):
         """
         # FIX: ADD FACILITY TO SPECIFY WEIGHTS AND/OR EXPONENTS FOR INDIVIDUAL OutputState SPECS
         #      CHANGE EXPECTATION OF *PROJECTIONS* ENTRY TO BE A SET OF TUPLES WITH THE WEIGHT AND EXPONENT FOR IT
-        #      THESE CAN BE USED BY THE InputState's LinearCombination Function
-        #          (AKIN TO HOW THE MECHANISM'S FUNCTION COMBINES InputState VALUES)
+        #      THESE CAN BE USED BY THE InputPort's LinearCombination Function
+        #          (AKIN TO HOW THE MECHANISM'S FUNCTION COMBINES InputPort VALUES)
         #      THIS WOULD ALLOW FULLY GENEREAL (HIEARCHICALLY NESTED) ALGEBRAIC COMBINATION OF INPUT VALUES
         #      TO A MECHANISM
         from psyneulink.core.components.projections.projection import _parse_connection_specs, ProjectionTuple
@@ -1424,7 +1424,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
         else:
             owner_value = converted_to_2d
 
-    # This allows method to be called by Mechanism.add_input_states() with set of user-specified output_states,
+    # This allows method to be called by Mechanism.add_input_ports() with set of user-specified output_states,
     #    while calls from init_methods continue to use owner.output_states (i.e., OutputState specifications
     #    assigned in the **output_states** argument of the Mechanism's constructor)
     output_states = output_states or owner.output_states

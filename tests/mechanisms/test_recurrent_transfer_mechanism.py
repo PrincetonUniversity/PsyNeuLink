@@ -100,7 +100,7 @@ class TestRecurrentTransferMechanismInputs:
         )
         np.testing.assert_allclose(R.recurrent_projection.matrix, R.matrix)
         assert R.recurrent_projection.sender is R.output_state
-        assert R.recurrent_projection.receiver is R.input_state
+        assert R.recurrent_projection.receiver is R.input_port
 
     @pytest.mark.mechanism
     @pytest.mark.recurrent_transfer_mechanism
@@ -874,7 +874,7 @@ class TestRecurrentTransferMechanismInSystem:
             ]
         )
         np.testing.assert_allclose(R.recurrent_projection.matrix, R.matrix)
-        np.testing.assert_allclose(R.input_state.path_afferents[0].matrix, R.matrix)
+        np.testing.assert_allclose(R.input_port.path_afferents[0].matrix, R.matrix)
 
         # Test that activity is properly computed prior to learning
         p = Process(pathway=[R])
@@ -1088,28 +1088,28 @@ class TestClip:
         assert np.allclose(R.execute([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
                            [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])
 
-class TestRecurrentInputState:
+class TestRecurrentInputPort:
 
     def test_ris_simple(self):
         R2 = RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
                                             matrix=[[1.0, 2.0, 3.0],
                                                     [2.0, 1.0, 2.0],
                                                     [3.0, 2.0, 1.0]],
-                                            has_recurrent_input_state=True)
+                                            has_recurrent_input_port=True)
         R2.execute(input=[1, 3, 2])
         p2 = Process(pathway=[R2])
         s2 = System(processes=[p2])
         s2.run(inputs=[[1, 3, 2]])
         np.testing.assert_allclose(R2.parameters.value.get(s2), [[14., 12., 13.]])
-        assert len(R2.input_states) == 2
-        assert "Recurrent Input State" not in R2.input_state.name  # make sure recurrent input state isn't primary
+        assert len(R2.input_ports) == 2
+        assert "Recurrent Input State" not in R2.input_port.name  # make sure recurrent input state isn't primary
 
 
 class TestCustomCombinationFunction:
 
     def test_rt_without_custom_comb_fct(self):
         R1 = RecurrentTransferMechanism(
-                has_recurrent_input_state=True,
+                has_recurrent_input_port=True,
                 size=2,
         )
         result = R1.execute([1,2])
@@ -1119,7 +1119,7 @@ class TestCustomCombinationFunction:
         def my_fct(x):
             return x[0] * x[1] if len(x) == 2 else x[0]
         R2 = RecurrentTransferMechanism(
-                has_recurrent_input_state=True,
+                has_recurrent_input_port=True,
                 size=2,
                 combination_function=my_fct
         )

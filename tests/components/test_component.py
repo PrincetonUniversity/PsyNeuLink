@@ -20,13 +20,13 @@ class TestComponent:
         assert "Unrecognized arguments in constructor for MY_MECH (type: ProcessingMechanism): 'flim_flam, grumblabble'"
 
     def test_component_execution_counts_for_standalone_mechanism(self):
-        """Note: input_state should not update execution count, since it has no afferents"""
+        """Note: input_port should not update execution count, since it has no afferents"""
 
         T = pnl.TransferMechanism()
 
         T.execute()
         assert T.execution_count == 1
-        assert T.input_state.execution_count == 0
+        assert T.input_port.execution_count == 0
 
         # skipped (0 executions) because we bypass execute when no afferents, and
         # function._is_identity is satisfied (here, Linear function with slope 0 and intercept 1)
@@ -36,13 +36,13 @@ class TestComponent:
 
         T.execute()
         assert T.execution_count == 2
-        assert T.input_state.execution_count == 0
+        assert T.input_port.execution_count == 0
         assert T.parameter_states[pnl.SLOPE].execution_count == 0
         assert T.output_state.execution_count == 0
 
         T.execute()
         assert T.execution_count == 3
-        assert T.input_state.execution_count == 0
+        assert T.input_port.execution_count == 0
         assert T.parameter_states[pnl.SLOPE].execution_count == 0
         assert T.output_state.execution_count == 0
 
@@ -59,19 +59,19 @@ class TestComponent:
 
         c.run(input_dict)
         assert T2.execution_count == 1
-        assert T2.input_state.execution_count == 1
+        assert T2.input_port.execution_count == 1
         assert T2.parameter_states[pnl.SLOPE].execution_count == 0
         assert T2.output_state.execution_count == 0
 
         c.run(input_dict)
         assert T2.execution_count == 2
-        assert T2.input_state.execution_count == 2
+        assert T2.input_port.execution_count == 2
         assert T2.parameter_states[pnl.SLOPE].execution_count == 0
         assert T2.output_state.execution_count == 0
 
         c.run(input_dict)
         assert T2.execution_count == 3
-        assert T2.input_state.execution_count == 3
+        assert T2.input_port.execution_count == 3
         assert T2.parameter_states[pnl.SLOPE].execution_count == 0
         assert T2.output_state.execution_count == 0
 

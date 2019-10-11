@@ -127,7 +127,7 @@ def print_header(system):
 
 def show_target():
     i = mySystem.input
-    t = mySystem.target_input_states[0].value
+    t = mySystem.target_input_ports[0].value
     print('\nOLD WEIGHTS: \n')
     print('- Input Weights: \n', Input_Weights.matrix)
     print('- Middle Weights: \n', Middle_Weights.matrix)

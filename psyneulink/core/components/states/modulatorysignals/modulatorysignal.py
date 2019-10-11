@@ -42,12 +42,12 @@ each of which is  associated wth a particular type of `ModulatoryMechanism <Modu
     of the `ControlMechanism <ControlMechanism>` to which it belongs, and uses it to modulate the parameter of a
     `Mechanism <Mechanism>` or its `function <Mechanism_Base.function>` (and thereby the `value
     <Mechanism_Base.value>` of that Mechanism), or a parameter of the `function <State_Base.function>` one of the
-    Mechanism's `InputStates <InputState>` or `OutputStates <OutputState>` (and thereby the `value <State_Base.value>`
+    Mechanism's `InputPorts <InputPort>` or `OutputStates <OutputState>` (and thereby the `value <State_Base.value>`
     of the corresponding State).
 ..
 * `GatingSignal` takes the `allocation <GatingSignal.allocation>` assigned to it by the `function
     <GatingMechanism.function>` of the `GatingMechanism` to which it belongs, and uses it to modulate the parameter
-    of the `function <State_Base.function>` of an `InputState` or `OutputState` (and hence that State's `value
+    of the `function <State_Base.function>` of an `InputPort` or `OutputState` (and hence that State's `value
     <State_Base.value>`).  A GatingMechanism and GatingSignal can be thought of as implementing a form of control
     specialized for gating the input to and/or output of a Mechanism.
 ..
@@ -124,7 +124,7 @@ Projections when creating a State.
 Although a ModulatorySignal can be assigned more than one `ModulatoryProjection <ModulatoryProjection>`,
 all of those Projections receive and convey the same modulatory `value <ModulatorySignal.value>` from the
 ModulatorySignal, and use the same form of `modulation <ModulatorySignal_Modulation>`.  This is a common use for some
-ModulatorySignals (e.g., the use of a single `GatingSignal` to gate multiple `InputState(s) <InputState>` or
+ModulatorySignals (e.g., the use of a single `GatingSignal` to gate multiple `InputPort(s) <InputPort>` or
 `OutputState(s) <OutputState>`), but requires more specialized circumstances for others (e.g., the use of a single
 `LearningSignal` for more than one `MappingProjection`, or a single `ControlSignal` for the parameters of more than
 one Mechanism or function).
@@ -157,7 +157,7 @@ ModulatorySignals used and the type of State modulated:
     in turn, determines how it computes the Mechanism's `value <Mechanism_Base.value>`;
 
   * **modulation of a** `Mechanism`\\s input or output -- a `GatingSignal` is specialized for this purpose, though a
-    `ControlSignal` can also be used;  these modulate an `InputState` of the Mechanism, that determines the
+    `ControlSignal` can also be used;  these modulate an `InputPort` of the Mechanism, that determines the
     Mechanism's `variable <Mechanism_Base.variable>` used as the input to its `function <Mechanism_Base.function>`,
     or an `OutputState` of the Mechanism, that determines how the `value <Mechanism_Base.value>` of the Mechanism
     (i.e., the result of its `function <Mechanism_Base.function>`) is used to generate the output of the Mechanism.
@@ -181,10 +181,10 @@ and shown in the `figure below <ModulatorySignal_Anatomy_Figure>`.
   +====================================+========================+==============================+========================================+============================+
   | Modulate the parameter of a        |                        |                              | Mechanism `ParameterState` (by default)|                            |
   | Mechanism's `function              | `ControlSignal` (blue) |     *MULTIPLICATIVE*         | but can also be an                     |     `Linear` (`slope`)     |
-  | <Mechanism_Base.function>`         |                        |                              | `InputState` or `OutputState`          |                            |
+  | <Mechanism_Base.function>`         |                        |                              | `InputPort` or `OutputState`          |                            |
   +------------------------------------+------------------------+------------------------------+----------------------------------------+----------------------------+
   | Modulate the input or output of    |                        |                              |                                        |                            |
-  | a Mechanism's `function            | `GatingSignal` (brown) |     *MULTIPLICATIVE*         |  Mechanism `InputState`/`OutputState`  |     `Linear` (`slope`)     |
+  | a Mechanism's `function            | `GatingSignal` (brown) |     *MULTIPLICATIVE*         |  Mechanism `InputPort`/`OutputState`  |     `Linear` (`slope`)     |
   | <Mechanism_Base.function>`         |                        |                              |                                        |                            |
   +------------------------------------+------------------------+------------------------------+----------------------------------------+----------------------------+
   | Modulate a MappingProjection's     |                        |                              |                                        |   `AccumulatorIntegrator`  |
@@ -212,7 +212,7 @@ detail under `ModulatorySignal_Implementation`.
    <ModulatorySignal_Types>` for each type of ModulatorySignal, and the default Function and modulated parameter of
    its recipient State are listed in the `table <ModulatorySignal_Table>` above. Note that the `ControlMechanism`
    and `ControlSignal <ControlSignal>` are shown in the figure modulating the `ParameterState` of a Mechanism;
-   however, like Gating components, they can also be used to modulate `InputStates <InputState>` and `OutputStates
+   however, like Gating components, they can also be used to modulate `InputPorts <InputPort>` and `OutputStates
    <OutputState>`. The `figure <ModulatorySignal_Detail_Figure>` below shows a detailed view of how ModulatorySignals
    modulate the parameters of a State's `function <State_Base.function>`.
 
@@ -557,12 +557,12 @@ class ModulatorySignal(OutputState):
 
         * one `ModulatoryProjection <ModulatoryProjction>` -- the following template is used:
           "<target Mechanism name> <target State name> <ModulatorySignal type name>"
-          (for example, ``'Decision[drift_rate] ControlSignal'``, or ``'Input Layer[InputState-0] GatingSignal'``);
+          (for example, ``'Decision[drift_rate] ControlSignal'``, or ``'Input Layer[InputPort-0] GatingSignal'``);
 
         * multiple ModulatoryProjections, all to States of the same Mechanism -- the following template is used:
           "<target Mechanism name> (<target State name>,...) <ModulatorySignal type name>"
           (for example, ``Decision (drift_rate, threshold) ControlSignal``, or
-          ``'Input Layer[InputState-0, InputState-1] GatingSignal'``);
+          ``'Input Layer[InputPort-0, InputPort-1] GatingSignal'``);
 
         * multiple ModulatoryProjections to States of different Mechanisms -- the following template is used:
           "<owner Mechanism's name> divergent <ModulatorySignal type name>"
@@ -715,13 +715,13 @@ class ModulatorySignal(OutputState):
             receiver_owner_receiver_names.append("{}[{}]".format(receiver_owner_name, receiver_name))
 
         # Only one ModulatoryProjection: "<target mech> <State.name> <ModulatorySignal>"
-        # (e.g., "Decision drift_rate ControlSignal", or "Input Layer InputState-0 GatingSignal")
+        # (e.g., "Decision drift_rate ControlSignal", or "Input Layer InputPort-0 GatingSignal")
         if len(receiver_owner_receiver_names) == 1:
             default_name = receiver_owner_receiver_names[0] + " " + class_name
 
         # Multiple ModulatoryProjections all for same mech: "<target mech> (<State.name>,...) <ModulatorySignal>"
         # (e.g., "Decision (drift_rate, threshold) ControlSignal" or
-        #        "InputLayer (InputState-0, InputState-0) ControlSignal")
+        #        "InputLayer (InputPort-0, InputPort-0) ControlSignal")
         elif all(name is receiver_owner_names[0] for name in receiver_owner_names):
             default_name = "{}[{}] {}".format(receiver_owner_names[0], ", ".join(receiver_names), class_name)
 

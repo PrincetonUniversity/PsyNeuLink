@@ -65,9 +65,9 @@ Execution
 
 Three main tasks are completed each time a ProcessingMechanism executes:
 
-1. The ProcessingMechanism updates its `InputState`(s), and their values are used to assemble `variable
-<ProcessingMechanism.variable>`. Each InputState `value <InputState.value>` (often there is only one `InputState`) is
-added to an outer array, such that each item of variable corresponds to an InputState `value <InputState.value>`.
+1. The ProcessingMechanism updates its `InputPort`(s), and their values are used to assemble `variable
+<ProcessingMechanism.variable>`. Each InputPort `value <InputPort.value>` (often there is only one `InputPort`) is
+added to an outer array, such that each item of variable corresponds to an InputPort `value <InputPort.value>`.
 
 2. The ProcessingMechanism's `variable <ProcessingMechanism.variable>` is handed off as the input to the
 ProcessingMechanism's `function <ProcessingMechanism.function>`, and the function executes.
@@ -139,7 +139,7 @@ class ProcessingMechanism_Base(Mechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_states=None,
+                 input_ports=None,
                  function=None,
                  output_states=None,
                  params=None,
@@ -162,7 +162,7 @@ class ProcessingMechanism_Base(Mechanism_Base):
 
         super().__init__(default_variable=default_variable,
                          size=size,
-                         input_states=input_states,
+                         input_ports=input_ports,
                          function=function,
                          output_states=output_states,
                          params=params,
@@ -284,7 +284,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_states:tc.optional(tc.any(list, dict))=None,
+                 input_ports:tc.optional(tc.any(list, dict))=None,
                  output_states:tc.optional(tc.any(str, Iterable))=None,
                  function=Linear,
                  params=None,
@@ -293,13 +293,13 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                  **kwargs):
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
-                                                  input_states=input_states,
+                                                  input_ports=input_ports,
                                                   output_states=output_states,
                                                   params=params)
 
         super(ProcessingMechanism, self).__init__(default_variable=default_variable,
                                                   size=size,
-                                                  input_states=input_states,
+                                                  input_ports=input_ports,
                                                   function=function,
                                                   output_states=output_states,
                                                   params=params,

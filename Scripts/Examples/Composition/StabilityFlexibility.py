@@ -111,7 +111,7 @@ stimulusInfo.set_log_conditions([pnl.RESULT])
 controlledElement = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
                                           size = 2,
                                           function=pnl.Linear(slope=1, intercept= 0),
-                                          input_states=pnl.InputState(combine=pnl.PRODUCT),
+                                          input_ports=pnl.InputPort(combine=pnl.PRODUCT),
                                           output_states = [pnl.RESULT],
                                           name = 'Stimulus Info * Activity')
 
@@ -180,7 +180,7 @@ objective_mech = pnl.ObjectiveMechanism(monitor=[inputLayer, stimulusInfo,
                                         )
 
 meta_controller = pnl.OptimizationControlMechanism(agent_rep=stabilityFlexibility,
-                                                   features=[inputLayer.input_state, stimulusInfo.input_state],
+                                                   features=[inputLayer.input_port, stimulusInfo.input_port],
                                                    feature_function=pnl.Buffer(history=3),
                                                    objective_mechanism=objective_mech,
                                                    function=pnl.GridSearch(),
@@ -192,8 +192,8 @@ stabilityFlexibility.enable_model_based_optimizer = True
 
 print("Beginning of Run")
 
-for i in range(1, len(stabilityFlexibility.model_based_optimizer.input_states)):
-    stabilityFlexibility.model_based_optimizer.input_states[i].function.reinitialize()
+for i in range(1, len(stabilityFlexibility.model_based_optimizer.input_ports)):
+    stabilityFlexibility.model_based_optimizer.input_ports[i].function.reinitialize()
 
 stabilityFlexibility.show_graph(show_model_based_optimizer=True)
 

@@ -90,8 +90,8 @@ the Logs of their `States <State>`.  Specifically the Logs of these Components c
 
   * *value* -- the `value <Mechanism_Base.value>` of the Mechanism.
 
-  * *InputStates* -- the `value <InputState.value>` of any `InputState` (listed in the Mechanism's `input_states
-    <Mechanism_Base.input_states>` attribute).
+  * *InputPorts* -- the `value <InputPort.value>` of any `InputPort` (listed in the Mechanism's `input_ports
+    <Mechanism_Base.input_ports>` attribute).
 
   * *ParameterStates* -- the `value <ParameterState.value>` of `ParameterState` (listed in the Mechanism's
     `parameter_states <Mechanism_Base.parameter_states>` attribute);  this includes all of the `user configurable
@@ -177,9 +177,9 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
     COMMENT
     # Show the loggable items (and current condition assignments) for each Mechanism and the Projection between them:
     >> my_mech_A.loggable_items
-    {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'integration_rate': 'OFF', 'intercept': 'OFF', 'noise': 'OFF'}
+    {'InputPort-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'integration_rate': 'OFF', 'intercept': 'OFF', 'noise': 'OFF'}
     >> my_mech_B.loggable_items
-    {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'integration_rate': 'OFF'}
+    {'InputPort-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'integration_rate': 'OFF'}
     >> proj_A_to_B.loggable_items
     {'value': 'OFF', 'matrix': 'OFF'}
 
@@ -706,9 +706,9 @@ class Log:
         return self.owner._loggable_parameters
 
     @property
-    def input_state_items(self):
+    def input_port_items(self):
         try:
-            return self.owner.input_states.names
+            return self.owner.input_ports.names
         except AttributeError:
             return []
 
@@ -735,7 +735,7 @@ class Log:
 
     @property
     def all_items(self):
-        return sorted(self.parameter_items + self.input_state_items + self.output_state_items + self.parameter_state_items + self.function_items)
+        return sorted(self.parameter_items + self.input_port_items + self.output_state_items + self.parameter_state_items + self.function_items)
 
     def _get_parameter_from_item_string(self, string):
         # KDM 8/15/18: can easily cache these results if it occupies too much time, assuming
@@ -752,7 +752,7 @@ class Log:
             pass
 
         try:
-            return self.owner.input_states[string].parameters.value
+            return self.owner.input_ports[string].parameters.value
         except (AttributeError, TypeError):
             pass
 

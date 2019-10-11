@@ -68,14 +68,14 @@ w_hdc = pnl.MappingProjection(
     name='hidden_to_cue',
     matrix=np.random.randn(n_hidden, n_hidden)*wts_init_scale,
     sender=hidden,
-    receiver=ContentAddressableMemory.input_states[pnl.CUE_INPUT]
+    receiver=ContentAddressableMemory.input_ports[pnl.CUE_INPUT]
 )
 
 w_hda = pnl.MappingProjection(
     name='hidden_to_assoc',
     matrix=np.random.randn(n_hidden, n_hidden)*wts_init_scale,
     sender=hidden,
-    receiver=ContentAddressableMemory.input_states[pnl.ASSOC_INPUT]
+    receiver=ContentAddressableMemory.input_ports[pnl.ASSOC_INPUT]
 )
 
 
@@ -100,54 +100,54 @@ comp.add_projection(sender=ContentAddressableMemory, projection=w_dh, receiver=h
 comp.add_projection(
     sender=hidden,
     projection=w_hdc,
-    receiver=ContentAddressableMemory.input_states[pnl.CUE_INPUT]
+    receiver=ContentAddressableMemory.input_ports[pnl.CUE_INPUT]
 )
 comp.add_projection(
     sender=hidden,
     projection=w_hda,
-    receiver=ContentAddressableMemory.input_states[pnl.ASSOC_INPUT]
+    receiver=ContentAddressableMemory.input_ports[pnl.ASSOC_INPUT]
 )
 # show graph
 comp.show_graph(show_node_structure=True)
 
 # # comp.show()
 # # the required inputs for ContentAddressableMemory
-# print('ContentAddressableMemory input_states: ', ContentAddressableMemory.input_states.names)
+# print('ContentAddressableMemory input_ports: ', ContentAddressableMemory.input_ports.names)
 #
 # # currently, ContentAddressableMemory receive info from the following node
 # print('ContentAddressableMemory receive: ')
-# for ContentAddressableMemory_input in ContentAddressableMemory.input_states.names:
-#     afferents = ContentAddressableMemory.input_states[ContentAddressableMemory_input].path_afferents
+# for ContentAddressableMemory_input in ContentAddressableMemory.input_ports.names:
+#     afferents = ContentAddressableMemory.input_ports[ContentAddressableMemory_input].path_afferents
 #     if len(afferents) == 0:
 #         print(f'- {ContentAddressableMemory_input}: NA')
 #     else:
 #         sending_node_name = afferents[0].sender.owner.name
 #         print(f'- {ContentAddressableMemory_input}: {sending_node_name}')
 #
-# print('ContentAddressableMemory cue input: ', ContentAddressableMemory.input_states.names)
+# print('ContentAddressableMemory cue input: ', ContentAddressableMemory.input_ports.names)
 #
 # print('hidden receive: ')
-# for hidden_afferent in hidden.input_states[0].path_afferents:
+# for hidden_afferent in hidden.input_ports[0].path_afferents:
 #     print('- ', hidden_afferent.sender.owner.name)
 
 # comp.show()
  # the required inputs for ContentAddressableMemory
-print('ContentAddressableMemory input_states: ', ContentAddressableMemory.input_states.names)
+print('ContentAddressableMemory input_ports: ', ContentAddressableMemory.input_ports.names)
   
 # currently, ContentAddressableMemory receive info from the following node
 print('ContentAddressableMemory receive: ')
-for ContentAddressableMemory_input in ContentAddressableMemory.input_states.names:
-    afferents = ContentAddressableMemory.input_states[ContentAddressableMemory_input].path_afferents
+for ContentAddressableMemory_input in ContentAddressableMemory.input_ports.names:
+    afferents = ContentAddressableMemory.input_ports[ContentAddressableMemory_input].path_afferents
     if len(afferents) == 0:
         print(f'- {ContentAddressableMemory_input}: NA')
     else:
         sending_node_name = afferents[0].sender.owner.name
         print(f'- {ContentAddressableMemory_input}: {sending_node_name}')
 
-print('ContentAddressableMemory cue input: ', ContentAddressableMemory.input_states.names)
+print('ContentAddressableMemory cue input: ', ContentAddressableMemory.input_ports.names)
 
 print('hidden receive: ')
-for hidden_afferent in hidden.input_states[0].path_afferents:
+for hidden_afferent in hidden.input_ports[0].path_afferents:
     print('- ', hidden_afferent.sender.owner.name)
 
 print(ContentAddressableMemory.output_states.names)
@@ -163,7 +163,7 @@ print(input)
 print(ContentAddressableMemory.output_states.values)
 
 input = [0,1]
-print(ContentAddressableMemory.input_states)
+print(ContentAddressableMemory.input_ports)
 print(hidden.value)
 print(output.value)
 

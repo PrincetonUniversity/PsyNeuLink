@@ -350,7 +350,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
 
     recurrent_projection : AutoAssociativeProjection
         an `AutoAssociativeProjection` that projects from the Mechanism's `primary OutputState <OutputState_Primary>`
-        back to its `primary inputState <Mechanism_InputStates>`.
+        back to its `primary inputPort <Mechanism_InputPorts>`.
 
     integrator_function :  IntegratorFunction
         the `IntegratorFunction` used when `integrator_mode <KWTAMechanism.integrator_mode>` is set to
@@ -572,7 +572,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
                  average_based=False,
                  inhibition_only=True,
                  clip=None,
-                 input_states:tc.optional(tc.any(list, dict)) = None,
+                 input_ports:tc.optional(tc.any(list, dict)) = None,
                  output_states:tc.optional(tc.any(str, Iterable))=RESULT,
                  params=None,
                  name=None,
@@ -585,7 +585,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
         if output_states is None:
             output_states = [RESULT]
 
-        params = self._assign_args_to_param_dicts(input_states=input_states,
+        params = self._assign_args_to_param_dicts(input_ports=input_ports,
                                                   integrator_mode=integrator_mode,
                                                   k_value=k_value,
                                                   threshold=threshold,
@@ -602,7 +602,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
 
         super().__init__(default_variable=default_variable,
                          size=size,
-                         input_states=input_states,
+                         input_ports=input_ports,
                          function=function,
                          matrix=matrix,
                          auto=auto,
@@ -629,7 +629,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
 
         return self._kwta_scale(variable, context=context)
 
-    # adds indexOfInhibitionInputState to the attributes of KWTAMechanism
+    # adds indexOfInhibitionInputPort to the attributes of KWTAMechanism
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
         super()._instantiate_attributes_before_function(function=function, context=context)
@@ -637,7 +637,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
         # this index is saved so the KWTAMechanism mechanism knows which input state represents inhibition
         # (it will be wrong if the user deletes an input state: currently, deleting input states is not supported,
         # so it shouldn't be a problem)
-        self.indexOfInhibitionInputState = len(self.input_states) - 1
+        self.indexOfInhibitionInputPort = len(self.input_ports) - 1
 
     def _kwta_scale(self, current_input, context=None):
         k_value = self.get_current_mechanism_param("k_value", context)
@@ -843,7 +843,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
         #         else:
         #             noise = noise()
         #
-        #     current_input = self.input_state.value + noise
+        #     current_input = self.input_port.value + noise
         # else:
         #     raise MechanismError("time_scale not specified for KWTAMechanism")
         #
@@ -883,7 +883,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
     #         matrix = get_matrix(matrix, size, size)
     #
     #     return AutoAssociativeProjection(sender=mech,
-    #                                      receiver=mech.input_states[mech.indexOfInhibitionInputState],
+    #                                      receiver=mech.input_ports[mech.indexOfInhibitionInputPort],
     #                                      matrix=matrix,
     #                                      name=mech.name + ' recurrent projection')
 

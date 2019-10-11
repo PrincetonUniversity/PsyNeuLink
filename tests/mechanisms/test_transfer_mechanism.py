@@ -15,7 +15,7 @@ from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
 from psyneulink.core.components.process import Process
-from psyneulink.core.components.states.inputstate import InputState
+from psyneulink.core.components.states.inputport import InputPort
 from psyneulink.core.components.system import System
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.keywords import INSTANTANEOUS_MODE_VALUE, INTEGRATOR_MODE_VALUE, REINITIALIZE
@@ -1502,7 +1502,7 @@ class TestTransferMechanismSize:
         assert len(T.size) == 1 and T.size[0] == 2 and len(T.params['size']) == 1 and T.params['size'][0] == 2
 
 
-class TestTransferMechanismMultipleInputStates:
+class TestTransferMechanismMultipleInputPorts:
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -1558,8 +1558,8 @@ class TestTransferMechanismMultipleInputStates:
     @pytest.mark.parametrize('mode', ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
-    def test_multiple_output_states_for_multiple_input_states(self, benchmark, mode):
-        T = TransferMechanism(input_states=['a','b','c'])
+    def test_multiple_output_states_for_multiple_input_ports(self, benchmark, mode):
+        T = TransferMechanism(input_ports=['a','b','c'])
         if mode == 'Python':
             val = benchmark(T.execute, [[1], [2], [3]])
             assert all(a==b for a,b in zip(T.output_values,val))
@@ -1579,7 +1579,7 @@ class TestTransferMechanismMultipleInputStates:
     # @pytest.mark.mimo
     # def test_OWNER_VALUE_standard_output_state(self):
     #     from psyneulink.core.globals.keywords import OWNER_VALUE
-    #     T = TransferMechanism(input_states=[[[0],[0]],'b','c'],
+    #     T = TransferMechanism(input_ports=[[[0],[0]],'b','c'],
     #                               output_states=OWNER_VALUE)
     #     print(T.value)
     #     val = T.execute([[[1],[4]],[2],[3]])
@@ -1984,9 +1984,9 @@ class TestClip:
 
 
 class TestOutputStates:
-    def test_output_states_match_input_states(self):
+    def test_output_states_match_input_ports(self):
         T = TransferMechanism(default_variable=[[0], [0], [0]])
-        assert len(T.input_states) == 3
+        assert len(T.input_ports) == 3
         assert len(T.output_states) == 3
 
         T.execute(input=[[1.0], [2.0], [3.0]])
@@ -1996,19 +1996,19 @@ class TestOutputStates:
         assert np.allclose(T.output_states[1].value, [2.0])
         assert np.allclose(T.output_states[2].value, [3.0])
 
-    def test_add_input_states(self):
+    def test_add_input_ports(self):
         T = TransferMechanism(default_variable=[[0], [0], [0]])
-        I = InputState(owner=T,
-                       variable=[4.0],
-                       reference_value=[4.0],
-                       name="extra input state")
+        I = InputPort(owner=T,
+                      variable=[4.0],
+                      reference_value=[4.0],
+                      name="extra input state")
         T.add_states([I])
-        print("Number of input states: ", len(T.input_states))
-        print(T.input_states, "\n\n")
+        print("Number of input states: ", len(T.input_ports))
+        print(T.input_ports, "\n\n")
         print("Number of output states: ", len(T.output_states))
         print(T.output_states)
 
-        # assert len(T.input_states) == 4
+        # assert len(T.input_ports) == 4
         # assert len(T.output_states) == 4
         #
         # T.execute(input=[[1.0], [2.0], [3.0], [4.0]])

@@ -35,7 +35,7 @@ A ControlMechanism is a `ModulatoryMechanism` that `modulates the value(s) <Modu
 more `States <State>` of other Mechanisms in the `Composition` to which it belongs. In general, a ControlMechanism is
 used to modulate the `ParameterState(s) <ParameterState>` of one or more Mechanisms, that determine the value(s) of
 the parameter(s) of the `function(s) <Mechanism_Base.function>` of those Mechanism(s). However, a ControlMechanism
-can also be used to modulate the function of `InputStates <InputState>` and/or `OutputState <OutputStates>`,
+can also be used to modulate the function of `InputPorts <InputPort>` and/or `OutputState <OutputStates>`,
 much like a `GatingMechanism`.  A ControlMechanism's `function <ControlMechanism.function>` calculates a
 `control_allocation <ControlMechanism.control_allocation>`: a list of values provided to each of its `control_signals
 <ControlMechanism.control_signals>`.  Its control_signals are `ControlSignal` OutputStates that are used to modulate
@@ -143,7 +143,7 @@ specified (also see `ControlMechanism_Examples`):
   * **monitor_for_control** -- a list of `OutputState specifications <OutputState_Specification>`.  If the
     **objective_mechanism** argument is not specified (or is *False* or *None*) then, when the ControlMechanism is
     added to a `Composition`, a `MappingProjection` is created for each OutputState specified to the ControlMechanism's
-    *OUTCOME* `input_state <ControlMechanism_Input>`.  If the **objective_mechanism** `argument
+    *OUTCOME* `input_port <ControlMechanism_Input>`.  If the **objective_mechanism** `argument
     <ControlMechanism_Objective_Mechanism_Argument>` is specified, then the OutputStates specified in
     **monitor_for_control** are assigned to the `ObjectiveMechanism` rather than the ControlMechanism itself (see
     `ControlMechanism_ObjectiveMechanism` for details).
@@ -182,7 +182,7 @@ specified (also see `ControlMechanism_Examples`):
       <ControlMechanism_ObjectiveMechanism_Function>` for additional details).
 
     - *an existing* `ObjectiveMechanism` -- for any OutputStates specified in the ControlMechanism's
-      **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>`, an InputState is added to the
+      **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>`, an InputPort is added to the
       ObjectiveMechanism, along with `MappingProjection` to it from the specified OutputState.    This can be used to
       specify an ObjectiveMechanism with a custom `function <ObjectiveMechanism.function>` and weighting of the
       OutputStates monitored (see `below <ControlMechanism_ObjectiveMechanism_Function>` for additional details).
@@ -220,15 +220,15 @@ If an `ObjectiveMechanism` is specified for a ControlMechanism (in the **objecti
 <ControlMechanism_Objective_Mechanism_Argument>` of its constructor; also see `ControlMechanism_Examples`),
 it is assigned to the ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>` attribute,
 and a `MappingProjection` is created automatically that projects from the ObjectiveMechanism's *OUTCOME*
-`output_state <ObjectiveMechanism_Output>` to the *OUTCOME* `input_state <ControlMechanism_Input>` of the
+`output_state <ObjectiveMechanism_Output>` to the *OUTCOME* `input_port <ControlMechanism_Input>` of the
 ControlMechanism.
 
 The `objective_mechanism <ControlMechanism.objective_mechanism>` is used to monitor the OutputStates
 specified in the **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>` of the
 ControlMechanism's constructor, as well as any specified in the **monitor** `argument <ObjectiveMechanism_Monitor>` of
-the ObjectiveMechanism's constructor.  Specifically, for each OutputState specified in either place, an `input_state
-<ObjectiveMechanism.input_states>` is added to the ObjectiveMechanism.  OutputStates to be monitored (and
-corresponding `input_states <ObjectiveMechanism.input_states>`) can be added to the `objective_mechanism
+the ObjectiveMechanism's constructor.  Specifically, for each OutputState specified in either place, an `input_port
+<ObjectiveMechanism.input_ports>` is added to the ObjectiveMechanism.  OutputStates to be monitored (and
+corresponding `input_ports <ObjectiveMechanism.input_ports>`) can be added to the `objective_mechanism
 <ControlMechanism.objective_mechanism>` later, by using its `add_to_monitor <ObjectiveMechanism.add_to_monitor>` method.
 The set of OutputStates monitored by the `objective_mechanism <ControlMechanism.objective_mechanism>` are listed in
 its `monitor <ObjectiveMechanism>` attribute, as well as in the ControlMechanism's `monitor_for_control
@@ -236,11 +236,11 @@ its `monitor <ObjectiveMechanism>` attribute, as well as in the ControlMechanism
 
 When the ControlMechanism is added to a `Composition`, the `objective_mechanism <ControlMechanism.objective_mechanism>`
 is also automatically added, and MappingProjectons are created from each of the OutputStates that it monitors to
-its corresponding `input_states <ObjectiveMechanism.input_states>`.  When the Composition is run, the `value
+its corresponding `input_ports <ObjectiveMechanism.input_ports>`.  When the Composition is run, the `value
 <OutputState.value>`\\(s) of the OutputState(s) monitored are evaluated using the `objective_mechanism`\\'s `function
 <ObjectiveMechanism.function>`, and the result is assigned to its *OUTCOME* `output_state
 <ObjectiveMechanism_Output>`.  That `value <ObjectiveMechanism.value>` is then passed to the ControlMechanism's
-*OUTCOME* `input_state <ControlMechanism_Input>`, which is used by the ControlMechanism's `function
+*OUTCOME* `input_port <ControlMechanism_Input>`, which is used by the ControlMechanism's `function
 <ControlMechanism.function>` to determine its `control_allocation <ControlMechanism.control_allocation>`.
 
 .. _ControlMechanism_ObjectiveMechanism_Function:
@@ -343,15 +343,15 @@ Structure
 *Input*
 ~~~~~~~
 
-By default, a ControlMechanism has a single (`primary <InputState_Primary>`) `input_state
-<ControlMechanism.input_state>` that is named *OUTCOME*.  If the ControlMechanism has an `objective_mechanism
-<ControlMechanism.objective_mechanism>`, then the *OUTCOME* `input_state <ControlMechanism.input_state>` receives a
+By default, a ControlMechanism has a single (`primary <InputPort_Primary>`) `input_port
+<ControlMechanism.input_port>` that is named *OUTCOME*.  If the ControlMechanism has an `objective_mechanism
+<ControlMechanism.objective_mechanism>`, then the *OUTCOME* `input_port <ControlMechanism.input_port>` receives a
 single `MappingProjection` from the `objective_mechanism <ControlMechanism.objective_mechanism>`\\'s *OUTCOME*
 OutputState (see `ControlMechanism_ObjectiveMechanism` for additional details). Otherwise, when the ControlMechanism is
-added to a `Composition`, MappingProjections are created that project to the ControlMechanism's *OUTCOME* `input_state
-<ControlMechanism.input_state>` from each of the OutputStates specified in the **monitor_for_control** `argument
-<ControlMechanism_Monitor_for_Control_Argument>` of its constructor.  The `value <InputState.value>` of the
-ControlMechanism's *OUTCOME* InputState is assigned to its `outcome <ControlMechanism.outcome>` attribute),
+added to a `Composition`, MappingProjections are created that project to the ControlMechanism's *OUTCOME* `input_port
+<ControlMechanism.input_port>` from each of the OutputStates specified in the **monitor_for_control** `argument
+<ControlMechanism_Monitor_for_Control_Argument>` of its constructor.  The `value <InputPort.value>` of the
+ControlMechanism's *OUTCOME* InputPort is assigned to its `outcome <ControlMechanism.outcome>` attribute),
 and is used as the input to the ControlMechanism's `function <ControlMechanism.function>` to determine its
 `control_allocation <ControlMechanism.control_allocation>`.
 
@@ -361,7 +361,7 @@ and is used as the input to the ControlMechanism's `function <ControlMechanism.f
 ~~~~~~~~~~
 
 A ControlMechanism's `function <ControlMechanism.function>` uses its `outcome <ControlMechanism.outcome>`
-attribute (the `value <InputState.value>` of its *OUTCOME* `InputState`) to generate a `control_allocation
+attribute (the `value <InputPort.value>` of its *OUTCOME* `InputPort`) to generate a `control_allocation
 <ControlMechanism.control_allocation>`.  By default, its `function <ControlMechanism.function>` is assigned
 the `DefaultAllocationFunction`, which takes a single value as its input, and assigns that as the value of
 each item of `control_allocation <ControlMechanism.control_allocation>`.  Each of these items is assigned as
@@ -410,8 +410,8 @@ also has a set of methods -- `combine_costs <ControlMechanism.combine_costs>`, `
 <ControlMechanism.compute_reconfiguration_cost>`, and `compute_net_outcome <ControlMechanism.compute_net_outcome>` --
 that can be used to compute the `combined costs <ControlMechanism.combined_costs>` of its `control_signals
 <ControlMechanism.control_signals>`, a `reconfiguration_cost <ControlSignal.reconfiguration_cost>` based on their change
-in value, and a `net_outcome <ControlMechanism.net_outcome>` (the `value <InputState.value>` of the ControlMechanism's
-*OUTCOME* `input_state <ControlMechanism_Input>` minus its `combined costs <ControlMechanism.combined_costs>`),
+in value, and a `net_outcome <ControlMechanism.net_outcome>` (the `value <InputPort.value>` of the ControlMechanism's
+*OUTCOME* `input_port <ControlMechanism_Input>` minus its `combined costs <ControlMechanism.combined_costs>`),
 respectively (see `ControlMechanism_Costs_Computation` below for additional details). These methods are used by some
 subclasses of ControlMechanism (e.g., `OptimizationControlMechanism`) to compute their `control_allocation
 <ControlMechanism.control_allocation>`.  Each method is assigned a default function, but can be assigned a custom
@@ -453,8 +453,8 @@ COMMENT
 description of how to configure the initialization of feedback loops in a Composition; also see `Scheduler` for a
 description of detailed ways in which a GatingMechanism and its dependents can be scheduled to execute).
 
-The ControlMechanism's `function <ControlMechanism.function>` takes as its input the `value <InputState.value>` of
-its *OUTCOME* `input_state <ControlMechanism.input_state>` (also contained in `outcome <ControlSignal.outcome>`).
+The ControlMechanism's `function <ControlMechanism.function>` takes as its input the `value <InputPort.value>` of
+its *OUTCOME* `input_port <ControlMechanism.input_port>` (also contained in `outcome <ControlSignal.outcome>`).
 It uses that to determine the `control_allocation <ControlMechanism.control_allocation>`, which specifies the value
 assigned to the `allocation <ControlSignal.allocation>` of each of its `ControlSignals <ControlSignal>`.  Each
 ControlSignal uses that value to calculate its `intensity <ControlSignal.intensity>`, as well as its `cost
@@ -572,7 +572,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism
 from psyneulink.core.components.shellclasses import Composition_Base, System_Base
 from psyneulink.core.components.states.state import State, _parse_state_spec
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.core.components.states.inputstate import InputState
+from psyneulink.core.components.states.inputport import InputPort
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
@@ -650,7 +650,7 @@ def _net_outcome_getter(owning_component=None, context=None):
 
 class DefaultAllocationFunction(Function_Base):
     """Take a single 1d item and return a 2d array with n identical items
-    Takes the default input (a single value in the *OUTCOME* InputState of the ControlMechanism),
+    Takes the default input (a single value in the *OUTCOME* InputPort of the ControlMechanism),
     and returns the same allocation for each of its `control_signals <ControlMechanism.control_signals>`.
     """
     componentName = 'Default Control Function'
@@ -835,7 +835,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
     objective_mechanism : ObjectiveMechanism
         `ObjectiveMechanism` that monitors and evaluates the values specified in the ControlMechanism's
         **objective_mechanism** argument, and transmits the result to the ControlMechanism's *OUTCOME*
-        `input_state <Mechanism_Base.input_state>`.
+        `input_port <Mechanism_Base.input_port>`.
 
     monitor_for_control : List[OutputState]
         each item is an `OutputState` monitored by the ControlMechanism or its `objective_mechanism
@@ -851,15 +851,15 @@ class ControlMechanism(ModulatoryMechanism_Base):
         ObjectiveMechanism's `function <ObjectiveMechanism.function>` to parametrize the contribution made to its
         output by each of the values that it monitors (see `ObjectiveMechanism Function <ObjectiveMechanism_Function>`).
 
-    input_state : InputState
-        the ControlMechanism's `primary InputState <InputState_Primary>`, named *OUTCOME*;  this receives a
+    input_port : InputPort
+        the ControlMechanism's `primary InputPort <InputPort_Primary>`, named *OUTCOME*;  this receives a
         `MappingProjection` from the *OUTCOME* `OutputState <ObjectiveMechanism_Output>` of `objective_mechanism
         <ControlMechanism.objective_mechanism>` if that is specified; otherwise, it receives MappingProjections
         from each of the OutputStates specifed in `monitor_for_control <ControlMechanism.monitor_for_control>`
         (see `_ControlMechanism_Input` for additional details).
 
     outcome : 1d array
-        the `value <InputState.value>` of the ControlMechanism's *OUTCOME* `input_state <ControlMechanism.input_state>`.
+        the `value <InputPort.value>` of the ControlMechanism's *OUTCOME* `input_port <ControlMechanism.input_port>`.
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         determines how the `value <OuputState.value>` \\s of the `OutputStates <OutputState>` specified in the
@@ -1135,7 +1135,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                  default_allocation:tc.optional(tc.any(int, float, list, np.ndarray))=None,
                  control:tc.optional(tc.any(is_iterable,
                                             ParameterState,
-                                            InputState,
+                                            InputPort,
                                             OutputState,
                                             ControlSignal))=None,
                  modulation:tc.optional(str)=MULTIPLICATIVE,
@@ -1214,7 +1214,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         """
         from psyneulink.core.components.system import MonitoredOutputStateTuple
         from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-        from psyneulink.core.components.states.inputstate import InputState
+        from psyneulink.core.components.states.inputport import InputPort
 
         super(ControlMechanism, self)._validate_params(request_set=request_set,
                                                        target_set=target_set,
@@ -1227,15 +1227,15 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 elif isinstance(spec, tuple):
                     spec = spec[0]
                 elif isinstance(spec, dict):
-                    # If it is a dict, parse to validate that it is an InputState specification dict
-                    #    (for InputState of ObjectiveMechanism to be assigned to the monitored_output_state)
+                    # If it is a dict, parse to validate that it is an InputPort specification dict
+                    #    (for InputPort of ObjectiveMechanism to be assigned to the monitored_output_state)
                     spec = _parse_state_spec(owner=self,
-                                             state_type=InputState,
+                                             state_type=InputPort,
                                              state_spec=spec,
                                              context=context)
                     # Get the OutputState, to validate that it is in the ControlMechanism's Composition (below);
                     #    presumes that the monitored_output_state is the first in the list of projection_specs
-                    #    in the InputState state specification dictionary returned from the parse,
+                    #    in the InputPort state specification dictionary returned from the parse,
                     #    and that it is specified as a projection_spec (parsed into that in the call
                     #    to _parse_connection_specs by _parse_state_spec)
 
@@ -1336,25 +1336,25 @@ class ControlMechanism(ModulatoryMechanism_Base):
     def _instantiate_objective_mechanism(self, context=None):
         """
         # FIX: ??THIS SHOULD BE IN OR MOVED TO ObjectiveMechanism
-        Assign InputState to ObjectiveMechanism for each OutputState to be monitored;
-            uses _instantiate_monitoring_input_state and _instantiate_control_mechanism_input_state to do so.
+        Assign InputPort to ObjectiveMechanism for each OutputState to be monitored;
+            uses _instantiate_monitoring_input_port and _instantiate_control_mechanism_input_port to do so.
             For each item in self.monitored_output_states:
-            - if it is a OutputState, call _instantiate_monitoring_input_state()
-            - if it is a Mechanism, call _instantiate_monitoring_input_state for relevant Mechanism.output_states
+            - if it is a OutputState, call _instantiate_monitoring_input_port()
+            - if it is a Mechanism, call _instantiate_monitoring_input_port for relevant Mechanism.output_states
                 (determined by whether it is a `TERMINAL` Mechanism and/or MonitoredOutputStatesOption specification)
-            - each InputState is assigned a name with the following format:
+            - each InputPort is assigned a name with the following format:
                 '<name of Mechanism that owns the monitoredOutputState>_<name of monitoredOutputState>_Monitor'
 
         Notes:
         * self.monitored_output_states is a list, each item of which is a Mechanism.output_state from which a
-          Projection will be instantiated to a corresponding InputState of the ControlMechanism
-        * self.input_states is the usual ordered dict of states,
+          Projection will be instantiated to a corresponding InputPort of the ControlMechanism
+        * self.input_ports is the usual ordered dict of states,
             each of which receives a Projection from a corresponding OutputState in self.monitored_output_states
         """
         from psyneulink.core.components.system import MonitoredOutputStateTuple
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism, ObjectiveMechanismError
-        from psyneulink.core.components.states.inputstate import EXPONENT_INDEX, WEIGHT_INDEX
+        from psyneulink.core.components.states.inputport import EXPONENT_INDEX, WEIGHT_INDEX
         from psyneulink.core.components.functions.function import FunctionError
 
         # GET OutputStates to Monitor (to specify as or add to ObjectiveMechanism's monitored_output_states attribute
@@ -1423,9 +1423,9 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         # CONFIGURE FOR ASSIGNMENT TO COMPOSITION
 
-        # Insure that ObjectiveMechanism's input_states are not assigned projections from a Composition's input_CIM
-        for input_state in self.objective_mechanism.input_states:
-            input_state.internal_only = True
+        # Insure that ObjectiveMechanism's input_ports are not assigned projections from a Composition's input_CIM
+        for input_port in self.objective_mechanism.input_ports:
+            input_port.internal_only = True
         # Flag ObjectiveMechanism and its Projection to ControlMechanism for inclusion in Composition
         self.aux_components.append(self.objective_mechanism)
         self.aux_components.append(projection_from_objective)
@@ -1435,11 +1435,11 @@ class ControlMechanism(ModulatoryMechanism_Base):
         self._objective_projection = projection_from_objective
         self.monitor_for_control = self.monitored_output_states
 
-    def _instantiate_input_states(self, context=None):
+    def _instantiate_input_ports(self, context=None):
 
-        super()._instantiate_input_states(context=context)
-        self.input_state.name = OUTCOME
-        self.input_state.name = OUTCOME
+        super()._instantiate_input_ports(context=context)
+        self.input_port.name = OUTCOME
+        self.input_port.name = OUTCOME
 
         # If objective_mechanism is specified, instantiate it,
         #     including Projections to it from monitor_for_control
@@ -1450,7 +1450,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         elif self.monitor_for_control:
             from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
             for sender in convert_to_list(self.monitor_for_control):
-                self.aux_components.append(MappingProjection(sender=sender, receiver=self.input_states[OUTCOME]))
+                self.aux_components.append(MappingProjection(sender=sender, receiver=self.input_ports[OUTCOME]))
 
     def _instantiate_output_states(self, context=None):
 
@@ -1624,7 +1624,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         print("\n{0}".format(self.name))
         print("\n\tMonitoring the following Mechanism OutputStates:")
-        for state in self.objective_mechanism.input_states:
+        for state in self.objective_mechanism.input_ports:
             for projection in state.path_afferents:
                 monitored_state = projection.sender
                 monitored_state_mech = projection.sender.owner
@@ -1668,8 +1668,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
         **monitored_output_states** can be any of the following:
             - `Mechanism`;
             - `OutputState`;
-            - `tuple specification <InputState_Tuple_Specification>`;
-            - `State specification dictionary <InputState_Specification_Dictionary>`;
+            - `tuple specification <InputPort_Tuple_Specification>`;
+            - `State specification dictionary <InputPort_Specification_Dictionary>`;
             - list with any of the above.
         If any item is a Mechanism, its `primary OutputState <OutputState_Primary>` is used.
         OutputStates must belong to Mechanisms in the same `System` as the ControlMechanism.

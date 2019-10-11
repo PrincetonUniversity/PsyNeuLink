@@ -40,7 +40,7 @@ from psyneulink.core.components.functions.statefulfunctions.statefulfunction imp
 from psyneulink.core.globals.keywords import \
     ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ADDITIVE_PARAM, \
     DECAY, DEFAULT_VARIABLE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, FITZHUGHNAGUMO_INTEGRATOR_FUNCTION, FUNCTION, \
-    INCREMENT, INITIALIZER, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, \
+    INCREMENT, INITIALIZER, INPUT_PORTS, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, \
     INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LEAKY_COMPETING_INTEGRATOR_FUNCTION, \
     MULTIPLICATIVE_PARAM, NOISE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, PRODUCT, \
     RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, DUAL_ADAPTIVE_INTEGRATOR_FUNCTION
@@ -594,7 +594,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         if runtime_params:
             for param_name in runtime_params:
                 if hasattr(self, param_name):
-                    if param_name in {FUNCTION, INPUT_STATES, OUTPUT_STATES}:
+                    if param_name in {FUNCTION, INPUT_PORTS, OUTPUT_STATES}:
                         continue
                     if context.execution_id not in self._runtime_params_reset:
                         self._runtime_params_reset[context.execution_id] = {}

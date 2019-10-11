@@ -103,7 +103,7 @@ task_decision = pnl.DDM(
 )
 
 # print("Task decision loggable: ", task_decision.loggable_items)
-task_decision.set_log_conditions('InputState-0')  
+task_decision.set_log_conditions('InputPort-0')
 # task_decision.set_log_conditions('func_drift_rate')     
 # task_decision.set_log_conditions('mod_drift_rate')      
 task_decision.set_log_conditions('PROBABILITY_LOWER_THRESHOLD')     
@@ -126,7 +126,7 @@ c.add_projection(sender=word_task, receiver=task_decision)
 
 lvoc = pnl.OptimizationControlMechanism(
     name='LVOC ControlMechanism',
-    features=[color_stim.input_state, word_stim.input_state],
+    features=[color_stim.input_port, word_stim.input_port],
     # features={pnl.SHADOW_EXTERNAL_INPUTS: [color_stim, word_stim]},
 
     # computes value of processing, reward received

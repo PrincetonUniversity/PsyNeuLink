@@ -39,7 +39,7 @@ import typecheck as tc
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.keywords import CONTROL, FUNCTION, FUNCTION_PARAMS, INPUT_STATES, INTERCEPT, MODULATION, NAME, OBJECTIVE_MECHANISM, SLOPE
+from psyneulink.core.globals.keywords import CONTROL, FUNCTION, FUNCTION_PARAMS, INPUT_PORTS, INTERCEPT, MODULATION, NAME, OBJECTIVE_MECHANISM, SLOPE
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList
@@ -59,15 +59,15 @@ class DefaultControlMechanism(ControlMechanism):
 
     COMMENT:
         Description:
-            Implements default source of control signals, with one inputState and outputState for each.
+            Implements default source of control signals, with one inputPort and outputState for each.
             Uses defaultControlAllocation as input(s) and pass value(s) unchanged to outputState(s) and
             ControlProjection(s)
 
             Every ControlProjection is assigned this Mechanism as its sender by default (i.e., unless a sender is
                 explicitly specified in its constructor).
 
-            An inputState and outputState is created for each ControlProjection assigned:
-                the inputState is assigned the
+            An inputPort and outputState is created for each ControlProjection assigned:
+                the inputPort is assigned the
                 :py:constant:`defaultControlAllocation <Defaults.defaultControlAllocation>` value;
                 when the DefaultControlMechanism executes, it simply assigns the same value to the ControlProjection.
 
@@ -123,11 +123,11 @@ class DefaultControlMechanism(ControlMechanism):
 
                 **kwargs)
 
-    def _instantiate_input_states(self, context=None):
+    def _instantiate_input_ports(self, context=None):
         """Instantiate input_value attribute
 
-        Instantiate input_states and monitored_output_states attributes (in case they are referenced)
-            and assign any OutputStates that project to the input_states to monitored_output_states
+        Instantiate input_ports and monitored_output_states attributes (in case they are referenced)
+            and assign any OutputStates that project to the input_ports to monitored_output_states
 
         IMPLEMENTATION NOTE:  At present, these are dummy assignments, simply to satisfy the requirements for
                               subclasses of ControlMechanism;  in the future, an _instantiate_objective_mechanism()
@@ -135,15 +135,15 @@ class DefaultControlMechanism(ControlMechanism):
                               method, and that can be used to add OutputStates/Mechanisms to be monitored.
         """
 
-        if not hasattr(self, INPUT_STATES):
-            self._input_states = None
-        elif self.input_states:
-            for input_state in self.input_states:
-                for projection in input_state.path_afferents:
+        if not hasattr(self, INPUT_PORTS):
+            self._input_ports = None
+        elif self.input_ports:
+            for input_port in self.input_ports:
+                for projection in input_port.path_afferents:
                     self.monitored_output_states.append(projection.sender)
 
     def _instantiate_control_signal(self, control_signal, context=None):
-        """Instantiate requested ControlSignal, ControlProjection and associated InputState
+        """Instantiate requested ControlSignal, ControlProjection and associated InputPort
         """
         from psyneulink.core.components.states.parameterstate import ParameterState
 
@@ -164,8 +164,8 @@ class DefaultControlMechanism(ControlMechanism):
             raise DefaultControlMechanismError("control signal ({}) was not a dict, tuple, or ParameterState".
                                                format(control_signal))
 
-        # Instantiate input_states and control_allocation attribute for control_signal allocations
-        self._instantiate_default_input_state(input_name, [defaultControlAllocation], context=context)
+        # Instantiate input_ports and control_allocation attribute for control_signal allocations
+        self._instantiate_default_input_port(input_name, [defaultControlAllocation], context=context)
         self.control_allocation = self.input_values
 
         # Call super to instantiate ControlSignal
@@ -173,25 +173,25 @@ class DefaultControlMechanism(ControlMechanism):
         #           should be in PARAMS entry of dict passed in control_signal arg
         control_signal = super()._instantiate_control_signal(control_signal=control_signal, context=context)
 
-    def _instantiate_default_input_state(self, input_state_name, input_state_value, context=None):
-        """Instantiate inputState for ControlMechanism
+    def _instantiate_default_input_port(self, input_port_name, input_port_value, context=None):
+        """Instantiate inputPort for ControlMechanism
 
-        NOTE: This parallels ObjectMechanism._instantiate_input_state_for_monitored_state()
+        NOTE: This parallels ObjectMechanism._instantiate_input_port_for_monitored_state()
               It is implemented here to spare having to instantiate a "dummy" (and superfluous) ObjectiveMechanism
-              for the sole purpose of creating input_states for each value of defaultControlAllocation to assign
+              for the sole purpose of creating input_ports for each value of defaultControlAllocation to assign
               to the ControlProjections.
 
-        Extend self.defaults.variable by one item to accommodate new inputState
-        Instantiate the inputState using input_state_name and input_state_value
-        Update self.input_state and self.input_states
+        Extend self.defaults.variable by one item to accommodate new inputPort
+        Instantiate the inputPort using input_port_name and input_port_value
+        Update self.input_port and self.input_ports
 
         Args:
-            input_state_name (str):
-            input_state_value (2D np.array):
+            input_port_name (str):
+            input_port_value (2D np.array):
             context:
 
         Returns:
-            input_state (InputState):
+            input_port (InputPort):
 
         """
 
@@ -199,59 +199,59 @@ class DefaultControlMechanism(ControlMechanism):
 
         # This is for generality (in case, for any subclass in the future, variable is assigned to None on init)
         if self.defaults.variable is None:
-            self.defaults.variable = np.atleast_2d(input_state_value)
+            self.defaults.variable = np.atleast_2d(input_port_value)
 
         # If there is a single item in self.defaults.variable, it could be the one assigned on initialization
         #     (in order to validate ``function`` and get its return value as a template for value);
-        #     in that case, there should be no input_states yet, so pass
-        #     (i.e., don't bother to extend self.defaults.variable): it will be used for the new inputState
+        #     in that case, there should be no input_ports yet, so pass
+        #     (i.e., don't bother to extend self.defaults.variable): it will be used for the new inputPort
         elif len(self.defaults.variable) == 1:
-            if self.input_states:
-                self.defaults.variable = np.append(self.defaults.variable, np.atleast_2d(input_state_value), 0)
+            if self.input_ports:
+                self.defaults.variable = np.append(self.defaults.variable, np.atleast_2d(input_port_value), 0)
             else:
-                # If there are no input_states, this is the usual initialization condition;
-                # Pass to create a new inputState that will be assigned to existing the first item of self.defaults.variable
+                # If there are no input_ports, this is the usual initialization condition;
+                # Pass to create a new inputPort that will be assigned to existing the first item of self.defaults.variable
                 pass
         # Other than on initialization (handled above), it is a PROGRAM ERROR if
-        #    the number of input_states is not equal to the number of items in self.defaults.variable
-        elif len(self.defaults.variable) != len(self.input_states):
+        #    the number of input_ports is not equal to the number of items in self.defaults.variable
+        elif len(self.defaults.variable) != len(self.input_ports):
             raise DefaultControlMechanismError(
-                "PROGRAM ERROR:  The number of input_states ({}) does not match "
+                "PROGRAM ERROR:  The number of input_ports ({}) does not match "
                 "the number of items found for the variable attribute ({}) of {}"
                 "when creating {}".format(
-                    len(self.input_states),
+                    len(self.input_ports),
                     len(self.defaults.variable),
                     self.name,
-                    input_state_name,
+                    input_port_name,
                 )
             )
 
-        # Extend self.defaults.variable to accommodate new inputState
+        # Extend self.defaults.variable to accommodate new inputPort
         else:
-            self.defaults.variable = np.append(self.defaults.variable, np.atleast_2d(input_state_value), 0)
+            self.defaults.variable = np.append(self.defaults.variable, np.atleast_2d(input_port_value), 0)
 
         variable_item_index = self.defaults.variable.size-1
 
-        # Instantiate inputState
+        # Instantiate inputPort
         from psyneulink.core.components.states.state import _instantiate_state
-        from psyneulink.core.components.states.inputstate import InputState
-        input_state = _instantiate_state(owner=self,
-                                         state_type=InputState,
-                                         name=input_state_name,
+        from psyneulink.core.components.states.inputport import InputPort
+        input_port = _instantiate_state(owner=self,
+                                         state_type=InputPort,
+                                         name=input_port_name,
                                          reference_value=np.array(self.defaults.variable[variable_item_index]),
                                          reference_value_name='Default control allocation',
                                          params=None,
                                          context=context)
 
-        #  Update inputState and input_states
-        if self.input_states:
-            self._input_states[input_state.name] = input_state
+        #  Update inputPort and input_ports
+        if self.input_ports:
+            self._input_ports[input_port.name] = input_port
         else:
             from psyneulink.core.components.states.state import State_Base
-            self._input_states = ContentAddressableList(component_type=State_Base,
-                                                        list=[input_state],
-                                                        name=self.name+'.input_states')
+            self._input_ports = ContentAddressableList(component_type=State_Base,
+                                                        list=[input_port],
+                                                        name=self.name+'.input_ports')
 
-        # self.input_value = [state.value for state in self.input_states]
+        # self.input_value = [state.value for state in self.input_ports]
 
-        return input_state
+        return input_port

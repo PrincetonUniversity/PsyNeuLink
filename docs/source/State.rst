@@ -8,7 +8,7 @@ States
    :maxdepth: 1
 
    *Subclasses:*
-   InputState
+   InputPort
    ParameterState
    OutputState
    ModulatorySignals <ModulatorySignal>

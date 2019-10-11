@@ -111,7 +111,7 @@ Two types of Components are the basic building blocks of PsyNeuLink models, Mech
    each of which can receive and/or send a combination of PathwayProjections and/or ModulatoryProjections
    (see `ModulatorySignal_Anatomy_Figure`):
 
-   + `InputState`
+   + `InputPort`
        Represents a set of inputs to the Mechanism.
        Receives one or more afferent PathwayProjections to a Mechanism, combines them using its
        `function <State.function>`, and assigns the result (its `value <State.value>`)as an item of the Mechanism's

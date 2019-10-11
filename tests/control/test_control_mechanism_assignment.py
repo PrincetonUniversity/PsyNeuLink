@@ -64,9 +64,9 @@ def test_control_mechanism_assignment():
 #                 monitor_for_control=T_3,
 #                 control_signals=(pnl.SLOPE, T_2),
 #                 enable_controller=True)
-#     assert S.controller.objective_mechanism.input_state[0].path_afferents[0].sender.owner == T_1
-#     assert S.controller.objective_mechanism.input_state[1].path_afferents[0].sender.owner == T_2
-#     assert S.controller.objective_mechanism.input_state[2].path_afferents[0].sender.owner == T_3
+#     assert S.controller.objective_mechanism.input_port[0].path_afferents[0].sender.owner == T_1
+#     assert S.controller.objective_mechanism.input_port[1].path_afferents[0].sender.owner == T_2
+#     assert S.controller.objective_mechanism.input_port[2].path_afferents[0].sender.owner == T_3
 #     assert T_1.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == S.controller
 #     assert T_2.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == S.controller
 
@@ -81,7 +81,7 @@ def test_control_mechanism_assignment_additional():
                 monitor_for_control=[T_1],
                 control_signals=(pnl.SLOPE, T_2),
                 enable_controller=True)
-    assert S.controller.objective_mechanism.input_state.path_afferents[0].sender.owner == T_1
+    assert S.controller.objective_mechanism.input_port.path_afferents[0].sender.owner == T_1
     assert T_1.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == S.controller
     assert T_2.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == S.controller
 
@@ -108,7 +108,7 @@ def test_control_mechanism_assignment_additional():
 #                 monitor_for_control=T3,
 #                 enable_controller=True
 #                 )
-#     assert len(S.controller.objective_mechanism.input_states)==3
+#     assert len(S.controller.objective_mechanism.input_ports)==3
 #
 #     S.recordSimulationPref = True
 #

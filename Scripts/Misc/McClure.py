@@ -37,7 +37,7 @@ action_selection = pnl.TransferMechanism(size=2,
                                            output=pnl.ALL,
                                            gain=1.0),
                                          output_states=[{pnl.NAME: 'SELECTED ACTION',
-                                                         pnl.VARIABLE: [(pnl.INPUT_STATE_VARIABLES, 0),
+                                                         pnl.VARIABLE: [(pnl.INPUT_PORT_VARIABLES, 0),
                                                                         (pnl.OWNER_VALUE, 0)],
                                                          # pnl.VARIABLE: [(pnl.OWNER_VALUE, 0)],
                                                          pnl.FUNCTION: psyneulink.core.components.functions
@@ -76,7 +76,7 @@ action_selection = pnl.TransferMechanism(size=2,
 #                                                  normalize=True),
 #                           name='K')
 
-conflicts = pnl.IntegratorMechanism(input_states=[action_selection.output_states[2]],
+conflicts = pnl.IntegratorMechanism(input_ports=[action_selection.output_states[2]],
                                     function=psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DualAdaptiveIntegrator(short_term_gain=6.0,
                                                                                                                                                 long_term_gain=6.0,
                                                                                                                                                 short_term_rate=0.05,
@@ -93,7 +93,7 @@ decision_process = pnl.Process(default_variable=[0, 0],
                                target=0
                                )
 
-print('reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
+print('reward prediction weights: \n', action_selection.input_port.path_afferents[0].matrix)
 print('target_mechanism weights: \n', action_selection.output_state.efferents[0].matrix)
 
 conflict_process = pnl.Process(pathway=[action_selection, conflicts])
@@ -157,7 +157,7 @@ def print_header(system):
 
 
 def show_weights(system):
-    # print('Reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
+    # print('Reward prediction weights: \n', action_selection.input_port.path_afferents[0].matrix)
     # print(
     #     '\nAction selected:  {}; predicted reward: {}'.format(
     #         np.nonzero(action_selection.output_state.value)[0][0],
@@ -184,11 +184,11 @@ def show_weights(system):
         format(
             action_selection.parameters.value.get(system),
             action_selection.output_state.parameters.value.get(system),
-            comparator.input_states[pnl.SAMPLE].parameters.value.get(system),
-            comparator.input_states[pnl.TARGET].parameters.value.get(system),
-            learn_mech.input_states[pnl.ACTIVATION_INPUT].parameters.value.get(system),
-            learn_mech.input_states[pnl.ACTIVATION_OUTPUT].parameters.value.get(system),
-            learn_mech.input_states[pnl.ERROR_SIGNAL].parameters.value.get(system),
+            comparator.input_ports[pnl.SAMPLE].parameters.value.get(system),
+            comparator.input_ports[pnl.TARGET].parameters.value.get(system),
+            learn_mech.input_ports[pnl.ACTIVATION_INPUT].parameters.value.get(system),
+            learn_mech.input_ports[pnl.ACTIVATION_OUTPUT].parameters.value.get(system),
+            learn_mech.input_ports[pnl.ERROR_SIGNAL].parameters.value.get(system),
             learn_mech.output_states[pnl.ERROR_SIGNAL].parameters.value.get(system),
             learn_mech.output_states[pnl.LEARNING_SIGNAL].parameters.value.get(system),
             action_selection.output_state.parameters.value.get(system)[np.nonzero(action_selection.output_state.parameters.value.get(system))][0],

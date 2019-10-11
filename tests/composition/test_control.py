@@ -138,8 +138,8 @@ class TestControlMechanisms:
         Note: Even though both mech and control_mech don't receive pathway inputs, since control_mech projects to mech,
         control_mech is assigned as NodeRole.INPUT (can be overridden with assignments in add_nodes)
         """
-        mech = pnl.ProcessingMechanism(input_states=['A','B','C'])
-        control_mech = pnl.ControlMechanism(control=mech.input_states[0])
+        mech = pnl.ProcessingMechanism(input_ports=['A','B','C'])
+        control_mech = pnl.ControlMechanism(control=mech.input_ports[0])
         comp = pnl.Composition()
         comp.add_nodes([mech, control_mech])
         result = comp.run(inputs={control_mech:[2]}, num_trials=3)
@@ -148,8 +148,8 @@ class TestControlMechanisms:
         assert pnl.NodeRole.INPUT in comp.get_roles_by_node(control_mech)
 
         # Should produce same result as above
-        mech = pnl.ProcessingMechanism(input_states=['A','B','C'])
-        control_mech = pnl.ControlMechanism(control=mech.input_states) # Note multiple parallel ControlProjections
+        mech = pnl.ProcessingMechanism(input_ports=['A','B','C'])
+        control_mech = pnl.ControlMechanism(control=mech.input_ports) # Note multiple parallel ControlProjections
         comp = pnl.Composition()
         comp.add_nodes([mech, control_mech])
         comp.run(inputs={control_mech:[2]}, num_trials=3)
@@ -178,14 +178,14 @@ class TestControlMechanisms:
         assert np.allclose(ctl_mech_A.control_signals[0].intensity_cost, 403.428793492735123)
 
     def test_lvoc(self):
-        m1 = pnl.TransferMechanism(input_states=["InputState A", "InputState B"])
+        m1 = pnl.TransferMechanism(input_ports=["InputPort A", "InputPort B"])
         m2 = pnl.TransferMechanism()
         c = pnl.Composition()
         c.add_node(m1, required_roles=pnl.NodeRole.INPUT)
         c.add_node(m2, required_roles=pnl.NodeRole.INPUT)
         c._analyze_graph()
         lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.RegressionCFA,
-                                                features=[m1.input_states[0], m1.input_states[1], m2.input_state],
+                                                features=[m1.input_ports[0], m1.input_ports[1], m2.input_port],
                                                 objective_mechanism=pnl.ObjectiveMechanism(
                                                     monitor=[m1, m2]),
                                                 function=pnl.GridSearch(max_iterations=1),
@@ -199,17 +199,17 @@ class TestControlMechanisms:
 
         c.run(inputs=input_dict)
 
-        assert len(lvoc.input_states) == 4
+        assert len(lvoc.input_ports) == 4
 
     def test_lvoc_both_predictors_specs(self):
-        m1 = pnl.TransferMechanism(input_states=["InputState A", "InputState B"])
+        m1 = pnl.TransferMechanism(input_ports=["InputPort A", "InputPort B"])
         m2 = pnl.TransferMechanism()
         c = pnl.Composition()
         c.add_node(m1, required_roles=pnl.NodeRole.INPUT)
         c.add_node(m2, required_roles=pnl.NodeRole.INPUT)
         c._analyze_graph()
         lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.RegressionCFA,
-                                                features=[m1.input_states[0], m1.input_states[1], m2.input_state, m2],
+                                                features=[m1.input_ports[0], m1.input_ports[1], m2.input_port, m2],
                                                 objective_mechanism=pnl.ObjectiveMechanism(
                                                     monitor=[m1, m2]),
                                                 function=pnl.GridSearch(max_iterations=1),
@@ -223,17 +223,17 @@ class TestControlMechanisms:
 
         c.run(inputs=input_dict)
 
-        assert len(lvoc.input_states) == 5
+        assert len(lvoc.input_ports) == 5
 
     def test_lvoc_features_function(self):
-        m1 = pnl.TransferMechanism(input_states=["InputState A", "InputState B"])
+        m1 = pnl.TransferMechanism(input_ports=["InputPort A", "InputPort B"])
         m2 = pnl.TransferMechanism()
         c = pnl.Composition()
         c.add_node(m1, required_roles=pnl.NodeRole.INPUT)
         c.add_node(m2, required_roles=pnl.NodeRole.INPUT)
         c._analyze_graph()
         lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.RegressionCFA,
-                                                features=[m1.input_states[0], m1.input_states[1], m2.input_state, m2],
+                                                features=[m1.input_ports[0], m1.input_ports[1], m2.input_port, m2],
                                                 feature_function=pnl.LinearCombination(offset=10.0),
                                                 objective_mechanism=pnl.ObjectiveMechanism(
                                                     monitor=[m1, m2]),
@@ -244,10 +244,10 @@ class TestControlMechanisms:
 
         c.run(inputs=input_dict)
 
-        assert len(lvoc.input_states) == 5
+        assert len(lvoc.input_ports) == 5
 
         for i in range(1,5):
-            assert lvoc.input_states[i].function.offset == 10.0
+            assert lvoc.input_ports[i].function.offset == 10.0
 
     def test_default_lc_control_mechanism(self):
         G = 1.0
@@ -383,7 +383,7 @@ class TestControlMechanisms:
         ocomp.add_controller(
             pnl.OptimizationControlMechanism(
                 agent_rep=ocomp,
-                features=[oa.input_state],
+                features=[oa.input_port],
                 # feature_function=pnl.Buffer(history=2),
                 name="Controller",
                 objective_mechanism=pnl.ObjectiveMechanism(
@@ -401,7 +401,7 @@ class TestControlMechanisms:
         icomp.add_controller(
             pnl.OptimizationControlMechanism(
                 agent_rep=icomp,
-                features=[ia.input_state],
+                features=[ia.input_port],
                 # feature_function=pnl.Buffer(history=2),
                 name="Controller",
                 objective_mechanism=pnl.ObjectiveMechanism(
@@ -442,7 +442,7 @@ class TestControlMechanisms:
         ocomp.add_controller(
             pnl.OptimizationControlMechanism(
                 agent_rep=ocomp,
-                features=[oa.input_state],
+                features=[oa.input_port],
                 # feature_function=pnl.Buffer(history=2),
                 name="Controller",
                 objective_mechanism=pnl.ObjectiveMechanism(
@@ -462,7 +462,7 @@ class TestControlMechanisms:
         icomp.add_controller(
             pnl.OptimizationControlMechanism(
                 agent_rep=icomp,
-                features=[ia.input_state],
+                features=[ia.input_port],
                 # feature_function=pnl.Buffer(history=2),
                 name="Controller",
                 objective_mechanism=pnl.ObjectiveMechanism(
@@ -505,7 +505,7 @@ class TestControlMechanisms:
         ocomp.add_controller(
             pnl.OptimizationControlMechanism(
                 agent_rep=ocomp,
-                features=[oa.input_state],
+                features=[oa.input_port],
                 # feature_function=pnl.Buffer(history=2),
                 name="Controller",
                 objective_mechanism=pnl.ObjectiveMechanism(
@@ -525,7 +525,7 @@ class TestControlMechanisms:
         icomp.add_controller(
             pnl.OptimizationControlMechanism(
                 agent_rep=icomp,
-                features=[ia.input_state],
+                features=[ia.input_port],
                 # feature_function=pnl.Buffer(history=2),
                 name="Controller",
                 objective_mechanism=pnl.ObjectiveMechanism(
@@ -592,14 +592,14 @@ class TestControlMechanisms:
         nonAutomaticComponent = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
                                                       size=2,
                                                       function=pnl.Linear(slope=1, intercept=0),
-                                                      input_states=pnl.InputState(combine=pnl.PRODUCT),
+                                                      input_ports=pnl.InputPort(combine=pnl.PRODUCT),
                                                       output_states=[pnl.RESULT],
                                                       name='Non-Automatic Component')
 
         # Summation of nonAutomatic and Automatic Components
         ddmCombination = pnl.TransferMechanism(size=1,
                                                function=pnl.Linear(slope=1, intercept=0),
-                                               input_states=pnl.InputState(combine=pnl.SUM),
+                                               input_ports=pnl.InputPort(combine=pnl.SUM),
                                                output_states=[pnl.RESULT],
                                                name="Drift = Wa*(S1 + S2) + (S1*Act1 + S2*Act2)")
 
@@ -616,13 +616,13 @@ class TestControlMechanisms:
         weightingFunction = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
                                                   size=2,
                                                   function=pnl.Linear(slope=1, intercept=0),
-                                                  input_states=pnl.InputState(combine=pnl.PRODUCT),
+                                                  input_ports=pnl.InputPort(combine=pnl.PRODUCT),
                                                   output_states=[pnl.RESULT],
                                                   name='Bias')
 
         topCorrect = pnl.TransferMechanism(size=1,
                                            function=pnl.Linear(slope=1, intercept=0),
-                                           input_states=pnl.InputState(combine=pnl.PRODUCT),
+                                           input_ports=pnl.InputPort(combine=pnl.PRODUCT),
                                            output_states=[pnl.RESULT],
                                            name="weightDDMInput")
 
@@ -662,8 +662,8 @@ class TestControlMechanisms:
 
         stabilityFlexibility.add_controller(
             pnl.OptimizationControlMechanism(agent_rep=stabilityFlexibility,
-                                             features=[taskLayer.input_state,
-                                                       stimulusInfo.input_state],
+                                             features=[taskLayer.input_port,
+                                                       stimulusInfo.input_port],
                                              feature_function=pnl.Buffer(history=2),
                                              name="Controller",
                                              objective_mechanism=pnl.ObjectiveMechanism(
@@ -690,7 +690,7 @@ class TestControlMechanisms:
         outerComposition.add_node(stabilityFlexibility)
         outerComposition.add_controller(
             pnl.OptimizationControlMechanism(agent_rep=stabilityFlexibility,
-                                             features=[taskLayer.input_state, stimulusInfo.input_state],
+                                             features=[taskLayer.input_port, stimulusInfo.input_port],
                                              feature_function=pnl.Buffer(history=2),
                                              name="OuterController",
                                              objective_mechanism=pnl.ObjectiveMechanism(
@@ -813,7 +813,7 @@ class TestModelBasedOptimizationControlMechanisms:
         outer_comp._analyze_graph()
         outer_comp.add_controller(controller=pnl.OptimizationControlMechanism(
             agent_rep=outer_comp,
-            features=[Input.input_state, reward.input_state],
+            features=[Input.input_port, reward.input_port],
             feature_function=pnl.AdaptiveIntegrator(rate=0.5),
             objective_mechanism=pnl.ObjectiveMechanism(
                 function=pnl.LinearCombination(operation=pnl.PRODUCT),
@@ -915,7 +915,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         comp.add_controller(controller=pnl.OptimizationControlMechanism(
                                                 agent_rep=comp,
-                                                features=[Input.input_state, reward.input_state],
+                                                features=[Input.input_port, reward.input_port],
                                                 feature_function=pnl.AdaptiveIntegrator(rate=0.5),
                                                 objective_mechanism=pnl.ObjectiveMechanism(
                                                         function=pnl.LinearCombination(operation=pnl.PRODUCT),
@@ -1054,9 +1054,9 @@ class TestModelBasedOptimizationControlMechanisms:
                                                                               pnl.PROBABILITY_UPPER_THRESHOLD], 1, -1)])
         # Model Based OCM (formerly controller)
         evc_gratton.add_controller(controller=pnl.OptimizationControlMechanism(agent_rep=evc_gratton,
-                                                                                         features=[target_stim.input_state,
-                                                                                                   flanker_stim.input_state,
-                                                                                                   reward.input_state],
+                                                                                         features=[target_stim.input_port,
+                                                                                                   flanker_stim.input_port,
+                                                                                                   reward.input_port],
                                                                                          feature_function=pnl.AdaptiveIntegrator(
                                                                                              rate=1.0),
                                                                                          objective_mechanism=objective_mech,
@@ -1192,7 +1192,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         objective_mech = pnl.ObjectiveMechanism(monitor=[B])
         ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
-                                               features=[A.input_state],
+                                               features=[A.input_port],
                                                objective_mechanism=objective_mech,
                                                function=pnl.GridSearch(),
                                                control_signals=[control_signal])
@@ -1233,7 +1233,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         objective_mech = pnl.ObjectiveMechanism(monitor=[B])
         ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
-                                               features=[A.input_state],
+                                               features=[A.input_port],
                                                objective_mechanism=objective_mech,
                                                function=pnl.GridSearch(),
                                                control_signals=[control_signal])
@@ -1269,7 +1269,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         objective_mech = pnl.ObjectiveMechanism(monitor=[B])
         ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
-                                               features=[A.input_state],
+                                               features=[A.input_port],
                                                feature_function=pnl.Buffer(history=2),
                                                objective_mechanism=objective_mech,
                                                function=pnl.GridSearch(),
@@ -1280,8 +1280,8 @@ class TestModelBasedOptimizationControlMechanisms:
 
         inputs = {A: [[[1.0]], [[2.0]], [[3.0]]]}
 
-        for i in range(1, len(ocm.input_states)):
-            ocm.input_states[i].function.reinitialize()
+        for i in range(1, len(ocm.input_ports)):
+            ocm.input_ports[i].function.reinitialize()
         comp.run(inputs=inputs)
 
         log = objective_mech.log.nparray_dictionary()
@@ -1398,14 +1398,14 @@ class TestModelBasedOptimizationControlMechanisms:
         nonAutomaticComponent = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
                                                       size=2,
                                                       function=pnl.Linear(slope=1, intercept=0),
-                                                      input_states=pnl.InputState(combine=pnl.PRODUCT),
+                                                      input_ports=pnl.InputPort(combine=pnl.PRODUCT),
                                                       output_states=[pnl.RESULT],
                                                       name='Non-Automatic Component [S1*Activity1, S2*Activity2]')
 
         # Summation of nonAutomatic and Automatic Components
         ddmCombination = pnl.TransferMechanism(size=1,
                                                function=pnl.Linear(slope=1, intercept=0),
-                                               input_states=pnl.InputState(combine=pnl.SUM),
+                                               input_ports=pnl.InputPort(combine=pnl.SUM),
                                                output_states=[pnl.RESULT],
                                                name="Drift = (S1 + S2) + (S1*Activity1 + S2*Activity2)")
 
@@ -1470,7 +1470,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         #  Sets trial history for simulations over specified signal search parameters
         metaController = pnl.OptimizationControlMechanism(agent_rep=stabilityFlexibility,
-                                                          features=[taskLayer.input_state, stimulusInfo.input_state],
+                                                          features=[taskLayer.input_port, stimulusInfo.input_port],
                                                           feature_function=pnl.Buffer(history=10),
                                                           name="Controller",
                                                           objective_mechanism=objectiveMechanism,
@@ -1481,8 +1481,8 @@ class TestModelBasedOptimizationControlMechanisms:
         stabilityFlexibility.enable_controller = True
         # stabilityFlexibility.model_based_optimizer_mode = pnl.BEFORE
 
-        for i in range(1, len(stabilityFlexibility.controller.input_states)):
-            stabilityFlexibility.controller.input_states[i].function.reinitialize()
+        for i in range(1, len(stabilityFlexibility.controller.input_ports)):
+            stabilityFlexibility.controller.input_ports[i].function.reinitialize()
         # Origin Node Inputs
         taskTrain = [[1, 0], [0, 1], [1, 0], [0, 1]]
         stimulusTrain = [[1, -1], [-1, 1], [1, -1], [-1, 1]]
@@ -1508,7 +1508,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         objective_mech = pnl.ObjectiveMechanism(monitor=[B])
         ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
-                                               features=[A.input_state],
+                                               features=[A.input_port],
                                                objective_mechanism=objective_mech,
                                                function=pnl.GridSearch(),
                                                num_estimates=5,
@@ -1544,7 +1544,7 @@ class TestModelBasedOptimizationControlMechanisms:
         objective_mech = pnl.ObjectiveMechanism(monitor=[B])
         ocm = pnl.OptimizationControlMechanism(
             agent_rep=comp,
-            features=[A.input_state],
+            features=[A.input_port],
             objective_mechanism=objective_mech,
             function=pnl.GridSearch(),
             num_estimates=1,
@@ -1580,7 +1580,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         objective_mech = pnl.ObjectiveMechanism(monitor=[B])
         ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
-                                               features=[A.input_state],
+                                               features=[A.input_port],
                                                objective_mechanism=objective_mech,
                                                function=pnl.GridSearch(select_randomly_from_optimal_values=True),
                                                control_signals=[control_signal])

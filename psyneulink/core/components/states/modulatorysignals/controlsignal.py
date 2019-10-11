@@ -323,7 +323,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     ALLOCATION_SAMPLES, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, \
-    INPUT_STATE, INPUT_STATES, \
+    INPUT_PORT, INPUT_PORTS, \
     OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, \
     PARAMETER_STATE, PARAMETER_STATES, \
     PROJECTION_TYPE, RECEIVER, SUM
@@ -756,8 +756,8 @@ class ControlSignal(ModulatorySignal):
                                                           DURATION_COST_FUNCTION,
                                                           COMBINE_COSTS_FUNCTION}
 
-    connectsWith = [PARAMETER_STATE, INPUT_STATE, OUTPUT_STATE]
-    connectsWithAttribute = [PARAMETER_STATES, INPUT_STATES, OUTPUT_STATES]
+    connectsWith = [PARAMETER_STATE, INPUT_PORT, OUTPUT_STATE]
+    connectsWithAttribute = [PARAMETER_STATES, INPUT_PORTS, OUTPUT_STATES]
     projectionSocket = RECEIVER
     modulators = []
 

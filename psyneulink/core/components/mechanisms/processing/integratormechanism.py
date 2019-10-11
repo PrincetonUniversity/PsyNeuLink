@@ -39,7 +39,7 @@ argument can be used to specify the length of the array, in which case it will b
 Structure
 ---------
 
-An IntegratorMechanism has a single `InputState`, the `value <InputState.InputState.value>` of which is
+An IntegratorMechanism has a single `InputPort`, the `value <InputPort.InputPort.value>` of which is
 used as the  `variable <IntegratorMechanism.variable>` for its `function <IntegratorMechanism.function>`.
 The default for `function <IntegratorMechanism.function>` is `AdaptiveIntegrator(rate=0.5)`. However,
 a custom function can also be specified,  so long as it takes a numeric value, or a list or np.ndarray of numeric
@@ -211,7 +211,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_states:tc.optional(tc.any(list, dict))=None,
+                 input_ports:tc.optional(tc.any(list, dict))=None,
                  function=None,
                  output_states:tc.optional(tc.any(str, Iterable))=RESULTS,
                  params=None,
@@ -222,7 +222,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         """
 
         # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(input_states=input_states,
+        params = self._assign_args_to_param_dicts(input_ports=input_ports,
                                                   output_states=output_states,
                                                   function=function,
                                                   params=params)
@@ -241,7 +241,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     # def _parse_function_variable(self, variable, context=None, context=None):
     #     super()._parse_function_variable(variable, context, context)
 
-    def _handle_default_variable(self, default_variable=None, size=None, input_states=None, function=None, params=None):
+    def _handle_default_variable(self, default_variable=None, size=None, input_ports=None, function=None, params=None):
         """If any parameters with len>1 have been specified for the Mechanism's function, and Mechanism's
         default_variable has not been specified, reshape Mechanism's variable to match function's,
         but make sure function's has the same outer dimensionality as the Mechanism's
@@ -287,6 +287,6 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
         return super()._handle_default_variable(default_variable=variable,
                                                 size=size,
-                                                input_states=input_states,
+                                                input_ports=input_ports,
                                                 function=function,
                                                 params=params)

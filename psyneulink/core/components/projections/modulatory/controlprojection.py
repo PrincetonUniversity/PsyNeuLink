@@ -111,7 +111,7 @@ from psyneulink.core.components.projections.projection import ProjectionError, P
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, INPUT_STATE, OUTPUT_STATE, PARAMETER_STATE, PROJECTION_SENDER
+    CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, INPUT_PORT, OUTPUT_STATE, PARAMETER_STATE, PROJECTION_SENDER
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -287,7 +287,7 @@ class ControlProjection(ModulatoryProjection_Base):
 
     class sockets:
         sender=[CONTROL_SIGNAL]
-        receiver=[PARAMETER_STATE, INPUT_STATE, OUTPUT_STATE]
+        receiver=[PARAMETER_STATE, INPUT_PORT, OUTPUT_STATE]
 
     class Parameters(ModulatoryProjection_Base.Parameters):
         """
@@ -369,12 +369,12 @@ class ControlProjection(ModulatoryProjection_Base):
 
         This method overrides the corresponding method of Projection, before calling it, to check if the
             DefaultController is being assigned as sender and, if so:
-            - creates projection-dedicated inputState and outputState in DefaultController
-            - puts them in DefaultController's input_states and outputStates attributes
+            - creates projection-dedicated inputPort and outputState in DefaultController
+            - puts them in DefaultController's input_ports and outputStates attributes
             - lengthens variable of DefaultController to accommodate the ControlProjection
             - updates value of the DefaultController (in response to the new variable)
         Notes:
-            * the default function of the DefaultControlMechanism simply maps the inputState value to the outputState
+            * the default function of the DefaultControlMechanism simply maps the inputPort value to the outputState
             * the params arg is assumed to be a dictionary of params for the ControlSignal of the ControlMechanism
 
         :return:

@@ -431,10 +431,10 @@ class TestInputSpecsDocumentationExamples:
 
         p1.execute(input_dictionary)
 
-class TestInputSpecsExternalInputStatesOnly:
+class TestInputSpecsExternalInputPortsOnly:
 
     def test_recurrent_transfer_origin(self):
-        R = RecurrentTransferMechanism(has_recurrent_input_state=True)
+        R = RecurrentTransferMechanism(has_recurrent_input_port=True)
         P = Process(pathway=[R])
         S = System(processes=[P])
 

@@ -33,7 +33,7 @@ Structure
 
 An AutoAssociativeLearningMechanism is identical to a `LearningMechanism` in all respects except the following:
 
-  * it has only a single *ACTIVATION_INPUT* `InputState`, that receives a `MappingProjection` from an `OutputState` of
+  * it has only a single *ACTIVATION_INPUT* `InputPort`, that receives a `MappingProjection` from an `OutputState` of
     the `RecurrentTransferMechanism` with which it is associated (identified by the `activity_source
     <AutoAssociativeLearningMechanism.activity_source>`);
 
@@ -49,7 +49,7 @@ An AutoAssociativeLearningMechanism is identical to a `LearningMechanism` in all
 
   * its `function <AutoAssociativeLearningMechanism.function>` takes as its `variable <Function_Base.variable>`
     a list or 1d np.array of numeric entries, corresponding in length to the AutoAssociativeLearningMechanism's
-    *ACTIVATION_INPUT* InputState; and it returns a `learning_signal <LearningMechanism.learning_signal>`
+    *ACTIVATION_INPUT* InputPort; and it returns a `learning_signal <LearningMechanism.learning_signal>`
     (a weight change matrix assigned to the Mechanism's *LEARNING_SIGNAL* OutputState), but not necessarily an
     `error_signal <LearningMechanism.error_signal>`.
 
@@ -92,7 +92,7 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.projections.projection import Projection_Base, projection_keywords
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, AUTOASSOCIATIVE_LEARNING_MECHANISM, CONTROL_PROJECTIONS, INPUT_STATES, \
+    ADDITIVE, AUTOASSOCIATIVE_LEARNING_MECHANISM, CONTROL_PROJECTIONS, INPUT_PORTS, \
     LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -100,7 +100,7 @@ from psyneulink.core.globals.utilities import is_numeric, parameter_spec
 
 __all__ = [
     'AutoAssociativeLearningMechanism', 'AutoAssociativeLearningMechanismError', 'DefaultTrainingMechanism',
-    'input_state_names', 'output_state_names',
+    'input_port_names', 'output_state_names',
 ]
 
 # Parameters:
@@ -108,7 +108,7 @@ __all__ = [
 parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
 projection_keywords.update({LEARNING_PROJECTION, LEARNING})
 
-input_state_names = [ACTIVATION_INPUT]
+input_port_names = [ACTIVATION_INPUT]
 output_state_names = [LEARNING_SIGNAL]
 
 DefaultTrainingMechanism = ObjectiveMechanism
@@ -144,7 +144,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     variable : List or 2d np.array : default None
         it must have a single item that corresponds to the value required by the AutoAssociativeLearningMechanism's
         `function <AutoAssociativeLearningMechanism.function>`;  it must each be compatible (in number and type)
-        with the `value <InputState.value>` of the Mechanism's `InputState <LearningMechanism_InputStates>` (see
+        with the `value <InputPort.value>` of the Mechanism's `InputPort <LearningMechanism_InputPorts>` (see
         `variable <AutoAssociativeLearningMechanism.variable>` for additional details).
 
     learning_signals : List[parameter of Projection, ParameterState, Projection, tuple[str, Projection] or dict] \
@@ -196,8 +196,8 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         the `OutputState` that is the `sender <AutoAssociativeProjection.sender>` of the `AutoAssociativeProjection`
         that the Mechanism trains.
 
-    input_states : ContentAddressableList[OutputState]
-        has a single item, that contains the AutoAssociativeLearningMechanism's single *ACTIVATION_INPUT* `InputState`.
+    input_ports : ContentAddressableList[OutputState]
+        has a single item, that contains the AutoAssociativeLearningMechanism's single *ACTIVATION_INPUT* `InputPort`.
 
     primary_learned_projection : AutoAssociativeProjection
         the `Projection` with the `matrix <AutoAssociativeProjection.matrix>` parameter being trained by the
@@ -214,15 +214,15 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         the function used to calculate the `learning_signal <AutoAssociativeLearningMechanism.learning_signal>`
         (assigned to the AutoAssociativeLearningMechanism's `LearningSignal(s) <LearningMechanism_LearningSignal>`).
         It's `variable <Function_Base.variable>` must be a list or 1d np.array of numeric entries, corresponding in
-        length to the AutoAssociativeLearningMechanism's *ACTIVATION_INPUT* (`primary <InputState_Primary>`) InputState.
+        length to the AutoAssociativeLearningMechanism's *ACTIVATION_INPUT* (`primary <InputPort_Primary>`) InputPort.
 
     learning_rate : float, 1d or 2d np.array, or np.matrix of numeric values : default None
         determines the learning rate used by the AutoAssociativeLearningMechanism's `function
         <AutoAssociativeLearningMechanism.function>` to scale the weight change matrix it returns. If it is a scalar, it is used to multiply the weight change matrix;  if it is a 2d array or matrix,
         it is used to Hadamard (elementwise) multiply the weight matrix (allowing the contribution of individual
         *connections* to be scaled);  if it is a 1d np.array, it is used to Hadamard (elementwise) multiply the input
-        to the `function <AutoAssociativeLearningMechanism.function>` (i.e., the `value <InputState.value>` of the
-        AutoAssociativeLearningMechanism's *ACTIVATION_INPUT* `InputState <AutoAssociativeLearningMechanism_Structure>`,
+        to the `function <AutoAssociativeLearningMechanism.function>` (i.e., the `value <InputPort.value>` of the
+        AutoAssociativeLearningMechanism's *ACTIVATION_INPUT* `InputPort <AutoAssociativeLearningMechanism_Structure>`,
         allowing the contribution of individual *units* to be scaled). If specified, the value supersedes the
         learning_rate assigned to any `Process` or `System` to which the AutoAssociativeLearningMechanism belongs.
         If it is `None`, then the `learning_rate <Process.learning_rate>` specified for the Process to which the
@@ -316,7 +316,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         CONTROL_PROJECTIONS: None,
-        INPUT_STATES:input_state_names,
+        INPUT_PORTS:input_port_names,
         OUTPUT_STATES:[{NAME:LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
                         VARIABLE: (OWNER_VALUE,0)}
                        ]})
@@ -448,4 +448,4 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
     @property
     def activity_source(self):
-        return self.input_state.path_afferents[0].sender.owner
+        return self.input_port.path_afferents[0].sender.owner

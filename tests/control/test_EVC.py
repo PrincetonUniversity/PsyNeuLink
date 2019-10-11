@@ -60,12 +60,12 @@ def test_EVC():
     Input.prefs.paramValidationPref = False
     Reward.prefs.paramValidationPref = False
     Decision.prefs.paramValidationPref = False
-    Decision.input_state.prefs.paramValidationPref = False
+    Decision.input_port.prefs.paramValidationPref = False
     for mech in [Input, Reward, Decision]:
         mech.function.prefs.paramValidationPref = False
         for os in mech.output_states:
             os.prefs.paramValidationPref = False
-        for instate in mech.input_states:
+        for instate in mech.input_ports:
             instate.prefs.paramValidationPref = False
         for pstate in mech._parameter_states:
             pstate.prefs.paramValidationPref = False

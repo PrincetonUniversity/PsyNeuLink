@@ -295,7 +295,7 @@ class TestNestedLearning:
 
         perceptual_state = pnl.ProcessingMechanism(name='Current State',
                                                    function=Concatenate,
-                                                   input_states=[{pnl.NAME: 'STIM',
+                                                   input_ports=[{pnl.NAME: 'STIM',
                                                                   pnl.SIZE: stim_size,
                                                                   pnl.PROJECTIONS: stim_in},
                                                                  {pnl.NAME: 'CONTEXT',
@@ -965,17 +965,17 @@ class TestBackProp:
             (comp.nodes['Comparator'].output_states[0].parameters.value.get(comp), np.array([0.48955343, 0.4516952])),
             (comp.nodes['Comparator'].output_states[pnl.MSE].parameters.value.get(comp), np.array(
                     0.22184555903789838)),
-            (comp.projections['MappingProjection from Color[RESULTS] to Hidden[InputState-0]'].get_mod_matrix(comp),
+            (comp.projections['MappingProjection from Color[RESULTS] to Hidden[InputPort-0]'].get_mod_matrix(comp),
              np.array([
                  [ 0.02512045, 1.02167245],
                  [ 2.02512045, 3.02167245],
              ])),
-            (comp.projections['MappingProjection from Word[RESULTS] to Hidden[InputState-0]'].get_mod_matrix(comp),
+            (comp.projections['MappingProjection from Word[RESULTS] to Hidden[InputPort-0]'].get_mod_matrix(comp),
              np.array([
                  [-0.05024091, 0.9566551 ],
                  [ 1.94975909, 2.9566551 ],
              ])),
-            (comp.projections['MappingProjection from Hidden[RESULTS] to Response[InputState-0]'].get_mod_matrix(comp),
+            (comp.projections['MappingProjection from Hidden[RESULTS] to Response[InputPort-0]'].get_mod_matrix(comp),
              np.array([
                  [ 0.03080958, 1.02830959],
                  [ 2.00464242, 3.00426575],
@@ -1010,19 +1010,19 @@ def validate_learning_mechs(comp):
     REL_HIDDEN_to_ACT_OUT_LM = get_learning_mech('LearningMechanism for MappingProjection from REL_HIDDEN to ACT_OUT')
 
     # Validate error_signal Projections for REP_IN to REP_HIDDEN
-    assert len(REP_IN_to_REP_HIDDEN_LM.input_states) == 3
-    assert REP_IN_to_REP_HIDDEN_LM.input_states[pnl.ERROR_SIGNAL].path_afferents[0].sender.owner == \
+    assert len(REP_IN_to_REP_HIDDEN_LM.input_ports) == 3
+    assert REP_IN_to_REP_HIDDEN_LM.input_ports[pnl.ERROR_SIGNAL].path_afferents[0].sender.owner == \
            REP_HIDDEN_to_REL_HIDDEN_LM
 
     # Validate error_signal Projections to LearningMechanisms for REP_HIDDEN_to REL_HIDDEN Projections
-    assert all(lm in [input_state.path_afferents[0].sender.owner for input_state in
-                      REP_HIDDEN_to_REL_HIDDEN_LM.input_states]
+    assert all(lm in [input_port.path_afferents[0].sender.owner for input_port in
+                      REP_HIDDEN_to_REL_HIDDEN_LM.input_ports]
                for lm in {REL_HIDDEN_to_REP_OUT_LM, REL_HIDDEN_to_PROP_OUT_LM,
                           REL_HIDDEN_to_QUAL_OUT_LM, REL_HIDDEN_to_ACT_OUT_LM})
 
     # Validate error_signal Projections to LearningMechanisms for REL_IN to REL_HIDDEN Projections
-    assert all(lm in [input_state.path_afferents[0].sender.owner for input_state in
-                      REL_IN_to_REL_HIDDEN_LM.input_states]
+    assert all(lm in [input_port.path_afferents[0].sender.owner for input_port in
+                      REL_IN_to_REL_HIDDEN_LM.input_ports]
                for lm in {REL_HIDDEN_to_REP_OUT_LM, REL_HIDDEN_to_PROP_OUT_LM,
                           REL_HIDDEN_to_QUAL_OUT_LM, REL_HIDDEN_to_ACT_OUT_LM})
 

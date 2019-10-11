@@ -203,7 +203,7 @@ A Component defines its `parameters <Parameters>` in its *parameters* attribute,
   general, only parameters that take numerical values and/or do not affect the structure, mode of operation,
   or format of the values associated with a Component can be subject to modulation.  For example, for a
   `TransferMechanism`, `clip <TransferMechanism.clip>`, `initial_value <TransferMechanism.initial_value>`,
-  `integrator_mode <TransferMechanism.integrator_mode>`, `input_states <TransferMechanism.input_states>`,
+  `integrator_mode <TransferMechanism.integrator_mode>`, `input_ports <TransferMechanism.input_ports>`,
   `output_states`, and `function <TransferMechanism.function>`, are all listed in user_params, and are user-modifiable,
   but are not subject to modulation; whereas `noise <TransferMechanism.noise>` and `integration_rate
   <TransferMechanism.integration_rate>`, as well as the parameters of the TransferMechanism's `function
@@ -423,7 +423,7 @@ from psyneulink.core.globals.context import Context, ContextError, ContextFlags,
 from psyneulink.core.globals.json import JSONDumpable
 from psyneulink.core.globals.keywords import \
     COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, \
-    FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, \
+    FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_PORTS, \
     LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, \
     PARAMS, PARAMS_CURRENT, PREFS_ARG, REINITIALIZE_WHEN, SIZE, USER_PARAMS, VALUE, VARIABLE, FUNCTION_COMPONENT_CATEGORY, \
     MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_PARAMETER_SOURCE, \
@@ -957,7 +957,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     paramClassDefaults = {}
 
-    exclude_from_parameter_states = [INPUT_STATES, OUTPUT_STATES]
+    exclude_from_parameter_states = [INPUT_PORTS, OUTPUT_STATES]
 
     # IMPLEMENTATION NOTE: This is needed so that the State class can be used with ContentAddressableList,
     #                      which requires that the attribute used for addressing is on the class;
@@ -1664,9 +1664,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 for param_name in sorted(list(kwargs[arg].keys())):
                     params[FUNCTION_PARAMS].__additem__(param_name,kwargs[arg][param_name])
 
-            # If no input_states or output_states are specified, ignore
+            # If no input_ports or output_states are specified, ignore
             #   (ones in paramClassDefaults will be assigned to paramsCurrent below (in params_class_defaults_only)
-            elif arg in {INPUT_STATES, OUTPUT_STATES} and kwargs[arg] is None:
+            elif arg in {INPUT_PORTS, OUTPUT_STATES} and kwargs[arg] is None:
                 continue
 
             # For all other params, assign arg and its default value to paramClassDefaults
@@ -1913,7 +1913,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 # (2) assign runtime param values to attributes (which calls validation via properties)
                 # (3) update parameter states if needed
                 if hasattr(self, param_name):
-                    if param_name in {FUNCTION, INPUT_STATES, OUTPUT_STATES}:
+                    if param_name in {FUNCTION, INPUT_PORTS, OUTPUT_STATES}:
                         continue
                     if context.execution_id not in self._runtime_params_reset:
                         self._runtime_params_reset[context.execution_id] = {}
@@ -2278,21 +2278,21 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         self.paramValidationPref = pref_buffer
 
         # FIX: THIS NEEDS TO BE HANDLED BETTER:
-        # FIX: DEAL WITH INPUT_STATES AND PARAMETER_STATES DIRECTLY (RATHER THAN VIA instantiate_attributes_before...)
+        # FIX: DEAL WITH INPUT_PORTS AND PARAMETER_STATES DIRECTLY (RATHER THAN VIA instantiate_attributes_before...)
         # FIX: SAME FOR FUNCTIONS THAT NEED TO BE "WRAPPED"
-        # FIX: FIGURE OUT HOW TO DEAL WITH INPUT_STATES
+        # FIX: FIGURE OUT HOW TO DEAL WITH INPUT_PORTS
         # FIX: FOR PARAMETER_STATES:
         #        CALL THE FOLLOWING FOR EACH PARAM:
         # FIX: NEED TO CALL
 
         validated_set_param_names = list(validated_set.keys())
 
-        # If an input_state is being added from the command line,
-        #    must _instantiate_attributes_before_function to parse input_states specification
+        # If an input_port is being added from the command line,
+        #    must _instantiate_attributes_before_function to parse input_ports specification
         # Otherwise, should not be run,
-        #    as it induces an unecessary call to _instantatiate_parameter_states (during instantiate_input_states),
+        #    as it induces an unecessary call to _instantatiate_parameter_states (during instantiate_input_ports),
         #    that causes name-repetition problems when it is called as part of the standard init procedure
-        if INPUT_STATES in validated_set_param_names and context.source & ContextFlags.COMMAND_LINE:
+        if INPUT_PORTS in validated_set_param_names and context.source & ContextFlags.COMMAND_LINE:
             self._instantiate_attributes_before_function(context=context)
 
         # If the object's function is being assigned, and it is a class, instantiate it as a Function object

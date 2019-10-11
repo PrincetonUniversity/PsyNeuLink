@@ -73,11 +73,11 @@ The DDM Mechanism implements a general form of the decision process.
 ~~~~~~~
 
 The input to the `function <DDM_Function>` of a DDM Mechanism is always a scalar, irrespective of `type of function
-<DDM_Modes>` that is used.  Accordingly, the default `InputState` for a DDM takes a single scalar value as its input,
+<DDM_Modes>` that is used.  Accordingly, the default `InputPort` for a DDM takes a single scalar value as its input,
 that represents the stimulus for the decision process.  However, this can be configured using the **input_format**
 argument of the DDM's consructor, to accomodate use of the DDM with other Mechanisms that generate a stimulus array
 (e.g., representing the stimuli associated with each of the two choices). By default, the **input_format** is
-*SCALAR*.  However, if it is specified as *ARRAY*, the DDM's InputState is configured to accept a 1d 2-item vector,
+*SCALAR*.  However, if it is specified as *ARRAY*, the DDM's InputPort is configured to accept a 1d 2-item vector,
 and to use `Reduce` as its Function, which subtracts the 2nd element of the vector from the 1st, and provides this as
 the input to the DDM's `function <DDM.function>`.  If *ARRAY* is specified, two  `Standard OutputStates
 <DDM_Standard_OutputStates>` are added to the DDM, that allow the result of the decision process to be represented
@@ -222,7 +222,7 @@ mode, only the `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <D
 
 COMMENT:
 [TBI - MULTIPROCESS DDM - REPLACE ABOVE]
-The DDM Mechanism implements a general form of the decision process.  A DDM Mechanism assigns one **inputState** to
+The DDM Mechanism implements a general form of the decision process.  A DDM Mechanism assigns one **inputPort** to
 each item in the `default_variable` argument, corresponding to each of the decision processes implemented
 (see :ref:`Input <DDM_Input>` above). The decision process can be configured to execute in different modes.  The
 `function <DDM.function>` parameters is the primary determinants of how the
@@ -364,7 +364,7 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.states.outputstate import SEQUENTIAL, StandardOutputStates
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INPUT_STATE_VARIABLES, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE, PREFERENCE_SET_NAME
+from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INPUT_PORT_VARIABLES, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -459,7 +459,7 @@ class DDM_OUTPUT():
          (see `DDM_Input`).
       • `analytic mode <DDM_Analytic_Mode>`: two element array, with one ("selected") element -- determined by the
         outcome of the decision process -- set to the value of the corresponding element in the stimulus array (i.e.,
-        the DDM's input_state `variable <InputState.variable>`).  The "selected" element is the 1st one if the decision
+        the DDM's input_port `variable <InputPort.variable>`).  The "selected" element is the 1st one if the decision
         process resulted in crossing the upper threshold, and the 2nd if it crossed the lower threshold; the other
         element is set to 0. \n
       • `integration mode <DDM_Integration_Mode>`: the value of the element in the stimulus array based on the
@@ -836,7 +836,7 @@ class DDM(ProcessingMechanism):
                                                    threshold=1.0,
                                                    noise=0.5,
                                                    t0=.200),
-                 input_states=None,
+                 input_ports=None,
                  output_states:tc.optional(tc.any(str, Iterable))=(DECISION_VARIABLE, RESPONSE_TIME),
                  params=None,
                  name=None,
@@ -847,15 +847,15 @@ class DDM(ProcessingMechanism):
                                                            DDM_standard_output_states,
                                                            indices=SEQUENTIAL)
 
-        if input_format is not None and input_states is not None:
+        if input_format is not None and input_ports is not None:
             raise DDMError(
-                'Only one of input_format and input_states should be specified.'
+                'Only one of input_format and input_ports should be specified.'
             )
         elif input_format is None:
             input_format = SCALAR
 
         # If input_format is specified to be ARRAY or VECTOR, instantiate:
-        #    InputState with:
+        #    InputPort with:
         #        2-item array as its variable
         #        Reduce as its function, which will generate an array of len 1
         #        and therefore specify size of Mechanism's variable as 1
@@ -865,7 +865,7 @@ class DDM(ProcessingMechanism):
         #            since they require input_format==ARRAY to be meaningful
         if input_format in {ARRAY, VECTOR}:
             size=1 # size of variable for DDM Mechanism
-            input_states = [
+            input_ports = [
                 {NAME:'ARRAY',
                  VARIABLE: np.array([[0.0, 0.0]]),
                  FUNCTION: Reduce(weights=[1,-1])}
@@ -882,11 +882,11 @@ class DDM(ProcessingMechanism):
                 # Provides a 1d 2-item array with:
                 #    input value in position corresponding to threshold crossed by decision variable, and 0 in the other
                 {NAME: SELECTED_INPUT_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
-                 VARIABLE:[(OWNER_VALUE, self.DECISION_VARIABLE_INDEX), THRESHOLD, (INPUT_STATE_VARIABLES, 0)],
+                 VARIABLE:[(OWNER_VALUE, self.DECISION_VARIABLE_INDEX), THRESHOLD, (INPUT_PORT_VARIABLES, 0)],
                  # per VARIABLE assignment above, items of v of lambda function below are:
                  #    v[0]=self.value[self.DECISION_VARIABLE_INDEX]
                  #    v[1]=self.parameter_states[THRESHOLD]
-                 #    v[2]=self.input_states[0].variable
+                 #    v[2]=self.input_ports[0].variable
                  FUNCTION: lambda v: [float(v[2][0][0]), 0] \
                                       if (v[1]-v[0]) < (v[1]+v[0]) \
                                       else [0,float(v[2][0][1])]
@@ -904,7 +904,7 @@ class DDM(ProcessingMechanism):
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
                                                   # input_format=input_format,
-                                                  input_states=input_states,
+                                                  input_ports=input_ports,
                                                   output_states=output_states,
                                                   params=params)
 
@@ -924,7 +924,7 @@ class DDM(ProcessingMechanism):
         # self.size = size
 
         super(DDM, self).__init__(default_variable=default_variable,
-                                  input_states=input_states,
+                                  input_ports=input_ports,
                                   output_states=output_states,
                                   function=function,
                                   params=params,

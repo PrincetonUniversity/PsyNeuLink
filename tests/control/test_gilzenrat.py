@@ -211,7 +211,7 @@ class TestGilzenratMechanisms:
 #                                               noise=NormalDist(mean=0.0, standard_deviation=standard_deviation).function,
 #                                               name='RESPONSE')
 #
-#         # Implement response layer with input_state for ObjectiveMechanism that has a single value
+#         # Implement response layer with input_port for ObjectiveMechanism that has a single value
 #         # and a MappingProjection to it that zeros the contribution of the decision unit in the decision layer
 #         LC = LCControlMechanism(
 #             time_step_size_FitzHughNagumo=time_step_size,  # integrating step size

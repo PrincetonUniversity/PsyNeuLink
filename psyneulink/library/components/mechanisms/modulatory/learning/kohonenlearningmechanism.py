@@ -33,11 +33,11 @@ Structure
 
 An KohonenLearningMechanism is identical to a `LearningMechanism` in all respects except the following:
 
-  * its *ACTIVATION_INPUT* InputState receives its `Projection` from the `sender <MappingProjection.sender>` of the
+  * its *ACTIVATION_INPUT* InputPort receives its `Projection` from the `sender <MappingProjection.sender>` of the
     `learned_projection <KohonenMechanism.learned_projection>` for the `KohonenMechanisms with which it is associated
     (identified by the `activity_source <KohonenLearningMechanism.activity_source>` attribute);  and its
-    *ACTIVATION_OUTPUT* InputState receives its input from the `receiver <MappingProjection.receiver>` of the
-    `learned_projection <KohonenMechanism.learned_projection>`. It does not have a *LEARNING_SIGNAL* `InputState`
+    *ACTIVATION_OUTPUT* InputPort receives its input from the `receiver <MappingProjection.receiver>` of the
+    `learned_projection <KohonenMechanism.learned_projection>`. It does not have a *LEARNING_SIGNAL* `InputPort`
     (since it implements a form of unsupervised learning).
 
   * it has a single *LEARNING_SIGNAL* `OutputState` that sends a `LearningProjection` to the `matrix
@@ -50,8 +50,8 @@ An KohonenLearningMechanism is identical to a `LearningMechanism` in all respect
     the KohonenMechanism's `learned_projection <KohonenMechanism.learned_projection>`.
 
   * its `function <KohonenLearningMechanism.function>` takes as its `variable <Function_Base.variable>`
-    a list containing two 1d arrays (the `value <InputState.value>` of its *ACTIVATION_INPUT* and *ACTIVATION_OUTPUT*
-    InputStates) and a 2d array (the current weight matrix of its `matrix <KohonenLearningMechanism.matrix>`
+    a list containing two 1d arrays (the `value <InputPort.value>` of its *ACTIVATION_INPUT* and *ACTIVATION_OUTPUT*
+    InputPorts) and a 2d array (the current weight matrix of its `matrix <KohonenLearningMechanism.matrix>`
     attribute), and it returns a `learning_signal <LearningMechanism.learning_signal>`
     (a weight change matrix assigned to the Mechanism's *LEARNING_SIGNAL* OutputState), but not an `error_signal
     <LearningMechanism.error_signal>`.
@@ -95,7 +95,7 @@ from psyneulink.core.components.projections.projection import Projection_Base, p
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, CONTROL_PROJECTIONS, INPUT_STATES, KOHONEN_LEARNING_MECHANISM, \
+    ADDITIVE, CONTROL_PROJECTIONS, INPUT_PORTS, KOHONEN_LEARNING_MECHANISM, \
     LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -103,7 +103,7 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, parameter_spec
 
 __all__ = [
-    'KohonenLearningMechanism', 'KohonenLearningMechanismError', 'input_state_names', 'output_state_names',
+    'KohonenLearningMechanism', 'KohonenLearningMechanismError', 'input_port_names', 'output_state_names',
 ]
 
 # Parameters:
@@ -111,7 +111,7 @@ __all__ = [
 parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
 projection_keywords.update({LEARNING_PROJECTION, LEARNING})
 
-input_state_names = [ACTIVATION_INPUT, ACTIVATION_OUTPUT]
+input_port_names = [ACTIVATION_INPUT, ACTIVATION_OUTPUT]
 output_state_names = [LEARNING_SIGNAL]
 
 # DefaultTrainingMechanism = ObjectiveMechanism
@@ -149,7 +149,7 @@ class KohonenLearningMechanism(LearningMechanism):
     variable : List[1d array, 1d array] or 2d np.array : default None
         it must have a two items that corresponds to the value required by the KohonenLearningMechanism's
         `function <KohonenLearningMechanism.function>`;  it must each be compatible (in number and type)
-        with the `value <InputState.value>` of the Mechanism's `InputState <LearningMechanism_InputStates>` (see
+        with the `value <InputPort.value>` of the Mechanism's `InputPort <LearningMechanism_InputPorts>` (see
         `variable <KohonenLearningMechanism.variable>` for additional details).
 
     learning_signals : List[parameter of Projection, ParameterState, Projection, tuple[str, Projection] or dict] \
@@ -192,15 +192,15 @@ class KohonenLearningMechanism(LearningMechanism):
     COMMENT
 
     variable : List[1d array, 1d array]
-        has two items, corresponding to the `value <InputState.value>` of its *ACTIVATION_INPUT* and
-        *ACTIVATION_OUTPUT* InputStates.
+        has two items, corresponding to the `value <InputPort.value>` of its *ACTIVATION_INPUT* and
+        *ACTIVATION_OUTPUT* InputPorts.
 
     activity_source : KohonenMechanism
         the `KohonenMechanism` with which the KohonenLearningMechanism is associated.
 
-    input_states : ContentAddressableList[OutputState]
+    input_ports : ContentAddressableList[OutputState]
         has a two items, that contains the KohonenLearningMechanism's *ACTIVATION_INPUT*  and *ACTIVATION_OUTPUT*
-        `InputStates`.
+        `InputPorts`.
 
     learned_projection : MappingProjection
         the `learning_projection <KohonenMechanism.learning_projection>` of the `KohoneMechanism` with which the
@@ -220,8 +220,8 @@ class KohonenLearningMechanism(LearningMechanism):
         used to multiply the weight change matrix;  if it is a 2d array or matrix,
         it is used to Hadamard (elementwise) multiply the weight matrix (allowing the contribution of individual
         *connections* to be scaled);  if it is a 1d np.array, it is used to Hadamard (elementwise) multiply the input
-        to the `function <KohonenLearningMechanism.function>` (i.e., the `value <InputState.value>` of the
-        KohonenLearningMechanism's *ACTIVATION_INPUT* `InputState <KohonenLearningMechanism_Structure>`,
+        to the `function <KohonenLearningMechanism.function>` (i.e., the `value <InputPort.value>` of the
+        KohonenLearningMechanism's *ACTIVATION_INPUT* `InputPort <KohonenLearningMechanism_Structure>`,
         allowing the contribution of individual *units* to be scaled). If specified, the value supersedes the
         learning_rate assigned to any `Process` or `System` to which the KohonenLearningMechanism belongs.
         If it is `None`, then the `learning_rate <Process.learning_rate>` specified for the Process to which the
@@ -342,7 +342,7 @@ class KohonenLearningMechanism(LearningMechanism):
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         CONTROL_PROJECTIONS: None,
-        INPUT_STATES:input_state_names,
+        INPUT_PORTS:input_port_names,
         OUTPUT_STATES:[{NAME:LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
                         VARIABLE: (OWNER_VALUE,0)}
                        ]})
@@ -454,5 +454,5 @@ class KohonenLearningMechanism(LearningMechanism):
 
     @property
     def activity_source(self):
-        # return self.input_state.path_afferents[0].sender.owner
+        # return self.input_port.path_afferents[0].sender.owner
         return self.primary_learned_projection.sender.owner

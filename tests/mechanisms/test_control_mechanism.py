@@ -154,9 +154,9 @@ class TestLCControlMechanism:
         Hidden_Layer_2 = pnl.TransferMechanism(name='Hidden Layer_2', function=pnl.Logistic, size=4)
         Output_Layer = pnl.TransferMechanism(name='Output Layer', function=pnl.Logistic, size=3)
     
-        Control_Mechanism = pnl.ControlMechanism(size=[1], control=[Hidden_Layer_1.input_state,
-                                                                    Hidden_Layer_2.input_state,
-                                                                    Output_Layer.input_state])
+        Control_Mechanism = pnl.ControlMechanism(size=[1], control=[Hidden_Layer_1.input_port,
+                                                                    Hidden_Layer_2.input_port,
+                                                                    Output_Layer.input_port])
     
         Input_Weights_matrix = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
         Middle_Weights_matrix = (np.arange(5 * 4).reshape((5, 4)) + 1) / (5 * 4)
@@ -207,9 +207,9 @@ class TestLCControlMechanism:
         expected_results = [[0.96801676, 0.98304415, 0.99225722]]
         assert np.allclose(results, expected_results)
 
-    def test_control_of_all_input_states(self):
-        mech = pnl.ProcessingMechanism(input_states=['A','B','C'])
-        control_mech = pnl.ControlMechanism(control=mech.input_states)
+    def test_control_of_all_input_ports(self):
+        mech = pnl.ProcessingMechanism(input_ports=['A','B','C'])
+        control_mech = pnl.ControlMechanism(control=mech.input_ports)
         comp = pnl.Composition()
         comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
         results = comp.run(inputs={mech:[[2],[2],[2]], control_mech:[2]}, num_trials=2)

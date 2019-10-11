@@ -50,7 +50,7 @@ Structure
 *Input: ObjectiveMechanism and Monitored OutputStates*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-An AGTControlMechanism has a single (primary) `InputState <InputState_Primary>` that receives its input via a
+An AGTControlMechanism has a single (primary) `InputPort <InputPort_Primary>` that receives its input via a
 `MappingProjection` from the *OUTCOME* `OutputState <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`. The
 ObjectiveMechanism is created automatically when the AGTControlMechanism is created, using a `DualAdaptiveIntegrator`
 as its `function <ObjectiveMechanism.function>`, and is listed in the AGTControlMechanism's `objective_mechanism
@@ -108,10 +108,10 @@ automatically created and assigned to the LCControlMechanism when it is created:
       control the value of the LCControlMechanism's `mode <FitzHughNagumoIntegrator.mode>` attribute.
     ..
     * `MappingProjections <MappingProjection>` from Mechanisms or OutputStates specified in **monitor_for_control** to
-      the AGTUtilityIntegratorMechanism's `primary InputState <InputState_Primary>`.
+      the AGTUtilityIntegratorMechanism's `primary InputPort <InputPort_Primary>`.
     ..
     * a `MappingProjection` from the AGTUtilityIntegratorMechanism's *UTILITY_SIGNAL* `OutputState
-      <AGTUtilityIntegratorMechanism_Structure>` to the LCControlMechanism's *MODE* <InputState_Primary>`.
+      <AGTUtilityIntegratorMechanism_Structure>` to the LCControlMechanism's *MODE* <InputPort_Primary>`.
     ..
     * a `ControlProjection` from the LCController's ControlSignal to the `ParameterState` for the LCControlMechanism's
       `mode <FitzHughNagumoIntegrator.mode>` attribute.
@@ -123,8 +123,8 @@ COMMENT
 Execution
 ---------
 
-An AGTControlMechanism's `function <AGTControlMechanism_Base.function>` takes as its input the `value <InputState.value>` of
-its *OUTCOME* `input_state <Mechanism_Base.input_state>`, and uses that to determine its `control_allocation
+An AGTControlMechanism's `function <AGTControlMechanism_Base.function>` takes as its input the `value <InputPort.value>` of
+its *OUTCOME* `input_port <Mechanism_Base.input_port>`, and uses that to determine its `control_allocation
 <ITC.control_allocation>` which specifies the value assigned to the `allocation <ControlSignal.allocation>` of each of
 its `ControlSignals <ControlSignal>`.  An AGTControlMechanism assigns the same value (the `input <AGTControlMechanism_Input>` it
 receives from its `objective_mechanism <AGTControlMechanism.objective_mechanism>` to all of its ControlSignals.  Each
@@ -459,7 +459,7 @@ class AGTControlMechanism(ControlMechanism):
         if self.objective_mechanism is None:
             print ("\t\tNone")
         else:
-            for state in self.objective_mechanism.input_states:
+            for state in self.objective_mechanism.input_ports:
                 for projection in state.path_afferents:
                     monitored_state = projection.sender
                     monitored_state_mech = projection.sender.owner

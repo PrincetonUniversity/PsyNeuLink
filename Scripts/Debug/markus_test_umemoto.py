@@ -95,7 +95,7 @@ print(Decision.execute([1]))
 # Decision.set_log_conditions('DECISION_VARIABLE')
 # Decision.set_log_conditions('value')
 # Decision.set_log_conditions('PROBABILITY_UPPER_THRESHOLD')
-Decision.set_log_conditions('InputState-0')
+Decision.set_log_conditions('InputPort-0')
 # Decision.set_log_conditions('RESPONSE_TIME')
 
 # Decision.loggable_items
@@ -205,8 +205,8 @@ def x():
     # print(Decision.output_states[pnl.DECISION_VARIABLE].value)
     # print(Decision.output_states[pnl.RESPONSE_TIME].value)
     # print(Target_Rep.input_values)
-    # print("target rep variable:", Target_Rep.input_states[0].variable)
-    # print("target rep input states:", Target_Rep.input_states)
+    # print("target rep variable:", Target_Rep.input_ports[0].variable)
+    # print("target rep input states:", Target_Rep.input_ports)
     # print("output target stim", Target_Stim.output_values)
     #
     # print(Target_Rep.path_afferents)
@@ -219,7 +219,7 @@ def x():
     # print("my system controller: ", mySystem.controller.control_signals.values)
     # print("my system controller SLOPE: ", mySystem.controller.control_signals.values)
     #
-    # print("input state bla bla:", Target_Rep.input_states[0].function.exponents)
+    # print("input state bla bla:", Target_Rep.input_ports[0].function.exponents)
     # print("============== ")
     # print("my system  stuff: ", mySystem.controller.control_signals.values)
     #

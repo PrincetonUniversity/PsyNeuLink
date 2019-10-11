@@ -57,7 +57,7 @@ Decision = pnl.DDM(function=psyneulink.core.components.functions.distributionfun
 Decision.set_log_conditions('DECISION_VARIABLE')
 Decision.set_log_conditions('value')
 Decision.set_log_conditions('PROBABILITY_UPPER_THRESHOLD')
-Decision.set_log_conditions('InputState-0')
+Decision.set_log_conditions('InputPort-0')
 
 Decision.loggable_items
 

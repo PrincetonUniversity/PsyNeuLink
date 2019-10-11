@@ -606,7 +606,7 @@ class Parameter(types.SimpleNamespace):
             if not None, this indicates the argument in the owning Component's
             constructor that this Parameter corresponds to. Typically this is
             used in Parameters that save specification types, as in
-            `input_states_spec <Mechanism.input_states_spec>` and
+            `input_ports_spec <Mechanism.input_ports_spec>` and
             `output_states_spec <Mechanism.output_states_spec>`
 
             :default: None

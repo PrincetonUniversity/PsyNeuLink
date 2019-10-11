@@ -383,7 +383,7 @@ class LCAMechanism(RecurrentTransferMechanism):
 
     recurrent_projection : MappingProjection
         a `MappingProjection` that projects from the Mechanism's `primary OutputState <OutputState_Primary>`
-        back to it `primary inputState <Mechanism_InputStates>`.
+        back to it `primary inputPort <Mechanism_InputPorts>`.
 
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS
         determines the starting value for time-averaged input
@@ -572,7 +572,7 @@ class LCAMechanism(RecurrentTransferMechanism):
     def __init__(self,
                  default_variable=None,
                  size:tc.optional(tc.any(int, list, np.array))=None,
-                 input_states:tc.optional(tc.any(list, dict))=None,
+                 input_ports:tc.optional(tc.any(list, dict))=None,
                  matrix=None,
                  function=Logistic,
                  initial_value=None,
@@ -621,7 +621,7 @@ class LCAMechanism(RecurrentTransferMechanism):
         integrator_function = LeakyCompetingIntegrator
 
         # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(input_states=input_states,
+        params = self._assign_args_to_param_dicts(input_ports=input_ports,
                                                   leak=leak,
                                                   self_excitation=self_excitation,
                                                   hetero=hetero,
@@ -638,7 +638,7 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         super().__init__(default_variable=default_variable,
                          size=size,
-                         input_states=input_states,
+                         input_ports=input_ports,
                          auto=self_excitation,
                          hetero=hetero,
                          function=function,

@@ -64,9 +64,9 @@ objective_mech = ObjectiveMechanism(function=LinearCombination(operation=PRODUCT
                                                   PROBABILITY_UPPER_THRESHOLD], 1, -1)])
 # Model Based OCM (formerly controller)
 evc_gratton.add_controller(controller=OptimizationControlMechanism(agent_rep=evc_gratton,
-                                                                   features=[target_stim.input_state,
-                                                                             flanker_stim.input_state,
-                                                                             reward.input_state],
+                                                                   features=[target_stim.input_port,
+                                                                             flanker_stim.input_port,
+                                                                             reward.input_port],
                                                                    feature_function=AdaptiveIntegrator(rate=1.0),
                                                                    objective_mechanism=objective_mech,
                                                                    function=GridSearch(),

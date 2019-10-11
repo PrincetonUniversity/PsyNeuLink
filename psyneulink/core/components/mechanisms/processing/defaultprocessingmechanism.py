@@ -39,7 +39,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
     Class attributes:
         + componentType (str): System Default Mechanism
         + paramClassDefaults (dict):
-            # + kwInputStateValue: [0]
+            # + kwInputPortValue: [0]
             # + kwOutputStateValue: [1]
             + FUNCTION: Linear
             + FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0}

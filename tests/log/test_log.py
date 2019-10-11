@@ -17,7 +17,7 @@ class TestLog:
         PJ = T_2.path_afferents[0]
 
         assert T_1.loggable_items == {
-            'InputState-0': 'OFF',
+            'InputPort-0': 'OFF',
             'RESULTS': 'OFF',
             'clip': 'OFF',
             'convergence_criterion': 'OFF',
@@ -47,7 +47,7 @@ class TestLog:
             'variable': 'OFF'
         }
         assert T_2.loggable_items == {
-            'InputState-0': 'OFF',
+            'InputPort-0': 'OFF',
             'RESULTS': 'OFF',
             'clip': 'OFF',
             'convergence_criterion': 'OFF',
@@ -96,7 +96,7 @@ class TestLog:
         PJ.set_log_conditions('mod_matrix')
 
         assert T_1.loggable_items == {
-            'InputState-0': 'OFF',
+            'InputPort-0': 'OFF',
             'RESULTS': 'EXECUTION',
             'clip': 'OFF',
             'convergence_criterion': 'OFF',
@@ -126,7 +126,7 @@ class TestLog:
             'variable': 'OFF'
         }
         assert T_2.loggable_items == {
-            'InputState-0': 'OFF',
+            'InputPort-0': 'OFF',
             'RESULTS': 'OFF',
             'clip': 'OFF',
             'convergence_criterion': 'OFF',
@@ -240,7 +240,7 @@ class TestLog:
         PJ = T2.path_afferents[0]
 
         assert T1.loggable_items == {
-            'InputState-0': 'OFF',
+            'InputPort-0': 'OFF',
             'RESULTS': 'OFF',
             'clip': 'OFF',
             'convergence_criterion': 'OFF',
@@ -270,7 +270,7 @@ class TestLog:
             'variable': 'OFF'
         }
         assert T2.loggable_items == {
-            'InputState-0': 'OFF',
+            'InputPort-0': 'OFF',
             'RESULTS': 'OFF',
             'clip': 'OFF',
             'convergence_criterion': 'OFF',
@@ -323,7 +323,7 @@ class TestLog:
         T2.set_log_conditions(pnl.VALUE)
 
         assert T1.loggable_items == {
-            'InputState-0': 'OFF',
+            'InputPort-0': 'OFF',
             'RESULTS': 'EXECUTION',
             'clip': 'OFF',
             'convergence_criterion': 'OFF',
@@ -353,7 +353,7 @@ class TestLog:
             'variable': 'OFF'
         }
         assert T2.loggable_items == {
-            'InputState-0': 'OFF',
+            'InputPort-0': 'OFF',
             'RESULTS': 'EXECUTION',
             'clip': 'OFF',
             'convergence_criterion': 'OFF',
@@ -458,7 +458,7 @@ class TestLog:
         SYS = pnl.System(name='log_test_SYS', processes=[PS])
 
         assert T1.loggable_items == {
-            'InputState-0': 'OFF',
+            'InputPort-0': 'OFF',
             'RESULTS': 'OFF',
             'clip': 'OFF',
             'convergence_criterion': 'OFF',
@@ -488,7 +488,7 @@ class TestLog:
             'variable': 'OFF'
         }
         assert T2.loggable_items == {
-            'InputState-0': 'OFF',
+            'InputPort-0': 'OFF',
             'RESULTS': 'OFF',
             'clip': 'OFF',
             'convergence_criterion': 'OFF',
@@ -523,7 +523,7 @@ class TestLog:
         T1.set_log_conditions(pnl.VALUE)
 
         assert T1.loggable_items == {
-            'InputState-0': 'OFF',
+            'InputPort-0': 'OFF',
             'RESULTS': 'EXECUTION',
             'clip': 'OFF',
             'convergence_criterion': 'OFF',
@@ -558,7 +558,7 @@ class TestLog:
         T2.set_log_conditions(pnl.VALUE)
 
         assert T2.loggable_items == {
-            'InputState-0': 'OFF',
+            'InputPort-0': 'OFF',
             'RESULTS': 'EXECUTION',
             'clip': 'OFF',
             'convergence_criterion': 'OFF',
@@ -1038,7 +1038,7 @@ class TestFiltering:
         comp.add_controller(
             controller=pnl.OptimizationControlMechanism(
                 agent_rep=comp,
-                features=[Input.input_state, reward.input_state],
+                features=[Input.input_port, reward.input_port],
                 feature_function=pnl.AdaptiveIntegrator(rate=0.5),
                 objective_mechanism=pnl.ObjectiveMechanism(
                     function=pnl.LinearCombination(operation=pnl.PRODUCT),

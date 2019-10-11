@@ -140,16 +140,16 @@ before setting it as the TransferMechanism's `value <TransferMechanism.value>`.
 Structure
 ---------
 
-.. _TransferMechanism_InputStates:
+.. _TransferMechanism_InputPorts:
 
-*InputStates*
+*InputPorts*
 ~~~~~~~~~~~~~
 
-By default, a TransferMechanism has a single `InputState`;  however, more than one can be specified
+By default, a TransferMechanism has a single `InputPort`;  however, more than one can be specified
 using the **default_variable** or **size** arguments of its constructor (see `Mechanism`).  The `value
-<InputState.value>` of each InputState is used as a separate item of the Mechanism's `variable
+<InputPort.value>` of each InputPort is used as a separate item of the Mechanism's `variable
 <TransferMechanism.variable>`, and transformed independently by its `function <TransferMechanism.function>`.
-Like any InputStates, the `value <OutputState.value>` of any or all of the TransferMechanism's InputStates can be
+Like any InputPorts, the `value <OutputState.value>` of any or all of the TransferMechanism's InputPorts can be
 modulated by one or more `GatingSignals <GatingSignal_Modulation>` prior to transformation by its `function
 <TransferMechanism.function>`.
 
@@ -164,7 +164,7 @@ either `TransferFunction` or `NormalizationFunction.` It can also be any python 
 that it returns an output that is identical in shape to its input;  the function or method is "wrapped" as
 `UserDefinedFunction`, and assigned as the TransferMechanism's `function <TransferMechanism.function>` attribute.
 
-The result of the `function <TransferMechanism.function>` applied to the `value <InputState.value>` of each InputState
+The result of the `function <TransferMechanism.function>` applied to the `value <InputPort.value>` of each InputPort
 is:
     - appended to an array that represents the TransferMechanism's `value <TransferMechanism.value>`
     - assigned as the `value <OutputState.value>` of the TransferMechanism's corresponding `OutputState <OutputState>`
@@ -174,11 +174,11 @@ is:
 *OutputStates*
 ~~~~~~~~~~~~~~
 
-By default, a TransferMechanism generates one `OutputState` for each of its `InputStates`.  The first (and `primary
+By default, a TransferMechanism generates one `OutputState` for each of its `InputPorts`.  The first (and `primary
 <OutputState_Primary>`) OutputState is named *RESULT*; subsequent ones use that as the base name, suffixed with an
 incrementing integer starting at '-1' for each additional OutputState (e.g., *RESULT-1*, *RESULT-2*, etc.; see
 `Naming`). The `value <OutputState.value>` of each OutputState is assigned the result of the Mechanism's `function
-<TransferMechanism.function>` applied to the `value <InputState.value>` of the corresponding InputState.
+<TransferMechanism.function>` applied to the `value <InputPort.value>` of the corresponding InputPort.
 
 Additional OutputStates can be assigned using the TransferMechanism's `Standard OutputStates
 <TransferMechanism_Standard_OutputStates>` (see `OutputState_Standard`) or by creating `custom OutputStates
@@ -192,7 +192,7 @@ all of these can be modulated by one or more `GatingSignals <GatingSignal_Modula
        then, `as with any Mechanism <Mechanism_Default_State_Suppression_Note>`, its default OutputStates are not
        automatically generated.  Therefore, an OutputState with the appropriate `index <OutputState.index>` must be
        explicitly specified for each and every item of the Mechanism's `value <TransferMechanism.value>` (corresponding
-       to each InputState) for which an OutputState is needed.
+       to each InputPort) for which an OutputState is needed.
 
 .. _Transfer_Execution:
 
@@ -234,7 +234,7 @@ the following parameters (in addition to any specified for the `function <Transf
       lower and upper values specified by clip.
 
 After each execution of the Mechanism the result of `function <TransferMechanism.function>` applied to each
-`InputState` is assigned as an item of the Mechanism's `value <TransferMechanism.value>`, and the `value
+`InputPort` is assigned as an item of the Mechanism's `value <TransferMechanism.value>`, and the `value
 <OutputState.value>` of each of its `OutputStates <OutputState>`, and to the 1st item of the Mechanism's
 `output_values <TransferMechanism.output_values>` attribute.
 
@@ -365,7 +365,7 @@ from psyneulink.core.components.functions.userdefinedfunction import UserDefined
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import _is_control_spec
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.core.components.states.inputstate import InputState
+from psyneulink.core.components.states.inputport import InputPort
 from psyneulink.core.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates, standard_output_states
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
@@ -409,11 +409,11 @@ class TRANSFER_OUTPUT():
 
     *RESULT* : 1d np.array
       first item of TransferMechanism's `value <TransferMechanism.value>` (corresponding to input from its
-      first InputState)
+      first InputPort)
 
     *RESULTS* : 2d np.array
       each item of TransferMechanism's `value <TransferMechanism.value>` (corresponding to input from each
-      of its `input_states <TransferMechanism.input_states>`) is assigned as the `value <OutputState.value>`
+      of its `input_ports <TransferMechanism.input_ports>`) is assigned as the `value <OutputState.value>`
       of a corresponding OutputState of its `output_states <TransferMechanism.output_states>`.
 
     .. _TRANSFER_MECHANISM_MEAN:
@@ -498,7 +498,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     TransferMechanism(                                                            \
     default_variable=None,                                                        \
     size=None,                                                                    \
-    input_states=None,                                                            \
+    input_ports=None,                                                            \
     function=Linear,                                                              \
     integrator_mode=False,                                                        \
     integrator_function=AdaptiveIntegrator,                                       \
@@ -558,11 +558,11 @@ class TransferMechanism(ProcessingMechanism_Base):
             T1 = TransferMechanism(size = [3, 2])
             T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
 
-    input_states : str, list, dict, or np.ndarray
-        specifies the InputStates for the TransferMechanism; by default, a single InputState is created using the
-        value of default_variable as its `variable <InputState.variable>`;  if more than one is specified, the number
+    input_ports : str, list, dict, or np.ndarray
+        specifies the InputPorts for the TransferMechanism; by default, a single InputPort is created using the
+        value of default_variable as its `variable <InputPort.variable>`;  if more than one is specified, the number
         and, if specified, their values must be compatible with any specifications in **default_variable** or
-        **size** (see `Mechanism_InputStates`);  see `input_states <TransferMechanism.output_states>` for additional
+        **size** (see `Mechanism_InputPorts`);  see `input_ports <TransferMechanism.output_states>` for additional
         details.
 
     function : TransferFunction : default Linear
@@ -631,8 +631,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
 
     output_states : str, list or np.ndarray : default RESULTS
-        specifies the OutputStates for the TransferMechanism; by default, one is created for each InputState
-        specified in **input_states**;  see `note <TransferMechanism_OutputStates_Note>`, and `output_states
+        specifies the OutputStates for the TransferMechanism; by default, one is created for each InputPort
+        specified in **input_ports**;  see `note <TransferMechanism_OutputStates_Note>`, and `output_states
         <TransferMechanism.output_states>` for additional details).
 
     params : Dict[param keyword: param value] : default None
@@ -659,8 +659,8 @@ class TransferMechanism(ProcessingMechanism_Base):
             :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
         COMMENT
 
-    input_states : *ContentAddressableList[InputState]*
-        list of Mechanism's `InputStates <InputStates>` (see `TransferMechanism_InputStates` for additional details).
+    input_ports : *ContentAddressableList[InputPort]*
+        list of Mechanism's `InputPorts <InputPorts>` (see `TransferMechanism_InputPorts` for additional details).
 
     function : Function
         the Function used to transform the input.
@@ -788,7 +788,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
 
     output_states : *ContentAddressableList[OutputState]*
-        list of Mechanism's `OutputStates <OutputStates>`; by default there is one OutputState for each InputState,
+        list of Mechanism's `OutputStates <OutputStates>`; by default there is one OutputState for each InputPort,
         with the base name `RESULT` (see `TransferMechanism_OutputStates` for additional details).
 
     output_values : List[array(float64)]
@@ -931,7 +931,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_states:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState))=None,
+                 input_ports:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputPort))=None,
                  function=Linear,
                  integrator_mode=False,
                  integrator_function=AdaptiveIntegrator,
@@ -962,7 +962,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,
-                                                  input_states=input_states,
+                                                  input_ports=input_ports,
                                                   output_states=output_states,
                                                   noise=noise,
                                                   integration_rate=integration_rate,
@@ -985,7 +985,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         super(TransferMechanism, self).__init__(
                 default_variable=default_variable,
                 size=size,
-                input_states=input_states,
+                input_ports=input_ports,
                 output_states=output_states,
                 function=function,
                 params=params,
@@ -1380,7 +1380,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         return tuple(context_list)
 
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
-        is_out, builder = self._gen_llvm_input_states(ctx, builder, params, context, arg_in)
+        is_out, builder = self._gen_llvm_input_ports(ctx, builder, params, context, arg_in)
 
         # Parameters and context for both integrator and main function
         f_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])

@@ -128,21 +128,21 @@ class TestNaming:
 
     # ------------------------------------------------------------------------------------------------
     # TEST 9
-    # Test that InputStates and Projections constructed on their own and assigned are properly named
+    # Test that InputPorts and Projections constructed on their own and assigned are properly named
 
-    def test_input_state_and_assigned_projection_names(self):
+    def test_input_port_and_assigned_projection_names(self):
         T1 = pnl.TransferMechanism(name='T1')
-        T2 = pnl.TransferMechanism(name='T2', input_states=[T1])
-        I1 = pnl.InputState(owner=T2)
-        I2 = pnl.InputState(projections=[T1])
-        assert I2.name == 'Deferred Init InputState'
+        T2 = pnl.TransferMechanism(name='T2', input_ports=[T1])
+        I1 = pnl.InputPort(owner=T2)
+        I2 = pnl.InputPort(projections=[T1])
+        assert I2.name == 'Deferred Init InputPort'
         T2.add_states([I2])
-        assert I1.name == 'InputState-1'
-        assert I2.name == 'InputState-2'
-        assert T2.input_states[0].path_afferents[0].name == \
-               'MappingProjection from T1[RESULTS] to T2[InputState-0]'
-        assert T2.input_states[2].path_afferents[0].name == \
-               'MappingProjection from T1[RESULTS] to T2[InputState-2]'
+        assert I1.name == 'InputPort-1'
+        assert I2.name == 'InputPort-2'
+        assert T2.input_ports[0].path_afferents[0].name == \
+               'MappingProjection from T1[RESULTS] to T2[InputPort-0]'
+        assert T2.input_ports[2].path_afferents[0].name == \
+               'MappingProjection from T1[RESULTS] to T2[InputPort-2]'
 
     # ------------------------------------------------------------------------------------------------
     # TEST 10
@@ -195,15 +195,15 @@ class TestNaming:
 
     def test_gating_signal_and_gating_projection_names(self):
         T3 = pnl.TransferMechanism(name='T3')
-        T4 = pnl.TransferMechanism(name='T4', input_states=['First State','Second State'])
+        T4 = pnl.TransferMechanism(name='T4', input_ports=['First State','Second State'])
 
         # GatingSignal with one GatingProjection
         G1 = pnl.GatingMechanism(gating_signals=[T3])
-        assert G1.gating_signals[0].name == 'T3[InputState-0] GatingSignal'
-        assert G1.gating_signals[0].efferents[0].name == 'GatingProjection for T3[InputState-0]'
+        assert G1.gating_signals[0].name == 'T3[InputPort-0] GatingSignal'
+        assert G1.gating_signals[0].efferents[0].name == 'GatingProjection for T3[InputPort-0]'
 
         # GatingSignal with two GatingProjections to two States of same Mechanism
-        G2 = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS:[T4.input_states[0], T4.input_states[1]]}])
+        G2 = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS:[T4.input_ports[0], T4.input_ports[1]]}])
         assert G2.gating_signals[0].name == 'T4[First State, Second State] GatingSignal'
         assert G2.gating_signals[0].efferents[0].name == 'GatingProjection for T4[First State]'
         assert G2.gating_signals[0].efferents[1].name == 'GatingProjection for T4[Second State]'
@@ -211,12 +211,12 @@ class TestNaming:
         # GatingSignal with two GatingProjections to two States of different Mechanisms
         G3 = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS:[T3, T4]}])
         assert G3.gating_signals[0].name == 'GatingSignal-0 divergent GatingSignal'
-        assert G3.gating_signals[0].efferents[0].name == 'GatingProjection for T3[InputState-0]'
+        assert G3.gating_signals[0].efferents[0].name == 'GatingProjection for T3[InputPort-0]'
         assert G3.gating_signals[0].efferents[1].name == 'GatingProjection for T4[First State]'
 
         # GatingProjections to ProcessingMechanism from GatingSignals of existing GatingMechanism
         T5 = pnl.TransferMechanism(name='T5',
-                                   input_states=[T3.output_states[pnl.RESULTS],
+                                   input_ports=[T3.output_states[pnl.RESULTS],
                                                  G3.gating_signals['GatingSignal-0 divergent GatingSignal']],
                                    output_states=[G3.gating_signals['GatingSignal-0 divergent GatingSignal']])
 

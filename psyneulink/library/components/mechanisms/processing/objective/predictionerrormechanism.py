@@ -32,48 +32,48 @@ A PredictionErrorMechanism can also be created directly by calling its construct
 Its **sample** and **target**  arguments are used to specify the OutputStates
 that provide the sample and target inputs, respectively (see
 `ObjectiveMechanism Monitored Output States <ObjectiveMechanism_Monitor>`
-for details). When the PredictionErrorMechanism is created, two InputStates are
+for details). When the PredictionErrorMechanism is created, two InputPorts are
 created, one each for its sample and target inputs (and named, by default
 *SAMPLE* and *TARGET*). Each is assigned a MappingProjection from the
 corresponding OutputState specified in the **sample** and **target** arguments.
 
 It is important to recognize that the value of the *SAMPLE* and *TARGET*
-InputStates must have the same length and type, so that they can be compared
+InputPorts must have the same length and type, so that they can be compared
 using the PredictionErrorMechanism's `function
 <PredictionErrorMechanism.function>` By default, they use the format of the
 OutputStates specified in the **sample** and **target** arguments, respectively,
 and the `MappingProjection` to each uses an `IDENTITY_MATRIX`. Therefore, for
 the default configuration, the OutputStates specified in the **sample** and
 **target** arguments must have values of the same length and type. If these
-differ, the **input_states** argument can be used to explicitly specify the
-format of the PredictionErrorMechanism's *SAMPLE* and *TARGET* InputStates, to
+differ, the **input_ports** argument can be used to explicitly specify the
+format of the PredictionErrorMechanism's *SAMPLE* and *TARGET* InputPorts, to
 insure they are compatible with one another (as well as to customize their
-names, if desired). If the **input_states** argument is used, *both* the sample
-and target InputStates must be specified. Any of the formats for `specifying
-InputStates <InputState_Specification>` can be used in the argument. If values
-are assigned for the InputStates, they must be of equal length and type. Their
+names, if desired). If the **input_ports** argument is used, *both* the sample
+and target InputPorts must be specified. Any of the formats for `specifying
+InputPorts <InputPort_Specification>` can be used in the argument. If values
+are assigned for the InputPorts, they must be of equal length and type. Their
 types must also be compatible with the value of the OutputStates specified in
 the **sample** and **target** arguments. However, the length specified for an
-InputState can differ from its corresponding OutputState; in that case, by
+InputPort can differ from its corresponding OutputState; in that case, by
 default, the MappingProjection created uses a `FULL_CONNECTIVITY` matrix. Thus,
 OutputStates of differing lengths can be mapped to the sample and target
-InputStates of a PredictionErrorMechanism (see the `example
+InputPorts of a PredictionErrorMechanism (see the `example
 <PredictionErrorMechanism_Example>` below), so long as the latter of of the
 same length. If a projection other than a `FULL_CONNECTIVITY` matrix is
 needed, this can be specified using the *PROJECTION* entry of a `State
-specification dictionary <State_Specification>` for the InputState in the
-**input_states** argument.
+specification dictionary <State_Specification>` for the InputPort in the
+**input_ports** argument.
 
 .. _PredictionErrorMechanism_Structure:
 
 Structure
 ---------
 
-A PredictionErrorMechanism has two `input_states
-<ComparatorMechanism.input_states>`, each of which receives a
+A PredictionErrorMechanism has two `input_ports
+<ComparatorMechanism.input_ports>`, each of which receives a
 `MappingProjection` from a corresponding OutputState specified in the
-**sample** and **target** arguments of its constructor. The InputStates are
-listed in the Mechanism's `input_states <ComparatorMechanism.input_states>`
+**sample** and **target** arguments of its constructor. The InputPorts are
+listed in the Mechanism's `input_ports <ComparatorMechanism.input_ports>`
 attribute and named, respectively, *SAMPLE* and *TARGET*. The OutputStates
 from which they receive their projections (specified in the **sample** and
 **target** arguments) are listed in the Mechanism's `sample
@@ -95,7 +95,7 @@ value of the PredictionErrorMechanism's *OUTCOME* (`primary
 Execution
 ---------
 
-When a PredictionErrorMechanism is executed, it updates its input_states with
+When a PredictionErrorMechanism is executed, it updates its input_ports with
 the values of the OutputStates specified in its **sample** and **target**
 arguments, and then uses its `function <PredictionErrorMechanism.function>` to
 compare these. By default, the result is assigned to the `value
@@ -110,10 +110,10 @@ Example
 
 .. _PredictionErrorMechanism_Default_Input_Value_Example:
 
-*Formatting InputState values*
+*Formatting InputPort values*
 
 The **default_variable** argument can be used to specify a particular format
-for the SAMPLE and/or TARGET InputStates of a PredictionErrorMechanism. This
+for the SAMPLE and/or TARGET InputPorts of a PredictionErrorMechanism. This
 can be useful when one or both of these differ from the format of the
 OutputState(s) specified in the **sample** and **target** arguments. For
 example, for `Temporal Difference Learning <TDLearning>`, a
@@ -122,7 +122,7 @@ sample with the true reward (the target). In the example below, the sample
 Mechanism is a `TransferMechanism` that uses the `Linear` function to output
 the sample values. Because the output is a vector, specifying it as the
 PredictionErrorMechanism's **sample** argument will generate a corresponding
-InputState with a vector as its value. This should match the reward
+InputPort with a vector as its value. This should match the reward
 signal specified in the PredictionErrorMechanism's **target** argument, the
 value of which is a vector of the same length as the output of sample.
 
@@ -136,8 +136,8 @@ value of which is a vector of the same length as the output of sample.
 Note that ``sample_mech`` is specified to take an array of length 5 as its
 input, and therefore generate one of the same length as its `primary output
 <OutputState_Primary>`. Since it is assigned as the **sample** of the
-PredictionErrorMechanism, by default this will create a *SAMPLE* InputState of
-length 5, that will match the length of the *TARGET* InputState.
+PredictionErrorMechanism, by default this will create a *SAMPLE* InputPort of
+length 5, that will match the length of the *TARGET* InputPort.
 
 Currently the default method of implementing temporal difference learning in
 PsyNeuLink requires the values of *SAMPLE* and *TARGET* to be provided as an
@@ -196,11 +196,11 @@ class PredictionErrorMechanism(ComparatorMechanism):
     ---------
 
     sample : OutputState, Mechanism_Base, dict, number, or str
-        specifies the SAMPLE InputState, which will be evaluated by
+        specifies the SAMPLE InputPort, which will be evaluated by
         the function
 
     target : OutputState, Mechanism_Base, dict, number, or str
-        specifies the TARGET InputState, which will be used by the function to
+        specifies the TARGET InputPort, which will be used by the function to
         evaluate the sample
 
     function : CombinationFunction, ObjectiveFunction, function, or method : default PredictionErrorDeltaFunction
@@ -225,11 +225,11 @@ class PredictionErrorMechanism(ComparatorMechanism):
     ----------
 
     sample : OutputState, Mechanism_Base, dict, number, or str
-        specifies the SAMPLE InputState, which will be evaluated by
+        specifies the SAMPLE InputPort, which will be evaluated by
         the function
 
     target : OutputState, Mechanism_Base, dict, number, or str
-        specifies the TARGET InputState, which will be used by the function to
+        specifies the TARGET InputPort, which will be used by the function to
         evaluate the sample
 
     function : CombinationFunction, ObjectiveFunction, Function, or method : default PredictionErrorDeltaFunction
@@ -310,18 +310,18 @@ class PredictionErrorMechanism(ComparatorMechanism):
                  **kwargs
                  ):
 
-        input_states = [sample, target]
+        input_ports = [sample, target]
         params = self._assign_args_to_param_dicts(sample=sample,
                                                   target=target,
                                                   function=function,
-                                                  input_states=input_states,
+                                                  input_ports=input_ports,
                                                   output_states=output_states,
                                                   learning_rate=learning_rate,
                                                   params=params)
 
         super().__init__(sample=sample,
                          target=target,
-                         input_states=input_states,
+                         input_ports=input_ports,
                          function=function,
                          output_states=output_states,
                          params=params,
@@ -333,8 +333,8 @@ class PredictionErrorMechanism(ComparatorMechanism):
     def _parse_function_variable(self, variable, context=None):
         # TODO: update to take sample/reward from variable
         # sample = x(t) in Montague on first run, V(t) on subsequent runs
-        sample = self.input_states[SAMPLE].parameters.value._get(context)
-        reward = self.input_states[TARGET].parameters.value._get(context)
+        sample = self.input_ports[SAMPLE].parameters.value._get(context)
+        reward = self.input_ports[TARGET].parameters.value._get(context)
 
         return [sample, reward]
 

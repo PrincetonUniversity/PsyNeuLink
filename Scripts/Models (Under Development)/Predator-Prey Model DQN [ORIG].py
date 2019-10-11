@@ -108,21 +108,21 @@ action_mech = ProcessingMechanism(default_variable=[[0,0],[0,0],[0,0]], function
 # ************************************** BASIC COMPOSITION *************************************************************
 
 agent_comp = Composition(name='PREDATOR-PREY COMPOSITION')
-# agent_comp.add_linear_processing_pathway([player_percept, action_mech.input_states[0]])
-# agent_comp.add_linear_processing_pathway([predator_percept, action_mech.input_states[1]])
-# agent_comp.add_linear_processing_pathway([prey_percept, action_mech.input_states[2]])
+# agent_comp.add_linear_processing_pathway([player_percept, action_mech.input_ports[0]])
+# agent_comp.add_linear_processing_pathway([predator_percept, action_mech.input_ports[1]])
+# agent_comp.add_linear_processing_pathway([prey_percept, action_mech.input_ports[2]])
 
 # agent_comp.add_nodes([player_percept, predator_percept, prey_percept, action_mech])
-# agent_comp.add_projection(sender=player_percept, receiver=action_mech.input_states[0])
-# agent_comp.add_projection(sender=predator_percept, receiver=action_mech.input_states[1])
-# agent_comp.add_projection(sender=prey_percept, receiver=action_mech.input_states[2])
+# agent_comp.add_projection(sender=player_percept, receiver=action_mech.input_ports[0])
+# agent_comp.add_projection(sender=predator_percept, receiver=action_mech.input_ports[1])
+# agent_comp.add_projection(sender=prey_percept, receiver=action_mech.input_ports[2])
 
 agent_comp.add_nodes([player_percept, predator_percept, prey_percept])
 agent_comp.add_node(action_mech, required_roles=[NodeRole.OUTPUT])
 
-a = MappingProjection(sender=player_percept, receiver=action_mech.input_states[0])
-b = MappingProjection(sender=predator_percept, receiver=action_mech.input_states[1])
-c = MappingProjection(sender=prey_percept, receiver=action_mech.input_states[2])
+a = MappingProjection(sender=player_percept, receiver=action_mech.input_ports[0])
+b = MappingProjection(sender=predator_percept, receiver=action_mech.input_ports[1])
+c = MappingProjection(sender=prey_percept, receiver=action_mech.input_ports[2])
 agent_comp.add_projection(a)
 agent_comp.add_projection(b)
 agent_comp.add_projection(c)

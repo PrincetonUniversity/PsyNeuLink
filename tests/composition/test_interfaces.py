@@ -41,20 +41,20 @@ class TestExecuteCIM:
         cim.execute()
         assert np.allclose(cim.value, [2.0])
 
-    def test_standalone_CIM_multiple_input_states(self):
+    def test_standalone_CIM_multiple_input_ports(self):
 
         cim = CompositionInterfaceMechanism(default_variable=[[0.0], [0.0], [0.0]])
         cim.execute([[1.0], [2.0], [3.0]])
         assert np.allclose(cim.value, [[1.0], [2.0], [3.0]])
 
-    def test_standalone_processing_multiple_input_states(self):
+    def test_standalone_processing_multiple_input_ports(self):
 
         processing_mech = ProcessingMechanism(default_variable=[[0.0], [0.0], [0.0]])
         processing_mech.execute([[1.0], [2.0], [3.0]])
         assert np.allclose(processing_mech.value, [[1.0], [2.0], [3.0]])
 
 
-    def test_one_input_state_one_output_state(self):
+    def test_one_input_port_one_output_state(self):
 
         comp = Composition()
 
@@ -80,7 +80,7 @@ class TestExecuteCIM:
 
         assert np.allclose([30], output)
 
-    def test_two_input_states_two_output_states(self):
+    def test_two_input_ports_two_output_states(self):
 
         comp = Composition()
 
@@ -96,7 +96,7 @@ class TestExecuteCIM:
         comp.add_node(B)
 
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp.add_projection(MappingProjection(sender=A.output_states[1], receiver=B.input_states[1]), A, B)
+        comp.add_projection(MappingProjection(sender=A.output_states[1], receiver=B.input_ports[1]), A, B)
 
         inputs_dict = {
             A: [[5.], [6.]],
@@ -213,7 +213,7 @@ class TestConnectCompositionsViaCIMS:
         inner_composition_1.add_node(B)
 
         inner_composition_1.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        inner_composition_1.add_projection(MappingProjection(sender=A.output_states[1], receiver=B.input_states[1]), A,
+        inner_composition_1.add_projection(MappingProjection(sender=A.output_states[1], receiver=B.input_ports[1]), A,
                                            B)
 
         inner_composition_2 = Composition(name="comp2")
@@ -230,7 +230,7 @@ class TestConnectCompositionsViaCIMS:
         inner_composition_2.add_node(B2)
 
         inner_composition_2.add_projection(MappingProjection(sender=A2, receiver=B2), A2, B2)
-        inner_composition_2.add_projection(MappingProjection(sender=A2.output_states[1], receiver=B2.input_states[1]),
+        inner_composition_2.add_projection(MappingProjection(sender=A2.output_states[1], receiver=B2.input_ports[1]),
                                            A2, B2)
 
         outer_composition = Composition(name="outer_composition")
@@ -242,7 +242,7 @@ class TestConnectCompositionsViaCIMS:
                                          receiver=inner_composition_2)
         outer_composition.add_projection(
             projection=MappingProjection(sender=inner_composition_1.output_CIM.output_states[1],
-                                         receiver=inner_composition_2.input_CIM.input_states[1]),
+                                         receiver=inner_composition_2.input_CIM.input_ports[1]),
             sender=inner_composition_1, receiver=inner_composition_2)
 
         sched = Scheduler(composition=outer_composition)
@@ -316,7 +316,7 @@ class TestConnectCompositionsViaCIMS:
 
         sched = Scheduler(composition=outer_composition)
 
-        # FIX: order of InputStates on inner composition 1 is not stable
+        # FIX: order of InputPorts on inner composition 1 is not stable
         output = outer_composition.run(
             inputs={
                 # inner_composition_1: [[2.0], [1.0]],
@@ -408,7 +408,7 @@ class TestConnectCompositionsViaCIMS:
 
         sched = Scheduler(composition=outer_composition)
 
-        # FIX: order of InputStates on inner composition 1 is not stable
+        # FIX: order of InputPorts on inner composition 1 is not stable
         output = outer_composition.run(
             inputs={
                 inner_composition_1: {A: [[2.0], [1.5], [2.5]],
@@ -482,7 +482,7 @@ class TestConnectCompositionsViaCIMS:
 
         sched = Scheduler(composition=level_2)
 
-        # FIX: order of InputStates in each inner composition (level_0 and level_1)
+        # FIX: order of InputPorts in each inner composition (level_0 and level_1)
         level_2.run(inputs={A2: [[1.0, 2.0]],
                             level_1: {A1: [[1.0]],
                                       level_0: {A0: [[1.0], [2.0]]}}},
@@ -501,7 +501,7 @@ class TestInputCIMOutputStateToOriginOneToMany:
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C',
-                                input_states=[A.input_state])
+                                input_ports=[A.input_port])
 
         comp = Composition(name='comp')
 
@@ -536,7 +536,7 @@ class TestInputCIMOutputStateToOriginOneToMany:
         B = ProcessingMechanism(name='B',
                                 default_variable=[[0.], [0.]])
         C = ProcessingMechanism(name='C',
-                                input_states=[B.input_states[1], A.input_state, B.input_states[0]])
+                                input_ports=[B.input_ports[1], A.input_port, B.input_ports[0]])
 
         input_dict = {A: [[2.0]],
                       B: [[3.0], [1.0]]}
@@ -557,7 +557,7 @@ class TestInputCIMOutputStateToOriginOneToMany:
         A = ProcessingMechanism(name='A',
                                 function=Linear(slope=2.0))
         B = ProcessingMechanism(name='B',
-                                input_states=[[0.], A.input_state])
+                                input_ports=[[0.], A.input_port])
 
         comp = Composition(name='comp')
 

@@ -15,7 +15,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_
 from psyneulink.core.compositions.composition import Composition
 
 def test_gating_with_composition():
-    """Tests same configuration as control of InputState in tests/mechansims/test_identicalness_of_control_and_gating
+    """Tests same configuration as control of InputPort in tests/mechansims/test_identicalness_of_control_and_gating
     """
     Input_Layer = TransferMechanism(name='Input Layer', function=Logistic, size=2)
     Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1', function=Logistic, size=5)

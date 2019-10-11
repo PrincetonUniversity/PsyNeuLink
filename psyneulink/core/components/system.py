@@ -78,11 +78,11 @@ arguments of the `System`, as described below.
 
   * **string** -- must be the `name <OutputState.name>` of an `OutputState` of a `Mechanism <Mechanism>` in the System
     (see third example under `System_Control_Examples`).  This can be used anywhere a reference to an OutputState can
-    ordinarily be used (e.g., in an `InputState tuple specification <InputState_Tuple_Specification>`). Any OutputState
+    ordinarily be used (e.g., in an `InputPort tuple specification <InputPort_Tuple_Specification>`). Any OutputState
     with a name matching the string will be monitored, including ones with the same name that belong to different
     Mechanisms within the System. If an OutputState of a particular Mechanism is desired, and it shares its name with
-    other Mechanisms in the System, then it must be referenced explicitly (see `InputState specification
-    <InputState_Specification>`, and examples under `System_Control_Examples`).
+    other Mechanisms in the System, then it must be referenced explicitly (see `InputPort specification
+    <InputPort_Specification>`, and examples under `System_Control_Examples`).
 
   * **MonitoredOutputStatesOption** -- must be a value of `MonitoredOutputStatesOption`, and must appear alone or as a
     single item in the list specifying the **monitor_for_control** argument;  any other specification(s) included in
@@ -448,11 +448,11 @@ from psyneulink.core.components.mechanisms.modulatory.learning.learningauxiliary
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism, LearningTiming
 from psyneulink.core.components.mechanisms.mechanism import MechanismList
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import DEFAULT_MONITORED_STATE_EXPONENT, DEFAULT_MONITORED_STATE_MATRIX, DEFAULT_MONITORED_STATE_WEIGHT, ObjectiveMechanism
-from psyneulink.core.components.process import Process, ProcessInputState, ProcessList, ProcessTuple
+from psyneulink.core.components.process import Process, ProcessInputPort, ProcessList, ProcessTuple
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import Projection
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, System_Base
-from psyneulink.core.components.states.inputstate import InputState
+from psyneulink.core.components.states.inputport import InputPort
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
@@ -474,12 +474,12 @@ from psyneulink.library.components.projections.pathway.autoassociativeprojection
 __all__ = [
     'CONTROL_MECHANISM', 'CONTROL_PROJECTION_RECEIVERS', 'defaultInstanceCount', 'DURATION',
     'EXECUTION_SET', 'INITIAL_FRAME', 'INPUT_ARRAY',
-    'kwSystemInputState',
+    'kwSystemInputPort',
     'LEARNING_MECHANISMS', 'LEARNING_PROJECTION_RECEIVERS', 'MECHANISMS', 'MonitoredOutputStateTuple', 'MOVIE_NAME',
     'NUM_PHASES_PER_TRIAL', 'NUM_TRIALS', 'ORIGIN_MECHANISMS', 'OUTPUT_STATE_NAMES', 'OUTPUT_VALUE_ARRAY',
     'PROCESSES', 'RECURRENT_INIT_ARRAY', 'RECURRENT_MECHANISMS',
     'SAVE_IMAGES', 'SCHEDULER',
-    'System', 'sys', 'SYSTEM_TARGET_INPUT_STATE', 'SystemError', 'SystemInputState', 'SystemRegistry',
+    'System', 'sys', 'SYSTEM_TARGET_INPUT_PORT', 'SystemError', 'SystemInputPort', 'SystemRegistry',
     'SystemWarning', 'TARGET_MECHANISMS', 'TERMINAL_MECHANISMS', 'UNIT', 'osf'
 ]
 
@@ -509,7 +509,7 @@ ORIGIN_MECHANISMS = 'ORIGIN_MECHANISMS'
 
 SystemRegistry = {}
 
-kwSystemInputState = 'SystemInputState'
+kwSystemInputPort = 'SystemInputPort'
 
 class MonitoredOutputStatesOption(AutoNumber):
     """Specifies OutputStates to be monitored by a `ControlMechanism <ControlMechanism>`
@@ -692,7 +692,7 @@ class System(System_Base):
         `learning_rate <LearningMechanism.learning_rate>` was set).
 
     targets : 2d nparray
-        used as template for the values of the System's `target_input_states`, and to represent the targets specified in
+        used as template for the values of the System's `target_input_ports`, and to represent the targets specified in
         the **targets** argument of System's `execute <System.execute>` and `run <System.run>` methods.
 
     graph : OrderedDict
@@ -785,11 +785,11 @@ class System(System_Base):
             based on _target_mechs)
         COMMENT
 
-    target_input_states : List[SystemInputState]
+    target_input_ports : List[SystemInputPort]
         one item for each `TARGET` Mechanism in the System (listed in its `target_nodes
         <System.target_mechansims>` attribute).  Used to represent the values specified in the **targets**
         argument of the System's `execute <System.execute>` and `run <System.run>` methods, and to provide
-        thoese values to the TARGET `InputState` of each `TARGET` Mechanism during `execution
+        thoese values to the TARGET `InputPort` of each `TARGET` Mechanism during `execution
         <System_Execution_Learning>`.
 
 
@@ -876,10 +876,10 @@ class System(System_Base):
     paramClassDefaults.update({
         'outputStates': {},
         '_phaseSpecMax': 0,
-        'stimulusInputStates': [],
+        'stimulusInputPorts': [],
         'inputs': [],
         'current_input': None,
-        'target_input_states': [],
+        'target_input_ports': [],
         'targets': None,
         'current_targets': None,
         'learning': False
@@ -1127,8 +1127,8 @@ class System(System_Base):
             if input is None:
                 process = processes_spec[i].process
                 process_input = []
-                for process_input_state in process.process_input_states:
-                    process_input.extend(process_input_state.value)
+                for process_input_port in process.process_input_ports:
+                    process_input.extend(process_input_port.value)
                 processes_spec[i] = ProcessTuple(process, process_input)
             # Input was provided on command line, so assign that to input item of tuple
             else:
@@ -1215,7 +1215,7 @@ class System(System_Base):
 
             process._all_mechanisms = MechanismList(process, components_list=process._mechs)
             for proj in process.projections:
-                if not isinstance(proj.sender, ProcessInputState):
+                if not isinstance(proj.sender, ProcessInputPort):
                     proj._activate_for_compositions(self)
 
         # Call all ControlMechanisms to allow them to implement specification of ALL
@@ -1321,8 +1321,8 @@ class System(System_Base):
             # PRUNE ANY NON-SYSTEM COMPONENTS ---------------------------------------------------------------------
 
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
-            for input_state in sender_mech.input_states:
-                for projection in input_state.all_afferents:
+            for input_port in sender_mech.input_ports:
+                for projection in input_port.all_afferents:
                     sender = projection.sender.owner
                     system_processes = self.processes
                     if isinstance(sender, Process_Base):
@@ -1332,8 +1332,8 @@ class System(System_Base):
                         del projection
 
             # If sender_mech has no projections left, raise exception
-            if not any(any(projection for projection in input_state.all_afferents)
-                       for input_state in sender_mech.input_states):
+            if not any(any(projection for projection in input_port.all_afferents)
+                       for input_port in sender_mech.input_ports):
                 raise SystemError("{} only receives Projections from other Processes or Mechanisms not"
                                   " in the current System ({})".format(sender_mech.name, self.name))
 
@@ -1517,7 +1517,7 @@ class System(System_Base):
             first_mech = process.first_mechanism
 
             # Treat as ORIGIN if ALL projections to the first mechanism in the process are from:
-            #    - the process itself (ProcessInputState)
+            #    - the process itself (ProcessInputPort)
             #    - another mechanism in the in process (i.e., feedback projections from *within* the process)
             #    - mechanisms from other process for which it is an origin
             # Notes:
@@ -1528,7 +1528,7 @@ class System(System_Base):
             try:
                 if all(
                         all(
-                                # All projections must be from a process (i.e., ProcessInputState) to which it belongs
+                                # All projections must be from a process (i.e., ProcessInputPort) to which it belongs
                                 projection.sender.owner in first_mech.processes or
                                 # or from mechanisms within its own process (e.g., [a, b, a])
                                 projection.sender.owner in list(process.mechanisms) or
@@ -1536,10 +1536,10 @@ class System(System_Base):
                                 all(ORIGIN in first_mech.processes[proc]
                                     for proc in projection.sender.owner.processes
                                     if isinstance(projection.sender.owner,Mechanism))
-                            # For all the projections to each InputState
-                            for projection in input_state.path_afferents)
-                        # For all input_states for the first_mech
-                        for input_state in first_mech.input_states):
+                            # For all the projections to each InputPort
+                            for projection in input_port.path_afferents)
+                        # For all input_ports for the first_mech
+                        for input_port in first_mech.input_ports):
                     # Assign its set value as empty, marking it as a "leaf" in the graph
                     object_item = first_mech
                     self.graph[object_item] = set()
@@ -1637,8 +1637,8 @@ class System(System_Base):
         self.defaults.variable = []
         for mech in self.origin_mechanisms:
             orig_mech_input = []
-            for input_state in mech.input_states:
-                orig_mech_input.append(input_state.value)
+            for input_port in mech.input_ports:
+                orig_mech_input.append(input_port.value)
             self.defaults.variable.append(orig_mech_input)
         self.defaults.variable = convert_to_np_array(self.defaults.variable, 2)
         # should add Utility to allow conversion to 3D array
@@ -1647,7 +1647,7 @@ class System(System_Base):
         # if input state values are all non-vector objects, such as strings, then self.defaults.variable
         # would be a 2D array. so we should convert that to a 3D array
 
-        # Instantiate StimulusInputStates
+        # Instantiate StimulusInputPorts
         self._instantiate_stimulus_inputs(context=context)
 
         # Validate initial values
@@ -1665,44 +1665,44 @@ class System(System_Base):
 
     def _instantiate_stimulus_inputs(self, context=None):
 
-# FIX: ZERO VALUE OF ALL ProcessInputStates BEFORE EXECUTING
-# FIX: RENAME SystemInputState -> SystemInputState
+# FIX: ZERO VALUE OF ALL ProcessInputPorts BEFORE EXECUTING
+# FIX: RENAME SystemInputPort -> SystemInputPort
 
-        # Create SystemInputState for each ORIGIN mechanism in origin_mechanisms and
-        #    assign MappingProjection from the SystemInputState to the ORIGIN mechanism
+        # Create SystemInputPort for each ORIGIN mechanism in origin_mechanisms and
+        #    assign MappingProjection from the SystemInputPort to the ORIGIN mechanism
         for i, origin_mech in zip(range(len(self.origin_mechanisms)), self.origin_mechanisms):
 
-            # Skip if ORIGIN mechanism already has a projection from a SystemInputState in current system
+            # Skip if ORIGIN mechanism already has a projection from a SystemInputPort in current system
             # (this avoids duplication from multiple passes through _instantiate_graph)
-            if any(self is projection.sender.owner for projection in origin_mech.input_state.path_afferents):
+            if any(self is projection.sender.owner for projection in origin_mech.input_port.path_afferents):
                 continue
-            # added a for loop to iterate over origin_mech.input_states to allow for multiple input states in an
+            # added a for loop to iterate over origin_mech.input_ports to allow for multiple input states in an
             # origin mechanism (useful only if origin mechanism is a KWTAMechanism) Check, for each ORIGIN mechanism,
             # that the length of the corresponding item of self.defaults.variable matches the length of the
-            #  ORIGIN inputState's defaults.variable attribute
-            for j in range(len(origin_mech.input_states)):
-                if origin_mech.input_states[j].internal_only:
+            #  ORIGIN inputPort's defaults.variable attribute
+            for j in range(len(origin_mech.input_ports)):
+                if origin_mech.input_ports[j].internal_only:
                     continue
-                if len(self.defaults.variable[i][j]) != origin_mech.input_states[j].socket_width:
+                if len(self.defaults.variable[i][j]) != origin_mech.input_ports[j].socket_width:
                     raise SystemError("Length of input {} ({}) does not match the length of the input ({}) for the "
                                       "corresponding ORIGIN Mechanism ()".
                                       format(i,
                                              len(self.defaults.variable[i][j]),
-                                             origin_mech.input_states[j].socket_width,
+                                             origin_mech.input_ports[j].socket_width,
                                              origin_mech.name))
-                stimulus_input_state = SystemInputState(owner=self,
-                                                        variable=origin_mech.input_states[j].socket_template,
+                stimulus_input_port = SystemInputPort(owner=self,
+                                                        variable=origin_mech.input_ports[j].socket_template,
                                                         prefs=self.prefs,
                                                         name="System Input State to Mechansism {}, Input State {}".
                                                         format(origin_mech.name,j),
                                                         context=context)
-                self.stimulusInputStates.append(stimulus_input_state)
-                self.inputs.append(stimulus_input_state.value)
+                self.stimulusInputPorts.append(stimulus_input_port)
+                self.inputs.append(stimulus_input_port.value)
 
-                # Add MappingProjection from stimulus_input_state to ORIGIN mechainsm's inputState
+                # Add MappingProjection from stimulus_input_port to ORIGIN mechainsm's inputPort
                 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-                proj = MappingProjection(sender=stimulus_input_state,
-                                  receiver=origin_mech.input_states[j],
+                proj = MappingProjection(sender=stimulus_input_port,
+                                  receiver=origin_mech.input_ports[j],
                                   name=self.name+' Input Projection to '+origin_mech.name+' Input State '+str(j))
                 proj._activate_for_compositions(self)
 
@@ -1744,16 +1744,16 @@ class System(System_Base):
             #    - all of the Mechanisms that project to it already have an ObjectiveMechanism,
             # Then:
             #    - do not include the ObjectiveMechanism in the graph;
-            #    - be sure that its outputState projects to the ERROR_SIGNAL inputState of a LearningMechanism
+            #    - be sure that its outputState projects to the ERROR_SIGNAL inputPort of a LearningMechanism
             #        (labelled "learning_mech" here -- raise an exception if it does not;
-            #    - determine whether learning_mech's ERROR_SIGNAL inputState receives any other projections
+            #    - determine whether learning_mech's ERROR_SIGNAL inputPort receives any other projections
             #        from another ObjectiveMechanism or LearningMechanism (labelled "error_signal_projection" here)
             #        -- if it does, be sure that it is from the same system and if so return;
             #           (note:  this shouldn't be true, but the test is here for completeness and sanity-checking)
-            #    - if learning_mech's ERROR_SIGNAL inputState does not receive any projections from
+            #    - if learning_mech's ERROR_SIGNAL inputPort does not receive any projections from
             #        another objectiveMechanism and/or LearningMechanism in the system, then:
             #        - find the sender to the ObjectiveMechanism (labelled "error_source" here)
-            #        - find the 1st projection from error_source that projects to the ACTIVATION_INPUT inputState of
+            #        - find the 1st projection from error_source that projects to the ACTIVATION_INPUT inputPort of
             #            a LearningMechanism (labelled "error_signal" here)
             #        - instantiate a MappingProjection from error_signal to learning_mech
             #            projected
@@ -1781,7 +1781,7 @@ class System(System_Base):
                                       format(obj_mech.name, process.name))
 
                 # Make sure sample_mech is referenced by learning_mech as is output_source
-                sample_mech = obj_mech.input_states[SAMPLE].path_afferents[0].sender.owner
+                sample_mech = obj_mech.input_ports[SAMPLE].path_afferents[0].sender.owner
                 if sample_mech != learning_mech.output_source:
                     raise SystemError("PROGRAM ERROR: learning_mecch ({}) does not properly reference sample_mech ({})"
                                       "in {} of {}".format(learning_mech.name,sample_mech.name,process.name,self.name))
@@ -1821,7 +1821,7 @@ class System(System_Base):
                                                       mech.output_state.efferents])
                             # senders to obj_mech
                             for mech in [proj.sender.owner
-                                         for proj in obj_mech.input_states[SAMPLE].path_afferents]):
+                                         for proj in obj_mech.input_ports[SAMPLE].path_afferents]):
 
                         # Get the other ObjectiveMechanism to which the error_source projects (in addition to obj_mech)
                         other_obj_mech = next((projection.receiver.owner for projection in
@@ -1843,7 +1843,7 @@ class System(System_Base):
                     # None of the mechanisms that project to it are a TERMINAL mechanism
                     elif (not all(all(projection.sender.owner.processes[proc] is TERMINAL
                                      for proc in projection.sender.owner.processes)
-                                 for projection in obj_mech.input_states[SAMPLE].path_afferents)
+                                 for projection in obj_mech.input_ports[SAMPLE].path_afferents)
                           # and it is not for the last Mechanism in a learning sequence
                           and any(proj.has_learning_projection and self in proj.receiver.owner.systems
                                   for proj in sample_mech.output_state.efferents)
@@ -1861,7 +1861,7 @@ class System(System_Base):
             # - IDENTIFY ALL OF THE OUTGOING PROJECTIONS FROM THE MECHANISMS ABOVE THAT ARE:
             #     - BEING LEARNED
             #     - PROJECT TO A MECHANISM IN THE CURRENT SYSTEM
-            # - ASSIGN MAPPING PROJECTION TO NEW ERROR_SIGNAL INPUT_STATE FOR sender_mech
+            # - ASSIGN MAPPING PROJECTION TO NEW ERROR_SIGNAL INPUT_PORT FOR sender_mech
 
             # sender_mech is a LearningMechanism:
             else:
@@ -1874,8 +1874,8 @@ class System(System_Base):
                         _assign_error_signal_projections(processing_mech, self)
 
             # If sender_mech has no Projections left, raise exception
-            if not any(any(projection for projection in input_state.path_afferents)
-                       for input_state in sender_mech.input_states):
+            if not any(any(projection for projection in input_port.path_afferents)
+                       for input_port in sender_mech.input_ports):
                 raise SystemError("{} only receives Projections from other Processes or Mechanisms not"
                                   " in the current System ({})".format(sender_mech.name, self.name))
 
@@ -1983,7 +1983,7 @@ class System(System_Base):
         self.learning_mechanisms = MechanismList(self, self._learning_mechs)
         self.target_mechanisms = MechanismList(self, self._target_mechs)
 
-        # Instantiate TargetInputStates
+        # Instantiate TargetInputPorts
         self._instantiate_target_inputs(context=context)
 
         # Assign scheduler for _execute_learning:
@@ -2012,46 +2012,46 @@ class System(System_Base):
                                   format(self.name))
                 return
             # target arg was not specified in System's constructor,
-            #    so use the value of the TARGET InputState for the TARGET Mechanism(s) as the default
-            self.targets = [target.input_states[TARGET].value for target in self.target_mechanisms]
+            #    so use the value of the TARGET InputPort for the TARGET Mechanism(s) as the default
+            self.targets = [target.input_ports[TARGET].value for target in self.target_mechanisms]
             if self.verbosePref:
                 warnings.warn("Learning has been specified for {} but its \'targets\' argument was not specified;"
                               "default will be used ({})".format(self.name, self.targets))
 
-        # Create SystemInputState for each TARGET mechanism in target_mechanisms and
-        #    assign MappingProjection from the SystemInputState to the ORIGIN mechanism
+        # Create SystemInputPort for each TARGET mechanism in target_mechanisms and
+        #    assign MappingProjection from the SystemInputPort to the ORIGIN mechanism
 
         if isinstance(self.targets, dict):
             for target_mech in self.target_mechanisms:
 
-                # Skip if TARGET input state already has a projection from a SystemInputState in current system
-                if any(self is projection.sender.owner for projection in target_mech.input_states[TARGET].path_afferents):
+                # Skip if TARGET input state already has a projection from a SystemInputPort in current system
+                if any(self is projection.sender.owner for projection in target_mech.input_ports[TARGET].path_afferents):
                     continue
 
-                sample_mechanism = target_mech.input_states[SAMPLE].path_afferents[0].sender.owner
-                TARGET_input_state = target_mech.input_states[TARGET]
+                sample_mechanism = target_mech.input_ports[SAMPLE].path_afferents[0].sender.owner
+                TARGET_input_port = target_mech.input_ports[TARGET]
 
-                if len(self.targets[sample_mechanism]) != len(TARGET_input_state.value):
+                if len(self.targets[sample_mechanism]) != len(TARGET_input_port.value):
                             raise SystemError("Length {} of target ({}, {}) does not match the length ({}) of the target "
                                               "expected for its TARGET Mechanism {}".
                                                format(len(self.targets[sample_mechanism]),
                                                       sample_mechanism.name,
                                                       self.targets[sample_mechanism],
-                                                      len(TARGET_input_state.value),
+                                                      len(TARGET_input_port.value),
                                                       target_mech.name))
 
-                system_target_input_state = SystemInputState(owner=self,
-                                                        variable=TARGET_input_state.defaults.variable,
+                system_target_input_port = SystemInputPort(owner=self,
+                                                        variable=TARGET_input_port.defaults.variable,
                                                         prefs=self.prefs,
                                                         name="System Target for {}".format(target_mech.name),
                                                         context=context)
-                self.target_input_states.append(system_target_input_state)
+                self.target_input_ports.append(system_target_input_port)
 
-                # Add MappingProjection from system_target_input_state to TARGET mechanism's target inputState
+                # Add MappingProjection from system_target_input_port to TARGET mechanism's target inputPort
                 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-                proj = MappingProjection(sender=system_target_input_state,
-                        receiver=TARGET_input_state,
-                        name=self.name+' Input Projection to '+TARGET_input_state.name)
+                proj = MappingProjection(sender=system_target_input_port,
+                        receiver=TARGET_input_port,
+                        name=self.name+' Input Projection to '+TARGET_input_port.name)
                 proj._activate_for_compositions(self)
 
         elif isinstance(self.targets, list):
@@ -2072,38 +2072,38 @@ class System(System_Base):
 
 
 
-            # Create SystemInputState for each TARGET mechanism in target_nodes and
-            #    assign MappingProjection from the SystemInputState
+            # Create SystemInputPort for each TARGET mechanism in target_nodes and
+            #    assign MappingProjection from the SystemInputPort
             #    to the TARGET mechanism's TARGET inputSate
-            #    (i.e., from the SystemInputState to the ComparatorMechanism)
+            #    (i.e., from the SystemInputPort to the ComparatorMechanism)
             for i, target_mech in zip(range(len(self.target_mechanisms)), self.target_mechanisms):
 
-                # Create ProcessInputState for each target and assign to targetMechanism's target inputState
-                target_mech_TARGET_input_state = target_mech.input_states[TARGET]
+                # Create ProcessInputPort for each target and assign to targetMechanism's target inputPort
+                target_mech_TARGET_input_port = target_mech.input_ports[TARGET]
 
                 # Check, for each TARGET mechanism, that the length of the corresponding item of targets matches the length
-                #    of the TARGET (ComparatorMechanism) target inputState's defaults.variable attribute
-                if len(self.targets[i]) != len(target_mech_TARGET_input_state.value):
+                #    of the TARGET (ComparatorMechanism) target inputPort's defaults.variable attribute
+                if len(self.targets[i]) != len(target_mech_TARGET_input_port.value):
                     raise SystemError("Length of target ({}: {}) does not match the length ({}) of the target "
                                       "expected for its TARGET Mechanism {}".
                                       format(len(self.targets[i]),
                                              self.targets[i],
-                                             len(target_mech_TARGET_input_state.value),
+                                             len(target_mech_TARGET_input_port.value),
                                              target_mech.name))
 
-                system_target_input_state = SystemInputState(
+                system_target_input_port = SystemInputPort(
                     owner=self,
-                    variable=target_mech_TARGET_input_state.value,
+                    variable=target_mech_TARGET_input_port.value,
                     prefs=self.prefs,
                     name="System Target {}".format(i),
                     context=context)
-                self.target_input_states.append(system_target_input_state)
+                self.target_input_ports.append(system_target_input_port)
 
-                # Add MappingProjection from system_target_input_state to TARGET mechanism's target inputState
+                # Add MappingProjection from system_target_input_port to TARGET mechanism's target inputPort
                 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-                proj = MappingProjection(sender=system_target_input_state,
-                                  receiver=target_mech_TARGET_input_state,
-                                  name=self.name + ' Input Projection to ' + target_mech_TARGET_input_state.name)
+                proj = MappingProjection(sender=system_target_input_port,
+                                  receiver=target_mech_TARGET_input_port,
+                                  name=self.name + ' Input Projection to ' + target_mech_TARGET_input_port.name)
                 proj._activate_for_compositions(self)
 
     def _assign_output_states(self):
@@ -2163,12 +2163,12 @@ class System(System_Base):
         self.execution_graph[self.controller.objective_mechanism] = set(self.execution_list[:-1])
 
         # Check whether controller has input, and if not then disable
-        has_input_states = isinstance(self.controller.input_states, ContentAddressableList)
+        has_input_ports = isinstance(self.controller.input_ports, ContentAddressableList)
 
-        if not has_input_states:
+        if not has_input_ports:
             # If controller was enabled (and verbose is set), warn that it has been disabled
             if self.enable_controller and self.prefs.verbosePref:
-                print("{} for {} has no input_states, so controller will be disabled".
+                print("{} for {} has no input_ports, so controller will be disabled".
                       format(self.controller.name, self.name))
             self.enable_controller = False
 
@@ -2194,8 +2194,8 @@ class System(System_Base):
                 + ALL_OUTPUT_STATES: assign all of the outputStates of each terminal Mechanism
             - precedence is given to MonitoredOutputStatesOptions specification in Mechanism > controller > System
         * controller.monitored_output_states is a list, each item of which is an OutputState from which a Projection
-            will be instantiated to a corresponding InputState of the ControlMechanism
-        * controller.input_states is the usual ordered dict of states,
+            will be instantiated to a corresponding InputPort of the ControlMechanism
+        * controller.input_ports is the usual ordered dict of states,
             each of which receives a Projection from a corresponding OutputState in controller.monitored_output_states
 
         Returns list of MonitoredOutputStateTuples: (OutputState, weight, exponent, matrix)
@@ -2210,9 +2210,9 @@ class System(System_Base):
                 monitored_output_states = controller.monitored_output_states.copy() or []
                 # Convert them to MonitoredOutputStateTuple specifications (for treatment below)
                 monitored_output_state_specs = []
-                for monitored_output_state, input_state in zip(monitored_output_states,
-                                                               controller.objective_mechanism.input_states):
-                    projection = input_state.path_afferents[0]
+                for monitored_output_state, input_port in zip(monitored_output_states,
+                                                               controller.objective_mechanism.input_ports):
+                    projection = input_port.path_afferents[0]
                     if not projection.sender is monitored_output_state:
                         raise SystemError("PROGRAM ERROR: Problem identifying projection ({}) for "
                                           "monitored_output_state ({}) specified for {} ({}) assigned to {}".
@@ -2720,7 +2720,7 @@ class System(System_Base):
             self._report_process_output = any(process.reportOutputPref for process in self.processes)
 
         # FIX: MOVE TO RUN??
-        # ASSIGN INPUTS TO SystemInputStates
+        # ASSIGN INPUTS TO SystemInputPorts
         #    that will be used as the input to the MappingProjection to each ORIGIN mechanism
         num_origin_mechs = len(list(self.origin_mechanisms))
 
@@ -2750,27 +2750,27 @@ class System(System_Base):
                                       "its number of origin Mechanisms ({2})".
                                       format(num_inputs, self.name,  num_origin_mechs ))
 
-            # Get SystemInputState that projects to each ORIGIN Mechanism and assign input to it
+            # Get SystemInputPort that projects to each ORIGIN Mechanism and assign input to it
             for origin_mech in self.origin_mechanisms:
-                # For each inputState of the ORIGIN mechanism
+                # For each inputPort of the ORIGIN mechanism
 
-                for j in range(len(origin_mech.external_input_states)):
-                   # Get the input from each Projection to that InputState (from the corresponding SystemInputState)
-                    system_input_state = next((projection.sender
-                                               for projection in origin_mech.input_states[j].path_afferents
-                                               if isinstance(projection.sender, SystemInputState)), None)
+                for j in range(len(origin_mech.external_input_ports)):
+                   # Get the input from each Projection to that InputPort (from the corresponding SystemInputPort)
+                    system_input_port = next((projection.sender
+                                               for projection in origin_mech.input_ports[j].path_afferents
+                                               if isinstance(projection.sender, SystemInputPort)), None)
 
-                    if system_input_state:
+                    if system_input_port:
                         if isinstance(input, dict):
-                            system_input_state.parameters.value._set(input[origin_mech][j], context)
+                            system_input_port.parameters.value._set(input[origin_mech][j], context)
 
                         else:
-                            system_input_state.parameters.value._set(input[j], context)
+                            system_input_port.parameters.value._set(input[j], context)
                     else:
-                        logger.warning("Failed to find expected SystemInputState "
+                        logger.warning("Failed to find expected SystemInputPort "
                                        "for {} at input state number ({}), ({})".
-                              format(origin_mech.name, j+1, origin_mech.input_states[j]))
-                        # raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
+                              format(origin_mech.name, j+1, origin_mech.input_ports[j]))
+                        # raise SystemError("Failed to find expected SystemInputPort for {}".format(origin_mech.name))
 
         self.input = input
 
@@ -2962,17 +2962,17 @@ class System(System_Base):
         if isinstance(target, dict):
             for i in range(len(self.target_mechanisms)):
 
-                terminal_mechanism = self.target_mechanisms[i].input_states[SAMPLE].path_afferents[0].sender.owner
+                terminal_mechanism = self.target_mechanisms[i].input_ports[SAMPLE].path_afferents[0].sender.owner
                 target_value = target[terminal_mechanism]
                 if callable(target_value):
                     val = call_with_pruned_args(target_value, context=context, composition=self)
-                    self.target_input_states[i].parameters.value._set(val, context)
+                    self.target_input_ports[i].parameters.value._set(val, context)
                 else:
-                    self.target_input_states[i].parameters.value._set(target_value, context)
+                    self.target_input_ports[i].parameters.value._set(target_value, context)
 
         elif isinstance(target, (list, np.ndarray)):
             for i in range(len(self.target_mechanisms)):
-                self.target_input_states[i].parameters.value._set(target[i], context)
+                self.target_input_ports[i].parameters.value._set(target[i], context)
 
         # THEN, execute all components involved in learning
         if self.scheduler_learning is None:
@@ -3696,7 +3696,7 @@ class System(System_Base):
 
     def _get_label(self, item, show_dimensions=None, show_roles=None):
 
-        # For Mechanisms, show length of each InputState and OutputState
+        # For Mechanisms, show length of each InputPort and OutputState
         if isinstance(item, Mechanism):
             if show_roles:
                 try:
@@ -3712,8 +3712,8 @@ class System(System_Base):
                 name = item.name
 
             if show_dimensions in {ALL, MECHANISMS}:
-                input_str = "in ({})".format(",".join(str(input_state.socket_width)
-                                                      for input_state in item.input_states))
+                input_str = "in ({})".format(",".join(str(input_port.socket_width)
+                                                      for input_port in item.input_ports))
                 output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_state.value)))
                                                         for output_state in item.output_states))
                 return "{}\n{}\n{}".format(output_str, name, input_str)
@@ -3736,7 +3736,7 @@ class System(System_Base):
             else:
                 return item.name
 
-        elif isinstance(item, (System, SystemInputState)):
+        elif isinstance(item, (System, SystemInputPort)):
             if "SYSTEM" in item.name.upper():
                 return item.name + ' Target Input'
             else:
@@ -3886,12 +3886,12 @@ class System(System_Base):
               <State_Base.value>` of each of its States.
 
             * *LABELS* -- shows the `value <Mechanism_Base.value>` of the Mechanism and the `value
-              <State_Base.value>` of each of its States, using any labels for the values of InputStates and
+              <State_Base.value>` of each of its States, using any labels for the values of InputPorts and
               OutputStates specified in the Mechanism's `input_labels_dict <Mechanism.input_labels_dict>` and
               `output_labels_dict <Mechanism.output_labels_dict>`, respectively.
 
             * *FUNCTIONS* -- shows the `function <Mechanism_Base.function>` of the Mechanism and the `function
-              <State_Base.function>` of its InputStates and OutputStates.
+              <State_Base.function>` of its InputPorts and OutputStates.
 
             * *ROLES* -- shows the `role <System_Mechanisms>` of the Mechanism in the System in square brackets
               (but not any of the other information;  use *ALL* to show ROLES with other information).
@@ -3955,7 +3955,7 @@ class System(System_Base):
 
             * *MECHANISMS* -- shows `Mechanism` input and output dimensions.  Input dimensions are shown in parentheses
               below the name of the Mechanism; each number represents the dimension of the `variable
-              <InputState.variable>` for each `InputState` of the Mechanism; Output dimensions are shown above
+              <InputPort.variable>` for each `InputPort` of the Mechanism; Output dimensions are shown above
               the name of the Mechanism; each number represents the dimension for `value <OutputState.value>` of each
               of `OutputState` of the Mechanism.
 
@@ -4113,13 +4113,13 @@ class System(System_Base):
                         penwidth=rcvr_penwidth)
 
             # handle auto-recurrent projections
-            for input_state in rcvr.input_states:
-                for proj in input_state.path_afferents:
+            for input_port in rcvr.input_ports:
+                for proj in input_port.path_afferents:
                     if proj.sender.owner is not rcvr:
                         continue
                     if show_mechanism_structure:
                         sndr_proj_label = '{}:{}-{}'.format(rcvr_label, OutputState.__name__, proj.sender.name)
-                        proc_mech_rcvr_label = '{}:{}-{}'.format(rcvr_label, InputState.__name__, proj.receiver.name)
+                        proc_mech_rcvr_label = '{}:{}-{}'.format(rcvr_label, InputPort.__name__, proj.receiver.name)
                     else:
                         sndr_proj_label = proc_mech_rcvr_label = rcvr_label
                     if show_projection_labels:
@@ -4196,7 +4196,7 @@ class System(System_Base):
                                         format(sndr_label, OutputState.__name__, proj.sender.name)
                                     proc_mech_rcvr_label = '{}:{}-{}'.\
                                         format(rcvr_label, proj.receiver.__class__.__name__, proj.receiver.name)
-                                        # format(rcvr_label, InputState.__name__, proj.receiver.name)
+                                        # format(rcvr_label, InputPort.__name__, proj.receiver.name)
                                 else:
                                     sndr_proj_label = sndr_label
                                     proc_mech_rcvr_label = rcvr_label
@@ -4282,7 +4282,7 @@ class System(System_Base):
                                 # G.edge(sndr_label, proc_mech_label, arrowhead='none')
                                 # G.edge(proc_mech_label, rcvr_label)
                                 sndr_proj_label = '{}:{}-{}'.format(sndr_label, OutputState.__name__, proj.sender.name)
-                                proc_mech_rcvr_label = '{}:{}-{}'.format(rcvr_label, InputState.__name__, proj.receiver.name)
+                                proc_mech_rcvr_label = '{}:{}-{}'.format(rcvr_label, InputPort.__name__, proj.receiver.name)
                                 G.edge(sndr_proj_label, proc_mech_label, arrowhead='none')
                                 G.edge(proc_mech_label, proc_mech_rcvr_label)
                             else:
@@ -4333,12 +4333,12 @@ class System(System_Base):
                         and rcvr._role is LEARNING
                         and show_learning is ALL):
                     # Projections to ObjectiveMechanism
-                    for input_state in rcvr.input_states:
-                        for proj in input_state.path_afferents:
+                    for input_port in rcvr.input_ports:
+                        for proj in input_port.path_afferents:
 
                             smpl_or_trgt_src = proj.sender.owner
 
-                            # Skip any Projections from ProcesInputStates
+                            # Skip any Projections from ProcesInputPorts
                             if isinstance(smpl_or_trgt_src, Process):
                                 continue
 
@@ -4381,7 +4381,7 @@ class System(System_Base):
                             sndr_label = self._get_label(smpl_or_trgt_src, show_dimensions, show_roles)
                             rcvr_label = self._get_label(proj.receiver.owner, show_dimensions, show_roles)
                             if show_mechanism_structure:
-                                proc_mech_rcvr_label = rcvr_label +':'+ InputState.__name__ +'-'+ proj.receiver.name
+                                proc_mech_rcvr_label = rcvr_label +':' + InputPort.__name__ + '-' + proj.receiver.name
                             else:
                                 proc_mech_rcvr_label = rcvr_label
 
@@ -4391,8 +4391,8 @@ class System(System_Base):
 
             # Implement edges for Projections to LearningMechanism
             #    from other LearningMechanisms or ObjectiveMechanism, and from ProcessingMechanisms if 'ALL' is set
-            for input_state in rcvr.input_states:
-                for proj in input_state.path_afferents:
+            for input_port in rcvr.input_ports:
+                for proj in input_port.path_afferents:
 
                     if proj.receiver.owner in active_items:
                         if active_color is BOLD:
@@ -4424,7 +4424,7 @@ class System(System_Base):
                             edge_label = ''
                         if show_mechanism_structure:
                             G.edge(sndr_label + ':' + OutputState.__name__ + '-' + proj.sender.name,
-                                   rcvr_label + ':' + InputState.__name__ + '-' + proj.receiver.name,
+                                   rcvr_label + ':' + InputPort.__name__ + '-' + proj.receiver.name,
                                    label=edge_label, color=learning_proj_color, penwidth=learning_proj_width)
                         else:
                             G.edge(sndr_label, rcvr_label, label=edge_label,
@@ -4538,7 +4538,7 @@ class System(System_Base):
                 return
 
             # get projection from ObjectiveMechanism to ControlMechanism
-            objmech_ctlr_proj = controller.input_state.path_afferents[0]
+            objmech_ctlr_proj = controller.input_port.path_afferents[0]
             if controller in active_items:
                 if active_color is BOLD:
                     objmech_ctlr_proj_color = control_color
@@ -4593,7 +4593,7 @@ class System(System_Base):
                 edge_label = ''
             if show_mechanism_structure:
                 obj_to_ctrl_label = objmech_label + ':' + OutputState.__name__ + '-' + objmech_ctlr_proj.sender.name
-                ctlr_from_obj_label = ctlr_label + ':' + InputState.__name__ + '-' + objmech_ctlr_proj.receiver.name
+                ctlr_from_obj_label = ctlr_label + ':' + InputPort.__name__ + '-' + objmech_ctlr_proj.receiver.name
             else:
                 obj_to_ctrl_label = objmech_label
                 ctlr_from_obj_label = ctlr_label
@@ -4645,8 +4645,8 @@ class System(System_Base):
                            )
 
             # incoming edges (from monitored mechs to objective mechanism)
-            for input_state in objmech.input_states:
-                for projection in input_state.path_afferents:
+            for input_port in objmech.input_ports:
+                for projection in input_port.path_afferents:
                     if objmech in active_items:
                         if active_color is BOLD:
                             proj_color = control_color
@@ -4660,7 +4660,7 @@ class System(System_Base):
                     if show_mechanism_structure:
                         sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions, show_roles) +\
                                           ':' + OutputState.__name__ + '-' + projection.sender.name
-                        objmech_proj_label = objmech_label + ':' + InputState.__name__ + '-' + input_state.name
+                        objmech_proj_label = objmech_label + ':' + InputPort.__name__ + '-' + input_port.name
                     else:
                         sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions, show_roles)
                         objmech_proj_label = self._get_label(objmech, show_dimensions, show_roles)
@@ -4707,7 +4707,7 @@ class System(System_Base):
                                     penwidth=pred_mech_width)
 
                             G.edge(mech.name + ':' + OutputState.__name__ + '-' + mech.output_state.name,
-                                   recvr_label + ':' + InputState.__name__ + '-' + proj.receiver.name,
+                                   recvr_label + ':' + InputPort.__name__ + '-' + proj.receiver.name,
                                    label=' prediction assignment',
                                    color=pred_proj_color, penwidth=pred_proj_width)
                         else:
@@ -4972,10 +4972,10 @@ class System(System_Base):
             return G
 
 
-SYSTEM_TARGET_INPUT_STATE = 'SystemInputState'
+SYSTEM_TARGET_INPUT_PORT = 'SystemInputPort'
 
 from psyneulink.core.components.states.outputstate import OutputState
-class SystemInputState(OutputState):
+class SystemInputPort(OutputState):
     """Represents inputs and targets specified in a call to the System's `execute <Process.execute>` and `run
     <Process.run>` methods.
 
@@ -4990,13 +4990,13 @@ class SystemInputState(OutputState):
            value is used to represent the item of the targets arg to system.execute or system.run
     COMMENT
 
-    A SystemInputState is created for each `InputState` of each `ORIGIN` Mechanism in `origin_mechanisms`, and for the
-    *TARGET* `InputState <ComparatorMechanism_Structure>` of each `ComparatorMechanism <ComparatorMechanism>` listed
+    A SystemInputPort is created for each `InputPort` of each `ORIGIN` Mechanism in `origin_mechanisms`, and for the
+    *TARGET* `InputPort <ComparatorMechanism_Structure>` of each `ComparatorMechanism <ComparatorMechanism>` listed
     in `target_nodes <System.target_nodes>`.  A `MappingProjection` is created that projects to each
-    of these InputStates from the corresponding SystemInputState.  When the System's `execute <System.execute>` or
+    of these InputPorts from the corresponding SystemInputPort.  When the System's `execute <System.execute>` or
     `run <System.run>` method is called, each item of its **inputs** and **targets** arguments is assigned as
-    the `value <SystemInputState.value>` of a SystemInputState, which is then conveyed to the
-    corresponding InputState of the `origin_mechanisms <System.origin_mechanisms>` and `terminal_mechanisms
+    the `value <SystemInputPort.value>` of a SystemInputPort, which is then conveyed to the
+    corresponding InputPort of the `origin_mechanisms <System.origin_mechanisms>` and `terminal_mechanisms
     <System.terminal_mechanisms>`.  See `System_Mechanisms` and `System_Execution` for additional details.
 
     """
@@ -5006,14 +5006,14 @@ class SystemInputState(OutputState):
             ----------
 
                 variable
-                    see `variable <SystemInputState.variable>`
+                    see `variable <SystemInputPort.variable>`
 
                     :default value: numpy.array([0])
                     :type: numpy.ndarray
                     :read only: True
 
                 value
-                    see `value <SystemInputState.value>`
+                    see `value <SystemInputPort.value>`
 
                     :default value: numpy.array([0])
                     :type: numpy.ndarray
@@ -5030,7 +5030,7 @@ class SystemInputState(OutputState):
         :param variable:
         """
         if not name:
-            self.name = owner.name + "_" + SYSTEM_TARGET_INPUT_STATE
+            self.name = owner.name + "_" + SYSTEM_TARGET_INPUT_PORT
         else:
             self.name = owner.name + "_" + name
         self.initialization_status = ContextFlags.INITIALIZING

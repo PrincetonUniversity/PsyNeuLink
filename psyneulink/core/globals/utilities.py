@@ -933,7 +933,7 @@ def convert_to_np_array(value, dimension):
 
         # KAM 6/28/18: added exception for cases when even np does not recognize the shape/dtype
         # Needed this specifically for the following shape: variable = [[0.0], [0.0], np.array([[0.0, 0.0]])]
-        # Due to a custom OutputState variable (variable = [owner value[0], owner param, owner InputState variable])
+        # Due to a custom OutputState variable (variable = [owner value[0], owner param, owner InputPort variable])
         # FIX: (1) is this exception specific enough? (2) this is not actually converting to an np.array but in this
         # case (as far as I know) we cannot convert to np -- should we warn other methods that this value is "not np"?
         except ValueError:

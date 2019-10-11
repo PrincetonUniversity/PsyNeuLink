@@ -26,7 +26,7 @@ shape as the individual items.
 All CombinationFunctions must have two attributes - **multiplicative_param** and **additive_param** -
 each of which is assigned the name of one of the function's parameters;
 this is for use by ModulatoryProjections (and, in particular, GatingProjections,
-when the CombinationFunction is used as the function of an InputState or OutputState).
+when the CombinationFunction is used as the function of an InputPort or OutputState).
 
 
 """
@@ -58,7 +58,7 @@ class CombinationFunction(Function_Base):
     All CombinationFunctions must have two attributes - multiplicative_param and additive_param -
         each of which is assigned the name of one of the function's parameters;
         this is for use by ModulatoryProjections (and, in particular, GatingProjections,
-        when the CombinationFunction is used as the function of an InputState or OutputState).
+        when the CombinationFunction is used as the function of an InputPort or OutputState).
 
     """
     componentType = COMBINATION_FUNCTION_TYPE
@@ -451,7 +451,7 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
                          prefs=prefs,
                          )
 
-    def _handle_default_variable(self, default_variable=None, size=None, input_states=None, function=None, params=None):
+    def _handle_default_variable(self, default_variable=None, size=None, input_ports=None, function=None, params=None):
         if default_variable is not None:
             self.parameters.variable._user_specified = True
         return default_variable

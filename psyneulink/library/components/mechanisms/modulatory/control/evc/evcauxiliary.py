@@ -317,7 +317,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         * Called by ControlSignalGridSearch.
         * Call System.execute for each `control_allocation` in `control_signal_search_space`.
         * Store an array of values for output_states in `monitored_output_states`
-          (i.e., the input_states in `input_states`) for each `control_allocation`.
+          (i.e., the input_ports in `input_ports`) for each `control_allocation`.
         * Call `_compute_EVC` for each control_allocation to calculate the EVC, identify the  maximum,
           and assign to `EVC_max`.
         * Set `EVC_max_policy` to the `control_allocation` (outputState.values) corresponding to EVC_max.
@@ -329,7 +329,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
               it is NOT used for System.execute -- that uses the runtime_params provided for the Mechanisms in each
               Process.configuration
 
-        Return (2D np.array): value of outputState for each monitored state (in self.input_states) for EVC_max
+        Return (2D np.array): value of outputState for each monitored state (in self.input_ports) for EVC_max
 
         """
 
@@ -508,9 +508,9 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         # Assign allocations to control_signals for optimal allocation policy:
         EVC_maxStateValue = iter(EVC_max_state_values)
 
-        # Assign max values for optimal allocation policy to controller.input_states (for reference only)
-        for i in range(len(controller.input_states)):
-            controller.input_states[controller.input_states.names[i]].parameters.value._set(np.atleast_1d(next(EVC_maxStateValue)), context)
+        # Assign max values for optimal allocation policy to controller.input_ports (for reference only)
+        for i in range(len(controller.input_ports)):
+            controller.input_ports[controller.input_ports.names[i]].parameters.value._set(np.atleast_1d(next(EVC_maxStateValue)), context)
 
 
         # Report EVC max info
@@ -686,10 +686,10 @@ class PredictionMechanism(IntegratorMechanism):
     The `System` to which a PredictionMechanism belongs is referenced in its `system <PredictionMechanism.system>`
     attribute, and the System's `ORIGIN` Mechanism which the PredictionMechanism is associated is referenced in its
     `origin_mechanism <PredictionMechanism.origin_mechanism>` attribute.  A PredictionMechanism has the same number
-    of `InputStates <InputState>` as its `origin_mechanism <PredictionMechanism.origin_mechanism>`, each of which
-    receives a `Projection <Projection>` from the same source as the corresponding InputState of its `origin_mechanism
+    of `InputPorts <InputPort>` as its `origin_mechanism <PredictionMechanism.origin_mechanism>`, each of which
+    receives a `Projection <Projection>` from the same source as the corresponding InputPort of its `origin_mechanism
     <PredictionMechanism.origin_mechanism>` (see `EVCControlMechanism_Prediction_Mechanisms`); and it has one
-    `OutputState` for each of its InputStates.
+    `OutputState` for each of its InputPorts.
 
     .. _PredictionMechanism_Function:
 
@@ -826,7 +826,7 @@ class PredictionMechanism(IntegratorMechanism):
         result returned by the PredictionMechanism's `function <PredictionMechanism.function>`, and provided as
         input to its `origin_mechanism <PredictionMechanism.origin_mechanism>`.  The format conforms to that of a
         System's `run <System.run>` method: items in the outermost dimension (axis 0) correspond to the inputs for
-        each trial of a simulation, each of which is a 2d np.array containing the input for each `InputState` of the
+        each trial of a simulation, each of which is a 2d np.array containing the input for each `InputPort` of the
         `Mechanism`.
 
     """
@@ -867,7 +867,7 @@ class PredictionMechanism(IntegratorMechanism):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_states:tc.optional(tc.any(list, dict))=None,
+                 input_ports:tc.optional(tc.any(list, dict))=None,
                  function:tc.optional(tc.enum(
                          INPUT, TIME_AVERAGE_INPUT, AVERAGE_INPUTS, INPUT_SEQUENCE))=TIME_AVERAGE_INPUT,
                  initial_value=None,
@@ -923,7 +923,7 @@ class PredictionMechanism(IntegratorMechanism):
         super().__init__(
                 default_variable=default_variable,
                 size=size,
-                input_states=input_states,
+                input_ports=input_ports,
                 function=function,
                 params=params,
                 name=name,

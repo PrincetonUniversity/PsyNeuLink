@@ -94,7 +94,7 @@ c.add_projection(sender=word_task, receiver=task_decision)
 
 lvoc = pnl.OptimizationControlMechanism(
     name='LVOC ControlMechanism',
-    features=[color_stim.input_state, word_stim.input_state],
+    features=[color_stim.input_port, word_stim.input_port],
     # features={pnl.SHADOW_EXTERNAL_INPUTS: [color_stim, word_stim]},
     objective_mechanism=pnl.ObjectiveMechanism(
         name='LVOC ObjectiveMechanism',

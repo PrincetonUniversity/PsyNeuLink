@@ -112,9 +112,9 @@ class MaskedMappingProjection(MappingProjection):
         `primary OutputState <OutputState_Primary>` will be used. If it is not specified, it will be assigned in
         the context in which the Projection is used.
 
-    receiver : Optional[InputState or Mechanism]
+    receiver : Optional[InputPort or Mechanism]
         specifies the destination of the Projection's output.  If a Mechanism is specified, its
-        `primary InputState <InputState_Primary>` will be used. If it is not specified, it will be assigned in
+        `primary InputPort <InputPort_Primary>` will be used. If it is not specified, it will be assigned in
         the context in which the Projection is used.
 
     matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX
@@ -152,7 +152,7 @@ class MaskedMappingProjection(MappingProjection):
     sender : OutputState
         identifies the source of the Projection's input.
 
-    receiver: InputState
+    receiver: InputPort
         identifies the destination of the Projection.
 
     matrix : 2d np.ndarray
@@ -168,7 +168,7 @@ class MaskedMappingProjection(MappingProjection):
         <MaskedMappingProjection.matrix>` when the Projection is executed.
 
     value : np.ndarray
-        Output of AutoAssociativeProjection, transmitted to `variable <InputState.variable>` of `receiver`.
+        Output of AutoAssociativeProjection, transmitted to `variable <InputPort.variable>` of `receiver`.
 
     name : str
         a string used for the name of the AutoAssociativeProjection (see `Registry <LINK>` for conventions used in

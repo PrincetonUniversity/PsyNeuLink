@@ -395,7 +395,7 @@ class TestIntegratorFunctions:
         I = IntegratorMechanism(
             function=Linear(slope=2.0, intercept=1.0),
             default_variable=[[1], [2]],
-            input_states=['a', 'b'],
+            input_ports=['a', 'b'],
         )
         if mode == 'Python':
             val = I.execute([[1], [2]])
@@ -450,7 +450,7 @@ class TestIntegratorFunctions:
         I = IntegratorMechanism(
             function=Linear(slope=2.0, intercept=1.0),
             default_variable=[[1], [2]],
-            input_states=['a', 'b'],
+            input_ports=['a', 'b'],
             output_states=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 1)},
                            {pnl.VARIABLE: (pnl.OWNER_VALUE, 0)}],
         )
@@ -1015,7 +1015,7 @@ class TestIntegratorRate:
         # Need to break up error message because length value returned ([10.0] vs. [ 10.0]) may differ by Python vers.
         error_msg_a1 = 'Length (1) of input'
         error_msg_a2 = 'does not match required length (3) for input to '
-        error_msg_b = 'InputState-0 InputState of IntegratorMechanism'
+        error_msg_b = 'InputPort-0 InputPort of IntegratorMechanism'
         assert [msg in returned_error_msg for msg in {error_msg_a1, error_msg_a2, '10'}]
         assert error_msg_b in str(error_text.value)
 

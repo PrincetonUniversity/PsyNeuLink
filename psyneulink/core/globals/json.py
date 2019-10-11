@@ -133,7 +133,7 @@ PsyNeuLink, only one primary function is allowed.
 
 **Mechanisms** have:
 
-* ``input_ports`` : a list of InputState and ParameterState JSON objects
+* ``input_ports`` : a list of InputPort and ParameterState JSON objects
 
 * ``output_ports`` : a list of OutputState JSON objects
 
@@ -445,7 +445,7 @@ def _generate_component_string(
             # constructor of the object.
             # Examples:
             #   ControlMechanism.control_spec / control_signals
-            #   Mechanism.input_states_spec / input_states
+            #   Mechanism.input_ports_spec / input_ports
             #   Mechanism.output_states_spec / output_states
             if constructor_parameter_name is not None:
                 constructor_arg = constructor_parameter_name

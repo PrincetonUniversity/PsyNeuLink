@@ -25,6 +25,6 @@ duplicated name, beginning with '1'.  The object with the original name (implici
 
 There is one exception to this rule, for the naming of `State <State>`.  States of the same type, but that belong to
 different `Mechanisms <Mechanism>`, can have the same name (for example, TransferMechanism-0 and TransferMechanism-1
-can both have an `InputState` named INPUT_STATE-0 (the default name for the first InputState);  however, if a State
+can both have an `InputPort` named input_port-0 (the default name for the first InputPort);  however, if a State
 is assigned a name that is the same as another State of that type belonging to the *same* Mechanism, it is treated as
 a duplicate, and its name is suffixed as described above.

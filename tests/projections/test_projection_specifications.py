@@ -118,16 +118,16 @@ class TestProjectionSpecificationFormats:
     def test_mapping_projection_with_mech_and_state_name_specs(self):
          R1 = pnl.TransferMechanism(output_states=['OUTPUT_1', 'OUTPUT_2'])
          R2 = pnl.TransferMechanism(default_variable=[[0],[0]],
-                                    input_states=['INPUT_1', 'INPUT_2'])
-         T = pnl.TransferMechanism(input_states=[{pnl.MECHANISM: R1,
+                                    input_ports=['INPUT_1', 'INPUT_2'])
+         T = pnl.TransferMechanism(input_ports=[{pnl.MECHANISM: R1,
                                                   pnl.OUTPUT_STATES: ['OUTPUT_1', 'OUTPUT_2']}],
                                    output_states=[{pnl.MECHANISM:R2,
-                                                   pnl.INPUT_STATES: ['INPUT_1', 'INPUT_2']}])
+                                                   pnl.INPUT_PORTS: ['INPUT_1', 'INPUT_2']}])
          assert len(R1.output_states)==2
-         assert len(R2.input_states)==2
-         assert len(T.input_states)==1
-         for input_state in T.input_states:
-             for projection in input_state.path_afferents:
+         assert len(R2.input_ports)==2
+         assert len(T.input_ports)==1
+         for input_port in T.input_ports:
+             for projection in input_port.path_afferents:
                  assert projection.sender.owner is R1
          assert len(T.output_states)==1
          for output_state in T.output_states:
@@ -136,27 +136,27 @@ class TestProjectionSpecificationFormats:
 
     def test_mapping_projection_using_2_item_tuple_with_list_of_state_names(self):
 
-        T1 = pnl.TransferMechanism(name='T1', input_states=[[0,0],[0,0,0]])
+        T1 = pnl.TransferMechanism(name='T1', input_ports=[[0,0],[0,0,0]])
         T2 = pnl.TransferMechanism(name='T2',
-                                   output_states=[(['InputState-0','InputState-1'], T1)])
+                                   output_states=[(['InputPort-0','InputPort-1'], T1)])
         assert len(T2.output_states)==1
-        assert T2.output_states[0].efferents[0].receiver.name == 'InputState-0'
+        assert T2.output_states[0].efferents[0].receiver.name == 'InputPort-0'
         assert T2.output_states[0].efferents[0].matrix.shape == (1,2)
-        assert T2.output_states[0].efferents[1].receiver.name == 'InputState-1'
+        assert T2.output_states[0].efferents[1].receiver.name == 'InputPort-1'
         assert T2.output_states[0].efferents[1].matrix.shape == (1,3)
 
     def test_mapping_projection_using_2_item_tuple_and_3_item_tuples_with_index_specs(self):
 
-        T1 = pnl.TransferMechanism(name='T1', input_states=[[0,0],[0,0,0]])
+        T1 = pnl.TransferMechanism(name='T1', input_ports=[[0,0],[0,0,0]])
         T2 = pnl.TransferMechanism(name='T2',
-                                   input_states=['a','b','c'],
-                                   output_states=[(['InputState-0','InputState-1'], T1),
-                                                  ('InputState-0', (pnl.OWNER_VALUE, 2), T1),
-                                                  (['InputState-0','InputState-1'], 1, T1)])
+                                   input_ports=['a','b','c'],
+                                   output_states=[(['InputPort-0','InputPort-1'], T1),
+                                                  ('InputPort-0', (pnl.OWNER_VALUE, 2), T1),
+                                                  (['InputPort-0','InputPort-1'], 1, T1)])
         assert len(T2.output_states)==3
-        assert T2.output_states[0].efferents[0].receiver.name == 'InputState-0'
+        assert T2.output_states[0].efferents[0].receiver.name == 'InputPort-0'
         assert T2.output_states[0].efferents[0].matrix.shape == (1,2)
-        assert T2.output_states[0].efferents[1].receiver.name == 'InputState-1'
+        assert T2.output_states[0].efferents[1].receiver.name == 'InputPort-1'
         assert T2.output_states[0].efferents[1].matrix.shape == (1,3)
         assert T2.output_states[1].owner_value_index == 2
         assert T2.output_states[2].owner_value_index == 1
@@ -210,10 +210,10 @@ class TestProjectionSpecificationFormats:
 
         G = pnl.GatingMechanism(gating_signals=['a','b'])
         T = pnl.TransferMechanism(name='T',
-                     input_states=[(3,G)],
+                     input_ports=[(3,G)],
                      output_states=[(2,G.gating_signals['b'])]
                                   )
-        assert T.input_states[0].mod_afferents[0].sender==G.gating_signals[0]
+        assert T.input_ports[0].mod_afferents[0].sender==G.gating_signals[0]
         assert T.output_states[0].mod_afferents[0].sender==G.gating_signals[1]
 
     def test_formats_for_control_specification_for_mechanism_and_function_params(self):
@@ -322,15 +322,15 @@ class TestProjectionSpecificationFormats:
             OUT_CONTROL = pnl.CONTROL in repr(OUT_NAME).split(".")[-1].upper()
 
             T = pnl.TransferMechanism(name='T-GATING-{}'.format(i),
-                                      input_states=[G_IN],
+                                      input_ports=[G_IN],
                                       output_states=[G_OUT])
 
             if IN_CONTROL:
-                assert T.input_states[0].mod_afferents[0].name in \
-                       'ControlProjection for T-GATING-{}[InputState-0]'.format(i)
+                assert T.input_ports[0].mod_afferents[0].name in \
+                       'ControlProjection for T-GATING-{}[InputPort-0]'.format(i)
             else:
-                assert T.input_states[0].mod_afferents[0].name in \
-                       'GatingProjection for T-GATING-{}[InputState-0]'.format(i)
+                assert T.input_ports[0].mod_afferents[0].name in \
+                       'GatingProjection for T-GATING-{}[InputPort-0]'.format(i)
 
             if OUT_CONTROL:
                 assert T.output_states[0].mod_afferents[0].name in \
@@ -340,9 +340,9 @@ class TestProjectionSpecificationFormats:
                        'GatingProjection for T-GATING-{}[OutputState-0]'.format(i)
 
         # with pytest.raises(pnl.ProjectionError) as error_text:
-        #     T1 = pnl.ProcessingMechanism(name='T1', input_states=[pnl.ControlMechanism()])
+        #     T1 = pnl.ProcessingMechanism(name='T1', input_ports=[pnl.ControlMechanism()])
         # assert 'Primary OutputState of ControlMechanism-0 (ControlSignal-0) ' \
-        #        'cannot be used as a sender of a Projection to InputState of T1' in error_text.value.args[0]
+        #        'cannot be used as a sender of a Projection to InputPort of T1' in error_text.value.args[0]
         #
         # with pytest.raises(pnl.ProjectionError) as error_text:
         #     T2 = pnl.ProcessingMechanism(name='T2', output_states=[pnl.ControlMechanism()])
@@ -435,6 +435,6 @@ class TestProjectionSpecificationFormats:
             T2 = pnl.TransferMechanism(name='T2')
             pnl.MappingProjection(sender=T1,receiver=T2,name='MP1')
             pnl.MappingProjection(sender=T1,receiver=T2,name='MP2')
-        assert 'Attempt to assign Projection to InputState-0 of T2 that already has an identical Projection.' \
+        assert 'Attempt to assign Projection to InputPort-0 of T2 that already has an identical Projection.' \
                in record.value.args[0]
 

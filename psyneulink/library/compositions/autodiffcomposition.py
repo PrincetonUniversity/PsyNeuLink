@@ -722,9 +722,9 @@ class AutodiffComposition(Composition):
             # save outputs of model if this is final epoch or if using early stopping
             if patience is not None or curr_epoch == total_epochs - 1:
                 curr_output_list = []
-                for input_state in self.output_CIM.input_states:
-                    assert (len(input_state.all_afferents) == 1)  # CW 12/05/18, this assert may eventually be outdated
-                    component = input_state.all_afferents[0].sender.owner
+                for input_port in self.output_CIM.input_ports:
+                    assert (len(input_port.all_afferents) == 1)  # CW 12/05/18, this assert may eventually be outdated
+                    component = input_port.all_afferents[0].sender.owner
                     curr_output_list.append(curr_tensor_outputs[component].detach().cpu().numpy().copy())
                 outputs.append(curr_output_list)
                 # outputs.extend(curr_output_list)
@@ -1199,7 +1199,7 @@ class AutodiffComposition(Composition):
                                                .format(node.component.function, node.component, self.name))
 
             # raise error if a node has more than one input state
-            if len(node.component.input_states) > 1:
+            if len(node.component.input_ports) > 1:
                 raise AutodiffCompositionError("Mechanism {0} of {1} has more than one input state. Autodiff "
                                                "Compositions only allow mechanisms to have one input state. The "
                                                "dimensionality of this state's value will become the dimensionality of "
@@ -1257,7 +1257,7 @@ class AutodiffComposition(Composition):
         mech_param_type_list = (ctx.get_param_struct_type(m) if (m is self.input_CIM or m is self.output_CIM)
                                 else pnlvm.ir.LiteralStructType([]) for m in self._all_nodes)
 
-        proj_param_type_list = (ctx.get_param_struct_type(p) if (p.sender in self.input_CIM.input_states or p.receiver in self.output_CIM.input_states)
+        proj_param_type_list = (ctx.get_param_struct_type(p) if (p.sender in self.input_CIM.input_ports or p.receiver in self.output_CIM.input_ports)
                                 else pnlvm.ir.LiteralStructType([]) for p in self.projections)
 
         self._build_pytorch_representation(self.default_execution_id)
@@ -1298,7 +1298,7 @@ class AutodiffComposition(Composition):
 
         mech_params = (_parameterize_node(m)
                        for m in self._all_nodes if m is not self.controller or not simulation)
-        proj_params = (tuple(p._get_param_initializer(context)) if (p.sender in self.input_CIM.input_states or p.receiver in self.output_CIM.input_states)
+        proj_params = (tuple(p._get_param_initializer(context)) if (p.sender in self.input_CIM.input_ports or p.receiver in self.output_CIM.input_ports)
                        else tuple() for p in self.projections)
         self._build_pytorch_representation(self.default_execution_id)
         model = self.parameters.pytorch_representation.get(self.default_execution_id)

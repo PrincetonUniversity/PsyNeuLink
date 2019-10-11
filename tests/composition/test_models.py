@@ -268,11 +268,11 @@ class TestModels:
         result = z.run(inputs={myMechanism: [[40]]})[0][0]
 
         expected_output = [
-            (myMechanism.input_states[0].parameters.value.get(z), np.array([40.])),
+            (myMechanism.input_ports[0].parameters.value.get(z), np.array([40.])),
             (myMechanism.output_states[0].parameters.value.get(z), np.array([10.])),
-            (myMechanism_2.input_states[0].parameters.value.get(z), np.array([10.])),
+            (myMechanism_2.input_ports[0].parameters.value.get(z), np.array([10.])),
             (myMechanism_2.output_states[0].parameters.value.get(z), np.array([20.])),
-            (myMechanism_3.input_states[0].parameters.value.get(z), np.array([20.])),
+            (myMechanism_3.input_ports[0].parameters.value.get(z), np.array([20.])),
             (myMechanism_3.output_states[0].parameters.value.get(z), np.array([30.])),
             (result, np.array([30.])),
         ]

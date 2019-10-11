@@ -108,13 +108,13 @@ Structure
 The distinguishing feature of a RecurrentTransferMechanism is its `recurrent_projection
 <RecurrentTransferMechanism.recurrent_projection>` attribute: a self-projecting `AutoAssociativeProjection`.
 By default, `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` projects from the Mechanism's
-`primary OutputState <OutputState_Primary>` back to its `primary InputState <InputState_Primary>`.  This can be
+`primary OutputState <OutputState_Primary>` back to its `primary InputPort <InputPort_Primary>`.  This can be
 parameterized using its `matrix <RecurrentTransferMechanism.matrix>`, `auto <RecurrentTransferMechanism.auto>`,
 and `hetero <RecurrentTransferMechanism.hetero>` attributes, and is stored in its `recurrent_projection
-<RecurrentTransferMechanism.recurrent_projection>` attribute.  Using the `has_recurrent_input_state
-<RecurrentTransferMechanism.has_recurrent_input_state>` attribute, the `recurrent_projection
-<RecurrentTransferMechanism.recurrent_projection>` can also be made to project to a separate *RECURRENT* InputState
-rather, than the primary one (named *EXTERNAL*).  In this case, the InputStates' results will be combined using the
+<RecurrentTransferMechanism.recurrent_projection>` attribute.  Using the `has_recurrent_input_port
+<RecurrentTransferMechanism.has_recurrent_input_port>` attribute, the `recurrent_projection
+<RecurrentTransferMechanism.recurrent_projection>` can also be made to project to a separate *RECURRENT* InputPort
+rather, than the primary one (named *EXTERNAL*).  In this case, the InputPorts' results will be combined using the
 `combination_function <RecurrentTransferMechanism.combination_function>` *before* being passed to the
 RecurrentTransferMechanism's `function <RecurrentTransferMechanism.function>`.
 
@@ -196,12 +196,12 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.components.states.inputstate import InputState
+from psyneulink.core.components.states.inputport import InputPort
 from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import _instantiate_state
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MAX_ABS_DIFF, NAME, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT
+from psyneulink.core.globals.keywords import AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_PORT, MATRIX, MAX_ABS_DIFF, NAME, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.registry import register_instance, remove_instance_from_registry
@@ -219,7 +219,7 @@ __all__ = [
 
 EXTERNAL = 'EXTERNAL'
 RECURRENT = 'RECURRENT'
-# Used to index items of InputState.variable corresponding to recurrent and external inputs
+# Used to index items of InputPort.variable corresponding to recurrent and external inputs
 EXTERNAL_INDEX = 0
 RECURRENT_INDEX = -1
 
@@ -343,7 +343,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     matrix=HOLLOW_MATRIX,                               \
     auto=None,                                          \
     hetero=None,                                        \
-    has_recurrent_input_state=False                     \
+    has_recurrent_input_port=False                     \
     combination_function=LinearCombination,             \
     integrator_mode=False,                              \
     integrator_function=AdaptiveIntegrator,             \
@@ -467,15 +467,15 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         Can be modified by control.
 
-    has_recurrent_input_state : boolean : default False
+    has_recurrent_input_port : boolean : default False
         specifies whether the mechanism's `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`
         points to a separate input state. By default, if False, the recurrent_projection points to its `primary
-        InputState <InputState_Primary>`. If True, the recurrent_projection points to a separate input state, and
+        InputPort <InputPort_Primary>`. If True, the recurrent_projection points to a separate input state, and
         the values of all input states are combined using `LinearCombination <function.LinearCombination>` *before*
         being passed to the RecurrentTransferMechanism's `function <RecurrentTransferMechanism.function>`.
 
     combination_function : function : default LinearCombination
-        specifies function used to combine the *RECURRENT* and *INTERNAL* `InputStates <Recurrent_Transfer_Structure>`;
+        specifies function used to combine the *RECURRENT* and *INTERNAL* `InputPorts <Recurrent_Transfer_Structure>`;
         must accept a 2d array with one or two items of the same length, and generate a result that is the same size
         as each of these;  default simply adds the two items.
 
@@ -586,18 +586,18 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     recurrent_projection : AutoAssociativeProjection
         an `AutoAssociativeProjection` that projects from the Mechanism's `primary OutputState <OutputState_Primary>`
-         to its `primary InputState <Mechanism_InputStates>`.
+         to its `primary InputPort <Mechanism_InputPorts>`.
 
-    has_recurrent_input_state : boolean
+    has_recurrent_input_port : boolean
         specifies whether the mechanism's `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`
         points to a separate input state. If False, the recurrent_projection points to its `primary
-        InputState <InputState_Primary>`. If True, the recurrent_projection points to a separate input state, and
+        InputPort <InputPort_Primary>`. If True, the recurrent_projection points to a separate input state, and
         the values of all input states are combined using `LinearCombination <function.LinearCombination>` *before*
         being passed to the RecurrentTransferMechanism's `function <RecurrentTransferMechanism.function>`.
 
     combination_function : function
-        the Function used to combine the *RECURRENT* and *EXTERNAL* InputStates if `has_recurrent_input_state
-        <RecurrentTransferMechanism.has_recurrent_input_state>` is `True`.  By default this is a `LinearCombination`
+        the Function used to combine the *RECURRENT* and *EXTERNAL* InputPorts if `has_recurrent_input_port
+        <RecurrentTransferMechanism.has_recurrent_input_port>` is `True`.  By default this is a `LinearCombination`
         Function that simply adds them.
 
     COMMENT:
@@ -925,8 +925,8 @@ class RecurrentTransferMechanism(TransferMechanism):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_states:tc.optional(tc.any(list, dict)) = None,
-                 has_recurrent_input_state=False,
+                 input_ports:tc.optional(tc.any(list, dict)) = None,
+                 has_recurrent_input_port=False,
                  combination_function:is_function_type=LinearCombination,
                  function=Linear,
                  matrix=None,
@@ -982,7 +982,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                   learning_condition=learning_condition,
                                                   auto=auto,
                                                   hetero=hetero,
-                                                  has_recurrent_input_state=has_recurrent_input_state,
+                                                  has_recurrent_input_port=has_recurrent_input_port,
                                                   combination_function=combination_function,
                                                   output_states=output_states,
                                                   params=params,
@@ -995,7 +995,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         super().__init__(default_variable=default_variable,
                          size=size,
-                         input_states=input_states,
+                         input_ports=input_ports,
                          function=function,
                          integrator_function=integrator_function,
                          initial_value=initial_value,
@@ -1012,9 +1012,9 @@ class RecurrentTransferMechanism(TransferMechanism):
                          prefs=prefs,
                          **kwargs)
 
-    # def _handle_default_variable(self, default_variable=None, size=None, input_states=None, params=None):
+    # def _handle_default_variable(self, default_variable=None, size=None, input_ports=None, params=None):
     #     """Set self.recurrent_size if it was not set by subclass;  assumes it is size of first item"""
-    #     default_variable = super()._handle_default_variable(default_variable, size, input_states, params)
+    #     default_variable = super()._handle_default_variable(default_variable, size, input_ports, params)
     #     self.recurrent_size = self.recurrent_size or len(default_variable[0])
     #     return default_variable
 
@@ -1208,7 +1208,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                 raise RecurrentTransferError("Failed to create ParameterState for `hetero` attribute for {} \"{}\"".
                                            format(self.__class__.__name__, self.name))
 
-        if self.has_recurrent_input_state:
+        if self.has_recurrent_input_port:
             comb_fct = self.combination_function
             if (
                 not (
@@ -1399,27 +1399,27 @@ class RecurrentTransferMechanism(TransferMechanism):
             matrix = get_matrix(matrix, size, size)
 
         # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
-        if self.has_recurrent_input_state:
+        if self.has_recurrent_input_port:
             # # FIX: 7/12/18 MAKE THIS A METHOD THAT CAN BE OVERRIDDEN BY CONTRASTIVEHEBBIAN
-            new_input_state = InputState(owner=self, name=RECURRENT, variable=self.defaults.variable[0],
-                                         internal_only=True)
-            assert (len(new_input_state.all_afferents) == 0)  # just a sanity check
-            assert(self.input_state.name != "Recurrent Input State")
-            # Rename existing InputState as EXTERNAL
+            new_input_port = InputPort(owner=self, name=RECURRENT, variable=self.defaults.variable[0],
+                                        internal_only=True)
+            assert (len(new_input_port.all_afferents) == 0)  # just a sanity check
+            assert(self.input_port.name != "Recurrent Input State")
+            # Rename existing InputPort as EXTERNAL
             remove_instance_from_registry(registry=self._stateRegistry,
-                                          category=INPUT_STATE,
-                                          component=self.input_state)
-            register_instance(self.input_state, EXTERNAL, InputState, self._stateRegistry, INPUT_STATE)
+                                          category=INPUT_PORT,
+                                          component=self.input_port)
+            register_instance(self.input_port, EXTERNAL, InputPort, self._stateRegistry, INPUT_PORT)
             proj = AutoAssociativeProjection(owner=mech,
-                                             receiver=new_input_state,
+                                             receiver=new_input_port,
                                              matrix=matrix,
                                              name=mech.name + ' recurrent projection')
-            receiver = new_input_state
+            receiver = new_input_port
         else:
             proj = AutoAssociativeProjection(owner=mech,
                                              matrix=matrix,
                                              name=mech.name + ' recurrent projection')
-            receiver = self.input_state
+            receiver = self.input_port
 
         proj._activate_for_compositions(ConnectionInfo.ALL)
         return proj
@@ -1448,7 +1448,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         self.aux_components.append(learning_mechanism)
         # Instantiate Projection from Mechanism's output to LearningMechanism
         mproj = MappingProjection(sender=activity_vector,
-                          receiver=learning_mechanism.input_states[ACTIVATION_INPUT],
+                          receiver=learning_mechanism.input_ports[ACTIVATION_INPUT],
                           name="Error Projection for {}".format(learning_mechanism.name))
         mproj._activate_for_all_compositions()
         self.aux_components.append(mproj)
@@ -1476,7 +1476,7 @@ class RecurrentTransferMechanism(TransferMechanism):
           RecurrentTransferMechanism's constructor are used;
         ..
         * a `MappingProjection` from the RecurrentTransferMechanism's `primary OutputState <OutputState_Primary>`
-          to the AutoAssociativeLearningMechanism's *ACTIVATION_INPUT* InputState;
+          to the AutoAssociativeLearningMechanism's *ACTIVATION_INPUT* InputPort;
         ..
         * a `LearningProjection` from the AutoAssociativeLearningMechanism's *LEARNING_SIGNAL* OutputState to
           the RecurrentTransferMechanism's `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`.
@@ -1517,18 +1517,18 @@ class RecurrentTransferMechanism(TransferMechanism):
         return super()._execute(variable, context, runtime_params)
 
     def _parse_function_variable(self, variable, context=None):
-        if self.has_recurrent_input_state:
+        if self.has_recurrent_input_port:
             variable = self.combination_function.execute(variable=variable, context=context)
 
         return super()._parse_function_variable(variable, context=context)
 
     def _get_variable_from_input(self, input, context=None):
-        if self.has_recurrent_input_state:
+        if self.has_recurrent_input_port:
             input = np.atleast_2d(input)
             input_len = len(input[0])
             num_inputs = np.size(input, 0)
-            num_input_states = len(self.input_states)
-            if num_inputs != num_input_states:
+            num_input_ports = len(self.input_ports)
+            if num_inputs != num_input_ports:
                 z = np.zeros((1, input_len))
                 input = np.concatenate((input, z))
 
@@ -1551,8 +1551,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         input_type_list = []
         # FIXME: What if we have more than one state? Does the autoprojection
         # connect only to the first one?
-        assert len(self.input_states) == 1
-        for state in self.input_states:
+        assert len(self.input_ports) == 1
+        for state in self.input_ports:
             # Extract the non-modulation portion of input state input struct
             s_type = ctx.get_input_struct_type(state).elements[0]
             if isinstance(s_type, pnlvm.ir.ArrayType):
@@ -1603,8 +1603,8 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         # FIXME: What if we have more than one state? Does the autoprojection
         # connect only to the first one?
-        assert len(self.input_states) == 1
-        for i, state in enumerate(self.input_states):
+        assert len(self.input_ports) == 1
+        for i, state in enumerate(self.input_ports):
             is_real_input = builder.gep(real_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
             is_current_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
             for idx in range(len(is_current_input.type.pointee)):
@@ -1630,8 +1630,8 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         # Copy mod afferents. These are not impacted by the recurrent projection
         if len(self.mod_afferents) > 1:
-            mod_afferent_arg_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(len(self.input_states))])
-            mod_afferent_in_ptr = builder.gep(real_in, [ctx.int32_ty(0), ctx.int32_ty(len(self.input_states))])
+            mod_afferent_arg_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(len(self.input_ports))])
+            mod_afferent_in_ptr = builder.gep(real_in, [ctx.int32_ty(0), ctx.int32_ty(len(self.input_ports))])
             builder.store(builder.load(mod_afferent_arg_ptr), mod_afferent_in_ptr)
 
         transfer_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0)])

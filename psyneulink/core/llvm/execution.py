@@ -401,8 +401,8 @@ class CompExecution(CUDAExecution):
         if inputs is None and node is self._composition.input_CIM:
             # This assumes origin mechanisms are in the same order as
             # CIM input states
-            origins = (n for n in self._composition.get_nodes_by_role(NodeRole.INPUT) for istate in n.input_states)
-            input_data = ([proj.parameters.value._get(context) for proj in state.all_afferents] for state in node.input_states)
+            origins = (n for n in self._composition.get_nodes_by_role(NodeRole.INPUT) for istate in n.input_ports)
+            input_data = ([proj.parameters.value._get(context) for proj in state.all_afferents] for state in node.input_ports)
             inputs = defaultdict(list)
             for n, d in zip(origins, input_data):
                 inputs[n].append(d[0])

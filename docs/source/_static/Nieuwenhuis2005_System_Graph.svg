@@ -112,7 +112,7 @@ x="357"
 y="797" 
 dx="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.3,0,0,-1.1,0,0,0,0,0,0,0,0,-1.1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1.1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0" 
 class="s2_1"
->MappingProjection from INPUT LAYER[RESULTS] to DECISION LAYER[InputState-0]</text>
+>MappingProjection from INPUT LAYER[RESULTS] to DECISION LAYER[InputPort-0]</text>
 
 <text 
 x="631" 
@@ -166,7 +166,7 @@ x="72"
 y="403" 
 dx="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1.1,0,0,0,0,0,0,0,0,-1.1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1.1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0" 
 class="s2_1"
->MappingProjection from DECISION LAYER[RESULT] to RESPONSE LAYER[InputState-0]</text>
+>MappingProjection from DECISION LAYER[RESULT] to RESPONSE LAYER[InputPort-0]</text>
 
 <text 
 x="360" 
@@ -204,7 +204,7 @@ x="359"
 y="600" 
 dx="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1.1,0,0,0,0,0,0,0,0,-1.1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0" 
 class="s2_1"
->MappingProjection from DECISION LAYER[RESULT] to Combine values[InputState-0]</text>
+>MappingProjection from DECISION LAYER[RESULT] to Combine values[InputPort-0]</text>
 
 <text 
 x="633" 

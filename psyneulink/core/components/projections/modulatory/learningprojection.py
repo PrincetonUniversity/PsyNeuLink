@@ -288,7 +288,7 @@ class LearningProjection(ModulatoryProjection_Base):
     error_function : Optional[Function or function] : default LinearCombination(weights=[[-1], [1]])
         specifies a function to be used by the `TARGET Mechanism <LearningMechanism_Targets>` to compute the error
         used for learning.  Since the `TARGET` Mechanism is a `ComparatorMechanism`, its function must have a `variable
-        <Function.variable>` with two items, that receives its values from the *SAMPLE* and *TARGET* InputStates of the
+        <Function.variable>` with two items, that receives its values from the *SAMPLE* and *TARGET* InputPorts of the
         ComparatorMechanism.
 
     learning_function : Optional[LearningFunction or function] : default BackPropagation
@@ -678,7 +678,7 @@ class LearningProjection(ModulatoryProjection_Base):
         # MODIFIED 7/15/19 OLD: JDC RESTORED TO ALLOW SYSTEM TO WORK (DOESN"T SEEM TO TRASH BP)
         # KAM Commented out next 8 lines on 6/24/19 to get past bug in multilayer backprop on Composition
         try:
-            candidate_objective_mech = learning_mechanism.input_states[ERROR_SIGNAL].path_afferents[0].sender.owner
+            candidate_objective_mech = learning_mechanism.input_ports[ERROR_SIGNAL].path_afferents[0].sender.owner
             if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role is LEARNING:
                 learned_projection.objective_mechanism = candidate_objective_mech
         except TypeError:

@@ -50,24 +50,24 @@ changed after creation of the LeabraMechanism, causing it to start/stop learning
     If the training_flag is True, the network will learn using the Leabra learning algorithm. Other algorithms may be
     added later.
 
-The LeabraMechanism has two InputStates: the *MAIN_INPUT* `InputState` and the *LEARNING_TARGET* InputState. The
-*MAIN_INPUT* InputState is the input to the leabra network, while the *LEARNING_TARGET* InputState is the learning
-target for the LeabraMechanism. The input to the *MAIN_INPUT* InputState should have length equal to
-`input_size <LeabraMechanism.input_size>` and the input to the *LEARNING_TARGET* InputState should have length equal to
+The LeabraMechanism has two InputPorts: the *MAIN_INPUT* `InputPort` and the *LEARNING_TARGET* InputPort. The
+*MAIN_INPUT* InputPort is the input to the leabra network, while the *LEARNING_TARGET* InputPort is the learning
+target for the LeabraMechanism. The input to the *MAIN_INPUT* InputPort should have length equal to
+`input_size <LeabraMechanism.input_size>` and the input to the *LEARNING_TARGET* InputPort should have length equal to
 `output_size <LeabraMechanism.output_size>`.
 
 .. note::
     Currently, there is a bug where LeabraMechanism (and other Mechanisms with multiple input states) cannot be
     used as `ORIGIN Mechanisms <System_Mechanisms>` for a `System`. If you desire to use a LeabraMechanism as an ORIGIN
     Mechanism, you can work around this bug by creating two `TransferMechanisms <Transfer_Overview>` as ORIGIN
-    Mechanisms instead, and have these two TransferMechanisms pass their output to the InputStates of the
+    Mechanisms instead, and have these two TransferMechanisms pass their output to the InputPorts of the
     LeabraMechanism. Here is an example of how to do this. In the example, T2 passes the training_data to the
-    *LEARNING_TARGET* InputState of L (L.input_states[1])::
+    *LEARNING_TARGET* InputPort of L (L.input_ports[1])::
         L = LeabraMechanism(input_size=input_size, output_size=output_size)
         T1 = TransferMechanism(name='T1', size=input_size, function=Linear)
         T2 = TransferMechanism(name='T2', size=output_size, function=Linear)
         p1 = Process(pathway=[T1, L])
-        proj = MappingProjection(sender=T2, receiver=L.input_states[1])
+        proj = MappingProjection(sender=T2, receiver=L.input_ports[1])
         p2 = Process(pathway=[T2, proj, L])
         s = System(processes=[p1, p2])
         s.run(inputs={T1: input_data, T2: training_data})
@@ -104,22 +104,22 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutputStates, standard_output_states
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import FUNCTION, INPUT_STATES, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, NETWORK, OUTPUT_STATES, PREFERENCE_SET_NAME
+from psyneulink.core.globals.keywords import FUNCTION, INPUT_PORTS, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, NETWORK, OUTPUT_STATES, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.scheduling.time import TimeScale
 
 __all__ = [
-    'build_leabra_network', 'convert_to_2d_input', 'input_state_names', 'LeabraError', 'LeabraFunction', 'LeabraMechanism',
+    'build_leabra_network', 'convert_to_2d_input', 'input_port_names', 'LeabraError', 'LeabraFunction', 'LeabraMechanism',
     'LEARNING_TARGET', 'MAIN_INPUT', 'MAIN_OUTPUT', 'output_state_name', 'run_leabra_network', 'train_leabra_network',
 ]
 
-# Used to name input_states and output_states:
+# Used to name input_ports and output_states:
 MAIN_INPUT = 'main_input'
 LEARNING_TARGET = 'learning_target'
 MAIN_OUTPUT = 'main_output'
-input_state_names = [MAIN_INPUT, LEARNING_TARGET]
+input_port_names = [MAIN_INPUT, LEARNING_TARGET]
 output_state_name = [MAIN_OUTPUT]
 
 
@@ -486,7 +486,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
     # LeabraMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({FUNCTION: LeabraFunction,
-                               INPUT_STATES: input_state_names,
+                               INPUT_PORTS: input_port_names,
                                OUTPUT_STATES: output_state_name})
 
     standard_output_states = standard_output_states.copy()

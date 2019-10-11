@@ -41,7 +41,7 @@ Target_Rep = pnl.TransferMechanism(name='Target Representation')
 
 Target_Rep.set_log_conditions('value')#, log_condition=pnl.PROCESSING) # Log Target_Rep
 Target_Rep.set_log_conditions('mod_slope')#, log_condition=pnl.PROCESSING)
-Target_Rep.set_log_conditions('InputState-0')#, log_condition=pnl.PROCESSING)
+Target_Rep.set_log_conditions('InputPort-0')#, log_condition=pnl.PROCESSING)
 
 Distractor_Rep = pnl.TransferMechanism(name='Distractor Representation')
 
@@ -75,7 +75,7 @@ Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
         }
     ],) #drift_rate=(1.0),threshold=(0.2645),noise=(0.5),starting_point=(0), t0=0.15
 
-Decision.set_log_conditions('InputState-0')#, log_condition=pnl.PROCESSING)
+Decision.set_log_conditions('InputPort-0')#, log_condition=pnl.PROCESSING)
 Decision.set_log_conditions('PROBABILITY_UPPER_THRESHOLD')
 print(Decision.loggable_items)
 # Outcome Mechanisms:
@@ -129,9 +129,9 @@ Distractor_Rep_Control_Signal = pnl.ControlSignal(modulates=[(pnl.SLOPE, Distrac
 
 Umemoto_comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(
         agent_rep=Umemoto_comp,
-        features=[Target_Stim.input_state,
-                  Distractor_Stim.input_state,
-                  Reward.input_state],
+        features=[Target_Stim.input_port,
+                  Distractor_Stim.input_port,
+                  Reward.input_port],
         feature_function=pnl.AdaptiveIntegrator(rate=1.0),
         objective_mechanism=pnl.ObjectiveMechanism(
                 monitor_for_control=[Reward,

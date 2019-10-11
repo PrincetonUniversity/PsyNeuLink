@@ -45,7 +45,7 @@ COMMENT:
     `gating_allocation <GatingMechanism.gating_allocation>`, each item of which is assigned to one of its
     `GatingSignals <ControlSignal>`;  each of those generates a `gating_signal <ControlSignal.control_signal>`
     that is used by its `GatingProjection(s) <ControlProjection>` to modulate the parameter of a `function
-    <State_Base.function>` (and thereby the `value <State_Base.value>`) of an `InputState` or `OutputState`.
+    <State_Base.function>` (and thereby the `value <State_Base.value>`) of an `InputPort` or `OutputState`.
     A GatingMechanism can be assigned only the `GatingSignal` class of `ModulatorySignal`, but can be also be assigned
     other generic `OutputStates <OutputState>`.
 COMMENT.
