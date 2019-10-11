@@ -811,6 +811,7 @@ class ControlSignal(ModulatorySignal):
                          function=function,
                          modulation=modulation,
                          modulates=modulates,
+                         allocation_samples=allocation_samples,
                          params=params,
                          name=name,
                          prefs=prefs,
@@ -947,7 +948,7 @@ class ControlSignal(ModulatorySignal):
     def _instantiate_allocation_samples(self, context=None):
         """Assign specified `allocation_samples <ControlSignal.allocation_samples>` to a `SampleIterator`."""
 
-        a = self.paramsCurrent[ALLOCATION_SAMPLES]
+        a = self.parameters.allocation_samples._get(context)
 
         if a is None:
             return

@@ -275,12 +275,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
             Attributes
             ----------
 
-                learning_signals
-                    see `learning_signals <AutoAssociativeLearningMechanism.learning_signals>`
-
-                    :default value: None
-                    :type:
-
                 modulation
                     see `modulation <AutoAssociativeLearningMechanism.modulation>`
 
@@ -289,8 +283,25 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
         """
         function = Parameter(Hebbian, stateful=False, loggable=False)
-        learning_signals = None
         modulation = ADDITIVE
+        input_ports = Parameter(
+            [ACTIVATION_INPUT],
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
+            parse_spec=True,
+        )
+        output_ports = Parameter(
+            [{
+                NAME: LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
+                VARIABLE: (OWNER_VALUE, 0)
+            }],
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
+        )
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
@@ -321,7 +332,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
-                                                  learning_signals=learning_signals,
                                                   params=params)
 
         # # USE FOR IMPLEMENTATION OF deferred_init()
@@ -344,6 +354,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                          params=params,
                          name=name,
                          prefs=prefs,
+                         learning_signals=learning_signals,
                          **kwargs
                          )
 

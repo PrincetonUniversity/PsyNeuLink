@@ -755,7 +755,7 @@ class InputPort(Port_Base):
         exponent = Parameter(None, modulable=True)
         combine = None
         internal_only = Parameter(False, stateful=False, loggable=False, pnl_internal=True)
-        shadow_inputs = Parameter(None, stateful=False, loggable=False, read_only=True, pnl_internal=True)
+        shadow_inputs = Parameter(None, stateful=False, loggable=False, read_only=True, pnl_internal=True, structural=True)
 
     paramClassDefaults = Port_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
@@ -1382,10 +1382,10 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
     if context.source & (ContextFlags.METHOD | ContextFlags.COMMAND_LINE):
         owner.input_ports.extend(port_list)
     else:
-        owner._input_ports = port_list
+        owner.input_ports = port_list
 
     # Assign value of require_projection_in_composition
-    for port in owner._input_ports:
+    for port in owner.input_ports:
         # Assign True for owner's primary InputPort and the value has not already been set in InputPort constructor
         if port.require_projection_in_composition is None and owner.input_port == port:
             port.parameters.require_projection_in_composition._set(True, context)

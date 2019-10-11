@@ -123,6 +123,10 @@ class EpisodicMemoryMechanismError(Exception):
         return repr(self.error_value)
 
 
+def _generate_content_input_port_spec(content_size):
+    return [{NAME: CONTENT_INPUT, SIZE: content_size}]
+
+
 class EpisodicMemoryMechanism(ProcessingMechanism_Base):
     """
     EpisodicMemoryMechanism(                \
@@ -180,6 +184,25 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         """
         variable = Parameter([[0]], pnl_internal=True, constructor_argument='default_variable')
         function = Parameter(ContentAddressableMemory, stateful=False, loggable=False)
+        content_size = 1
+        assoc_size = 0
+
+        input_ports = Parameter(
+            _generate_content_input_port_spec(content_size),
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
+            parse_spec=True,
+        )
+
+        output_ports = Parameter(
+            [{NAME: CONTENT_OUTPUT, VARIABLE: (OWNER_VALUE, 0)}],
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
+        )
 
     def __init__(self,
                  content_size:int=1,
@@ -191,24 +214,31 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                  **kwargs):
         # Template for memory_store entries
         default_variable = [np.zeros(content_size)]
+        input_ports = None
+        output_ports = None
 
-        input_ports = [{NAME:CONTENT_INPUT, SIZE:content_size}]
-        output_ports = [{NAME: CONTENT_OUTPUT, VARIABLE: (OWNER_VALUE, 0)}]
+        if content_size != self.defaults.content_size:
+            input_ports = _generate_content_input_port_spec(content_size)
 
-        if assoc_size:
-            input_ports.append({NAME:ASSOC_INPUT, SIZE:assoc_size})
+        if assoc_size != self.defaults.assoc_size:
+            try:
+                input_ports.append({NAME: ASSOC_INPUT, SIZE: assoc_size})
+            except AttributeError:
+                input_ports = [{NAME: ASSOC_INPUT, SIZE: assoc_size}]
+
+            output_ports = self.class_defaults.output_ports.copy()
             output_ports.append({NAME: ASSOC_OUTPUT, VARIABLE: (OWNER_VALUE, 1)})
             default_variable.append(np.zeros(assoc_size))
 
         params = self._assign_args_to_param_dicts(function=function,
-                                                  input_ports=input_ports,
-                                                  output_ports=output_ports,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
                          params=params,
                          name=name,
                          prefs=prefs,
+                         input_ports=input_ports,
+                         output_ports=output_ports,
                          **kwargs
                          )
 

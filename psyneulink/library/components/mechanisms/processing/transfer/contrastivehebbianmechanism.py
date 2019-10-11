@@ -1064,8 +1064,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                                   max_passes=max_passes,
                                                   continuous=continuous,
                                                   clamp=clamp,
-                                                  input_ports=input_ports,
-                                                  output_ports=output_ports,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,

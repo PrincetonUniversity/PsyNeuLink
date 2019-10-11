@@ -1124,6 +1124,11 @@ class Port_Base(Port):
         if context.source == ContextFlags.COMMAND_LINE:
             owner.add_ports([self])
 
+    def _initialize_parameters(self, context=None, **param_defaults):
+        super()._initialize_parameters(context=context, **param_defaults)
+        # instantiate auxiliary Functions
+        self._instantiate_parameter_classes(context)
+
     def _handle_size(self, size, variable):
         """Overwrites the parent method in Component.py, because the variable of a Port
             is generally 1D, rather than 2D as in the case of Mechanisms

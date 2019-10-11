@@ -654,7 +654,12 @@ class Parameter(types.SimpleNamespace):
     # will be included as "param attrs" - the attributes of a Parameter that may be of interest to/settable by users
     # To add an additional property-like param attribute, add its name here, and a _set_<param_name> method
     # (see _set_history_max_length)
-    _additional_param_attr_properties = {'default_value', 'history_max_length', 'log_condition'}
+    _additional_param_attr_properties = {
+        'default_value',
+        'history_max_length',
+        'log_condition',
+        'spec',
+    }
 
     def __init__(
         self,
@@ -662,6 +667,7 @@ class Parameter(types.SimpleNamespace):
         name=None,
         stateful=True,
         modulable=False,
+        structural=False,
         modulation_combination_function=None,
         read_only=False,
         function_arg=True,
@@ -681,6 +687,7 @@ class Parameter(types.SimpleNamespace):
         retain_old_simulation_data=False,
         constructor_argument=None,
         spec=None,
+        parse_spec=False,
         valid_types=None,
         _owner=None,
         _inherited=False,
@@ -709,6 +716,7 @@ class Parameter(types.SimpleNamespace):
             name=name,
             stateful=stateful,
             modulable=modulable,
+            structural=structural,
             modulation_combination_function=modulation_combination_function,
             read_only=read_only,
             function_arg=function_arg,
@@ -728,6 +736,7 @@ class Parameter(types.SimpleNamespace):
             retain_old_simulation_data=retain_old_simulation_data,
             constructor_argument=constructor_argument,
             spec=spec,
+            parse_spec=parse_spec,
             valid_types=valid_types,
             _inherited=_inherited,
             _user_specified=_user_specified,
@@ -1182,6 +1191,11 @@ class Parameter(types.SimpleNamespace):
 
         super().__setattr__('log_condition', value)
 
+    def _set_spec(self, value):
+        if self.parse_spec:
+            value = self._parse(value)
+        super().__setattr__('spec', value)
+
 
 class _ParameterAliasMeta(type):
     # these will not be taken from the source
@@ -1313,7 +1327,13 @@ class ParametersBase(ParametersTemplate):
 
                 if value.aliases is not None:
                     for alias in value.aliases:
-                        if not hasattr(self, alias) or unproxy_weakproxy(getattr(self, alias)._owner) is not self:
+                        # the alias doesn't exist, or it's an alias on the
+                        # parent
+                        if (
+                            not hasattr(self, alias)
+                            or not hasattr(getattr(self, alias), '_owner')
+                            or unproxy_weakproxy(getattr(self, alias)._owner) is not self
+                        ):
                             super().__setattr__(alias, ParameterAlias(source=getattr(self, attr), name=alias))
                             self._register_parameter(alias)
 

@@ -1437,10 +1437,10 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
     if context.source & (ContextFlags.COMMAND_LINE | ContextFlags.METHOD):
         owner.output_ports.extend(port_list)
     else:
-        owner._output_ports = port_list
+        owner.output_ports = port_list
 
     # Assign value of require_projection_in_composition
-    for port in owner._output_ports:
+    for port in owner.output_ports:
         # Assign True for owner's primary OutputPort and the value has not already been set in OutputPort constructor
         if port.require_projection_in_composition is None and owner.output_port == port:
             port.parameters.require_projection_in_composition._set(True, context)

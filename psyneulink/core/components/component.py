@@ -492,12 +492,12 @@ from psyneulink.core.globals.keywords import \
     MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, PARAMS, PARAMS_CURRENT, PREFS_ARG, \
     REINITIALIZE_WHEN, SIZE, USER_PARAMS, VALUE, VARIABLE
 from psyneulink.core.globals.log import LogCondition
-from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase
+from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import \
     PreferenceEntry, PreferenceLevel, PreferenceSet, _assign_prefs
 from psyneulink.core.globals.registry import register_category
-from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared, is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, unproxy_weakproxy
+from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, copy_iterable_with_shared, get_deepcopy_with_shared, is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, unproxy_weakproxy
 from psyneulink.core.scheduling.condition import Never
 
 __all__ = [
@@ -513,7 +513,7 @@ DeferredInitRegistry = {}
 
 
 def get_deepcopy_with_shared_Components(shared_keys=None):
-    return get_deepcopy_with_shared(shared_keys, (Component, ))
+    return get_deepcopy_with_shared(shared_keys, (Component, ComponentsMeta))
 
 
 class ResetMode(Enum):
@@ -1027,18 +1027,40 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         def _validate_variable(self, variable):
             return None
 
-        def _parse_modulable(self, modulable_param):
+        def _parse_modulable(self, param_name, param_value):
+            from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
             # assume 2-tuple with class/instance as second item is a proper
             # modulatory spec, can possibly add in a flag on acceptable
             # classes in the future
             if (
-                isinstance(modulable_param, tuple)
-                and len(modulable_param) == 2
-                and is_instance_or_subclass(modulable_param[1], Component)
+                isinstance(param_value, tuple)
+                and len(param_value) == 2
+                and (
+                    is_instance_or_subclass(param_value[1], Component)
+                    or (
+                        isinstance(param_value[1], str)
+                        and param_value[1] in MODULATORY_SPEC_KEYWORDS
+                    )
+                )
             ):
-                return modulable_param[0]
+                return param_value[0]
+            # assume a DistributionFunction is allowed to persist, for noise
+            elif (
+                (
+                    is_instance_or_subclass(param_value, Component)
+                    and not is_instance_or_subclass(
+                        param_value,
+                        DistributionFunction
+                    )
+                )
+                or (
+                    isinstance(param_value, str)
+                    and param_value in MODULATORY_SPEC_KEYWORDS
+                )
+            ):
+                return getattr(self, param_name).default_value
             else:
-                return modulable_param
+                return param_value
 
     initMethod = INIT_FULL_EXECUTE_METHOD
 
@@ -1093,7 +1115,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         """
 
-        illegal_args = [arg for arg in kwargs.keys() if arg not in self.standard_constructor_args]
+        illegal_args = [arg for arg in kwargs.keys() if arg not in self.standard_constructor_args + self.parameters.names(show_all=True)]
         if illegal_args:
             plural = ''
             if len(illegal_args)>1:
@@ -1111,7 +1133,15 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         except KeyError:
             function_params = None
 
-        self._initialize_parameters(context=context, **param_defaults)
+        # allow override of standard arguments with arguments specified in
+        # params (here, param_defaults) argument
+        for p in param_defaults:
+            try:
+                del kwargs[p]
+            except KeyError:
+                pass
+
+        self._initialize_parameters(context=context, **param_defaults, **kwargs)
 
         v = self._handle_default_variable(default_variable, size)
         if v is None:
@@ -1282,6 +1312,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             # proxying so it's sensible (so self.parameters._owner is self)
             newone.parameters._owner = weakref.proxy(newone)
             newone.defaults._owner = weakref.proxy(newone)
+            newone._compilation_data._owner = weakref.proxy(newone)
 
         return newone
 
@@ -1864,8 +1895,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         #    • _create_attributes_for_params assigns properties to each param in user_params;
         #    • the setter for those properties (in make_property) also assigns its value to its entry user_params;
         #    • paramInstanceDefaults are assigned to paramsCurrent in Component.__init__ assigns
-        #    • since paramsCurrent is a ParamsDict, it assigns the values of its entries to the corresponding attributes
-        #         and the setter assigns those values to the user_params
         #    • therefore, assignments of paramInstance defaults to paramsCurrent in __init__ overwrites the
         #         the user-specified values (from the constructor args) in user_params
         self.user_params_for_instantiation = OrderedDict()
@@ -2329,6 +2358,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             for p in d:
                 try:
                     parameter_obj = getattr(self.parameters, p)
+                    if parameter_obj.structural:
+                        parameter_obj.spec = d[p]
+
                     if parameter_obj.modulable:
                         # later, validate this
                         try:
@@ -2336,17 +2368,17 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                                 parse=True,
                                 modulable=True
                             )
-                            parsed = modulable_param_parser(d[p])
+                            parsed = modulable_param_parser(p, d[p])
 
                             if parsed is not d[p]:
                                 # we have a modulable param spec
                                 parameter_obj.spec = d[p]
                                 d[p] = parsed
+                                param_defaults[p] = parsed
                         except AttributeError:
                             pass
 
-                    if d[p] is not None:
-                        parameter_obj._user_specified = True
+                    d[p] = copy_parameter_value(d[p])
                 except AttributeError:
                     # p in param_defaults does not correspond to a Parameter
                     pass
@@ -2356,18 +2388,60 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         self.defaults = Defaults(owner=self, **defaults)
 
         for p in self.parameters:
+            # copy spec so it is not overwritten later
+            # TODO: check if this is necessary
+            if not isinstance(p.spec, (Component, ComponentsMeta)):
+                p.spec = copy_parameter_value(p.spec)
+
+            if p.name in param_defaults and param_defaults[p.name] is not None:
+                p._user_specified = True
+
             # set default to None context to ensure it exists
             if p.getter is None and p._get(context) is None:
                 try:
+                    # remember, this portion with attrs is a temporary hack
+                    # to be used only until AATPD is fully removed
                     attr_name = '_{0}'.format(p.name)
-                    attr_value = getattr(self, attr_name)
-                    if attr_value is None:
-                        attr_value = copy.deepcopy(p.default_value)
+                    val = getattr(self, attr_name)
 
-                    p._set(attr_value, context=context, skip_history=True)
-                    delattr(self, attr_name)
+                    if (
+                        (val is None or p.name in param_defaults)
+                    ):
+                        try:
+                            val = param_defaults[p.name]
+                        except KeyError:
+                            val = None
+                        if val is None:
+                            val = copy_parameter_value(p.default_value)
+
+                    # remove this when AATPD fully removed..
+                    if not p.structural:
+                        delattr(self, attr_name)
                 except AttributeError:
-                    p._set(copy.deepcopy(p.default_value), context=context, skip_history=True)
+                    if p.name in param_defaults and param_defaults[p.name] is not None:
+                        val = param_defaults[p.name]
+                    else:
+                        val = copy_parameter_value(p.default_value)
+
+                p.set(val, context=context, skip_history=True, override=True)
+
+    def _instantiate_parameter_classes(self, context=None):
+        """
+            An optional method that will take any Parameter values in
+            **context** that are classes/types, and instantiate them.
+        """
+        from psyneulink.core.components.shellclasses import Function
+
+        # (this originally occurred in _validate_params)
+        for p in self.parameters:
+            if p.getter is None:
+                val = p._get(context)
+                if (
+                    p.name != FUNCTION
+                    and inspect.isclass(val)
+                    and issubclass(val, Function)
+                ):
+                    p._set(val(), context)
 
     @handle_external_context()
     def assign_params(self, request_set=None, context=None):
@@ -2690,7 +2764,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             # Check that param is in paramClassDefaults (if not, it is assumed to be invalid for this object)
             if not param_name in self.paramClassDefaults:
                 # these are always allowable since they are attribs of every Component
-                if param_name in {VARIABLE, NAME, VALUE, PARAMS, SIZE, LOG_ENTRIES, FUNCTION_PARAMS}:
+                if param_name in {VARIABLE, NAME, VALUE, PARAMS, SIZE, LOG_ENTRIES, FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS}:
                     continue
                 raise ComponentError(f"{param_name} is not a valid parameter for {self.__class__.__name__}.")
 
@@ -3328,29 +3402,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         self._user_params = new_params
 
     @property
-    def paramsCurrent(self):
-        return self._paramsCurrent
-        # try:
-        #     return self._paramsCurrent
-        # except AttributeError:
-        #     self._paramsCurrent = ParamsDict(self)
-        #     return self._paramsCurrent
-
-    @paramsCurrent.setter
-    def paramsCurrent(self, dict):
-
-        try:
-            self._paramsCurrent.update(dict)
-        except AttributeError:
-            self._paramsCurrent = ParamsDict(self, dict)
-
-            # INSTANTIATE PARAMSCURRENT AS A USER DICT HERE (THAT IS CONFIGURED TO HAVE GETTERS AND SETTERS FOR ITS ENTRIES)
-            #    AND COPY THE DICT PASSED IN INTO IT (RATHER THAN SIMPLY ASSIGNING IT;  OR, ASSIGN INITIAL PARAM DICTS
-            #    TO THE SAME USER CLASS SO THAT THE ASSIGNMENT IS TO A VERSION OF THE USER DICT
-            # WHEN THOSE ENTRIES ARE SET IN USER DICT, REFERENCE THEM USING GETTATTR AND SETATTR
-            #    TO THE CORRESPONDING ATTRIBUTES OF THE OWNER OBJECT
-
-    @property
     def verbosePref(self):
         return self.prefs.verbosePref
 
@@ -3542,7 +3593,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             assert not _parameters_belongs_to_obj(self)
 
         for p in self.parameters:
-            if p.name not in self._model_spec_parameter_blacklist:
+            if (
+                p.name not in self._model_spec_parameter_blacklist
+                and not isinstance(p, ParameterAlias)
+            ):
                 if self.initialization_status is ContextFlags.DEFERRED_INIT:
                     try:
                         val = deferred_init_values[p.name]
@@ -3558,6 +3612,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                         and p.name == 'matrix'
                     ):
                         val = self.function.defaults.matrix
+                    elif p.spec is not None:
+                        val = p.spec
                     else:
                         val = p.default_value
 
@@ -3791,7 +3847,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             A set of Parameter names that should not be added to the generated
             constructor string
         """
-        return {'function', 'value'}
+        return {'function', 'value', 'input_ports', 'output_ports', 'control'}
 
 
 COMPONENT_BASE_CLASS = Component
@@ -3813,8 +3869,8 @@ def make_property(name):
             and hasattr(self, 'paramInstanceDefaults')
         ):
             self._assign_params(request_set={name:val}, context=Context(source=ContextFlags.PROPERTY))
-        else:
-            setattr(self, backing_field, val)
+
+        setattr(self, backing_field, val)
 
         # Update user_params dict with new value
         # KAM COMMENTED OUT 3/2/18 -- we do not want to update user_params with the base value, only param port value

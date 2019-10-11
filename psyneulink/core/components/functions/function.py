@@ -135,6 +135,7 @@ Class Reference
 """
 
 import abc
+import inspect
 import numbers
 import numpy as np
 import typecheck as tc
@@ -527,6 +528,11 @@ class Function_Base(Function):
         except:
             pass
         return new
+
+    def _initialize_parameters(self, context=None, **param_defaults):
+        super()._initialize_parameters(context=context, **param_defaults)
+        # instantiate auxiliary Functions
+        self._instantiate_parameter_classes(context)
 
     @handle_external_context()
     def function(self,

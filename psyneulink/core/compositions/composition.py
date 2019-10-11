@@ -2044,8 +2044,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.controller._remove_default_control_signal(type=CONTROL_SIGNAL)
                 for ctl_sig_spec in deferred_init_control_specs:
                     # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
-                    self.controller._instantiate_control_signal(control_signal=ctl_sig_spec,
+                    control_signal = self.controller._instantiate_control_signal(control_signal=ctl_sig_spec,
                                                            context=Context(source=ContextFlags.COMPOSITION))
+                    self.controller.control.append(control_signal)
                     self.controller._activate_projections_for_compositions(self)
 
     def add_nodes(self, nodes, required_roles=None):
@@ -4464,8 +4465,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Don't add any that are already on the ControlMechanism
 
             # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
-            controller._instantiate_control_signal(control_signal=ctl_sig_spec,
+            new_signal = controller._instantiate_control_signal(control_signal=ctl_sig_spec,
                                                    context=Context(source=ContextFlags.COMPOSITION))
+            controller.control.append(new_signal)
             # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITON:
             #                ?DON'T ASSIGN ControlProjection?
             #                ?JUST DON'T ACTIVATE IT FOR COMPOSITON?

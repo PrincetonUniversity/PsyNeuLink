@@ -559,6 +559,7 @@ Class Reference
 """
 
 import copy
+import collections
 import itertools
 import numpy as np
 import threading
@@ -585,7 +586,7 @@ from psyneulink.core.globals.keywords import \
     MODULATORY_SIGNALS, MONITOR_FOR_CONTROL, MONITOR_FOR_MODULATION, MULTIPLICATIVE, \
     OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, PORT_TYPE, SYSTEM, \
     MECHANISM, MULTIPLICATIVE, NAME
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_list, copy_iterable_with_shared, is_iterable
@@ -597,6 +598,8 @@ __all__ = [
 
 CONTROL_ALLOCATION = 'control_allocation'
 GATING_ALLOCATION = 'gating_allocation'
+
+MonitoredOutputPortTuple = collections.namedtuple("MonitoredOutputPortTuple", "output_port weight exponent matrix")
 
 ControlMechanismRegistry = {}
 
@@ -622,6 +625,52 @@ def _is_control_spec(spec):
 class ControlMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
+
+
+def validate_monitored_port_spec(owner, spec_list):
+    for spec in spec_list:
+        if isinstance(spec, MonitoredOutputPortTuple):
+            spec = spec.output_port
+        elif isinstance(spec, tuple):
+            spec = _parse_port_spec(
+                owner=owner,
+                port_type=InputPort,
+                port_spec=spec,
+            )
+            spec = spec['params'][PROJECTIONS][0][0]
+        elif isinstance(spec, dict):
+            # If it is a dict, parse to validate that it is an InputPort specification dict
+            #    (for InputPort of ObjectiveMechanism to be assigned to the monitored_output_port)
+            spec = _parse_port_spec(
+                owner=owner,
+                port_type=InputPort,
+                port_spec=spec,
+            )
+            # Get the OutputPort, to validate that it is in the ControlMechanism's Composition (below);
+            #    presumes that the monitored_output_port is the first in the list of projection_specs
+            #    in the InputPort port specification dictionary returned from the parse,
+            #    and that it is specified as a projection_spec (parsed into that in the call
+            #    to _parse_connection_specs by _parse_port_spec)
+            spec = spec[PROJECTIONS][0][0]
+
+        if not isinstance(spec, (OutputPort, Mechanism)):
+            if isinstance(spec, type) and issubclass(spec, Mechanism):
+                raise ControlMechanismError(
+                    f"Mechanism class ({spec.__name__}) specified in '{MONITOR_FOR_CONTROL}' arg "
+                    f"of {self.name}; it must be an instantiated {Mechanism.__name__} or "
+                    f"{OutputPort.__name__} of one."
+                )
+            elif isinstance(spec, Port):
+                raise ControlMechanismError(
+                    f"{spec.__class__.__name__} specified in '{MONITOR_FOR_CONTROL}' arg of {owner.name} "
+                    f"({spec.name} of {spec.owner.name}); "
+                    f"it must be an {OutputPort.__name__} or {Mechanism.__name__}."
+                )
+            else:
+                raise ControlMechanismError(
+                    f"Erroneous specification of '{MONITOR_FOR_CONTROL}' arg for {owner.name} ({spec}); "
+                    f"it must be an {OutputPort.__name__} or a {Mechanism.__name__}."
+                )
 
 
 def _control_mechanism_costs_getter(owning_component=None, context=None):
@@ -1047,8 +1096,34 @@ class ControlMechanism(ModulatoryMechanism_Base):
         simulation_ids = Parameter([], user=False, pnl_internal=True)
         modulation = Parameter(MULTIPLICATIVE, pnl_internal=True)
 
-        objective_mechanism = Parameter(None, stateful=False, loggable=False)
+        objective_mechanism = Parameter(None, stateful=False, loggable=False, structural=True)
 
+        input_ports = Parameter(
+            [OUTCOME],
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
+            parse_spec=True,
+        )
+
+        monitor_for_control = Parameter(
+            [OUTCOME],
+            stateful=False,
+            loggable=False,
+            read_only=True,
+        )
+
+        output_ports = Parameter(
+            None,
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
+            parse_spec=True,
+            aliases=['control', 'control_signals'],
+            constructor_argument='control'
+        )
         control_spec = Parameter(
             None,
             stateful=False,
@@ -1056,8 +1131,9 @@ class ControlMechanism(ModulatoryMechanism_Base):
             read_only=True,
             user=False,
             pnl_internal=True,
-            constructor_argument='control'
+            constructor_argument='control',
         )
+        output_ports_spec = ParameterAlias(source='control_spec')
 
         def _parse_control_spec(self, control_spec):
             def is_2tuple(o):
@@ -1094,9 +1170,15 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
             return control_spec
 
+        _parse_output_ports = _parse_control_spec
+
+        def _validate_input_ports(self, input_ports):
+            if input_ports is None:
+                return
+            validate_monitored_port_spec(self._owner._owner, input_ports)
+
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        OBJECTIVE_MECHANISM: None,
         CONTROL_PROJECTIONS: None})
 
 
@@ -1158,11 +1240,9 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(system=system,
-                                                  monitor_for_control=monitor_for_control,
                                                   objective_mechanism=objective_mechanism,
                                                   function=function,
                                                   default_allocation=default_allocation,
-                                                  control=control,
                                                   modulation=modulation,
                                                   control_spec=control_spec,
                                                   params=params)
@@ -1174,6 +1254,9 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                                   params=params,
                                                   name=name,
                                                   function=function,
+                                                  monitor_for_control=monitor_for_control,
+                                                  control=control,
+                                                  output_ports=control,
                                                   prefs=prefs,
                                                   **kwargs)
 
@@ -1188,72 +1271,17 @@ class ControlMechanism(ModulatoryMechanism_Base):
         Check that all items in CONTROL_SIGNALS are parameters or ParameterPorts for Mechanisms in self.system
         Check that all items in GATING_SIGNALS are Ports for Mechanisms in self.system
         """
-        from psyneulink.core.components.system import MonitoredOutputPortTuple
         from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-        from psyneulink.core.components.ports.inputport import InputPort
 
         super(ControlMechanism, self)._validate_params(request_set=request_set,
                                                        target_set=target_set,
                                                        context=context)
-
-        def validate_monitored_port_spec(spec_list):
-            for spec in spec_list:
-                if isinstance(spec, MonitoredOutputPortTuple):
-                    spec = spec.output_port
-                elif isinstance(spec, tuple):
-                    spec = _parse_port_spec(owner=self,
-                                             port_type=InputPort,
-                                             port_spec=spec,
-                                             context=context)
-                    spec = spec['params'][PROJECTIONS][0][0]
-                elif isinstance(spec, dict):
-                    # If it is a dict, parse to validate that it is an InputPort specification dict
-                    #    (for InputPort of ObjectiveMechanism to be assigned to the monitored_output_port)
-                    spec = _parse_port_spec(owner=self,
-                                             port_type=InputPort,
-                                             port_spec=spec,
-                                             context=context)
-                    # Get the OutputPort, to validate that it is in the ControlMechanism's Composition (below);
-                    #    presumes that the monitored_output_port is the first in the list of projection_specs
-                    #    in the InputPort port specification dictionary returned from the parse,
-                    #    and that it is specified as a projection_spec (parsed into that in the call
-                    #    to _parse_connection_specs by _parse_port_spec)
-                    spec = spec[PROJECTIONS][0][0]
-
-                if not isinstance(spec, (OutputPort, Mechanism)):
-                    if isinstance(spec, type) and issubclass(spec, Mechanism):
-                        raise ControlMechanismError(
-                                f"Mechanism class ({spec.__name__}) specified in '{MONITOR_FOR_CONTROL}' arg "
-                                f"of {self.name}; it must be an instantiated {Mechanism.__name__} or "
-                                f"{OutputPort.__name__} of one.")
-                    elif isinstance(spec, Port):
-                        raise ControlMechanismError(
-                                f"{spec.__class__.__name__} specified in '{MONITOR_FOR_CONTROL}' arg of {self.name} "
-                                f"({spec.name} of {spec.owner.name}); "
-                                f"it must be an {OutputPort.__name__} or {Mechanism.__name__}.")
-                    else:
-                        raise ControlMechanismError(
-                                f"Erroneous specification of '{MONITOR_FOR_CONTROL}' arg for {self.name} ({spec}); "
-                                f"it must be an {OutputPort.__name__} or a {Mechanism.__name__}.")
-                # If ControlMechanism has been assigned to a System, check that
-                #    all the items in the list used to specify objective_mechanism are in the same System
-                # FIX: TBI FOR COMPOSITION
-                if self.system:
-                    if not isinstance(spec, (list, ContentAddressableList)):
-                        spec = [spec]
-                    self.system._validate_monitored_ports_in_system(spec, context=context)
 
         if SYSTEM in target_set:
             if not isinstance(target_set[SYSTEM], System_Base):
                 raise KeyError
             else:
                 self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
-
-        if MONITOR_FOR_CONTROL in target_set and target_set[MONITOR_FOR_CONTROL] is not None:
-            spec = target_set[MONITOR_FOR_CONTROL]
-            if not isinstance(spec, (list, ContentAddressableList)):
-                spec = [spec]
-            validate_monitored_port_spec(spec)
 
         if OBJECTIVE_MECHANISM in target_set and \
                 target_set[OBJECTIVE_MECHANISM] is not None and\
@@ -1281,7 +1309,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                                     " it is in a list with other items ({})".
                                                     format(OBJECTIVE_MECHANISM, self.name, obj_mech_spec_list))
                 else:
-                    validate_monitored_port_spec(obj_mech_spec_list)
+                    validate_monitored_port_spec(self, obj_mech_spec_list)
 
             if not isinstance(target_set[OBJECTIVE_MECHANISM], (ObjectiveMechanism, list, bool)):
                 raise ControlMechanismError("Specification of {} arg for {} ({}) must be an {}"
@@ -1449,7 +1477,9 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
     def _instantiate_control_signals(self, context):
         """Subclassess can override for class-specific implementation (see OptimiziationControlMechanism for example)"""
-        for i, control_signal in enumerate(self.control):
+        output_port_specs = list(enumerate(self.output_ports))
+
+        for i, control_signal in output_port_specs:
             self.control[i] = self._instantiate_control_signal(control_signal, context=context)
         num_control_signals = i + 1
 
@@ -1493,8 +1523,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
            once value has been expanded
         """
 
-        if self._output_ports is None:
-            self._output_ports = []
+        if self.output_ports is None:
+            self.output_ports = []
 
         control_signal = self._instantiate_control_signal_type(control_signal, context)
         control_signal.owner = self
@@ -1516,11 +1546,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
         # so that modulation that occurs BEFORE the control mechanism executes is computed appropriately
         # if (isinstance(self.function, IntegratorFunction)):
         #     control_signal._intensity = function.initializer
-
-        # Add ControlSignal to end of list of ControlSignals at start of output_ports list
-        # FIX: 9/25/19 - PUT ALL ControlSignals AT THE BEGINNING OF THE LIST;
-        #                ALLOW OTHERS OutputPortS TO BE SPECIFIED
-        self._output_ports.append(control_signal)
 
         return control_signal
 
@@ -1733,7 +1758,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 and self.control_signals[0].name=='ControlSignal-0'
                 and not self.control_signals[0].efferents):
             # FIX: REPLACE WITH remove_ports
-            del self._output_ports[0]
+            del self.output_ports[0]
             # del self.control_signals[0]
 
         # Add any ControlSignals specified for System
@@ -1748,7 +1773,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                               "as one in controller ({}) being assigned to the {}."
                               "".format(ControlSignal.__name__, system.name,
                                         control_signal.name, self.name, system.__class__.__name__))
-            self.control_signals.append(control_signal)
+            self.control.append(control_signal)
 
         # If it HAS been assigned a System, make sure it is the current one
         if self.system and not self.system is system:

@@ -642,11 +642,10 @@ class MappingProjection(PathwayProjection_Base):
                  or isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], LearningProjection) or
                      (inspect.isclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]) and
                           issubclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], LearningProjection)))):
-            self.paramsCurrent[FUNCTION_PARAMS].__additem__(MATRIX,
-                                                            (value, self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]))
+            self.paramsCurrent[FUNCTION_PARAMS][MATRIX] = (value, self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1])
 
         else:
-            self.paramsCurrent[FUNCTION_PARAMS].__additem__(MATRIX, value)
+            self.paramsCurrent[FUNCTION_PARAMS][MATRIX] = value
 
     @property
     def logPref(self):

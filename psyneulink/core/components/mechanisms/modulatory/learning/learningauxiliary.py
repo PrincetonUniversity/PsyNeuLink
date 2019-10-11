@@ -376,9 +376,9 @@ def _instantiate_learning_components(learning_projection, context=None):
     #      FOR PROCESS AND SYSTEM, RATHER THAN USING A LearningProjection
     # Get function used for learning and the learning_rate from their specification in the LearningProjection
     # FIXME: learning_function is deprecated
-    learning_function = learning_projection._learning_function
-    learning_rate = learning_projection._learning_rate
-    error_function = learning_projection._error_function
+    learning_function = learning_projection.learning_function
+    learning_rate = learning_projection.learning_rate
+    error_function = learning_projection.error_function
 
     # HEBBIAN LEARNING FUNCTION
     if learning_function.componentName is HEBBIAN_FUNCTION:

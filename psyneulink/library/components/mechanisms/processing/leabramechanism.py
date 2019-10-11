@@ -329,7 +329,9 @@ def _training_flag_setter(value, self=None, owning_component=None, context=None)
         try:
             set_training(owning_component.parameters.network._get(context), value)
         except AttributeError:
-            return None
+            # do not return None here, or training_flag will always be
+            # set to None
+            pass
 
     return value
 
