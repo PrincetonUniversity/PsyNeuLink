@@ -1,6 +1,7 @@
 from . import context
 from . import defaults
 from . import environment
+from . import json
 from . import keywords
 from . import kvo
 from . import log
@@ -13,6 +14,7 @@ from . import sampleiterator
 from .context import *
 from .defaults import *
 from .environment import *
+from .json import *
 from .keywords import *
 from .kvo import *
 from .log import *
@@ -25,6 +27,7 @@ from .sampleiterator import *
 __all__ = list(context.__all__)
 __all__.extend(defaults.__all__)
 __all__.extend(environment.__all__)
+__all__.extend(json.__all__)
 __all__.extend(keywords.__all__)
 __all__.extend(kvo.__all__)
 __all__.extend(log.__all__)

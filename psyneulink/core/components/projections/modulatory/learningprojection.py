@@ -482,12 +482,12 @@ class LearningProjection(ModulatoryProjection_Base):
                     :read only: True
 
         """
-        value = Parameter(np.array([0]), read_only=True, aliases=['weight_change_matrix'])
+        value = Parameter(np.array([0]), read_only=True, aliases=['weight_change_matrix'], pnl_internal=True)
         function = Parameter(Linear, stateful=False, loggable=False)
         error_function = Parameter(LinearCombination(weights=[[-1], [1]]), stateful=False, loggable=False)
         learning_function = Parameter(BackPropagation, stateful=False, loggable=False)
         learning_rate = Parameter(None, modulable=True)
-        learning_signal = Parameter(None, read_only=True, getter=_learning_signal_getter, setter=_learning_signal_setter)
+        learning_signal = Parameter(None, read_only=True, getter=_learning_signal_getter, setter=_learning_signal_setter, pnl_internal=True)
         learning_enabled = None
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()

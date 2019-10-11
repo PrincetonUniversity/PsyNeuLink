@@ -708,16 +708,24 @@ class ControlSignal(ModulatorySignal):
         # FIX: if the specification of this getter is happening in several other classes, should consider
         #      refactoring Parameter to allow individual attributes to be inherited, othwerise, leaving this is an
         #      isolated case
-        variable = Parameter(np.array([defaultControlAllocation]),
-                             aliases='allocation',
-                             getter=_output_state_variable_getter)
+        variable = Parameter(
+            np.array([defaultControlAllocation]),
+            aliases='allocation',
+            getter=_output_state_variable_getter,
+            pnl_internal=True, constructor_argument='default_variable'
+        )
 
         # # FIX: DOESN'T WORK, SINCE DON'T HAVE ACCESS TO OTHER ARGS
         # function = Parameter(TransferWithCosts, stateful=False, loggable=False, )
         # _parse_function = _function_parser
 
-        value = Parameter(np.array([defaultControlAllocation]), read_only=True, aliases=['intensity'],
-                          history_min_length=1)
+        value = Parameter(
+            np.array([defaultControlAllocation]),
+            read_only=True,
+            aliases=['intensity'],
+            pnl_internal=True,
+            history_min_length=1
+        )
         allocation_samples = Parameter(None, modulable=True)
 
         cost_options = Parameter(CostFunctions.DEFAULTS, getter=_cost_options_getter, setter=_cost_options_setter)

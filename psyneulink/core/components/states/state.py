@@ -771,7 +771,7 @@ from psyneulink.core.globals.utilities import \
     merge_param_dicts, MODULATION_OVERRIDE, type_match
 
 __all__ = [
-    'State_Base', 'state_keywords', 'state_type_keywords', 'StateError', 'StateRegistry'
+    'State_Base', 'state_keywords', 'state_type_keywords', 'StateError', 'StateRegistry', 'STATE_SPEC'
 ]
 
 state_keywords = component_keywords.copy()
@@ -1042,7 +1042,7 @@ class State_Base(State):
                     :read only: True
         """
         function = Parameter(Linear, stateful=False, loggable=False)
-        require_projection_in_composition = Parameter(True, stateful=False, loggable=False, read_only=True)
+        require_projection_in_composition = Parameter(True, stateful=False, loggable=False, read_only=True, pnl_internal=True)
 
     stateAttributes = {FUNCTION, FUNCTION_PARAMS, PROJECTIONS}
 
@@ -2363,6 +2363,16 @@ class State_Base(State):
             super()._dependent_components,
             self.efferents,
         ))
+
+    @property
+    def _dict_summary(self):
+        return {
+            **super()._dict_summary,
+            **{
+                'shape': str(self.defaults.variable.shape),
+                'dtype': str(self.defaults.variable.dtype)
+            }
+        }
 
 
 def _instantiate_state_list(owner,

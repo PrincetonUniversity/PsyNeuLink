@@ -977,7 +977,7 @@ class OutputState(State_Base):
                     :read only: True
 
         """
-        variable = Parameter(np.array([0]), read_only=True, getter=_output_state_variable_getter)
+        variable = Parameter(np.array([0]), read_only=True, getter=_output_state_variable_getter, pnl_internal=True, constructor_argument='default_variable')
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
@@ -1354,6 +1354,17 @@ class OutputState(State_Base):
         except AttributeError:
             label_dictionary = {}
         return self._get_value_label(label_dictionary, self.owner.output_states, context=context)
+
+    @property
+    def _dict_summary(self):
+        return {
+            **super()._dict_summary,
+            **{
+                'shape': str(self.defaults.value.shape),
+                'dtype': str(self.defaults.value.dtype)
+            }
+        }
+
 
 def _instantiate_output_states(owner, output_states=None, context=None):
     """Call State._instantiate_state_list() to instantiate ContentAddressableList of OutputState(s)

@@ -276,6 +276,7 @@ import warnings
 from toposort import toposort, toposort_flatten
 
 from psyneulink.core.globals.context import Context, handle_external_context
+from psyneulink.core.globals.json import JSONDumpable
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Condition, ConditionSet, EveryNCalls, Never
 from psyneulink.core.scheduling.time import Clock, TimeScale
 
@@ -295,7 +296,7 @@ class SchedulerError(Exception):
         return repr(self.error_value)
 
 
-class Scheduler(object):
+class Scheduler(JSONDumpable):
     """Generates an order of execution for `Components <Component>` in a `Composition <Composition>` or graph
     specification dictionary, possibly determined by a set of `Conditions <Condition>`.
 
@@ -825,21 +826,18 @@ class Scheduler(object):
 
         return self.execution_list[context.execution_id]
 
+    @property
     def _dict_summary(self):
         return {
             'conditions': {
                 'termination': {
-                    str(k): str(v) for k, v in self.termination_conds.items()
+                    str(k): v._dict_summary for k, v in self.termination_conds.items()
                 },
                 'node': {
-                    n.name: str(self.conditions[n]) for n in self.nodes if n in self.conditions
+                    n.name: self.conditions[n]._dict_summary for n in self.nodes if n in self.conditions
                 }
             }
         }
-
-    def json_summary(self):
-        import json
-        return json.dumps(self._dict_summary(), sort_keys=True, indent=4, separators=(',', ': '))
 
     @property
     def clock(self):

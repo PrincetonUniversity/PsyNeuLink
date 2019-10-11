@@ -590,6 +590,16 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         """
         function = Parameter(LinearCombination, stateful=False, loggable=False)
 
+        input_states_spec = Parameter(
+            None,
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            user=False,
+            pnl_internal=True,
+            constructor_argument='monitor'
+        )
+
     # ObjectiveMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
