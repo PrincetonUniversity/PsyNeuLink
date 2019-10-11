@@ -16,7 +16,7 @@ https://princetonuniversity.github.io/PsyNeuLink/Component.html
 #
 # __all__ = ['INPUT_PORTS',
 #            'OUTPUT_PORTS',
-#            'PARAMETER_STATE',
+#            'PARAMETER_PORT',
 #            'MAPPING_PROJECTION',
 #            'CONTROL_PROJECTION',
 #            'LEARNING_PROJECTION']
@@ -129,9 +129,9 @@ register_category(entry=InputPort,
                   registry=StateRegistry,
                   context=kwInitPy)
 
-# ParameterState
-from psyneulink.core.components.states.parameterstate import ParameterState
-register_category(entry=ParameterState,
+# ParameterPort
+from psyneulink.core.components.states.parameterport import ParameterPort
+register_category(entry=ParameterPort,
                   base_class=State_Base,
                   registry=StateRegistry,
                   context=kwInitPy)
@@ -361,7 +361,7 @@ Function.classPreferences = BasePreferenceSet(owner=Function,
 #                                              level=PreferenceLevel.TYPE,
 #                                              context=".__init__.py")
 #
-# ParameterState.classPreferences = BasePreferenceSet(owner=ParameterState,
+# ParameterPort.classPreferences = BasePreferenceSet(owner=ParameterPort,
 #                                              prefs=ComponentDefaultPrefDicts[PreferenceLevel.TYPE],
 #                                              level=PreferenceLevel.TYPE,
 #                                              context=".__init__.py")

@@ -169,7 +169,7 @@ for mech in mySystem.controller.prediction_mechanisms.mechanisms:
     if 'Reward' in mech.name:
         print(mech.name)
         mech.function.rate = 0.8
-        # mySystem.controller.prediction_mechanisms[mech].parameterStates['rate'].base_value = 1.0
+        # mySystem.controller.prediction_mechanisms[mech].parameterPorts['rate'].base_value = 1.0
 
 print('new rate of integration mechanisms before System execution:')
 # for mech in mySystem.controller.prediction_mechanisms.keys():

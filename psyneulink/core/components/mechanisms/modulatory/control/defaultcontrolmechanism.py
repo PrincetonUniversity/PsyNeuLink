@@ -145,7 +145,7 @@ class DefaultControlMechanism(ControlMechanism):
     def _instantiate_control_signal(self, control_signal, context=None):
         """Instantiate requested ControlSignal, ControlProjection and associated InputPort
         """
-        from psyneulink.core.components.states.parameterstate import ParameterState
+        from psyneulink.core.components.states.parameterport import ParameterPort
 
         if isinstance(control_signal, dict):
             if CONTROL in control_signal:
@@ -157,11 +157,11 @@ class DefaultControlMechanism(ControlMechanism):
         elif isinstance(control_signal, tuple):
             input_name = 'DefaultControlAllocation for ' + control_signal[0] + '_ControlSignal'
 
-        elif isinstance(control_signal, ParameterState):
+        elif isinstance(control_signal, ParameterPort):
             input_name = 'DefaultControlAllocation for ' + control_signal.name + '_ControlSignal'
 
         else:
-            raise DefaultControlMechanismError("control signal ({}) was not a dict, tuple, or ParameterState".
+            raise DefaultControlMechanismError("control signal ({}) was not a dict, tuple, or ParameterPort".
                                                format(control_signal))
 
         # Instantiate input_ports and control_allocation attribute for control_signal allocations

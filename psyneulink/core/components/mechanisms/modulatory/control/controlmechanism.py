@@ -33,7 +33,7 @@ Overview
 
 A ControlMechanism is a `ModulatoryMechanism` that `modulates the value(s) <ModulatorySignal_Modulation>` of one or
 more `States <State>` of other Mechanisms in the `Composition` to which it belongs. In general, a ControlMechanism is
-used to modulate the `ParameterState(s) <ParameterState>` of one or more Mechanisms, that determine the value(s) of
+used to modulate the `ParameterPort(s) <ParameterPort>` of one or more Mechanisms, that determine the value(s) of
 the parameter(s) of the `function(s) <Mechanism_Base.function>` of those Mechanism(s). However, a ControlMechanism
 can also be used to modulate the function of `InputPorts <InputPort>` and/or `OutputPort <OutputPorts>`,
 much like a `GatingMechanism`.  A ControlMechanism's `function <ControlMechanism.function>` calculates a
@@ -291,7 +291,7 @@ When a ControlMechanism is created for or assigned as the `controller <Compositi
 `ControlMechanism_Composition_Controller`), any OutputPorts specified to be monitored by the System are assigned as
 inputs to the ObjectiveMechanism.  This includes any specified in the **monitor_for_control** argument of the
 System's constructor, as well as any specified in a MONITOR_FOR_CONTROL entry of a Mechanism `parameter specification
-dictionary <ParameterState_Specification>` (see `Mechanism_Constructor_Arguments` and `System_Control_Specification`).
+dictionary <ParameterPort_Specification>` (see `Mechanism_Constructor_Arguments` and `System_Control_Specification`).
 
 FOR DEVELOPERS:
     If the ObjectiveMechanism has not yet been created, these are added to the **monitored_output_ports** of its
@@ -315,18 +315,18 @@ Composition, or an error will occur.
 
 *On a Parameter to be controlled by the `controller <Composition.controller>` of a `Composition`*
 
-Control can also be specified for a parameter where the `parameter itself is specified <ParameterState_Specification>`,
+Control can also be specified for a parameter where the `parameter itself is specified <ParameterPort_Specification>`,
 in the constructor for the Component to which it belongs, by including a `ControlProjection`, `ControlSignal` or
-the keyword `CONTROL` in a `tuple specification <ParameterState_Tuple_Specification>` for the parameter.  In this
+the keyword `CONTROL` in a `tuple specification <ParameterPort_Tuple_Specification>` for the parameter.  In this
 case, the specified parameter will be assigned for control by the `controller <controller.Composition>` of any
 `Composition` to which its Component belongs, when the Component is executed in that Composition (see
 `ControlMechanism_Composition_Controller`).  Conversely, when a ControlMechanism is assigned as the `controller
 <Composition.controller>` of a Composition, a `ControlSignal` is created and assigned to the ControlMechanism
 for every parameter of any `Component <Component>` in the Composition that has been `specified for control
-<ParameterState_Modulatory_Specification>`.
+<ParameterPort_Modulatory_Specification>`.
 
 In general, a `ControlSignal` is created for each parameter specified to be controlled by a ControlMechanism.  These
-are a type of `OutputPort` that send a `ControlProjection` to the `ParameterState` of the parameter to be
+are a type of `OutputPort` that send a `ControlProjection` to the `ParameterPort` of the parameter to be
 controlled. All of the ControlSignals for a ControlMechanism are listed in its `control_signals
 <ControlMechanism.control_signals>` attribute, and all of its ControlProjections are listed in
 its`control_projections <ControlMechanism.control_projections>` attribute. Additional parameters to be controlled can
@@ -382,7 +382,7 @@ different items in `control_allocation` as their `variable <ControlSignal.variab
 
 The OutputPorts of a ControlMechanism are `ControlSignals <ControlSignal>` (listed in its `control_signals
 <ControlMechanism.control_signals>` attribute). It has a `ControlSignal` for each parameter specified in the
-**control_signals** argument of its constructor, that sends a `ControlProjection` to the `ParameterState` for the
+**control_signals** argument of its constructor, that sends a `ControlProjection` to the `ParameterPort` for the
 corresponding parameter.  The ControlSignals are listed in the `control_signals <ControlMechanism.control_signals>`
 attribute;  since they are a type of `OutputPort`, they are also listed in the ControlMechanism's `output_ports
 <ControlMechanism.output_ports>` attribute. The parameters modulated by a ControlMechanism's ControlSignals can be
@@ -394,7 +394,7 @@ specify a  default allocation for ControlSignals that have not been assigned the
 <ControlSignal.default_allocation>`. The `allocation <ControlSignal.allocation>` is used by each ControlSignal to
 determine its `intensity <ControlSignal.intensity>`, which is then assigned to the `value <ControlProjection.value>`
 of the ControlSignal's `ControlProjection`.   The `value <ControlProjection.value>` of the ControlProjection is used
-by the `ParameterState` to which it projects to modify the value of the parameter it controls (see
+by the `ParameterPort` to which it projects to modify the value of the parameter it controls (see
 `ControlSignal_Modulation` for description of how a ControlSignal modulates the value of a parameter).
 
 .. _ControlMechanism_Costs_NetOutcome:
@@ -459,7 +459,7 @@ It uses that to determine the `control_allocation <ControlMechanism.control_allo
 assigned to the `allocation <ControlSignal.allocation>` of each of its `ControlSignals <ControlSignal>`.  Each
 ControlSignal uses that value to calculate its `intensity <ControlSignal.intensity>`, as well as its `cost
 <ControlSignal.cost>.  The `intensity <ControlSignal.intensity>`is used by its `ControlProjection(s)
-<ControlProjection>` to modulate the value of the ParameterState(s) for the parameter(s) it controls, which are then
+<ControlProjection>` to modulate the value of the ParameterPort(s) for the parameter(s) it controls, which are then
 used in the subsequent `TRIAL` of execution.
 
 .. note::
@@ -574,7 +574,7 @@ from psyneulink.core.components.states.state import State, _parse_state_spec
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.states.inputport import InputPort
 from psyneulink.core.components.states.outputport import OutputPort
-from psyneulink.core.components.states.parameterstate import ParameterState
+from psyneulink.core.components.states.parameterport import ParameterPort
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
@@ -736,7 +736,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                        to the `objective_mechanism` argument of the ControlMechanism's constructor;
                    the System calls its _get_control_signals_for_system() method which returns all of the parameters
                        that have been specified for control within the System, assigns them a ControlSignal
-                       (with a ControlProjection to the ParameterState for the parameter), and assigns the
+                       (with a ControlProjection to the ParameterPort for the parameter), and assigns the
                        ControlSignals (alogn with any specified in the **control_signals** argument of the System's
                        constructor) to the **control_signals** argument of the ControlMechanism's constructor
 
@@ -812,7 +812,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         arguments and return an array with a single scalar value.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters
         for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
         specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
@@ -881,7 +881,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         list of the `ControlSignals <ControlSignals>` for the ControlMechanism, including any inherited from a
         `Composition` for which it is a `controller <Composition.controller>` (same as ControlMechanism's
         `output_ports <Mechanism_Base.output_ports>` attribute); each sends a `ControlProjection`
-        to the `ParameterState` for the parameter it controls
+        to the `ParameterPort` for the parameter it controls
 
     compute_reconfiguration_cost : Function, function or method
         function used to compute the ControlMechanism's `reconfiguration_cost  <ControlMechanism.reconfiguration_cost>`;
@@ -1134,7 +1134,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                  function=None,
                  default_allocation:tc.optional(tc.any(int, float, list, np.ndarray))=None,
                  control:tc.optional(tc.any(is_iterable,
-                                            ParameterState,
+                                            ParameterPort,
                                             InputPort,
                                             OutputPort,
                                             ControlSignal))=None,
@@ -1209,7 +1209,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         If System is specified, validate it
         Check that all items in monitor_for_control are Mechanisms or OutputPorts for Mechanisms in self.system
-        Check that all items in CONTROL_SIGNALS are parameters or ParameterStates for Mechanisms in self.system
+        Check that all items in CONTROL_SIGNALS are parameters or ParameterPorts for Mechanisms in self.system
         Check that all items in GATING_SIGNALS are States for Mechanisms in self.system
         """
         from psyneulink.core.components.system import MonitoredOutputPortTuple

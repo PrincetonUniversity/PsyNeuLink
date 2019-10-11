@@ -67,8 +67,8 @@ def test_control_mechanism_assignment():
 #     assert S.controller.objective_mechanism.input_port[0].path_afferents[0].sender.owner == T_1
 #     assert S.controller.objective_mechanism.input_port[1].path_afferents[0].sender.owner == T_2
 #     assert S.controller.objective_mechanism.input_port[2].path_afferents[0].sender.owner == T_3
-#     assert T_1.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == S.controller
-#     assert T_2.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == S.controller
+#     assert T_1.parameter_ports[pnl.SLOPE].mod_afferents[0].sender.owner == S.controller
+#     assert T_2.parameter_ports[pnl.SLOPE].mod_afferents[0].sender.owner == S.controller
 
 
 
@@ -82,8 +82,8 @@ def test_control_mechanism_assignment_additional():
                 control_signals=(pnl.SLOPE, T_2),
                 enable_controller=True)
     assert S.controller.objective_mechanism.input_port.path_afferents[0].sender.owner == T_1
-    assert T_1.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == S.controller
-    assert T_2.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == S.controller
+    assert T_1.parameter_ports[pnl.SLOPE].mod_afferents[0].sender.owner == S.controller
+    assert T_2.parameter_ports[pnl.SLOPE].mod_afferents[0].sender.owner == S.controller
 
 # def test_prediction_mechanism_assignment():
 #     """Tests prediction mechanism assignment and more tests for ObjectiveMechanism and ControlSignal assignments"""

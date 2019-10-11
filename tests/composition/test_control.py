@@ -36,8 +36,8 @@ class TestControlSpecification:
         comp = pnl.Composition()
         comp.add_node(ddm)
         comp.add_controller(ctl_mech)
-        assert ddm.parameter_states['drift_rate'].mod_afferents[0].sender.owner == comp.controller
-        assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_states['drift_rate']
+        assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
+        assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert np.allclose(comp.controller.control_signals[0].allocation_samples(),
                            [0.1, 0.4, 0.7000000000000001, 1.0000000000000002])
 
@@ -57,8 +57,8 @@ class TestControlSpecification:
         ctl_mech = pnl.ControlMechanism()
         comp = pnl.Composition(controller=ctl_mech)
         comp.add_node(ddm)
-        assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_states['drift_rate']
-        assert ddm.parameter_states['drift_rate'].mod_afferents[0].sender.owner == comp.controller
+        assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
+        assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
         assert np.allclose(comp.controller.control_signals[0].allocation_samples(),
                            [0.1, 0.4, 0.7000000000000001, 1.0000000000000002])
 
@@ -74,8 +74,8 @@ class TestControlSpecification:
         comp = pnl.Composition()
         comp.add_node(ddm)
         comp.add_controller(pnl.ControlMechanism(control_signals=("drift_rate", ddm)))
-        assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_states['drift_rate']
-        assert ddm.parameter_states['drift_rate'].mod_afferents[0].sender.owner == comp.controller
+        assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
+        assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
         assert comp.controller.control_signals[0].allocation_samples is None
 
     def test_redundant_control_spec_add_controller_in_comp_constructor_then_add_node_with_control_specified(self):
@@ -89,8 +89,8 @@ class TestControlSpecification:
                                                   control_signal_params={ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}))))
         comp = pnl.Composition(controller=pnl.ControlMechanism(control_signals=("drift_rate", ddm)))
         comp.add_node(ddm)
-        assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_states['drift_rate']
-        assert ddm.parameter_states['drift_rate'].mod_afferents[0].sender.owner == comp.controller
+        assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
+        assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
         assert comp.controller.control_signals[0].allocation_samples is None
 
     def test_redundant_control_spec_add_controller_in_comp_constructor_then_add_node_with_alloc_samples_specified(self):
@@ -105,8 +105,8 @@ class TestControlSpecification:
         comp = pnl.Composition(controller=pnl.ControlMechanism(control_signals={ALLOCATION_SAMPLES:np.arange(0.2,1.01, 0.3),
                                                                                 PROJECTIONS:('drift_rate', ddm)}))
         comp.add_node(ddm)
-        assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_states['drift_rate']
-        assert ddm.parameter_states['drift_rate'].mod_afferents[0].sender.owner == comp.controller
+        assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
+        assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
         assert np.allclose(comp.controller.control_signals[0].allocation_samples(), [0.2, 0.5, 0.8])
 
 class TestControlMechanisms:
@@ -356,7 +356,7 @@ class TestControlMechanisms:
     #     comp._analyze_graph()
     #     comp._scheduler.add_condition(Tz, pnl.AllHaveRun(C))
     #
-    #     # assert Tz.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == C
+    #     # assert Tz.parameter_ports[pnl.SLOPE].mod_afferents[0].sender.owner == C
     #     result = comp.run(inputs={Tx: [1, 1],
     #                               Ty: [4, 4]})
     #     assert np.allclose(result, [[[4.], [4.]],

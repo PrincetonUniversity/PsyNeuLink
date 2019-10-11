@@ -17,8 +17,8 @@ A ControlSignal is a type of `ModulatorySignal <ModulatorySignal>` that is speci
 `Components <Component>`. A ControlSignal receives an `allocation <ControlSignal.allocation>` value from the
 ControlMechanism to which it belongs, and uses that to compute an `intensity` (also referred to as a `control_signal`)
 that is assigned as the `value <ControlProjection.ControlProjection.value>` of its ControlProjections. Each
-ControlProjection conveys its value to the `ParameterState` for the parameter it controls, which uses that value to
-`modulate <ModulatorySignal_Modulation>` the `value <ParameterState.value>` of the parameter.  A ControlSignal also
+ControlProjection conveys its value to the `ParameterPort` for the parameter it controls, which uses that value to
+`modulate <ModulatorySignal_Modulation>` the `value <ParameterPort.value>` of the parameter.  A ControlSignal also
 calculates a `cost`, based on its `intensity` and/or its time course, that may be used by the ControlMechanism to
 adapt the ControlSignal's `allocation <ControlSignal.allocation>` in subsequent executions.
 
@@ -30,8 +30,8 @@ Creating a ControlSignal
 A ControlSignal is created automatically whenever the parameter of a Mechanism or of its function is `specified for
 control <ControlMechanism_Control_Signals>`.  ControlSignals can also be specified in the **control_signals** argument
 of the constructor for a `ControlMechanism <ControlMechanism>`, as well as in the `specification of the parameter
-<ParameterState_Specification>` that the ControlSignal is intended to modulate (also see `Modualory Specificadtion
-<ParameterState_Modulatory_Specification>`.  Although a ControlSignal can also be  created on its own using its
+<ParameterPort_Specification>` that the ControlSignal is intended to modulate (also see `Modualory Specificadtion
+<ParameterPort_Modulatory_Specification>`.  Although a ControlSignal can also be  created on its own using its
 constructor (or any of the other ways for `creating an OutputPort <OutputPorts_Creation>`), this is usually not
 necessary nor is it advisable, as a ControlSignal has dedicated components and requirements for configuration that
 must be met for it to function properly.
@@ -50,7 +50,7 @@ For convenience, the parameters can also be specified on their own in the **cont
 ControlMechanism's constructor, in which case a default ControlSignal will be created for each.  In all cases, any
 of the following can be use to specify the parameter(s) to be controlled:
 
-  * **ParameterState** (or list of them) -- for the Mechanism(s) to which the parameter(s) belong;
+  * **ParameterPort** (or list of them) -- for the Mechanism(s) to which the parameter(s) belong;
   ..
   * **2-item tuple:** *(parameter name or list of them>, <Mechanism>)* -- the 1st item must be the name of the
     parameter (or list of parameter names), and the 2nd item the Mechanism to which it (they) belong(s); this is a
@@ -73,7 +73,7 @@ of the following can be use to specify the parameter(s) to be controlled:
 
         * <str>:list
             the string used as the key specifies the name to be used for the ControlSignal,
-            and each item of the list must be a `specification of a parameter <ParameterState_Specification>` to be
+            and each item of the list must be a `specification of a parameter <ParameterPort_Specification>` to be
             controlled by the ControlSignal (and that will receive a `ControlProjection` from it).
   ..
 
@@ -83,7 +83,7 @@ Structure
 ---------
 
 A ControlSignal is owned by an `ControlMechanism <ControlMechanism>`, and controls the parameters of one or more
-Components by modulating the `function <ParameterState.function>` of the `ParameterState` that determines the value
+Components by modulating the `function <ParameterPort.function>` of the `ParameterPort` that determines the value
 of each of the parameters that it control.  Its operation is governed by several attributes of the ControlSignal,
 that are described below.
 
@@ -102,7 +102,7 @@ creating a State.
    Although a ControlSignal can be assigned more than one `ControlProjection`, all of those Projections will receive
    the same `value <ControlProjection.value>` (based on the `intensity` of that ControlSignal), and use the same
    form of `modulation <ControlSignal_Modulation>`.  Thus, for them to be meaningful, they should project to
-   ParameterStates for parameters that are meaningfully related to one another (for example, the threshold parameter
+   ParameterPorts for parameters that are meaningfully related to one another (for example, the threshold parameter
    of multiple `DDM` Mechanisms).
 
 .. _ControlSignal_Modulation:
@@ -204,12 +204,12 @@ A ControlSignal cannot be executed directly.  It is executed whenever the `Contr
 which it belongs is executed.  When this occurs, the ControlMechanism provides the ControlSignal with an `allocation
 <ControlSignal.allocation>`, that is used by its `function <ControlSignal.function>` to compute its `intensity` for
 that `TRIAL`.  The `intensity` is used by the ControlSignal's `ControlProjections <ControlProjection>` to set the
-`value <ParameterState.value>` \\(s) of the `ParameterState(s) <ParameterState>` to which the ControlSignal projects.
+`value <ParameterPort.value>` \\(s) of the `ParameterPort(s) <ParameterPort>` to which the ControlSignal projects.
 
-Recall that the ParameterState value is referenced anywhere that the controlled parameter is used in computation, and
-that it does not update until the component to which the ParameterState belongs executes. If the distinction between the
+Recall that the ParameterPort value is referenced anywhere that the controlled parameter is used in computation, and
+that it does not update until the component to which the ParameterPort belongs executes. If the distinction between the
 base value stored in the parameter attribute (i.e. MyTransferMech.function.gain) and the value of the
-ParameterState is unfamiliar, see `Parameter State documentation <ParameterState>` for more details, or see
+ParameterPort is unfamiliar, see `Parameter State documentation <ParameterPort>` for more details, or see
 `ModulatorySignal_Modulation` for a detailed description of how modulation operates.
 
 The ControlSignal's `intensity` is also used  by its `cost functions <ControlSignal_Costs>` to compute its `cost`
@@ -234,14 +234,14 @@ ControlSignal to the `bias <Logistic.gain>` parameter of the `Logistic` Function
     >>> my_mech = TransferMechanism(function=Logistic(bias=(1.0, ControlSignal)))
 
 Note that the ControlSignal is specified by it class.  This will create a default ControlSignal,
-with a ControlProjection that projects to the TransferMechanism's `ParameterState` for the `bias <Logistic.bias>`
+with a ControlProjection that projects to the TransferMechanism's `ParameterPort` for the `bias <Logistic.bias>`
 parameter of its `Logistic` Function.  The default value of a ControlSignal's `modulation <ControlSignal.modulation>`
 attribute is *MULTIPLICATIVE*, so that it will multiply the value of the `bias <Logistic.bias>` parameter.
 When the TransferMechanism executes, the Logistic Function will use the value of the ControlSignal as its
 bias parameter.
 
 *Specify attributes of a ControlSignal*.  Ordinarily, ControlSignals modify the *MULTIPLICATIVE_PARAM* of a
-ParameterState's `function <ParameterState.function>` to modulate the parameter's value.
+ParameterPort's `function <ParameterPort.function>` to modulate the parameter's value.
 In the example below, this is changed by specifying the `modulation <ControlSignal.modulation>` attribute of a
 `ControlSignal` for the `Logistic` Function of the `TransferMechanism`.  It is changed so that the value of the
 ControlSignal adds to, rather than multiplies, the value of the `gain <Logistic.gain>` parameter of the Logistic
@@ -325,7 +325,7 @@ from psyneulink.core.globals.keywords import \
     ALLOCATION_SAMPLES, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, \
     INPUT_PORT, INPUT_PORTS, \
     OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, \
-    PARAMETER_STATE, PARAMETER_STATES, \
+    PARAMETER_PORT, PARAMETER_PORTS, \
     PROJECTION_TYPE, RECEIVER, SUM
 from psyneulink.core.globals.parameters import Parameter, get_validator_by_function, get_validator_by_type_only
 from psyneulink.core.globals.sampleiterator import is_sample_spec
@@ -494,7 +494,7 @@ class ControlSignal(ModulatorySignal):
         details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
         the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
 
@@ -756,8 +756,8 @@ class ControlSignal(ModulatorySignal):
                                                           DURATION_COST_FUNCTION,
                                                           COMBINE_COSTS_FUNCTION}
 
-    connectsWith = [PARAMETER_STATE, INPUT_PORT, OUTPUT_PORT]
-    connectsWithAttribute = [PARAMETER_STATES, INPUT_PORTS, OUTPUT_PORTS]
+    connectsWith = [PARAMETER_PORT, INPUT_PORT, OUTPUT_PORT]
+    connectsWithAttribute = [PARAMETER_PORTS, INPUT_PORTS, OUTPUT_PORTS]
     projectionSocket = RECEIVER
     modulators = []
 

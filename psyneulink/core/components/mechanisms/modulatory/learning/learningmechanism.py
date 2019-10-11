@@ -123,7 +123,7 @@ names and roles (shown in the `figure <LearningMechanism_Single_Layer_Learning_F
   `primary_learned_projection` projects.  By default, the `output_source <LearningMechanism.output_source>`'s
   `primary OutputPort <OutputPort_Primary>` is used.  However, a different OutputPort can be designated in
   the constructor for the `output_source <LearningMechanism.output_source>`, by assigning a `parameter specification
-  dictionary <ParameterState_Specification>` to the **params** argument of its constructor, with an entry that uses
+  dictionary <ParameterPort_Specification>` to the **params** argument of its constructor, with an entry that uses
   *MONITOR_FOR_LEARNING* as its key and a list containing the desired OutputPort(s) as its value. The `value
   <InputPort.value>` of the *ACTIVATION_OUTPUT* InputPort is assigned as the second item of the LearningMechanism's
   `variable <LearningMechanism.variable>` attribute.
@@ -374,7 +374,7 @@ for the Projection between them).  In this case, a single `ComparatorMechanism` 
   LearningMechanism's *ERROR_SIGNAL* `InputPort <LearningMechanism_Activation_Input>`.
 
 In addition, a `LearningProjection` is created from the `LearningSignal<LearningMechanism_LearningSignal>` for the
-`primary_learned_projection` to the `ParameterState` for the `matrix <MappingProjection.matrix>` of the
+`primary_learned_projection` to the `ParameterPort` for the `matrix <MappingProjection.matrix>` of the
 `primary_learned_projection`.  Because this configuration involves only a single layer of learning, *no* Projection
 is created or assigned to the LearningMechanism's *ERROR_SIGNAL* `OutputPort <LearningMechanism_Output_Error_Signal>`.
 
@@ -428,7 +428,7 @@ sequence, the following additional MappingProjections are created for learning (
   <LearningMechanism_Input_Error_Signal>`.
 
 In addition, a `LearningProjection` is created from the `LearningSignal <LearningMechanism_LearningSignal>` for the
-`primary_learned_projection` of each LearningMechanism in the sequence, to the `ParameterState` for the `matrix
+`primary_learned_projection` of each LearningMechanism in the sequence, to the `ParameterPort` for the `matrix
 <MappingProjection.matrix>` of the `primary_learned_projection`.  If the `primary_learned_projection` is the first in
 the sequence, then *no* Projection is created or assigned to its LearningMechanism's *ERROR_SIGNAL* `OutputPort
 <LearningMechanism_Output_Error_Signal>`.
@@ -476,19 +476,19 @@ belong have executed.  When a LearningMechanism is executed, it uses the `value 
 <LearningMechanis.learned_projections>`. Those weight changes are assigned as the LearningMechanism's
 `learning_signal <LearningMechanism.learning_signal>` attribute, the `value <LearningSignal.value>` of each of its
 `LearningSignals <LearningMechanism_LearningSignal>`, and as the `value <LearningProjection.value>` of each of their
-LearningProjections.  That value is used, in turn, to modify the `value <ParameterState.value>` of the *MATRIX*
-`ParameterState` of each of the MappingProjections being learned (listed in the LearningMechanism's
+LearningProjections.  That value is used, in turn, to modify the `value <ParameterPort.value>` of the *MATRIX*
+`ParameterPort` of each of the MappingProjections being learned (listed in the LearningMechanism's
 `learned_projections <LearningMechanism.learned_projections>` attribute).
 
-Each ParameterState uses the value it receives from the `LearningProjection` that projects to it to modify the
-parameter of its `function <ParameterState.function>`, in a manner specified by the `modulation
+Each ParameterPort uses the value it receives from the `LearningProjection` that projects to it to modify the
+parameter of its `function <ParameterPort.function>`, in a manner specified by the `modulation
 <LearningSignal.modulation>` attribute of the `LearningSignal` from which it receives the LearningProjection (see
 `Modulation <ModulatorySignal_Modulation>` for a description of how modulation operates). By default, the
 `modulation <LearningSignal.modulation>` attribute of a LearningSignal is `ADDITIVE`, the `function
-<ParameterState.function>` of a *MATRIX* ParameterState for a MappingProjection is `AccumulatorIntegrator`,
+<ParameterPort.function>` of a *MATRIX* ParameterPort for a MappingProjection is `AccumulatorIntegrator`,
 and the parameter it uses for additive modulation is its `increment <AccumulatorIntegrator.increment>` parameter.
 These assignments cause the value of the LearningProjection to be added to the previous value of the *MATRIX*
-ParameterState, thus incrementing the weights by an amount specified by the LearningMechanism's `learning_signal
+ParameterPort, thus incrementing the weights by an amount specified by the LearningMechanism's `learning_signal
 <LearningMechanism.learning_signal>`. Note, that the changes to the `matrix
 <MappingProjection.MappingProjection.matrix>` parameter itself do not take effect until the next time the
 `learned_projection` is executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
@@ -519,7 +519,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.states.modulatorysignals.learningsignal import LearningSignal
-from psyneulink.core.components.states.parameterstate import ParameterState
+from psyneulink.core.components.states.parameterport import ParameterPort
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ADDITIVE, AFTER, ASSERT, CONTEXT, CONTROL_PROJECTIONS, ENABLED, INPUT_PORTS, \
@@ -737,7 +737,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         specifies the learning rate for the LearningMechanism (see `learning_rate <LearningMechanism.learning_rate>`
         for details).
 
-    learning_signals : List[parameter of Projection, ParameterState, Projection, tuple[str, Projection] or dict] :
+    learning_signals : List[parameter of Projection, ParameterPort, Projection, tuple[str, Projection] or dict] :
     default *LEARNING_SIGNAL*
         specifies the parameter(s) to be learned (see `learning_signals <LearningMechanism.learning_signals>` for
         details).
@@ -751,7 +751,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         (see `learning_enabled <LearningMechanism.learning_enabled>` for additional details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default `function <LearningProjection.function>` and parameter assignments.  Values specified
         for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
@@ -796,7 +796,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         the Mechanism(s) that calculate the error signal(s) provided to the
         LearningMechanism's *ERROR_SIGNAL(s)* `InputPort(s) <LearningMechanism_Input_Error_Signal>`.
 
-    error_matrices : list[ParameterState]
+    error_matrices : list[ParameterPort]
         the matrices of the Projections associated with the `error_sources <LearningMechanism.error_sources>`,
         (i.e., for the next Projection(s) in the learning_sequence, or to the `ComparatorMechanism`);
         note: these are *not* for the LearningMechanism's `learned_projections <LearningMechanism.learned_projections>`.
@@ -843,7 +843,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
     learning_signals : ContentAddressableList[LearningSignal]
         list of all of the `LearningSignals <LearningSignal>` for the LearningMechanism, each of which sends one or
-        more `LearningProjections <LearningProjection>` to the `ParameterState(s) <ParameterState>` for the `matrix
+        more `LearningProjections <LearningProjection>` to the `ParameterPort(s) <ParameterPort>` for the `matrix
         <MappingProjection.matrix>` parameter of the `MappingProjection(s) <MappingProjection>` trained by the
         LearningMechanism.  The `value <LearningSignal>` of each LearningSignal is the LearningMechanism's
         `learning_signal <LearningMechanism.learning_signal>` attribute. Since LearningSignals are `OutputPorts
@@ -1180,7 +1180,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
                     # IMPLEMENTATION NOTE:
                     #     This assumes that error_source has only one LearningSignal or,
                     #     if it has more, that they are all equivalent
-                    self.error_matrices[i] = error_source.primary_learned_projection.parameter_states[MATRIX]
+                    self.error_matrices[i] = error_source.primary_learned_projection.parameter_ports[MATRIX]
 
     def _instantiate_output_ports(self, context=None):
 
@@ -1258,7 +1258,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         instantiated_input_ports = []
         for input_port in states[INPUT_PORTS]:
             error_source = input_port.path_afferents[0].sender.owner
-            self.error_matrices.append(error_source.primary_learned_projection.parameter_states[MATRIX])
+            self.error_matrices.append(error_source.primary_learned_projection.parameter_ports[MATRIX])
             if ERROR_SIGNAL in input_port.name:
                 self._error_signal_input_ports.append(input_port)
             instantiated_input_ports.append(input_port)
@@ -1323,7 +1323,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
                 np.array(self.error_matrices)[np.array([c - ERROR_SIGNAL_INDEX for c in error_signal_indices])]
 
         for i, matrix in enumerate(error_matrices):
-            if isinstance(error_matrices[i], ParameterState):
+            if isinstance(error_matrices[i], ParameterPort):
                 error_matrices[i] = error_matrices[i].parameters.value._get(context)
 
         summed_learning_signal = 0
@@ -1419,5 +1419,5 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
     @property
     def dependent_learning_mechanisms(self):
-        return [p.parameter_states[MATRIX].mod_afferents[0].sender.owner for p in self.input_source.path_afferents
+        return [p.parameter_ports[MATRIX].mod_afferents[0].sender.owner for p in self.input_source.path_afferents
                 if p.has_learning_projection]

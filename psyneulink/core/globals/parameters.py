@@ -4,7 +4,7 @@
 
 PsyNeuLink `parameters <Parameter>` are objects that represent the user-modifiable parameters of a `Component`. `Parameter`\\ s have
 names, default values, and other attributes that define how they are used in models. `Parameter` \\s also maintain and provide
-access to the data used in actual computations - `default values <Parameter_Defaults>`, `current values <Parameter_Statefulness>`, `previous values <Parameter.history>`,
+access to the data used in actual computations - `default values <Parameter_Defaults>`, `current values <Parameter_portfulness>`, `previous values <Parameter.history>`,
 and `logged values <Log>`.
 
 
@@ -25,7 +25,7 @@ compatibility between this instance and other PNL objects. Given a `TransferMech
     ``t.defaults.noise`` is shorthand for ``t.parameters.noise.default_value``, and they both refer to the default noise value for *t*
 
 
-.. _Parameter_Statefulness:
+.. _Parameter_portfulness:
 
 Statefulness of Parameters
 ==========================
@@ -172,8 +172,8 @@ You should avoid using `dot notation <Parameter_Dot_Notation>` in internal code,
 |                  |               |based on execution context                  |                                         |
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
 |    modulable     |     False     |if True, the parameter can be modulated     |Currently this does not determine what   |
-|                  |               |(if it belongs to a Mechanism or Projection |gets a ParameterState, but in the future |
-|                  |               | it is assigned a `ParameterState`)         |it should                                |
+|                  |               |(if it belongs to a Mechanism or Projection |gets a ParameterPort, but in the future |
+|                  |               | it is assigned a `ParameterPort`)         |it should                                |
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
 |    read_only     |     False     |whether the user should be able to set the  |Can be manually set, but will trigger a  |
 |                  |               |value or not (e.g. variable and value are   |warning unless override=True             |
@@ -488,11 +488,11 @@ class Parameter(types.SimpleNamespace):
 
         modulable
             if True, the parameter can be modulated; if the Parameter belongs to a `Mechanism` or `Projection`,
-            it is assigned a `ParameterState`.
+            it is assigned a `ParameterPort`.
 
             :default: False
 
-            :Developer Notes: Currently this does not determine what gets a ParameterState, but in the future it should
+            :Developer Notes: Currently this does not determine what gets a ParameterPort, but in the future it should
 
         modulation_combination_function
             specifies the function used in State._get_combined_mod_val() to combine values for the parameter if

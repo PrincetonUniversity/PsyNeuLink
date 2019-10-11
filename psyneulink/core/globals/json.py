@@ -78,8 +78,8 @@ PsyNeuLink, this is indicated by `PNL`:
     }
 
 Note that the value of a parameter may be a long-form dictionary when \
-it corresponds to a `ParameterState`. In this case, it will indicate \
-the ParameterState in a `source<>` field:
+it corresponds to a `ParameterPort`. In this case, it will indicate \
+the ParameterPort in a `source<>` field:
 
 .. code-block:: javascript
 
@@ -133,7 +133,7 @@ PsyNeuLink, only one primary function is allowed.
 
 **Mechanisms** have:
 
-* ``input_ports`` : a list of InputPort and ParameterState JSON objects
+* ``input_ports`` : a list of InputPort and ParameterPort JSON objects
 
 * ``output_ports`` : a list of OutputPort JSON objects
 
@@ -295,7 +295,7 @@ def _parse_parameter_value(value, component_identifiers=None):
             MODEL_SPEC_ID_PARAMETER_SOURCE in value
             and MODEL_SPEC_ID_PARAMETER_VALUE in value
         ):
-            # handle ParameterState spec
+            # handle ParameterPort spec
             try:
                 value_type = eval(value[MODEL_SPEC_ID_TYPE])
             except Exception as e:

@@ -102,7 +102,7 @@ arguments of the `System`, as described below.
   *control_signals* argument of a ControlMechanism. These are added to any `ControlSignals <ControlSignal>` that have
   already been specified for the `controller <System.controller>` (listed in its `control_signals
   <ControlMechanism.control_signals>` attribute), and any parameters that have directly been `specified for
-  control <ParameterState_Specification>` within the System (see `System_Control` below for additional details).
+  control <ParameterPort_Specification>` within the System (see `System_Control` below for additional details).
 
 .. _System_Structure:
 
@@ -227,7 +227,7 @@ specifications made for the System as follows:
     to specify OutputPorts to be monitored.
 
   * a `ControlSignal` and `ControlProjection` is assigned to the ControlMechanism for every parameter that has been
-    `specified for control <ParameterState_Specification>` in the System;  these are added to any that the
+    `specified for control <ParameterPort_Specification>` in the System;  these are added to any that the
     ControlMechanism may already have (listed in its `control_signals <ControlMechanism.control_signals>` attribute).
 
 See `System_Control_Specification` above, `ControlMechanism <ControlMechanism>` and `ModulatorySignal_Modulation`
@@ -453,7 +453,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.components.projections.projection import Projection
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.core.components.states.inputport import InputPort
-from psyneulink.core.components.states.parameterstate import ParameterState
+from psyneulink.core.components.states.parameterport import ParameterPort
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ALL, BOLD, COMPONENT, CONDITION, CONTROL, CONTROLLER, CYCLE, FUNCTION, FUNCTIONS, \
@@ -2565,7 +2565,7 @@ class System(System_Base):
 
         Generate list from:
            ControlSignal specifications passed in from the **control_signals** argument.
-           ParameterStates of the System's Mechanisms that have been assigned ControlProjections with deferred_init();
+           ParameterPorts of the System's Mechanisms that have been assigned ControlProjections with deferred_init();
                Note: this includes any for which a ControlSignal rather than a ControlProjection
                      was used to specify control for a parameter (e.g., in a 2-item tuple specification for the
                      parameter); the initialization of the ControlProjection and, if specified, the ControlSignal
@@ -2573,8 +2573,8 @@ class System(System_Base):
         """
         control_signal_specs = control_signals or []
         for mech in self.mechanisms:
-            for parameter_state in mech._parameter_states:
-                for projection in parameter_state.mod_afferents:
+            for parameter_port in mech._parameter_ports:
+                for projection in parameter_port.mod_afferents:
                     # If Projection was deferred for init, instantiate its ControlSignal and then initialize it
                     if projection.initialization_status == ContextFlags.DEFERRED_INIT:
                         proj_control_signal_specs = projection.control_signal_params or {}
@@ -2586,7 +2586,7 @@ class System(System_Base):
         if control_signals:
             for control_signal in control_signals:
                 for control_projection in control_signal.efferents:
-                    if not any(control_projection.receiver in mech.parameter_states for mech in self.mechanisms):
+                    if not any(control_projection.receiver in mech.parameter_ports for mech in self.mechanisms):
                         raise SystemError("A parameter controlled by a ControlSignal of a controller "
                                           "being assigned to {} is not in that System".format(self.name))
 
@@ -3018,7 +3018,7 @@ class System(System_Base):
 
                 elif isinstance(component, MappingProjection):
                     processes = list(component.sender.owner.processes.keys())
-                    component._parameter_states[MATRIX]._update(context=context)
+                    component._parameter_ports[MATRIX]._update(context=context)
 
                 if not self._animate is False:
                     if (self._animate_unit is COMPONENT and
@@ -3031,7 +3031,7 @@ class System(System_Base):
                 # print ("EXECUTING LEARNING UPDATES: ", component.name)
 
                 # # TEST PRINT LEARNING:
-                # print(component._parameter_states[MATRIX].value)
+                # print(component._parameter_ports[MATRIX].value)
 
         # FINALLY report outputs
         if self._report_system_output and self._report_process_output:
@@ -3470,7 +3470,7 @@ class System(System_Base):
 
             CONTROL_MECHANISM: `ControlMechanism <ControlMechanism>` of the System;
 
-            CONTROL_PROJECTION_RECEIVERS: list of `ParameterStates <ParameterState>` that receive learning projections.
+            CONTROL_PROJECTION_RECEIVERS: list of `ParameterPorts <ParameterPort>` that receive learning projections.
 
         Returns
         -------
@@ -3501,18 +3501,18 @@ class System(System_Base):
         learning_projections = []
         controlled_parameters = []
         for mech in list(self.mechanisms):
-            for parameter_state in mech._parameter_states:
+            for parameter_port in mech._parameter_ports:
                 try:
-                    for projection in parameter_state.mod_afferents:
+                    for projection in parameter_port.mod_afferents:
                         if isinstance(projection, ControlProjection):
-                            controlled_parameters.append(parameter_state)
+                            controlled_parameters.append(parameter_port)
                 except AttributeError:
                     pass
             for output_port in mech.output_ports:
                 try:
                     for projection in output_port.efferents:
-                        for parameter_state in projection.paramaterStates:
-                            for sender in parameter_state.mod_afferents:
+                        for parameter_port in projection.paramaterStates:
+                            for sender in parameter_port.mod_afferents:
                                 if isinstance(sender, LearningProjection):
                                     learning_projections.append(projection)
                 except AttributeError:
@@ -4445,7 +4445,7 @@ class System(System_Base):
             # If Projection has a LearningProjection from a LearningMechanism
             #    that executes in the execution_phase, include it here
             if proj_learning_in_execution_phase:
-                learning_mech = proj.parameter_states[MATRIX].mod_afferents[0].sender.owner
+                learning_mech = proj.parameter_ports[MATRIX].mod_afferents[0].sender.owner
                 learning_rcvrs = [learning_mech, proj]
                 learning_graph={proj:{learning_mech}}
                 for lr in learning_rcvrs:
@@ -4499,12 +4499,12 @@ class System(System_Base):
             else:
                 learning_proj_color = learning_color
                 learning_proj_width = str(default_width)
-            sndrs = proj._parameter_states['matrix'].mod_afferents # GET ALL LearningProjections to proj
+            sndrs = proj._parameter_ports['matrix'].mod_afferents # GET ALL LearningProjections to proj
             for sndr in sndrs:
                 sndr_label = self._get_label(sndr.sender.owner, show_dimensions, show_roles)
                 rcvr_label = self._get_label(proj, show_dimensions, show_roles)
                 if show_projection_labels:
-                    edge_label = proj._parameter_states['matrix'].mod_afferents[0].name
+                    edge_label = proj._parameter_ports['matrix'].mod_afferents[0].name
                 else:
                     edge_label = ''
                 if show_mechanism_structure:
@@ -4633,7 +4633,7 @@ class System(System_Base):
                     if show_mechanism_structure:
                         ctl_sndr_label = ctlr_label + ':' + OutputPort.__name__ + '-' + control_signal.name
                         proc_mech_rcvr_label = \
-                            proc_mech_label + ':' + ParameterState.__name__ + '-' + ctl_proj.receiver.name
+                            proc_mech_label + ':' + ParameterPort.__name__ + '-' + ctl_proj.receiver.name
                     else:
                         ctl_sndr_label = ctlr_label
                         proc_mech_rcvr_label = proc_mech_label

@@ -123,8 +123,8 @@ class TestLCControlMechanism:
 
         assert len(LC.control_signals)==1
         assert len(LC.control_signals[0].efferents)==2
-        assert T_1.parameter_states[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
-        assert T_2.parameter_states[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
+        assert T_1.parameter_ports[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
+        assert T_2.parameter_ports[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
 
     def test_control_modulation(self):
         Tx = pnl.TransferMechanism(name='Tx')
@@ -143,7 +143,7 @@ class TestLCControlMechanism:
         from pprint import pprint
         pprint(S.execution_graph)
 
-        assert Tz.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == C
+        assert Tz.parameter_ports[pnl.SLOPE].mod_afferents[0].sender.owner == C
         result = S.run(inputs={Tx:[1,1], Ty:[4,4]})
         assert result == [[[4.], [4.]], [[4.], [4.]]]
 
@@ -246,27 +246,27 @@ class TestLCControlMechanism:
         comp.add_controller(c1)
         assert c1.control_signals[0].value == [10] # defaultControlAllocation should be assigned
                                                    # (as no default_allocation from pnl.ControlMechanism)
-        assert m1.parameter_states[pnl.SLOPE].value == [1]
+        assert m1.parameter_ports[pnl.SLOPE].value == [1]
         assert c1.control_signals[1].value == [2]      # default_allocation from pnl.ControlSignal (converted scalar)
-        assert m2.parameter_states[pnl.SLOPE].value == [1]
+        assert m2.parameter_ports[pnl.SLOPE].value == [1]
         assert c1.control_signals[2].value == [3]      # default_allocation from pnl.ControlSignal
-        assert m3.parameter_states[pnl.SLOPE].value == [1]
+        assert m3.parameter_ports[pnl.SLOPE].value == [1]
         result = comp.run(inputs={m1:[2],m2:[3],m3:[4]})
         assert np.allclose(result, [[20.], [6.], [12.]])
         assert c1.control_signals[0].value == [10]
-        assert m1.parameter_states[pnl.SLOPE].value == [10]
+        assert m1.parameter_ports[pnl.SLOPE].value == [10]
         assert c1.control_signals[1].value == [10]
-        assert m2.parameter_states[pnl.SLOPE].value == [2]
+        assert m2.parameter_ports[pnl.SLOPE].value == [2]
         assert c1.control_signals[2].value == [10]
-        assert m3.parameter_states[pnl.SLOPE].value == [3]
+        assert m3.parameter_ports[pnl.SLOPE].value == [3]
         result = comp.run(inputs={m1:[2],m2:[3],m3:[4]})
         assert np.allclose(result, [[20.], [30.], [40.]])
         assert c1.control_signals[0].value == [10]
-        assert m1.parameter_states[pnl.SLOPE].value == [10]
+        assert m1.parameter_ports[pnl.SLOPE].value == [10]
         assert c1.control_signals[1].value == [10]
-        assert m2.parameter_states[pnl.SLOPE].value == [10]
+        assert m2.parameter_ports[pnl.SLOPE].value == [10]
         assert c1.control_signals[2].value == [10]
-        assert m3.parameter_states[pnl.SLOPE].value == [10]
+        assert m3.parameter_ports[pnl.SLOPE].value == [10]
 
         # default_allocation *is* specified in constructor of pnl.ControlMechanism,
         #     so should be used unless specified in pnl.ControlSignal constructor
@@ -283,24 +283,24 @@ class TestLCControlMechanism:
         comp.add_nodes([m1,m2,m3])
         comp.add_controller(c2)
         assert c2.control_signals[0].value == [4]        # default_allocation from pnl.ControlMechanism assigned
-        assert m1.parameter_states[pnl.SLOPE].value == [10]  # has not yet received pnl.ControlSignal value
+        assert m1.parameter_ports[pnl.SLOPE].value == [10]  # has not yet received pnl.ControlSignal value
         assert c2.control_signals[1].value == [5]        # default_allocation from pnl.ControlSignal assigned (converted scalar)
-        assert m2.parameter_states[pnl.SLOPE].value == [10]
+        assert m2.parameter_ports[pnl.SLOPE].value == [10]
         assert c2.control_signals[2].value == [6]        # default_allocation from pnl.ControlSignal assigned
-        assert m3.parameter_states[pnl.SLOPE].value == [10]
+        assert m3.parameter_ports[pnl.SLOPE].value == [10]
         result = comp.run(inputs={m1:[2],m2:[3],m3:[4]})
         assert np.allclose(result, [[8.], [15.], [24.]])
         assert c2.control_signals[0].value == [10]
-        assert m1.parameter_states[pnl.SLOPE].value == [4]
+        assert m1.parameter_ports[pnl.SLOPE].value == [4]
         assert c2.control_signals[1].value == [10]
-        assert m2.parameter_states[pnl.SLOPE].value == [5]
+        assert m2.parameter_ports[pnl.SLOPE].value == [5]
         assert c2.control_signals[2].value == [10]
-        assert m3.parameter_states[pnl.SLOPE].value == [6]
+        assert m3.parameter_ports[pnl.SLOPE].value == [6]
         result = comp.run(inputs={m1:[2],m2:[3],m3:[4]})
         assert np.allclose(result, [[20.], [30.], [40.]])
         assert c2.control_signals[0].value == [10]
-        assert m1.parameter_states[pnl.SLOPE].value == [10]
+        assert m1.parameter_ports[pnl.SLOPE].value == [10]
         assert c2.control_signals[1].value == [10]
-        assert m2.parameter_states[pnl.SLOPE].value == [10]
+        assert m2.parameter_ports[pnl.SLOPE].value == [10]
         assert c2.control_signals[2].value == [10]
-        assert m3.parameter_states[pnl.SLOPE].value == [10]
+        assert m3.parameter_ports[pnl.SLOPE].value == [10]

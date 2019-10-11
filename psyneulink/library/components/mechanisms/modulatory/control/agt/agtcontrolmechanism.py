@@ -78,7 +78,7 @@ and the `allocation <ControlSignal.allocation>` of its `ControlSignal(s) <Contro
 ~~~~~~~~
 
 An AGTControlMechanism has a `ControlSignal` for each parameter specified in its `control_signals
-<ControlMechanism.control_signals>` attribute, that sends a `ControlProjection` to the `ParameterState` for the
+<ControlMechanism.control_signals>` attribute, that sends a `ControlProjection` to the `ParameterPort` for the
 corresponding parameter. ControlSignals are a type of `OutputPort`, and so they are also listed in the
 AGTControlMechanism's `output_ports <AGTControlMechanism_Base.output_ports>` attribute. The parameters modulated by an
 AGTControlMechanism's ControlSignals can be displayed using its `show <AGTControlMechanism_Base.show>` method. By default,
@@ -87,7 +87,7 @@ the `input <AGTControlMechanism_Input>` it receives from its `objective_mechanis
 above).  The `allocation <ControlSignal.allocation>` is used by the ControlSignal(s) to determine
 their `intensity <ControlSignal.intensity>`, which is then assigned as the `value <ControlProjection.value>` of the
 ControlSignal's `ControlProjection`.   The `value <ControlProjection.value>` of the ControlProjection is used by the
-`ParameterState` to which it projects to modify the value of the parameter it controls (see
+`ParameterPort` to which it projects to modify the value of the parameter it controls (see
 `ControlSignal_Modulation` for description of how a ControlSignal modulates the value of a parameter).
 
 COMMENT:
@@ -97,7 +97,7 @@ automatically created and assigned to the LCControlMechanism when it is created:
 
     * an `LCController` -- takes the output of the AGTUtilityIntegratorMechanism (see below) and uses this to
       control the value of the LCControlMechanism's `mode <FitzHughNagumoIntegrator.mode>` attribute.  It is assigned a single
-      `ControlSignal` that projects to the `ParameterState` for the LCControlMechanism's `mode <FitzHughNagumoIntegrator.mode>`
+      `ControlSignal` that projects to the `ParameterPort` for the LCControlMechanism's `mode <FitzHughNagumoIntegrator.mode>`
       attribute.
     ..
     * a `AGTUtilityIntegratorMechanism` -- monitors the `value <OutputPort.value>` of any `OutputPorts <OutputPort>`
@@ -113,7 +113,7 @@ automatically created and assigned to the LCControlMechanism when it is created:
     * a `MappingProjection` from the AGTUtilityIntegratorMechanism's *UTILITY_SIGNAL* `OutputPort
       <AGTUtilityIntegratorMechanism_Structure>` to the LCControlMechanism's *MODE* <InputPort_Primary>`.
     ..
-    * a `ControlProjection` from the LCController's ControlSignal to the `ParameterState` for the LCControlMechanism's
+    * a `ControlProjection` from the LCController's ControlSignal to the `ParameterPort` for the LCControlMechanism's
       `mode <FitzHughNagumoIntegrator.mode>` attribute.
 COMMENT
 
@@ -129,11 +129,11 @@ its *OUTCOME* `input_port <Mechanism_Base.input_port>`, and uses that to determi
 its `ControlSignals <ControlSignal>`.  An AGTControlMechanism assigns the same value (the `input <AGTControlMechanism_Input>` it
 receives from its `objective_mechanism <AGTControlMechanism.objective_mechanism>` to all of its ControlSignals.  Each
 ControlSignal uses that value to calculate its `intensity <ControlSignal.intensity>`, which is used by its
-`ControlProjection(s) <ControlProjection>` to modulate the value of the ParameterState(s) for the parameter(s) it
+`ControlProjection(s) <ControlProjection>` to modulate the value of the ParameterPort(s) for the parameter(s) it
 controls, which are then used in the subsequent `TRIAL` of execution.
 
 .. note::
-   A `ParameterState` that receives a `ControlProjection` does not update its value until its owner Mechanism
+   A `ParameterPort` that receives a `ControlProjection` does not update its value until its owner Mechanism
    executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a
    ControlMechanism has executed, a parameter that it controls will not assume its new value until the Mechanism
    to which it belongs has executed.
@@ -203,12 +203,12 @@ class AGTControlMechanism(ControlMechanism):
         `control_allocation <AGTControlMechanism.control_allocation>`, that is used to assign the `allocation
         <ControlSignal.allocation>` of its `ControlSignal(s) <ControlSignal>`.
 
-    control_signals : List[ParameterState, tuple[str, Mechanism] or dict]
+    control_signals : List[ParameterPort, tuple[str, Mechanism] or dict]
         specifies the parameters to be controlled by the AGTControlMechanism; a `ControlSignal` is created for each
         (see `ControlSignal_Specification` for details of specification).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters
         for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
         specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
@@ -266,7 +266,7 @@ class AGTControlMechanism(ControlMechanism):
         list of the AGTControlMechanism's `ControlSignals <ControlSignals>` , including any inherited from a `system
         <ControlMechanism.system>` for which it is a `controller <System.controller>` (same as
         ControlMechanism's `output_ports <Mechanism_Base.output_ports>` attribute); each sends a `ControlProjection`
-        to the `ParameterState` for the parameter it controls
+        to the `ParameterPort` for the parameter it controls
 
     control_projections : List[ControlProjection]
         list of `ControlProjections <ControlProjection>`, one for each `ControlSignal` in `control_signals`.

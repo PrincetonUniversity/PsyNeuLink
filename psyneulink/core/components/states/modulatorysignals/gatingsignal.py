@@ -329,7 +329,7 @@ class GatingSignal(ControlSignal):
         details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
         the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
 
@@ -525,7 +525,7 @@ class GatingSignal(ControlSignal):
                          **kwargs)
 
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
-            """Get connections specified in a ParameterState specification tuple
+            """Get connections specified in a ParameterPort specification tuple
 
             Tuple specification can be:
                 (State name, Mechanism)

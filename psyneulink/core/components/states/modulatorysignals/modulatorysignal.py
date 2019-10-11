@@ -153,7 +153,7 @@ There are three broad categories of modulation that serve different purposes, an
 ModulatorySignals used and the type of State modulated:
 
   * **modulation of a** `Mechanism`\\s <function <Mechanism_Base.function> -- a `ControlSignal` must be used; this
-    modulates the `ParameterState` for a parameter of the Mechanism's `function <Mechanism_Base.function>` which,
+    modulates the `ParameterPort` for a parameter of the Mechanism's `function <Mechanism_Base.function>` which,
     in turn, determines how it computes the Mechanism's `value <Mechanism_Base.value>`;
 
   * **modulation of a** `Mechanism`\\s input or output -- a `GatingSignal` is specialized for this purpose, though a
@@ -162,7 +162,7 @@ ModulatorySignals used and the type of State modulated:
     or an `OutputPort` of the Mechanism, that determines how the `value <Mechanism_Base.value>` of the Mechanism
     (i.e., the result of its `function <Mechanism_Base.function>`) is used to generate the output of the Mechanism.
 
-  * **modulation of a** `MappingProjection` -- a `LearningSignal` must be used; this modulates the `ParameterState` for
+  * **modulation of a** `MappingProjection` -- a `LearningSignal` must be used; this modulates the `ParameterPort` for
     the `matrix <MappingProjection.matrix>` parameter of a MappingProjection's `function  <MappingProjection.function>`
     which, in turn, determines how it computes the MappingProjection's `value <MappingProjection.value>`.
 
@@ -179,7 +179,7 @@ and shown in the `figure below <ModulatorySignal_Anatomy_Figure>`.
   |                                    |                        |Default type of `modulation   |                                        |Default Function (mod param)|
   |             Purpose                |  ModulatorySignal      |<ModulatorySignal.modulation>`|           Recipient State              |for Recipient State         |
   +====================================+========================+==============================+========================================+============================+
-  | Modulate the parameter of a        |                        |                              | Mechanism `ParameterState` (by default)|                            |
+  | Modulate the parameter of a        |                        |                              | Mechanism `ParameterPort` (by default)|                            |
   | Mechanism's `function              | `ControlSignal` (blue) |     *MULTIPLICATIVE*         | but can also be an                     |     `Linear` (`slope`)     |
   | <Mechanism_Base.function>`         |                        |                              | `InputPort` or `OutputPort`          |                            |
   +------------------------------------+------------------------+------------------------------+----------------------------------------+----------------------------+
@@ -188,7 +188,7 @@ and shown in the `figure below <ModulatorySignal_Anatomy_Figure>`.
   | <Mechanism_Base.function>`         |                        |                              |                                        |                            |
   +------------------------------------+------------------------+------------------------------+----------------------------------------+----------------------------+
   | Modulate a MappingProjection's     |                        |                              |                                        |   `AccumulatorIntegrator`  |
-  | `matrix <MappingProjection.matrix>`|`LearningSignal` (green)|        *ADDITIVE*            |  MappingProjection `ParameterState`    |   (`increment`)            |
+  | `matrix <MappingProjection.matrix>`|`LearningSignal` (green)|        *ADDITIVE*            |  MappingProjection `ParameterPort`    |   (`increment`)            |
   | parameter                          |                        |                              |                                        |                            |
   +------------------------------------+------------------------+------------------------------+----------------------------------------+----------------------------+
 
@@ -211,7 +211,7 @@ detail under `ModulatorySignal_Implementation`.
    **Three types of Modulatory Components and the States they modulate**. The default `type of modulation
    <ModulatorySignal_Types>` for each type of ModulatorySignal, and the default Function and modulated parameter of
    its recipient State are listed in the `table <ModulatorySignal_Table>` above. Note that the `ControlMechanism`
-   and `ControlSignal <ControlSignal>` are shown in the figure modulating the `ParameterState` of a Mechanism;
+   and `ControlSignal <ControlSignal>` are shown in the figure modulating the `ParameterPort` of a Mechanism;
    however, like Gating components, they can also be used to modulate `InputPorts <InputPort>` and `OutputPorts
    <OutputPort>`. The `figure <ModulatorySignal_Detail_Figure>` below shows a detailed view of how ModulatorySignals
    modulate the parameters of a State's `function <State_Base.function>`.
@@ -338,11 +338,11 @@ COMMENT:
 # FIX: 9/3/19 -- REWORK AND ADD EXAMPLE HERE
 
 For example, consider a `ControlSignal` that modulates the `bias <Logistic.bias>` parameter of a `Logistic` Function
-used by a `TransferMechanism`, and assume that the `ParameterState` for the bias parameter (to which the ControlSignal
-projects) uses a `Linear` function (the default for a ParameterState) to set the `value <ParameterState.value>` of
+used by a `TransferMechanism`, and assume that the `ParameterPort` for the bias parameter (to which the ControlSignal
+projects) uses a `Linear` function (the default for a ParameterPort) to set the `value <ParameterPort.value>` of
 that parameter. If the `modulation  <ModulatorySignal.modulation>` attribute of the `ControlSignal` is *MULTIPLICATIVE*
 then, when the TransferMechanism's `Logistic` `function <TransferMechanism.function>` is executed, the `function
-<ParameterState.function>` of the ParameterState that sets the value of the `Logistic` Function's `bias <Logistic.bias>`
+<ParameterPort.function>` of the ParameterPort that sets the value of the `Logistic` Function's `bias <Logistic.bias>`
 parameter is executed;  that is a `Linear` Function, that uses the ControlSignal's `value <ControlSignal.value>` as
 its `slope <Linear.slope>` parameter.  Thus, the effect is that the ControlSignal's `value <ControlSignal.value>` is
 multiplied by the base value of the `bias <Logistic.bias>` parameter, before that is used by the TransferMechanism's
@@ -368,7 +368,7 @@ FIX: EXAMPLE OF FULL SPECIFIATION (BY STATE AND STATE'S FUCNTION'S PARAMETER NAM
 The following example uses a parameter's name to specify
     >>> my_mech = ProcessingMechanism(function=Logistic)
     >>> ctl_mech = ControlMechanism(monitor_for_control=my_mech,
-    ...                             control_signals=ControlSignal(modulates=my_mech.parameter_states[GAIN],
+    ...                             control_signals=ControlSignal(modulates=my_mech.parameter_ports[GAIN],
     ...                                                           modulation=SLOPE))
 
 FIX: EXAMPLE OF SPECIFIATION OF CONTROLSIGNAL WITH MECHANISM AND STATE'S PARAMETER NAME
@@ -502,7 +502,7 @@ class ModulatorySignal(OutputPort):
         specifies the type of modulation the ModulatorySignal uses to determine the value of the State(s) it modulates.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
         the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
 

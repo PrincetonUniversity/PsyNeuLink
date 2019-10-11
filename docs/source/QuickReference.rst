@@ -189,7 +189,7 @@ The four types of Components in PsyNeuLink, Mechanisms, Projections, States and 
        `variable <Mechanism_Base.variable>`.  It can also receive one or more `GatingProjections <GatingProjection>`,
        that modify the parameter(s) of the State's function, and thereby the State's `value <State_Base.value>`.
 
-   + `ParameterState`
+   + `ParameterPort`
        Represents a parameter of the Mechanism's `function <Mechanism_Base.function>`.  Takes the assigned value of the
        parameter as the `variable <State_Base.variable>` for the State's `function <State_Base.function>`, and assigns
        the result as the value of the parameter used by the Mechanism's `function <Mechanism_Base.function>` when the

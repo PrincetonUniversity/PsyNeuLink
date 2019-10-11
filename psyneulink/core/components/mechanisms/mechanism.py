@@ -16,7 +16,7 @@
      * :ref:`Mechanism_Function`
      * :ref:`Mechanism_States`
         * :ref:`Mechanism_InputPorts`
-        * :ref:`Mechanism_ParameterStates`
+        * :ref:`Mechanism_ParameterPorts`
         * :ref:`Mechanism_OutputPorts`
      * :ref:`Mechanism_Additional_Attributes`
      * :ref:`Mechanism_Role_In_Processes_And_Systems`
@@ -63,13 +63,13 @@ Every Mechanism is made up of four fundamental components:
     ..
     * `Function <Function>` used to transform its input(s) into its output(s);
     ..
-    * `ParameterState(s) <ParameterState>` used to represent the parameters of its Function (and/or any
+    * `ParameterPort(s) <ParameterPort>` used to represent the parameters of its Function (and/or any
       parameters that are specific to the Mechanism itself);
     ..
     * `OutputPort(s) <OutputPort>` used to represent its output(s)
 
 These are described in the sections on `Mechanism_Function` and `Mechanism_States` (`Mechanism_InputPorts`,
-`Mechanism_ParameterStates`, and `Mechanism_OutputPorts`), and shown graphically in a `figure <Mechanism_Figure>`,
+`Mechanism_ParameterPorts`, and `Mechanism_OutputPorts`), and shown graphically in a `figure <Mechanism_Figure>`,
 under `Mechanism_Structure` below.
 
 .. _Mechanism_Creation:
@@ -104,7 +104,7 @@ mentioned above, or using one of the following:
           Mechanism or ones specific to a particular type of Mechanism (see documentation for the type).  The key must
           be the name of the argument used to specify the parameter in the Mechanism's constructor, and the value must
           be a legal value for that parameter, using any of the ways allowed for `specifying a parameter
-          <ParameterState_Specification>`. The parameter values specified will be used to instantiate the Mechanism.
+          <ParameterPort_Specification>`. The parameter values specified will be used to instantiate the Mechanism.
           These can be overridden during execution by specifying `Mechanism_Runtime_Parameters`, either when calling
           the Mechanism's `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method, or where it is
           specified in the `pathway <Process.pathway>` attribute of a `Process`.
@@ -119,16 +119,16 @@ mentioned above, or using one of the following:
 *Specifying States*
 ~~~~~~~~~~~~~~~~~~~
 
-Every Mechanism has one or more `InputPorts <InputPort>`, `ParameterStates <ParameterState>`, and `OutputPorts
+Every Mechanism has one or more `InputPorts <InputPort>`, `ParameterPorts <ParameterPort>`, and `OutputPorts
 <OutputPort>` (described `below <Mechanism_States>`) that allow it to receive and send `Projections <Projection>`,
 and to execute its `function <Mechanism_Base.function>`).  When a Mechanism is created, it automatically creates the
-ParameterStates it needs to represent its parameters, including those of its `function <Mechanism_Base.function>`.
+ParameterPorts it needs to represent its parameters, including those of its `function <Mechanism_Base.function>`.
 It also creates any InputPorts and OutputPorts required for the Projections it has been assigned. InputPorts and
 OutputPorts, and corresponding Projections (including those from `ModulatorySignals <ModulatorySignal>`) can also be
 specified explicitly in the **input_ports** and **output_ports** arguments of the Mechanism's constructor (see
 `Mechanism_InputPorts` and `Mechanism_OutputPorts`, respectively, as well as the `first example <Mechanism_Example_1>`
 below, and `State_Examples`).  They can also be specified in a `parameter specification dictionary
-<ParameterState_Specification>` assigned to the Mechanism's **params** argument, using entries with the keys
+<ParameterPort_Specification>` assigned to the Mechanism's **params** argument, using entries with the keys
 *INPUT_PORTS* and *OUTPUT_PORTS*, respectively (see `second example <Mechanism_Example_2>` below).  While
 specifying the **input_ports** and **output_ports** arguments directly is simpler and more convenient,
 the dictionary format allows parameter sets to be created elsewhere and/or re-used.  The value of each entry can be
@@ -182,13 +182,13 @@ See `State <State_Examples>` for additional examples of specifying the States of
 *Specifying Parameters*
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-As described `below <Mechanism_ParameterStates>`, Mechanisms have `ParameterStates <ParameterState>` that provide the
+As described `below <Mechanism_ParameterPorts>`, Mechanisms have `ParameterPorts <ParameterPort>` that provide the
 current value of a parameter used by the Mechanism and/or its `function <Mechanism_Base.function>` when it is `executed
 <Mechanism_Execution>`. These can also be used by a `ControlMechanism <ControlMechanism>` to control the parameters of
 the Mechanism and/or it `function <Mechanism_Base.function>`.  The value of any of these, and their control, can be
 specified in the corresponding argument of the constructor for the Mechanism and/or its `function
 <Mechanism_Base.function>`,  or in a parameter specification dictionary assigned to the **params** argument of its
-constructor, as described under `ParameterState_Specification`.
+constructor, as described under `ParameterPort_Specification`.
 
 
 .. _Mechanism_Structure:
@@ -220,7 +220,7 @@ so the Mechanisms' constructor does not have a :keyword:`function` argument.  Ho
 **comparison_operation** argument, that is used to set the LinearCombination function's `operation` parameter.
 
 The parameters for a Mechanism's primary function can also be specified as entries in a *FUNCTION_PARAMS* entry of a
-`parameter specification dictionary <ParameterState_Specification>` in the **params** argument of the Mechanism's
+`parameter specification dictionary <ParameterPort_Specification>` in the **params** argument of the Mechanism's
 constructor.  For example, the parameters of the `Logistic` function in the example above can
 also be assigned as follows::
 
@@ -267,7 +267,7 @@ COMMENT:
 NOT CURRENTLY IMPLEMENTED
 For Mechanisms that offer a selection of functions for the primary function (such as the `TransferMechanism`), if all
 of the functions use the same parameters, then those parameters can also be specified as entries in a `parameter
-specification dictionary <ParameterState_Specification>` as described above;  however, any parameters that are unique
+specification dictionary <ParameterPort_Specification>` as described above;  however, any parameters that are unique
 to a particular function must be specified in a constructor for that function.  For Mechanisms that have additional,
 auxiliary functions, those must be specified in arguments for them in the Mechanism's constructor, and their parameters
 must be specified in constructors for those functions unless documented otherwise.
@@ -280,8 +280,8 @@ COMMENT:
         This must be implemented by the subclass, or an exception will be raised;
         each item in the variable of this method must be compatible with a corresponding InputPort;
         each item in the output of this method must be compatible  with the corresponding OutputPort;
-        for any parameter of the method that has been assigned a ParameterState,
-        the output of the ParameterState's own execute method must be compatible with
+        for any parameter of the method that has been assigned a ParameterPort,
+        the output of the ParameterPort's own execute method must be compatible with
         the value of the parameter with the same name in params[FUNCTION_PARAMS] (EMP)
     + FUNCTION_PARAMS (dict):
         NOTE: function parameters can be specified either as arguments in the Mechanism's __init__ method,
@@ -291,8 +291,8 @@ COMMENT:
         - if the Mechanism implements several possible functions and they do not ALL share the SAME parameters,
             then the function should be provided as an argument but not they parameters; they should be specified
             as arguments in the specification of the function
-        each parameter is instantiated as a ParameterState
-        that will be placed in <Mechanism_Base>._parameter_states;  each parameter is also referenced in
+        each parameter is instantiated as a ParameterPort
+        that will be placed in <Mechanism_Base>._parameter_ports;  each parameter is also referenced in
         the <Mechanism>.function_params dict, and assigned its own attribute (<Mechanism>.<param>).
 COMMENT
 
@@ -355,8 +355,8 @@ Mechanism's `value <Mechanism_Base.value>` attribute which is  also at least a 2
 ~~~~~~~~
 
 Every Mechanism has one or more of each of three types of States:  `InputPort(s) <InputPort>`,
-`ParameterState(s) <ParameterState>`, `and OutputPort(s) <OutputPort>`.  Generally, these are created automatically
-when the Mechanism is created.  InputPorts and OutputPorts (but not ParameterStates) can also be specified explicitly
+`ParameterPort(s) <ParameterPort>`, `and OutputPort(s) <OutputPort>`.  Generally, these are created automatically
+when the Mechanism is created.  InputPorts and OutputPorts (but not ParameterPorts) can also be specified explicitly
 for a Mechanism, or added to an existing Mechanism using its `add_states <Mechanism_Base.add_states>` method, as
 described `above <Mechanism_State_Specification>`).
 
@@ -369,10 +369,10 @@ The three types of States are shown schematically in the figure below, and descr
    :scale: 75 %
    :align: left
 
-   **Schematic of a Mechanism showing its three types of States** (`InputPort`, `ParameterState` and `OutputPort`).
+   **Schematic of a Mechanism showing its three types of States** (`InputPort`, `ParameterPort` and `OutputPort`).
    Every Mechanism has at least one (`primary <InputPort_Primary>`) InputPort and one (`primary
    <OutputPort_Primary>`) OutputPort, but can have additional states of each type.  It also has one
-   `ParameterState` for each of its parameters and the parameters of its `function <Mechanism_Base.function>`.
+   `ParameterPort` for each of its parameters and the parameters of its `function <Mechanism_Base.function>`.
    The `value <InputPort.value>` of each InputPort is assigned as an item of the Mechanism's `variable
    <Mechanism_Base.variable>`, and the result of its `function <Mechanism_Base.function>` is assigned as the Mechanism's
    `value <Mechanism_Base.value>`, the items of which are referenced by its OutputPorts to determine their own
@@ -547,33 +547,33 @@ in its `path_afferents <InputPort.path_afferents>` attribute.  If the Mechanism 
 attribute.
 
 
-.. _Mechanism_ParameterStates:
+.. _Mechanism_ParameterPorts:
 
-ParameterStates and Parameters
+ParameterPorts and Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-`ParameterStates <ParameterState>` provide the value for each parameter of a Mechanism and its `function
-<Mechanism_Base.function>`.  One ParameterState is assigned to each of the parameters of the Mechanism and/or its
-`function <Mechanism_Base.function>` (corresponding to the arguments in their constructors). The ParameterState takes
+`ParameterPorts <ParameterPort>` provide the value for each parameter of a Mechanism and its `function
+<Mechanism_Base.function>`.  One ParameterPort is assigned to each of the parameters of the Mechanism and/or its
+`function <Mechanism_Base.function>` (corresponding to the arguments in their constructors). The ParameterPort takes
 the value specified for a parameter (see `below <Mechanism_Parameter_Value_Specification>`) as its `variable
-<ParameterState.variable>`, and uses it as the input to the ParameterState's `function <ParameterState.function>`,
+<ParameterPort.variable>`, and uses it as the input to the ParameterPort's `function <ParameterPort.function>`,
 which `modulates <ModulatorySignal_Modulation>` it in response to any `ControlProjections <ControlProjection>` received
-by the ParameterState (specified in its `mod_afferents <ParameterState.mod_afferents>` attribute), and assigns the
-result to the ParameterState's `value <ParameterState.value>`.  This is the value used by the Mechanism or its
+by the ParameterPort (specified in its `mod_afferents <ParameterPort.mod_afferents>` attribute), and assigns the
+result to the ParameterPort's `value <ParameterPort.value>`.  This is the value used by the Mechanism or its
 `function <Mechanism_Base.function>` when the Mechanism `executes <Mechanism_Execution>`.  Accordingly, when the value
 of a parameter is accessed (e.g., using "dot" notation, such as ``my_mech.my_param``), it is actually the
-*ParameterState's* `value <ParameterState.value>` that is returned (thereby accurately reflecting the value used
-during the last execution of the Mechanism or its `function <Mechanism_Base.function>`).  The ParameterStates for a
-Mechanism are listed in its `parameter_states <Mechanism_Base.parameter_states>` attribute.
+*ParameterPort's* `value <ParameterPort.value>` that is returned (thereby accurately reflecting the value used
+during the last execution of the Mechanism or its `function <Mechanism_Base.function>`).  The ParameterPorts for a
+Mechanism are listed in its `parameter_ports <Mechanism_Base.parameter_ports>` attribute.
 
 .. _Mechanism_Parameter_Value_Specification:
 
-The "base" value of a parameter (i.e., the unmodulated value used as the ParameterState's `variable
-<ParameterState.variable>` and the input to its `function <ParameterState.function>`) can specified when a Mechanism
+The "base" value of a parameter (i.e., the unmodulated value used as the ParameterPort's `variable
+<ParameterPort.variable>` and the input to its `function <ParameterPort.function>`) can specified when a Mechanism
 and/or its `function <Mechanism_Base.function>` are first created,  using the corresponding arguments of their
 constructors (see `Mechanism_Function` above).  Parameter values can also be specified later, by direct assignment of a
 value to the attribute for the parameter, or by using the Mechanism's `assign_param` method (the recommended means;
-see `ParameterState_Specification`).  Note that the attributes for the parameters of a Mechanism's `function
+see `ParameterPort_Specification`).  Note that the attributes for the parameters of a Mechanism's `function
 <Mechanism_Base.function>` usually belong to the `Function <Function_Overview>` referenced in its `function
 <Component.function>` attribute, not the Mechanism itself, and therefore must be assigned to the Function
 Component (see `Mechanism_Function` above).
@@ -629,7 +629,7 @@ Additional Constructor Arguments
 
 In addition to the `standard attributes <Component_Structure>` of any `Component <Component>`, Mechanisms have a set of
 Mechanism-specific attributes (listed below). These can be specified in arguments of the Mechanism's constructor,
-in a `parameter specification dictionary <ParameterState_Specification>` assigned to the **params** argument of the
+in a `parameter specification dictionary <ParameterPort_Specification>` assigned to the **params** argument of the
 Mechanism's constructor, by direct reference to the corresponding attribute of the Mechanisms after it has been
 constructed (e.g., ``my_mechanism.param``), or using the Mechanism's `assign_params` method. The Mechanism-specific
 attributes are listed below by their argument names / keywords, along with a description of how they are specified:
@@ -860,7 +860,7 @@ tuple that also has an optional set of `runtime parameters <Mechanism_Runtime_Pa
 
 The parameters of a Mechanism are usually specified when the Mechanism is `created <Mechanism_Creation>`.  However,
 these can be overridden when it `executed <Mechanism_Base.execution>`.  This can be done in a `parameter specification
-dictionary <ParameterState_Specification>` assigned to the **runtime_param** argument of the Mechanism's `execute
+dictionary <ParameterPort_Specification>` assigned to the **runtime_param** argument of the Mechanism's `execute
 <Mechanism_Base.execute>` method, or in a `tuple with the Mechanism <Process_Mechanism_Specification>` in the `pathway`
 of a `Process`.  Any value assigned to a parameter in a **runtime_params** dictionary will override the current value of
 the parameter for that (and *only* that) execution of the Mechanism; the value will return to its previous value
@@ -869,13 +869,13 @@ following that execution.
 The runtime parameters for a Mechanism are specified using a dictionary that contains one or more entries, each of which
 is for a parameter of the Mechanism or its  `function <Mechanism_Base.function>`, or for one of the `Mechanism's States
 <Mechanism_States>`. Entries for parameters of the Mechanism or its `function <Mechanism_Base.function>` use the
-standard format for `parameter specification dictionaries <ParameterState_Specification>`. Entries for the Mechanism's
+standard format for `parameter specification dictionaries <ParameterPort_Specification>`. Entries for the Mechanism's
 States can be used to specify runtime parameters of the corresponding State, its `function <State_Base.function>`, or
 any of the `Projections to that state <State_Projections>`. Each entry for the parameters of a State uses a key
-corresponding to the type of State (*INPUT_PORT_PARAMS*, *OUTPUT_PORT_PARAMS* or *PARAMETER_STATE_PARAMS*), and a
+corresponding to the type of State (*INPUT_PORT_PARAMS*, *OUTPUT_PORT_PARAMS* or *PARAMETER_PORT_PARAMS*), and a
 value that is a sub-dictionary containing a dictionary with the runtime  parameter specifications for all States of that
 type). Within that sub-dictionary, specification of parameters for the State or its `function <State_Base.function>` use
-the  standard format for a `parameter specification dictionary <ParameterState_Specification>`.  Parameters for all of
+the  standard format for a `parameter specification dictionary <ParameterPort_Specification>`.  Parameters for all of
 the `State's Projections <State_Projections>` can be specified in an entry with the key *PROJECTION_PARAMS*, and a
 sub-dictionary that contains the parameter specifications;  parameters for Projections of a particular type can be
 placed in an entry with a key specifying the type (*MAPPING_PROJECTION_PARAMS*, *LEARNING_PROJECTION_PARAMS*,
@@ -896,7 +896,7 @@ State keyword: dict for State's params
 
     dict: can be one (or more) of the following:
         + INPUT_PORT_PARAMS:<dict>
-        + PARAMETER_STATE_PARAMS:<dict>
+        + PARAMETER_PORT_PARAMS:<dict>
    [TBI + OUTPUT_PORT_PARAMS:<dict>]
         - each dict will be passed to the corresponding State
         - params can be any permissible executeParamSpecs for the corresponding State
@@ -951,7 +951,7 @@ from psyneulink.core.components.shellclasses import Function, Mechanism, Project
 from psyneulink.core.components.states.inputport import DEFER_VARIABLE_SPEC_TO_MECH_MSG, InputPort
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.states.outputport import OutputPort
-from psyneulink.core.components.states.parameterstate import ParameterState
+from psyneulink.core.components.states.parameterport import ParameterPort
 from psyneulink.core.components.states.state import REMOVE_STATES, STATE_SPEC, _parse_state_spec
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
@@ -960,7 +960,7 @@ from psyneulink.core.globals.keywords import \
     INPUT_LABELS_DICT, INPUT_PORT, INPUT_PORTS, INPUT_PORT_VARIABLES, \
     MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, MULTIPLICATIVE_PARAM, \
     OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_EXECUTION_TIME, OWNER_VALUE, \
-    PARAMETER_STATE, PARAMETER_STATES, PREVIOUS_VALUE, PROJECTIONS, REFERENCE_VALUE, \
+    PARAMETER_PORT, PARAMETER_PORTS, PREVIOUS_VALUE, PROJECTIONS, REFERENCE_VALUE, \
     TARGET_LABELS_DICT, VALUE, VARIABLE, MECHANISM_COMPONENT_CATEGORY, \
     MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, MECHANISM, WEIGHT, \
     EXPONENT, NAME
@@ -1024,9 +1024,9 @@ class Mechanism_Base(Mechanism):
                 if both methods are used, they must generate the same sized variable for the mechanims
                 ?? WHERE IS THIS CHECKED?  WHICH TAKES PRECEDENCE: InputPort SPECIFICATION (IN _instantiate_state)??
             - an execute method:
-                coordinates updating of input_ports, parameter_states (and params), execution of the function method
+                coordinates updating of input_ports, parameter_ports (and params), execution of the function method
                 implemented by the subclass, (by calling its _execute method), and updating of the OutputPorts
-            - one or more parameters, each of which must be (or resolve to) a reference to a ParameterState
+            - one or more parameters, each of which must be (or resolve to) a reference to a ParameterPort
                 these determine the operation of the function of the Mechanism subclass being instantiated
             - one or more OutputPorts:
                 the variable of each receives the corresponding item in the output of the Mechanism's function
@@ -1043,7 +1043,7 @@ class Mechanism_Base(Mechanism):
             - the number of input_ports must correspond to the length of the variable of the Mechanism's execute method
             - the value of each InputPort must be compatible with the corresponding item in the
                 variable of the Mechanism's execute method
-            - the value of each ParameterState must be compatible with the corresponding parameter of  the Mechanism's
+            - the value of each ParameterPort must be compatible with the corresponding parameter of  the Mechanism's
                  execute method
             - the number of OutputPorts must correspond to the length of the output of the Mechanism's execute method,
                 (self.defaults.value)
@@ -1133,12 +1133,12 @@ class Mechanism_Base(Mechanism):
         `target mechanism <LearningMechanism_Targets>` for additional details.
     COMMENT
 
-    parameter_states : ContentAddressableList[str, ParameterState]
-        a read-only list of the Mechanism's `ParameterStates <Mechanism_ParameterStates>`, one for each of its
-        `configurable parameters <ParameterState_Configurable_Parameters>`, including those of its `function
+    parameter_ports : ContentAddressableList[str, ParameterPort]
+        a read-only list of the Mechanism's `ParameterPorts <Mechanism_ParameterPorts>`, one for each of its
+        `configurable parameters <ParameterPort_Configurable_Parameters>`, including those of its `function
         <Mechanism_Base.function>`.  The value of the parameters of the Mechanism and its `function
         <Mechanism_Base.function>` are also accessible as (and can be modified using) attributes of the Mechanism
-        (see `Mechanism_ParameterStates`).
+        (see `Mechanism_ParameterPorts`).
 
     COMMENT:
        MOVE function and function_params (and add user_params) to Component docstring
@@ -1232,21 +1232,21 @@ class Mechanism_Base(Mechanism):
 
     states : ContentAddressableList
         a list of all of the Mechanism's `States <State>`, composed from its `input_ports
-        <Mechanism_Base.input_ports>`, `parameter_states <Mechanism_Base.parameter_states>`, and
+        <Mechanism_Base.input_ports>`, `parameter_ports <Mechanism_Base.parameter_ports>`, and
         `output_ports <Mechanism_Base.output_ports>` attributes.
 
     projections : ContentAddressableList
         a list of all of the Mechanism's `Projections <Projection>`, composed from the
         `path_afferents <InputPorts.path_afferents>` of all of its `input_ports <Mechanism_Base.input_ports>`,
         the `mod_afferents` of all of its `input_ports <Mechanism_Base.input_ports>`,
-        `parameter_states <Mechanism)Base.parameter_states>`, and `output_ports <Mechanism_Base.output_ports>`,
+        `parameter_ports <Mechanism)Base.parameter_ports>`, and `output_ports <Mechanism_Base.output_ports>`,
         and the `efferents <OutputPort.efferents>` of all of its `output_ports <Mechanism_Base.output_ports>`.
 
     afferents : ContentAddressableList
         a list of all of the Mechanism's afferent `Projections <Projection>`, composed from the
         `path_afferents <InputPorts.path_afferents>` of all of its `input_ports <Mechanism_Base.input_ports>`,
         and the `mod_afferents` of all of its `input_ports <Mechanism_Base.input_ports>`,
-        `parameter_states <Mechanism)Base.parameter_states>`, and `output_ports <Mechanism_Base.output_ports>`.,
+        `parameter_ports <Mechanism)Base.parameter_ports>`, and `output_ports <Mechanism_Base.output_ports>`.,
 
     path_afferents : ContentAddressableList
         a list of all of the Mechanism's afferent `PathwayProjections <PathwayProjection>`, composed from the
@@ -1255,8 +1255,8 @@ class Mechanism_Base(Mechanism):
 
     mod_afferents : ContentAddressableList
         a list of all of the Mechanism's afferent `ModulatoryProjections <ModulatoryProjection>`, composed from the
-        `mod_afferents` attributes of all of its `input_ports <Mechanism_Base.input_ports>`, `parameter_states
-        <Mechanism)Base.parameter_states>`, and `output_ports <Mechanism_Base.output_ports>`.
+        `mod_afferents` attributes of all of its `input_ports <Mechanism_Base.input_ports>`, `parameter_ports
+        <Mechanism)Base.parameter_ports>`, and `output_ports <Mechanism_Base.output_ports>`.
 
     efferents : ContentAddressableList
         a list of all of the Mechanism's efferent `Projections <Projection>`, composed from the `efferents
@@ -1301,7 +1301,7 @@ class Mechanism_Base(Mechanism):
         <LINK>` for details).
 
         .. _stateRegistry : Registry
-               registry containing dicts for each State type (InputPort, OutputPort and ParameterState) with instance
+               registry containing dicts for each State type (InputPort, OutputPort and ParameterPort) with instance
                dicts for the instances of each type and an instance count for each State type in the Mechanism.
                Note: registering instances of State types with the Mechanism (rather than in the StateRegistry)
                      allows the same name to be used for instances of a State type belonging to different Mechanisms
@@ -1349,7 +1349,7 @@ class Mechanism_Base(Mechanism):
     valueEncodingDim = 2
 
     stateListAttr = {InputPort:INPUT_PORTS,
-                     ParameterState:PARAMETER_STATES,
+                     ParameterPort:PARAMETER_PORTS,
                      OutputPort:OUTPUT_PORTS}
 
     # Category specific defaults:
@@ -1525,9 +1525,9 @@ class Mechanism_Base(Mechanism):
                           registry=self._stateRegistry,
                           context=context)
 
-        # ParameterState
-        from psyneulink.core.components.states.parameterstate import ParameterState
-        register_category(entry=ParameterState,
+        # ParameterPort
+        from psyneulink.core.components.states.parameterport import ParameterPort
+        register_category(entry=ParameterPort,
                           base_class=State_Base,
                           registry=self._stateRegistry,
                           context=context)
@@ -1862,7 +1862,7 @@ class Mechanism_Base(Mechanism):
                 specification dict for one, 2-item tuple, or numeric value(s)>;
                 if it is missing or not one of the above types, it is set to self.defaults.variable
             + FUNCTION_PARAMS:  <dict>, every entry of which must be one of the following:
-                ParameterState or Projection object or class, specification dict for one, 2-item tuple, or numeric
+                ParameterPort or Projection object or class, specification dict for one, 2-item tuple, or numeric
                 value(s);
                 if invalid, default (from paramInstanceDefaults or paramClassDefaults) is assigned
             + OUTPUT_PORTS:
@@ -1875,7 +1875,7 @@ class Mechanism_Base(Mechanism):
             + MONITORED_STATES:
                 ** DOCUMENT
 
-        Note: PARAMETER_STATES are validated separately -- ** DOCUMENT WHY
+        Note: PARAMETER_PORTS are validated separately -- ** DOCUMENT WHY
 
         TBI - Generalize to go through all params, reading from each its type (from a registry),
                                    and calling on corresponding subclass to get default values (if param not found)
@@ -1916,7 +1916,7 @@ class Mechanism_Base(Mechanism):
                                      format(FUNCTION_PARAMS, self.__class__.__name__))
             # Validate params
 
-            from psyneulink.core.components.states.parameterstate import ParameterState
+            from psyneulink.core.components.states.parameterport import ParameterPort
             for param_name, param_value in function_param_specs.items():
                 try:
                     self.defaults.value = self.paramInstanceDefaults[FUNCTION_PARAMS][param_name]
@@ -1924,15 +1924,15 @@ class Mechanism_Base(Mechanism):
                     raise MechanismError("{0} not recognized as a param of execute method for {1}".
                                          format(param_name, self.__class__.__name__))
                 if not ((isclass(param_value) and
-                             (issubclass(param_value, ParameterState) or
-                                  issubclass(param_value, Projection))) or
-                        isinstance(param_value, ParameterState) or
+                             (issubclass(param_value, ParameterPort) or
+                              issubclass(param_value, Projection))) or
+                        isinstance(param_value, ParameterPort) or
                         isinstance(param_value, Projection) or
                         isinstance(param_value, dict) or
                         iscompatible(param_value, self.defaults.value)):
                     params[FUNCTION_PARAMS][param_name] = self.defaults.value
                     if self.prefs.verbosePref:
-                        print("{0} param ({1}) for execute method {2} of {3} is not a ParameterState, "
+                        print("{0} param ({1}) for execute method {2} of {3} is not a ParameterPort, "
                               "projection, tuple, or value; default value ({4}) will be used".
                               format(param_name,
                                      param_value,
@@ -2028,7 +2028,7 @@ class Mechanism_Base(Mechanism):
     def _instantiate_attributes_before_function(self, function=None, context=None):
         self.parameters.previous_value._set(None, context)
         self._instantiate_input_ports(context=context)
-        self._instantiate_parameter_states(function=function, context=context)
+        self._instantiate_parameter_ports(function=function, context=context)
         super()._instantiate_attributes_before_function(function=function, context=context)
 
         # Assign attributes to be included in attributes_dict
@@ -2089,15 +2089,15 @@ class Mechanism_Base(Mechanism):
         self.function._instantiate_value(context)
 
     def _instantiate_attributes_after_function(self, context=None):
-        from psyneulink.core.components.states.parameterstate import _instantiate_parameter_state
+        from psyneulink.core.components.states.parameterport import _instantiate_parameter_port
 
         self._instantiate_output_ports(context=context)
         # instantiate parameter states from UDF custom parameters if necessary
         try:
             cfp = self.function.cust_fct_params
-            udf_parameters_lacking_states = {param_name: cfp[param_name] for param_name in cfp if param_name not in self.parameter_states.names}
+            udf_parameters_lacking_states = {param_name: cfp[param_name] for param_name in cfp if param_name not in self.parameter_ports.names}
 
-            _instantiate_parameter_state(self, FUNCTION_PARAMS, udf_parameters_lacking_states, context=context, function=self.function)
+            _instantiate_parameter_port(self, FUNCTION_PARAMS, udf_parameters_lacking_states, context=context, function=self.function)
             self._parse_param_state_sources()
         except AttributeError:
             pass
@@ -2116,15 +2116,15 @@ class Mechanism_Base(Mechanism):
                                          reference_value=reference_value,
                                          context=context)
 
-    def _instantiate_parameter_states(self, function=None, context=None):
-        """Call State._instantiate_parameter_states to instantiate a ParameterState for each parameter in user_params
+    def _instantiate_parameter_ports(self, function=None, context=None):
+        """Call State._instantiate_parameter_ports to instantiate a ParameterPort for each parameter in user_params
 
-        This is a stub, implemented to allow Mechanism subclasses to override _instantiate_parameter_states
-            or process InputPorts before and/or after call to _instantiate_parameter_states
+        This is a stub, implemented to allow Mechanism subclasses to override _instantiate_parameter_ports
+            or process InputPorts before and/or after call to _instantiate_parameter_ports
             :param function:
         """
-        from psyneulink.core.components.states.parameterstate import _instantiate_parameter_states
-        _instantiate_parameter_states(owner=self, function=function, context=context)
+        from psyneulink.core.components.states.parameterport import _instantiate_parameter_ports
+        _instantiate_parameter_ports(owner=self, function=function, context=context)
 
     def _instantiate_output_ports(self, context=None):
         """Call State._instantiate_output_ports to instantiate orderedDict of OutputPort(s)
@@ -2133,7 +2133,7 @@ class Mechanism_Base(Mechanism):
             or process InputPorts before and/or after call to _instantiate_output_ports
         """
         from psyneulink.core.components.states.outputport import _instantiate_output_ports
-        # self._update_parameter_states(context=context)
+        # self._update_parameter_ports(context=context)
         self._update_attribs_dicts(context=context)
         _instantiate_output_ports(owner=self, output_ports=self.output_ports, context=context)
 
@@ -2247,7 +2247,7 @@ class Mechanism_Base(Mechanism):
                                  "for {}'s default variable, try {}.defaults.variable."
                                  .format(self.name, self.name))
         try:
-            return self._parameter_states[param_name].parameters.value._get(context)
+            return self._parameter_ports[param_name].parameters.value._get(context)
         except (AttributeError, TypeError):
             return getattr(self.parameters, param_name)._get(context)
 
@@ -2269,14 +2269,14 @@ class Mechanism_Base(Mechanism):
                 + execute every self.input_port.path_afferents.[<Projection>.execute()...]
                 + combine results and/or gate state using self.input_port.function()
                 + assign the result in self.input_port.value
-            - Call every self.params[<ParameterState>].execute(); for each:
-                + execute self.params[<ParameterState>].mod_afferents.[<Projection>.execute()...]
+            - Call every self.params[<ParameterPort>].execute(); for each:
+                + execute self.params[<ParameterPort>].mod_afferents.[<Projection>.execute()...]
                     (usually this is just a single ControlProjection)
                 + combine results for each ModulationParam or assign value from an OVERRIDE specification
-                + assign the result to self.params[<ParameterState>].value
+                + assign the result to self.params[<ParameterPort>].value
             - Call subclass' self.execute(params):
                 - use self.input_port.value as its variable,
-                - use self.params[<ParameterState>].value for each param of subclass' self.function
+                - use self.params[<ParameterPort>].value for each param of subclass' self.function
                 - call self._update_output_ports() to assign the output to each self.output_ports[<OutputPort>].value
                 Note:
                 * if execution is occurring as part of initialization, each output_port is reset to 0
@@ -2399,7 +2399,7 @@ class Mechanism_Base(Mechanism):
         self.parameters.variable._set(variable, context=context)
 
         # UPDATE PARAMETER STATE(S)
-        self._update_parameter_states(context=context, runtime_params=runtime_params)
+        self._update_parameter_ports(context=context, runtime_params=runtime_params)
 
         # EXECUTE MECHNISM BY CALLING SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
@@ -2535,19 +2535,19 @@ class Mechanism_Base(Mechanism):
             state._update(context=context, params=runtime_params)
         return np.array(self.get_input_values(context))
 
-    def _update_parameter_states(self, context=None, runtime_params=None):
+    def _update_parameter_ports(self, context=None, runtime_params=None):
 
-        for state in self._parameter_states:
+        for state in self._parameter_ports:
             state._update(context=context, params=runtime_params)
         self._update_attribs_dicts(context=context)
 
-    def _get_parameter_state_deferred_init_control_specs(self):
+    def _get_parameter_port_deferred_init_control_specs(self):
         # FIX: 9/14/19 - THIS ASSUMES THAT ONLY CONTROLPROJECTIONS RELEVANT TO COMPOSITION ARE in DEFERRED INIT;
         #                BUT WHAT IF NODE SPECIFIED CONTROL BY AN EXISTING CONTROLMECHANISM NOT IN A COMPOSITION
         #                THAT WAS THEN ADDED;  COMPOSITION WOULD STILL NEED TO KNOW ABOUT IT TO ACTIVATE THE CTLPROJ
         ctl_specs = []
-        for parameter_state in self._parameter_states:
-            for proj in parameter_state.mod_afferents:
+        for parameter_port in self._parameter_ports:
+            for proj in parameter_port.mod_afferents:
                 if proj.initialization_status == ContextFlags.DEFERRED_INIT:
                     proj_control_signal_specs = proj.control_signal_params or {}
                     proj_control_signal_specs.update({PROJECTIONS: [proj]})
@@ -2556,7 +2556,7 @@ class Mechanism_Base(Mechanism):
 
     def _update_attribs_dicts(self, context):
         from psyneulink.core.globals.keywords import NOISE
-        for state in self._parameter_states:
+        for state in self._parameter_ports:
             if NOISE in state.name and self.initialization_status == ContextFlags.INITIALIZING:
                 continue
             if state.name in self.user_params:
@@ -2771,7 +2771,7 @@ class Mechanism_Base(Mechanism):
         builder.store(builder.load(f_params_in), f_params_out)
 
         # Filter out param states without corresponding params for this function
-        param_states = [p for p in self._parameter_states if p.name in func._get_param_ids()]
+        param_states = [p for p in self._parameter_ports if p.name in func._get_param_ids()]
 
         def _get_output_ptr(b, i):
             ptr = ctx.get_param_ptr(func, b, f_params_out, param_states[i].name)
@@ -2965,7 +2965,7 @@ class Mechanism_Base(Mechanism):
             <Mechanism.output_labels_dict>` (for OutputPort values), otherwise the value is used.
 
         show_headers : bool : default False
-            show the Mechanism, InputPort, ParameterState and OutputPort headers.
+            show the Mechanism, InputPort, ParameterPort and OutputPort headers.
 
             **composition** argument (if **composition** is not specified, show_roles is ignored).
 
@@ -3006,14 +3006,14 @@ class Mechanism_Base(Mechanism):
             </table></td>
         </tr>
 
-        <tr>                                                                      <- BEGIN MECHANISM & PARAMETERSTATES
+        <tr>                                                                      <- BEGIN MECHANISM & ParameterPortS
             <td port="Mech name"><b>Mech name</b><br/><i>Roles</i></td>           <- MECHANISM CELL (OUTERMOST TABLE)
-            <td><table border="0" cellborder="0" BGCOLOR="bisque">                <- PARAMETERSTATES OUTER TABLE
+            <td><table border="0" cellborder="0" BGCOLOR="bisque">                <- ParameterPortS OUTER TABLE
                 <tr>
-                    <td><b>ParameterStates</b></td>                               <- PARAMETERSTATES HEADER
+                    <td><b>ParameterPorts</b></td>                               <- ParameterPortS HEADER
                 </tr>
                 <tr>
-                    <td><table border="0" cellborder="1">                         <- PARAMETERSTATE CELLS TABLE
+                    <td><table border="0" cellborder="1">                         <- ParameterPort CELLS TABLE
                         <tr><td port="ParamPort1">Param 1<br/><i>function 1</i><br/><i>= value</i></td></tr>
                         <tr><td port="ParamPort1">Param 2<br/><i>function 2</i><br/><i>= value</i></td></tr>
                     </table></td>
@@ -3054,7 +3054,7 @@ class Mechanism_Base(Mechanism):
 
         # Header cell of outer State table:
         input_ports_header     = f'<tr><td colspan="1" valign="middle"><b><i>{InputPort.__name__}s</i></b></td></tr>'
-        parameter_states_header = f'<tr><td rowspan="1" valign="middle"><b><i>{ParameterState.__name__}s</i></b></td>'
+        parameter_ports_header = f'<tr><td rowspan="1" valign="middle"><b><i>{ParameterPort.__name__}s</i></b></td>'
         output_ports_header    = f'<tr><td colspan="1" valign="middle"><b><i>{OutputPort.__name__}s</i></b></td></tr>'
 
         # Inner State table (i.e., that contains individual states in each cell):
@@ -3113,20 +3113,20 @@ class Mechanism_Base(Mechanism):
             mech_value = ''
             if show_values:
                 mech_value = f'<br/>={self.value}'
-            # Mech cell should span full width if there are no ParameterStates
+            # Mech cell should span full width if there are no ParameterPorts
             cols = 1
-            if not len(self.parameter_states):
+            if not len(self.parameter_ports):
                 cols = 2
             return f'<td port="{self.name}" colspan="{cols}">' + \
                    mech_name + mech_roles + mech_condition + mech_function + mech_value + '</td>'
 
         @tc.typecheck
         def state_table(state_list:ContentAddressableList,
-                        state_type:tc.enum(InputPort, ParameterState, OutputPort)):
+                        state_type:tc.enum(InputPort, ParameterPort, OutputPort)):
             """Return html with table for each state in state_list, including functions and/or values as specified
 
             Each table has a header cell and and inner table with cells for each state in the list
-            InputPort and OutputPort cells are aligned horizontally;  ParameterState cells are aligned vertically.
+            InputPort and OutputPort cells are aligned horizontally;  ParameterPort cells are aligned vertically.
             Use show_functions, show_values and include_labels arguments from call to _show_structure()
             See _show_structure docstring for full template.
             """
@@ -3148,7 +3148,7 @@ class Mechanism_Base(Mechanism):
                     function = f'<br/><i>{state.function.__class__.__name__}({fct_params})</i>'
                 value=''
                 if include_value:
-                    if use_label and not isinstance(state, ParameterState):
+                    if use_label and not isinstance(state, ParameterPort):
                         value = f'<br/>={state.label}'
                     else:
                         value = f'<br/>={state.value}'
@@ -3166,10 +3166,10 @@ class Mechanism_Base(Mechanism):
                     table += state_cell(state, show_functions, show_values, use_labels)
                 table += '</tr></table></td></tr></table></td>'
 
-            # ParameterStates
-            elif state_type is ParameterState:
+            # ParameterPorts
+            elif state_type is ParameterPort:
                 if show_headers:
-                    states_header = parameter_states_header
+                    states_header = parameter_ports_header
                 else:
                     states_header = '<tr>'
                 table = f'<td> {outer_table_spec} {states_header} <td> {inner_table_spec}'
@@ -3198,11 +3198,11 @@ class Mechanism_Base(Mechanism):
         else:
             input_ports_table = ''
 
-        # Construct ParameterStates table
-        if len(self.parameter_states):
-            parameter_states_table = state_table(self.parameter_states, ParameterState)
+        # Construct ParameterPorts table
+        if len(self.parameter_ports):
+            parameter_ports_table = state_table(self.parameter_ports, ParameterPort)
         else:
-            parameter_states_table = ''
+            parameter_ports_table = ''
 
         # Construct OutputPorts table
         if len(self.output_ports) and (not compact_cim or self is not composition.output_CIM):
@@ -3214,7 +3214,7 @@ class Mechanism_Base(Mechanism):
         # Construct full table
         m_node_struct = '<' + node_table_spec + \
                         output_ports_table + \
-                        '<tr>' + mech_cell() + parameter_states_table + '</tr>' + \
+                        '<tr>' + mech_cell() + parameter_ports_table + '</tr>' + \
                         input_ports_table + \
                         '</table>>'
 
@@ -3242,13 +3242,13 @@ class Mechanism_Base(Mechanism):
     def _get_port_name(self, state:State):
         if isinstance(state, InputPort):
             state_type = InputPort.__name__
-        elif isinstance(state, ParameterState):
-            state_type = ParameterState.__name__
+        elif isinstance(state, ParameterPort):
+            state_type = ParameterPort.__name__
         elif isinstance(state, OutputPort):
             state_type = OutputPort.__name__
         else:
             assert False, f'Mechanism._get_port_name() must be called with an ' \
-                f'{InputPort.__name__}, {ParameterState.__name__} or {OutputPort.__name__}'
+                f'{InputPort.__name__}, {ParameterPort.__name__} or {OutputPort.__name__}'
         return state_type + '-' + state.name
 
     def plot(self, x_range=None):
@@ -3294,7 +3294,7 @@ class Mechanism_Base(Mechanism):
         add_states(states)
 
         Add one or more `States <State>` to the Mechanism.  Only `InputPorts <InputPort>` and `OutputPorts
-        <OutputPort>` can be added; `ParameterStates <ParameterState>` cannot be added to a Mechanism after it has
+        <OutputPort>` can be added; `ParameterPorts <ParameterPort>` cannot be added to a Mechanism after it has
         been constructed.
 
         If the `owner <State_Base.owner>` of a State specified in the **states** argument is not the same as the
@@ -3380,7 +3380,7 @@ class Mechanism_Base(Mechanism):
         remove_states(states)
 
         Remove one or more `States <State>` from the Mechanism.  Only `InputPorts <InputPort> and `OutputPorts
-        <OutputPort>` can be removed; `ParameterStates <ParameterState>` cannot be removed from a Mechanism.
+        <OutputPort>` can be removed; `ParameterPorts <ParameterPort>` cannot be removed from a Mechanism.
 
         Each Specified state must be owned by the Mechanism, otherwise the request is ignored.
 
@@ -3431,14 +3431,14 @@ class Mechanism_Base(Mechanism):
                 old_variable = np.delete(old_variable,index,0)
                 self.defaults.variable = old_variable
 
-            elif state in self.parameter_states:
-                if isinstance(state, ParameterState):
-                    index = self.parameter_states.index(state)
+            elif state in self.parameter_ports:
+                if isinstance(state, ParameterPort):
+                    index = self.parameter_ports.index(state)
                 else:
-                    index = self.parameter_states.index(self.parameter_states[state])
-                del self.parameter_states[index]
+                    index = self.parameter_ports.index(self.parameter_ports[state])
+                del self.parameter_ports[index]
                 remove_instance_from_registry(registry=self._stateRegistry,
-                                              category=PARAMETER_STATE,
+                                              category=PARAMETER_PORT,
                                               component=state)
 
             elif state in self.output_ports:
@@ -3463,7 +3463,7 @@ class Mechanism_Base(Mechanism):
 
     def _delete_mechanism(mechanism):
         mechanism.remove_states(mechanism.input_ports)
-        mechanism.remove_states(mechanism.parameter_states)
+        mechanism.remove_states(mechanism.parameter_ports)
         mechanism.remove_states(mechanism.output_ports)
         # del mechanism.function
         remove_instance_from_registry(MechanismRegistry, mechanism.__class__.__name__,
@@ -3472,12 +3472,12 @@ class Mechanism_Base(Mechanism):
 
 
     def _get_mechanism_param_values(self):
-        """Return dict with current value of each ParameterState in paramsCurrent
+        """Return dict with current value of each ParameterPort in paramsCurrent
         :return: (dict)
         """
-        from psyneulink.core.components.states.parameterstate import ParameterState
+        from psyneulink.core.components.states.parameterport import ParameterPort
         return dict((param, value.value) for param, value in self.paramsCurrent.items()
-                    if isinstance(value, ParameterState) )
+                    if isinstance(value, ParameterPort))
 
     def get_input_port_position(self, state):
         if state in self.input_ports:
@@ -3584,12 +3584,12 @@ class Mechanism_Base(Mechanism):
             return self.get_input_values(context)
 
     @property
-    def parameter_states(self):
-        return self._parameter_states
+    def parameter_ports(self):
+        return self._parameter_ports
 
-    @parameter_states.setter
-    def parameter_states(self, value):
-        # This keeps parameter_states property readonly,
+    @parameter_ports.setter
+    def parameter_ports(self, value):
+        # This keeps parameter_ports property readonly,
         #    but averts exception when setting paramsCurrent in Component (around line 850)
         pass
 
@@ -3625,7 +3625,7 @@ class Mechanism_Base(Mechanism):
         return ContentAddressableList(
                 component_type=State,
                 list=list(self.input_ports) +
-                     list(self.parameter_states) +
+                     list(self.parameter_ports) +
                      list(self.output_ports))
 
     @property
@@ -3642,8 +3642,8 @@ class Mechanism_Base(Mechanism):
         projs = []
         for input_port in self.input_ports:
             projs.extend(input_port.mod_afferents)
-        for parameter_state in self.parameter_states:
-            projs.extend(parameter_state.mod_afferents)
+        for parameter_port in self.parameter_ports:
+            projs.extend(parameter_port.mod_afferents)
         for output_port in self.output_ports:
             projs.extend(output_port.mod_afferents)
         return ContentAddressableList(component_type=Projection, list=projs)
@@ -3724,7 +3724,7 @@ class Mechanism_Base(Mechanism):
             super()._dependent_components,
             self.input_ports,
             self.output_ports,
-            self.parameter_states,
+            self.parameter_ports,
         ))
 
     @property
@@ -3735,7 +3735,7 @@ class Mechanism_Base(Mechanism):
             ]
         }
         inputs_dict[MODEL_SPEC_ID_INPUT_PORTS].extend(
-            [s._dict_summary for s in self.parameter_states]
+            [s._dict_summary for s in self.parameter_ports]
         )
 
         outputs_dict = {

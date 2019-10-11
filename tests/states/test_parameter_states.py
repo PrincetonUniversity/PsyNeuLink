@@ -5,7 +5,7 @@ from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 
-class TestParameterStates:
+class TestParameterPorts:
     def test_inspect_function_params_slope_noise(self):
         A = TransferMechanism()
         B = TransferMechanism()
@@ -63,10 +63,10 @@ class TestParameterStates:
         assert B.mod_noise == 0.6
 
     def test_direct_call_to_constructor_error(self):
-        from psyneulink.core.components.states.parameterstate import ParameterState, ParameterStateError
-        with pytest.raises(ParameterStateError) as error_text:
-            ParameterState(owner='SOMETHING')
-        assert "Contructor for ParameterState cannot be called directly(context: None" in str(error_text.value)
+        from psyneulink.core.components.states.parameterport import ParameterPort, ParameterPortError
+        with pytest.raises(ParameterPortError) as error_text:
+            ParameterPort(owner='SOMETHING')
+        assert "Contructor for ParameterPort cannot be called directly(context: None" in str(error_text.value)
 
 class TestConfigurableParameters:
     def test_configurable_params(self):
@@ -156,4 +156,4 @@ class TestModParams:
         T = TransferMechanism()
         with pytest.raises(ComponentError) as error_text:
             T.mod_slope = 20.0
-        assert "directly because it is computed by the ParameterState" in str(error_text.value)
+        assert "directly because it is computed by the ParameterPort" in str(error_text.value)

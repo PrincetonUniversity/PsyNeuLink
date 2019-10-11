@@ -382,7 +382,7 @@ conflict in the ``output`` Mechanism on each `trial <TimeScale.TRIAL>`, and use 
         print(f'\nEnd of trial {t}:')
         print(f'\t\t\t\tcolor  word')
         print(f'\ttask:\t\t{task.value[0]}')
-        print(f'\ttask gain:\t   {task.parameter_states[GAIN].value}')
+        print(f'\ttask gain:\t   {task.parameter_ports[GAIN].value}')
         print(f'\t\t\t\tred   green')
         print(f'\toutput:\t\t{output.value[0]}')
         print(f'\tdecision:\t{decision.value[0]}{decision.value[1]}')

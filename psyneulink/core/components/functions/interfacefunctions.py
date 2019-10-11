@@ -21,7 +21,7 @@ import typecheck as tc
 from psyneulink.core.components.functions.function import Function_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    FUNCTION_OUTPUT_TYPE_CONVERSION, PARAMETER_STATE_PARAMS, STATE_MAP_FUNCTION, TRANSFER_FUNCTION_TYPE, \
+    FUNCTION_OUTPUT_TYPE_CONVERSION, PARAMETER_PORT_PARAMS, STATE_MAP_FUNCTION, TRANSFER_FUNCTION_TYPE, \
     PREFERENCE_SET_NAME
 from psyneulink.core.globals.preferences.basepreferenceset import \
     PreferenceEntry, PreferenceLevel, is_pref_set, REPORT_OUTPUT_PREF
@@ -56,7 +56,7 @@ class InterfaceStateMap(InterfaceFunction):
         specifies a template for the value to be transformed.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -98,7 +98,7 @@ class InterfaceStateMap(InterfaceFunction):
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         FUNCTION_OUTPUT_TYPE_CONVERSION: True,
-        PARAMETER_STATE_PARAMS: None
+        PARAMETER_PORT_PARAMS: None
     })
 
     @tc.typecheck
@@ -143,7 +143,7 @@ class InterfaceStateMap(InterfaceFunction):
             the InputPort on the owner CompositionInterfaceMechanism to which this OutputPort corresponds
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 

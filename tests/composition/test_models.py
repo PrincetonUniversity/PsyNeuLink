@@ -851,8 +851,8 @@ class TestModels:
 
         # KDM 8/23/18: below must be added because these were expected to be changed with the above matrix setting, but this has appeared
         # to be incorrect behavior, and the reason for doing it is unknown
-        color_input_weights.parameter_states['matrix'].function.parameters.previous_value.set(color_input_weights.matrix, PCTC, override=True)
-        word_input_weights.parameter_states['matrix'].function.parameters.previous_value.set(word_input_weights.matrix, PCTC, override=True)
+        color_input_weights.parameter_ports['matrix'].function.parameters.previous_value.set(color_input_weights.matrix, PCTC, override=True)
+        word_input_weights.parameter_ports['matrix'].function.parameters.previous_value.set(word_input_weights.matrix, PCTC, override=True)
 
         results_2 = PCTC.run(inputs=congruent_input,
                              termination_processing=terminate_trial)  # run system with congruent stimulus input until

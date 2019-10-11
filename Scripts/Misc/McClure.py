@@ -126,7 +126,7 @@ LC_NE = pnl.LCControlMechanism(objective_mechanism=pnl.ObjectiveMechanism(monito
 
 updateC = pnl.ControlMechanism(objective_mechanism=pnl.ObjectiveMechanism(
     monitor_for_control=[action_selection.output_ports[1], conflicts.output_port]),
-    control_signals=[LC_NE.parameter_states[35]],
+    control_signals=[LC_NE.parameter_ports[35]],
     name='C Update')
 
 update_process = pnl.Process(pathway=[LC_NE],
@@ -194,7 +194,7 @@ def show_weights(system):
             action_selection.output_port.parameters.value.get(system)[np.nonzero(action_selection.output_port.parameters.value.get(system))][0],
             rrate.append(action_selection.output_ports[1].parameters.value.get(system)),
             conflictK.append(action_selection.output_ports[2].parameters.value.get(system)),
-            coherence.append(LC_NE.parameter_states[35].parameters.value.get(system)),
+            coherence.append(LC_NE.parameter_ports[35].parameters.value.get(system)),
             update.append(updateC.output_port.parameters.value.get(system)),
             cons.append(conflicts.output_port.parameters.value.get(system))
                 )

@@ -407,7 +407,7 @@ from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, NAME, \
-    OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMETER_STATES, PARAMS
+    OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMETER_PORTS, PARAMS
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -518,7 +518,7 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism_Function>` for additional details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for the
         OptimizationControlMechanism, its `function <OptimizationControlMechanism.function>`, and/or a custom function
         and its parameters.  Values specified for parameters in the dictionary override any assigned to those
         parameters in arguments of the constructor.
@@ -708,7 +708,7 @@ class OptimizationControlMechanism(ControlMechanism):
         control_allocation_search_space = None
 
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
-    paramClassDefaults.update({PARAMETER_STATES: NotImplemented}) # This suppresses parameterStates
+    paramClassDefaults.update({PARAMETER_PORTS: NotImplemented}) # This suppresses parameterPorts
 
 
     @tc.typecheck

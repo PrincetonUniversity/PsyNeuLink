@@ -92,7 +92,7 @@ from psyneulink.core.components.functions.learningfunctions import Hebbian
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism, LearningTiming, LearningType
 from psyneulink.core.components.projections.projection import Projection_Base, projection_keywords
-from psyneulink.core.components.states.parameterstate import ParameterState
+from psyneulink.core.components.states.parameterport import ParameterPort
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     ADDITIVE, CONTROL_PROJECTIONS, INPUT_PORTS, KOHONEN_LEARNING_MECHANISM, \
@@ -152,7 +152,7 @@ class KohonenLearningMechanism(LearningMechanism):
         with the `value <InputPort.value>` of the Mechanism's `InputPort <LearningMechanism_InputPorts>` (see
         `variable <KohonenLearningMechanism.variable>` for additional details).
 
-    learning_signals : List[parameter of Projection, ParameterState, Projection, tuple[str, Projection] or dict] \
+    learning_signals : List[parameter of Projection, ParameterPort, Projection, tuple[str, Projection] or dict] \
     : default None
         specifies the `matrix <AutoAssociativeProjection.matrix>` to be learned (see `learning_signals
         <LearningMechanism.learning_signals>` for details of specification).
@@ -172,7 +172,7 @@ class KohonenLearningMechanism(LearningMechanism):
         <KohonenLearningMechanism.learning_rate>` for details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default `function <LearningProjection.function>` and parameter assignments.  Values specified
         for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
@@ -239,7 +239,7 @@ class KohonenLearningMechanism(LearningMechanism):
 
     learning_signals : List[LearningSignal]
         list of all of the `LearningSignals <LearningSignal>` for the KohonenLearningMechanism, each of which
-        sends one or more `LearningProjections <LearningProjection>` to the `ParameterState(s) <ParameterState>` for
+        sends one or more `LearningProjections <LearningProjection>` to the `ParameterPort(s) <ParameterPort>` for
         the `matrix <MappingProjection.matrix>` parameter of the `MappingProjection(s)
         <MappingProjection>` trained by the KohonenLearningMechanism.  Although in most instances a
         KohonenLearningMechanism is used to train a single MappingProjection, like a standard
@@ -351,7 +351,7 @@ class KohonenLearningMechanism(LearningMechanism):
     def __init__(self,
                  default_variable:tc.any(list, np.ndarray),
                  size=None,
-                 matrix:tc.optional(ParameterState)=None,
+                 matrix:tc.optional(ParameterPort)=None,
                  function:is_function_type=Hebbian,
                  learning_signals:tc.optional(list) = None,
                  modulation:tc.optional(str)=ADDITIVE,

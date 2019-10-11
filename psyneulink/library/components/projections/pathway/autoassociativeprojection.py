@@ -186,7 +186,7 @@ class AutoAssociativeProjection(MappingProjection):
         the value of the `sender <AutoAssociativeProjection.sender>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
         the Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default assignment (`LinearCombination`).  Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
@@ -228,8 +228,8 @@ class AutoAssociativeProjection(MappingProjection):
         hetero is a single number, it means the off-diagonal terms are all the same.
 
     has_learning_projection : bool : None
-        identifies the `LearningProjection` assigned to the AutoAssociativeProjection's `MATRIX` `ParameterState
-        <ParameterState>`.
+        identifies the `LearningProjection` assigned to the AutoAssociativeProjection's `MATRIX` `ParameterPort
+        <ParameterPort>`.
 
     value : np.ndarray
         Output of AutoAssociativeProjection, transmitted to `variable <InputPort.variable>` of `receiver`.
@@ -341,9 +341,9 @@ class AutoAssociativeProjection(MappingProjection):
     #             raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputPort: currently"
     #                                        " the sender is {}".
     #                                        format(self.__class__.__name__, self.name, self.sender))
-    #     if AUTO in owner_mech._parameter_states and HETERO in owner_mech._parameter_states:
-    #         owner_mech._parameter_states[AUTO].update(context=context, params=runtime_params, time_scale=time_scale)
-    #         owner_mech._parameter_states[HETERO].update(context=context, params=runtime_params, time_scale=time_scale)
+    #     if AUTO in owner_mech._parameter_ports and HETERO in owner_mech._parameter_ports:
+    #         owner_mech._parameter_ports[AUTO].update(context=context, params=runtime_params, time_scale=time_scale)
+    #         owner_mech._parameter_ports[HETERO].update(context=context, params=runtime_params, time_scale=time_scale)
     #
 
     # END OF COMMENTED OUT BY KAM 1/9/2018
@@ -354,14 +354,14 @@ class AutoAssociativeProjection(MappingProjection):
         # this is commented out because this may in fact be the desired behavior.
         # Two possible solutions: allow control to be done on projections, or build a more general way to allow
         # projections to read parameters from mechanisms.
-    # def _update_parameter_states(self, runtime_params=None, context=None):
+    # def _update_parameter_ports(self, runtime_params=None, context=None):
     #     """Update this projection's owner mechanism's `auto` and `hetero` parameter states as well! The owner mechanism
     #     should be a RecurrentTransferMechanism, which DOES NOT update its own `auto` and `hetero` parameter states during
-    #     its _update_parameter_states function (so that the ParameterState is not redundantly updated).
+    #     its _update_parameter_ports function (so that the ParameterPort is not redundantly updated).
     #     Thus, if you want to have an AutoAssociativeProjection on a mechanism that's not a RecurrentTransferMechanism,
     #     your mechanism must similarly exclude `auto` and `hetero` from updating.
     #     """
-    #     super()._update_parameter_states(runtime_params, context)
+    #     super()._update_parameter_ports(runtime_params, context)
     #
     #     if isinstance(self.sender, OutputPort):
     #         owner_mech = self.sender.owner
@@ -372,13 +372,13 @@ class AutoAssociativeProjection(MappingProjection):
     #                                    " sender is {}".
     #                                    format(self.__class__.__name__, self.name, self.sender))
     #
-    #     if AUTO in owner_mech._parameter_states and HETERO in owner_mech._parameter_states:
-    #         owner_mech._parameter_states[AUTO].update(context=context, params=runtime_params)
-    #         owner_mech._parameter_states[HETERO].update(context=context, params=runtime_params)
+    #     if AUTO in owner_mech._parameter_ports and HETERO in owner_mech._parameter_ports:
+    #         owner_mech._parameter_ports[AUTO].update(context=context, params=runtime_params)
+    #         owner_mech._parameter_ports[HETERO].update(context=context, params=runtime_params)
     #     else:
-    #         raise AutoAssociativeError("Auto or Hetero ParameterState not found in {0} \"{1}\"; here are names of the "
-    #                                    "current ParameterStates for {1}: {2}".format(owner_mech.__class__.__name__,
-    #                                    owner_mech.name, owner_mech._parameter_states.key_values))
+    #         raise AutoAssociativeError("Auto or Hetero ParameterPort not found in {0} \"{1}\"; here are names of the "
+    #                                    "current ParameterPorts for {1}: {2}".format(owner_mech.__class__.__name__,
+    #                                    owner_mech.name, owner_mech._parameter_ports.key_values))
 
     @property
     def owner_mech(self):

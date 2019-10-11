@@ -198,7 +198,7 @@ from psyneulink.core.components.projections.modulatory.learningprojection import
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.states.inputport import InputPort
 from psyneulink.core.components.states.outputport import PRIMARY, StandardOutputPorts
-from psyneulink.core.components.states.parameterstate import ParameterState
+from psyneulink.core.components.states.parameterport import ParameterPort
 from psyneulink.core.components.states.state import _instantiate_state
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_PORT, MATRIX, MAX_ABS_DIFF, NAME, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT
@@ -312,7 +312,7 @@ def _recurrent_transfer_mechanism_matrix_setter(value, owning_component=None, co
     # KDM 8/7/18: removing the below because it has bad side effects for _instantiate_from_context, and it's not clear
     # that it's the correct behavior. Similar reason for removing/not implementing auto/hetero setters
     # if hasattr(owning_component, "recurrent_projection"):
-    #     owning_component.recurrent_projection.parameter_states["matrix"].function.parameters.previous_value._set(value, base_execution_id)
+    #     owning_component.recurrent_projection.parameter_ports["matrix"].function.parameters.previous_value._set(value, base_execution_id)
 
     try:
         value = get_matrix(value, owning_component.recurrent_size, owning_component.recurrent_size)
@@ -558,7 +558,7 @@ class RecurrentTransferMechanism(TransferMechanism):
        See `learning_condition <RecurrentTransferMechanism.learning_condition>` for additional details.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
         the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
 
@@ -1123,7 +1123,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         """using the `matrix` argument the user passed in (which is now stored in function_params), instantiate
-        ParameterStates for auto and hetero if they haven't already been instantiated. This is useful if auto and
+        ParameterPorts for auto and hetero if they haven't already been instantiated. This is useful if auto and
         hetero were None in the initialization call.
         :param function:
         """
@@ -1131,7 +1131,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
-        param_keys = self._parameter_states.key_values
+        param_keys = self._parameter_ports.key_values
 
         matrix = get_matrix(self.defaults.matrix, rows=self.recurrent_size, cols=self.recurrent_size)
 
@@ -1176,7 +1176,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         if AUTO not in param_keys and HETERO in param_keys:
             d = np.diagonal(matrix).copy()
             state = _instantiate_state(owner=self,
-                                       state_type=ParameterState,
+                                       state_type=ParameterPort,
                                        name=AUTO,
                                        reference_value=d,
                                        reference_value_name=AUTO,
@@ -1184,10 +1184,10 @@ class RecurrentTransferMechanism(TransferMechanism):
                                        context=context)
             self._auto = d
             if state is not None:
-                self._parameter_states[AUTO] = state
+                self._parameter_ports[AUTO] = state
                 state.source = self
             else:
-                raise RecurrentTransferError("Failed to create ParameterState for `auto` attribute for {} \"{}\"".
+                raise RecurrentTransferError("Failed to create ParameterPort for `auto` attribute for {} \"{}\"".
                                            format(self.__class__.__name__, self.name))
         if HETERO not in param_keys and AUTO in param_keys:
 
@@ -1195,17 +1195,17 @@ class RecurrentTransferMechanism(TransferMechanism):
             np.fill_diagonal(m, 0.0)
             self._hetero = m
             state = _instantiate_state(owner=self,
-                                       state_type=ParameterState,
+                                       state_type=ParameterPort,
                                        name=HETERO,
                                        reference_value=m,
                                        reference_value_name=HETERO,
                                        params=None,
                                        context=context)
             if state is not None:
-                self._parameter_states[HETERO] = state
+                self._parameter_ports[HETERO] = state
                 state.source = self
             else:
-                raise RecurrentTransferError("Failed to create ParameterState for `hetero` attribute for {} \"{}\"".
+                raise RecurrentTransferError("Failed to create ParameterPort for `hetero` attribute for {} \"{}\"".
                                            format(self.__class__.__name__, self.name))
 
         if self.has_recurrent_input_port:
@@ -1292,7 +1292,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             energy = Stability(self.defaults.variable[0],
                                metric=ENERGY,
                                transfer_fct=self.function,
-                               matrix=self.recurrent_projection._parameter_states[MATRIX])
+                               matrix=self.recurrent_projection._parameter_ports[MATRIX])
             self.output_ports[ENERGY]._calculate = energy.function
 
         if ENTROPY in self.output_ports.names:
@@ -1300,16 +1300,16 @@ class RecurrentTransferMechanism(TransferMechanism):
                 entropy = Stability(self.defaults.variable[0],
                                     metric=ENTROPY,
                                     transfer_fct=self.function,
-                                    matrix=self.recurrent_projection._parameter_states[MATRIX])
+                                    matrix=self.recurrent_projection._parameter_ports[MATRIX])
                 self.output_ports[ENTROPY]._calculate = entropy.function
             else:
                 del self.output_ports[ENTROPY]
 
-    def _update_parameter_states(self, context=None, runtime_params=None):
-        for state in self._parameter_states:
+    def _update_parameter_ports(self, context=None, runtime_params=None):
+        for state in self._parameter_ports:
             # (8/2/17 CW) because the auto and hetero params are solely used by the AutoAssociativeProjection
             # (the RecurrentTransferMechanism doesn't use them), the auto and hetero param states are updated in the
-            # projection's _update_parameter_states, and accordingly are not updated here
+            # projection's _update_parameter_ports, and accordingly are not updated here
             if state.name != AUTO and state.name != HETERO:
                 state._update(context=context, params=runtime_params)
 
@@ -1331,12 +1331,12 @@ class RecurrentTransferMechanism(TransferMechanism):
         # unexpected values to be set to previous_value
         # KDM 7/1/19: reinstating below
         if hasattr(self, "recurrent_projection"):
-            self.recurrent_projection.parameter_states["matrix"].function.previous_value = val
+            self.recurrent_projection.parameter_ports["matrix"].function.previous_value = val
 
         self.parameters.matrix._set(val, self.most_recent_context)
 
-        if hasattr(self, '_parameter_states') and 'matrix' in self._parameter_states:
-            param_state = self._parameter_states['matrix']
+        if hasattr(self, '_parameter_ports') and 'matrix' in self._parameter_ports:
+            param_state = self._parameter_ports['matrix']
 
             if hasattr(param_state.function, 'initializer'):
                 param_state.function.reinitialize = val
@@ -1349,8 +1349,8 @@ class RecurrentTransferMechanism(TransferMechanism):
     def auto(self, val):
         self.parameters.auto._set(val, self.most_recent_context)
 
-        if hasattr(self, "recurrent_projection") and 'hetero' in self._parameter_states:
-            self.recurrent_projection.parameter_states["matrix"].function.previous_value = self.matrix
+        if hasattr(self, "recurrent_projection") and 'hetero' in self._parameter_ports:
+            self.recurrent_projection.parameter_ports["matrix"].function.previous_value = self.matrix
 
 
     @property
@@ -1361,8 +1361,8 @@ class RecurrentTransferMechanism(TransferMechanism):
     def hetero(self, val):
         self.parameters.hetero._set(val, self.most_recent_context)
 
-        if hasattr(self, "recurrent_projection") and 'auto' in self._parameter_states:
-            self.recurrent_projection.parameter_states["matrix"].function.previous_value = self.matrix_param
+        if hasattr(self, "recurrent_projection") and 'auto' in self._parameter_ports:
+            self.recurrent_projection.parameter_ports["matrix"].function.previous_value = self.matrix_param
 
     @property
     def learning_enabled(self):
@@ -1454,7 +1454,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         self.aux_components.append(mproj)
         # Instantiate Projection from LearningMechanism to Mechanism's AutoAssociativeProjection
         lproj = LearningProjection(sender=learning_mechanism.output_ports[LEARNING_SIGNAL],
-                           receiver=matrix.parameter_states[MATRIX],
+                           receiver=matrix.parameter_ports[MATRIX],
                            name="{} for {}".format(LearningProjection.className, self.recurrent_projection.name))
         lproj._activate_for_all_compositions()
         self.aux_components.append((lproj, True))

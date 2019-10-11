@@ -190,7 +190,7 @@ mySystem.controller.prediction_mechanisms.mechanisms[2].function.rate = 1.0
 #     if 'Reward' in mech.name:
 #         # print(mech.name)
 #         mech.function.rate = 1.0
-#         # mySystem.controller.prediction_mechanisms[mech].parameterStates['rate'].base_value = 1.0
+#         # mySystem.controller.prediction_mechanisms[mech].parameterPorts['rate'].base_value = 1.0
 #
 
 

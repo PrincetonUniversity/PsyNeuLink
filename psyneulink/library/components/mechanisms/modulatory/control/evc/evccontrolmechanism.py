@@ -176,12 +176,12 @@ EVCControlMechanism's constructor, which can be specified using any of the follo
     is created for each prediction mechanism, with a number of InputPorts and OutputPorts equal to the number of
     InputPorts of the `ORIGIN` Mechanism to which it corresponds.
   ..
-  * **dict** -- a `parameter specification dictionary <ParameterState_Specification>` specifying the parameters to be
+  * **dict** -- a `parameter specification dictionary <ParameterPort_Specification>` specifying the parameters to be
     assigned to all prediction mechanisms, all of which are instances of a `PredictionMechanism` (thus, the parameters
     specified must be appropriate for a PredictionMechanism).
   ..
   * **2-item tuple:** *(Mechanism subclass, dict)* -- the Mechanism subclass, and parameters specified in
-    the `parameter specification dictionary <ParameterState_Specification>`, are used for all prediction mechanisms.
+    the `parameter specification dictionary <ParameterPort_Specification>`, are used for all prediction mechanisms.
   ..
   * **list** -- its length must equal the number of `ORIGIN` Mechanisms in the EVCControlMechanism's `system
     <EVCControlMechanism.system>` each item must be a Mechanism, a subclass of one, or a 2-item tuple (see above),
@@ -289,12 +289,12 @@ function (see note below).
 The OutputPorts of an EVCControlMechanism (like any `ControlMechanism`) are a set of `ControlSignals
 <ControlSignal>`, that are listed in its `control_signals <EVCControlMechanism.control_signals>` attribute (as well as
 its `output_ports <ControlMechanism.output_ports>` attribute).  Each ControlSignal is assigned a  `ControlProjection`
-that projects to the `ParameterState` for a parameter controlled by the EVCControlMechanism.  Each ControlSignal is
+that projects to the `ParameterPort` for a parameter controlled by the EVCControlMechanism.  Each ControlSignal is
 assigned an item of the EVCControlMechanism's `control_allocation`, that determines its `allocation
 <ControlSignal.allocation>` for a given `TRIAL` of execution.  The `allocation <ControlSignal.allocation>` is used by
 a ControlSignal to determine its `intensity <ControlSignal.intensity>`, which is then assigned as the `value
 <ControlProjection.value>` of the ControlSignal's ControlProjection.   The `value <ControlProjection>` of the
-ControlProjection is used by the `ParameterState` to which it projects to modify the value of the parameter (see
+ControlProjection is used by the `ParameterPort` to which it projects to modify the value of the parameter (see
 `ControlSignal_Modulation` for description of how a ControlSignal modulates the value of a parameter it controls).
 A ControlSignal also calculates a `cost <ControlSignal.cost>`, based on its `intensity <ControlSignal.intensity>`
 and/or its time course. The `cost <ControlSignal.cost>` is included in the evaluation that the EVCControlMechanism
@@ -388,11 +388,11 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.components.shellclasses import Function, System_Base
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.states.outputport import OutputPort
-from psyneulink.core.components.states.parameterstate import ParameterState
+from psyneulink.core.components.states.parameterport import ParameterPort
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM, INIT_FUNCTION_METHOD_ONLY, \
-    MULTIPLICATIVE, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM
+    MULTIPLICATIVE, PARAMETER_PORTS, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -456,7 +456,7 @@ class EVCControlMechanism(ControlMechanism):
         ControlProjection Specification:
         #    - wherever a ControlProjection is specified, using kwEVC instead of CONTROL_PROJECTION
         #     this should override the default sender SYSTEM_DEFAULT_CONTROLLER in ControlProjection._instantiate_sender
-        #    ? expclitly, in call to "EVC.monitor(input_port, parameter_state=NotImplemented) method
+        #    ? expclitly, in call to "EVC.monitor(input_port, parameter_port=NotImplemented) method
 
         # - specification of function: default is default allocation policy (BADGER/GUMBY)
         #   constraint:  if specified, number of items in variable must match number of input_ports in INPUT_PORTS
@@ -494,15 +494,15 @@ class EVCControlMechanism(ControlMechanism):
     default PredictionMechanism
         the `Mechanism(s) <Mechanism>` or class(es) of Mechanisms  used for `prediction Mechanism(s)
         <EVCControlMechanism_Prediction_Mechanisms>` and, optionally, their parameters (specified in a `parameter
-        specification dictionary <ParameterState_Specification>`);  see `EVCControlMechanism_Prediction_Mechanisms`
+        specification dictionary <ParameterPort_Specification>`);  see `EVCControlMechanism_Prediction_Mechanisms`
         for details.
 
         COMMENT:
         the `Mechanism(s) <Mechanism>` or class(es) of Mechanisms  used for `prediction Mechanism(s)
         <EVCControlMechanism_Prediction_Mechanisms>`.  If a class, dict, or tuple is specified, it is used as the
         specification for all prediction Mechanisms.  A dict specified on its own is assumed to be a `parameter
-        specification dictionary <ParameterState_Specification>` for a `PredictionMechanism`; a dict specified
-        in a tuple must be a `parameter specification dictionary <ParameterState_Specification>` appropriate for the
+        specification dictionary <ParameterPort_Specification>` for a `PredictionMechanism`; a dict specified
+        in a tuple must be a `parameter specification dictionary <ParameterPort_Specification>` appropriate for the
         type of Mechanism specified as the first item of the tuple.  If a list is specified, its length must equal
         the number of `ORIGIN` Mechanisms in the System for which the EVCControlMechanism is the `controller
         <System.controller>`;  each item must be a Mechanism, subclass of one, or a tuple specifying a subclass and
@@ -542,7 +542,7 @@ class EVCControlMechanism(ControlMechanism):
         (see `ControlSignal_Specification` for details of specification).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for the
         Mechanism, its `function <EVCControlMechanism.function>`, and/or a custom function and its parameters.  Values
         specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
@@ -664,7 +664,7 @@ class EVCControlMechanism(ControlMechanism):
         <EVCControlMechanism_ControlSignals>`.  The `weights <LinearCombination.weights>` and/or `exponents
         <LinearCombination.exponents>` parameters of the function can be used, respectively, to scale and/or
         exponentiate the contribution of each ControlSignal cost to the combined cost.  These must be specified as
-        1d arrays in a *WEIGHTS* and/or *EXPONENTS* entry of a `parameter dictionary <ParameterState_Specification>`
+        1d arrays in a *WEIGHTS* and/or *EXPONENTS* entry of a `parameter dictionary <ParameterPort_Specification>`
         assigned to the **params** argument of the constructor of a `LinearCombination` function; the length of
         each array must equal the number of (and the values listed in the same order as) the ControlSignals in the
         EVCControlMechanism's `control_signals <EVCControlMechanism.control_signals>` attribute. The default function
@@ -726,7 +726,7 @@ class EVCControlMechanism(ControlMechanism):
     control_signals : ContentAddressableList[ControlSignal]
         list of the EVCControlMechanism's `ControlSignals <EVCControlMechanism_ControlSignals>`, including any that it
         inherited from its `system <EVCControlMechanism.system>` (same as the EVCControlMechanism's `output_ports
-        <Mechanism_Base.output_ports>` attribute); each sends a `ControlProjection` to the `ParameterState` for the
+        <Mechanism_Base.output_ports>` attribute); each sends a `ControlProjection` to the `ParameterPort` for the
         parameter it controls
 
     name : str
@@ -861,7 +861,7 @@ class EVCControlMechanism(ControlMechanism):
 
     # from Components.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
-    paramClassDefaults.update({PARAMETER_STATES: NotImplemented}) # This suppresses parameterStates
+    paramClassDefaults.update({PARAMETER_PORTS: NotImplemented}) # This suppresses parameterPorts
 
     @tc.typecheck
     def __init__(self,
@@ -876,7 +876,7 @@ class EVCControlMechanism(ControlMechanism):
                  cost_function=LinearCombination(operation=SUM),
                  combine_outcome_and_cost_function=LinearCombination(operation=SUM),
                  save_all_values_and_policies:bool=False,
-                 control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
+                 control_signals:tc.optional(tc.any(is_iterable, ParameterPort, ControlSignal))=None,
                  modulation:tc.optional(str)=MULTIPLICATIVE,
                  params=None,
                  name=None,

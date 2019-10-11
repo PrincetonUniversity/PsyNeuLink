@@ -197,12 +197,12 @@ class GatingProjection(ModulatoryProjection_Base):
        before combining it with others (see `exponent <GatingProjection.exponent>` for additional details).
 
     gating_signal_params : Dict[param keyword: param value]
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for the
         GatingProjection's `sender <ControlProjection.sender>` (see `GatingSignal_Structure` for a description
         of GatingSignal parameters).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
         the GatingProjection, its `function <GatingProjection.function>`, and/or a custom function and its parameters.
         Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.

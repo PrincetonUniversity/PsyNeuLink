@@ -8,8 +8,8 @@ def test_state_docs():
     pass
 
 
-def test_parameter_state_docs():
-    fail, total = doctest.testmod(pnl.core.components.states.parameterstate, globs={})
+def test_parameter_port_docs():
+    fail, total = doctest.testmod(pnl.core.components.states.parameterport, globs={})
 
     if fail > 0:
         pytest.fail("{} out of {} examples failed".format(fail, total),

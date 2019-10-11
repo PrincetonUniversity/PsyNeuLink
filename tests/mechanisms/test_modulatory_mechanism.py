@@ -19,7 +19,7 @@ class TestControlMechanism:
     #     from pprint import pprint
     #     pprint(S.execution_graph)
     #
-    #     assert Tz.parameter_states[SLOPE].mod_afferents[0].sender.owner == C
+    #     assert Tz.parameter_ports[SLOPE].mod_afferents[0].sender.owner == C
     #     result = S.run(inputs={Tx:[1,1], Ty:[4,4]})
     #     assert result == [[[4.], [4.]], [[4.], [4.]]]
 
@@ -34,8 +34,8 @@ class TestControlMechanism:
     #             ]
     #     )
     #     assert  c.output_ports.names == ['CS1', 'GS', 'CS2']
-    #     assert m.parameter_states['gain'].mod_afferents[0].sender.owner == c
-    #     assert m.parameter_states['bias'].mod_afferents[0].sender.owner == c
+    #     assert m.parameter_ports['gain'].mod_afferents[0].sender.owner == c
+    #     assert m.parameter_ports['bias'].mod_afferents[0].sender.owner == c
     #     assert m.input_port.mod_afferents[0].sender.owner == c
 
 
@@ -54,6 +54,6 @@ class TestControlMechanism:
         comp.add_node(Ty, required_roles=NodeRole.TERMINAL)
         comp.add_controller(C)
 
-        assert Tz.parameter_states[SLOPE].mod_afferents[0].sender.owner == C
+        assert Tz.parameter_ports[SLOPE].mod_afferents[0].sender.owner == C
         assert np.allclose(comp.results,[[[1.], [4.]], [[4.], [4.]]])
 

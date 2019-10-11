@@ -238,9 +238,9 @@ def main():
 
             # print('Variance Params:')
             # print('\tPlayer:\t\t{}\n\tPredator\t{}\n\tPrey:\t\t{}'.
-            #       format(player_percept.parameter_states[VARIANCE].parameters.value.get(context),
-            #              predator_percept.parameter_states[VARIANCE].parameters.value.get(context),
-            #              prey_percept.parameter_states[VARIANCE].parameters.value.get(context)))
+            #       format(player_percept.parameter_ports[VARIANCE].parameters.value.get(context),
+            #              predator_percept.parameter_ports[VARIANCE].parameters.value.get(context),
+            #              prey_percept.parameter_ports[VARIANCE].parameters.value.get(context)))
 
             print('OCM ControlSignals:')
             print('\tPlayer:\t\t{}\n\tPredator\t{}\n\tPrey:\t\t{}'.
@@ -254,23 +254,23 @@ def main():
                          ocm.control_signals[1].parameters.cost.get(context),
                          ocm.control_signals[2].parameters.cost.get(context)))
 
-            # print('Control Projection Senders\' Values (<percept>.parameter_states[VARIANCE].mod_afferents[0].sender.value):')
+            # print('Control Projection Senders\' Values (<percept>.parameter_ports[VARIANCE].mod_afferents[0].sender.value):')
             # print('\tPlayer:\t\t{}\n\tPredator\t{}\n\tPrey:\t\t{}'.
-            #       format(player_percept.parameter_states[VARIANCE].mod_afferents[0].sender.parameters.value.get(context),
-            #              predator_percept.parameter_states[VARIANCE].mod_afferents[0].sender.parameters.value.get(context),
-            #              prey_percept.parameter_states[VARIANCE].mod_afferents[0].sender.parameters.value.get(context)))
+            #       format(player_percept.parameter_ports[VARIANCE].mod_afferents[0].sender.parameters.value.get(context),
+            #              predator_percept.parameter_ports[VARIANCE].mod_afferents[0].sender.parameters.value.get(context),
+            #              prey_percept.parameter_ports[VARIANCE].mod_afferents[0].sender.parameters.value.get(context)))
             #
-            # print('Control Projection Variables (<percept>.parameter_states[VARIANCE].mod_afferents[0].variable)):')
+            # print('Control Projection Variables (<percept>.parameter_ports[VARIANCE].mod_afferents[0].variable)):')
             # print('\tPlayer:\t\t{}\n\tPredator\t{}\n\tPrey:\t\t{}'.
-            #       format(player_percept.parameter_states[VARIANCE].mod_afferents[0].parameters.variable.get(context),
-            #              predator_percept.parameter_states[VARIANCE].mod_afferents[0].parameters.variable.get(context),
-            #              prey_percept.parameter_states[VARIANCE].mod_afferents[0].parameters.variable.get(context)))
+            #       format(player_percept.parameter_ports[VARIANCE].mod_afferents[0].parameters.variable.get(context),
+            #              predator_percept.parameter_ports[VARIANCE].mod_afferents[0].parameters.variable.get(context),
+            #              prey_percept.parameter_ports[VARIANCE].mod_afferents[0].parameters.variable.get(context)))
             #
-            # print('Control Projection Values (<percept>.parameter_states[VARIANCE].mod_afferents[0].value):')
+            # print('Control Projection Values (<percept>.parameter_ports[VARIANCE].mod_afferents[0].value):')
             # print('\tPlayer:\t\t{}\n\tPredator\t{}\n\tPrey:\t\t{}'.
-            #       format(player_percept.parameter_states[VARIANCE].mod_afferents[0].parameters.value.get(context),
-            #              predator_percept.parameter_states[VARIANCE].mod_afferents[0].parameters.value.get(context),
-            #              prey_percept.parameter_states[VARIANCE].mod_afferents[0].parameters.value.get(context)))
+            #       format(player_percept.parameter_ports[VARIANCE].mod_afferents[0].parameters.value.get(context),
+            #              predator_percept.parameter_ports[VARIANCE].mod_afferents[0].parameters.value.get(context),
+            #              prey_percept.parameter_ports[VARIANCE].mod_afferents[0].parameters.value.get(context)))
 
             print('SIMULATION (PREP FOR NEXT TRIAL):')
             for sample, value in zip(ocm.saved_samples, ocm.saved_values):

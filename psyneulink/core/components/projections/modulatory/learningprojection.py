@@ -15,7 +15,7 @@ Overview
 --------
 
 A LearningProjection is a type of `ModulatoryProjection <ModulatoryProjection>` that projects from a `LearningMechanism`
-to the *MATRIX* `ParameterState` of a `MappingProjection`.  It takes the `value <LearningSignal.value>` of a
+to the *MATRIX* `ParameterPort` of a `MappingProjection`.  It takes the `value <LearningSignal.value>` of a
 `LearningSignal` of a `LearningMechanism`, and uses it to modify the value of the `matrix <MappingProjection.matrix>`
 parameter of that MappingProjection.  All of the LearningProjections in a System, along with its other `learning
 components <LearningMechanism_Learning_Configurations>`, can be displayed using the System's `show_graph
@@ -34,7 +34,7 @@ specified for a `Process <Process_Learning_Sequence>` or a `System <System_Execu
 
 If a LearningProjection is created explicitly (using its constructor), and its **receiver** argument is not specified,
 its initialization is `deferred <LearningProjection_Deferred_Initialization>`.  If it is included in the `matrix
-specification <MappingProjection_Tuple_Specification>` for a `MappingProjection`, the *MATRIX* `ParameterState` for
+specification <MappingProjection_Tuple_Specification>` for a `MappingProjection`, the *MATRIX* `ParameterPort` for
 the MappingProjection will be assigned as the LearningProjection's `receiver <LearningProjection.receiver>`.  If its
 **sender** argument is not specified, its assignment depends on the **receiver**.  If the **receiver** belongs to a
 MappingProjection that projects between two Mechanisms that are both in the same `Process <Process_Learning_Sequence>`
@@ -109,7 +109,7 @@ over the direct specification of the `learning_rate <LearningProjection.learning
 
 Every LearningProjection has a `weight <LearningProjection.weight>` and `exponent <LearningProjection.exponent>`
 attribute that are applied to its `value <LearningProjection.value>` before it is combined  with other
-LearningProjections that modify the `ParameterState` for the `matrix <MappingProjection.matrix>` parameter of the
+LearningProjections that modify the `ParameterPort` for the `matrix <MappingProjection.matrix>` parameter of the
 `MappingProjection` to which they project (see description under `Projection <Projection_Weight_Exponent>` for
 additional details).
 
@@ -118,7 +118,7 @@ additional details).
    LearningProjection are not commonly used, and are implemented largely for generality and compatibility with other
    types of `Projection`.  They are distinct from, and are applied in addition to the LearningProjection's
    `learning_rate <LearningProjection.learning_rate>` attribute.  As noted under  `Projection
-   <Projection_Weight_Exponent>`, they are not normalized and thus their effects aggregate if a ParameterState
+   <Projection_Weight_Exponent>`, they are not normalized and thus their effects aggregate if a ParameterPort
    receives one or more LearningProjections with non-default values of their  `weight
    <MappingProjection.weight>` and `exponent <MappingProjection.exponent>` attributes.
 
@@ -127,7 +127,7 @@ additional details).
 *Receiver*
 ~~~~~~~~~~
 
-The `receiver <LearningProjection.receiver>` of a LearningProject is the *MATRIX* `ParameterState` of a
+The `receiver <LearningProjection.receiver>` of a LearningProject is the *MATRIX* `ParameterPort` of a
 `MappingProjection`, that uses the `weight_change_matrix <LearningProjection.weight_change_matrix>` provided by the
 LearningProjection to modify the `matrix <MappingProjection.matrix>` parameter of the `MappingProjection` being
 learned.
@@ -139,9 +139,9 @@ Execution
 
 A LearningProjection cannot be executed directly.  It's execution is determined by its `learning_enabled
 <LearningProjection.learning_enabled>` attribute.  If that is False`, it is never executed.  If it is True or
-*ONLINE*, is executed when the *MATRIX* ParameterState to which it projects is updated.  This occurs when the
+*ONLINE*, is executed when the *MATRIX* ParameterPort to which it projects is updated.  This occurs when the
 `learned_projection <LearningProjection.learned_projection>` (the `MappingProjection` to which the *MATRIX*
-ParameterState belongs) is updated. Note that these events occur only when the ProcessingMechanism that receives the
+ParameterPort belongs) is updated. Note that these events occur only when the ProcessingMechanism that receives the
 `learned_projection <LearningProjection.learned_projection>` is executed (see :ref:`Lazy Evaluation <LINK>` for an
 explanation of "lazy" updating).  If `learning_enabled <LearningProjection.learning_enabled>` is *AFTER*, then
 LearningProjection is executed at the end of the `TRIAL` of the Composition to which it belongs.  When the
@@ -182,11 +182,11 @@ from psyneulink.core.components.projections.projection import Projection_Base, p
 from psyneulink.core.components.shellclasses import ShellClass
 from psyneulink.core.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.core.components.states.outputport import OutputPort
-from psyneulink.core.components.states.parameterstate import ParameterState
+from psyneulink.core.components.states.parameterport import ParameterPort
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.keywords import \
     CONTEXT, FUNCTION, FUNCTION_PARAMS, INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, \
-    MATRIX, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE, ONLINE, AFTER
+    MATRIX, PARAMETER_PORT, PARAMETER_PORTS, PROJECTION_SENDER, SLOPE, ONLINE, AFTER
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -238,16 +238,16 @@ class LearningProjection(ModulatoryProjection_Base):
                  name=None,            \
                  prefs=None)
 
-    Subclass of `ModulatoryProjection <ModulatoryProjection>` that modulates the value of a `ParameterState` for the
+    Subclass of `ModulatoryProjection <ModulatoryProjection>` that modulates the value of a `ParameterPort` for the
     `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`.
 
     COMMENT:
         Description:
             The LearningProjection class is a componentType in the Projection category of Function.
             It implements a Projection from the LEARNING_SIGNAL outputPort of a LearningMechanism to the MATRIX
-            parameterState of a MappingProjection that modifies its matrix parameter.
+            parameterPort of a MappingProjection that modifies its matrix parameter.
             It's function takes the output of a LearningMechanism (its learning_signal attribute), and provides this
-            to the parameterState to which it projects, possibly scaled by the LearningProjection's learning_rate.
+            to the parameterPort to which it projects, possibly scaled by the LearningProjection's learning_rate.
 
         Class attributes:
             + className = LEARNING_PROJECTION
@@ -274,8 +274,8 @@ class LearningProjection(ModulatoryProjection_Base):
         if it is not specified, and cannot be `inferred from context <LearningProjection_Creation>`, initialization is
         `deferred <LearningProjection_Deferred_Initialization>`.
 
-    receiver : Optional[MappingProjection or ParameterState for matrix parameter of one]
-        specifies the *MATRIX* `ParameterState` (or the `MappingProjection` that owns it) for the `matrix
+    receiver : Optional[MappingProjection or ParameterPort for matrix parameter of one]
+        specifies the *MATRIX* `ParameterPort` (or the `MappingProjection` that owns it) for the `matrix
         <MappingProjection.matrix>` of the `learned_projection <LearningProjection.learned_projection>` to be
         modified by the LearningProjection; if it is not specified, and cannot be `inferred from context
         <LearningProjection_Creation>`, initialization is `deferred <LearningProjection_Deferred_Initialization>`.
@@ -323,7 +323,7 @@ class LearningProjection(ModulatoryProjection_Base):
        before combining it with others (see `exponent <LearningProjection.exponent>` for additional details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default `function <LearningProjection.function>` and parameter assignments.  Values specified
         for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
@@ -344,8 +344,8 @@ class LearningProjection(ModulatoryProjection_Base):
         source of `learning_signal <LearningProjection.learning_signal>`
         (see `LearningProjection_Sender` for additional details).
 
-    receiver : MATRIX ParameterState of a MappingProjection
-        *MATRIX* `ParameterState` for the `matrix <MappingProjection.MappingProjection.matrix>` parameter of the
+    receiver : MATRIX ParameterPort of a MappingProjection
+        *MATRIX* `ParameterPort` for the `matrix <MappingProjection.MappingProjection.matrix>` parameter of the
         `learned_projection <LearningProjection.learned_projection>` (see `LearningProjection_Receiver` for additional
         details).
 
@@ -396,7 +396,7 @@ class LearningProjection(ModulatoryProjection_Base):
 
     weight : number
        multiplies the `value <LearningProjection.value>` of the LearningProjection after applying `exponent
-       <LearningProjection.exponent>`, and before combining it with any others that project to the `ParameterState`
+       <LearningProjection.exponent>`, and before combining it with any others that project to the `ParameterPort`
        for the `matrix <MappingProjection.matrix>` parameter of the same `MappingProjection` to determine how that
        MappingProjection's `matrix <MappingProjection.matrix>` is modified (see `description above
        <LearningProjection_Weight_Exponent>` for additional details, including relationship to `learning_rate
@@ -404,7 +404,7 @@ class LearningProjection(ModulatoryProjection_Base):
 
     exponent : number
         exponentiates the `value <LearningProjection.value>` of the LearningProjection, before applying `weight
-        <ControlProjection.weight>`, and before combining it with any others that project to the `ParameterState`
+        <ControlProjection.weight>`, and before combining it with any others that project to the `ParameterPort`
        for the `matrix <MappingProjection.matrix>` parameter of the same `MappingProjection` to determine how that
        MappingProjection's `matrix <MappingProjection.matrix>` is modified (see `description above
        <LearningProjection_Weight_Exponent>` for additional details, including relationship to `learning_rate
@@ -430,7 +430,7 @@ class LearningProjection(ModulatoryProjection_Base):
 
     class sockets:
         sender=[LEARNING_SIGNAL]
-        receiver=[PARAMETER_STATE]
+        receiver=[PARAMETER_PORT]
 
     class Parameters(ModulatoryProjection_Base.Parameters):
         """
@@ -492,7 +492,7 @@ class LearningProjection(ModulatoryProjection_Base):
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_SENDER: LearningMechanism,
-                               PARAMETER_STATES: NotImplemented, # This suppresses parameterStates
+                               PARAMETER_PORTS: NotImplemented, # This suppresses parameterPorts
                                FUNCTION: Linear,
                                FUNCTION_PARAMS:
                                    {SLOPE: 1,
@@ -502,7 +502,7 @@ class LearningProjection(ModulatoryProjection_Base):
     @tc.typecheck
     def __init__(self,
                  sender:tc.optional(tc.any(LearningSignal, LearningMechanism))=None,
-                 receiver:tc.optional(tc.any(ParameterState, MappingProjection))=None,
+                 receiver:tc.optional(tc.any(ParameterPort, MappingProjection))=None,
                  error_function:tc.optional(is_function_type)=LinearCombination(weights=[[-1], [1]]),
                  learning_function:tc.optional(is_function_type)=BackPropagation,
                  # FIX: 10/3/17 - TEST IF THIS OK AND REINSTATE IF SO
@@ -551,7 +551,7 @@ class LearningProjection(ModulatoryProjection_Base):
         """Validate sender and receiver
 
         Insure `sender <LearningProjection>` is a LearningMechanism or the OutputPort of one.
-        Insure `receiver <LearningProjection>` is a MappingProjection or the matrix ParameterState of one.
+        Insure `receiver <LearningProjection>` is a MappingProjection or the matrix ParameterPort of one.
         """
 
         # IMPLEMENTATION NOTE: IS TYPE CHECKING HERE REDUNDANT WITH typecheck IN __init__??
@@ -590,13 +590,13 @@ class LearningProjection(ModulatoryProjection_Base):
             receiver = self.receiver
             if isinstance(receiver, MappingProjection):
                 try:
-                    receiver = self.receiver = receiver._parameter_states[MATRIX]
+                    receiver = self.receiver = receiver._parameter_ports[MATRIX]
                 except KeyError:
                     raise LearningProjectionError("The MappingProjection {} specified as the receiver for {} "
                                                   "has no MATRIX parameter state".format(receiver.name, self.name))
-            if not any(s in {ParameterState, MappingProjection} for s in {receiver, type(receiver)}):
+            if not any(s in {ParameterPort, MappingProjection} for s in {receiver, type(receiver)}):
                 raise LearningProjectionError("The receiver arg for {} must be a MappingProjection "
-                                              "or the MATRIX parameterState of one."
+                                              "or the MATRIX parameterPort of one."
                                               .format(PROJECTION_SENDER, sender, self.name, ))
 
     def _instantiate_sender(self, sender, context=None):
@@ -636,7 +636,7 @@ class LearningProjection(ModulatoryProjection_Base):
         Set learning_enabled to value of receiver if it was not otherwise specified in the constructor
 
         Notes:
-        * _validate_params verifies that receiver is a parameterState for the matrix parameter of a MappingProjection.
+        * _validate_params verifies that receiver is a parameterPort for the matrix parameter of a MappingProjection.
         * _super()._instantiate_receiver verifies that the projection has not already been assigned to the receiver.
 
         """

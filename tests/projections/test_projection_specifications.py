@@ -55,17 +55,17 @@ class TestProjectionSpecificationFormats:
     def test_multiple_modulatory_projection_specs(self):
 
         M = pnl.DDM(name='MY DDM')
-        C = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS: [M.parameter_states[
+        C = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS: [M.parameter_ports[
                                                                          psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE],
-                                                                     M.parameter_states[
+                                                                     M.parameter_ports[
                                                                          psyneulink.core.components.functions.distributionfunctions.THRESHOLD]]}])
         G = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS: [M.output_ports[pnl.DECISION_VARIABLE],
                                                                      M.output_ports[pnl.RESPONSE_TIME]]}])
         assert len(C.control_signals)==1
         assert len(C.control_signals[0].efferents)==2
-        assert M.parameter_states[
+        assert M.parameter_ports[
                    psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE].mod_afferents[0] == C.control_signals[0].efferents[0]
-        assert M.parameter_states[
+        assert M.parameter_ports[
                    psyneulink.core.components.functions.distributionfunctions.THRESHOLD].mod_afferents[0] == C.control_signals[0].efferents[1]
         assert len(G.gating_signals)==1
         assert len(G.gating_signals[0].efferents)==2
@@ -75,18 +75,18 @@ class TestProjectionSpecificationFormats:
     def test_multiple_modulatory_projections_with_state_name(self):
 
         M = pnl.DDM(name='MY DDM')
-        C = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[M.parameter_states[
+        C = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[M.parameter_ports[
                                                                            psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE],
-                                                                       M.parameter_states[
+                                                                       M.parameter_ports[
                                                                            psyneulink.core.components.functions.distributionfunctions.THRESHOLD]]}])
         G = pnl.GatingMechanism(gating_signals=[{'DDM_OUTPUT_GATE':[M.output_ports[pnl.DECISION_VARIABLE],
                                                                     M.output_ports[pnl.RESPONSE_TIME]]}])
         assert len(C.control_signals)==1
         assert C.control_signals[0].name=='DECISION_CONTROL'
         assert len(C.control_signals[0].efferents)==2
-        assert M.parameter_states[
+        assert M.parameter_ports[
                    psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE].mod_afferents[0] == C.control_signals[0].efferents[0]
-        assert M.parameter_states[
+        assert M.parameter_ports[
                    psyneulink.core.components.functions.distributionfunctions.THRESHOLD].mod_afferents[0] == C.control_signals[0].efferents[1]
         assert len(G.gating_signals)==1
         assert G.gating_signals[0].name=='DDM_OUTPUT_GATE'
@@ -98,7 +98,7 @@ class TestProjectionSpecificationFormats:
 
         M = pnl.DDM(name='MY DDM')
         C = pnl.ControlMechanism(control_signals=[{pnl.MECHANISM: M,
-                                                   pnl.PARAMETER_STATES: [
+                                                   pnl.PARAMETER_PORTS: [
                                                        psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE,
 
                                                        psyneulink.core.components.functions.distributionfunctions.THRESHOLD]}])
@@ -106,9 +106,9 @@ class TestProjectionSpecificationFormats:
                                                  pnl.OUTPUT_PORTS: [pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME]}])
         assert len(C.control_signals)==1
         assert len(C.control_signals[0].efferents)==2
-        assert M.parameter_states[
+        assert M.parameter_ports[
                    psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE].mod_afferents[0] == C.control_signals[0].efferents[0]
-        assert M.parameter_states[
+        assert M.parameter_ports[
                    psyneulink.core.components.functions.distributionfunctions.THRESHOLD].mod_afferents[0] == C.control_signals[0].efferents[1]
         assert len(G.gating_signals)==1
         assert len(G.gating_signals[0].efferents)==2
@@ -161,7 +161,7 @@ class TestProjectionSpecificationFormats:
         assert T2.output_ports[1].owner_value_index == 2
         assert T2.output_ports[2].owner_value_index == 1
 
-    def test_2_item_tuple_from_control_signal_to_parameter_state(self):
+    def test_2_item_tuple_from_control_signal_to_parameter_port(self):
 
         D = pnl.DDM(name='D')
 
@@ -179,16 +179,16 @@ class TestProjectionSpecificationFormats:
         assert C.control_signals[0].efferents[0].receiver.name == 'drift_rate'
         assert C.control_signals[0].efferents[1].receiver.name == 'threshold'
 
-    def test_2_item_tuple_from_parameter_state_to_control_signals(self):
+    def test_2_item_tuple_from_parameter_port_to_control_signals(self):
 
         C = pnl.ControlMechanism(control_signals=['a','b'])
         D = pnl.DDM(name='D3',
                      function=psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical(drift_rate=(3, C),
                                                                                                                   threshold=(2,C.control_signals['b']))
                     )
-        assert D.parameter_states[
+        assert D.parameter_ports[
                    psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE].mod_afferents[0].sender == C.control_signals[0]
-        assert D.parameter_states[
+        assert D.parameter_ports[
                    psyneulink.core.components.functions.distributionfunctions.THRESHOLD].mod_afferents[0].sender == C.control_signals[1]
 
     def test_2_item_tuple_from_gating_signal_to_output_ports(self):
@@ -255,9 +255,9 @@ class TestProjectionSpecificationFormats:
 
             R = pnl.RecurrentTransferMechanism(noise=C1,
                                                function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=C2))
-            assert R.parameter_states[pnl.NOISE].mod_afferents[0].name in \
+            assert R.parameter_ports[pnl.NOISE].mod_afferents[0].name in \
                    'ControlProjection for RecurrentTransferMechanism-{}[noise]'.format(i)
-            assert R.parameter_states[pnl.GAIN].mod_afferents[0].name in \
+            assert R.parameter_ports[pnl.GAIN].mod_afferents[0].name in \
                    'ControlProjection for RecurrentTransferMechanism-{}[gain]'.format(i)
 
     def test_formats_for_gating_specification_of_input_and_output_ports(self):

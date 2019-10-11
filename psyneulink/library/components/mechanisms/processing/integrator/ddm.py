@@ -261,7 +261,7 @@ COMMENT:  [OLD;  PUT SOMEHWERE ELSE??]
     * `DRIFT_RATE <drift_rate>` (default 0.0)
       - multiplies the input to the Mechanism before assigning it to the `variable <DDM.variable>` on each call of
       `function <DDM.function>`.  The resulting value is further multiplied by the value of any ControlProjections to
-      the `DRIFT_RATE` parameterState. The `drift_rate` parameter can be thought of as the "automatic" component
+      the `DRIFT_RATE` parameterPort. The `drift_rate` parameter can be thought of as the "automatic" component
       (baseline strength) of the decision process, the value received from a ControlProjection as the "attentional"
       component, and the input its "stimulus" component.  The product of all three determines the drift rate in
       effect for each time_step of the decision process.
@@ -294,8 +294,8 @@ single set of parameters that are not subject to the analytic solution (e.g., fo
    DDM handles "runtime" parameters (specified in a call to its
    :py:meth:`execute <Mechanism_Base.exeucte>` or :py:meth:`run <Mechanism_Base.run>` methods)
    differently than standard Components: runtime parameters are added to the Mechanism's current value of the
-   corresponding ParameterState (rather than overriding it);  that is, they are combined additively with the value of
-   any `ControlProjection` it receives to determine the parameter's value for that execution.  The ParameterState's
+   corresponding ParameterPort (rather than overriding it);  that is, they are combined additively with the value of
+   any `ControlProjection` it receives to determine the parameter's value for that execution.  The ParameterPort's
    value is then restored to its original value (i.e., either its default value or the one assigned when it was
    created) for the next execution.
 
@@ -877,7 +877,7 @@ class DDM(ProcessingMechanism):
                  VARIABLE:[(OWNER_VALUE, self.DECISION_VARIABLE_INDEX), THRESHOLD],
                            # per VARIABLE assignment above, items of v of lambda function below are:
                            #    v[0]=self.value[self.DECISION_VARIABLE_INDEX]
-                           #    v[1]=self.parameter_states[THRESHOLD]
+                           #    v[1]=self.parameter_ports[THRESHOLD]
                  FUNCTION: lambda v: [float(v[0]), 0] if (v[1]-v[0]) < (v[1]+v[0]) else [0, float(v[0])]},
                 # Provides a 1d 2-item array with:
                 #    input value in position corresponding to threshold crossed by decision variable, and 0 in the other
@@ -885,7 +885,7 @@ class DDM(ProcessingMechanism):
                  VARIABLE:[(OWNER_VALUE, self.DECISION_VARIABLE_INDEX), THRESHOLD, (INPUT_PORT_VARIABLES, 0)],
                  # per VARIABLE assignment above, items of v of lambda function below are:
                  #    v[0]=self.value[self.DECISION_VARIABLE_INDEX]
-                 #    v[1]=self.parameter_states[THRESHOLD]
+                 #    v[1]=self.parameter_ports[THRESHOLD]
                  #    v[2]=self.input_ports[0].variable
                  FUNCTION: lambda v: [float(v[2][0][0]), 0] \
                                       if (v[1]-v[0]) < (v[1]+v[0]) \

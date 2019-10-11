@@ -151,7 +151,7 @@ class BasePreferenceSet(PreferenceSet):
                     ProcessingMechanism.classPreferences
                 State types:
                     InputPort.classPreferences
-                    ParameterState.classPreferences
+                    ParameterPort.classPreferences
                     OutputPort.classPreferences
                 Projection types:
                     ControlProjection.classPreferences

@@ -9,7 +9,7 @@ States
 
    *Subclasses:*
    InputPort
-   ParameterState
+   ParameterPort
    OutputPort
    ModulatorySignals <ModulatorySignal>
 

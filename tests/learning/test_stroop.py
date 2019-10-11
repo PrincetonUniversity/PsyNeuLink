@@ -239,7 +239,7 @@ class TestStroop:
         objective_hidden = s.mechanisms[7]
         from pprint import pprint
         pprint(CH_Weights.__dict__)
-        print(CH_Weights._parameter_states["matrix"].value)
+        print(CH_Weights._parameter_ports["matrix"].value)
         print(CH_Weights.get_mod_matrix(s))
         expected_output = [
             (colors.output_ports[0].parameters.value.get(s), np.array([1., 1.])),

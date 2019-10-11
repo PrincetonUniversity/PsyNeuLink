@@ -21,13 +21,13 @@ that modulate different types of Components and their States:
 
 * `LearningProjection`
     takes the `value <LearningSignal.value>` of a `LearningSignal` belonging to a `LearningMechanism`,
-    and conveys it to the *MATRIX* `ParameterState` of a `MappingProjection`, for use by its
-    `function <ParameterState.function>` in modulating the value of the MappingProjection's
+    and conveys it to the *MATRIX* `ParameterPort` of a `MappingProjection`, for use by its
+    `function <ParameterPort.function>` in modulating the value of the MappingProjection's
     `matrix <MappingProjection.matrix>` parameter.
 ..
 * `ControlProjection`
     takes the `value <ControlSignal.value>` of a `ControlSignal` belonging to a `ControlMechanism`,
-    and conveys it to the `ParameterState` for the parameter of a `Mechanism <Mechanism>` or its
+    and conveys it to the `ParameterPort` for the parameter of a `Mechanism <Mechanism>` or its
     `function <Mechanism_Base.function>`, for use in modulating the value of the parameter.
 ..
 * `GatingProjection`
@@ -133,7 +133,7 @@ class ModulatoryProjection_Base(Projection_Base):
        before combining it with others (see `exponent <ModulatoryProjection_Base.exponent>` for additional details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         ModulatoryProjection, its `function <ModulatoryProjection_Base.function>`, and/or a custom function and its
         parameters. By default, it contains an entry for the ModulatoryProjection's default `function
         <ModulatoryProjection_Base.function>` and parameter assignments.  Values specified for parameters in the
@@ -153,7 +153,7 @@ class ModulatoryProjection_Base(Projection_Base):
     Attributes
     ----------
 
-    receiver : MATRIX ParameterState of a MappingProjection
+    receiver : MATRIX ParameterPort of a MappingProjection
         the State to which the ModulatoryProjection projects, the `function <State_Base.function>` of which is
         modulated by it.
 

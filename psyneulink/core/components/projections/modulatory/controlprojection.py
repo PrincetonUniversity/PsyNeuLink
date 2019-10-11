@@ -14,10 +14,10 @@
 Overview
 --------
 
-A ControlProjection is a type of `ModulatoryProjection <ModulatoryProjection>` that projects to the `ParameterState
-<ParameterState>` of a `ProcessingMechanism <ProcessingMechanism>`. It takes the `value <ControlSignal.value>` of a
+A ControlProjection is a type of `ModulatoryProjection <ModulatoryProjection>` that projects to the `ParameterPort
+<ParameterPort>` of a `ProcessingMechanism <ProcessingMechanism>`. It takes the `value <ControlSignal.value>` of a
 `ControlSignal` of a `ControlMechanism <ControlMechanism>` and uses it to  modify the value of the parameter associated
-with the ParameterState to which it projects.  All of the ControlProjections in a Composition, along with its other
+with the ParameterPort to which it projects.  All of the ControlProjections in a Composition, along with its other
 `control components <ControlMechanism>`, can be displayed using the Composition's `show_graph <Composition.show_graph>`
 method with its **show_control** argument assigned as `True`.
 
@@ -27,11 +27,11 @@ Creating a ControlProjection
 ----------------------------
 
 A ControlProjection can be created using any of the standard ways to `create a Projection <Projection_Creation>`,
-or by including it in a `tuple <ParameterState_Tuple_Specification>` that specifies a parameter for a `Mechanism
+or by including it in a `tuple <ParameterPort_Tuple_Specification>` that specifies a parameter for a `Mechanism
 <Mechanism>`, `MappingProjection`, or the `function <Component.function>` of either of these.  If a ControlProjection
 is created explicitly (using its constructor), and either its **receiver** or **sender** argument is not specified,
 its initialization is `deferred <ControlProjection_Deferred_Initialization>`.  If it is included in a `parameter
-specification <ParameterState_Specification>`, the  `ParameterState` for the parameter being specified will be assigned
+specification <ParameterPort_Specification>`, the  `ParameterPort` for the parameter being specified will be assigned
 as the ControlProjection's `receiver <ControlProjection.receiver>`.
 COMMENT:
 TBI FOR COMPOSITION
@@ -51,7 +51,7 @@ a ControlProjection to be created before its `sender <ControlProjection.sender>`
 <ControlProjection.receiver>` have been created (e.g., before them in a script), by calling its constructor without
 specifying its **sender** or **receiver** arguments. However, for the ControlProjection to be operational,
 initialization must be completed by a call to its `deferred_init` method. This is done automatically if the
-ControlProjection is included in a `tuple specification <ParameterState_Tuple_Specification>` for the parameter of a
+ControlProjection is included in a `tuple specification <ParameterPort_Tuple_Specification>` for the parameter of a
 `Mechanism <Mechanism>` or its `function <Mechanism_Base.function>`, when the `ControlMechanism <ControlMechanism>`
 is created for the `Composition` to which the parameter's owner belongs (see `ControlMechanism_Creation`).
 
@@ -69,7 +69,7 @@ ControlProjection as its `variable <ControlProjection.variable>`;  this is also 
 ControlProjection is an identity function (`Linear` with **slope**\\ =1 and **intercept**\\ =0);  that is, it simply
 conveys the value of its `control_signal <ControlProjection.control_signal>` to its `receiver
 <ControlProjection.receiver>`, for use in modifying the value of the parameter that it controls. Its `receiver
-<ControlProjection.receiver>` is the `ParameterState` for the parameter of the `Mechanism <Mechanism>` or its `function
+<ControlProjection.receiver>` is the `ParameterPort` for the parameter of the `Mechanism <Mechanism>` or its `function
 <Mechanism_Base.function>` that is controlled by the ControlProjection.
 
 .. _ControlProjection_Execution:
@@ -77,14 +77,14 @@ conveys the value of its `control_signal <ControlProjection.control_signal>` to 
 Execution
 ---------
 
-A ControlProjection cannot be executed directly.  It is executed when the `ParameterState` to which it projects is
-updated.  Note that this only occurs when the `Mechanism <Mechanism>` to which the `ParameterState` belongs is executed
+A ControlProjection cannot be executed directly.  It is executed when the `ParameterPort` to which it projects is
+updated.  Note that this only occurs when the `Mechanism <Mechanism>` to which the `ParameterPort` belongs is executed
 (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating). When a ControlProjection is executed, its
 `function <ControlProjection.function>` gets the `control_signal <ControlProjection.control_signal>` from its `sender
 <ControlProjection.sender>` and conveys that to its `receiver <ControlProjection.receiver>`.  This is used by the
 `receiver <ControlProjection.receiver>` to modify the parameter controlled by the ControlProjection (see
-`ModulatorySignal_Modulation` and `ParameterState Execution <ParameterState_Execution>` for how modulation operates and
-how this applies to a ParameterState).
+`ModulatorySignal_Modulation` and `ParameterPort Execution <ParameterPort_Execution>` for how modulation operates and
+how this applies to a ParameterPort).
 
 .. note::
    The changes to a parameter in response to the execution of a ControlProjection are not applied until the `Mechanism
@@ -111,7 +111,7 @@ from psyneulink.core.components.projections.projection import ProjectionError, P
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, INPUT_PORT, OUTPUT_PORT, PARAMETER_STATE, PROJECTION_SENDER
+    CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, INPUT_PORT, OUTPUT_PORT, PARAMETER_PORT, PROJECTION_SENDER
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -155,13 +155,13 @@ class ControlProjection(ModulatoryProjection_Base):
      name=None,                  \
      prefs=None)
 
-    Subclass of `ModulatoryProjection <ModulatoryProjection>` that modulates the value of a `ParameterState` of a
+    Subclass of `ModulatoryProjection <ModulatoryProjection>` that modulates the value of a `ParameterPort` of a
     `Mechanism <Mechanism>`.
 
     COMMENT:
         Description:
             The ControlProjection class is a type in the Projection category of Component.
-            It implements a projection to the ParameterState of a Mechanism that modifies a parameter of its function.
+            It implements a projection to the ParameterPort of a Mechanism that modifies a parameter of its function.
             It:
                - takes a scalar as its input (sometimes referred to as an "allocation")
                - uses its `function` to compute its value (sometimes referred to as its "intensity"
@@ -194,8 +194,8 @@ class ControlProjection(ModulatoryProjection_Base):
         if it is not specified and cannot be `inferred from context <ControlProjection_Creation>`, initialization is
         `deferred <ControlProjection_Deferred_Initialization>`.
 
-    receiver : Optional[Mechanism or ParameterState]
-        specifies the `ParameterState` associated with the parameter to be controlled; if it is not specified,
+    receiver : Optional[Mechanism or ParameterPort]
+        specifies the `ParameterPort` associated with the parameter to be controlled; if it is not specified,
         and cannot be `inferred from context <ControlProjection_Creation>`, initialization is `deferred
         <ControlProjection_Deferred_Initialization>`.
 
@@ -212,12 +212,12 @@ class ControlProjection(ModulatoryProjection_Base):
        before combining it with others (see `exponent <ControlProjection.exponent>` for additional details).
 
     control_signal_params pip install --updgrade Sphinx==1.6.2 sphinx-rtd-theme==0.2.4 sphinxcontrib-websupport==1.0.1: Dict[param keyword: param value]
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for the
         ControlProjection's `sender <ControlProjection.sender>` (see `ControlSignal_Structure` for a description
         of ControlSignal parameters).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
         the ControlProjection, its `function <ControlProjection.function>`, and/or a custom function and its parameters.
         Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
@@ -236,8 +236,8 @@ class ControlProjection(ModulatoryProjection_Base):
     sender : ControlSignal
         source of the `control_signal <ControlProjection.control_signal>`.
 
-    receiver : ParameterState of Mechanism
-        `ParameterState` for the parameter to be modified by the ControlProjection.
+    receiver : ParameterPort of Mechanism
+        `ParameterPort` for the parameter to be modified by the ControlProjection.
 
     variable : 2d np.array
         same as `control_signal <ControlProjection.control_signal>`.
@@ -251,19 +251,19 @@ class ControlProjection(ModulatoryProjection_Base):
 
     value : float
         the value used to modify the parameter controlled by the ControlProjection (see `ModulatorySignal_Modulation`
-        and `ParameterState Execution <ParameterState_Execution>` for how modulation operates and how this applies
-        to a ParameterState).
+        and `ParameterPort Execution <ParameterPort_Execution>` for how modulation operates and how this applies
+        to a ParameterPort).
 
     weight : number
        multiplies the `value <ControlProjection.value>` of the ControlProjection after applying `exponent
-       <ControlProjection.exponent>`, and before combining it with any others that project to the same `ParameterState`
-       to determine how that ParameterState's `variable <ParameterState.variable>` is modified (see description in
+       <ControlProjection.exponent>`, and before combining it with any others that project to the same `ParameterPort`
+       to determine how that ParameterPort's `variable <ParameterPort.variable>` is modified (see description in
        `Projection <Projection_Weight_Exponent>` for details).
 
     exponent : number
         exponentiates the `value <ControlProjection.value>` of the ControlProjection, before applying `weight
-        <ControlProjection.weight>`, and before combining it with any others that project to the same `ParameterState`
-        to determine how that ParameterState's `variable <ParameterState.variable>` is modified (see description in
+        <ControlProjection.weight>`, and before combining it with any others that project to the same `ParameterPort`
+        to determine how that ParameterPort's `variable <ParameterPort.variable>` is modified (see description in
         `Projection <Projection_Weight_Exponent>` for details).
 
     name : str
@@ -287,7 +287,7 @@ class ControlProjection(ModulatoryProjection_Base):
 
     class sockets:
         sender=[CONTROL_SIGNAL]
-        receiver=[PARAMETER_STATE, INPUT_PORT, OUTPUT_PORT]
+        receiver=[PARAMETER_PORT, INPUT_PORT, OUTPUT_PORT]
 
     class Parameters(ModulatoryProjection_Base.Parameters):
         """
@@ -407,23 +407,23 @@ class ControlProjection(ModulatoryProjection_Base):
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
 
         Overrides Projection._instantiate_receiver, to require that if the receiver is specified as a Mechanism, then:
-            the receiver Mechanism must have one and only one ParameterState;
+            the receiver Mechanism must have one and only one ParameterPort;
             otherwise, passes control to Projection_Base._instantiate_receiver for validation
 
         :return:
         """
         if isinstance(self.receiver, Mechanism):
-            # If there is just one param of ParameterState type in the receiver Mechanism
+            # If there is just one param of ParameterPort type in the receiver Mechanism
             # then assign it as actual receiver (which must be a State);  otherwise, raise exception
-            from psyneulink.core.components.states.parameterstate import ParameterState
+            from psyneulink.core.components.states.parameterport import ParameterPort
             if len(dict((param_name, state) for param_name, state in self.receiver.paramsCurrent.items()
-                    if isinstance(state, ParameterState))) == 1:
-                receiver_parameter_state = [state for state in dict.values()][0]
-                # Reassign self.receiver to Mechanism's parameterState
-                self.receiver = receiver_parameter_state
+                    if isinstance(state, ParameterPort))) == 1:
+                receiver_parameter_port = [state for state in dict.values()][0]
+                # Reassign self.receiver to Mechanism's parameterPort
+                self.receiver = receiver_parameter_port
             else:
                 raise ControlProjectionError("Unable to assign ControlProjection ({0}) from {1} to {2}, "
-                                         "as it has several ParameterStates;  must specify one (or each) of them"
+                                         "as it has several ParameterPorts;  must specify one (or each) of them"
                                          " as receiver(s)".
                                          format(self.name, self.sender.owner, self.receiver.name))
         # else:

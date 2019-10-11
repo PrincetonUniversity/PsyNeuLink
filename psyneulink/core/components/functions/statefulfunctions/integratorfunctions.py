@@ -116,7 +116,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         determines the timing precision of the integration process
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -433,7 +433,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         <AccumulatorIntegrator.initializer>` for details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -612,7 +612,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         ---------
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -627,7 +627,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
 
         # Warn if being called as a standalone function and variable is passed
         # Don't warn if it belongs to a Component, ans that Component's function may pass in a value for variable
-        # (such as a MappingProjection that uses AccumulatorFunction in its matrix ParameterState for learning)
+        # (such as a MappingProjection that uses AccumulatorFunction in its matrix ParameterPort for learning)
         if (not self.owner
                 and self.initialization_status != ContextFlags.INITIALIZING
                 and variable is not None
@@ -712,7 +712,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         for details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -840,7 +840,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
            a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -929,7 +929,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         for details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -1183,7 +1183,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
            a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -1336,7 +1336,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         `variable <DualAdaptiveIntegrator.variable>` (see `offset <DualAdaptiveIntegrator.offset>` for details.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -1705,7 +1705,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
            a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -1898,7 +1898,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         for details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -2113,7 +2113,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
            a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -2256,7 +2256,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         for details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -2485,7 +2485,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
            the drift rate).
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -2613,7 +2613,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         for details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -2836,7 +2836,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
            a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -2940,7 +2940,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         for details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -3084,7 +3084,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
            a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -3388,7 +3388,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         (Forward Euler)
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -3998,7 +3998,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         ---------
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 

@@ -95,7 +95,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         specifies the function used to transform the variable before assigning it to the Mechanism's OutputPort(s)
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterPort_Specifying_Parameters>` that can be used to specify the parameters for
         the `Mechanism <Mechanism>`, parameters for its `function <CompositionInterfaceMechanism.function>`, and/or a
         custom function and its parameters.  Values specified for parameters in the dictionary override any assigned
         to those parameters in arguments of the constructor.

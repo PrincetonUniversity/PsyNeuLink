@@ -19,7 +19,7 @@ LearningSignal receives the value of a `learning_signal <LearningMechanism>` cal
 which it belongs, which in general is a matrix of weight changes to be made to the `matrix <MappingProjection>`
 parameter of the MappingProjection(s) being learned.  The LearningSignal assigns its `learning_signal
 <LearningSignal.learning_signal>` as the value of its LearningProjection(s), which convey it to the
-MappingProjections` *MATRIX* `ParameterState(s) <ParameterState>`, which in turn modify the matrix parameter(s) of
+MappingProjections` *MATRIX* `ParameterPort(s) <ParameterPort>`, which in turn modify the matrix parameter(s) of
 the MappingProjection(s) being learned.
 
 .. _LearningSignal_Creation:
@@ -40,17 +40,17 @@ LearningSignal has dedicated Components and requirements for configuration that 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a LearningSignal is specified in the **learning_signals** argument of the constructor for a `LearningMechanism`,
-the `ParameterState(s) <ParameterState>` of the `MappingProjection(s) <MappingProjection>` being learned must be
+the `ParameterPort(s) <ParameterPort>` of the `MappingProjection(s) <MappingProjection>` being learned must be
 specified.  This can take any of the following forms:
 
   * an existing LearningSignal, or a reference to the class (in which case a default LearningSignal is created);
   ..
-  * a **ParameterState**, which must be for the `matrix <MappingProjection.matrix>` parameter of the
+  * a **ParameterPort**, which must be for the `matrix <MappingProjection.matrix>` parameter of the
     `MappingProjection` to be learned;
   ..
   * a **Projection**, which must be either a `LearningProjection`, or a `MappingProjection` to which the
     LearningSignal should send a `LearningProjection`.  In both cases, it is assumed that the LearningProjection
-    projects to the *MATRIX* `ParameterState` of a `MappingProjection`.
+    projects to the *MATRIX* `ParameterPort` of a `MappingProjection`.
   ..
   * a **tuple**, with the name of the parameter as its 1st item. and the Projection to which it belongs as the 2nd;
     note that this is a convenience format, which is simpler to use than a specification dictionary (see below),
@@ -104,7 +104,7 @@ concerning the specification of Projections when creating a State.
 
 A LearningSignal has a `modulation <LearningSignal.modulation>` attribute that determines how the LearningSignal's
 `value <LearningSignal.value>` (i.e., its `learning_signal <LearningSignal.learning_signal>`) is used by the
-ParameterState(s) to which it projects to modify the `matrix <MappingProjection.matrix>` parameter(s) of their
+ParameterPort(s) to which it projects to modify the `matrix <MappingProjection.matrix>` parameter(s) of their
 MappingProjection(s) (see `ModulatorySignal Modulation <ModulatorySignal_Modulation>` for an explanation of how the
 `modulation <LearningSignal.modulation>` attribute is specified and used to modify the value of a parameter).  The
 default value is set to the value of the `modulation <LearningMechanism.modulation>` attribute of the
@@ -178,7 +178,7 @@ from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     CONTEXT, LEARNED_PARAM, LEARNING_PROJECTION, LEARNING_SIGNAL, OUTPUT_PORT_PARAMS, \
-    PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER
+    PARAMETER_PORT, PARAMETER_PORTS, PROJECTION_TYPE, RECEIVER
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -258,7 +258,7 @@ class LearningSignal(ModulatorySignal):
         the LearningSignal's `LearningProjection(s) <LearningProjection>` project.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter specification dictionary <ParameterState_Specification>` that can be used to specify the
+        a `parameter specification dictionary <ParameterPort_Specification>` that can be used to specify the
         parameters for the LearningSignal and/or a custom function and its parameters. Values specified for
         parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
@@ -336,8 +336,8 @@ class LearningSignal(ModulatorySignal):
 
     stateAttributes = ModulatorySignal.stateAttributes
 
-    connectsWith = [PARAMETER_STATE]
-    connectsWithAttribute = [PARAMETER_STATES]
+    connectsWith = [PARAMETER_PORT]
+    connectsWithAttribute = [PARAMETER_PORTS]
     projectionSocket = RECEIVER
     modulators = []
 
@@ -420,7 +420,7 @@ class LearningSignal(ModulatorySignal):
                          **kwargs)
 
     def _get_primary_state(self, projection):
-        return projection.parameter_state
+        return projection.parameter_port
 
     @property
     def learning_signal(self):

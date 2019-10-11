@@ -147,7 +147,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         with the `value <InputPort.value>` of the Mechanism's `InputPort <LearningMechanism_InputPorts>` (see
         `variable <AutoAssociativeLearningMechanism.variable>` for additional details).
 
-    learning_signals : List[parameter of Projection, ParameterState, Projection, tuple[str, Projection] or dict] \
+    learning_signals : List[parameter of Projection, ParameterPort, Projection, tuple[str, Projection] or dict] \
     : default None
         specifies the `matrix <AutoAssociativeProjection.matrix>` to be learned (see `learning_signals
         <LearningMechanism.learning_signals>` for details of specification).
@@ -168,7 +168,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         <AutoAssociativeLearningMechanism.learning_rate>` for details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default `function <LearningProjection.function>` and parameter assignments.  Values specified
         for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
@@ -241,7 +241,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
     learning_signals : List[LearningSignal]
         list of all of the `LearningSignals <LearningSignal>` for the AutoAssociativeLearningMechanism, each of which
-        sends one or more `LearningProjections <LearningProjection>` to the `ParameterState(s) <ParameterState>` for
+        sends one or more `LearningProjections <LearningProjection>` to the `ParameterPort(s) <ParameterPort>` for
         the `matrix <AutoAssociativeProjection.matrix>` parameter of the `AutoAssociativeProjection(s)
         <AutoAssociativeProjection>` trained by the AutoAssociativeLearningMechanism.  Although in most instances an
         AutoAssociativeLearningMechanism is used to train a single AutoAssociativeProjection, like a standard

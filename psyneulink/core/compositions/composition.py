@@ -613,7 +613,7 @@ arguments of the `System`, as described below.
   *control_signals* argument of a ControlMechanism. These are added to any `ControlSignals <ControlSignal>` that have
   already been specified for the `controller <System.controller>` (listed in its `control_signals
   <ControlMechanism.control_signals>` attribute), and any parameters that have directly been `specified for
-  control <ParameterState_Specification>` within the System (see `System_Control` below for additional details).
+  control <ParameterPort_Specification>` within the System (see `System_Control` below for additional details).
 COMMENT
 
 .. _Composition_Controller_Execution:
@@ -813,8 +813,8 @@ following Components, and assigns to them the `NodeRoles <NodeRole>` indicated:
     * a *LEARNING_MECHANISM* for each MappingProjection in the sequence, each of which calculates the `learning_signal
       <LearningMechanism.learning_signal>` used to modify the `matrix <MappingProjection.matrix>` parameter for the
       coresponding MappingProjection, along with a `LearningSignal` and `LearningProjection` that convey the
-      `learning_signal <LearningMechanism.learning_signal>` to the MappingProjection's *MATRIX* `ParameterState
-      <Mapping_Matrix_ParameterState>`;  depending on learning method, additional MappingProjections may be created to
+      `learning_signal <LearningMechanism.learning_signal>` to the MappingProjection's *MATRIX* `ParameterPort
+      <Mapping_Matrix_ParameterPort>`;  depending on learning method, additional MappingProjections may be created to
       and/or from the LearningMechanism -- see `LearningMechanism_Learning_Configurations` for details);
       these are assigned the `NodeRole` `LEARNING` in the Composition.
 
@@ -1111,7 +1111,7 @@ from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.components.states.state import State
 from psyneulink.core.components.states.inputport import InputPort, SHADOW_INPUTS
-from psyneulink.core.components.states.parameterstate import ParameterState
+from psyneulink.core.components.states.parameterport import ParameterPort
 from psyneulink.core.components.states.outputport import OutputPort
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
@@ -1991,9 +1991,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                             receiver=node)
 
         # Add ControlSignals to controller and ControlProjections
-        #     to any parameter_states specified for control in node's constructor
+        #     to any parameter_ports specified for control in node's constructor
         if self.controller:
-            deferred_init_control_specs = node._get_parameter_state_deferred_init_control_specs()
+            deferred_init_control_specs = node._get_parameter_port_deferred_init_control_specs()
             if deferred_init_control_specs:
                 self.controller._remove_default_control_signal(type=CONTROL_SIGNAL)
                 for ctl_sig_spec in deferred_init_control_specs:
@@ -2550,7 +2550,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     CIM_state_for_nested_node = nc.output_CIM_states[node_state][1]
                     CIM = nc.output_CIM
                 else:
-                    # IMPLEMENTATION NOTE:  Place marker for future implementation of ParameterState handling
+                    # IMPLEMENTATION NOTE:  Place marker for future implementation of ParameterPort handling
                     #                       However, typecheck above should have caught this
                     assert False
 
@@ -2973,12 +2973,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Mechanism spec -- update receiver_input_port to reference primary InputPort
             receiver_input_port = receiver.input_port
 
-        elif isinstance(receiver, (InputPort, ParameterState)):
+        elif isinstance(receiver, (InputPort, ParameterPort)):
             # InputPort spec -- update receiver_mechanism and graph_receiver to reference owner Mechanism
             receiver_mechanism = graph_receiver = receiver.owner
 
-        elif isinstance(sender, (ControlSignal, ControlMechanism)) and isinstance(receiver, ParameterState):
-            # ParameterState spec -- update receiver_mechanism and graph_receiver to reference owner Mechanism
+        elif isinstance(sender, (ControlSignal, ControlMechanism)) and isinstance(receiver, ParameterPort):
+            # ParameterPort spec -- update receiver_mechanism and graph_receiver to reference owner Mechanism
             receiver_mechanism = graph_receiver = receiver.owner
 
         elif isinstance(receiver, Composition):
@@ -3799,7 +3799,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         learning_projection = LearningProjection(name="Learning Projection",
                                                  sender=learning_mechanism.learning_signals[0],
-                                                 receiver=learned_projection.parameter_states["matrix"])
+                                                 receiver=learned_projection.parameter_ports["matrix"])
 
         learned_projection.has_learning_projection = True
 
@@ -3904,7 +3904,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # If learned_projection already has a LearningProjection (due to pathway overlap),
             #    use those terminal sequence components
             if (learned_projection.has_learning_projection
-                    and any([lp for lp in learned_projection.parameter_states[MATRIX].mod_afferents
+                    and any([lp for lp in learned_projection.parameter_ports[MATRIX].mod_afferents
                              if lp in self.projections])):
                 target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
                 comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
@@ -4097,7 +4097,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Get existing LearningMechanism if one exists (i.e., if this is a crossing point with another pathway)
         learning_mechanism = \
-            next((lp.receiver.owner for lp in learned_projection.parameter_states[MATRIX].mod_afferents
+            next((lp.receiver.owner for lp in learned_projection.parameter_ports[MATRIX].mod_afferents
                   if isinstance(lp, LearningProjection)),
                  None)
 
@@ -4178,7 +4178,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                              and p.has_learning_projection
                              and p in self.projections)]:
             # Then get any LearningProjections to that efferent that are in current Composition
-            for learning_projection in [mod_aff for mod_aff in efferent.parameter_states[MATRIX].mod_afferents
+            for learning_projection in [mod_aff for mod_aff in efferent.parameter_ports[MATRIX].mod_afferents
                                         if (isinstance(mod_aff, LearningProjection) and mod_aff in self.projections)]:
                 error_source = learning_projection.sender.owner
                 if (error_source not in self.nodes  # error_source is not in the Composition
@@ -4224,7 +4224,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                              and p.has_learning_projection
                              and p in self.projections)]:
             # Then any LearningProjections to that efferent that are in current Composition
-            for learning_projection in [mod_aff for mod_aff in efferent.parameter_states[MATRIX].mod_afferents
+            for learning_projection in [mod_aff for mod_aff in efferent.parameter_ports[MATRIX].mod_afferents
                                         if (isinstance(mod_aff, LearningProjection) and mod_aff in self.projections)]:
                 error_source = learning_projection.sender.owner
                 if (error_source in learning_mech.error_sources
@@ -4263,7 +4263,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                              and hasattr(p, 'has_learning_projection')
                              and p.has_learning_projection)]:
             # For each LearningProjection to that afferent, if its LearningMechanism doesn't already receiver
-            for learning_projection in [lp for lp in afferent.parameter_states[MATRIX].mod_afferents
+            for learning_projection in [lp for lp in afferent.parameter_ports[MATRIX].mod_afferents
                                         if (isinstance(lp, LearningProjection)
                                             and error_source not in lp.sender.owner.error_sources)]:
                 dependent_learning_mech = learning_projection.sender.owner
@@ -4365,7 +4365,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Get rid of default ControlSignal if it has no ControlProjections
         controller._remove_default_control_signal(type=CONTROL_SIGNAL)
 
-        # Add any ControlSignals specified for ParameterStates of nodes already in the Composition
+        # Add any ControlSignals specified for ParameterPorts of nodes already in the Composition
         control_signal_specs = self._get_control_signals_for_composition()
         for ctl_sig_spec in control_signal_specs:
             # FIX: 9/14/19: THIS SHOULD BE HANDLED IN _instantiate_projection_to_state
@@ -4387,7 +4387,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Return list of ControlSignals specified by nodes in the Composition
 
         Generate list of control signal specifications
-            from ParameterStates of Mechanisms that have been specified for control.
+            from ParameterPorts of Mechanisms that have been specified for control.
         The specifications can be:
             ControlProjections (with deferred_init())
             # FIX: 9/14/19 - THIS SHOULD ALREADY HAVE BEEN PARSED INTO ControlProjection WITH DEFFERRED_INIT:
@@ -4406,7 +4406,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if node.controller:
                     control_signal_specs.append(node._get_control_signals_for_composition())
             elif isinstance(node, Mechanism):
-                control_signal_specs.extend(node._get_parameter_state_deferred_init_control_specs())
+                control_signal_specs.extend(node._get_parameter_port_deferred_init_control_specs())
         return control_signal_specs
 
     def _build_predicted_inputs_dict(self, predicted_input):
@@ -5362,12 +5362,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 learning_proj_color = learning_color
                 learning_proj_width = str(default_width)
-            sndrs = proj._parameter_states['matrix'].mod_afferents # GET ALL LearningProjections to proj
+            sndrs = proj._parameter_ports['matrix'].mod_afferents # GET ALL LearningProjections to proj
             for sndr in sndrs:
                 sndr_label = self._get_graph_node_label(sndr.sender.owner, show_dimensions)
                 rcvr_label = self._get_graph_node_label(proj, show_dimensions)
                 if show_projection_labels:
-                    edge_label = proj._parameter_states['matrix'].mod_afferents[0].name
+                    edge_label = proj._parameter_ports['matrix'].mod_afferents[0].name
                 else:
                     edge_label = ''
                 if show_node_structure:
@@ -5709,7 +5709,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             <Mechanism.output_labels_dict>` (for OutputPort values); otherwise it is ignored.
 
         show_headers : bool : default False
-            show the Mechanism, InputPort, ParameterState and OutputPort headers.
+            show the Mechanism, InputPort, ParameterPort and OutputPort headers.
 
         show_roles : bool : default False
             show the `roles <Composition.NodeRoles>` of each Mechanism in the `Composition`.
@@ -6862,7 +6862,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if self.enable_learning:
                         projections = set(self.projections).intersection(set(node.path_afferents))
                         if any([p for p in projections if
-                                any([a for a in p.parameter_states[MATRIX].mod_afferents
+                                any([a for a in p.parameter_ports[MATRIX].mod_afferents
                                      if (hasattr(a, 'learning_enabled') and a.learning_enabled in {True, ONLINE})])]):
                             context.replace_flag(ContextFlags.PROCESSING, ContextFlags.LEARNING)
 
@@ -6996,9 +6996,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             context.add_flag(ContextFlags.LEARNING)
             for projection in [p for p in self.projections if
                                hasattr(p, 'has_learning_projection') and p.has_learning_projection]:
-                matrix_parameter_state = projection.parameter_states[MATRIX]
-                if any([lp for lp in matrix_parameter_state.mod_afferents if lp.learning_enabled == AFTER]):
-                    matrix_parameter_state._update(context=context)
+                matrix_parameter_port = projection.parameter_ports[MATRIX]
+                if any([lp for lp in matrix_parameter_port.mod_afferents if lp.learning_enabled == AFTER]):
+                    matrix_parameter_port._update(context=context)
             context.remove_flag(ContextFlags.LEARNING)
 
         if call_after_pass:

@@ -93,8 +93,8 @@ the Logs of their `States <State>`.  Specifically the Logs of these Components c
   * *InputPorts* -- the `value <InputPort.value>` of any `InputPort` (listed in the Mechanism's `input_ports
     <Mechanism_Base.input_ports>` attribute).
 
-  * *ParameterStates* -- the `value <ParameterState.value>` of `ParameterState` (listed in the Mechanism's
-    `parameter_states <Mechanism_Base.parameter_states>` attribute);  this includes all of the `user configurable
+  * *ParameterPorts* -- the `value <ParameterPort.value>` of `ParameterPort` (listed in the Mechanism's
+    `parameter_ports <Mechanism_Base.parameter_ports>` attribute);  this includes all of the `user configurable
     <Component_User_Params>` parameters of the Mechanism and its `function <Mechanism_Base.function>`.
 
   * *OutputPorts* -- the `value <OutputPort.value>` of any `OutputPort` (listed in the Mechanism's `output_ports
@@ -320,7 +320,7 @@ An attribute is logged if:
 
 # * it is one `automatically included <LINK>` in logging;
 
-* it is included in the *LOG_ENTRIES* entry of a `parameter specification dictionary <ParameterState_Specification>`
+* it is included in the *LOG_ENTRIES* entry of a `parameter specification dictionary <ParameterPort_Specification>`
   assigned to the **params** argument of the constructor for the Component;
 
 * the LogCondition(s) specified in a Component's logpref match the current `ContextFlags` in its context attribute
@@ -720,9 +720,9 @@ class Log:
             return []
 
     @property
-    def parameter_state_items(self):
+    def parameter_port_items(self):
         try:
-            return [MODULATED_PARAMETER_PREFIX + name for name in self.owner.parameter_states.names]
+            return [MODULATED_PARAMETER_PREFIX + name for name in self.owner.parameter_ports.names]
         except AttributeError:
             return []
 
@@ -735,14 +735,14 @@ class Log:
 
     @property
     def all_items(self):
-        return sorted(self.parameter_items + self.input_port_items + self.output_port_items + self.parameter_state_items + self.function_items)
+        return sorted(self.parameter_items + self.input_port_items + self.output_port_items + self.parameter_port_items + self.function_items)
 
     def _get_parameter_from_item_string(self, string):
         # KDM 8/15/18: can easily cache these results if it occupies too much time, assuming
         # no duplicates/changing
         if string.startswith(MODULATED_PARAMETER_PREFIX):
             try:
-                return self.owner.parameter_states[string[len(MODULATED_PARAMETER_PREFIX):]].parameters.value
+                return self.owner.parameter_ports[string[len(MODULATED_PARAMETER_PREFIX):]].parameters.value
             except (AttributeError, TypeError):
                 pass
 

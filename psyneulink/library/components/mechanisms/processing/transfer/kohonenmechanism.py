@@ -189,7 +189,7 @@ class KohonenMechanism(TransferMechanism):
         <MappingProjection.matrix>` of `learned_projection <KohonenMechanism.learned_projection>.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
         the mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
 
@@ -534,7 +534,7 @@ class KohonenMechanism(TransferMechanism):
                 self._learning_enable_deferred = True
                 return
 
-        self.matrix = self.learned_projection.parameter_states[MATRIX]
+        self.matrix = self.learned_projection.parameter_ports[MATRIX]
 
         self.learning_mechanism = self._instantiate_learning_mechanism(learning_function=self.learning_function,
                                                                        learning_rate=self.learning_rate,

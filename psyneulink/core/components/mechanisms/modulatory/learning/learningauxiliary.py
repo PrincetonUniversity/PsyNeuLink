@@ -83,7 +83,7 @@ COMMENT:
             activation_mech_input (OutputPort)
             activation_mech_output (OutputPort)
             activation_derivative (function)
-            error_matrix (ParameterState)
+            error_matrix (ParameterPort)
             error_derivative (function)
             error_mech (error_source_mech) (ProcessingMechanism)
             error_signal_mech (LearningMechanism or ObjectiveMechanism)
@@ -148,7 +148,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.states.inputport import InputPort
 from psyneulink.core.components.states.outputport import OutputPort
-from psyneulink.core.components.states.parameterstate import ParameterState
+from psyneulink.core.components.states.parameterport import ParameterPort
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.keywords import \
     BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, \
@@ -702,7 +702,7 @@ def _get_learning_mechanisms(mech:Mechanism, composition=None):
                                                    or composition in projection.receiver.owner.systems):
 
             aff.extend([learning_projection.sender.owner
-                        for learning_projection in projection.parameter_states[MATRIX].mod_afferents
+                        for learning_projection in projection.parameter_ports[MATRIX].mod_afferents
                         if isinstance(learning_projection, LearningProjection)
                         and (not composition or composition in getattr(learning_projection.sender.owner,
                                                                        composition_attrib))
@@ -713,7 +713,7 @@ def _get_learning_mechanisms(mech:Mechanism, composition=None):
                                                    or composition in projection.receiver.owner.processes
                                                    or composition in projection.receiver.owner.systems):
             eff.extend([learning_projection.sender.owner
-                        for learning_projection in projection.parameter_states[MATRIX].mod_afferents
+                        for learning_projection in projection.parameter_ports[MATRIX].mod_afferents
                         if isinstance(learning_projection, LearningProjection)
                         and (not composition or composition in getattr(learning_projection.sender.owner,
                                                                        composition_attrib))
@@ -807,7 +807,7 @@ class LearningComponents(object):
     * `activation_mech_fct` (function):  function of Mechanism to which projection being learned projects
     * `activation_derivative` (function):  derivative of function for activation_output_mech
     * `error_projection` (`MappingProjection`):  next projection in learning sequence after activation_mech_projection
-    * `error_matrix` (`ParameterState`):  parameterState of error_projection with error_matrix
+    * `error_matrix` (`ParameterPort`):  parameterPort of error_projection with error_matrix
     * `error_derivative` (function):  deriviative of function of error_mech
     * `error_mech` (ProcessingMechanism):  Mechanism to which error_projection projects
     * `error_mech_output` (OutputPort):  outputPort of error_mech, that projects either to the next
@@ -1015,7 +1015,7 @@ class LearningComponents(object):
 
 
     # ---------------------------------------------------------------------------------------------------------------
-    # error_matrix:  parameterState for error_matrix (ParameterState)
+    # error_matrix:  parameterPort for error_matrix (ParameterPort)
     # This must be found
     @property
     def error_matrix(self):
@@ -1025,21 +1025,21 @@ class LearningComponents(object):
             if not self.error_projection:
                 return None
             try:
-                self.error_matrix = self.error_projection._parameter_states[MATRIX]
-                return self.error_projection._parameter_states[MATRIX]
+                self.error_matrix = self.error_projection._parameter_ports[MATRIX]
+                return self.error_projection._parameter_ports[MATRIX]
             except AttributeError:
                 raise LearningAuxiliaryError("error_matrix not identified: error_projection ({})"
-                                              "not not have a {} parameterState".
+                                              "not not have a {} parameterPort".
                                              format(self.error_projection))
         return self._error_matrix or _get_err_matrix()
 
     @error_matrix.setter
     def error_matrix(self, assignment):
-        if isinstance(assignment, (ParameterState)):
+        if isinstance(assignment, (ParameterPort)):
             self._error_matrix = assignment
         else:
             raise LearningAuxiliaryError("PROGRAM ERROR: illegal assignment to error_matrix; "
-                                          "it must be a ParameterState.")
+                                          "it must be a ParameterPort.")
 
 
     # ---------------------------------------------------------------------------------------------------------------

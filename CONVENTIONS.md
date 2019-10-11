@@ -28,7 +28,7 @@ Made up of two types of classes:
         - **GatingProjection**
 - *State*
     - **InputPort**
-    - **ParameterState**
+    - **ParameterPort**
     - **OutputPort**
     - *ModulatorySignal*
         - **LearningSignal**

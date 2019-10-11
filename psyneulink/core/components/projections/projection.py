@@ -48,7 +48,7 @@ each of which has subtypes that differ in the type of information they transmit,
 * `ModulatoryProjection <ModulatoryProjection>`
     takes the `value <OutputPort.value>` of a `ModulatorySignal <ModulatorySignal>` of a `ModulatoryMechanism
     <ProcessingMechanism>`, uses it to regulate modify the `value <State_Base.value>` of an `InputPort`,
-    `ParameterState` or `OutputPort` of another Component.  ModulatorySignals are specialized types of `OutputPort`,
+    `ParameterPort` or `OutputPort` of another Component.  ModulatorySignals are specialized types of `OutputPort`,
     that are used to specify how to modify the `value <State_Base.value>` of the `State <State>` to which a
     ModulatoryProjection projects. There are three types of ModulatoryProjections, corresponding to the three types
     of ModulatoryMechanisms (and corresponding ModulatorySignals; see `figure <ModulatorySignal_Anatomy_Figure>`),
@@ -56,13 +56,13 @@ each of which has subtypes that differ in the type of information they transmit,
 
   * `LearningProjection`
       takes the `value <LearningSignal.value>` of a `LearningSignal` of a `LearningMechanism`, and transmits
-      this to the `ParameterState` of a `MappingProjection` that uses this to modify its `matrix
+      this to the `ParameterPort` of a `MappingProjection` that uses this to modify its `matrix
       <MappingProjection.MappingProjection.matrix>` parameter. LearningProjections are used when learning has
       been specified for a `Process <Process_Learning_Sequence>` or `System <System_Execution_Learning>`.
   ..
   * `ControlProjection`
       takes the `value <ControlSignal.value>` of a `ControlSignal` of a `ControlMechanism <ControlMechanism>`, and
-      transmit this to the `ParameterState of a `ProcessingMechanism <ProcessingMechanism>` that uses this to modify
+      transmit this to the `ParameterPort of a `ProcessingMechanism <ProcessingMechanism>` that uses this to modify
       the parameter of the (or its `function <Mechanism_Base.function>`) for which it is responsible.
       ControlProjections are used when control has been used specified for a `System`.
   ..
@@ -120,7 +120,7 @@ Projection in context:
       COMMENT
 
       * *CONTROL_PROJECTION* (or *CONTROL*) -- this can be used when specifying a parameter using the `tuple format
-        <ParameterState_Tuple_Specification>`, to create a default `ControlProjection` to the `ParameterState` for that
+        <ParameterPort_Tuple_Specification>`, to create a default `ControlProjection` to the `ParameterPort` for that
         parameter.  If the `Component <Component>` to which the parameter belongs is part of a `System`, then a
         `ControlSignal` is added to the System's `controller <System.controller>` and assigned as the
         ControlProjection's `sender <ControlProjection.sender>`;  otherwise, the ControlProjection's `initialization
@@ -267,11 +267,11 @@ of a State are listed in its `projections <State_Base.projections>` attribute.
     | `MappingProjection`  | `OutputPort`                         | `InputPort`                                     |
     |                      | (`efferents <OutputPort.efferents>`) | (`path_afferents <InputPort.path_afferents>`)   |
     +----------------------+---------------------------------------+--------------------------------------------------+
-    | `LearningProjection` | `LearningSignal`                      | `ParameterState`                                 |
-    |                      | (`efferents <OutputPort.efferents>`) | (`mod_afferents <ParameterState.mod_afferents>`) |
+    | `LearningProjection` | `LearningSignal`                      | `ParameterPort`                                 |
+    |                      | (`efferents <OutputPort.efferents>`) | (`mod_afferents <ParameterPort.mod_afferents>`) |
     +----------------------+---------------------------------------+--------------------------------------------------+
-    | `ControlProjection`  | `ControlSignal`                       | `ParameterState`                                 |
-    |                      | (`efferents <OutputPort.efferents>`) | (`mod_afferents <ParameterState.mod_afferents>`) |
+    | `ControlProjection`  | `ControlSignal`                       | `ParameterPort`                                 |
+    |                      | (`efferents <OutputPort.efferents>`) | (`mod_afferents <ParameterPort.mod_afferents>`) |
     +----------------------+---------------------------------------+--------------------------------------------------+
     | `GatingProjection`   | `GatingSignal`                        | `InputPort` or `OutputPort`                    |
     |                      | (`efferents <OutputPort.efferents>`) | (`mod_afferents <State_Base.mod_afferents>`)     |
@@ -310,8 +310,8 @@ Projection is `deferred <Projection_Deferred_Initialization>`.
 The `receiver <Projection_Base.receiver>` required by a Projection depends on its type, as listed below:
 
     * MappingProjection: `InputPort`
-    * LearningProjection: `ParameterState` (for the `matrix <MappingProjection>` of a `MappingProjection`)
-    * ControlProjection: `ParameterState`
+    * LearningProjection: `ParameterPort` (for the `matrix <MappingProjection>` of a `MappingProjection`)
+    * ControlProjection: `ParameterPort`
     * GatingProjection: `InputPort` or OutputPort`
 
 A `MappingProjection` (as a `PathwayProjection <PathwayProjection>`) is assigned to the `path_afferents
@@ -345,13 +345,13 @@ with others to determine the `variable <State_Base.variable>` of the State to wh
    they project.
 
 
-*ParameterStates and Parameters*
+*ParameterPorts and Parameters*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-`ParameterStates <ParameterState>` provide the value for each parameter of a Projection and its `function
-<Mechanism_Base.function>`.  ParameterStates and their associated parameters are handled in the same way by
-Projections as they are for Mechanisms (see `Mechanism_ParameterStates` for details).  The ParameterStates for a
-Projection are listed in its `parameter_states <Projection_Base.parameter_states>` attribute.
+`ParameterPorts <ParameterPort>` provide the value for each parameter of a Projection and its `function
+<Mechanism_Base.function>`.  ParameterPorts and their associated parameters are handled in the same way by
+Projections as they are for Mechanisms (see `Mechanism_ParameterPorts` for details).  The ParameterPorts for a
+Projection are listed in its `parameter_ports <Projection_Base.parameter_ports>` attribute.
 
 
 .. _Projection_Execution:
@@ -451,7 +451,7 @@ class DuplicateProjectionError(Exception):
 # def projection(name=NotImplemented, params=NotImplemented, context=None):
 #         """Instantiates default or specified subclass of Projection
 #
-#         If called w/o arguments or 1st argument=NotImplemented, instantiates default subclass (ParameterState)
+#         If called w/o arguments or 1st argument=NotImplemented, instantiates default subclass (ParameterPort)
 #         If called with a name string:
 #             - if registered in ProjectionRegistry class dictionary as name of a subclass, instantiates that class
 #             - otherwise, uses it as the name for an instantiation of the default subclass, and instantiates that
@@ -536,20 +536,20 @@ class Projection_Base(Projection):
     value : value
         output of Projection, transmitted to variable of function of its `receiver <Projection_Base.receiver>`.
 
-    parameter_states : ContentAddressableList[str, ParameterState]
-        a list of the Projection's `ParameterStates <Projection_ParameterStates>`, one for each of its specifiable
+    parameter_ports : ContentAddressableList[str, ParameterPort]
+        a list of the Projection's `ParameterPorts <Projection_ParameterPorts>`, one for each of its specifiable
         parameters and those of its `function <Mechanism_Base.function>` (i.e., the ones for which there are
         arguments in their constructors).  The value of the parameters of the Projection are also accessible as
         attributes of the Projection (using the name of the parameter); the function parameters are listed in the
         Projection's `function_params <Projection_Base.function_params>` attribute, and as attributes of the `Function`
         assigned to its `function <Component.function>` attribute.
 
-    parameter_states : ContentAddressableList[str, ParameterState]
-        a read-only list of the Projection's `ParameterStates <Mechanism_ParameterStates>`, one for each of its
-        `configurable parameters <ParameterState_Configurable_Parameters>`, including those of its `function
+    parameter_ports : ContentAddressableList[str, ParameterPort]
+        a read-only list of the Projection's `ParameterPorts <Mechanism_ParameterPorts>`, one for each of its
+        `configurable parameters <ParameterPort_Configurable_Parameters>`, including those of its `function
         <Projection_Base.function>`.  The value of the parameters of the Projection and its `function
         <Projection_Base.function>` are also accessible as (and can be modified using) attributes of the Projection,
-        in the same manner as they can for a `Mechanism <Mechanism_ParameterStates>`).
+        in the same manner as they can for a `Mechanism <Mechanism_ParameterPorts>`).
 
     weight : number
        multiplies the `value <Projection_Base.value>` of the Projection after applying the `exponent
@@ -670,7 +670,7 @@ class Projection_Base(Projection):
             ControlProjection:
                 sender = <Mechanism>.output_port
                 receiver = <Mechanism>.paramsCurrent[<param>] IF AND ONLY IF there is a single one
-                            that is a ParameterState;  otherwise, an exception is raised
+                            that is a ParameterPort;  otherwise, an exception is raised
         * _instantiate_sender, _instantiate_receiver must be called before _instantiate_function:
             - _validate_params must be called before _instantiate_sender, as it validates PROJECTION_SENDER
             - instantatiate_sender may alter self.defaults.variable, so it must be called before _validate_function
@@ -687,7 +687,7 @@ class Projection_Base(Projection):
         :param context: (str)
         :return: None
         """
-        from psyneulink.core.components.states.parameterstate import ParameterState
+        from psyneulink.core.components.states.parameterport import ParameterPort
         from psyneulink.core.components.states.state import State_Base
 
         params = self._assign_args_to_param_dicts(weight=weight,
@@ -700,7 +700,7 @@ class Projection_Base(Projection):
             self._init_args[NAME] = name
 
             # remove local imports
-            del self._init_args['ParameterState']
+            del self._init_args['ParameterPort']
             del self._init_args['State_Base']
             return
 
@@ -713,10 +713,10 @@ class Projection_Base(Projection):
                           registry=ProjectionRegistry,
                           context=context)
 
-        # Create projection's _stateRegistry and ParameterState entry
+        # Create projection's _stateRegistry and ParameterPort entry
         self._stateRegistry = {}
 
-        register_category(entry=ParameterState,
+        register_category(entry=ParameterPort,
                           base_class=State_Base,
                           registry=self._stateRegistry,
                           context=context)
@@ -801,12 +801,12 @@ class Projection_Base(Projection):
                                          Mechanism.__name__, State.__name__))
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
-        self._instantiate_parameter_states(function=function, context=context)
+        self._instantiate_parameter_ports(function=function, context=context)
 
-    def _instantiate_parameter_states(self, function=None, context=None):
+    def _instantiate_parameter_ports(self, function=None, context=None):
 
-        from psyneulink.core.components.states.parameterstate import _instantiate_parameter_states
-        _instantiate_parameter_states(owner=self, function=function, context=context)
+        from psyneulink.core.components.states.parameterport import _instantiate_parameter_ports
+        _instantiate_parameter_ports(owner=self, function=function, context=context)
 
     def _instantiate_sender(self, sender, context=None):
         """Assign self.sender to OutputPort of sender
@@ -878,14 +878,14 @@ class Projection_Base(Projection):
                                            f"{sender.owner.name} that already has an identical {Projection.__name__}.")
 
     def _instantiate_attributes_after_function(self, context=None):
-        from psyneulink.core.components.states.parameterstate import _instantiate_parameter_state
+        from psyneulink.core.components.states.parameterport import _instantiate_parameter_port
         self._instantiate_receiver(context=context)
         # instantiate parameter states from UDF custom parameters if necessary
         try:
             cfp = self.function.cust_fct_params
-            udf_parameters_lacking_states = {param_name: cfp[param_name] for param_name in cfp if param_name not in self.parameter_states.names}
+            udf_parameters_lacking_states = {param_name: cfp[param_name] for param_name in cfp if param_name not in self.parameter_ports.names}
 
-            _instantiate_parameter_state(self, FUNCTION_PARAMS, udf_parameters_lacking_states, context=context, function=self.function)
+            _instantiate_parameter_port(self, FUNCTION_PARAMS, udf_parameters_lacking_states, context=context, function=self.function)
         except AttributeError:
             pass
 
@@ -926,12 +926,12 @@ class Projection_Base(Projection):
         else:
             raise ProjectionError("Unrecognized receiver specification ({0}) for {1}".format(self.receiver, self.name))
 
-    def _update_parameter_states(self, context=None, runtime_params=None):
-        for state in self._parameter_states:
+    def _update_parameter_ports(self, context=None, runtime_params=None):
+        for state in self._parameter_ports:
             state_name = state.name
             state._update(context=context, params=runtime_params)
 
-            # Assign version of ParameterState.value matched to type of template
+            # Assign version of ParameterPort.value matched to type of template
             #    to runtime param or paramsCurrent (per above)
             # FYI (7/18/17 CW) : in addition to the params and attribute being set, the state's variable is ALSO being
             # set by the statement below. For example, if state_name is 'matrix', the statement below sets
@@ -1000,14 +1000,14 @@ class Projection_Base(Projection):
                               format(self.__class__.__name__))
 
     @property
-    def parameter_states(self):
-        """Read-only access to _parameter_states"""
-        return self._parameter_states
+    def parameter_ports(self):
+        """Read-only access to _parameter_ports"""
+        return self._parameter_ports
 
-    @parameter_states.setter
-    def parameter_states(self, value):
+    @parameter_ports.setter
+    def parameter_ports(self, value):
         # IMPLEMENTATION NOTE:
-        # This keeps parameter_states property readonly,
+        # This keeps parameter_ports property readonly,
         #    but averts exception when setting paramsCurrent in Component (around line 850)
         pass
 
@@ -1024,7 +1024,7 @@ class Projection_Base(Projection):
     def _dependent_components(self):
         return list(itertools.chain(
             super()._dependent_components,
-            self.parameter_states,
+            self.parameter_ports,
         ))
 
     def _delete_projection(projection):
@@ -1358,7 +1358,7 @@ def _parse_connection_specs(connectee_state_type,
     from psyneulink.core.components.states.state import StateRegistry
     from psyneulink.core.components.states.inputport import InputPort
     from psyneulink.core.components.states.outputport import OutputPort
-    from psyneulink.core.components.states.parameterstate import ParameterState
+    from psyneulink.core.components.states.parameterport import ParameterPort
     from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
     from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import _is_control_spec
     from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import _is_gating_spec
@@ -1401,14 +1401,14 @@ def _parse_connection_specs(connectee_state_type,
         if isinstance(connection, (Mechanism, State, type)):
             # FIX: 10/3/17 - REPLACE THIS (AND ELSEWHERE) WITH ProjectionTuple THAT HAS BOTH SENDER AND RECEIVER
             # FIX: 11/28/17 - HACKS TO HANDLE PROJECTION FROM GatingSignal TO InputPort or OutputPort
-            # FIX:            AND PROJECTION FROM ControlSignal to ParameterState
+            # FIX:            AND PROJECTION FROM ControlSignal to ParameterPort
             # # If it is a ModulatoryMechanism specification, get its ModulatorySignal class
             # # (so it is recognized by _is_projection_spec below (Mechanisms are not for secondary reasons)
             # if isinstance(connection, type) and issubclass(connection, ModulatoryMechanism_Base):
             #     connection = connection.outputPortTypes
-            if ((isinstance(connectee_state_type, (InputPort, OutputPort, ParameterState))
+            if ((isinstance(connectee_state_type, (InputPort, OutputPort, ParameterPort))
                  or isinstance(connectee_state_type, type)
-                and issubclass(connectee_state_type, (InputPort, OutputPort, ParameterState)))
+                and issubclass(connectee_state_type, (InputPort, OutputPort, ParameterPort)))
                 and _is_modulatory_spec(connection)):
                 # Convert ModulatoryMechanism spec to corresponding ModulatorySignal spec
                 if isinstance(connection, type) and issubclass(connection, ModulatoryMechanism_Base):
@@ -1984,21 +1984,21 @@ def _validate_receiver(sender_mech:Mechanism,
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 def _add_projection_to(receiver, state, projection_spec, context=None):
-    """Assign an "incoming" Projection to a receiver InputPort or ParameterState of a Component object
+    """Assign an "incoming" Projection to a receiver InputPort or ParameterPort of a Component object
 
     Verify that projection has not already been assigned to receiver;
         if it has, issue a warning and ignore the assignment request.
 
     Requirements:
        * receiver must be an appropriate Component object (currently, a Mechanism or a Projection);
-       * state must be a specification of an InputPort or ParameterState;
+       * state must be a specification of an InputPort or ParameterPort;
        * specification of InputPort can be any of the following:
                 - INPUT_PORT - assigns projection_spec to (primary) InputPort;
                 - InputPort object;
                 - index for Mechanism.input_ports;
                 - name of an existing InputPort (i.e., key for Mechanism.input_ports);
                 - the keyword ADD_INPUT_PORT or the name for an InputPort to be added;
-       * specification of ParameterState must be a ParameterState object
+       * specification of ParameterPort must be a ParameterPort object
        * projection_spec can be any valid specification of a projection_spec
            (see `State._instantiate_projections_to_state`).
 
@@ -2009,7 +2009,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
         context
 
     """
-    # IMPLEMENTATION NOTE:  ADD FULL SET OF ParameterState SPECIFICATIONS
+    # IMPLEMENTATION NOTE:  ADD FULL SET OF ParameterPort SPECIFICATIONS
     #                       CURRENTLY, ASSUMES projection_spec IS AN ALREADY INSTANTIATED PROJECTION
 
     from psyneulink.core.components.states.state import _instantiate_state
@@ -2021,7 +2021,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
                              " that is not a name, reference to a {} or an index for one".
                              format(receiver.name, projection_spec.name, State.__name__))
 
-    # state is State object, so use thatParameterState
+    # state is State object, so use thatParameterPort
     if isinstance(state, State_Base):
         return state._instantiate_projections_to_state(projections=projection_spec, context=context)
 

@@ -636,7 +636,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         <TransferMechanism.output_ports>` for additional details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
         the Mechanism, its `function <Mechanism_Base.function>`, and/or a custom function and its parameters.  Values
         specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
@@ -1150,7 +1150,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         return param
 
-    def _instantiate_parameter_states(self, function=None, context=None):
+    def _instantiate_parameter_ports(self, function=None, context=None):
 
         # If function is a logistic, and clip has not been specified, bound it between 0 and 1
         if ((isinstance(self.function, Logistic) or
@@ -1158,7 +1158,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 self.clip is None):
             self.clip = (0,1)
 
-        super()._instantiate_parameter_states(function=function, context=context)
+        super()._instantiate_parameter_ports(function=function, context=context)
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         super()._instantiate_attributes_before_function(function=function, context=context)

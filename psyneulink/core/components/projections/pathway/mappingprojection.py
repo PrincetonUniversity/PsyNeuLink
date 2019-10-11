@@ -103,13 +103,13 @@ A MappingProjection is specified for learning in any of the following ways:
     * in the **matrix** argument of the MappingProjection's constructor, using the `tuple format
       <MappingProjection_Tuple_Specification>` described above;
     ..
-    * specifying the MappingProjection (or its *MATRIX* `ParameterState`) as the `receiver
+    * specifying the MappingProjection (or its *MATRIX* `ParameterPort`) as the `receiver
       <LearningProjection.receiver>` of a `LearningProjection`;
     ..
-    * specifying the MappingProjection (or its *MATRIX* `ParameterState`) in the **projections** argument of
+    * specifying the MappingProjection (or its *MATRIX* `ParameterPort`) in the **projections** argument of
       the constructor for a `LearningSignal <LearningSignal_Specification>`
     ..
-    * specifying the MappingProjection (or its *MATRIX* `ParameterState`) in the **learning_signals** argument of
+    * specifying the MappingProjection (or its *MATRIX* `ParameterPort`) in the **learning_signals** argument of
       the constructor for a `LearningMechanism <LearningSignal_Specification>`
     ..
     * specifying a MappingProjection in the `pathway <Process.pathway>`  for a `Process`,
@@ -180,12 +180,12 @@ In addition to its `sender <MappingProjection.sender>`, `receiver <MappingProjec
     the matrix minus its sender dimensionality).
 
 
-.. _Mapping_Matrix_ParameterState:
+.. _Mapping_Matrix_ParameterPort:
 
-* *MATRIX* `ParameterState` - this receives any `LearningProjections <LearningProjection>` that are assigned to the
+* *MATRIX* `ParameterPort` - this receives any `LearningProjections <LearningProjection>` that are assigned to the
   MappingProjection (see `MappingProjection_Learning_Specification` above), and updates the current value of the
   MappingProjection's `matrix <MappingProjection.matrix>` parameter in response to `learning
-  <LearningMechanism>`.  The `function <ParameterState.function>` of a *MATRIX* ParameterState is an
+  <LearningMechanism>`.  The `function <ParameterPort.function>` of a *MATRIX* ParameterPort is an
   `AccumulatorIntegrator`, which accumulates the weight changes received from the LearningProjections
   that project to it (see `MappingProjection_Learning` below).  This can be replaced by any function that defines an
   *ADDITIVE_PARAM* `modulatory parameter <ModulatorySignal_Modulation>`), and that takes as its input an array or
@@ -216,13 +216,13 @@ parameter to transform its `sender <MappingProjection.sender>` into a form suita
 <InputPort.variable>` of its `receiver <MappingProjection.receiver>`.  A MappingProjection cannot be executed
 directly. It is executed when the `InputPort` to which it projects (i.e., its `receiver
 <MappingProjection.receiver>`) is updated;  that occurs when the InputPort's owner `Mechanism <Mechanism>` is executed.
-When executed, the MappingProjection's *MATRIX* `ParameterState` updates its `matrix <MappingProjection.matrix>`
-parameter based on any `LearningProjection(s)` it receives (listed in the ParameterState's `mod_afferents
-<ParameterState.mod_afferents>` attribute). This brings into effect any changes that occurred due to `learning
+When executed, the MappingProjection's *MATRIX* `ParameterPort` updates its `matrix <MappingProjection.matrix>`
+parameter based on any `LearningProjection(s)` it receives (listed in the ParameterPort's `mod_afferents
+<ParameterPort.mod_afferents>` attribute). This brings into effect any changes that occurred due to `learning
 <MappingProjection_Learning>`.  Since this does not occur until the Mechanism that receives the MappingProjection
 is executed (in accord with :ref:`Lazy Evaluation <LINK>`), any changes due to learning do not take effect, and are not
 observable (e.g., through inspection of the `matrix <MappingProjection.matrix>` attribute or the
-`value <ParameterState.value>` of its ParameterState) until the next `TRIAL` of execution (see :ref:`Lazy Evaluation`
+`value <ParameterPort.value>` of its ParameterPort) until the next `TRIAL` of execution (see :ref:`Lazy Evaluation`
 for an explanation of "lazy" updating).
 
 .. _MappingProjection_Learning:
@@ -231,27 +231,27 @@ for an explanation of "lazy" updating).
 ~~~~~~~~~~
 
 Learning modifies the `matrix <MappingProjection.matrix>` parameter of a MappingProjection, under the influence
-of one or more `LearningProjections <LearningProjection>` that project to its *MATRIX* `ParameterState`.
+of one or more `LearningProjections <LearningProjection>` that project to its *MATRIX* `ParameterPort`.
 This conforms to the general procedures for modulation used by `ModulatoryProjections <ModulatoryProjection>`
-A LearningProjection `modulates <LearningSignal_Modulation>` the `function <ParameterState.function>` of the
-*MATRIX* ParameterState, which is responsible for keeping a record of the value of the MappingProjection's matrix,
+A LearningProjection `modulates <LearningSignal_Modulation>` the `function <ParameterPort.function>` of the
+*MATRIX* ParameterPort, which is responsible for keeping a record of the value of the MappingProjection's matrix,
 and providing it to the MappingProjection's `function <MappingProjection.function>` (usually `LinearMatrix`).  By
-default, the function for the *MATRIX* ParameterState is an `AccumulatorIntegrator`.  A LearningProjection
+default, the function for the *MATRIX* ParameterPort is an `AccumulatorIntegrator`.  A LearningProjection
 modulates it by assigning the value of its `additive_param <AccumulatorIntegrator.additive_param>` (`increment
 <AccumulatorIntegrator.increment>`), which is added to its `previous_value <AccumulatorIntegrator.previous_value>`
 attribute each time it is executed. The result is that each time the MappingProjection is executed, and in turn
-executes its *MATRIX* ParameterState, the `weight changes <LearningProjection_Structure>` conveyed to the
+executes its *MATRIX* ParameterPort, the `weight changes <LearningProjection_Structure>` conveyed to the
 MappingProjection from any LearningProjection(s) are added to the record of the matrix kept by the *MATRIX*
-ParameterState's `AccumulatorIntegrator` function in its `previous_value <AccumulatorIntegrator.previous_value>`
+ParameterPort's `AccumulatorIntegrator` function in its `previous_value <AccumulatorIntegrator.previous_value>`
 attribute. This is then the value of the matrix used  by the MappingProjection's `LinearMatrix` function when it is
 executed.  It is important to note that the accumulated weight changes received by a MappingProjection from its
-LearningProjection(s) are stored by the *MATRIX* ParameterState's function, and not the MappingProjection's `matrix
+LearningProjection(s) are stored by the *MATRIX* ParameterPort's function, and not the MappingProjection's `matrix
 <MappingProjection.matrix>` parameter itself; the latter stores the original value of the matrix before learning (that
 is, its unmodulated value, conforming to the general protocol for `modulation <ModulatorySignal_Modulation>` in
 PsyNeuLink).  The most recent value of the matrix used by the MappingProjection is stored in the `value
-<ParameterState.value>` of its *MATRIX* ParameterState. As noted `above <Mapping_Execution>`, however, this does not
-reflect any changes due to learning on the current `TRIAL` of execution; those are assigned to the ParameterState's
-`value <ParameterState.value>` when it executes, which does not occur until the `Mechanism <Mechanism>` that receives
+<ParameterPort.value>` of its *MATRIX* ParameterPort. As noted `above <Mapping_Execution>`, however, this does not
+reflect any changes due to learning on the current `TRIAL` of execution; those are assigned to the ParameterPort's
+`value <ParameterPort.value>` when it executes, which does not occur until the `Mechanism <Mechanism>` that receives
 the MappingProjection is executed in the next `TRIAL` of execution (see :ref:`Lazy Evaluation <LINK>` for an explanation
 of "lazy" updating)
 
@@ -303,7 +303,7 @@ def _mapping_projection_matrix_setter(value, owning_component=None, context=None
     owning_component.function.parameters.matrix.set(value, context)
     # KDM 11/13/18: not sure that below is correct to do here, probably is better to do this in a "reinitialize" type method
     # but this is needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models)
-    owning_component.parameter_states["matrix"].function.parameters.previous_value.set(value, context)
+    owning_component.parameter_ports["matrix"].function.parameters.previous_value.set(value, context)
 
     return value
 
@@ -392,7 +392,7 @@ class MappingProjection(PathwayProjection_Base):
         of its `receiver <MappingProjection.receiver>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
         the Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default assignment (`LinearCombination`).  Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
@@ -422,8 +422,8 @@ class MappingProjection(PathwayProjection_Base):
         `sender <MappingProjection.sender>` into the value provided to its `receiver <MappingProjection.receiver>`.
 
     has_learning_projection : bool : None
-        identifies the `LearningProjection` assigned to the MappingProjection's `MATRIX` `ParameterState
-        <ParameterState>`.
+        identifies the `LearningProjection` assigned to the MappingProjection's `MATRIX` `ParameterPort
+        <ParameterPort>`.
 
     function : function
        determines function used to transform `variable <MappingProjection.variable>` into `value
@@ -504,7 +504,7 @@ class MappingProjection(PathwayProjection_Base):
         #     - for MappingProjections, this logs the value of the Projection's matrix parameter
         #     - for ModulatoryProjections, this logs the value of the Projection
         # IMPLEMENTATION NOTE: this needs to be a property as that is expected by Log.loggable_items
-        return list(self.parameter_states)
+        return list(self.parameter_ports)
 
 
     class sockets:
@@ -558,37 +558,37 @@ class MappingProjection(PathwayProjection_Base):
                          **kwargs)
 
         try:
-            self._parameter_states[MATRIX].function.reinitialize(context=context)
+            self._parameter_ports[MATRIX].function.reinitialize(context=context)
         except AttributeError:
             pass
 
-    def _instantiate_parameter_states(self, function=None, context=None):
+    def _instantiate_parameter_ports(self, function=None, context=None):
 
-        super()._instantiate_parameter_states(function=function, context=context)
+        super()._instantiate_parameter_ports(function=function, context=context)
 
         # FIX: UPDATE FOR LEARNING
         # FIX: UPDATE WITH MODULATION_MODS
         # FIX: MOVE THIS TO MappingProjection.__init__;
         # FIX: AS IT IS, OVER-WRITES USER ASSIGNMENT OF FUNCTION IN params dict FOR MappingProjection
-        matrix = get_matrix(self._parameter_states[MATRIX].value)
+        matrix = get_matrix(self._parameter_ports[MATRIX].value)
         initial_rate = matrix * 0.0
 
         # KDM 7/11/19: instead of simply setting the function, we need to reinstantiate to ensure
         # new defaults get set properly
-        self._parameter_states[MATRIX]._instantiate_function(
+        self._parameter_ports[MATRIX]._instantiate_function(
             function=AccumulatorIntegrator(
-                owner=self._parameter_states[MATRIX],
+                owner=self._parameter_ports[MATRIX],
                 default_variable=matrix,
                 initializer=matrix,
                 # rate=initial_rate
             ),
             context=context
         )
-        self._parameter_states[MATRIX]._instantiate_value(context)
-        self._parameter_states[MATRIX]._update_parameter_components(context)
+        self._parameter_ports[MATRIX]._instantiate_value(context)
+        self._parameter_ports[MATRIX]._update_parameter_components(context)
 
-        # # Assign ParameterState the same Log as the MappingProjection, so that its entries are accessible to Mechanisms
-        # self._parameter_states[MATRIX].log = self.log
+        # # Assign ParameterPort the same Log as the MappingProjection, so that its entries are accessible to Mechanisms
+        # self._parameter_ports[MATRIX].log = self.log
 
     def _instantiate_receiver(self, context=None):
         """Determine matrix needed to map from sender to receiver
@@ -688,7 +688,7 @@ class MappingProjection(PathwayProjection_Base):
 
     def _execute(self, variable=None, context=None, runtime_params=None):
 
-        self._update_parameter_states(context=context, runtime_params=runtime_params)
+        self._update_parameter_ports(context=context, runtime_params=runtime_params)
 
         value = super()._execute(
                 variable=variable,
@@ -738,4 +738,4 @@ class MappingProjection(PathwayProjection_Base):
     @logPref.setter
     def logPref(self, setting):
         self.prefs.logPref = setting
-        self.parameter_states[MATRIX].logPref = setting
+        self.parameter_ports[MATRIX].logPref = setting

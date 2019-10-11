@@ -258,8 +258,8 @@ The following Components are created for each learning sequence specified for a 
     * a `LearningMechanism` for each MappingProjection in the sequence that calculates the `learning_signal
       <LearningMechanism.learning_signal>` used to modify the `matrix <MappingProjection.matrix>` parameter for that
       MappingProjection, along with a `LearningSignal` and `LearningProjection` that convey the `learning_signal
-      <LearningMechanism.learning_signal>` to the MappingProjection's *MATRIX* `ParameterState
-      <Mapping_Matrix_ParameterState>` (additional MappingProjections are created for the LearningMechanism -- see
+      <LearningMechanism.learning_signal>` to the MappingProjection's *MATRIX* `ParameterPort
+      <Mapping_Matrix_ParameterPort>` (additional MappingProjections are created for the LearningMechanism -- see
       `LearningMechanism_Learning_Configurations` for details).
 
     .. note::
@@ -309,7 +309,7 @@ can be "clamped" on using the **clamp_input** argument of `execute <Process.exec
 After the `origin_mechanism <Process.origin_mechanism>` is executed, each subsequent Mechanism in the `pathway` is
 executed in sequence.  If a Mechanism is specified in the pathway using a `MechanismTuple
 <Process_Mechanism_Specification>`, then the `runtime parameters <Mechanism_Runtime_Parameters>` are applied and the
-Mechanism is executed using them (see `Mechanism <Mechanism_ParameterStates>` for parameter specification).  Finally the
+Mechanism is executed using them (see `Mechanism <Mechanism_ParameterPorts>` for parameter specification).  Finally the
 output of the `terminal_mechanism <Process.terminal_mechanism>` (the last one in the pathway) is assigned as the
 `output <Process_Output>` of the Process.
 
@@ -351,7 +351,7 @@ argument of the Process' `execute <Process.execute>` or `run <Process.run>` meth
 sequence <Process_Learning_Sequence>`. These are used to calculate a `learning_signal
 <LearningMechanism.learning_signal>` for each MappingProjection in a learning sequence. This is conveyed by a
 `LearningProjection` as a `weight_change_matrix <LearningProjection.weight_change_matrix>` to the MappingProjection's
-*MATRIX* `ParameterState <Mapping_Matrix_ParameterState>`, that  is used to modify the MappingProjection's `matrix
+*MATRIX* `ParameterPort <Mapping_Matrix_ParameterPort>`, that  is used to modify the MappingProjection's `matrix
 <MappingProjection.matrix>` parameter when it executes.
 
 .. note::
@@ -376,7 +376,7 @@ instance, the second as a default instance of a Mechanism type, and the third in
 
     mechanism_1 = TransferMechanism()
     mechanism_2 = DDM()
-    some_params = {PARAMETER_STATE_PARAMS:{THRESHOLD:2,NOISE:0.1}}
+    some_params = {PARAMETER_PORT_PARAMS:{THRESHOLD:2,NOISE:0.1}}
     my_process = Process(pathway=[mechanism_1, TransferMechanism, (mechanism_2, my_params)])
 
 *Default Projection specification:*  The `pathway` for this Process uses default Projection specifications; as a
@@ -467,12 +467,12 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.components.projections.projection import _add_projection_to, _is_projection_spec
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Projection, System_Base
 from psyneulink.core.components.states.modulatorysignals.learningsignal import LearningSignal
-from psyneulink.core.components.states.parameterstate import ParameterState
+from psyneulink.core.components.states.parameterport import ParameterPort
 from psyneulink.core.components.states.state import _instantiate_state, _instantiate_state_list
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, ENABLED, FUNCTION, FUNCTION_PARAMS, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, \
-    MAPPING_PROJECTION, MATRIX, NAME, OBJECTIVE_MECHANISM, ORIGIN, PARAMETER_STATE, PATHWAY, SENDER, SINGLETON, \
+    MAPPING_PROJECTION, MATRIX, NAME, OBJECTIVE_MECHANISM, ORIGIN, PARAMETER_PORT, PATHWAY, SENDER, SINGLETON, \
     TARGET, TERMINAL, PROCESS_COMPONENT_CATEGORY, RECEIVER_ARG
 from psyneulink.core.globals.parameters import Defaults, Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -1234,51 +1234,51 @@ class Process(Process_Base):
                 if isinstance(preceding_item, Projection):
                     if self.learning:
 
-                        # Check if preceding_item has a matrix ParameterState and, if so, it has any learningSignals
+                        # Check if preceding_item has a matrix ParameterPort and, if so, it has any learningSignals
                         # If it does, assign them to learning_projections
                         try:
                             learning_projections = list(
-                                projection for projection in preceding_item._parameter_states[MATRIX].mod_afferents
+                                projection for projection in preceding_item._parameter_ports[MATRIX].mod_afferents
                                 if isinstance(projection, LearningProjection)
                             )
 
                         # FIX: 10/3/17: USE OF TUPLE AS ITEM IN state_list ARGS BELOW IS NO LONGER SUPPORTED
                         #               NEED TO REFORMAT SPECS FOR state_list BELOW
                         #               (NOTE: THESE EXCEPTIONS ARE NOT BEING CALLED IN CURRENT TEST SUITES)
-                        # preceding_item doesn't have a _parameter_states attrib, so assign one with self.learning
+                        # preceding_item doesn't have a _parameter_ports attrib, so assign one with self.learning
                         except AttributeError:
-                            # Instantiate _parameter_states Ordered dict with ParameterState and self.learning
-                            preceding_item._parameter_states = _instantiate_state_list(
+                            # Instantiate _parameter_ports Ordered dict with ParameterPort and self.learning
+                            preceding_item._parameter_ports = _instantiate_state_list(
                                     owner=preceding_item,
                                     state_list=[(MATRIX, self.learning)],
-                                    state_types=ParameterState,
-                                    state_param_identifier=PARAMETER_STATE,
+                                    state_types=ParameterPort,
+                                    state_param_identifier=PARAMETER_PORT,
                                     reference_value=self.learning,
                                     reference_value_name=LEARNING_PROJECTION,
                                     context=context
                             )
 
-                        # preceding_item has _parameter_states but not (yet!) one for MATRIX, so instantiate it
+                        # preceding_item has _parameter_ports but not (yet!) one for MATRIX, so instantiate it
                         except KeyError:
-                            # Instantiate ParameterState for MATRIX
-                            preceding_item._parameter_states[MATRIX] = _instantiate_state(
+                            # Instantiate ParameterPort for MATRIX
+                            preceding_item._parameter_ports[MATRIX] = _instantiate_state(
                                 owner=preceding_item,
-                                state_type=ParameterState,
+                                state_type=ParameterPort,
                                 name=MATRIX,
                                 # # FIX: NOT SURE IF THIS IS CORRECT:
-                                # state_spec=PARAMETER_STATE,
+                                # state_spec=PARAMETER_PORT,
                                 reference_value=self.learning,
                                 reference_value_name=LEARNING_PROJECTION,
                                 params=self.learning,
                                 context=context
                             )
-                        # preceding_item has ParameterState for MATRIX,
+                        # preceding_item has ParameterPort for MATRIX,
                         else:
                             if not learning_projections:
                                 # Add learningProjection to Projection if it doesn't have one
                                 projs = _add_projection_to(
                                     preceding_item,
-                                    preceding_item._parameter_states[MATRIX],
+                                    preceding_item._parameter_ports[MATRIX],
                                     projection_spec=self.learning
                                 )
                                 for proj in projs:
@@ -1304,30 +1304,30 @@ class Process(Process_Base):
                         if self.learning:
                             # Make sure Projection includes a learningSignal and add one if it doesn't
                             try:
-                                matrix_param_state = projection._parameter_states[MATRIX]
+                                matrix_param_state = projection._parameter_ports[MATRIX]
 
-                            # Projection doesn't have a _parameter_states attrib, so assign one with self.learning
+                            # Projection doesn't have a _parameter_ports attrib, so assign one with self.learning
                             except AttributeError:
-                                # Instantiate _parameter_states Ordered dict with ParameterState for self.learning
-                                projection._parameter_states = _instantiate_state_list(
+                                # Instantiate _parameter_ports Ordered dict with ParameterPort for self.learning
+                                projection._parameter_ports = _instantiate_state_list(
                                     owner=preceding_item,
                                     state_list=[(MATRIX, self.learning)],
-                                    state_types=ParameterState,
-                                    state_param_identifier=PARAMETER_STATE,
+                                    state_types=ParameterPort,
+                                    state_param_identifier=PARAMETER_PORT,
                                     reference_value=self.learning,
                                     reference_value_name=LEARNING_PROJECTION,
                                     context=context
                                 )
 
-                            # Projection has _parameter_states but not (yet!) one for MATRIX,
+                            # Projection has _parameter_ports but not (yet!) one for MATRIX,
                             #    so instantiate it with self.learning
                             except KeyError:
-                                # Instantiate ParameterState for MATRIX
-                                projection._parameter_states[MATRIX] = _instantiate_state(
+                                # Instantiate ParameterPort for MATRIX
+                                projection._parameter_ports[MATRIX] = _instantiate_state(
                                     owner=preceding_item,
-                                    state_type=ParameterState,
+                                    state_type=ParameterPort,
                                     name=MATRIX,
-                                    # state_spec=PARAMETER_STATE,
+                                    # state_spec=PARAMETER_PORT,
                                     reference_value=self.learning,
                                     reference_value_name=LEARNING_PROJECTION,
                                     params=self.learning,
@@ -1423,7 +1423,7 @@ class Process(Process_Base):
                     )
 
                     projection._activate_for_compositions(self)
-                    for mod_proj in itertools.chain.from_iterable([p.mod_afferents for p in projection.parameter_states]):
+                    for mod_proj in itertools.chain.from_iterable([p.mod_afferents for p in projection.parameter_ports]):
                         mod_proj._activate_for_compositions(self)
 
                     if self.prefs.verbosePref:
@@ -1870,7 +1870,7 @@ class Process(Process_Base):
                 go through _mechs in reverse order of pathway since
                     LearningProjections are processed from the output (where the training signal is provided) backwards
                 exhaustively check all of Components of each Mechanism,
-                    including all projections to its input_ports and _parameter_states
+                    including all projections to its input_ports and _parameter_ports
                 initialize all items that specified deferred initialization
                 construct a _learning_mechs of Mechanism tuples (mech, params):
                 add _learning_mechs to the Process' _mechs
@@ -1900,17 +1900,17 @@ class Process(Process_Base):
                         pass
                 self._instantiate__deferred_init_projections(projections, context=context)
 
-            # For each ParameterState of the mechanism
-            for parameter_state in mech._parameter_states:
-                parameter_state._deferred_init(context=context)
+            # For each ParameterPort of the mechanism
+            for parameter_port in mech._parameter_ports:
+                parameter_port._deferred_init(context=context)
                 # MODIFIED 5/2/17 OLD:
-                # self._instantiate__deferred_init_projections(parameter_state.path_afferents)
+                # self._instantiate__deferred_init_projections(parameter_port.path_afferents)
                 # MODIFIED 5/2/17 NEW:
                 # Defer instantiation of ControlProjections to System
-                #   and there should not be any other type of Projection to the ParameterState of a Mechanism
+                #   and there should not be any other type of Projection to the ParameterPort of a Mechanism
                 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
-                if not all(isinstance(proj, ControlProjection) for proj in parameter_state.mod_afferents):
-                    raise ProcessError("PROGRAM ERROR:  non-ControlProjection found to ParameterState for a Mechanism")
+                if not all(isinstance(proj, ControlProjection) for proj in parameter_port.mod_afferents):
+                    raise ProcessError("PROGRAM ERROR:  non-ControlProjection found to ParameterPort for a Mechanism")
                 # MODIFIED 5/2/17 END
 
         # CHANGYAN NOTE: check this spot
@@ -1957,12 +1957,12 @@ class Process(Process_Base):
             projection._deferred_init(context=context)
 
             # FIX:  WHY DOESN'T THE PROJECTION HANDLE THIS? (I.E., IN ITS deferred_init() METHOD?)
-            # For each parameter_state of the Projection
+            # For each parameter_port of the Projection
             try:
-                for parameter_state in projection._parameter_states:
-                    # Initialize each Projection to the ParameterState (learning or control)
+                for parameter_port in projection._parameter_ports:
+                    # Initialize each Projection to the ParameterPort (learning or control)
                     # IMPLEMENTATION NOTE:  SHOULD ControlProjections BE IGNORED HERE?
-                    for param_projection in parameter_state.mod_afferents:
+                    for param_projection in parameter_port.mod_afferents:
                         param_projection._deferred_init(context=context)
                         if isinstance(param_projection, LearningProjection):
                             # Get ObjectiveMechanism if there is one, and add to _learning_mechs
@@ -2004,9 +2004,9 @@ class Process(Process_Base):
                         except AttributeError:
                             pass
 
-            # Not all Projection subclasses instantiate ParameterStates
+            # Not all Projection subclasses instantiate ParameterPorts
             except TypeError as e:
-                if 'parameterStates' in e.args[0]:
+                if 'parameterPorts' in e.args[0]:
                     pass
                 else:
                     error_msg = 'Error in attempt to initialize LearningProjection ({}) for {}: \"{}\"'.\
@@ -2199,7 +2199,7 @@ class Process(Process_Base):
             for the corresponding `ComparatorMechanism` in `target_nodes <Process.target_nodes>`.
 
         params : Dict[param keyword: param value] :  default None
-            a `parameter dictionary <ParameterState_Specification>` that can include any of the parameters used
+            a `parameter dictionary <ParameterPort_Specification>` that can include any of the parameters used
             as arguments to instantiate the object. Use parameter's name as the keyword for its entry.  Values specified
             for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
@@ -2337,7 +2337,7 @@ class Process(Process_Base):
         # FINALLY, execute LearningProjections to MappingProjections in the process' pathway
         for mech in self._mechs:
             # IMPLEMENTATION NOTE:
-            #    This implementation restricts learning to ParameterStates of projections to input_ports
+            #    This implementation restricts learning to ParameterPorts of projections to input_ports
             #    That means that other parameters (e.g. object or function parameters) are not currenlty learnable
 
             # For each inputPort of the mechanism
@@ -2353,33 +2353,33 @@ class Process(Process_Base):
                     if isinstance(sender, Process) or not self in (sender.processes):
                         continue
 
-                    # Call parameter_state._update with LEARNING in context to update LearningSignals
+                    # Call parameter_port._update with LEARNING in context to update LearningSignals
                     # Note: context is set on the projection,
-                    #    as the ParameterStates are assigned their owner's context in their update methods
+                    #    as the ParameterPorts are assigned their owner's context in their update methods
                     # Note: do this rather just calling LearningSignals directly
-                    #       since parameter_state._update() handles parsing of LearningProjection-specific params
+                    #       since parameter_port._update() handles parsing of LearningProjection-specific params
 
-                    # For each parameter_state of the Projection
+                    # For each parameter_port of the Projection
                     try:
-                        for parameter_state in projection._parameter_states:
+                        for parameter_port in projection._parameter_ports:
 
                             # Skip learning if the LearningMechanism to which the LearningProjection belongs is disabled
                             if all(projection.sender.owner.learning_enabled is False
-                                   for projection in parameter_state.mod_afferents):
+                                   for projection in parameter_port.mod_afferents):
                                 continue
 
                             # NOTE: This will need to be updated when runtime params are re-enabled
-                            # parameter_state._update(params=params, context=context)
-                            parameter_state._update(context=context)
+                            # parameter_port._update(params=params, context=context)
+                            parameter_port._update(context=context)
 
-                    # Not all Projection subclasses instantiate ParameterStates
+                    # Not all Projection subclasses instantiate ParameterPorts
                     except AttributeError as e:
-                        if e.args[0] is '_parameter_states':
+                        if e.args[0] is '_parameter_ports':
                             pass
                         else:
                             raise ProcessError("PROGRAM ERROR: unrecognized attribute (\'{}\') encountered "
                                                "while attempting to update {} {} of {}".
-                                               format(e.args[0], parameter_state.name, ParameterState.__name__,
+                                               format(e.args[0], parameter_port.name, ParameterPort.__name__,
                                                       projection.name))
 
         context.remove_flag(ContextFlags.LEARNING)

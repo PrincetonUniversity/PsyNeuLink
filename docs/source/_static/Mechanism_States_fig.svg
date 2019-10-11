@@ -1726,7 +1726,7 @@
                x="0 8.6709995 15.9016 20.961201 28.191799 39.7514 46.981998 51.311001 58.541599 63.6012 72.272202 76.601196 83.831802 88.160797"
                y="0"
                sodipodi:role="line"
-               id="tspan4597">ParameterState</tspan></text>
+               id="tspan4597">ParameterPort</tspan></text>
 </g></g></g><g
        id="g4599"><g
          id="g4601"
@@ -1912,7 +1912,7 @@
                x="0 8.6709995 15.9016 20.961201 28.191799 39.7514 46.981998 51.311001 58.541599 63.6012 72.272202 76.601196 83.831802 88.160797"
                y="0"
                sodipodi:role="line"
-               id="tspan4807">ParameterState</tspan></text>
+               id="tspan4807">ParameterPort</tspan></text>
 </g></g></g><g
        id="g4809"><g
          id="g4811"
