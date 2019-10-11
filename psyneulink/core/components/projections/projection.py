@@ -399,7 +399,7 @@ from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Pro
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.states.state import StateError
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATING, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, NAME, OUTPUT_STATE, OUTPUT_STATES, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, STANDARD_ARGS, STATE, STATES, WEIGHT, ADD_INPUT_STATE, ADD_OUTPUT_STATE, PROJECTION_COMPONENT_CATEGORY
+from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATING, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_RECEIVER_STATE, MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_SENDER_STATE, NAME, OUTPUT_STATE, OUTPUT_STATES, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, STANDARD_ARGS, STATE, STATES, WEIGHT, ADD_INPUT_STATE, ADD_OUTPUT_STATE, PROJECTION_COMPONENT_CATEGORY
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
@@ -847,6 +847,8 @@ class Projection_Base(Projection):
 
         # Assign projection to self.sender's efferents list attribute
         # First make sure that projection is not already in efferents
+        # IMPLEMENTATON NOTE:  Currently disallows *ANY* Projections with same sender and receiver
+        #                      (even if they are in different Compositions)
         if self not in self.sender.efferents:
             # Then make sure there is not already a projection to its receiver
             receiver = self.receiver
@@ -861,6 +863,8 @@ class Projection_Base(Projection):
             # IMPLEMENTATION NOTE:  this gives precedence to a Projection to a Component specified by its sender
             #                      (e.g., controller of a Composition for a ControlProjection)
             #                       over its specification in the constructor for the receiver or its owner
+            # IMPLEMENTATION NOTE:  This should be removed if/when different Projections are permitted between
+            #                       the same sender and receiver in different Compositions
             if dup:
                 if dup.initialization_status == ContextFlags.DEFERRED_INIT:
                     del receiver.mod_afferents[receiver.mod_afferents.index(dup)]
@@ -1025,6 +1029,35 @@ class Projection_Base(Projection):
 
     def _delete_projection(projection):
         raise ProjectionError(f"{Projection.__name__} class {type(projection)} does not implement _delete method.")
+
+    @property
+    def _dict_summary(self):
+        # these may occur during deferred init
+        if not isinstance(self.sender, type):
+            sender_name = self.sender.name
+            sender_mech = self.sender.owner.name
+        else:
+            sender_name = None
+            sender_mech = None
+
+        if not isinstance(self.receiver, type):
+            receiver_name = self.receiver.name
+            receiver_mech = self.receiver.owner.name
+        else:
+            receiver_name = None
+            receiver_mech = None
+
+        socket_dict = {
+            MODEL_SPEC_ID_SENDER_STATE: sender_name,
+            MODEL_SPEC_ID_RECEIVER_STATE: receiver_name,
+            MODEL_SPEC_ID_SENDER_MECH: sender_mech,
+            MODEL_SPEC_ID_RECEIVER_MECH: receiver_mech
+        }
+
+        return {
+            **super()._dict_summary,
+            **socket_dict
+        }
 
 
 @tc.typecheck
@@ -1193,6 +1226,7 @@ def _parse_projection_spec(projection_spec,
     elif (isinstance(projection_spec, State)
           or (isinstance(projection_spec, type) and issubclass(projection_spec, State))):
         proj_spec_dict[PROJECTION_TYPE] = projection_spec.paramClassDefaults[PROJECTION_TYPE]
+        state_type = projection_spec.__class__
 
     # Mechanism object or class
     elif (isinstance(projection_spec, Mechanism)
@@ -1603,10 +1637,7 @@ def _parse_connection_specs(connectee_state_type,
                 # FIX: 11/28/17 HACK TO DEAL WITH GatingSignal Projection to OutputState
                 # FIX: 5/11/19: CORRECTED TO HANDLE ControlMechanism SPECIFIED FOR GATING
                 if ((_is_gating_spec(first_item) or _is_control_spec(first_item))
-                    and (isinstance(last_item, OutputState) or last_item == OutputState
-                        # # FIX: 9/27/19:  ADDED TO DEAL WITH ControlMechanism SPECIFIED FOR GATING OF INPUTSTATE
-                        #  or isinstance(last_item, InputState) or last_item == InputState
-                        )
+                    and (isinstance(last_item, OutputState) or last_item == OutputState)
                 ):
                     projection_socket = SENDER
                     state_types = [OutputState]
@@ -1661,7 +1692,6 @@ def _parse_connection_specs(connectee_state_type,
             if _is_projection_spec(projection_spec) or _is_modulatory_spec(projection_spec) or projection_spec is None:
 
                 # FIX: 11/21/17 THIS IS A HACK TO DEAL WITH GatingSignal Projection TO InputState or OutputState
-                # FIX: 9/27/19 AUGMENT TO INCLUDE ControlSignal Projection??
                 from psyneulink.core.components.states.inputstate import InputState
                 from psyneulink.core.components.states.outputstate import OutputState
                 from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
@@ -1683,14 +1713,8 @@ def _parse_connection_specs(connectee_state_type,
                 ):
                     projection_spec = state
 
-                # # MODIFIED 9/27/19 OLD:
-                # elif _is_gating_spec(first_item):
-                # # MODIFIED 9/27/19 NEW: [JDC]
-                # elif _is_gating_spec(first_item) or _is_control_spec((first_item)):
-                # MODIFIED 9/27/19 NEWER: [JDC] XYZ
                 elif (_is_gating_spec(first_item) or _is_control_spec((first_item))
                       and not isinstance(last_item, (GatingProjection, ControlProjection))):
-                # MODIFIED 9/27/19 END
                     projection_spec = first_item
                 projection_spec = _parse_projection_spec(projection_spec,
                                                          owner=owner,

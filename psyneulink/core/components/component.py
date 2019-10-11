@@ -400,10 +400,13 @@ It also contains:
 COMMENT
 
 """
+import base64
 import copy
+import dill
 import inspect
 import logging
 import numbers
+import re
 import types
 import warnings
 
@@ -417,11 +420,14 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import Context, ContextError, ContextFlags, INITIALIZATION_STATUS_FLAGS, _get_time, handle_external_context
+from psyneulink.core.globals.json import JSONDumpable
 from psyneulink.core.globals.keywords import \
     COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, \
     FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, \
     LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, \
-    PARAMS, PARAMS_CURRENT, PREFS_ARG, REINITIALIZE_WHEN, SIZE, USER_PARAMS, VALUE, VARIABLE, FUNCTION_COMPONENT_CATEGORY
+    PARAMS, PARAMS_CURRENT, PREFS_ARG, REINITIALIZE_WHEN, SIZE, USER_PARAMS, VALUE, VARIABLE, FUNCTION_COMPONENT_CATEGORY, \
+    MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_PARAMETER_SOURCE, \
+    MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
@@ -675,7 +681,7 @@ class ComponentsMeta(ABCMeta):
         return self.defaults
 
 
-class Component(object, metaclass=ComponentsMeta):
+class Component(JSONDumpable, metaclass=ComponentsMeta):
     """Base class for Component.
 
     .. note::
@@ -862,6 +868,22 @@ class Component(object, metaclass=ComponentsMeta):
 
     standard_constructor_args = [REINITIALIZE_WHEN]
 
+    # helper attributes for JSON model spec
+    _model_spec_id_parameters = 'parameters'
+
+    _model_spec_generic_type_name = NotImplemented
+    """
+        string describing this class's generic type in universal model
+        specification,
+        if it exists and is different than the class name
+    """
+
+    _model_spec_class_name_is_generic = False
+    """
+        True if the class name is the class's generic type in universal model specification,
+        False otherwise
+    """
+
     class Parameters(ParametersBase):
         """
             The `Parameters` that are associated with all `Components`
@@ -897,12 +919,19 @@ class Component(object, metaclass=ComponentsMeta):
                     :read only: True
 
         """
-        variable = Parameter(np.array([0]), read_only=True)
-        value = Parameter(np.array([0]), read_only=True)
-        has_initializers = Parameter(False, setter=_has_initializers_setter)
+        variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
+        value = Parameter(np.array([0]), read_only=True, pnl_internal=True)
+        has_initializers = Parameter(False, setter=_has_initializers_setter, pnl_internal=True)
         # execution_count ios not stateful because it is a global counter;
         #    for context-specific counts should use schedulers which store this info
-        execution_count = Parameter(0, read_only=True, loggable=False, stateful=False, fallback_default=True)
+        execution_count = Parameter(
+            0,
+            read_only=True,
+            loggable=False,
+            stateful=False,
+            fallback_default=True,
+            pnl_internal=True
+        )
 
         def _parse_variable(self, variable):
             return variable
@@ -1016,24 +1045,7 @@ class Component(object, metaclass=ComponentsMeta):
                                     format(self.__class__.__bases__[0].__name__))
 
         # ASSIGN PREFS
-
-        # If a PreferenceSet was provided, assign to instance
-        # If a PreferenceSet was provided, assign to instance
         _assign_prefs(self, prefs, BasePreferenceSet)
-
-        # # MODIFIED 9/30/19 OLD:
-        # if isinstance(prefs, PreferenceSet):
-        #     self.prefs = prefs
-        #     # FIX:  CHECK LEVEL HERE??  OR DOES IT NOT MATTER, AS OWNER WILL BE ASSIGNED DYNAMICALLY??
-        # # Otherwise, if prefs is a specification dict instantiate it, or if it is None assign defaults
-        # else:
-        #     self.prefs = BasePreferenceSet(owner=self, prefs=prefs, context=context)
-        # try:
-        #     # assign log conditions from preferences
-        #     self.parameters.value.log_condition = self.prefs._log_pref.setting
-        # except AttributeError:
-        #     pass
-        # MODIFIED 9/30/19 END
 
         # ASSIGN LOG
         from psyneulink.core.globals.log import Log
@@ -1146,14 +1158,6 @@ class Component(object, metaclass=ComponentsMeta):
         self._validate(context=context)
 
         self.initialization_status = ContextFlags.INITIALIZED
-        # MODIFIED 12/4/18 NEW [JDC]:
-        from psyneulink.core.components.functions.function import Function_Base
-        if (
-            isinstance(self.function, Function_Base)
-            and self.function.initialization_status != ContextFlags.DEFERRED_INIT
-        ):
-            self.function.initialization_status = ContextFlags.INITIALIZED
-        # MODIFIED 12/4/18 END
 
         self._compilation_data = self._CompilationData(owner=self)
 
@@ -1466,8 +1470,6 @@ class Component(object, metaclass=ComponentsMeta):
             # Otherwise, allow class to replace std default name with class-specific one if it has a method for doing so
             else:
                 self._assign_default_name()
-
-            self.initialization_status = ContextFlags.INITIALIZED
 
     def _assign_deferred_init_name(self, name, context):
 
@@ -2175,12 +2177,14 @@ class Component(object, metaclass=ComponentsMeta):
                                       context=context)
 
     def _initialize_parameters(self, context=None, **param_defaults):
+        alias_names = {p.name for p in self.class_parameters if isinstance(p, ParameterAlias)}
+
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
 
         # assign defaults based on pass in params and class defaults
         defaults = {
             k: copy.deepcopy(v) for (k, v) in self.class_defaults.values(show_all=True).items()
-            if not isinstance(getattr(self.class_parameters, k), ParameterAlias)
+            if not k in alias_names
         }
         try:
             function_params = param_defaults[FUNCTION_PARAMS]
@@ -2195,7 +2199,10 @@ class Component(object, metaclass=ComponentsMeta):
             d = {
                 k: v for (k, v) in param_defaults.items()
                 if (
-                    k not in defaults
+                    (
+                        k not in defaults
+                        and k not in alias_names
+                    )
                     or (
                         (function_params is None or k not in function_params)
                         and v is not None
@@ -2203,10 +2210,11 @@ class Component(object, metaclass=ComponentsMeta):
                 )
             }
             for p in d:
-                try:
-                    getattr(self.parameters, p)._user_specified = True
-                except AttributeError:
-                    pass
+                if d[p] is not None:
+                    try:
+                        getattr(self.parameters, p)._user_specified = True
+                    except AttributeError:
+                        pass
             defaults.update(d)
 
         self.defaults = Defaults(owner=self, **defaults)
@@ -2875,6 +2883,7 @@ class Component(object, metaclass=ComponentsMeta):
         if isinstance(function, types.FunctionType):
             self.function = UserDefinedFunction(default_variable=function_variable,
                                                 custom_function=function,
+                                                owner=self,
                                                 context=context)
             self.function_params = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
             for param_name in self.function.cust_fct_params:
@@ -2907,14 +2916,9 @@ class Component(object, metaclass=ComponentsMeta):
             else:
                 self.function = copy.deepcopy(function)
 
-            # setting init status because many mechanisms change execution or validation behavior
-            # during initialization
-            self.function.initialization_status = ContextFlags.INITIALIZING
-
-            self.function.defaults.variable = function_variable
-            self.function._instantiate_value(context)
-
-            self.function.initialization_status = ContextFlags.INITIALIZED
+            # set owner first because needed for is_initializing calls
+            self.function.owner = self
+            self.function._update_default_variable(function_variable, context)
 
         # Specification is Function class
         # Note:  parameter_states for function's parameters will be created in_instantiate_attributes_after_function
@@ -2940,12 +2944,10 @@ class Component(object, metaclass=ComponentsMeta):
                         pass
 
             _, kwargs = prune_unused_args(function.__init__, args=[], kwargs=kwargs_to_instantiate)
-            self.function = function(default_variable=function_variable, **kwargs)
+            self.function = function(default_variable=function_variable, owner=self, **kwargs)
 
         else:
             raise ComponentError(f'Unsupported function type: {type(function)}, function={function}.')
-
-        self.function.owner = self
 
         # KAM added 6/14/18 for functions that do not pass their has_initializers status up to their owner via property
         # FIX: need comprehensive solution for has_initializers; need to determine whether states affect mechanism's
@@ -2989,8 +2991,27 @@ class Component(object, metaclass=ComponentsMeta):
             # Immutable, so just assign value
             self.defaults.value = value
 
+    def _update_default_variable(self, new_default_variable, context=None):
+        self.defaults.variable = copy.deepcopy(new_default_variable)
+        self._instantiate_value(context)
+
+        function_variable = self._parse_function_variable(
+            new_default_variable,
+            context
+        )
+        try:
+            self.function._update_default_variable(function_variable, context)
+        except AttributeError:
+            pass
+
     def initialize(self, context=None):
         raise ComponentError("{} class does not support initialize() method".format(self.__class__.__name__))
+
+    def _check_for_composition(self, context=None):
+        """Allow Component to check whether it or its attributes are suitable for inclusion in a Composition
+        Called by Composition.add_node.
+        """
+        pass
 
     @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, *args, context=None):
@@ -3234,7 +3255,8 @@ class Component(object, metaclass=ComponentsMeta):
 
     @initialization_status.setter
     def initialization_status(self, flag):
-        """Check that a flag is one and only one status flag"""
+        """Check that a flag is one and only one status flag
+        """
         if flag in INITIALIZATION_STATUS_FLAGS:
             self._initialization_status = flag
         elif not flag:
@@ -3305,36 +3327,152 @@ class Component(object, metaclass=ComponentsMeta):
         """
         self.log.log_values(entries)
 
+    @property
     def _dict_summary(self):
+        from psyneulink.core.compositions.composition import Composition
+        from psyneulink.core.components.states.state import State
+        from psyneulink.core.components.states.outputstate import OutputState
+        from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+
+        def parse_parameter_value(value):
+            if isinstance(value, (list, tuple)):
+                new_item = []
+                for item in value:
+                    new_item.append(parse_parameter_value(item))
+                value = type(value)(new_item)
+            elif isinstance(value, dict):
+                value = {
+                    parse_parameter_value(k): parse_parameter_value(v)
+                    for k, v in value.items()
+                }
+            elif isinstance(value, Composition):
+                value = value.name
+            elif isinstance(value, State):
+                if isinstance(value, OutputState):
+                    state_port_name = MODEL_SPEC_ID_OUTPUT_PORTS
+                else:
+                    state_port_name = MODEL_SPEC_ID_INPUT_PORTS
+
+                # assume we will use the identifier on reconstitution
+                value = '{0}.{1}.{2}'.format(
+                    value.owner.name,
+                    state_port_name,
+                    value.name
+                )
+            elif isinstance(value, Component):
+                # could potentially create duplicates when it should
+                # create a reference to an already existent Component like
+                # with Compositions, but in a vacuum the full specification
+                # is necessary.
+                # in fact this would happen unless the parser specifically
+                # handles it like ours does
+                value = value._dict_summary
+            elif isinstance(value, (types.FunctionType)):
+                value = base64.encodebytes(dill.dumps(value)).decode('utf-8')
+
+            return value
+
+        # attributes (and their values) included in top-level dict
         basic_attributes = ['name']
 
-        # lifted from LLVM
-        parameter_black_list = {'function', 'variable', 'value', 'context'}
+        # attributes that aren't Parameters but are psyneulink-specific
+        # and are stored in the PNL parameters section
+        implicit_parameter_attributes = ['node_ordering', 'required_node_roles']
+
         parameters_dict = {}
+        pnl_specific_parameters = {}
+        deferred_init_values = {}
+
+        if self.initialization_status is ContextFlags.DEFERRED_INIT:
+            deferred_init_values = copy.copy(self.init_args)
+            try:
+                deferred_init_values.update(deferred_init_values['params'])
+            except KeyError:
+                pass
+
+            # .parameters still refers to class parameters during deferred init
+            assert not _parameters_belongs_to_obj(self)
 
         for p in self.parameters:
-            if p.user and p.name not in parameter_black_list:
-                val = p._get(self.most_recent_context)
+            if p.name not in self._model_spec_parameter_blacklist:
+                if self.initialization_status is ContextFlags.DEFERRED_INIT:
+                    try:
+                        val = deferred_init_values[p.name]
+                    except KeyError:
+                        # class default
+                        val = p.default_value
+                else:
+                    # special handling because MappingProjection matrix just
+                    # refers to its function's matrix but its default values are
+                    # PNL-specific
+                    if (
+                        isinstance(self, MappingProjection)
+                        and p.name == 'matrix'
+                    ):
+                        val = self.function.defaults.matrix
+                    else:
+                        val = p.default_value
 
-                if isinstance(val, np.ndarray):
-                    val = f'numpy.array({val})'
-                elif not isinstance(val, numbers.Number) and val is not None:
-                    val = str(val)
+                val = parse_parameter_value(val)
 
-                parameters_dict[p.name] = val
+                try:
+                    matching_parameter_state = self.owner.parameter_states[p.name]
 
-        function_dict = {'function': self.function._dict_summary()} if (hasattr(self, 'function') and isinstance(self.function, Component)) else {}
+                    if matching_parameter_state.source is self:
+                        val = {
+                            MODEL_SPEC_ID_PARAMETER_SOURCE: '{0}.{1}.{2}'.format(
+                                self.owner.name,
+                                MODEL_SPEC_ID_INPUT_PORTS,
+                                p.name
+                            ),
+                            MODEL_SPEC_ID_PARAMETER_VALUE: val,
+                            MODEL_SPEC_ID_TYPE: type(val)
+                        }
+                # ContentAddressableList uses TypeError when key not found
+                except (AttributeError, TypeError):
+                    pass
+
+                # split parameters designated as PsyNeuLink-specific and
+                # parameters that are universal
+                if p.pnl_internal:
+                    pnl_specific_parameters[p.name] = val
+                else:
+                    parameters_dict[p.name] = val
+
+        for attr in implicit_parameter_attributes:
+            try:
+                pnl_specific_parameters[attr] = getattr(self, attr)
+            except AttributeError:
+                pass
+
+        if len(pnl_specific_parameters) > 0:
+            parameters_dict[MODEL_SPEC_ID_PSYNEULINK] = pnl_specific_parameters
+
+        function_dict = {}
+        try:
+            if isinstance(self.function, Component):
+                function_dict['functions'] = [self.function._dict_summary]
+        except AttributeError:
+            pass
+
+        type_dict = {}
+
+        if self._model_spec_class_name_is_generic:
+            type_dict[MODEL_SPEC_ID_GENERIC] = self.__class__.__name__
+        else:
+            if self._model_spec_generic_type_name is not NotImplemented:
+                type_dict[MODEL_SPEC_ID_GENERIC] = self._model_spec_generic_type_name
+            else:
+                type_dict[MODEL_SPEC_ID_GENERIC] = None
+
+            type_dict[MODEL_SPEC_ID_PSYNEULINK] = self.__class__.__name__
 
         return {
             **{attr: getattr(self, attr) for attr in basic_attributes},
-            **{'parameters': parameters_dict},
+            **{self._model_spec_id_parameters: parameters_dict},
             **function_dict,
-            **{'type': self.__class__.__name__}
+            **{MODEL_SPEC_ID_TYPE: type_dict}
         }
-
-    def json_summary(self):
-        import json
-        return json.dumps(self._dict_summary(), sort_keys=True, indent=4, separators=(',', ': '))
 
     @property
     def logged_items(self):
@@ -3497,6 +3635,14 @@ class Component(object, metaclass=ComponentsMeta):
     @most_recent_context.setter
     def most_recent_context(self, value):
         self._most_recent_context = value
+
+    @property
+    def _model_spec_parameter_blacklist(self):
+        """
+            A set of Parameter names that should not be added to the generated
+            constructor string
+        """
+        return {'function', 'value'}
 
 
 COMPONENT_BASE_CLASS = Component

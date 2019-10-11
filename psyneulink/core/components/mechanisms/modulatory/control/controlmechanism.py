@@ -563,6 +563,7 @@ import threading
 import typecheck as tc
 import warnings
 
+from psyneulink.core.components.component import Component
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function_Base, is_function_type
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
@@ -580,14 +581,16 @@ from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, \
     EID_SIMULATION, GATING_SIGNAL, INIT_EXECUTE_METHOD_ONLY, \
     MODULATORY_SIGNALS, MONITOR_FOR_CONTROL, MONITOR_FOR_MODULATION, MULTIPLICATIVE, \
-    OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, STATE_TYPE, SYSTEM
+    OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, STATE_TYPE, SYSTEM, \
+    MECHANISM, MULTIPLICATIVE, NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import ContentAddressableList, is_iterable, convert_to_list
+from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_list, copy_iterable_with_shared, is_iterable
 
 __all__ = [
-    'CONTROL_ALLOCATION', 'GATING_ALLOCATION', 'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry'
+    'CONTROL_ALLOCATION', 'GATING_ALLOCATION', 'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry',
+    'DefaultAllocationFunction'
 ]
 
 CONTROL_ALLOCATION = 'control_allocation'
@@ -1054,28 +1057,72 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         """
         # This must be a list, as there may be more than one (e.g., one per control_signal)
-        variable = np.array([[defaultControlAllocation]])
-        value = Parameter(np.array([[defaultControlAllocation]]), aliases='control_allocation')
+        variable = Parameter(np.array([[defaultControlAllocation]]), pnl_internal=True, constructor_argument='default_variable')
+        value = Parameter(np.array([defaultControlAllocation]), aliases='control_allocation', pnl_internal=True)
         default_allocation = None,
 
         combine_costs = Parameter(np.sum, stateful=False, loggable=False)
         costs = Parameter(None, read_only=True, getter=_control_mechanism_costs_getter)
-        control_signal_costs = Parameter(None, read_only=True)
+        control_signal_costs = Parameter(None, read_only=True, pnl_internal=True)
         compute_reconfiguration_cost = Parameter(None, stateful=False, loggable=False)
         reconfiguration_cost = Parameter(None, read_only=True)
-        outcome = Parameter(None, read_only=True, getter=_outcome_getter)
+        outcome = Parameter(None, read_only=True, getter=_outcome_getter, pnl_internal=True)
         compute_net_outcome = Parameter(lambda outcome, cost: outcome - cost, stateful=False, loggable=False)
-        net_outcome = Parameter(None, read_only=True,
-                                getter=_net_outcome_getter)
-        simulation_ids = Parameter([], user=False)
-        modulation = MULTIPLICATIVE
+        net_outcome = Parameter(
+            None,
+            read_only=True,
+            getter=_net_outcome_getter,
+            pnl_internal=True
+        )
+        simulation_ids = Parameter([], user=False, pnl_internal=True)
+        modulation = Parameter(MULTIPLICATIVE, pnl_internal=True)
 
         objective_mechanism = Parameter(None, stateful=False, loggable=False)
+
+        control_spec = Parameter(
+            None,
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            user=False,
+            pnl_internal=True,
+            constructor_argument='control'
+        )
+
+        def _parse_control_spec(self, control_spec):
+            def is_2tuple(o):
+                return isinstance(o, tuple) and len(o) == 2
+
+            if not isinstance(control_spec, list):
+                control_spec = [control_spec]
+
+            for i in range(len(control_spec)):
+                # handle 2-item tuple
+                if is_2tuple(control_spec[i]):
+                    control_spec[i] = {
+                        NAME: control_spec[i][0],
+                        MECHANISM: control_spec[i][1]
+                    }
+                # handle dict of form {PROJECTIONS: <2 item tuple>, <param1>: <value1>, ...}
+                elif (
+                    isinstance(control_spec[i], dict)
+                    and PROJECTIONS in control_spec[i]
+                    and is_2tuple(control_spec[i][PROJECTIONS])
+                ):
+                    full_spec_dict = {
+                        NAME: control_spec[i][PROJECTIONS][0],
+                        MECHANISM: control_spec[i][PROJECTIONS][1],
+                        **{k: v for k, v in control_spec[i].items() if k != PROJECTIONS}
+                    }
+                    control_spec[i] = full_spec_dict
+
+            return control_spec
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         OBJECTIVE_MECHANISM: None,
         CONTROL_PROJECTIONS: None})
+
 
     @tc.typecheck
     def __init__(self,
@@ -1124,6 +1171,15 @@ class ControlMechanism(ModulatoryMechanism_Base):
         self.compute_net_outcome = compute_net_outcome
         self.compute_reconfiguration_cost = compute_reconfiguration_cost
 
+        try:
+            control_spec = (
+                copy_iterable_with_shared(control, shared_types=Component)
+                if control is not None
+                else None
+            )
+        except TypeError:
+            control_spec = control
+
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(system=system,
                                                   monitor_for_control=monitor_for_control,
@@ -1132,6 +1188,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                                   default_allocation=default_allocation,
                                                   control=control,
                                                   modulation=modulation,
+                                                  control_spec=control_spec,
                                                   params=params)
         self._sim_counts = {}
 
@@ -1466,7 +1523,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                             f"of {self.name} ({control_signal.owner_value_index})is not an int."
 
     def _instantiate_control_signal(self,  control_signal, context=None):
-        """Parse and instantiate ControlSignal (or subclass relveant to ControlMechanism subclass)
+        """Parse and instantiate ControlSignal (or subclass relevant to ControlMechanism subclass)
 
         Temporarily assign variable to default allocation value to avoid chicken-and-egg problem:
            value, output_states and control_signals haven't been expanded yet to accomodate the new
@@ -1511,6 +1568,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         from psyneulink.core.components.projections.projection import ProjectionError
 
         allocation_parameter_default = self.parameters.control_allocation.default_value
+
         control_signal = _instantiate_state(state_type=ControlSignal,
                                                owner=self,
                                                variable=self.default_allocation           # User specified value

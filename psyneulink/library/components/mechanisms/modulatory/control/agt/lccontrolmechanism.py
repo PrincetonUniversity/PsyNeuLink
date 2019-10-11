@@ -846,6 +846,12 @@ class LCControlMechanism(ControlMechanism):
 
         super()._instantiate_output_states(context=context)
 
+    def _check_for_composition(self, context=None):
+        from psyneulink.core.compositions.composition import Composition
+        if self.modulated_mechanisms == ALL:
+            raise LCControlMechanismError(f"'ALL' not currently supported for '{MODULATED_MECHANISMS}' argument "
+                                          f"of {self.__class__.__name__} in context of a {Composition.__name__}")
+
     def _execute(
         self,
         variable=None,

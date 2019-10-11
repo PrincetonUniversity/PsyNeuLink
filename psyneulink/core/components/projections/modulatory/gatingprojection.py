@@ -295,7 +295,7 @@ class GatingProjection(ModulatoryProjection_Base):
 
         """
         function = Parameter(Linear(params={FUNCTION_OUTPUT_TYPE: FunctionOutputType.RAW_NUMBER}), stateful=False, loggable=False)
-        gating_signal = Parameter(None, read_only=True, getter=_gating_signal_getter, setter=_gating_signal_setter)
+        gating_signal = Parameter(None, read_only=True, getter=_gating_signal_getter, setter=_gating_signal_setter, pnl_internal=True)
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({

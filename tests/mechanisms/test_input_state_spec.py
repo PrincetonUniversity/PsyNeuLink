@@ -1,6 +1,7 @@
 import numpy as np
 import psyneulink as pnl
 import pytest
+import re
 
 from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
@@ -18,6 +19,7 @@ mismatches_default_variable_format_error_text = 'is not compatible with its expe
 mismatches_size_error_text = 'not compatible with the default variable determined from size parameter'
 mismatches_more_input_states_than_default_variable_error_text = 'There are more InputStates specified'
 mismatches_fewer_input_states_than_default_variable_error_text = 'There are fewer InputStates specified'
+mismatches_specified_matrix_pattern = r'The number of rows \(\d\) of the matrix provided for .+ does not equal the length \(\d\) of the sender vector'
 
 
 class TestInputStateSpec:
@@ -564,17 +566,19 @@ class TestInputStateSpec:
             m = TransferMechanism(size=3, output_states=[pnl.TRANSFER_OUTPUT.MEAN])
             p = MappingProjection(sender=m, matrix=[[0,0,0], [0,0,0]])
             T = TransferMechanism(input_states=[p])
-        assert 'Specification of matrix and/or default_variable for LinearMatrix Function-0 is not valid. ' \
-               'The shapes of variable (1, 1) and matrix (2, 3) are not compatible for multiplication' \
-               in str(error_text.value)
+        assert re.match(
+            mismatches_specified_matrix_pattern,
+            error_text.value.error_value
+        )
 
         with pytest.raises(FunctionError) as error_text:
             m2 = TransferMechanism(size=2, output_states=[pnl.TRANSFER_OUTPUT.MEAN])
             p2 = MappingProjection(sender=m2, matrix=[[1,1,1],[1,1,1]])
             T2 = TransferMechanism(input_states=[p2])
-        assert 'Specification of matrix and/or default_variable for LinearMatrix Function-1 is not valid. ' \
-               'The shapes of variable (1, 1) and matrix (2, 3) are not compatible for multiplication' \
-               in str(error_text.value)
+        assert re.match(
+            mismatches_specified_matrix_pattern,
+            error_text.value.error_value
+        )
 
     # ------------------------------------------------------------------------------------------------
     # TEST 33

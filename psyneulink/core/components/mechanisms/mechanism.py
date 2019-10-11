@@ -952,7 +952,7 @@ from psyneulink.core.components.states.inputstate import DEFER_VARIABLE_SPEC_TO_
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.components.states.state import REMOVE_STATES, _parse_state_spec
+from psyneulink.core.components.states.state import REMOVE_STATES, STATE_SPEC, _parse_state_spec
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, EXECUTION_PHASE, FUNCTION, FUNCTION_PARAMS, \
@@ -961,13 +961,14 @@ from psyneulink.core.globals.keywords import \
     MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, MULTIPLICATIVE_PARAM, \
     OUTPUT_LABELS_DICT, OUTPUT_STATE, OUTPUT_STATES, OWNER_EXECUTION_COUNT, OWNER_EXECUTION_TIME, OWNER_VALUE, \
     PARAMETER_STATE, PARAMETER_STATES, PREVIOUS_VALUE, PROJECTIONS, REFERENCE_VALUE, \
-    TARGET_LABELS_DICT, VALUE, VARIABLE, MECHANISM_COMPONENT_CATEGORY
+    TARGET_LABELS_DICT, VALUE, VARIABLE, MECHANISM_COMPONENT_CATEGORY, \
+    MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, MECHANISM, WEIGHT, \
+    EXPONENT, NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.scheduling.condition import Condition
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
-from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, append_type_to_name, \
-    convert_to_np_array, iscompatible, kwCompatibilityNumeric
+from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, append_type_to_name, convert_to_np_array, copy_iterable_with_shared, iscompatible, kwCompatibilityNumeric
 
 __all__ = [
     'Mechanism_Base', 'MechanismError', 'MechanismRegistry'
@@ -1399,12 +1400,76 @@ class Mechanism_Base(Mechanism):
                     :read only: True
 
         """
-        variable = Parameter(np.array([[0]]), read_only=True)
-        value = Parameter(np.array([[0]]), read_only=True)
-        previous_value = Parameter(None, read_only=True)
+        variable = Parameter(np.array([[0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
+        value = Parameter(np.array([[0]]), read_only=True, pnl_internal=True)
+        previous_value = Parameter(None, read_only=True, pnl_internal=True)
         function = Linear
 
-        input_state_variables = Parameter(None, read_only=True, user=False, getter=_input_state_variables_getter)
+        input_state_variables = Parameter(None, read_only=True, user=False, getter=_input_state_variables_getter, pnl_internal=True)
+
+        input_states_spec = Parameter(
+            None,
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            user=False,
+            pnl_internal=True,
+            constructor_argument='input_states'
+        )
+
+        output_states_spec = Parameter(
+            None,
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            user=False,
+            pnl_internal=True,
+            constructor_argument='output_states'
+        )
+
+        def _parse_input_states_spec(self, input_states_spec):
+            if input_states_spec is None:
+                return input_states_spec
+            elif not isinstance(input_states_spec, list):
+                input_states_spec = [input_states_spec]
+
+            spec_list = []
+
+            for state in input_states_spec:
+                # handle tuple specification only because it cannot
+                # be translated to and from JSON (converts to list, which is
+                # not accepted as a valid specification)
+                if isinstance(state, tuple):
+                    if len(state) == 2:
+                        spec = {
+                            NAME: state[0],
+                            MECHANISM: state[1]
+                        }
+                    elif len(state) > 2:
+                        try:
+                            # if state is assigned to an object,
+                            # use a reference instead of name/value
+                            state[0].owner
+                            spec = {STATE_SPEC: state[0]}
+                        except AttributeError:
+                            spec = {
+                                NAME: state[0].name,
+                                VALUE: state[0].defaults.value,
+                            }
+
+                        spec[WEIGHT] = state[1]
+                        spec[EXPONENT] = state[2]
+
+                        try:
+                            spec[PROJECTIONS] = [state[3]]
+                        except IndexError:
+                            pass
+
+                    spec_list.append(spec)
+                else:
+                    spec_list.append(state)
+
+            return spec_list
 
     # def __new__(cls, *args, **kwargs):
     # def __new__(cls, name=NotImplemented, params=NotImplemented, context=None):
@@ -1475,6 +1540,30 @@ class Mechanism_Base(Mechanism):
                           context=context)
 
         default_variable = self._handle_default_variable(default_variable, size, input_states, function, params)
+
+        try:
+            input_states_spec = (
+                copy_iterable_with_shared(input_states, shared_types=Component)
+                if input_states is not None
+                else None
+            )
+        except TypeError:
+            input_states_spec = input_states
+
+        try:
+            output_states_spec = (
+                copy_iterable_with_shared(output_states, shared_types=Component)
+                if output_states is not None
+                else None
+            )
+        except TypeError:
+            output_states_spec = output_states
+
+        params = self._assign_args_to_param_dicts(
+            params=params,
+            input_states_spec=input_states_spec,
+            output_states_spec=output_states_spec,
+        )
 
         super(Mechanism_Base, self).__init__(default_variable=default_variable,
                                              size=size,
@@ -1997,9 +2086,7 @@ class Mechanism_Base(Mechanism):
             self.function.output_type = FunctionOutputType.NP_2D_ARRAY
             self.function.enable_output_type_conversion = True
 
-        self.function.initialization_status = ContextFlags.INITIALIZING
         self.function._instantiate_value(context)
-        self.function.initialization_status = ContextFlags.INITIALIZED
 
     def _instantiate_attributes_after_function(self, context=None):
         from psyneulink.core.components.states.parameterstate import _instantiate_parameter_state
@@ -3639,6 +3726,29 @@ class Mechanism_Base(Mechanism):
             self.output_states,
             self.parameter_states,
         ))
+
+    @property
+    def _dict_summary(self):
+        inputs_dict = {
+            MODEL_SPEC_ID_INPUT_PORTS: [
+                s._dict_summary for s in self.input_states
+            ]
+        }
+        inputs_dict[MODEL_SPEC_ID_INPUT_PORTS].extend(
+            [s._dict_summary for s in self.parameter_states]
+        )
+
+        outputs_dict = {
+            MODEL_SPEC_ID_OUTPUT_PORTS: [
+                s._dict_summary for s in self.output_states
+            ]
+        }
+
+        return {
+            **super()._dict_summary,
+            **inputs_dict,
+            **outputs_dict
+        }
 
 
 def _is_mechanism_spec(spec):

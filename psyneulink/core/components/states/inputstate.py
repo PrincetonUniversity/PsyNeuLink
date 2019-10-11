@@ -772,8 +772,8 @@ class InputState(State_Base):
         weight = Parameter(None, modulable=True)
         exponent = Parameter(None, modulable=True)
         combine = None
-        internal_only = Parameter(False, stateful=False, loggable=False)
-        shadow_inputs = Parameter(None, stateful=False, loggable=False, read_only=True)
+        internal_only = Parameter(False, stateful=False, loggable=False, pnl_internal=True)
+        shadow_inputs = Parameter(None, stateful=False, loggable=False, read_only=True, pnl_internal=True)
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,

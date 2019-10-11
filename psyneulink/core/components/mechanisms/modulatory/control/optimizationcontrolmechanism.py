@@ -392,6 +392,7 @@ import typecheck as tc
 
 from collections.abc import Iterable
 
+from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.optimizationfunctions import \
     OBJECTIVE_FUNCTION, SEARCH_SPACE, OptimizationFunction
@@ -694,14 +695,14 @@ class OptimizationControlMechanism(ControlMechanism):
         feature_function = Parameter(None, stateful=False, loggable=False)
         search_function = Parameter(None, stateful=False, loggable=False)
         search_termination_function = Parameter(None, stateful=False, loggable=False)
-        comp_execution_mode = Parameter('Python', stateful=False, loggable=False)
+        comp_execution_mode = Parameter('Python', stateful=False, loggable=False, pnl_internal=True)
         search_statefulness = Parameter(True, stateful=False, loggable=False)
 
-        agent_rep = Parameter(None, stateful=False, loggable=False)
+        agent_rep = Parameter(None, stateful=False, loggable=False, pnl_internal=True)
 
-        feature_values = Parameter(_parse_feature_values_from_variable([defaultControlAllocation]), user=False)
+        feature_values = Parameter(_parse_feature_values_from_variable([defaultControlAllocation]), user=False, pnl_internal=True)
 
-        features = None
+        features = Parameter(None, pnl_internal=True)
         num_estimates = 1
         # search_space = None
         control_allocation_search_space = None
@@ -820,6 +821,18 @@ class OptimizationControlMechanism(ControlMechanism):
         self.defaults.value = np.tile(control_signal.parameters.variable.default_value, (i+1, 1))
         self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
 
+    def _instantiate_function(self, function, function_params=None, context=None):
+        # this indicates a significant peculiarity of OCM, in that its function
+        # corresponds to its value (control_allocation) rather than anything to
+        # do with its variable. see _instantiate_attributes_after_function
+
+        # Workaround this issue here, and explicitly allow the function's
+        # default variable to be modified
+        if isinstance(function, Function):
+            function._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
+
+        super()._instantiate_function(function, function_params, context)
+
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate OptimizationControlMechanism's OptimizatonFunction attributes"""
 
@@ -931,7 +944,7 @@ class OptimizationControlMechanism(ControlMechanism):
         if not self.agent_rep.parameters.retain_old_simulation_data._get():
             self.agent_rep._delete_contexts(sim_context, check_simulation_storage=True)
 
-    def evaluation_function(self, control_allocation, context=None):
+    def evaluation_function(self, control_allocation, context=None, return_results=False):
         """Compute `net_outcome <ControlMechanism.net_outcome>` for current set of `feature_values
         <OptimizationControlMechanism.feature_values>` and a specified `control_allocation
         <ControlMechanism.control_allocation>`.
@@ -964,12 +977,21 @@ class OptimizationControlMechanism(ControlMechanism):
                                              self.parameters.num_estimates._get(context),
                                              base_context=context,
                                              context=new_context,
-                                             execution_mode=self.parameters.comp_execution_mode._get(context)
-            )
+                                             execution_mode=self.parameters.comp_execution_mode._get(context),
+                                             return_results=return_results)
             context.composition = old_composition
 
             if self.defaults.search_statefulness:
                 self._tear_down_simulation(new_context)
+
+            # If results of the simulation shoudld be returned then, do so. Agent Rep Evaluate will
+            # return a tuple in this case where the first element is the outcome as usual and the
+            # results of composision run are the second element.
+            if return_results:
+                return result[0], result[1]
+            else:
+                return result
+
         # agent_rep is a CompositionFunctionApproximator (since runs_simuluations = False)
         else:
             result = self.agent_rep.evaluate(self.parameters.feature_values._get(context),
@@ -1266,6 +1288,16 @@ class OptimizationControlMechanism(ControlMechanism):
     def control_allocation_search_space(self):
         """Return list of SampleIterators for allocation_samples of control_signals"""
         return [c.allocation_samples for c in self.control_signals]
+
+    @property
+    def _model_spec_parameter_blacklist(self):
+        # default_variable is hidden in constructor arguments,
+        # and anyway assigning it is problematic because it is modified
+        # several times when creating input states, and assigning function that
+        # fits the control allocation
+        return super()._model_spec_parameter_blacklist.union({
+            'variable',
+        })
 
     # ******************************************************************************************************************
     # FIX:  THE FOLLOWING IS SPECIFIC TO CompositionFunctionApproximator AS agent_rep

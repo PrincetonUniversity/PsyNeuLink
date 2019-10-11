@@ -442,6 +442,8 @@ class Function_Base(Function):
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
 
+    _model_spec_id_parameters = 'args'
+
     class Parameters(Function.Parameters):
         """
             Attributes
@@ -455,7 +457,7 @@ class Function_Base(Function):
                     :read only: True
 
         """
-        variable = Parameter(np.array([0]), read_only=True)
+        variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
     # Note: the following enforce encoding as 1D np.ndarrays (one array per variable)
     variableEncodingDim = 1
@@ -509,7 +511,7 @@ class Function_Base(Function):
                          function=function,
                          param_defaults=params,
                          name=name,
-                         prefs=prefs)
+                            prefs=prefs)
 
     def __call__(self, *args, **kwargs):
         return self.function(*args, **kwargs)
@@ -701,6 +703,12 @@ class Function_Base(Function):
         # the Function's output will be the same as its input
         # Used to bypass execute when unnecessary
         return False
+
+    @property
+    def _model_spec_parameter_blacklist(self):
+        return super()._model_spec_parameter_blacklist.union({
+            'multiplicative_param', 'additive_param',
+        })
 
 # *****************************************   EXAMPLE FUNCTION   *******************************************************
 
@@ -954,7 +962,7 @@ class EVCAuxiliaryFunction(Function_Base):
                     :read only: True
 
         """
-        variable = None
+        variable = Parameter(None, pnl_internal=True, constructor_argument='default_variable')
 
     classPreferences = {
         PREFERENCE_SET_NAME: 'ValueFunctionCustomClassPreferences',

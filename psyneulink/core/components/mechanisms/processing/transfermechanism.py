@@ -912,7 +912,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         integrator_mode = Parameter(False, setter=_integrator_mode_setter)
         integration_rate = Parameter(0.5, modulable=True)
         initial_value = None
-        previous_value = Parameter(None, read_only=True)
+        previous_value = Parameter(None, read_only=True, pnl_internal=True)
         integrator_function = Parameter(AdaptiveIntegrator, stateful=False, loggable=False)
         integrator_function_value = Parameter([[0]], read_only=True)
         has_integrated = Parameter(False, user=False)
@@ -986,6 +986,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 default_variable=default_variable,
                 size=size,
                 input_states=input_states,
+                output_states=output_states,
                 function=function,
                 params=params,
                 name=name,
@@ -1288,10 +1289,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                     f"size ({variable.shape[-1]}) of the innermost dimension (axis 0) of its "
                                     f"{repr(VARIABLE)} (i.e., the length of its items .")
             self.integrator_function.parameters.variable.default_value = variable
-            function_context_buffer = self.integrator_function.initialization_status
-            self.integrator_function.initialization_status = ContextFlags.INITIALIZING
             self.integrator_function.parameters.value.default_value = self.integrator_function(variable, context=context)
-            self.integrator_function.initialization_status = function_context_buffer
         # MODIFIED 6/24/19 END
 
         self.has_integrated = True

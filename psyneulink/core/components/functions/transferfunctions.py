@@ -397,6 +397,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
+    _model_spec_class_name_is_generic = True
+
     class Parameters(TransferFunction.Parameters):
         """
             Attributes
@@ -906,6 +908,8 @@ class Logistic(TransferFunction):  # -------------------------------------------
     bounds = (0, 1)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    _model_spec_class_name_is_generic = True
 
     class Parameters(TransferFunction.Parameters):
         """
@@ -2003,7 +2007,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         scale = Parameter(0.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
-        random_state = Parameter(None, modulable=False)
+        random_state = Parameter(None, modulable=False, pnl_internal=True)
 
     @tc.typecheck
     def __init__(self,
@@ -2020,7 +2024,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         if seed is None:
             seed = get_global_seed()
 
-        random_state = np.random.RandomState(np.asarray([seed]))
+        random_state = np.random.RandomState([seed])
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["random_state"]
 
@@ -2283,11 +2287,11 @@ class SoftMax(TransferFunction):
                     :type: bool
 
         """
-        variable = Parameter(np.array(0.0), read_only=True)
+        variable = Parameter(np.array(0.0), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bounds = (0, 1)
         output = ALL
-        per_item = True
+        per_item = Parameter(True, pnl_internal=True)
 
         def _validate_output(self, output):
             options = {ALL, MAX_VAL, MAX_INDICATOR, PROB}
@@ -2750,8 +2754,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         # proxy for checking whether the owner is a projection
         if hasattr(self.owner, "receiver"):
             sender = self.defaults.variable
-            # Note: this assumes variable is a 1D array, as enforced by _validate_variable
-            sender_len = sender.size
+            sender_len = np.size(np.atleast_2d(self.defaults.variable), 1)
 
             # FIX: RELABEL sender -> input AND receiver -> output
             # FIX: THIS NEEDS TO BE CLEANED UP:
@@ -3780,7 +3783,7 @@ class TransferWithCosts(TransferFunction):
         _validate_cost_functions = get_validator_by_type_only([CostFunctions, list])
 
         # Create versions of cost functions' modulation params for TransferWithCosts
-        
+
         intensity_cost = None
         intensity_cost_fct = Parameter(Exponential, stateful=False)
         _validate_intensity_cost_fct = get_validator_by_function(is_function_type)

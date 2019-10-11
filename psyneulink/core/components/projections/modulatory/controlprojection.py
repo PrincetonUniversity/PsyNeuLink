@@ -309,7 +309,16 @@ class ControlProjection(ModulatoryProjection_Base):
 
         """
         function = Parameter(Linear, stateful=False, loggable=False)
-        control_signal = Parameter(None, read_only=True, getter=_control_signal_getter, setter=_control_signal_setter)
+        control_signal = Parameter(None, read_only=True, getter=_control_signal_getter, setter=_control_signal_setter, pnl_internal=True)
+
+        control_signal_params = Parameter(
+            None,
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            user=False,
+            pnl_internal=True
+        )
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -419,6 +428,9 @@ class ControlProjection(ModulatoryProjection_Base):
                                          format(self.name, self.sender.owner, self.receiver.name))
         # else:
         super(ControlProjection, self)._instantiate_receiver(context=context)
+
+    # def _execute(self, variable=None, context=None, runtime_params=None):
+    #     return super()._execute(variable, context, runtime_params)
 
     @property
     def control_signal(self):

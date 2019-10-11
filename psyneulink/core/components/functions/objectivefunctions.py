@@ -37,7 +37,7 @@ from psyneulink.core.globals.keywords import \
     NORMED_L0_SIMILARITY, OBJECTIVE_FUNCTION_TYPE, SIZE, STABILITY_FUNCTION
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
-from psyneulink.core.globals.utilities import is_distance_metric
+from psyneulink.core.globals.utilities import is_distance_metric, safe_len
 from psyneulink.core.globals.utilities import is_iterable
 
 
@@ -334,11 +334,16 @@ class Stability(ObjectiveFunction):
         :param function:
 
         """
-
-        size = len(self.defaults.variable)
-
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.core.components.states.parameterstate import ParameterState
+
+        # this mirrors the transformation in _function
+        # it is a hack, and a general solution should be found
+        squeezed = np.array(self.defaults.variable)
+        if squeezed.ndim > 1:
+            squeezed = np.squeeze(squeezed)
+
+        size = safe_len(squeezed)
 
         matrix = self.parameters.matrix._get(context)
 
@@ -364,6 +369,32 @@ class Stability(ObjectiveFunction):
             assert False, "Unknown metric"
         #FIXME: This is a hack to make sure metric-fct param is set
         self.parameters.metric_fct.set(self.metric_fct)
+
+    def _update_default_variable(self, new_default_variable, context):
+        from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+        from psyneulink.core.components.states.parameterstate import ParameterState
+
+        # this mirrors the transformation in _function
+        # it is a hack, and a general solution should be found
+        squeezed = np.array(new_default_variable)
+        if squeezed.ndim > 1:
+            squeezed = np.squeeze(squeezed)
+
+        size = safe_len(squeezed)
+        matrix = self.parameters.matrix._get(context)
+
+        if isinstance(matrix, MappingProjection):
+            matrix = matrix._parameter_states[MATRIX]
+        elif isinstance(matrix, ParameterState):
+            pass
+        else:
+            matrix = get_matrix(self.defaults.matrix, size, size)
+
+        self.parameters.matrix._set(matrix, context)
+
+        self._hollow_matrix = get_matrix(HOLLOW_MATRIX, size, size)
+
+        super()._update_default_variable(new_default_variable, context)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         # Dot product
@@ -744,7 +775,7 @@ class Distance(ObjectiveFunction):
                     :type: str
 
         """
-        variable = Parameter(np.array([[0], [0]]), read_only=True)
+        variable = Parameter(np.array([[0], [0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         metric = Parameter(DIFFERENCE, stateful=False)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
