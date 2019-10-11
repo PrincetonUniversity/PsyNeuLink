@@ -1764,36 +1764,7 @@ class State_Base(State):
 
             # Deferred init
             if projection.initialization_status == ContextFlags.DEFERRED_INIT:
-
                 projection._init_args[SENDER] = self
-
-                # Construct and assign name
-                if isinstance(receiver, State):
-                    if receiver.initialization_status == ContextFlags.DEFERRED_INIT:
-                        receiver_name = receiver._init_args[NAME]
-                    else:
-                        receiver_name = receiver.name
-                elif inspect.isclass(receiver) and issubclass(receiver, State):
-                    receiver_name = receiver.__name__
-                else:
-                    raise StateError("RECEIVER of {} to {} of {} is neither a State or State class".
-                                     format(projection_type.__name__, self.name, self.owner.name))
-                # if isinstance(projection, PathwayProjection_Base):
-                #     projection_name = projection_type.__name__ + " from " + self.owner.name + " to " + receiver_name
-                #
-                # else:
-                #     if isinstance(receiver, State):
-                #         receiver_name = receiver.owner.name + " " + receiver.name
-                #     else:
-                #         receiver_name = receiver.__name__
-                #     projection_name = projection_type.__name__ + " for " + receiver_name
-                # # projection._init_args[NAME] = projection._init_args[NAME] or projection_name
-                # projection._assign_default_projection_name(state=self,
-                #                                            sender_name=self.name,
-                #                                            receiver_name=receiver_name)
-
-                # If receiver has been instantiated, try to complete initialization
-                # If not, assume it will be handled later (by Mechanism or Composition)
                 if isinstance(receiver, State) and receiver.initialization_status == ContextFlags.INITIALIZED:
                     projection._deferred_init(context=context)
 

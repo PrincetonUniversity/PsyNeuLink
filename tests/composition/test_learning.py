@@ -424,7 +424,7 @@ class TestBackProp:
     ])
     @pytest.mark.pytorch
     def test_xor_training_identicalness_standard_composition_vs_autodiff(self, models):
-        """Test equality of results for running 3-layered xor network using System, Composition and Audodiff"""
+        """Test equality of results for running 3-layered xor network using System, Composition and Autodiff"""
 
         num_epochs=2
 
