@@ -14,7 +14,7 @@
 Overview
 --------
 
-A MappingProjection transmits the `value <OutputState.value>` of an `OutputState` of one `ProcessingMechanism
+A MappingProjection transmits the `value <OutputPort.value>` of an `OutputPort` of one `ProcessingMechanism
 <ProcessingMechanism>` (its `sender <MappingProjection.sender>`) to the `InputPort` of another (its `receiver
 <MappingProjection.receiver>`). The default `function <MappingProjection.function>` for a MappingProjection is
 `LinearMatrix`, which uses the MappingProjection's `matrix <MappingProjection.matrix>` attribute to transform the
@@ -38,17 +38,17 @@ MappingProjections are also generated automatically in the following circumstanc
     have a Projection assigned between them (`AUTO_ASSIGN_MATRIX` is used as the `matrix <MappingProjection.matrix>`
     specification, which determines the appropriate matrix by context);
   ..
-  * by an `ObjectiveMechanism`, from each `OutputState` listed in its `monitored_output_states
-    <ObjectiveMechanism.monitored_output_states>` attribute to the corresponding `InputPort` of the ObjectiveMechanism
+  * by an `ObjectiveMechanism`, from each `OutputPort` listed in its `monitored_output_ports
+    <ObjectiveMechanism.monitored_output_ports>` attribute to the corresponding `InputPort` of the ObjectiveMechanism
     (`AUTO_ASSIGN_MATRIX` is used as the `matrix <MappingProjection.matrix>` specification, which determines the
     appropriate matrix by context);
   ..
   * by a `LearningMechanism`, between it and the other components required to implement learning
     (see `LearningMechanism_Learning_Configurations` for details);
   ..
-  * by a `ControlMechanism <ControlMechanism>`, from the *OUTCOME* `OutputState` of the `ObjectiveMechanism` that `it
-    creates <ControlMechanism_ObjectiveMechanism>` to its *OUTCOME* `InputPort`, and from the `OutputStates
-    <OutputState>` listed in the ObjectiveMechanism's `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
+  * by a `ControlMechanism <ControlMechanism>`, from the *OUTCOME* `OutputPort` of the `ObjectiveMechanism` that `it
+    creates <ControlMechanism_ObjectiveMechanism>` to its *OUTCOME* `InputPort`, and from the `OutputPorts
+    <OutputPort>` listed in the ObjectiveMechanism's `monitored_output_ports <ObjectiveMechanism.monitored_output_ports>`
     attribute to the ObjectiveMechanism's `primary InputPort <InputPort_Primary>` (as described above; an
     `IDENTITY_MATRIX` is used for all of these).
 
@@ -272,11 +272,11 @@ from psyneulink.core.components.functions.statefulfunctions.integratorfunctions 
 from psyneulink.core.components.functions.transferfunctions import LinearMatrix, get_matrix
 from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.core.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
-from psyneulink.core.components.states.outputstate import OutputState
+from psyneulink.core.components.states.outputport import OutputPort
 from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, CONTEXT, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, \
     HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_PORT, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, \
-    OUTPUT_STATE, PROCESS_INPUT_PORT, PROJECTION_SENDER, SYSTEM_INPUT_PORT, VALUE
+    OUTPUT_PORT, PROCESS_INPUT_PORT, PROJECTION_SENDER, SYSTEM_INPUT_PORT, VALUE
 from psyneulink.core.globals.log import ContextFlags
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -326,15 +326,15 @@ class MappingProjection(PathwayProjection_Base):
     COMMENT:
         Description:
             The MappingProjection class is a type in the Projection category of Component.
-            It implements a Projection that takes the value of an OutputState of one Mechanism, transforms it as
+            It implements a Projection that takes the value of an OutputPort of one Mechanism, transforms it as
             necessary, and provides it to the inputPort of another ProcessingMechanism.
-            It's function conveys (and possibly transforms) the OutputState.value of a sender
+            It's function conveys (and possibly transforms) the OutputPort.value of a sender
                 to the InputPort.value of a receiver.
 
             IMPLEMENTATION NOTE:
                 AUGMENT SO THAT SENDER CAN BE A Mechanism WITH MULTIPLE OUTPUT STATES, IN WHICH CASE:
-                    RECEIVER MUST EITHER BE A MECHANISM WITH SAME NUMBER OF INPUT STATES AS SENDER HAS OUTPUTSTATES
-                        (FOR WHICH SENDER OUTPUTSTATE IS MAPPED TO THE CORRESPONDING RECEIVER INPUT STATE
+                    RECEIVER MUST EITHER BE A MECHANISM WITH SAME NUMBER OF INPUT STATES AS SENDER HAS OutputPortS
+                        (FOR WHICH SENDER OutputPort IS MAPPED TO THE CORRESPONDING RECEIVER INPUT STATE
                             USING THE SAME MAPPING_PROJECTION MATRIX, OR AN ARRAY OF THEM)
                     OR BOTH MUST BE 1D ARRAYS (I.E., SINGLE VECTOR)
                     SHOULD BE CHECKED IN OVERRIDE OF _validate_variable
@@ -361,9 +361,9 @@ class MappingProjection(PathwayProjection_Base):
     Arguments
     ---------
 
-    sender : Optional[OutputState or Mechanism]
+    sender : Optional[OutputPort or Mechanism]
         specifies the source of the Projection's input. If a `Mechanism <Mechanism>` is specified, its
-        `primary OutputState <OutputState_Primary>` will be used. If it is not specified, it will be assigned in
+        `primary OutputPort <OutputPort_Primary>` will be used. If it is not specified, it will be assigned in
         the context in which the Projection is used, or its initialization will be `deferred
         <MappingProjection_Deferred_Initialization>`.
 
@@ -409,10 +409,10 @@ class MappingProjection(PathwayProjection_Base):
     componentType : MAPPING_PROJECTION
 
     variable : ndarray
-        input to MappingProjection, received from `value <OutputState.varlue>` of `sender <MappingProjection.sender>`.
+        input to MappingProjection, received from `value <OutputPort.varlue>` of `sender <MappingProjection.sender>`.
 
-    sender : OutputState
-        the `OutputState` of the `Mechanism <Mechanism>` that is the source of the Projection's input
+    sender : OutputPort
+        the `OutputPort` of the `Mechanism <Mechanism>` that is the source of the Projection's input
 
     receiver: InputPort
         the `InputPort` of the `Mechanism <Mechanism>` that is the destination of the Projection's output.
@@ -454,13 +454,13 @@ class MappingProjection(PathwayProjection_Base):
         it is appended with an indexed suffix, incremented for each MappingProjection with the same base name (see
         `Naming`). If the name is not specified in the **name** argument of its constructor, a default name is
         assigned using the following format:
-        'MappingProjection from <sender Mechanism>[<OutputState>] to <receiver Mechanism>[InputPort]'
-        (for example, ``'MappingProjection from my_mech_1[OutputState-0] to my_mech2[InputPort-0]'``).
+        'MappingProjection from <sender Mechanism>[<OutputPort>] to <receiver Mechanism>[InputPort]'
+        (for example, ``'MappingProjection from my_mech_1[OutputPort-0] to my_mech2[InputPort-0]'``).
         If either the `sender <MappingProjection.sender>` or `receiver <MappingProjection.receiver>` has not yet been
         assigned (the MappingProjection is in `deferred initialization <MappingProjection_Deferred_Initialization>`),
         then the parenthesized name of class is used in place of the unassigned attribute
         (for example, if the `sender <MappingProjection.sender>` has not yet been specified:
-        ``'MappingProjection from (OutputState-0) to my_mech2[InputPort-0]'``).
+        ``'MappingProjection from (OutputPort-0) to my_mech2[InputPort-0]'``).
 
 
     prefs : PreferenceSet or specification dict
@@ -500,7 +500,7 @@ class MappingProjection(PathwayProjection_Base):
     @property
     def _loggable_items(self):
         # States and afferent Projections are loggable for a Mechanism
-        #     - this allows the value of InputPorts and OutputStates to be logged
+        #     - this allows the value of InputPorts and OutputPorts to be logged
         #     - for MappingProjections, this logs the value of the Projection's matrix parameter
         #     - for ModulatoryProjections, this logs the value of the Projection
         # IMPLEMENTATION NOTE: this needs to be a property as that is expected by Log.loggable_items
@@ -508,12 +508,12 @@ class MappingProjection(PathwayProjection_Base):
 
 
     class sockets:
-        sender=[OUTPUT_STATE, PROCESS_INPUT_PORT, SYSTEM_INPUT_PORT]
+        sender=[OUTPUT_PORT, PROCESS_INPUT_PORT, SYSTEM_INPUT_PORT]
         receiver=[INPUT_PORT]
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({FUNCTION: LinearMatrix,
-                               PROJECTION_SENDER: OutputState,
+                               PROJECTION_SENDER: OutputPort,
                                })
 
     @tc.typecheck

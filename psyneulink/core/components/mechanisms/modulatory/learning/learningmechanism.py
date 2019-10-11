@@ -97,7 +97,7 @@ Structure
 ---------
 
 A LearningMechanism has three types of `InputPorts <InputPort>`, a learning `function <LearningMechanism.function>`,
-and two types of `OutputStates <OutputState>`. These are used, respectively, to receive, compute, and transmit the
+and two types of `OutputPorts <OutputPort>`. These are used, respectively, to receive, compute, and transmit the
 information needed to modify the MappingProjection(s) for which the LearningMechanism is responsible.  In addition,
 it has several attributes that govern and provide access to its operation.  These are described below.
 
@@ -119,31 +119,31 @@ names and roles (shown in the `figure <LearningMechanism_Single_Layer_Learning_F
 .. _LearningMechanism_Activation_Output:
 
 * *ACTIVATION_OUTPUT* - receives the value of the LearningMechanism's `output_source <LearningMechanism.output_source>`;
-  that is, the `value <OutputState.value>` of the `OutputState` of the *ProcessingMechanism* to which the
+  that is, the `value <OutputPort.value>` of the `OutputPort` of the *ProcessingMechanism* to which the
   `primary_learned_projection` projects.  By default, the `output_source <LearningMechanism.output_source>`'s
-  `primary OutputState <OutputState_Primary>` is used.  However, a different OutputState can be designated in
+  `primary OutputPort <OutputPort_Primary>` is used.  However, a different OutputPort can be designated in
   the constructor for the `output_source <LearningMechanism.output_source>`, by assigning a `parameter specification
   dictionary <ParameterState_Specification>` to the **params** argument of its constructor, with an entry that uses
-  *MONITOR_FOR_LEARNING* as its key and a list containing the desired OutputState(s) as its value. The `value
+  *MONITOR_FOR_LEARNING* as its key and a list containing the desired OutputPort(s) as its value. The `value
   <InputPort.value>` of the *ACTIVATION_OUTPUT* InputPort is assigned as the second item of the LearningMechanism's
   `variable <LearningMechanism.variable>` attribute.
 
 .. _LearningMechanism_Input_Error_Signal:
 
-* *ERROR_SIGNAL* - this receives the `value <OutputState.value>` from the *OUTCOME* `OutputState
-  <ComparatorMechanism_Structure>` of a `ComparatorMechanism`, or of the *ERROR_SIGNAL* OutputState of another
+* *ERROR_SIGNAL* - this receives the `value <OutputPort.value>` from the *OUTCOME* `OutputPort
+  <ComparatorMechanism_Structure>` of a `ComparatorMechanism`, or of the *ERROR_SIGNAL* OutputPort of another
   `LearningMechanisms <LearningMechanism_Output_Error_Signal>`. If the `primary_learned_projection` projects
   to the `TERMINAL` Mechanism of the `Composition` to which it belongs, or is not part of a `multilayer learning
   sequence <LearningMechanism_Multilayer_Learning>`, then the LearningMechanism has a single *ERROR_SIGNAL* InputPort,
   that receives its input from a ComparatorMechanism. If the `primary_learned_projection` is part of a `multilayer
   learning sequence <LearningMechanism_Multilayer_Learning>`, then the LearningMechanism will have one or more
   *ERROR_SIGNAL* InputPorts, that receive their input from the next LearningMechanism(s) in the sequence;  that is,
-  the one(s) associated with the `efferents <OutputState.efferents>` (outgoing Projections) of its `output_source`,
+  the one(s) associated with the `efferents <OutputPort.efferents>` (outgoing Projections) of its `output_source`,
   with one *ERROR_SIGNAL* InputPort for each of those Projections.  The `value <InputPort.value>`\\s of the
   *ERROR_SIGNAL* InputPorts are summed by the LearningMechanism's `function <LearningMechanism.function>` to
   calculate the `learning_signal <LearningMechanism.learning_signal>` (see `below <LearningMechanism_Function>`);
   note that the value of the *ERROR_SIGNAL* InputPort may not be the same as that of the LearningMechanism's
-  `error_signal <LearningMechanism.error_signal>` attribute or *ERROR_SIGNAL* `OutputState
+  `error_signal <LearningMechanism.error_signal>` attribute or *ERROR_SIGNAL* `OutputPort
   <LearningMechanism_Output_Error_Signal>` (see `note <LearningMechanism_Error_Signal>` below).  If a LearningMechanism
   has more than one *ERROR_SIGNAL* InputPort, their names are suffixed with a hyphenated index, that is incremented for
   each additional InputPort (e.g., ``error_signal-1``, ``error_signal-2``, etc.).  These are listed in the
@@ -181,7 +181,7 @@ InputPorts (described `above <LearningMechanism_InputPorts>`) to calculate the v
   `output_source`, as well as the `matrix <MappingProjection.matrix>` parameter of any of the `output_source`'s
   outgoing Projections that are also being learned (these are listed in the LearningMechanism's `error_matrices
   <LearningMechanism.error_matrices>` attribute).  The value of the `error_signal <LearningMechanism.error_signal>`
-  is assigned as the value of the LearningMechanism's *ERROR_SIGNAL* `OutputState
+  is assigned as the value of the LearningMechanism's *ERROR_SIGNAL* `OutputPort
   <LearningMechanism_Output_Error_Signal>`.
 
   .. _LearningMechanism_Error_Signal_Note:
@@ -189,7 +189,7 @@ InputPorts (described `above <LearningMechanism_InputPorts>`) to calculate the v
   .. note::
 
      A LearningMechanism's *ERROR_SIGNAL* `InputPort(s) <LearningMechanism_Input_Error_Signal>` and its
-     *ERROR_SIGNAL* `OutputState <LearningMechanism_Output_Error_Signal>` may not have the same value.
+     *ERROR_SIGNAL* `OutputPort <LearningMechanism_Output_Error_Signal>` may not have the same value.
      The former are the error signal(s) received from a `ComparatorMechanism` or one or more `LearningMechanisms
      <LearningMechanism>`, while the latter is the contribution made to those errors by the `primary_learned_projection`
      and the `output_source`, as calculated by the LearningMechanism's `function <LearningMechanism.function>`
@@ -202,14 +202,14 @@ assigned any other PsyNeuLink `LearningFunction <LearningFunctions>`, or any oth
 input a list or np.array containing three lists or 1d np.arrays of numeric values, and returns two lists or 1d
 np.arrays.  The two values it returns are assigned to the LearningMechanism's `learning_signal
 <LearningMechanism.learning_signal>` and `error_signal <LearningSignal.error_signal>` attributes, respectively,
-as well as to its two OutputStates, as described below.
+as well as to its two OutputPorts, as described below.
 
-.. _LearningMechanism_OutputStates:
+.. _LearningMechanism_OutputPorts:
 
-*OutputStates*
+*OutputPorts*
 ~~~~~~~~~~~~~~
 
-By default, a LearningMechanism has two `OutputStates <OutputState>`, the first of which is named *ERROR_SIGNAL* and
+By default, a LearningMechanism has two `OutputPorts <OutputPort>`, the first of which is named *ERROR_SIGNAL* and
 is assigned the value of the `error_signal <LearningMechanism.error_signal>` returned by the LearningMechanism's
 `function <LearningMechanism.function>`, and the second of which is a `LearningSignal` and is assigned the value of the
 `learning_signal <LearningMechanism.learning_signal>` returned by the `function <LearningMechanism.function>`.
@@ -217,24 +217,24 @@ They are each described below:
 
 .. _LearningMechanism_Output_Error_Signal:
 
-* *ERROR_SIGNAL* - this is the `primary OutputState <OutputState_Primary>` of a LearningMechanism, and  receives the
+* *ERROR_SIGNAL* - this is the `primary OutputPort <OutputPort_Primary>` of a LearningMechanism, and  receives the
   value of the `error_signal <LearningMechanism.error_signal>` used to calculate the `learning_signal
   <LearningMechanism.learning_signal>`.  Its value is assigned as the first item of the LearningMechanism's
   `output_values <LearningMechanism.output_values>` attribute.  If the LearningMechanism is part of a `multilayer
-  learning sequence <LearningMechanism_Multilayer_Learning>`, the *ERROR_SIGNAL* OutputState is assigned a Projection
+  learning sequence <LearningMechanism_Multilayer_Learning>`, the *ERROR_SIGNAL* OutputPort is assigned a Projection
   to the LearningMechanism for the preceding MappingProjection in the sequence being learned - see `figure
-  <LearningMechanism_Multilayer_Learning_Figure>` below).  Note that the `value <OutputState.value>` of the
-  *ERROR_SIGNAL* OutputState may not be the same as that of the LearningMechanism's *ERROR_SIGNAL* `InputPorts
+  <LearningMechanism_Multilayer_Learning_Figure>` below).  Note that the `value <OutputPort.value>` of the
+  *ERROR_SIGNAL* OutputPort may not be the same as that of the LearningMechanism's *ERROR_SIGNAL* `InputPorts
   <LearningMechanism_Input_Error_Signal>` (see `error_signal <LearningMechanism_Error_Signal>`).
 
 .. _LearningMechanism_LearningSignal:
 
 * `LearningSignal(s) <LearningSignal>` - by default, a LearningMechanism has a single LearningSignal, which is a
-  special type of OutputState that receives the `learning_signal <LearningMechanism.learning_signal>` generated by the
+  special type of OutputPort that receives the `learning_signal <LearningMechanism.learning_signal>` generated by the
   LearningMechanism's `function <LearningMechanism.function>`, and used to modify the `matrix
   <MappingProjection.matrix>` parameter of the `primary_learned_projection`.  The LearningSignal is assigned as the
-  second item in the list of the LearningMechanism's OutputStates (i.e., of its `output_states
-  <LearningMechanism.output_states>` attribute), and its `value <LearningSignal.value>` is assigned as the second
+  second item in the list of the LearningMechanism's OutputPorts (i.e., of its `output_ports
+  <LearningMechanism.output_ports>` attribute), and its `value <LearningSignal.value>` is assigned as the second
   item of the LearningMechanism's `output_values <LearningMechanism.output_values>` attribute.
 
 .. _LearningMechanism_Multiple_LearningSignals:
@@ -265,8 +265,8 @@ They are each described below:
   <LearningMechanism_Learning_Rate>`).
 
   All of the LearningSignals of a LearningMechanism are listed in its `learning_signals` attribute.  Because these
-  are `OutputStates <OutputState>`, they are also listed in the `output_states <LearningMechanism.output_states>`
-  attribute, after the *ERROR_SIGNAL* OutputState.  All of the LearningMechanism's LearningProjections (that is, those
+  are `OutputPorts <OutputPort>`, they are also listed in the `output_ports <LearningMechanism.output_ports>`
+  attribute, after the *ERROR_SIGNAL* OutputPort.  All of the LearningMechanism's LearningProjections (that is, those
   belonging to all of its LearningSignals) are listed in its `learning_projections` attribute.
 
 .. _LearningMechanism_Additional_Attributes:
@@ -275,7 +275,7 @@ They are each described below:
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 In addition to its `InputPorts <LearningMechanism_InputPorts>`, `function <LearningMechanism_Function>` and
-`OutputStates <LearningMechanism_OutputStates>`, a LearningMechanism has the following attributes that
+`OutputPorts <LearningMechanism_OutputPorts>`, a LearningMechanism has the following attributes that
 refer to the Components being learned and/or its operation:
 
 .. _LearningMechanism_Primary_Learned_Projection:
@@ -303,7 +303,7 @@ refer to the Components being learned and/or its operation:
 ..
 * `error_matrices` - the `matrix <MappingProjection.matrix>` parameters of the Projections associated with the
   `error_sources <LearningMechanism.error_sources>`;  that is, of any of the `output_source
-  <LearningMechanism.output_source>`'s `efferents <OutputStates.efferents>` that are also being learned.
+  <LearningMechanism.output_source>`'s `efferents <OutputPorts.efferents>` that are also being learned.
 ..
 * `modulation` - the default value used for the `modulation <LearningSignal.modulation>` attribute of
   LearningMechanism's `LearningSignals <LearningSignal>` (i.e. those for which it is not explicitly specified).
@@ -362,21 +362,21 @@ learning <Composition_Learning_Supervised>` is used for a pathway in a Compositi
 for the Projection between them).  In this case, a single `ComparatorMechanism` and LearningMechanism are created
 (if they do not already exist) as well as the following MappingProjections:
 
-* from an `OutputState` of the LearningMechanism's `output_source` to the ComparatorMechanism's *SAMPLE* `InputPort
-  <ComparatorMechanism_Structure>`.  By default, the `primary OutputState <OutputState_Primary>` of the
+* from an `OutputPort` of the LearningMechanism's `output_source` to the ComparatorMechanism's *SAMPLE* `InputPort
+  <ComparatorMechanism_Structure>`.  By default, the `primary OutputPort <OutputPort_Primary>` of the
   `output_source` is used; however, this can be modified by specifying its *MONITOR_FOR_LEARNING* parameter
   (see `above <LearningMechanism_Activation_Output>`).
 ..
 * from the `TARGET_MECHANISM` in the Composition to the ComparatorMechanism's *TARGET* `InputPort
   <ComparatorMechanism_Structure>`;
 ..
-* from the ComparatorMechanism's *OUTCOME* `OutputState <ComparatorMechanism_Structure>` to the
+* from the ComparatorMechanism's *OUTCOME* `OutputPort <ComparatorMechanism_Structure>` to the
   LearningMechanism's *ERROR_SIGNAL* `InputPort <LearningMechanism_Activation_Input>`.
 
 In addition, a `LearningProjection` is created from the `LearningSignal<LearningMechanism_LearningSignal>` for the
 `primary_learned_projection` to the `ParameterState` for the `matrix <MappingProjection.matrix>` of the
 `primary_learned_projection`.  Because this configuration involves only a single layer of learning, *no* Projection
-is created or assigned to the LearningMechanism's *ERROR_SIGNAL* `OutputState <LearningMechanism_Output_Error_Signal>`.
+is created or assigned to the LearningMechanism's *ERROR_SIGNAL* `OutputPort <LearningMechanism_Output_Error_Signal>`.
 
 .. _LearningMechanism_Single_Layer_Learning_Figure.svg:
 
@@ -391,7 +391,7 @@ is created or assigned to the LearningMechanism's *ERROR_SIGNAL* `OutputState <L
        camelCase), NodeRole(s) assigned (*italics*), learning component type used as key in dictionary returned by
        the learning method (*UPPER_CASE* italics, outside of object) and, where relevant, the name of the attribute
        of the LearningMechanism with which it is associated (*italicized* lower case, outside of object). The
-       ComparatorMechanism and LearningMechanism are shown with their InputPorts, OutputStates and functions
+       ComparatorMechanism and LearningMechanism are shown with their InputPorts, OutputPorts and functions
        diagrammed.
 
 .. _LearningMechanism_Multilayer_Learning:
@@ -423,14 +423,14 @@ sequence, the following additional MappingProjections are created for learning (
 * from the `output_source <LearningMechanism.output_source>` to the LearningMechanism's *ACTIVATION_OUTPUT* `InputPort
   <LearningMechanism_Activation_Output>`.
 ..
-* from the *ERROR_SIGNAL* `OutputState <LearningMechanism_Output_Error_Signal>` of each of the LearningMechanism's
+* from the *ERROR_SIGNAL* `OutputPort <LearningMechanism_Output_Error_Signal>` of each of the LearningMechanism's
   `error_sources <LearningMechanisms.error_sources>` to each of its corresponding *ERROR_SIGNAL* `InputPort(s)
   <LearningMechanism_Input_Error_Signal>`.
 
 In addition, a `LearningProjection` is created from the `LearningSignal <LearningMechanism_LearningSignal>` for the
 `primary_learned_projection` of each LearningMechanism in the sequence, to the `ParameterState` for the `matrix
 <MappingProjection.matrix>` of the `primary_learned_projection`.  If the `primary_learned_projection` is the first in
-the sequence, then *no* Projection is created or assigned to its LearningMechanism's *ERROR_SIGNAL* `OutputState
+the sequence, then *no* Projection is created or assigned to its LearningMechanism's *ERROR_SIGNAL* `OutputPort
 <LearningMechanism_Output_Error_Signal>`.
 
 .. _LearningMechanism_Multilayer_Learning_Figure:
@@ -447,7 +447,7 @@ the sequence, then *no* Projection is created or assigned to its LearningMechani
        **bold**, camelCase); NodeRole(s) assigned (*italics*) to it; name of learning component type (used as key in
        dictionary returned by the learning method; *UPPER_CASE* italics, outside of object); and, where relevant,
        the name of the attribute of the LearningMechanism with which it is associated (*italicized* lower case,
-       outside of object). The ComparatorMechanism and LearningMechanism are shown with their InputPorts, OutputStates
+       outside of object). The ComparatorMechanism and LearningMechanism are shown with their InputPorts, OutputPorts
        and functions diagrammed.
 
 .. _LearningMechanism_Targets:
@@ -494,8 +494,8 @@ ParameterState, thus incrementing the weights by an amount specified by the Lear
 `learned_projection` is executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
 
 A LearningMechanism's `function <LearningMechanism.function>` also computes an `error_signal
-<LearningMechanism.error_signal>` that is assigned as the `value <OutputState.value>` of its *ERROR_SIGNAL*
-`OutputState <LearningMechanism_Output_Error_Signal>`;  in a `multilayer learning configuration
+<LearningMechanism.error_signal>` that is assigned as the `value <OutputPort.value>` of its *ERROR_SIGNAL*
+`OutputPort <LearningMechanism_Output_Error_Signal>`;  in a `multilayer learning configuration
 <LearningMechanism_Multilayer_Learning>`, that value is provided to the *ERROR_SIGNAL* `InputPort(s)
 <LearningMechanism_Input_Error_Signal>` of the LearningMechanism(s) for the preceding MappingProjection(s)
 being learned in the sequence.
@@ -524,7 +524,7 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.keywords import \
     ADDITIVE, AFTER, ASSERT, CONTEXT, CONTROL_PROJECTIONS, ENABLED, INPUT_PORTS, \
     LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
-    MATRIX, NAME, ONLINE, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, STATE_TYPE, VARIABLE
+    MATRIX, NAME, ONLINE, OUTPUT_PORT, OUTPUT_PORTS, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, STATE_TYPE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -533,7 +533,7 @@ from psyneulink.core.globals.utilities import ContentAddressableList, is_numeric
 __all__ = [
     'ACTIVATION_INPUT', 'ACTIVATION_INPUT_INDEX', 'ACTIVATION_OUTPUT', 'ACTIVATION_OUTPUT_INDEX',
     'DefaultTrainingMechanism', 'ERROR_SIGNAL', 'ERROR_SIGNAL_INDEX', 'ERROR_SOURCES',
-    'LearningMechanism', 'LearningMechanismError', 'input_port_names', 'output_state_names'
+    'LearningMechanism', 'LearningMechanismError', 'input_port_names', 'output_port_names'
 ]
 
 
@@ -608,12 +608,12 @@ ACTIVATION_INPUT_INDEX = 0
 ACTIVATION_OUTPUT_INDEX = 1
 ERROR_SIGNAL_INDEX = 2
 
-# Used to name input_ports and output_states:
+# Used to name input_ports and output_ports:
 ACTIVATION_INPUT = 'activation_input'     # InputPort
 ACTIVATION_OUTPUT = 'activation_output'   # InputPort
 ERROR_SIGNAL = 'error_signal'
 input_port_names = [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL]
-output_state_names = [LEARNING_SIGNAL, ERROR_SIGNAL]
+output_port_names = [LEARNING_SIGNAL, ERROR_SIGNAL]
 
 ERROR_SOURCES = 'error_sources'
 
@@ -674,7 +674,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         #    IF objective_mechanism IS None, IT IS LEFT UNSPECIFIED (FOR FURTHER IMPLEMENTATION BY COMPOSITION)
         #    THESE ARE HANDLED BY A MODULE METHOD _instantiate_objective_mechanism (AS PER OBJECTIVE MECHANISM):
         #        IF objective_mechanism IS SPECIFIED AS ObjectiveMechanism, AN OBJECTIVE MECHANISM IS CREATED FOR IT
-        #        IF objective_mechanism IS SPECIFIED AS A MECHANISM OR OUTPUTSTATE,
+        #        IF objective_mechanism IS SPECIFIED AS A MECHANISM OR OutputPort,
         #               a MappingProjection WITH AN IDENTITY MATRIX IS IMPLEMENTED FROM IT TO THE LearningMechanism
 
         Learning function:
@@ -718,12 +718,12 @@ class LearningMechanism(ModulatoryMechanism_Base):
         <InputPort.value>` of the corresponding `InputPort <LearningMechanism_InputPorts>` (see `variable
         <LearningMechanism.variable>` for additional details).
 
-    error_sources : ComparatorMechanism, LearningMechanism, OutputState or list of them
+    error_sources : ComparatorMechanism, LearningMechanism, OutputPort or list of them
         specifies the source(s) of the error signal(s) used by the LearningMechanism's `function
         <LearningMechanism.function>`.  Each must be a `ComparatorMechanism` for `single layer learning
         <LearningMechanism_Single_Layer_Learning>`, or for the last `MappingProjection` in a learning sequence in
         `multilayer learning <LearningMechanism_Multilayer_Learning>`;  otherwise they must be a `LearningMechanism`
-        or the *ERROR_SIGNAL* OutputState of one.
+        or the *ERROR_SIGNAL* OutputPort of one.
 
     function : LearningFunction or function : default BackPropagation
         specifies the function used to calculate the LearningMechanism's `learning_signal
@@ -776,7 +776,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         the input to the `primary_learned_projection` (from `input_source`), the output of the Mechanism to which
         that projects (i.e., of `output_source`); and the error signal (from `LearningMechanism.error_sources`).
 
-    input_ports : ContentAddressableList[OutputState]
+    input_ports : ContentAddressableList[OutputPort]
         list containing the LearningMechanism's three `InputPorts <LearningMechanism_InputPorts>`:
         *ACTIVATION_INPUT*,  *ACTIVATION_OUTPUT*, and *ERROR_SIGNAL*.
 
@@ -830,7 +830,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         the LearningMechanism's *ERROR_SIGNAL* `InputPort <LearningMechanism_Input_Error_Signal>`;  for `multilayer
         learning <LearningMechanism_Multilayer_Learning>`, it is a modified version of the value received, that takes
         account of the contribution made by the learned_projection and its input to the error signal received. This
-        is assigned as the `value <OutputState.value>` of the LearningMechanism's *ERROR_SIGNAL* `OutputState
+        is assigned as the `value <OutputPort.value>` of the LearningMechanism's *ERROR_SIGNAL* `OutputPort
         <LearningMechanism_Output_Error_Signal>`.
 
     learning_signal : number, ndarray or matrix
@@ -846,9 +846,9 @@ class LearningMechanism(ModulatoryMechanism_Base):
         more `LearningProjections <LearningProjection>` to the `ParameterState(s) <ParameterState>` for the `matrix
         <MappingProjection.matrix>` parameter of the `MappingProjection(s) <MappingProjection>` trained by the
         LearningMechanism.  The `value <LearningSignal>` of each LearningSignal is the LearningMechanism's
-        `learning_signal <LearningMechanism.learning_signal>` attribute. Since LearningSignals are `OutputStates
-        <OutputState>`, they are also listed in the LearningMechanism's `output_states
-        <LearningMechanism.output_states>` attribute, after it *ERROR_SIGNAL* `OutputState
+        `learning_signal <LearningMechanism.learning_signal>` attribute. Since LearningSignals are `OutputPorts
+        <OutputPort>`, they are also listed in the LearningMechanism's `output_ports
+        <LearningMechanism.output_ports>` attribute, after it *ERROR_SIGNAL* `OutputPort
         <LearningMechanism_Output_Error_Signal>`.
 
     learning_projections : List[LearningProjection]
@@ -871,20 +871,20 @@ class LearningMechanism(ModulatoryMechanism_Base):
            can be overridden for individual `LearningProjections <LearningProjection>` by assigning their
            `learning_enabled <LearningProjection.learning_enabled>` attributes either at or after construction.
 
-    output_states : ContentAddressableList[OutputState]
-        list of the LearningMechanism's `OutputStates <OutputState>`, including its *ERROR_SIGNAL* `OutputState
+    output_ports : ContentAddressableList[OutputPort]
+        list of the LearningMechanism's `OutputPorts <OutputPort>`, including its *ERROR_SIGNAL* `OutputPort
         <LearningMechanism_Output_Error_Signal>`, followed by its `LearningSignal(s)
-        <LearningMechanism_LearningSignal>`, and then any additional (user-specified) `OutputStates <OutputState>`.
+        <LearningMechanism_LearningSignal>`, and then any additional (user-specified) `OutputPorts <OutputPort>`.
 
     COMMENT:
        #  FIX: THIS MAY NEED TO BE A 3d array (TO ACCOMDATE 2d array (MATRICES) AS ENTRIES)\
     COMMENT
 
     output_values : 2d np.array
-        the first item is the `value <OutputState.value>` of the LearningMechanism's *ERROR_SIGNAL* `OutputState
+        the first item is the `value <OutputPort.value>` of the LearningMechanism's *ERROR_SIGNAL* `OutputPort
         <LearningMechanism_Output_Error_Signal>`, followed by the `value <LearningSignal.value>` \\(s) of its
         `LearningSignal(s) <LearningMechanism_LearningSignal>`, and then those of any additional (user-specified)
-        `OutputStates <OutputState>`.
+        `OutputPorts <OutputPort>`.
 
     modulation : ModulationParam
         the default form of modulation used by the LearningMechanism's `LearningSignal(s)
@@ -905,7 +905,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
     className = componentType
     suffix = " " + className
 
-    outputStateTypes = LearningSignal
+    outputPortTypes = LearningSignal
 
     stateListAttr = Mechanism_Base.stateListAttr.copy()
     stateListAttr.update({LearningSignal:LEARNING_SIGNALS})
@@ -967,8 +967,8 @@ class LearningMechanism(ModulatoryMechanism_Base):
     paramClassDefaults.update({
         CONTROL_PROJECTIONS: None,
         INPUT_PORTS:input_port_names,
-        OUTPUT_STATES:[{NAME:ERROR_SIGNAL,
-                        STATE_TYPE:OUTPUT_STATE,
+        OUTPUT_PORTS:[{NAME:ERROR_SIGNAL,
+                        STATE_TYPE:OUTPUT_PORT,
                         VARIABLE: (OWNER_VALUE, 1)},
                        {NAME:LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
                         VARIABLE: (OWNER_VALUE, 0)}
@@ -1093,7 +1093,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         """Validate error_sources
 
         `error_sources` argument must be an `ObjectiveMechanism`, another `LearningMechanism`, an *ERROR_SIGNAL*
-        OutputState of a LearningMechanism, or a list of these, and there must be the same number as there are
+        OutputPort of a LearningMechanism, or a list of these, and there must be the same number as there are
         ERROR_SIGNAL InputPorts.
 
         """
@@ -1101,7 +1101,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         super()._validate_params(request_set=request_set, target_set=target_set,context=context)
 
         from psyneulink.core.components.states.state import _parse_state_spec
-        from psyneulink.core.components.states.outputstate import OutputState
+        from psyneulink.core.components.states.outputport import OutputPort
         from psyneulink.core.components.states.modulatorysignals.learningsignal import LearningSignal
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.core.components.projections.projection import _validate_receiver
@@ -1118,13 +1118,13 @@ class LearningMechanism(ModulatoryMechanism_Base):
                                              f"({len(self.error_signal_input_ports)}).")
 
             for error_source in error_sources:
-                if (not isinstance(error_source, (ObjectiveMechanism, LearningMechanism, OutputState))
-                        or (isinstance(error_source, OutputState)
-                            and not error_source in error_source.owner.output_states[ERROR_SIGNAL])):
+                if (not isinstance(error_source, (ObjectiveMechanism, LearningMechanism, OutputPort))
+                        or (isinstance(error_source, OutputPort)
+                            and not error_source in error_source.owner.output_ports[ERROR_SIGNAL])):
                     raise LearningMechanismError(f"{repr(ERROR_SOURCES)} arg for {self.name} ({error_source}) "
                                                  f"must be an {ObjectiveMechanism.__name__}, "
                                                  f"another {LearningMechanism.__name__}, an {repr(ERROR_SIGNAL)} "
-                                                 f"{OutputState.__name__} of one, or list of any of these.")
+                                                 f"{OutputPort.__name__} of one, or list of any of these.")
 
         if LEARNING_SIGNALS in target_set and target_set[LEARNING_SIGNALS]:
 
@@ -1182,7 +1182,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
                     #     if it has more, that they are all equivalent
                     self.error_matrices[i] = error_source.primary_learned_projection.parameter_states[MATRIX]
 
-    def _instantiate_output_states(self, context=None):
+    def _instantiate_output_ports(self, context=None):
 
         from psyneulink.core.globals.registry import register_category
         from psyneulink.core.components.states.modulatorysignals.learningsignal import LearningSignal
@@ -1194,14 +1194,14 @@ class LearningMechanism(ModulatoryMechanism_Base):
                           registry=self._stateRegistry,
                           context=context)
 
-        # Instantiate LearningSignals if they are specified, and assign to self._output_states
+        # Instantiate LearningSignals if they are specified, and assign to self._output_ports
         # Notes:
-        #    - if any LearningSignals are specified they will replace the default LEARNING_SIGNAL OutputState
-        #        in the OUTPUT_STATES entry of paramClassDefaults;
-        #    - the LearningSignals are appended to _output_states, leaving ERROR_SIGNAL as the first entry.
+        #    - if any LearningSignals are specified they will replace the default LEARNING_SIGNAL OutputPort
+        #        in the OUTPUT_PORTS entry of paramClassDefaults;
+        #    - the LearningSignals are appended to _output_ports, leaving ERROR_SIGNAL as the first entry.
 
         # Get default LearningSignal
-        default_learning_signal = next((item for item in self._output_states
+        default_learning_signal = next((item for item in self._output_ports
                                         if NAME in item and item[NAME] is LEARNING_SIGNAL),None)
         if default_learning_signal is None:
             raise LearningMechanismError("PROGRAM ERROR: Can't find default {} for {}".
@@ -1212,9 +1212,9 @@ class LearningMechanism(ModulatoryMechanism_Base):
             self.learning_signals = [default_learning_signal]
 
         # Either way, delete default LearningSignal
-        del self._output_states[self._output_states.index(default_learning_signal)]
+        del self._output_ports[self._output_ports.index(default_learning_signal)]
 
-        # Instantiate LearningSignals and assign to self._output_states
+        # Instantiate LearningSignals and assign to self._output_ports
         for learning_signal in self.learning_signals:
             # Instantiate LearningSignal
 
@@ -1231,19 +1231,19 @@ class LearningMechanism(ModulatoryMechanism_Base):
                                                  # state_spec=self.learning_signal)
                                                  state_spec=learning_signal,
                                                  context=context)
-            # Add LearningSignal to output_states list
-            self._output_states.append(learning_signal)
+            # Add LearningSignal to output_ports list
+            self._output_ports.append(learning_signal)
 
         # Assign LEARNING_SIGNAL as the name of the 1st LearningSignal; the names of any others can be user-defined
-        first_learning_signal = next(state for state in self.output_states if isinstance(state, LearningSignal))
+        first_learning_signal = next(state for state in self.output_ports if isinstance(state, LearningSignal))
         first_learning_signal.name = LEARNING_SIGNAL
 
-        super()._instantiate_output_states(context=context)
+        super()._instantiate_output_ports(context=context)
 
         # Reassign learning_signals to capture any user_defined LearningSignals instantiated in call to super
         #   and assign them to a ContentAddressableList
         self._learning_signals = ContentAddressableList(component_type=LearningSignal,
-                                                        list=[state for state in self.output_states if
+                                                        list=[state for state in self.output_ports if
                                                                   isinstance(state, LearningSignal)])
 
         # Initialize _error_signals;  this is assigned for efficiency (rather than just using the property)

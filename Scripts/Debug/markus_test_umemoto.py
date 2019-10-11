@@ -79,7 +79,7 @@ Decision = pnl.DDM(function=psyneulink.core.components.functions.distributionfun
         starting_point=(x_0),
         t0=t0
     ),name='Decision',
-    output_states=[
+    output_ports=[
         pnl.DECISION_VARIABLE,
         pnl.RESPONSE_TIME,
         pnl.PROBABILITY_UPPER_THRESHOLD,
@@ -201,9 +201,9 @@ def x():
     print("decision input vale:", Decision.input_values)
     print("============== ")
 
-    # print(Decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD].value)
-    # print(Decision.output_states[pnl.DECISION_VARIABLE].value)
-    # print(Decision.output_states[pnl.RESPONSE_TIME].value)
+    # print(Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD].value)
+    # print(Decision.output_ports[pnl.DECISION_VARIABLE].value)
+    # print(Decision.output_ports[pnl.RESPONSE_TIME].value)
     # print(Target_Rep.input_values)
     # print("target rep variable:", Target_Rep.input_ports[0].variable)
     # print("target rep input states:", Target_Rep.input_ports)

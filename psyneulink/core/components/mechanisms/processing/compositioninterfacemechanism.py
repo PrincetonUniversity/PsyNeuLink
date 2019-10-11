@@ -22,7 +22,7 @@ Creating an CompositionInterfaceMechanism
 -----------------------------------------
 
 A CompositionInterfaceMechanism is created automatically when an `INPUT <NodeRole.INPUT>` Mechanism is identified in a
-Composition. When created, the CompositionInterfaceMechanism's OutputState is set directly by the Composition. This
+Composition. When created, the CompositionInterfaceMechanism's OutputPort is set directly by the Composition. This
 Mechanism should never be executed, and should never be created by a user.
 
 .. _CompositionInterfaceMechanism_Structure
@@ -56,7 +56,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.states.inputport import InputPort
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.core.components.states.outputstate import OutputState
+from psyneulink.core.components.states.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, PREFERENCE_SET_NAME
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
@@ -84,7 +84,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         the input to the Mechanism to use if none is provided in a call to its
         `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` methods;
         also serves as a template to specify the length of `variable <CompositionInterfaceMechanism.variable>` for
-        `function <CompositionInterfaceMechanism.function>`, and the `primary outputState <OutputState_Primary>` of the
+        `function <CompositionInterfaceMechanism.function>`, and the `primary outputPort <OutputPort_Primary>` of the
         Mechanism.
 
     size : int, list or np.ndarray of ints
@@ -92,7 +92,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         if **default_variable** is specified, it takes precedence over the specification of **size**.
 
     function : InterfaceFunction : default Identity
-        specifies the function used to transform the variable before assigning it to the Mechanism's OutputState(s)
+        specifies the function used to transform the variable before assigning it to the Mechanism's OutputPort(s)
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
@@ -130,7 +130,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     """
 
     componentType = COMPOSITION_INTERFACE_MECHANISM
-    outputStateTypes = [OutputState, ControlSignal]
+    outputPortTypes = [OutputPort, ControlSignal]
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # These will override those specified in TYPE_DEFAULT_PREFERENCES
@@ -146,7 +146,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_ports: tc.optional(tc.any(Iterable, Mechanism, OutputState, InputPort)) = None,
+                 input_ports: tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort)) = None,
                  function=Identity(),
                  composition=None,
                  params=None,

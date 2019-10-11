@@ -72,7 +72,7 @@ color_feature_layer = pnl.RecurrentTransferMechanism(
     integrator_mode=True,       # Set IntegratorFunction mode to True
     integration_rate=Lambda,    # smoothing factor ==  integration rate
     hetero=inhibition,          # Inhibition among units within a layer
-    output_states=[{                          # Create new output state by applying
+    output_ports=[{                          # Create new output state by applying
         pnl.NAME: 'SPECIAL_LOGISTIC',         # the "my_special_Logistic" function
         pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
         pnl.FUNCTION: my_special_Logistic
@@ -86,7 +86,7 @@ word_feature_layer = pnl.RecurrentTransferMechanism(
     integrator_mode=True,   # Set IntegratorFunction mode to True
     integration_rate=Lambda,  # smoothing factor ==  integration rate
     hetero=inhibition,      # Inhibition among units within a layer
-    output_states=[{              # Create new output state by applying
+    output_ports=[{              # Create new output state by applying
         pnl.NAME: 'SPECIAL_LOGISTIC',        # the "my_special_Logistic" function
         pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
         pnl.FUNCTION: my_special_Logistic
@@ -101,7 +101,7 @@ response_layer = pnl.RecurrentTransferMechanism(
     integrator_mode=True,           # Set IntegratorFunction mode to True
     integration_rate=Lambda,        # smoothing factor ==  integration rate
     hetero=inhibition,              # Inhibition among units within a layer
-    output_states=[{           # Create new output state by applying
+    output_ports=[{           # Create new output state by applying
         pnl.NAME: 'SPECIAL_LOGISTIC',        # the "my_special_Logistic" function
         pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
         pnl.FUNCTION: my_special_Logistic
@@ -117,7 +117,7 @@ task_demand_layer = pnl.RecurrentTransferMechanism(
     integrator_mode=True,   # Set IntegratorFunction mode to True
     integration_rate=Lambda,  # smoothing factor ==  integration rate
     hetero=inhibition_task,  # Inhibition among units within a layer
-    output_states=[               # Create new output state by applying
+    output_ports=[               # Create new output state by applying
         {
             pnl.NAME: 'SPECIAL_LOGISTIC',        # the "my_conflict_function" function
             pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
@@ -203,7 +203,7 @@ task_input_weights = pnl.MappingProjection(
 # specify the receiver of the projection
 task_conflict_to_response_weights = pnl.MappingProjection(
     matrix=np.array([[-1.0, -1.0]]),
-    sender=task_demand_layer.output_states[1],
+    sender=task_demand_layer.output_ports[1],
     receiver=response_layer
 )
 

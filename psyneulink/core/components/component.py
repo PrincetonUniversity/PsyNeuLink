@@ -204,7 +204,7 @@ A Component defines its `parameters <Parameters>` in its *parameters* attribute,
   or format of the values associated with a Component can be subject to modulation.  For example, for a
   `TransferMechanism`, `clip <TransferMechanism.clip>`, `initial_value <TransferMechanism.initial_value>`,
   `integrator_mode <TransferMechanism.integrator_mode>`, `input_ports <TransferMechanism.input_ports>`,
-  `output_states`, and `function <TransferMechanism.function>`, are all listed in user_params, and are user-modifiable,
+  `output_ports`, and `function <TransferMechanism.function>`, are all listed in user_params, and are user-modifiable,
   but are not subject to modulation; whereas `noise <TransferMechanism.noise>` and `integration_rate
   <TransferMechanism.integration_rate>`, as well as the parameters of the TransferMechanism's `function
   <TransferMechanism.function>` (listed in the *function_params* subdictionary) can all be subject to modulation.
@@ -424,7 +424,7 @@ from psyneulink.core.globals.json import JSONDumpable
 from psyneulink.core.globals.keywords import \
     COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, \
     FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_PORTS, \
-    LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, \
+    LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, \
     PARAMS, PARAMS_CURRENT, PREFS_ARG, REINITIALIZE_WHEN, SIZE, USER_PARAMS, VALUE, VARIABLE, FUNCTION_COMPONENT_CATEGORY, \
     MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_PARAMETER_SOURCE, \
     MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS
@@ -698,7 +698,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
              it can be referenced either as self.function, self.params[FUNCTION] or self.paramsCurrent[FUNCTION]
          - function (Function): the object to which function belongs (and that defines it's parameters)
          - output (value: self.value)
-         - output_values (return from self.execute: concatenated set of values of output_states)
+         - output_values (return from self.execute: concatenated set of values of output_ports)
          - class and instance variable defaults
          - class and instance param defaults
         The Components's execute method (<subclass>.execute is the Component's primary method
@@ -957,7 +957,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     paramClassDefaults = {}
 
-    exclude_from_parameter_states = [INPUT_PORTS, OUTPUT_STATES]
+    exclude_from_parameter_states = [INPUT_PORTS, OUTPUT_PORTS]
 
     # IMPLEMENTATION NOTE: This is needed so that the State class can be used with ContentAddressableList,
     #                      which requires that the attribute used for addressing is on the class;
@@ -1152,7 +1152,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         # INSTANTIATE ATTRIBUTES AFTER FUNCTION
         # Stub for methods that need to be executed after instantiating function
-        #    (e.g., instantiate_output_state in Mechanism)
+        #    (e.g., instantiate_output_port in Mechanism)
         self._instantiate_attributes_after_function(context=context)
 
         self._validate(context=context)
@@ -1664,9 +1664,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 for param_name in sorted(list(kwargs[arg].keys())):
                     params[FUNCTION_PARAMS].__additem__(param_name,kwargs[arg][param_name])
 
-            # If no input_ports or output_states are specified, ignore
+            # If no input_ports or output_ports are specified, ignore
             #   (ones in paramClassDefaults will be assigned to paramsCurrent below (in params_class_defaults_only)
-            elif arg in {INPUT_PORTS, OUTPUT_STATES} and kwargs[arg] is None:
+            elif arg in {INPUT_PORTS, OUTPUT_PORTS} and kwargs[arg] is None:
                 continue
 
             # For all other params, assign arg and its default value to paramClassDefaults
@@ -1913,7 +1913,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 # (2) assign runtime param values to attributes (which calls validation via properties)
                 # (3) update parameter states if needed
                 if hasattr(self, param_name):
-                    if param_name in {FUNCTION, INPUT_PORTS, OUTPUT_STATES}:
+                    if param_name in {FUNCTION, INPUT_PORTS, OUTPUT_PORTS}:
                         continue
                     if context.execution_id not in self._runtime_params_reset:
                         self._runtime_params_reset[context.execution_id] = {}
@@ -2300,9 +2300,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             self._instantiate_function(context=context)
         # FIX: WHY SHOULD IT BE CALLED DURING STANDRD INIT PROCEDURE?
         # # MODIFIED 5/5/17 OLD:
-        # if OUTPUT_STATES in validated_set:
-        # MODIFIED 5/5/17 NEW:  [THIS FAILS WITH A SPECIFICATION IN output_states ARG OF CONSTRUCTOR]
-        if OUTPUT_STATES in validated_set and context.source & ContextFlags.COMMAND_LINE:
+        # if OUTPUT_PORTS in validated_set:
+        # MODIFIED 5/5/17 NEW:  [THIS FAILS WITH A SPECIFICATION IN output_ports ARG OF CONSTRUCTOR]
+        if OUTPUT_PORTS in validated_set and context.source & ContextFlags.COMMAND_LINE:
         # MODIFIED 5/5/17 END
             self._instantiate_attributes_after_function(context=context)
 
@@ -3331,7 +3331,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     def _dict_summary(self):
         from psyneulink.core.compositions.composition import Composition
         from psyneulink.core.components.states.state import State
-        from psyneulink.core.components.states.outputstate import OutputState
+        from psyneulink.core.components.states.outputport import OutputPort
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 
         def parse_parameter_value(value):
@@ -3348,7 +3348,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             elif isinstance(value, Composition):
                 value = value.name
             elif isinstance(value, State):
-                if isinstance(value, OutputState):
+                if isinstance(value, OutputPort):
                     state_port_name = MODEL_SPEC_ID_OUTPUT_PORTS
                 else:
                     state_port_name = MODEL_SPEC_ID_INPUT_PORTS

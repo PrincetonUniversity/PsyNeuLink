@@ -14,7 +14,7 @@ Overview
 
 A ComparatorMechanism is a subclass of `ObjectiveMechanism` that receives two inputs (a sample and a target), compares
 them using its `function <ComparatorMechanism.function>`, and places the calculated discrepancy between the two in its
-*OUTCOME* `OutputState <ComparatorMechanism.output_state>`.
+*OUTCOME* `OutputPort <ComparatorMechanism.output_port>`.
 
 .. _ComparatorMechanism_Creation:
 
@@ -23,26 +23,26 @@ Creating a ComparatorMechanism
 
 ComparatorMechanisms are generally created automatically when other PsyNeuLink components are created (such as
 `LearningMechanisms <LearningMechanism_Creation>`).  A ComparatorMechanism can also be created directly by calling
-its constructor.  Its **sample** and **target** arguments are used to specify the OutputStates that provide the
+its constructor.  Its **sample** and **target** arguments are used to specify the OutputPorts that provide the
 sample and target inputs, respectively (see `ObjectiveMechanism_Monitored_States` for details concerning their
 specification, which are special versions of an ObjectiveMechanism's **monitor** argument).  When the
 ComparatorMechanism is created, two InputPorts are created, one each for its sample and target inputs (and named,
-by default, *SAMPLE* and *TARGET*). Each is assigned a MappingProjection from the corresponding OutputState specified
+by default, *SAMPLE* and *TARGET*). Each is assigned a MappingProjection from the corresponding OutputPort specified
 in the **sample** and **target** arguments.
 
 It is important to recognize that the value of the *SAMPLE* and *TARGET* InputPorts must have the same length and type,
 so that they can be compared using the ComparatorMechanism's `function <ComparatorMechanism.function>`.  By default,
-they use the format of the OutputStates specified in the **sample** and **target** arguments, respectively,
+they use the format of the OutputPorts specified in the **sample** and **target** arguments, respectively,
 and the `MappingProjection` to each uses an `IDENTITY_MATRIX`.  Therefore, for the default configuration, the
-OutputStates specified in the **sample** and **target** arguments must have values of the same length and type.
+OutputPorts specified in the **sample** and **target** arguments must have values of the same length and type.
 If these differ, the **input_ports** argument can be used to explicitly specify the format of the ComparatorMechanism's
 *SAMPLE* and *TARGET* InputPorts, to insure they are compatible with one another (as well as to customize their
 names, if desired).  If the **input_ports** argument is used, *both* the sample and target InputPorts must be
 specified.  Any of the formats for `specifying InputPorts <InputPort_Specification>` can be used in the argument.
 If values are assigned for the InputPorts, they must be of equal length and type.  Their types must
-also be compatible with the value of the OutputStates specified in the **sample** and **target** arguments.  However,
-the length specified for an InputPort can differ from its corresponding OutputState;  in that case, by default, the
-MappingProjection created uses a `FULL_CONNECTIVITY` matrix.  Thus, OutputStates of differing lengths can be mapped
+also be compatible with the value of the OutputPorts specified in the **sample** and **target** arguments.  However,
+the length specified for an InputPort can differ from its corresponding OutputPort;  in that case, by default, the
+MappingProjection created uses a `FULL_CONNECTIVITY` matrix.  Thus, OutputPorts of differing lengths can be mapped
 to the sample and target InputPorts of a ComparatorMechanism (see the `example <ComparatorMechanism_Example>` below),
 so long as the latter are of the same length.  If a projection other than a `FULL_CONNECTIVITY` matrix is needed, this
 can be specified using the *PROJECTION* entry of a `State specification dictionary <State_Specification>` for the
@@ -54,9 +54,9 @@ Structure
 ---------
 
 A ComparatorMechanism has two `input_ports <ComparatorMechanism.input_ports>`, each of which receives a
-`MappingProjection` from a corresponding OutputState specified in the **sample** and **target** arguments of its
+`MappingProjection` from a corresponding OutputPort specified in the **sample** and **target** arguments of its
 constructor.  The InputPorts are listed in the Mechanism's `input_ports <ComparatorMechanism.input_ports>` attribute
-and named, respectively, *SAMPLE* and *TARGET*.  The OutputStates from which they receive their projections (specified
+and named, respectively, *SAMPLE* and *TARGET*.  The OutputPorts from which they receive their projections (specified
 in the **sample** and **target** arguments) are listed in the Mechanism's `sample <ComparatorMechanism.sample>` and
 `target <ComparatorMechanism.target>` attributes as well as in its `monitor <ComparatorMechanism.monitor>` attribute.
 The ComparatorMechanism's `function <ComparatorMechanism.function>` compares the value of the sample and target
@@ -64,18 +64,18 @@ InputPorts.  By default, it uses a `LinearCombination` function, assigning the s
 <LinearCombination.weight>` of *-1* and the target a `weight <LinearCombination.weight>` of *1*, so that the sample
 is subtracted from the target.  However, the `function <ComparatorMechanism.function>` can be customized, so long as
 it is replaced with one that takes two arrays with the same format as its inputs and generates a similar array as its
-result. The result is assigned as the value of the Comparator Mechanism's *OUTCOME* (`primary <OutputState_Primary>`)
-OutputState.
+result. The result is assigned as the value of the Comparator Mechanism's *OUTCOME* (`primary <OutputPort_Primary>`)
+OutputPort.
 
 .. _ComparatorMechanism_Function:
 
 Execution
 ---------
 
-When a ComparatorMechanism is executed, it updates its input_ports with the values of the OutputStates specified
+When a ComparatorMechanism is executed, it updates its input_ports with the values of the OutputPorts specified
 in its **sample** and **target** arguments, and then uses its `function <ComparatorMechanism.function>` to
 compare these.  By default, the result is assigned to the `value <ComparatorMechanism.value>` of its *OUTCOME*
-`output_state <ComparatorMechanism.output_state>`, and as the first item of the Mechanism's
+`output_port <ComparatorMechanism.output_port>`, and as the first item of the Mechanism's
 `output_values <ComparatorMechanism.output_values>` attribute.
 
 .. _ComparatorMechanism_Example:
@@ -89,7 +89,7 @@ Example
 
 The **default_variable** argument can be used to specify a particular format for the SAMPLE and/or TARGET InputPorts
 of a ComparatorMechanism.  This can be useful when one or both of these differ from the format of the
-OutputState(s) specified in the **sample** and **target** arguments. For example, for `Reinforcement Learning
+OutputPort(s) specified in the **sample** and **target** arguments. For example, for `Reinforcement Learning
 <Reinforcement>`, a ComparatorMechanism is used to monitor an action selection Mechanism (the sample), and compare
 this with a reinforcement signal (the target).  In the example below, the action selection Mechanism is a
 `TransferMechanism` that uses the `SoftMax` function (and the `PROB <Softmax.PROB>` as its output format) to select
@@ -110,13 +110,13 @@ TARGET InputPorts in the **default_variable** argument of the ComparatorMechanis
     ...                                              target=my_reward_mech)
 
 Note that ``my_action_selection_mechanism`` is specified to take an array of length 5 as its input, and therefore
-generate one of the same length as its `primary output <OutputState_Primary>`.  Since it is assigned as the **sample**
+generate one of the same length as its `primary output <OutputPort_Primary>`.  Since it is assigned as the **sample**
 of the ComparatorMechanism, by default this will create a *SAMPLE* InputPort of length 5, that will not match the
 length of the *TARGET* InputPort (the default for which is length 1).  This is taken care of, by specifying the
 **default_variable** argument as an array with two single-value arrays (corresponding to the *SAMPLE* and *TARGET*
 InputPorts). (In this example, the **sample** and **target** arguments are specified as Mechanisms since,
-by default, each has only a single (`primary <OutputState_Primary>`) OutputState, that will be used;  if either had
-more than one OutputState, and one of those was desired, it would have had to be specified explicitly in the
+by default, each has only a single (`primary <OutputPort_Primary>`) OutputPort, that will be used;  if either had
+more than one OutputPort, and one of those was desired, it would have had to be specified explicitly in the
 **sample** or **target** argument).
 
 .. _ComparatorMechanism_Class_Reference:
@@ -136,7 +136,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.states.inputport import InputPort
-from psyneulink.core.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates
+from psyneulink.core.components.states.outputport import OutputPort, PRIMARY, StandardOutputPorts
 from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.keywords import COMPARATOR_MECHANISM, FUNCTION, INPUT_PORTS, NAME, OUTCOME, SAMPLE, TARGET, VARIABLE, PREFERENCE_SET_NAME
@@ -156,9 +156,9 @@ MSE = 'MSE'
 
 class COMPARATOR_OUTPUT():
     """
-    .. _ComparatorMechanism_Standard_OutputStates:
+    .. _ComparatorMechanism_Standard_OutputPorts:
 
-    `Standard OutputStates <OutputState_Standard>` for `ComparatorMechanism`
+    `Standard OutputPorts <OutputPort_Standard>` for `ComparatorMechanism`
 
     .. _COMPARATOR_MECHANISM_SSE
 
@@ -190,12 +190,12 @@ class ComparatorMechanism(ObjectiveMechanism):
         target,                                         \
         input_ports=[SAMPLE,TARGET]                    \
         function=LinearCombination(weights=[[-1],[1]],  \
-        output_states=OUTCOME                           \
+        output_ports=OUTCOME                           \
         params=None,                                    \
         name=None,                                      \
         prefs=None)
 
-    Subclass of `ObjectiveMechanism` that compares the values of two `OutputStates <OutputState>`.
+    Subclass of `ObjectiveMechanism` that compares the values of two `OutputPorts <OutputPort>`.
 
     COMMENT:
         Description:
@@ -224,23 +224,23 @@ class ComparatorMechanism(ObjectiveMechanism):
     Arguments
     ---------
 
-    sample : OutputState, Mechanism, value, or string
+    sample : OutputPort, Mechanism, value, or string
         specifies the value to compare with the `target` by the `function <ComparatorMechanism.function>`.
 
-    target :  OutputState, Mechanism, value, or string
+    target :  OutputPort, Mechanism, value, or string
         specifies the value with which the `sample` is compared by the `function <ComparatorMechanism.function>`.
 
     input_ports :  List[InputPort, value, str or dict] or Dict[] : default [SAMPLE, TARGET]
         specifies the names and/or formats to use for the values of the sample and target InputPorts;
-        by default they are named *SAMPLE* and *TARGET*, and their formats are match the value of the OutputStates
+        by default they are named *SAMPLE* and *TARGET*, and their formats are match the value of the OutputPorts
         specified in the **sample** and **target** arguments, respectively (see `ComparatorMechanism_Structure`
         for additional details).
 
     function :  Function, function or method : default Distance(metric=DIFFERENCE)
         specifies the `function <Comparator.function>` used to compare the `sample` with the `target`.
 
-    output_states :  List[OutputState, value, str or dict] or Dict[] : default [OUTCOME]
-        specifies the OutputStates for the Mechanism;
+    output_ports :  List[OutputPort, value, str or dict] or Dict[] : default [OUTCOME]
+        specifies the OutputPorts for the Mechanism;
 
     params :  Optional[Dict[param keyword: param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
@@ -262,15 +262,15 @@ class ComparatorMechanism(ObjectiveMechanism):
     default_variable : Optional[List[array] or 2d np.array]
     COMMENT
 
-    sample : OutputState
+    sample : OutputPort
         determines the value to compare with the `target` by the `function <ComparatorMechanism.function>`.
 
-    target : OutputState
+    target : OutputPort
         determines the value with which `sample` is compared by the `function <ComparatorMechanism.function>`.
 
     input_ports : ContentAddressableList[InputPort, InputPort]
         contains the two InputPorts named, by default, *SAMPLE* and *TARGET*, each of which receives a
-        `MappingProjection` from the OutputStates referenced by the `sample` and `target` attributes
+        `MappingProjection` from the OutputPorts referenced by the `sample` and `target` attributes
         (see `ComparatorMechanism_Structure` for additional details).
 
     function : CombinationFunction, function or method
@@ -281,16 +281,16 @@ class ComparatorMechanism(ObjectiveMechanism):
     value : 1d np.array
         the result of the comparison carried out by the `function <ComparatorMechanism.function>`.
 
-    output_state : OutputState
-        contains the `primary <OutputState_Primary>` OutputState of the ComparatorMechanism; the default is
-        its *OUTCOME* OutputState, the value of which is equal to the `value <ComparatorMechanism.value>`
+    output_port : OutputPort
+        contains the `primary <OutputPort_Primary>` OutputPort of the ComparatorMechanism; the default is
+        its *OUTCOME* OutputPort, the value of which is equal to the `value <ComparatorMechanism.value>`
         attribute of the ComparatorMechanism.
 
-    output_states : ContentAddressableList[OutputState]
-        contains, by default, only the *OUTCOME* (primary) OutputState of the ComparatorMechanism.
+    output_ports : ContentAddressableList[OutputPort]
+        contains, by default, only the *OUTCOME* (primary) OutputPort of the ComparatorMechanism.
 
     output_values : 2d np.array
-        contains one item that is the value of the *OUTCOME* OutputState.
+        contains one item that is the value of the *OUTCOME* OutputPort.
 
     name : str
         the name of the ComparatorMechanism; if it is not specified in the **name** argument of the constructor, a
@@ -351,9 +351,9 @@ class ComparatorMechanism(ObjectiveMechanism):
     # ComparatorMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
 
-    standard_output_states = ObjectiveMechanism.standard_output_states.copy()
+    standard_output_ports = ObjectiveMechanism.standard_output_ports.copy()
 
-    standard_output_states.extend([{NAME: SSE,
+    standard_output_ports.extend([{NAME: SSE,
                                     FUNCTION: lambda x: np.sum(x*x)},
                                    {NAME: MSE,
                                     FUNCTION: lambda x: np.sum(x * x) / safe_len(x)}])
@@ -361,10 +361,10 @@ class ComparatorMechanism(ObjectiveMechanism):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 sample: tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
-                 target: tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
+                 sample: tc.optional(tc.any(OutputPort, Mechanism_Base, dict, is_numeric, str))=None,
+                 target: tc.optional(tc.any(OutputPort, Mechanism_Base, dict, is_numeric, str))=None,
                  function=LinearCombination(weights=[[-1], [1]]),
-                 output_states:tc.optional(tc.any(str, Iterable))=(OUTCOME,),
+                 output_ports:tc.optional(tc.any(str, Iterable))=(OUTCOME,),
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -377,25 +377,25 @@ class ComparatorMechanism(ObjectiveMechanism):
 
         input_ports = self._merge_legacy_constructor_args(sample, target, default_variable, input_ports)
 
-        # Default output_states is specified in constructor as a tuple rather than a list
+        # Default output_ports is specified in constructor as a tuple rather than a list
         # to avoid "gotcha" associated with mutable default arguments
         # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
-        if isinstance(output_states, (str, tuple)):
-            output_states = list(output_states)
+        if isinstance(output_ports, (str, tuple)):
+            output_ports = list(output_ports)
 
         # IMPLEMENTATION NOTE: The following prevents the default from being updated by subsequent assignment
         #                     (in this case, to [OUTCOME, {NAME= MSE}]), but fails to expose default in IDE
-        # output_states = output_states or [OUTCOME, MSE]
+        # output_ports = output_ports or [OUTCOME, MSE]
 
-        # Create a StandardOutputStates object from the list of stand_output_states specified for the class
-        if not isinstance(self.standard_output_states, StandardOutputStates):
-            self.standard_output_states = StandardOutputStates(self,
-                                                               self.standard_output_states,
+        # Create a StandardOutputPorts object from the list of stand_output_ports specified for the class
+        if not isinstance(self.standard_output_ports, StandardOutputPorts):
+            self.standard_output_ports = StandardOutputPorts(self,
+                                                               self.standard_output_ports,
                                                                indices=PRIMARY)
 
         super().__init__(monitor=input_ports,
                          function=function,
-                         output_states=output_states.copy(), # prevent default from getting overwritten by later assign
+                         output_ports=output_ports.copy(), # prevent default from getting overwritten by later assign
                          params=params,
                          name=name,
                          prefs=prefs,
@@ -486,7 +486,7 @@ class ComparatorMechanism(ObjectiveMechanism):
 
         # USE sample and target TO CREATE AN InputPort specfication dictionary for each;
         # DO SAME FOR InputPorts argument, USE TO OVERWRITE ANY SPECIFICATIONS IN sample AND target DICTS
-        # TRY tuple format AS WAY OF PROVIDED CONSOLIDATED variable AND OutputState specifications
+        # TRY tuple format AS WAY OF PROVIDED CONSOLIDATED variable AND OutputPort specifications
 
         sample_dict = _parse_state_spec(owner=self,
                                         state_type=InputPort,

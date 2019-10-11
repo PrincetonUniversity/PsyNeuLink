@@ -316,12 +316,12 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         * Called by ControlSignalGridSearch.
         * Call System.execute for each `control_allocation` in `control_signal_search_space`.
-        * Store an array of values for output_states in `monitored_output_states`
+        * Store an array of values for output_ports in `monitored_output_ports`
           (i.e., the input_ports in `input_ports`) for each `control_allocation`.
         * Call `_compute_EVC` for each control_allocation to calculate the EVC, identify the  maximum,
           and assign to `EVC_max`.
-        * Set `EVC_max_policy` to the `control_allocation` (outputState.values) corresponding to EVC_max.
-        * Set value for each control_signal (outputState.value) to the values in `EVC_max_policy`.
+        * Set `EVC_max_policy` to the `control_allocation` (outputPort.values) corresponding to EVC_max.
+        * Set value for each control_signal (outputPort.value) to the values in `EVC_max_policy`.
         * Return an control_allocation.
 
         .. note::
@@ -329,7 +329,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
               it is NOT used for System.execute -- that uses the runtime_params provided for the Mechanisms in each
               Process.configuration
 
-        Return (2D np.array): value of outputState for each monitored state (in self.input_ports) for EVC_max
+        Return (2D np.array): value of outputPort for each monitored state (in self.input_ports) for EVC_max
 
         """
 
@@ -525,7 +525,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         #endregion
 
         # # TEST PRINT:
-        # print ("\nEND OF TRIAL 1 EVC outputState: {0}\n".format(controller.outputState.value))
+        # print ("\nEND OF TRIAL 1 EVC outputPort: {0}\n".format(controller.outputPort.value))
 
         #region ASSIGN AND RETURN control_allocation
         # Convert EVC_max_policy into 2d array with one control_signal allocation per item,
@@ -558,7 +558,7 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context):
     """
     # # TEST PRINT:
     # print("Allocation vector: {}\nPredicted input: {}".
-    #       format(allocation_vector, [mech.outputState.value for mech in predicted_input]),
+    #       format(allocation_vector, [mech.outputPort.value for mech in predicted_input]),
     #       flush=True)
 
 
@@ -689,7 +689,7 @@ class PredictionMechanism(IntegratorMechanism):
     of `InputPorts <InputPort>` as its `origin_mechanism <PredictionMechanism.origin_mechanism>`, each of which
     receives a `Projection <Projection>` from the same source as the corresponding InputPort of its `origin_mechanism
     <PredictionMechanism.origin_mechanism>` (see `EVCControlMechanism_Prediction_Mechanisms`); and it has one
-    `OutputState` for each of its InputPorts.
+    `OutputPort` for each of its InputPorts.
 
     .. _PredictionMechanism_Function:
 

@@ -310,7 +310,7 @@ class TestMechanismOutputLabels:
         assert store_output_labels == [['red'], ['green'], ['green'], ['red']]
         # S.show_graph(show_mechanism_structure="labels")
 
-    def test_not_all_output_state_values_have_label(self):
+    def test_not_all_output_port_values_have_label(self):
         input_labels_dict = {"red": [1.0, 0.0],
                              "green": [0.0, 1.0],
                              "blue": [2.0, 2.0]}

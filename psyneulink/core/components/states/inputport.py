@@ -141,7 +141,7 @@ method (see `examples <State_Create_State_Examples>` in State).
        the Mechanism's `variable <Mechanism_Base.variable>` attribute is extended with items that correspond to the
        `value <InputPort.value>` attribute of each added InputPort.  This may affect the relationship of the
        Mechanism's `variable <Mechanism_Base.variable>` to its `function <Mechanism_Base.function>`, as well as the
-       number of its `OutputStates <OutputState>` (see `note <Mechanism_Add_InputPorts_Note>`).
+       number of its `OutputPorts <OutputPort>` (see `note <Mechanism_Add_InputPorts_Note>`).
 
 If the name of an InputPort added to a Mechanism is the same as one that already exists, its name is suffixed with a
 numerical index (incremented for each InputPort with that name; see `Naming`), and the InputPort is added to the
@@ -239,9 +239,9 @@ should project to the InputPort. Each of these is described below:
     <InputPort_Compatability_and_Constraints>` for an explanation of the relationship between the `value` of these
     Components and the InputPort's `variable <InputPort.variable>`):
 
-    * **OutputState, GatingSignal, Mechanism, or list with any of these** -- creates an InputPort with Projection(s)
-      to it from the specified State(s) or Mechanism(s).  For each Mechanism specified, its `primary OutputState
-      <OutputState_Primary>` (or GatingSignal) is used.
+    * **OutputPort, GatingSignal, Mechanism, or list with any of these** -- creates an InputPort with Projection(s)
+      to it from the specified State(s) or Mechanism(s).  For each Mechanism specified, its `primary OutputPort
+      <OutputPort_Primary>` (or GatingSignal) is used.
     ..
     * **Projection** -- any form of `Projection specification <Projection_Specification>` can be
       used;  creates an InputPort and assigns it as the Projection's `receiver <Projection_Base.receiver>`.
@@ -254,7 +254,7 @@ should project to the InputPort. Each of these is described below:
         .. _InputPort_State_Mechanism_Tuple:
 
         * **2-item tuple:** *(<State name or list of State names>, <Mechanism>)* -- 1st item must be the name of an
-          `OutputState` or `ModulatorySignal`, or a list of such names, and the 2nd item must be the Mechanism to
+          `OutputPort` or `ModulatorySignal`, or a list of such names, and the 2nd item must be the Mechanism to
           which they all belong.  Projections of the relevant types are created for each of the specified States
           (see `State 2-item tuple <State_2_Item_Tuple>` for additional details).
 
@@ -273,7 +273,7 @@ should project to the InputPort. Each of these is described below:
             * **value, State specification, or list of State specifications** -- specifies either the `variable
               <InputPort.variable>` of the InputPort, or one or more States that should project to it.  The State
               specification(s) can be a (State name, Mechanism) tuple (see above), and/or include Mechanisms (in which
-              case their `primary OutputState <OutputStatePrimary>` is used.  All of the State specifications must be
+              case their `primary OutputPort <OutputPortPrimary>` is used.  All of the State specifications must be
               consistent with (that is, their `value <State_Base.value>` must be compatible with the `variable
               <Projection_Base.variable>` of) the Projection specified in the fourth item if that is included;
 
@@ -289,7 +289,7 @@ should project to the InputPort. Each of these is described below:
             * **Projection specification** (optional) -- `specifies a Projection <Projection_Specification>` that
               must be compatible with the State specification(s) in the 1st item; if there is more than one State
               specified, and the Projection specification is used, all of the States
-              must be of the same type (i.e.,either OutputStates or GatingSignals), and the `Projection
+              must be of the same type (i.e.,either OutputPorts or GatingSignals), and the `Projection
               Specification <Projection_Specification>` cannot be an instantiated Projection (since a
               Projection cannot be assigned more than one `sender <Projection_Base.sender>`).
 
@@ -329,7 +329,7 @@ starting with constraints that are given the highest precedence:
     `InputPort is assigned <Mechanism_Variable_and_InputPorts>` is used to determine the InputPort's `variable must
     <InputPort.variable>`.  Any other specifications of the InputPort relevant to its `variable <InputPort.variable>`
     must be compatible with this (for example, `specifying it by value <InputPort_Specification_by_Value>` or by a
-    `MappingProjection` or `OutputState` that projects to it (see `above <InputPort_Projection_Source_Specification>`).
+    `MappingProjection` or `OutputPort` that projects to it (see `above <InputPort_Projection_Source_Specification>`).
 
     COMMENT:
     ***XXX EXAMPLE HERE
@@ -376,15 +376,15 @@ starting with constraints that are given the highest precedence:
           <Projection_Base.receiver>`), the receiver dimensionality is its outer dimension (axis 1, or its number of
           columns).  However, if the `sender <Projection_Base.sender>` has more than one dimension, then the
           dimensionality of the receiver (used for the InputPort's `variable <InputPort.variable>`) is the
-          dimensionality of the matrix minus the dimensionality of the sender's `value <OutputState.value>`
+          dimensionality of the matrix minus the dimensionality of the sender's `value <OutputPort.value>`
           (see `matrix dimensionality <Mapping_Matrix_Dimensionality>`).
 
-      * **OutputState or ProcessingMechanism** -- the `value <OutputState.value>` of the OutputState (if it is a
-        Mechanism, then its `primary OutputState <OutputState_Primary>`) determines the format of the InputPort's
-        `variable <InputPort.variable>`, and a MappingProjection is created from the OutputState to the InputPort
+      * **OutputPort or ProcessingMechanism** -- the `value <OutputPort.value>` of the OutputPort (if it is a
+        Mechanism, then its `primary OutputPort <OutputPort_Primary>`) determines the format of the InputPort's
+        `variable <InputPort.variable>`, and a MappingProjection is created from the OutputPort to the InputPort
         using an `IDENTITY_MATRIX`.  If the InputPort's `variable <InputPort.variable>` is constrained (as in some
-        of the cases above), then a `FULL_CONNECTIVITY_MATRIX` is used which maps the shape of the OutputState's `value
-        <OutputState.value>` to that of the InputPort's `variable <InputPort.variable>`.
+        of the cases above), then a `FULL_CONNECTIVITY_MATRIX` is used which maps the shape of the OutputPort's `value
+        <OutputPort.value>` to that of the InputPort's `variable <InputPort.variable>`.
 
       * **GatingProjection, GatingSignal or GatingMechanism** -- any of these can be used to specify an InputPort;
         their `value` does not need to be compatible with the InputPort's `variable <InputPort.variable>`, however
@@ -401,7 +401,7 @@ Every InputPort is owned by a `Mechanism <Mechanism>`. It can receive one or mor
 is the `ORIGIN` Mechanism for that Process or System).  It has the following attributes, that includes ones specific
 to, and that can be used to customize the InputPort:
 
-* `projections <OutputState.projections>` -- all of the `Projections <Projection>` received by the InputPort.
+* `projections <OutputPort.projections>` -- all of the `Projections <Projection>` received by the InputPort.
 
 .. _InputPort_Afferent_Projections:
 
@@ -485,12 +485,12 @@ from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, LinearCombination, Reduce
 from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import Buffer
-from psyneulink.core.components.states.outputstate import OutputState
+from psyneulink.core.components.states.outputport import OutputPort
 from psyneulink.core.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     COMBINE, CONTROL_SIGNAL, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_PORT, INPUT_PORTS, INPUT_PORT_PARAMS, \
-    LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, NAME, OPERATION, OUTPUT_STATE, OUTPUT_STATES, OWNER,\
+    LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, NAME, OPERATION, OUTPUT_PORT, OUTPUT_PORTS, OWNER,\
     PARAMS, PROCESS_INPUT_PORT, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, \
     SENDER, SIZE, STATE_TYPE, SUM, SYSTEM_INPUT_PORT, VALUE, VARIABLE, WEIGHT
 from psyneulink.core.globals.parameters import Parameter
@@ -700,14 +700,14 @@ class InputPort(State_Base):
 
     stateAttributes = State_Base.stateAttributes | {WEIGHT, EXPONENT}
 
-    connectsWith = [OUTPUT_STATE,
+    connectsWith = [OUTPUT_PORT,
                     PROCESS_INPUT_PORT,
                     SYSTEM_INPUT_PORT,
                     LEARNING_SIGNAL,
                     GATING_SIGNAL,
                     CONTROL_SIGNAL
                     ]
-    connectsWithAttribute = [OUTPUT_STATES]
+    connectsWithAttribute = [OUTPUT_PORTS]
     projectionSocket = SENDER
     modulators = [GATING_SIGNAL, CONTROL_SIGNAL]
     canReceive = modulators + [MAPPING_PROJECTION]
@@ -778,7 +778,7 @@ class InputPort(State_Base):
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
                                MECHANISM: None,     # These are used to specifiy InputPorts by projections to them
-                               OUTPUT_STATES: None  # from the OutputStates of a particular Mechanism (see docs)
+                               OUTPUT_PORTS: None  # from the OutputPorts of a particular Mechanism (see docs)
                                })
     #endregion
 
@@ -865,7 +865,7 @@ class InputPort(State_Base):
 
         if isinstance(proj_spec.projection, Projection):
             variable = proj_spec.projection.defaults.value
-        elif isinstance(proj_spec.state, OutputState):
+        elif isinstance(proj_spec.state, OutputPort):
             variable = proj_spec.state.defaults.value
         else:
             raise InputPortError("Unrecognized specification for \'{}\' arg of {}".format(PROJECTIONS, self.name))
@@ -971,7 +971,7 @@ class InputPort(State_Base):
         Returns redundant Projection if found, otherwise False.
         """
 
-        # FIX: 7/22/19 - CHECK IF SENDER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_OUTPUT_STATE
+        # FIX: 7/22/19 - CHECK IF SENDER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_OUTPUT_PORT
         duplicate = next(iter([proj for proj in self.path_afferents
                                if ((proj.sender == projection.sender and proj != projection)
                                    or (proj.initialization_status == ContextFlags.DEFERRED_INIT
@@ -1029,7 +1029,7 @@ class InputPort(State_Base):
              - params dict with WEIGHT, EXPONENT and/or PROJECTIONS entries if any of these was specified.
 
         """
-        # FIX: ADD FACILITY TO SPECIFY WEIGHTS AND/OR EXPONENTS FOR INDIVIDUAL OutputState SPECS
+        # FIX: ADD FACILITY TO SPECIFY WEIGHTS AND/OR EXPONENTS FOR INDIVIDUAL OutputPort SPECS
         #      CHANGE EXPECTATION OF *PROJECTIONS* ENTRY TO BE A SET OF TUPLES WITH THE WEIGHT AND EXPONENT FOR IT
         #      THESE CAN BE USED BY THE InputPort's LinearCombination Function
         #          (AKIN TO HOW THE MECHANISM'S FUNCTION COMBINES InputPort VALUES)
@@ -1042,11 +1042,11 @@ class InputPort(State_Base):
 
         if isinstance(state_specific_spec, dict):
             # FIX: 10/3/17 - CHECK HERE THAT, IF MECHANISM ENTRY IS USED, A VARIABLE, WEIGHT AND/OR EXPONENT ENTRY
-            # FIX:                       IS APPLIED TO ALL THE OutputStates SPECIFIED IN OUTPUT_STATES
+            # FIX:                       IS APPLIED TO ALL THE OutputPorts SPECIFIED IN OUTPUT_PORTS
             # FIX:                       UNLESS THEY THEMSELVES USE A State specification dict WITH ANY OF THOSE ENTRIES
             # FIX:           USE ObjectiveMechanism EXAMPLES
             # if MECHANISM in state_specific_spec:
-            #     if OUTPUT_STATES in state_specific_spec
+            #     if OUTPUT_PORTS in state_specific_spec
             if SIZE in state_specific_spec:
                 if (VARIABLE in state_specific_spec or
                         any(key in state_dict and state_dict[key] is not None for key in {VARIABLE, SIZE})):
@@ -1179,7 +1179,7 @@ class InputPort(State_Base):
                                 # No need to check any more Projections
                                 break
 
-                        # Remove dimensionality of sender OutputState, and assume that is what receiver will receive
+                        # Remove dimensionality of sender OutputPort, and assume that is what receiver will receive
                         else:
                             proj_val_shape = matrix.shape[sender_dim :]
                             # state_dict[VARIABLE] = np.zeros(proj_val_shape)
@@ -1204,7 +1204,7 @@ class InputPort(State_Base):
                                                  owner.name,
                                                  projections_spec,
                                                  'Mechanism',
-                                                 OutputState.__name__,
+                                                 OutputPort.__name__,
                                                  Projection.__name__))
 
             # GET WEIGHT AND EXPONENT IF SPECIFIED ***************************************************************
@@ -1250,11 +1250,11 @@ class InputPort(State_Base):
                                   "InputPort._parse_self_state_type called with non-InputPort specification ({})".
                                   format(input_port))
 
-        sender_output_states = [p.sender for p in input_port.path_afferents]
+        sender_output_ports = [p.sender for p in input_port.path_afferents]
         state_spec = {NAME: SHADOW_INPUT_NAME + input_port.owner.name,
                       VARIABLE: np.zeros_like(input_port.variable),
                       STATE_TYPE: InputPort,
-                      PROJECTIONS: sender_output_states,
+                      PROJECTIONS: sender_output_ports,
                       PARAMS: {SHADOW_INPUTS: input_port},
                       OWNER: owner}
         return state_spec

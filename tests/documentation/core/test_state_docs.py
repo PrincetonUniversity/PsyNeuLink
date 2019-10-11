@@ -16,8 +16,8 @@ def test_parameter_state_docs():
                     pytrace=False)
 
 
-def test_output_state_docs():
-    fail, total = doctest.testmod(pnl.core.components.states.outputstate)
+def test_output_port_docs():
+    fail, total = doctest.testmod(pnl.core.components.states.outputport)
 
     if fail > 0:
         pytest.fail("{} out of {} examples failed".format(fail, total))

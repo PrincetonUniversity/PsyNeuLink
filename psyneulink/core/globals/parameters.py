@@ -192,7 +192,7 @@ You should avoid using `dot notation <Parameter_Dot_Notation>` in internal code,
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
 |      getter      |     None      |hook that allows overriding the retrieval of|kwargs self, owning_component, and       |
 |                  |               |values based on a supplied method           |context will be passed in if your        |
-|                  |               |(e.g. _output_state_variable_getter)        |method uses them. self - the Parameter   |
+|                  |               |(e.g. _output_port_variable_getter)        |method uses them. self - the Parameter   |
 |                  |               |                                            |calling the setter; owning_component -   |
 |                  |               |                                            |the Component to which the Parameter     |
 |                  |               |                                            |belongs; context - the context           |
@@ -539,7 +539,7 @@ class Parameter(types.SimpleNamespace):
 
         getter
             hook that allows overriding the retrieval of values based on a supplied method
-            (e.g. _output_state_variable_getter).
+            (e.g. _output_port_variable_getter).
 
             :type: types.FunctionType
             :default: None
@@ -607,7 +607,7 @@ class Parameter(types.SimpleNamespace):
             constructor that this Parameter corresponds to. Typically this is
             used in Parameters that save specification types, as in
             `input_ports_spec <Mechanism.input_ports_spec>` and
-            `output_states_spec <Mechanism.output_states_spec>`
+            `output_ports_spec <Mechanism.output_ports_spec>`
 
             :default: None
 

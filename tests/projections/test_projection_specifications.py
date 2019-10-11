@@ -59,8 +59,8 @@ class TestProjectionSpecificationFormats:
                                                                          psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE],
                                                                      M.parameter_states[
                                                                          psyneulink.core.components.functions.distributionfunctions.THRESHOLD]]}])
-        G = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS: [M.output_states[pnl.DECISION_VARIABLE],
-                                                                     M.output_states[pnl.RESPONSE_TIME]]}])
+        G = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS: [M.output_ports[pnl.DECISION_VARIABLE],
+                                                                     M.output_ports[pnl.RESPONSE_TIME]]}])
         assert len(C.control_signals)==1
         assert len(C.control_signals[0].efferents)==2
         assert M.parameter_states[
@@ -69,8 +69,8 @@ class TestProjectionSpecificationFormats:
                    psyneulink.core.components.functions.distributionfunctions.THRESHOLD].mod_afferents[0] == C.control_signals[0].efferents[1]
         assert len(G.gating_signals)==1
         assert len(G.gating_signals[0].efferents)==2
-        assert M.output_states[pnl.DECISION_VARIABLE].mod_afferents[0]==G.gating_signals[0].efferents[0]
-        assert M.output_states[pnl.RESPONSE_TIME].mod_afferents[0]==G.gating_signals[0].efferents[1]
+        assert M.output_ports[pnl.DECISION_VARIABLE].mod_afferents[0]==G.gating_signals[0].efferents[0]
+        assert M.output_ports[pnl.RESPONSE_TIME].mod_afferents[0]==G.gating_signals[0].efferents[1]
 
     def test_multiple_modulatory_projections_with_state_name(self):
 
@@ -79,8 +79,8 @@ class TestProjectionSpecificationFormats:
                                                                            psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE],
                                                                        M.parameter_states[
                                                                            psyneulink.core.components.functions.distributionfunctions.THRESHOLD]]}])
-        G = pnl.GatingMechanism(gating_signals=[{'DDM_OUTPUT_GATE':[M.output_states[pnl.DECISION_VARIABLE],
-                                                                    M.output_states[pnl.RESPONSE_TIME]]}])
+        G = pnl.GatingMechanism(gating_signals=[{'DDM_OUTPUT_GATE':[M.output_ports[pnl.DECISION_VARIABLE],
+                                                                    M.output_ports[pnl.RESPONSE_TIME]]}])
         assert len(C.control_signals)==1
         assert C.control_signals[0].name=='DECISION_CONTROL'
         assert len(C.control_signals[0].efferents)==2
@@ -91,8 +91,8 @@ class TestProjectionSpecificationFormats:
         assert len(G.gating_signals)==1
         assert G.gating_signals[0].name=='DDM_OUTPUT_GATE'
         assert len(G.gating_signals[0].efferents)==2
-        assert M.output_states[pnl.DECISION_VARIABLE].mod_afferents[0]==G.gating_signals[0].efferents[0]
-        assert M.output_states[pnl.RESPONSE_TIME].mod_afferents[0]==G.gating_signals[0].efferents[1]
+        assert M.output_ports[pnl.DECISION_VARIABLE].mod_afferents[0]==G.gating_signals[0].efferents[0]
+        assert M.output_ports[pnl.RESPONSE_TIME].mod_afferents[0]==G.gating_signals[0].efferents[1]
 
     def test_multiple_modulatory_projections_with_mech_and_state_name_specs(self):
 
@@ -103,7 +103,7 @@ class TestProjectionSpecificationFormats:
 
                                                        psyneulink.core.components.functions.distributionfunctions.THRESHOLD]}])
         G = pnl.GatingMechanism(gating_signals=[{pnl.MECHANISM: M,
-                                                 pnl.OUTPUT_STATES: [pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME]}])
+                                                 pnl.OUTPUT_PORTS: [pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME]}])
         assert len(C.control_signals)==1
         assert len(C.control_signals[0].efferents)==2
         assert M.parameter_states[
@@ -112,54 +112,54 @@ class TestProjectionSpecificationFormats:
                    psyneulink.core.components.functions.distributionfunctions.THRESHOLD].mod_afferents[0] == C.control_signals[0].efferents[1]
         assert len(G.gating_signals)==1
         assert len(G.gating_signals[0].efferents)==2
-        assert M.output_states[pnl.DECISION_VARIABLE].mod_afferents[0]==G.gating_signals[0].efferents[0]
-        assert M.output_states[pnl.RESPONSE_TIME].mod_afferents[0]==G.gating_signals[0].efferents[1]
+        assert M.output_ports[pnl.DECISION_VARIABLE].mod_afferents[0]==G.gating_signals[0].efferents[0]
+        assert M.output_ports[pnl.RESPONSE_TIME].mod_afferents[0]==G.gating_signals[0].efferents[1]
 
     def test_mapping_projection_with_mech_and_state_name_specs(self):
-         R1 = pnl.TransferMechanism(output_states=['OUTPUT_1', 'OUTPUT_2'])
+         R1 = pnl.TransferMechanism(output_ports=['OUTPUT_1', 'OUTPUT_2'])
          R2 = pnl.TransferMechanism(default_variable=[[0],[0]],
                                     input_ports=['INPUT_1', 'INPUT_2'])
          T = pnl.TransferMechanism(input_ports=[{pnl.MECHANISM: R1,
-                                                  pnl.OUTPUT_STATES: ['OUTPUT_1', 'OUTPUT_2']}],
-                                   output_states=[{pnl.MECHANISM:R2,
+                                                  pnl.OUTPUT_PORTS: ['OUTPUT_1', 'OUTPUT_2']}],
+                                   output_ports=[{pnl.MECHANISM:R2,
                                                    pnl.INPUT_PORTS: ['INPUT_1', 'INPUT_2']}])
-         assert len(R1.output_states)==2
+         assert len(R1.output_ports)==2
          assert len(R2.input_ports)==2
          assert len(T.input_ports)==1
          for input_port in T.input_ports:
              for projection in input_port.path_afferents:
                  assert projection.sender.owner is R1
-         assert len(T.output_states)==1
-         for output_state in T.output_states:
-             for projection in output_state.efferents:
+         assert len(T.output_ports)==1
+         for output_port in T.output_ports:
+             for projection in output_port.efferents:
                  assert projection.receiver.owner is R2
 
     def test_mapping_projection_using_2_item_tuple_with_list_of_state_names(self):
 
         T1 = pnl.TransferMechanism(name='T1', input_ports=[[0,0],[0,0,0]])
         T2 = pnl.TransferMechanism(name='T2',
-                                   output_states=[(['InputPort-0','InputPort-1'], T1)])
-        assert len(T2.output_states)==1
-        assert T2.output_states[0].efferents[0].receiver.name == 'InputPort-0'
-        assert T2.output_states[0].efferents[0].matrix.shape == (1,2)
-        assert T2.output_states[0].efferents[1].receiver.name == 'InputPort-1'
-        assert T2.output_states[0].efferents[1].matrix.shape == (1,3)
+                                   output_ports=[(['InputPort-0','InputPort-1'], T1)])
+        assert len(T2.output_ports)==1
+        assert T2.output_ports[0].efferents[0].receiver.name == 'InputPort-0'
+        assert T2.output_ports[0].efferents[0].matrix.shape == (1,2)
+        assert T2.output_ports[0].efferents[1].receiver.name == 'InputPort-1'
+        assert T2.output_ports[0].efferents[1].matrix.shape == (1,3)
 
     def test_mapping_projection_using_2_item_tuple_and_3_item_tuples_with_index_specs(self):
 
         T1 = pnl.TransferMechanism(name='T1', input_ports=[[0,0],[0,0,0]])
         T2 = pnl.TransferMechanism(name='T2',
                                    input_ports=['a','b','c'],
-                                   output_states=[(['InputPort-0','InputPort-1'], T1),
+                                   output_ports=[(['InputPort-0','InputPort-1'], T1),
                                                   ('InputPort-0', (pnl.OWNER_VALUE, 2), T1),
                                                   (['InputPort-0','InputPort-1'], 1, T1)])
-        assert len(T2.output_states)==3
-        assert T2.output_states[0].efferents[0].receiver.name == 'InputPort-0'
-        assert T2.output_states[0].efferents[0].matrix.shape == (1,2)
-        assert T2.output_states[0].efferents[1].receiver.name == 'InputPort-1'
-        assert T2.output_states[0].efferents[1].matrix.shape == (1,3)
-        assert T2.output_states[1].owner_value_index == 2
-        assert T2.output_states[2].owner_value_index == 1
+        assert len(T2.output_ports)==3
+        assert T2.output_ports[0].efferents[0].receiver.name == 'InputPort-0'
+        assert T2.output_ports[0].efferents[0].matrix.shape == (1,2)
+        assert T2.output_ports[0].efferents[1].receiver.name == 'InputPort-1'
+        assert T2.output_ports[0].efferents[1].matrix.shape == (1,3)
+        assert T2.output_ports[1].owner_value_index == 2
+        assert T2.output_ports[2].owner_value_index == 1
 
     def test_2_item_tuple_from_control_signal_to_parameter_state(self):
 
@@ -191,7 +191,7 @@ class TestProjectionSpecificationFormats:
         assert D.parameter_states[
                    psyneulink.core.components.functions.distributionfunctions.THRESHOLD].mod_afferents[0].sender == C.control_signals[1]
 
-    def test_2_item_tuple_from_gating_signal_to_output_states(self):
+    def test_2_item_tuple_from_gating_signal_to_output_ports(self):
 
         D4 = pnl.DDM(name='D4')
 
@@ -206,15 +206,15 @@ class TestProjectionSpecificationFormats:
         assert G.gating_signals[0].efferents[0].receiver.name == 'DECISION_VARIABLE'
         assert G.gating_signals[0].efferents[1].receiver.name == 'RESPONSE_TIME'
 
-    def test_2_item_tuple_from_input_and_output_states_to_gating_signals(self):
+    def test_2_item_tuple_from_input_and_output_ports_to_gating_signals(self):
 
         G = pnl.GatingMechanism(gating_signals=['a','b'])
         T = pnl.TransferMechanism(name='T',
                      input_ports=[(3,G)],
-                     output_states=[(2,G.gating_signals['b'])]
+                     output_ports=[(2,G.gating_signals['b'])]
                                   )
         assert T.input_ports[0].mod_afferents[0].sender==G.gating_signals[0]
-        assert T.output_states[0].mod_afferents[0].sender==G.gating_signals[1]
+        assert T.output_ports[0].mod_afferents[0].sender==G.gating_signals[1]
 
     def test_formats_for_control_specification_for_mechanism_and_function_params(self):
 
@@ -260,7 +260,7 @@ class TestProjectionSpecificationFormats:
             assert R.parameter_states[pnl.GAIN].mod_afferents[0].name in \
                    'ControlProjection for RecurrentTransferMechanism-{}[gain]'.format(i)
 
-    def test_formats_for_gating_specification_of_input_and_output_states(self):
+    def test_formats_for_gating_specification_of_input_and_output_ports(self):
 
         gating_spec_list = [
             pnl.GATING,
@@ -323,7 +323,7 @@ class TestProjectionSpecificationFormats:
 
             T = pnl.TransferMechanism(name='T-GATING-{}'.format(i),
                                       input_ports=[G_IN],
-                                      output_states=[G_OUT])
+                                      output_ports=[G_OUT])
 
             if IN_CONTROL:
                 assert T.input_ports[0].mod_afferents[0].name in \
@@ -333,21 +333,21 @@ class TestProjectionSpecificationFormats:
                        'GatingProjection for T-GATING-{}[InputPort-0]'.format(i)
 
             if OUT_CONTROL:
-                assert T.output_states[0].mod_afferents[0].name in \
-                       'ControlProjection for T-GATING-{}[OutputState-0]'.format(i)
+                assert T.output_ports[0].mod_afferents[0].name in \
+                       'ControlProjection for T-GATING-{}[OutputPort-0]'.format(i)
             else:
-                assert T.output_states[0].mod_afferents[0].name in \
-                       'GatingProjection for T-GATING-{}[OutputState-0]'.format(i)
+                assert T.output_ports[0].mod_afferents[0].name in \
+                       'GatingProjection for T-GATING-{}[OutputPort-0]'.format(i)
 
         # with pytest.raises(pnl.ProjectionError) as error_text:
         #     T1 = pnl.ProcessingMechanism(name='T1', input_ports=[pnl.ControlMechanism()])
-        # assert 'Primary OutputState of ControlMechanism-0 (ControlSignal-0) ' \
+        # assert 'Primary OutputPort of ControlMechanism-0 (ControlSignal-0) ' \
         #        'cannot be used as a sender of a Projection to InputPort of T1' in error_text.value.args[0]
         #
         # with pytest.raises(pnl.ProjectionError) as error_text:
-        #     T2 = pnl.ProcessingMechanism(name='T2', output_states=[pnl.ControlMechanism()])
-        # assert 'Primary OutputState of ControlMechanism-1 (ControlSignal-0) ' \
-        #        'cannot be used as a sender of a Projection to OutputState of T2' in error_text.value.args[0]
+        #     T2 = pnl.ProcessingMechanism(name='T2', output_ports=[pnl.ControlMechanism()])
+        # assert 'Primary OutputPort of ControlMechanism-1 (ControlSignal-0) ' \
+        #        'cannot be used as a sender of a Projection to OutputPort of T2' in error_text.value.args[0]
 
     # KDM: this is a good candidate for pytest.parametrize
     def test_masked_mapping_projection(self):
@@ -402,7 +402,7 @@ class TestProjectionSpecificationFormats:
         assert "((2, 3)) must be the same as its 'matrix' ((2, 2))" in str(error_text.value)
 
     # FIX 7/22/15 [JDC] - REPLACE WITH MORE ELABORATE TESTS OF DUPLICATE PROJECTIONS:
-    #                     SAME FROM OUTPUTSTATE;  SAME TO INPUT STATE
+    #                     SAME FROM OutputPort;  SAME TO INPUT STATE
     #                     TEST ERROR MESSAGES GENERATED BY VARIOUS _check_for_duplicates METHODS
     # def test_duplicate_projection_detection_and_warning(self):
     #

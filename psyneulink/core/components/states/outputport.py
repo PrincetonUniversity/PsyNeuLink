@@ -3,127 +3,127 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# ******************************************  OutputState *****************************************************
+# ******************************************  OutputPort *****************************************************
 
 """
 
 Overview
 --------
 
-OutputState(s) represent the result(s) of executing a Mechanism.  This may be the result(s) of its
-`function <OutputState.function>` and/or values derived from that result.  The full set of results are stored in the
-Mechanism's `output_values <Mechanism_Base.output_values>` attribute.  OutputStates are used to represent
+OutputPort(s) represent the result(s) of executing a Mechanism.  This may be the result(s) of its
+`function <OutputPort.function>` and/or values derived from that result.  The full set of results are stored in the
+Mechanism's `output_values <Mechanism_Base.output_values>` attribute.  OutputPorts are used to represent
 individual items of the Mechanism's `value <Mechanism_Base.value>`, and/or useful quantities derived from
 them.  For example, the `function <TransferMechanism.TransferMechanism.function>` of a `TransferMechanism` generates
-a single result (the transformed value of its input);  however, a TransferMechanism can also be assigned OutputStates
+a single result (the transformed value of its input);  however, a TransferMechanism can also be assigned OutputPorts
 that represent its mean, variance or other derived values.  In contrast, the `function <DDM.DDM.function>`
 of a `DDM` Mechanism generates several results (such as decision accuracy and response time), each of which can be
-assigned as the `value <OutputState.value>` of a different OutputState.  The OutputState(s) of a Mechanism can serve
+assigned as the `value <OutputPort.value>` of a different OutputPort.  The OutputPort(s) of a Mechanism can serve
 as the input to other  Mechanisms (by way of `projections <Projections>`), or as the output of a Process and/or
-System.  The OutputState's `efferents <OutputState.efferents>` attribute lists all of its outgoing
+System.  The OutputPort's `efferents <OutputPort.efferents>` attribute lists all of its outgoing
 projections.
 
-.. _OutputStates_Creation:
+.. _OutputPorts_Creation:
 
-Creating an OutputState
+Creating an OutputPort
 -----------------------
 
-An OutputState can be created by calling its constructor. However, in general this is not necessary, as a Mechanism
-automatically creates a default OutputState if none is explicitly specified, that contains the primary result of its
+An OutputPort can be created by calling its constructor. However, in general this is not necessary, as a Mechanism
+automatically creates a default OutputPort if none is explicitly specified, that contains the primary result of its
 `function <Mechanism_Base.function>`.  For example, if the Mechanism is created within the `pathway` of a
-`Process <Process>`, an OutputState is created and assigned as the `sender <MappingProjection.MappingProjection.sender>`
+`Process <Process>`, an OutputPort is created and assigned as the `sender <MappingProjection.MappingProjection.sender>`
 of a `MappingProjection` to the next Mechanism in the pathway, or to the Process' `output <Process_Input_And_Output>`
 if the Mechanism is a `TERMINAL` Mechanism for that Process. Other configurations can also easily be specified using
-a Mechanism's **output_states** argument (see `OutputState_Specification` below).  If it is created using its
+a Mechanism's **output_ports** argument (see `OutputPort_Specification` below).  If it is created using its
 constructor, and a Mechanism is specified in the **owner** argument, it is automatically assigned to that Mechanism.
 If its **owner* is not specified, `initialization is deferred.
 
-.. _OutputState_Deferred_Initialization:
+.. _OutputPort_Deferred_Initialization:
 
 *Owner Assignment and Deferred Initialization*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-An OutputState must be owned by a `Mechanism <Mechanism>`.  When OutputState is specified in the constructor for a
+An OutputPort must be owned by a `Mechanism <Mechanism>`.  When OutputPort is specified in the constructor for a
 `Mechanism <Mechanism>` (see `below <InputPort_Specification>`), it is automatically assigned to that Mechanism as
-its owner. If the OutputState is created directly, its `owner <OutputState.owner>` Mechanism can specified in the
+its owner. If the OutputPort is created directly, its `owner <OutputPort.owner>` Mechanism can specified in the
 **owner** argument of its constructor, in which case it is assigned to the specified Mechanism.  Otherwise, its
 initialization is `deferred <State_Deferred_Initialization>` until
 COMMENT:
 TBI: its `owner <State_Base.owner>` attribute is assigned or
 COMMENT
-the OutputState is assigned to a Mechanism using the Mechanism's `add_states <Mechanism_Base.add_states>` method.
+the OutputPort is assigned to a Mechanism using the Mechanism's `add_states <Mechanism_Base.add_states>` method.
 
-.. _OutputState_Primary:
+.. _OutputPort_Primary:
 
-*Primary OutputState*
+*Primary OutputPort*
 ~~~~~~~~~~~~~~~~~~~~~
 
-Every Mechanism has at least one OutputState, referred to as its *primary OutputState*.  If OutputStates are not
-`explicitly specified <OutputState_Specification>` for a Mechanism, a primary OutputState is automatically created
-and assigned to its `output_state <Mechanism_Base.output_state>` attribute (note the singular),
-and also to the first entry of the Mechanism's `output_states <Mechanism_Base.output_states>` attribute
-(note the plural).  The primary OutputState is assigned an `index <OutputState.index>` of '0', and therefore its
-`value <OutputState.value>` is assigned as the first (and often only) item of the Mechanism's `value
+Every Mechanism has at least one OutputPort, referred to as its *primary OutputPort*.  If OutputPorts are not
+`explicitly specified <OutputPort_Specification>` for a Mechanism, a primary OutputPort is automatically created
+and assigned to its `output_port <Mechanism_Base.output_port>` attribute (note the singular),
+and also to the first entry of the Mechanism's `output_ports <Mechanism_Base.output_ports>` attribute
+(note the plural).  The primary OutputPort is assigned an `index <OutputPort.index>` of '0', and therefore its
+`value <OutputPort.value>` is assigned as the first (and often only) item of the Mechanism's `value
 <Mechanism_Base.value>` attribute.
 
-.. _OutputState_Specification:
+.. _OutputPort_Specification:
 
-*OutputState Specification*
+*OutputPort Specification*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Specifying OutputStates when a Mechanism is created
+Specifying OutputPorts when a Mechanism is created
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-OutputStates can be specified for a `Mechanism <Mechanism>` when it is created, in the **output_states** argument of the
-Mechanism's constructor (see `examples <State_Constructor_Argument_Examples>` in State), or in an *OUTPUT_STATES* entry
+OutputPorts can be specified for a `Mechanism <Mechanism>` when it is created, in the **output_ports** argument of the
+Mechanism's constructor (see `examples <State_Constructor_Argument_Examples>` in State), or in an *OUTPUT_PORTS* entry
 of a parameter dictionary assigned to the constructor's **params** argument.  The latter takes precedence over the
-former (that is, if an *OUTPUT_STATES* entry is included in the parameter dictionary, any specified in the
-**output_states** argument are ignored).
+former (that is, if an *OUTPUT_PORTS* entry is included in the parameter dictionary, any specified in the
+**output_ports** argument are ignored).
 
-    .. _OutputState_Replace_Default_Note:
+    .. _OutputPort_Replace_Default_Note:
 
     .. note::
-        Assigning OutputStates to a Mechanism in its constructor **replaces** any that are automatically generated for
+        Assigning OutputPorts to a Mechanism in its constructor **replaces** any that are automatically generated for
         that Mechanism (i.e., those that it creates for itself by default).  If any of those need to be retained, they
-        must be explicitly specified in the list assigned to the **output_states** argument or the *OUTPUT_STATES* entry
-        of the parameter dictionary in the **params** argument).  In particular, if the default OutputState -- that
+        must be explicitly specified in the list assigned to the **output_ports** argument or the *OUTPUT_PORTS* entry
+        of the parameter dictionary in the **params** argument).  In particular, if the default OutputPort -- that
         usually contains the result of the Mechanism's `function <Mechanism_Base.function>` -- is to be retained,
-        it too must be specified along with any additional OutputStates desired.
+        it too must be specified along with any additional OutputPorts desired.
 
 
-Adding OutputStates to a Mechanism after it is created
+Adding OutputPorts to a Mechanism after it is created
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-OutputStates can also be added to a Mechanism, using the Mechanism's `add_states <Mechanism_Base.add_methods>` method.
-Unlike specification in the constructor, this **does not** replace any OutputStates already assigned to the Mechanism.
-Doing so appends them to the list of OutputStates in the Mechanism's `output_states <Mechanism_Base.output_states>`
+OutputPorts can also be added to a Mechanism, using the Mechanism's `add_states <Mechanism_Base.add_methods>` method.
+Unlike specification in the constructor, this **does not** replace any OutputPorts already assigned to the Mechanism.
+Doing so appends them to the list of OutputPorts in the Mechanism's `output_ports <Mechanism_Base.output_ports>`
 attribute, and their values are appended to its `output_values <Mechanism_Base.output_values>` attribute.  If the name
-of an OutputState added to a Mechanism is the same as one that is already exists on the Mechanism, its name is suffixed
-with a numerical index (incremented for each OutputState with that name; see `Naming`), and the OutputState is added
+of an OutputPort added to a Mechanism is the same as one that is already exists on the Mechanism, its name is suffixed
+with a numerical index (incremented for each OutputPort with that name; see `Naming`), and the OutputPort is added
 to the list (that is, it does *not* replace the one that was already there).
 
 
-.. _OutputState_Variable_and_Value:
+.. _OutputPort_Variable_and_Value:
 
-*OutputStates* `variable <OutputState.variable>` *and* `value <OutputState.value>`
+*OutputPorts* `variable <OutputPort.variable>` *and* `value <OutputPort.value>`
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-Each OutputState created with or assigned to a Mechanism must reference one or more items of the Mechanism's attributes,
-that serve as the OutputState's `variable <OutputState.variable>`, and are used by its `function <OutputState.function>`
-to generate the OutputState's `value <OutputState.value>`.  By default, it uses the first item of its `owner
-<OutputState.owner>` Mechanism's `value <Mechanism_Base.value>`.  However, other attributes (or combinations of them)
-can be specified in the **variable** argument of the OutputState's constructor, or the *VARIABLE* entry in an
-`OutputState specification dictionary <OutputState_Specification_Dictionary>` (see `OutputState_Customization`).
+Each OutputPort created with or assigned to a Mechanism must reference one or more items of the Mechanism's attributes,
+that serve as the OutputPort's `variable <OutputPort.variable>`, and are used by its `function <OutputPort.function>`
+to generate the OutputPort's `value <OutputPort.value>`.  By default, it uses the first item of its `owner
+<OutputPort.owner>` Mechanism's `value <Mechanism_Base.value>`.  However, other attributes (or combinations of them)
+can be specified in the **variable** argument of the OutputPort's constructor, or the *VARIABLE* entry in an
+`OutputPort specification dictionary <OutputPort_Specification_Dictionary>` (see `OutputPort_Customization`).
 The specification must be compatible (in the number and type of items it generates) with the input expected by the
-OutputState's `function <OutputState.function>`. The OutputState's `variable <OutputState.variable>` is used as the
-input to its `function <OutputState.function>` to generate the OutputState's `value <OutputState.value>`, possibly
-modulated by a `GatingSignal` (see `below <OutputState_Modulatory_Projections>`).  The OutputState's `value
-<OutputState.value>` must, in turn, be compatible with any Projections that are assigned to it, or `used to specify
-it <OutputState_Projection_Destination_Specification>`.
+OutputPort's `function <OutputPort.function>`. The OutputPort's `variable <OutputPort.variable>` is used as the
+input to its `function <OutputPort.function>` to generate the OutputPort's `value <OutputPort.value>`, possibly
+modulated by a `GatingSignal` (see `below <OutputPort_Modulatory_Projections>`).  The OutputPort's `value
+<OutputPort.value>` must, in turn, be compatible with any Projections that are assigned to it, or `used to specify
+it <OutputPort_Projection_Destination_Specification>`.
 
-The `value <OutputState.value>` of each OutputState of a Mechanism is assigned to a corresponding item of the
+The `value <OutputPort.value>` of each OutputPort of a Mechanism is assigned to a corresponding item of the
 Mechanism's `output_values <Mechanism_Base.output_values>` attribute, in the order in which they are assigned in
-the **output_states** argument of its constructor, and listed in its `output_states <Mechanism_Base.output_states>`
+the **output_ports** argument of its constructor, and listed in its `output_ports <Mechanism_Base.output_ports>`
 attribute.
 
     .. note::
@@ -132,78 +132,78 @@ attribute.
            * a Mechanism's `value <Mechanism.value>` attribute contains the full and unmodified results of its
              `function <Mechanism_Base.function>`;
            * a Mechanism's `output_values <Mechanism.output_values>` attribute contains a list of the `value
-             <OutputState.value>` of each of its OutputStates.
+             <OutputPort.value>` of each of its OutputPorts.
 
-.. _OutputState_Forms_of_Specification:
+.. _OutputPort_Forms_of_Specification:
 
 Forms of Specification
 ^^^^^^^^^^^^^^^^^^^^^^
 
-OutputStates can be specified in a variety of ways, that fall into three broad categories:  specifying an OutputState
+OutputPorts can be specified in a variety of ways, that fall into three broad categories:  specifying an OutputPort
 directly; use of a `State specification dictionary <State_Specification>`; or by specifying one or more Components to
 which it should project. Each of these is described below:
 
-    .. _OutputState_Direct_Specification:
+    .. _OutputPort_Direct_Specification:
 
-    **Direct Specification of an OutputState**
+    **Direct Specification of an OutputPort**
 
-    * existing **OutputState object** or the name of one -- it cannot belong to another Mechanism, and the format of
-      its `variable <OutputState.variable>` must be compatible with the aributes of the `owner <OutputState.owner>`
-      Mechanism specified for the OutputState's `variable <OutputState.variable>` (see `OutputState_Customization`).
+    * existing **OutputPort object** or the name of one -- it cannot belong to another Mechanism, and the format of
+      its `variable <OutputPort.variable>` must be compatible with the aributes of the `owner <OutputPort.owner>`
+      Mechanism specified for the OutputPort's `variable <OutputPort.variable>` (see `OutputPort_Customization`).
     ..
-    * **OutputState class**, **keyword** *OUTPUT_STATE*, or a **string** -- creates a default OutputState that uses
-      the first item of the `owner <OutputState.owner>` Mechanism's `value <Mechanism_Base.value>` as its `variable
-      <OutputState.variable>`, and assigns it as the `owner <OutputState.owner>` Mechanism's `primary OutputState
-      <OutputState_Primary>`. If the class name or *OUTPUT_STATE* keyword is used, a default name is assigned to the
-      State; if a string is specified, it is used as the `name <OutputState.name>` of the OutputState  (see `Naming`).
+    * **OutputPort class**, **keyword** *OUTPUT_PORT*, or a **string** -- creates a default OutputPort that uses
+      the first item of the `owner <OutputPort.owner>` Mechanism's `value <Mechanism_Base.value>` as its `variable
+      <OutputPort.variable>`, and assigns it as the `owner <OutputPort.owner>` Mechanism's `primary OutputPort
+      <OutputPort_Primary>`. If the class name or *OUTPUT_PORT* keyword is used, a default name is assigned to the
+      State; if a string is specified, it is used as the `name <OutputPort.name>` of the OutputPort  (see `Naming`).
 
-    .. _OutputState_Specification_by_Variable:
+    .. _OutputPort_Specification_by_Variable:
 
-    * **variable** -- creates an OutputState using the specification as the OutputState's `variable
-      <OutputState.variable>` (see `OutputState_Customization`).  This must be compatible with (have the same number
-      and type of elements as) the OutputState's `function <OutputState.function>`.  A default name is assigned based
+    * **variable** -- creates an OutputPort using the specification as the OutputPort's `variable
+      <OutputPort.variable>` (see `OutputPort_Customization`).  This must be compatible with (have the same number
+      and type of elements as) the OutputPort's `function <OutputPort.function>`.  A default name is assigned based
       on the name of the Mechanism (see `Naming`).
     ..
-    .. _OutputState_Specification_Dictionary:
+    .. _OutputPort_Specification_Dictionary:
 
-    **OutputState Specification Dictionary**
+    **OutputPort Specification Dictionary**
 
-    * **OutputState specification dictionary** -- this can be used to specify the attributes of an OutputState,
+    * **OutputPort specification dictionary** -- this can be used to specify the attributes of an OutputPort,
       using any of the entries that can be included in a `State specification dictionary <State_Specification>`
       (see `examples <State_Specification_Dictionary_Examples>` in State), including:
 
-      * *VARIABLE*:<keyword or list> - specifies the attribute(s) of its `owner <OutputState.owner>` Mechanism to use
-        as the input to the OutputState's `function <OutputState.function>` (see `OutputState_Customization`); this
-        must be compatible (in the number and format of the items it specifies) with the OutputState's `function
-        <OutputState.function>`.
+      * *VARIABLE*:<keyword or list> - specifies the attribute(s) of its `owner <OutputPort.owner>` Mechanism to use
+        as the input to the OutputPort's `function <OutputPort.function>` (see `OutputPort_Customization`); this
+        must be compatible (in the number and format of the items it specifies) with the OutputPort's `function
+        <OutputPort.function>`.
 
       * *FUNCTION*:<`Function <Function>`, function or method> - specifies the function used to transform and/or
-        combine the item(s) specified for the OutputState's `variable <OutputState.variable>` into its
-        `value <OutputState.value>`;  its input must be compatible (in the number and format of elements) with the
-        specification of the OutputState's `variable <OutputState.variable>` (see `OutputState_Customization`).
+        combine the item(s) specified for the OutputPort's `variable <OutputPort.variable>` into its
+        `value <OutputPort.value>`;  its input must be compatible (in the number and format of elements) with the
+        specification of the OutputPort's `variable <OutputPort.variable>` (see `OutputPort_Customization`).
 
       * *PROJECTIONS* or *MECHANISMS*:<list of `Projections <Projection>` and/or `Mechanisms <Mechanism>`> - specifies
-        one or more efferent `MappingProjections <MappingProjection>` from the OutputState, Mechanims that should
+        one or more efferent `MappingProjections <MappingProjection>` from the OutputPort, Mechanims that should
         receive them, and/or `ModulatoryProjections <ModulatoryProjection>` for it to receive;  this may be constrained
-        by or have consequences for the OutputState's `variable <InputPort.variable>` and/or its `value
-        <OutputState.value>` (see `OutputState_Compatibility_and_Constraints`).
+        by or have consequences for the OutputPort's `variable <InputPort.variable>` and/or its `value
+        <OutputPort.value>` (see `OutputPort_Compatibility_and_Constraints`).
 
         .. note::
            The *INDEX* and *ASSIGN* attributes described below have been deprecated in version 0.4.5, and should be
            replaced by use of the *VARIABLE* and *FUNCTION* entries, respectively.  Although use of *INDEX* and *ASSIGN*
            is currently being supported for backward compatibility, this may be eliminated in a future version.
 
-      * *INDEX*:<int> *[DEPRECATED in version 0.4.5]* - specifies the item of the `owner <OutputState.owner>`
-        Mechanism's `value <Mechanism_Base.value>` to be used for the OutputState's `variable <OutputState.variable>`;
-        equivalent to specifying (OWNER_VALUE, <int>) for *VARIABLE* (see `OutputState_Customization`), which should be
+      * *INDEX*:<int> *[DEPRECATED in version 0.4.5]* - specifies the item of the `owner <OutputPort.owner>`
+        Mechanism's `value <Mechanism_Base.value>` to be used for the OutputPort's `variable <OutputPort.variable>`;
+        equivalent to specifying (OWNER_VALUE, <int>) for *VARIABLE* (see `OutputPort_Customization`), which should be
         used for compatibility with future versions.
 
-      * *ASSIGN*:<function> *[DEPRECATED in version 0.4.5]* - specifies the OutputState's `function`
-        <OutputState.assign>` attribute;  *FUNCTION* should be used for compatibility with future versions.
+      * *ASSIGN*:<function> *[DEPRECATED in version 0.4.5]* - specifies the OutputPort's `function`
+        <OutputPort.assign>` attribute;  *FUNCTION* should be used for compatibility with future versions.
 
-    .. _OutputState_Projection_Destination_Specification:
+    .. _OutputPort_Projection_Destination_Specification:
 
-    **Specifying an OutputState by Components to which it Projects**
+    **Specifying an OutputPort by Components to which it Projects**
 
     COMMENT:
     `examples
@@ -213,49 +213,49 @@ which it should project. Each of these is described below:
     COMMENT:
     ------------------------------------------------------------------------------------------------------------------
     ?? PUT IN ITS OWN SECTION ABOVE OR BELOW??
-    Projections from an OutputState can be specified either as attributes, in the constructor for an OutputState (in
-    its **projections** argument or in the *PROJECTIONS* entry of an `OutputState specification dictionary
-    <OutputState_Specification_Dictionary>`), or used to specify the OutputState itself (using one of the
-    `OutputState_Forms_of_Specification` described above. See `State Projections <State_Projections>` for additional
+    Projections from an OutputPort can be specified either as attributes, in the constructor for an OutputPort (in
+    its **projections** argument or in the *PROJECTIONS* entry of an `OutputPort specification dictionary
+    <OutputPort_Specification_Dictionary>`), or used to specify the OutputPort itself (using one of the
+    `OutputPort_Forms_of_Specification` described above. See `State Projections <State_Projections>` for additional
     details concerning the specification of Projections when creating a State.
 
-    .. _OutputState_Projections:
+    .. _OutputPort_Projections:
 
     *Projections*
     ~~~~~~~~~~~~~
 
-    When an OutputState is created, it can be assigned one or more `Projections <Projection>`, using either the
+    When an OutputPort is created, it can be assigned one or more `Projections <Projection>`, using either the
     **projections** argument of its constructor, or in an entry of a dictionary assigned to the **params** argument with
-    the key *PROJECTIONS*.  An OutputState can be assigned either `MappingProjection(s) <MappingProjection>` or
-    `GatingProjection(s) <GatingProjection>`.  MappingProjections are assigned to its `efferents <OutputState.efferents>`
-    attribute and GatingProjections to its `mod_afferents <OutputState.mod_afferents>` attribute.  See
+    the key *PROJECTIONS*.  An OutputPort can be assigned either `MappingProjection(s) <MappingProjection>` or
+    `GatingProjection(s) <GatingProjection>`.  MappingProjections are assigned to its `efferents <OutputPort.efferents>`
+    attribute and GatingProjections to its `mod_afferents <OutputPort.mod_afferents>` attribute.  See
     `State Projections <State_Projections>` for additional details concerning the specification of Projections when
     creating a State.
     ------------------------------------------------------------------------------------------------------------------
     COMMENT
 
-    An OutputState can also be specified by specifying one or more Components to or from which it should be assigned
-    Projection(s). Specifying an OutputState in this way creates both the OutputState and any of the specified or
+    An OutputPort can also be specified by specifying one or more Components to or from which it should be assigned
+    Projection(s). Specifying an OutputPort in this way creates both the OutputPort and any of the specified or
     implied Projection(s) (if they don't already exist). `MappingProjections <MappingProjection>`
-    are assigned to the OutputState's `efferents <OutputState.efferents>` attribute, and `GatingProjections
+    are assigned to the OutputPort's `efferents <OutputPort.efferents>` attribute, and `GatingProjections
     <GatingProjection>` to its `mod_afferents <InputPort.mod_afferents>` attribute. Any of the following can be used
     to specify an InputPort by the Components that projection to it (see `below
-    <OutputState_Compatability_and_Constraints>` for an explanation of the relationship between the `variable` of these
-    Components and the OutputState's `value <OutputState.value>`):
+    <OutputPort_Compatability_and_Constraints>` for an explanation of the relationship between the `variable` of these
+    Components and the OutputPort's `value <OutputPort.value>`):
 
-    * **InputPort, GatingSignal, Mechanism, or list with any of these** -- creates an OutputState with
+    * **InputPort, GatingSignal, Mechanism, or list with any of these** -- creates an OutputPort with
       the relevant Projection(s).  A `MappingProjection` is created to each InputPort or ProcessingMechanism specified
       (for a Mechanism, its `primary InputPort <InputPort_Primary>` is used). A `GatingProjection` is created for
       each GatingSignal or GatingMechamism specified (for a GatingMechanism, its first GatingSignal is used).
     ..
     * **Projection** -- any form of `Projection specification <Projection_Specification>` can be used; creates an
-      OutputState and assigns it as the `sender <MappingProjection.sender>` for any MappingProjections specified, and
+      OutputPort and assigns it as the `sender <MappingProjection.sender>` for any MappingProjections specified, and
       as the `receiver <GatingProjection.receiver>` for any GatingProjections specified.
 
-    .. _OutputState_Tuple_Specification:
+    .. _OutputPort_Tuple_Specification:
 
-    * **OutputState specification tuples** -- these are convenience formats that can be used to compactly specify an
-      OutputState along with Projections to or from it in any of the following ways:
+    * **OutputPort specification tuples** -- these are convenience formats that can be used to compactly specify an
+      OutputPort along with Projections to or from it in any of the following ways:
 
         * **2-item tuple:** *(<State name or list of State names>, <Mechanism>)* -- 1st item must be the name of an
           `InputPort` or `ModulatorySignal`, or a list of such names, and the 2nd item must be the Mechanism to
@@ -266,8 +266,8 @@ which it should project. Each of these is described below:
           form of the 3-item tuple described below
 
         * **3-item tuple:** *(<value, State spec, or list of State specs>, variable spec, Projection specification)* --
-          this allows the specification of State(s) to which the OutputState should project, together with a
-          specification of its `variable <OutputState.variable>` attribute, and (optionally) parameters of the
+          this allows the specification of State(s) to which the OutputPort should project, together with a
+          specification of its `variable <OutputPort.variable>` attribute, and (optionally) parameters of the
           Projection(s) to use (e.g., their `weight <Projection_Base.weight>` and/or `exponent
           <Projection_Base.exponent>` attributes.  Each tuple must have at least the first two items (in the
           order listed), and can include the third:
@@ -279,8 +279,8 @@ which it should project. Each of these is described below:
               consistent with (that is, their `value <State_Base.value>` must be compatible with the `variable
               <Projection_Base.variable>` of) the Projection specified in the fourth item if that is included.
 
-            * **variable spec** -- specifies the attributes of the OutputState's `owner <OutputState.owner>` Mechanism
-              used for its `variable <OutputState.variable>` (see `OutputState_Customization`).
+            * **variable spec** -- specifies the attributes of the OutputPort's `owner <OutputPort.owner>` Mechanism
+              used for its `variable <OutputPort.variable>` (see `OutputPort_Customization`).
 
             * **Projection specification** (optional) -- `specifies a Projection <Projection_Specification>` that
               must be compatible with the State specification(s) in the 1st item; if there is more than one
@@ -289,295 +289,295 @@ which it should project. Each of these is described below:
               Specification <Projection_Specification>` cannot be an instantiated Projection (since a
               Projection cannot be assigned more than one `receiver <Projection_Base.receiver>`).
 
-.. _OutputState_Compatibility_and_Constraints:
+.. _OutputPort_Compatibility_and_Constraints:
 
-OutputState `variable <OutputState.variable>` and `value <OutputState.value>`: Compatibility and Constraints
+OutputPort `variable <OutputPort.variable>` and `value <OutputPort.value>`: Compatibility and Constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The format of an OutputStates' `variable <OutputState.variable>` may have consequences that must be taken into
-account when `specifying an OutputState by Components to which it projects
-<OutputState_Projection_Destination_Specification>`.  These depend on the context in which the specification is
+The format of an OutputPorts' `variable <OutputPort.variable>` may have consequences that must be taken into
+account when `specifying an OutputPort by Components to which it projects
+<OutputPort_Projection_Destination_Specification>`.  These depend on the context in which the specification is
 made, and possibly the value of other specifications.  These considerations and how they are handled are described
 below, starting with constraints that are given the highest precedence:
 
-  * **OutputState specified in a Mechanism's constructor** -- the specification of the OutputState's `variable
-    <OutputState.variable>`, together with its `function <OutputState.function>` determine the OutputState's `value
-    <OutputState.value>` (see `above <OutputState_Variable_and_Value>`).  Therefore, any specifications of the
-    OutputState relevant to its `value <OutputState.value>` must also be compatible with these factors (for example,
-    `specifying it by variable <OutputState_Specification_by_Variable>` or by a `MappingProjection` or an
-    `InputPort` to which it should project (see `above <OutputState_Projection_Destination_Specification>`).
+  * **OutputPort specified in a Mechanism's constructor** -- the specification of the OutputPort's `variable
+    <OutputPort.variable>`, together with its `function <OutputPort.function>` determine the OutputPort's `value
+    <OutputPort.value>` (see `above <OutputPort_Variable_and_Value>`).  Therefore, any specifications of the
+    OutputPort relevant to its `value <OutputPort.value>` must also be compatible with these factors (for example,
+    `specifying it by variable <OutputPort_Specification_by_Variable>` or by a `MappingProjection` or an
+    `InputPort` to which it should project (see `above <OutputPort_Projection_Destination_Specification>`).
 
     COMMENT:
     ***XXX EXAMPLE HERE
     COMMENT
   ..
-  * **OutputState specified on its own** -- any direct specification of the OutputState's `variable
-    <OutputState.variable>` is used to determine its format (e.g., `specifying it by variable
-    <OutputState_Specification_by_Variable>`, or a *VARIABLE* entry in an `OutputState specification dictionary
-    <OutputState_Specification_Dictionary>`.  In this case, the value of any `Components used to specify the
-    OutputState <OutputState_Projection_Destination_Specification>` must be compatible with the specification of its
-    `variable <OutputState.variable>` and the consequences this has for its `value <OutputState.value>` (see below).
+  * **OutputPort specified on its own** -- any direct specification of the OutputPort's `variable
+    <OutputPort.variable>` is used to determine its format (e.g., `specifying it by variable
+    <OutputPort_Specification_by_Variable>`, or a *VARIABLE* entry in an `OutputPort specification dictionary
+    <OutputPort_Specification_Dictionary>`.  In this case, the value of any `Components used to specify the
+    OutputPort <OutputPort_Projection_Destination_Specification>` must be compatible with the specification of its
+    `variable <OutputPort.variable>` and the consequences this has for its `value <OutputPort.value>` (see below).
 
     COMMENT:
     ***XXX EXAMPLE HERE
     COMMENT
   ..
-  * **OutputState's** `value <OutputState.value>` **not constrained by any of the conditions above** -- then its
-    `variable <OutputState.variable>` is determined by the default for an OutputState (the format of the first
-    item of its `owner <OutputState.owner>` Mechanism's `value <Mechanism_Base.value>` ). If the OutputState is
-    `specified to project to any other Components <OutputState_Projection_Destination_Specification>`, then if the
+  * **OutputPort's** `value <OutputPort.value>` **not constrained by any of the conditions above** -- then its
+    `variable <OutputPort.variable>` is determined by the default for an OutputPort (the format of the first
+    item of its `owner <OutputPort.owner>` Mechanism's `value <Mechanism_Base.value>` ). If the OutputPort is
+    `specified to project to any other Components <OutputPort_Projection_Destination_Specification>`, then if the
     Component is a:
 
 
     * **InputPort or Mechanism** (for which its `primary InputPort <InputPort_Primary>` is used) -- if its
-      `variable <State_Base.variable>` matches the format of the OutputState's `value <OutputState.value>`, a
+      `variable <State_Base.variable>` matches the format of the OutputPort's `value <OutputPort.value>`, a
       `MappingProjection` is created using an `IDENTITY_MATRIX`;  otherwise, a `FULL_CONNECTIVITY_MATRIX` is used
-      that maps the OutputState's `value <OutputState.value>` to the InputPort's `variable <State_Base.variable>`.
+      that maps the OutputPort's `value <OutputPort.value>` to the InputPort's `variable <State_Base.variable>`.
 
     * **MappingProjection** -- if its `matrix <MappingProjection.matrix>` is specified, then the `sender dimensionality
-      <Mapping_Matrix_Dimensionality>` of the matrix must be the same as that of the OutputState's `value
-      <OutputState.value>`; if its `receiver <MappingProjection.receiver>` is specified, but not its `matrix
-      <MappingProjection.matrix>`, then a matrix is chosen that appropriately maps from the OutputState to the
+      <Mapping_Matrix_Dimensionality>` of the matrix must be the same as that of the OutputPort's `value
+      <OutputPort.value>`; if its `receiver <MappingProjection.receiver>` is specified, but not its `matrix
+      <MappingProjection.matrix>`, then a matrix is chosen that appropriately maps from the OutputPort to the
       receiver (as described just above);  if neither its `matrix <MappingProjection.matrix>` or its `receiver
       <MappingProjection.receiver>` are specified, then the Projection's `initialization is deferred
       <MappingProjection_Deferred_Initialization>` until its `receiver <MappingProjection.receiver>` is specified.
 
-    * **GatingProjection, GatingSignal or GatingMechanism** -- any of these can be used to specify an OutputState;
-      their `value` does not need to be compatible with the OutputState's `variable <InputPort.variable>` or
-      `value <OutputState.value>`, however it does have to be compatible with the `modulatory parameter
-      <Function_Modulatory_Params>` of the OutputState's `function <OutputState.function>`.
+    * **GatingProjection, GatingSignal or GatingMechanism** -- any of these can be used to specify an OutputPort;
+      their `value` does not need to be compatible with the OutputPort's `variable <InputPort.variable>` or
+      `value <OutputPort.value>`, however it does have to be compatible with the `modulatory parameter
+      <Function_Modulatory_Params>` of the OutputPort's `function <OutputPort.function>`.
 
 
-.. _OutputState_Standard:
+.. _OutputPort_Standard:
 
-Standard OutputStates
+Standard OutputPorts
 ^^^^^^^^^^^^^^^^^^^^^
 
-Most types of Mechanisms have a `standard_output_states` class attribute, that contains a list of predefined
-OutputStates relevant to that type of Mechanism (for example, the `TransferMechanism` class has OutputStates for
+Most types of Mechanisms have a `standard_output_ports` class attribute, that contains a list of predefined
+OutputPorts relevant to that type of Mechanism (for example, the `TransferMechanism` class has OutputPorts for
 calculating the mean, median, variance, and standard deviation of its result).  The names of these are listed as
 attributes of a class with the name *<ABBREVIATED_CLASS_NAME>_OUTPUT*.  For example, the TransferMechanism class
 defines `TRANSFER_OUTPUT`, with attributes *OUTPUT_MEAN*, *OUTPUT_MEDIAN*, *OUTPUT_VARIANCE* and *OUTPUT_STD_DEV* that
-are the names of predefined OutputStates in its `standard_output_states <TransferMechanism.standard_output_states>`
-attribute. These can be used in the list of OutputStates specified for a TransferMechanism object, as in the
+are the names of predefined OutputPorts in its `standard_output_ports <TransferMechanism.standard_output_ports>`
+attribute. These can be used in the list of OutputPorts specified for a TransferMechanism object, as in the
 following example::
 
     >>> import psyneulink as pnl
     >>> my_mech = pnl.TransferMechanism(default_variable=[0,0],
     ...                                 function=pnl.Logistic(),
-    ...                                 output_states=[pnl.TRANSFER_OUTPUT.RESULT,
+    ...                                 output_ports=[pnl.TRANSFER_OUTPUT.RESULT,
     ...                                                pnl.TRANSFER_OUTPUT.MEAN,
     ...                                                pnl.TRANSFER_OUTPUT.VARIANCE])
 
-In this example, ``my_mech`` is configured with three OutputStates;  the first will be named *RESULT* and will
+In this example, ``my_mech`` is configured with three OutputPorts;  the first will be named *RESULT* and will
 represent logistic transform of the 2-element input vector;  the second will be named  *OUTPUT_MEAN* and will
 represent mean of the result (i.e., of its two elements); and the third will be named *OUTPUT_VARIANCE* and contain
 the variance of the result.
 
-.. _OutputState_Customization:
+.. _OutputPort_Customization:
 
-*OutputState Customization*
+*OutputPort Customization*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-An OutputState's `value <OutputState.value>` can be customized by specifying its `variable <OutputState.variable>`
-and/or `function <OutputState.function>` in the **variable** and **function** arguments of the OutputState's
-constructor, the corresponding entries (*VARIABLE* and *FUNCTION*) of an `OutputState specification
-dictionary <OutputState_Specification_Dictionary>`, or in the variable spec (2nd) item of a `3-item tuple
-<OutputState_Tuple_Specification>` for the OutputState.
+An OutputPort's `value <OutputPort.value>` can be customized by specifying its `variable <OutputPort.variable>`
+and/or `function <OutputPort.function>` in the **variable** and **function** arguments of the OutputPort's
+constructor, the corresponding entries (*VARIABLE* and *FUNCTION*) of an `OutputPort specification
+dictionary <OutputPort_Specification_Dictionary>`, or in the variable spec (2nd) item of a `3-item tuple
+<OutputPort_Tuple_Specification>` for the OutputPort.
 
-.. _OutputState_Variable:
+.. _OutputPort_Variable:
 
-*OutputState* `variable <OutputState.variable>`
+*OutputPort* `variable <OutputPort.variable>`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-By default, an OutputState uses the first (and often only) item of the owner Mechanism's `value
-<Mechanism_Base.value>` as its `variable <OutputState.variable>`.  However, this can be customized by specifying
-any other item of its `owner <OutputState.owner>`\\s `value <Mechanism_Base.value>`, the full `value
-<Mechanism_Base.value>` itself, other attributes of the `owner <OutputState.owner>`, or any combination of these
+By default, an OutputPort uses the first (and often only) item of the owner Mechanism's `value
+<Mechanism_Base.value>` as its `variable <OutputPort.variable>`.  However, this can be customized by specifying
+any other item of its `owner <OutputPort.owner>`\\s `value <Mechanism_Base.value>`, the full `value
+<Mechanism_Base.value>` itself, other attributes of the `owner <OutputPort.owner>`, or any combination of these
 using the following:
 
-    *OWNER_VALUE* -- keyword specifying the entire `value <Mechanism_Base.value>` of the OutputState's `owner
-    <OutputState.owner>`.
+    *OWNER_VALUE* -- keyword specifying the entire `value <Mechanism_Base.value>` of the OutputPort's `owner
+    <OutputPort.owner>`.
 
-    *(OWNER_VALUE, <int>)* -- tuple specifying an item of the `owner <OutputState.owner>`\\'s `value
+    *(OWNER_VALUE, <int>)* -- tuple specifying an item of the `owner <OutputPort.owner>`\\'s `value
     <Mechanism_Base.value>` indexed by the int;  indexing begins with 0 (e.g.; 1 references the 2nd item).
 
-    *<attribute name>* -- the name of an attribute of the OutputState's `owner <OutputState.owner>` (must be one
-    in the `owner <OutputState.owner>`\\'s `params_dict <Mechanism.attributes_dict>` dictionary); returns the value
-    of the named attribute for use in the OutputState's `variable <OutputState.variable>`.
+    *<attribute name>* -- the name of an attribute of the OutputPort's `owner <OutputPort.owner>` (must be one
+    in the `owner <OutputPort.owner>`\\'s `params_dict <Mechanism.attributes_dict>` dictionary); returns the value
+    of the named attribute for use in the OutputPort's `variable <OutputPort.variable>`.
 
-    *PARAMS_DICT* -- keyword specifying the `owner <OutputState.owner>` Mechanism's entire `params_dict
+    *PARAMS_DICT* -- keyword specifying the `owner <OutputPort.owner>` Mechanism's entire `params_dict
     <Mechanism.attributes_dict>` dictionary, that contains entries for all of it accessible attributes.  The
-    OutputState's `function <OutputState.function>` must be able to parse the dictionary.
+    OutputPort's `function <OutputPort.function>` must be able to parse the dictionary.
     COMMENT
     ??WHERE CAN THE USER GET THE LIST OF ALLOWABLE ATTRIBUTES?  USER_PARAMS?? aTTRIBUTES_DICT?? USER ACCESSIBLE PARAMS??
     COMMENT
 
     *List[<any of the above items>]* -- this assigns the value of each item in the list to the corresponding item of
-    the OutputState's `variable <OutputState.variable>`.  This must be compatible (in number and type of elements) with
-    the input expected by the OutputState's `function <OutputState.function>`.
+    the OutputPort's `variable <OutputPort.variable>`.  This must be compatible (in number and type of elements) with
+    the input expected by the OutputPort's `function <OutputPort.function>`.
 
-*OutputState* `function <OutputState.function>`
+*OutputPort* `function <OutputPort.function>`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-By default, the `function <OutputState.function>` of an OutputState is `Linear`, which simply assigns the
-OutputState's `variable <OutputState.variable>` as its `value <OutputState.value>`.  However, a different function
-can be assigned, to transform and/or combine the item(s) of the OutputState's `variable <OutputState.variable>`
-for use as its `value <OutputState.value>`. The function can be a PsyNeuLink `Function <Function>` or any Python
+By default, the `function <OutputPort.function>` of an OutputPort is `Linear`, which simply assigns the
+OutputPort's `variable <OutputPort.variable>` as its `value <OutputPort.value>`.  However, a different function
+can be assigned, to transform and/or combine the item(s) of the OutputPort's `variable <OutputPort.variable>`
+for use as its `value <OutputPort.value>`. The function can be a PsyNeuLink `Function <Function>` or any Python
 function or method, so long as the input it expects is compatible (in number and format of elements) with the
-OutputState's `variable <OutputState.variable>`.
+OutputPort's `variable <OutputPort.variable>`.
 
 Examples
 --------
 
-In the following example, a `DDM` Mechanism named ``my_mech`` is configured with three OutputStates:
+In the following example, a `DDM` Mechanism named ``my_mech`` is configured with three OutputPorts:
 
 COMMENT:
-(also see `OutputState_Structure` below). If the
+(also see `OutputPort_Structure` below). If the
 Mechanism's `function
 <Mechanism_Base.function>` returns a value with more than one item (i.e., a list of lists, or a 2d np.array), then an
-OutputState can be assigned to any of those items by specifying its `index <OutputState.index>` attribute. An
-OutputState can also be configured to transform the value of the item, by specifying a function for its `assign
-<OutputState.assign>` attribute; the result will then be assigned as the OutputState's `value <OutputState.value>`.
-An OutputState's `index <OutputState.index>` and `assign <OutputState.assign>` attributes can be assigned when
-the OutputState is assigned to a Mechanism, by including *INDEX* and *ASSIGN* entries in a `specification dictionary
-<OutputState_Specification>` for the OutputState, as in the following example::
+OutputPort can be assigned to any of those items by specifying its `index <OutputPort.index>` attribute. An
+OutputPort can also be configured to transform the value of the item, by specifying a function for its `assign
+<OutputPort.assign>` attribute; the result will then be assigned as the OutputPort's `value <OutputPort.value>`.
+An OutputPort's `index <OutputPort.index>` and `assign <OutputPort.assign>` attributes can be assigned when
+the OutputPort is assigned to a Mechanism, by including *INDEX* and *ASSIGN* entries in a `specification dictionary
+<OutputPort_Specification>` for the OutputPort, as in the following example::
 COMMENT
 
     >>> my_mech = pnl.DDM(function=pnl.DriftDiffusionAnalytical(),
-    ...                   output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
+    ...                   output_ports=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
     ...                                  pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
     ...                                  {pnl.NAME: 'DECISION ENTROPY',
     ...                                   pnl.VARIABLE: (pnl.OWNER_VALUE, 2),
     ...                                   pnl.FUNCTION: pnl.Stability(metric=pnl.ENTROPY) }])
 
 COMMENT:
-   ADD VERSION IN WHICH INDEX IS SPECIFIED USING DDM_standard_output_states
+   ADD VERSION IN WHICH INDEX IS SPECIFIED USING DDM_standard_output_ports
    CW 3/20/18: TODO: this example is flawed: if you try to execute() it, it gives divide by zero error.
 COMMENT
 
-The first two are `Standard OutputStates <OutputState_Standard>` that represent the decision variable of the DDM and
-the probability of it crossing of the upper (vs. lower) threshold. The third is a custom OutputState, that computes
+The first two are `Standard OutputPorts <OutputPort_Standard>` that represent the decision variable of the DDM and
+the probability of it crossing of the upper (vs. lower) threshold. The third is a custom OutputPort, that computes
 the entropy of the probability of crossing the upper threshold.  It uses the 3rd item of the DDM's `value <DDM.value>`
 (items are indexed starting with 0), which contains the `probability of crossing the upper threshold
 <DDM_PROBABILITY_UPPER_THRESHOLD>`, and uses this as the input to the `Stability` Function assigned as the
-OutputState's `function <OutputState.function>`, that computes the entropy of the probability. The three OutputStates
-will be assigned to the `output_states <Mechanism_Base.output_states>` attribute of ``my_mech``, and their values
+OutputPort's `function <OutputPort.function>`, that computes the entropy of the probability. The three OutputPorts
+will be assigned to the `output_ports <Mechanism_Base.output_ports>` attribute of ``my_mech``, and their values
 will be assigned as items in its `output_values <Mechanism_Base.output_values>` attribute, in the order in which they
-are listed in the **output_states** argument of the constructor for ``my_mech``.
+are listed in the **output_ports** argument of the constructor for ``my_mech``.
 
-Custom OutputStates can also be created on their own, and separately assigned or added to a Mechanism.  For example,
-the ``DECISION ENTROPY`` OutputState could be created as follows::
+Custom OutputPorts can also be created on their own, and separately assigned or added to a Mechanism.  For example,
+the ``DECISION ENTROPY`` OutputPort could be created as follows::
 
-    >>> decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',
+    >>> decision_entropy_output_port = pnl.OutputPort(name='DECISION ENTROPY',
     ...                                                 variable=(OWNER_VALUE, 2),
     ...                                                 function=pnl.Stability(metric=pnl.ENTROPY))
 
 and then assigned either as::
 
     >>> my_mech = pnl.DDM(function=pnl.DriftDiffusionAnalytical(),
-    ...                   output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
+    ...                   output_ports=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
     ...                                  pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
-    ...                                  decision_entropy_output_state])
+    ...                                  decision_entropy_output_port])
 
 or::
 
-    >>> another_decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',
+    >>> another_decision_entropy_output_port = pnl.OutputPort(name='DECISION ENTROPY',
     ...                                                variable=(OWNER_VALUE, 2),
     ...                                                function=pnl.Stability(metric=pnl.ENTROPY))
     >>> my_mech2 = pnl.DDM(function=pnl.DriftDiffusionAnalytical(),
-    ...                    output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
+    ...                    output_ports=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
     ...                                   pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD])
 
-    >>> my_mech2.add_states(another_decision_entropy_output_state) # doctest: +SKIP
+    >>> my_mech2.add_states(another_decision_entropy_output_port) # doctest: +SKIP
 
-Note that another new OutputState had to be used for the second example, as trying to
+Note that another new OutputPort had to be used for the second example, as trying to
 add the first one created for ``my_mech`` to ``my_mech2`` would have produced an error (since a State already
 belonging to one Mechanism can't be added to another.
 
-.. _OutputState_Structure:
+.. _OutputPort_Structure:
 
 Structure
 ---------
 
-Every OutputState is owned by a `Mechanism <Mechanism>`. It can send one or more `MappingProjections
+Every OutputPort is owned by a `Mechanism <Mechanism>`. It can send one or more `MappingProjections
 <MappingProjection>` to other Mechanisms.  If its owner is a `TERMINAL` Mechanism of a Process and/or System, then the
-OutputState will also be treated as the output of that `Process <Process_Input_And_Output>` and/or of a System.  It has
+OutputPort will also be treated as the output of that `Process <Process_Input_And_Output>` and/or of a System.  It has
 the following attributes, some of which can be specified in ways that are specific to, and that can be used to
-`customize, the OutputState <OutputState_Customization>`:
+`customize, the OutputPort <OutputPort_Customization>`:
 
 COMMENT:
-.. _OutputState_Index:
+.. _OutputPort_Index:
 
-* `index <OutputState.index>`: this determines the item of its owner Mechanism's `value <Mechanism_Base.value>` to
+* `index <OutputPort.index>`: this determines the item of its owner Mechanism's `value <Mechanism_Base.value>` to
   which it is assigned.  By default, this is set to 0, which assigns it to the first item of the Mechanism's `value
   <Mechanism_Base.value>`.  The `index <Mechanism_Base.index>` must be equal to or less than one minus the number of
-  OutputStates listed in the Mechanism's `output_states <Mechanism_Base.output_states>` attribute.  The `variable
-  <OutputState.variable>` of the OutputState must also match (in the number and type of its elements) the item of the
-  Mechanism's `value <Mechanism_Base.value>` designated by the `index <OutputState.index>`.
+  OutputPorts listed in the Mechanism's `output_ports <Mechanism_Base.output_ports>` attribute.  The `variable
+  <OutputPort.variable>` of the OutputPort must also match (in the number and type of its elements) the item of the
+  Mechanism's `value <Mechanism_Base.value>` designated by the `index <OutputPort.index>`.
 
-.. _OutputState_Assign:
+.. _OutputPort_Assign:
 
-* `assign <OutputState.assign>`:  this specifies a function used to convert the item of the owner Mechanism's
-  `value <Mechanism_Base.value>` (designated by the OutputState's `index <OutputState.index>` attribute), before
-  providing it to the OutputState's `function <OutputState.function>`.  The `assign <OutputState.assign>`
-  attribute can be assigned any function that accept the OutputState's `variable <OutputState.variable>` as its input,
-  and that generates a result that can be used the input for the OutputState's `function <OutputState.function>`.
+* `assign <OutputPort.assign>`:  this specifies a function used to convert the item of the owner Mechanism's
+  `value <Mechanism_Base.value>` (designated by the OutputPort's `index <OutputPort.index>` attribute), before
+  providing it to the OutputPort's `function <OutputPort.function>`.  The `assign <OutputPort.assign>`
+  attribute can be assigned any function that accept the OutputPort's `variable <OutputPort.variable>` as its input,
+  and that generates a result that can be used the input for the OutputPort's `function <OutputPort.function>`.
   The default is an identity function (`Linear` with **slope**\\ =1 and **intercept**\\ =0), that simply assigns the
-  specified item of the Mechanism's `value <Mechanism_Base.value>` unmodified as the input for OutputState's
-  `function <OutputState.function>`.
+  specified item of the Mechanism's `value <Mechanism_Base.value>` unmodified as the input for OutputPort's
+  `function <OutputPort.function>`.
 COMMENT
 ..
-* `variable <OutputState.variable>` -- references attributes of the OutputState's `owner <OutputState.owner>` that
-  are used as the input to the OutputState's `function <OutputState.function>`, to determine its `value
-  <OutputState.value>`.  The specification must match (in both the number and types of elements it generates)
-  the input to the OutputState's `function <OutputState.function>`.  By default, the first item of the `owner
-  <OutputState.owner>` Mechanisms' `value <Mechanism_Base.value>` is used.  However, this can be customized as
-  described under `OutputState_Customization`.
+* `variable <OutputPort.variable>` -- references attributes of the OutputPort's `owner <OutputPort.owner>` that
+  are used as the input to the OutputPort's `function <OutputPort.function>`, to determine its `value
+  <OutputPort.value>`.  The specification must match (in both the number and types of elements it generates)
+  the input to the OutputPort's `function <OutputPort.function>`.  By default, the first item of the `owner
+  <OutputPort.owner>` Mechanisms' `value <Mechanism_Base.value>` is used.  However, this can be customized as
+  described under `OutputPort_Customization`.
 
-* `function <OutputState.function>` -- takes the OutputState's `variable <OutputState.variable>` as its input, and
-  generates the OutputState's `value <OutputState.value>` as its result.  The default function is `Linear` that simply
-  assigns the OutputState's `variable <OutputState.variable>` as its `value <OutputState.value>`.  However, the
-  parameters of the `function <OutputState.function>` -- and thus the `value <OutputState.value>` of the OutputState --
-  can be modified by `GatingProjections <GatingProjection>` received by the OutputState (listed in its
-  `mod_afferents <OutputState.mod_afferents>` attribute.  A custom function can also be specified, so long as it can
-  take as its input a value that is compatible with the OutputState's `variable <OutputState.variable>`.
+* `function <OutputPort.function>` -- takes the OutputPort's `variable <OutputPort.variable>` as its input, and
+  generates the OutputPort's `value <OutputPort.value>` as its result.  The default function is `Linear` that simply
+  assigns the OutputPort's `variable <OutputPort.variable>` as its `value <OutputPort.value>`.  However, the
+  parameters of the `function <OutputPort.function>` -- and thus the `value <OutputPort.value>` of the OutputPort --
+  can be modified by `GatingProjections <GatingProjection>` received by the OutputPort (listed in its
+  `mod_afferents <OutputPort.mod_afferents>` attribute.  A custom function can also be specified, so long as it can
+  take as its input a value that is compatible with the OutputPort's `variable <OutputPort.variable>`.
 
-* `projections <OutputState.projections>` -- all of the `Projections <Projection>` sent and received by the OutputState;
+* `projections <OutputPort.projections>` -- all of the `Projections <Projection>` sent and received by the OutputPort;
 
-.. _OutputState_Efferent_Projections:
+.. _OutputPort_Efferent_Projections:
 
-* `efferents <OutputState.path_afferents>` -- `MappingProjections <MappingProjection>` that project from the
-  OutputState.
+* `efferents <OutputPort.path_afferents>` -- `MappingProjections <MappingProjection>` that project from the
+  OutputPort.
 
-.. _OutputState_Modulatory_Projections:
+.. _OutputPort_Modulatory_Projections:
 
-* `mod_afferents <OutputState.mod_afferents>` -- `GatingProjections <GatingProjection>` that project to the OutputState,
-  the `value <GatingProjection.value>` of which can modify the OutputState's `value <InputPort.value>` (see the
+* `mod_afferents <OutputPort.mod_afferents>` -- `GatingProjections <GatingProjection>` that project to the OutputPort,
+  the `value <GatingProjection.value>` of which can modify the OutputPort's `value <InputPort.value>` (see the
   descriptions of Modulation under `ModulatorySignals <ModulatorySignal_Modulation>` and `GatingSignals
-  <GatingSignal_Modulation>` for additional details).  If the OutputState receives more than one GatingProjection,
-  their values are combined before they are used to modify the `value <OutputState.value>` of the OutputState.
+  <GatingSignal_Modulation>` for additional details).  If the OutputPort receives more than one GatingProjection,
+  their values are combined before they are used to modify the `value <OutputPort.value>` of the OutputPort.
 ..
-* `value <OutputState.value>`:  assigned the result of the OutputState's `function <OutputState.function>`, possibly
-  modified by any `GatingProjections <GatingProjection>` received by the OutputState. It is used as the input to any
+* `value <OutputPort.value>`:  assigned the result of the OutputPort's `function <OutputPort.function>`, possibly
+  modified by any `GatingProjections <GatingProjection>` received by the OutputPort. It is used as the input to any
   projections that the OutputStatue sends.
 
 
-.. _OutputState_Execution:
+.. _OutputPort_Execution:
 
 Execution
 ---------
 
-An OutputState cannot be executed directly.  It is executed when the Mechanism to which it belongs is executed.
-When the Mechanism is executed, the values of its attributes specified for the OutputState's `variable
-<OutputState.variable>` (see `OutputState_Customization`) are used as the input to the OutputState's `function
-<OutputState.function>`. The OutputState is updated by calling its `function <OutputState.function>`.  The result,
-modified by any `GatingProjections <GatingProjection>` the OutputState receives (listed in its `mod_afferents
-<OutputState.mod_afferents>` attribute), is assigned as the `value <OutputState.value>` of the OutputState.  This is
+An OutputPort cannot be executed directly.  It is executed when the Mechanism to which it belongs is executed.
+When the Mechanism is executed, the values of its attributes specified for the OutputPort's `variable
+<OutputPort.variable>` (see `OutputPort_Customization`) are used as the input to the OutputPort's `function
+<OutputPort.function>`. The OutputPort is updated by calling its `function <OutputPort.function>`.  The result,
+modified by any `GatingProjections <GatingProjection>` the OutputPort receives (listed in its `mod_afferents
+<OutputPort.mod_afferents>` attribute), is assigned as the `value <OutputPort.value>` of the OutputPort.  This is
 assigned to a corresponding item of the Mechanism's `output_values <Mechanism_Base.output_values>` attribute,
-and is used as the input to any projections for which the OutputState is the `sender <Projection_Base.sender>`.
+and is used as the input to any projections for which the OutputPort is the `sender <Projection_Base.sender>`.
 
-.. _OutputState_Class_Reference:
+.. _OutputPort_Class_Reference:
 
 Class Reference
 ---------------
@@ -598,10 +598,10 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.keywords import \
     ALL, ASSIGN, CALCULATE, CONTEXT, CONTROL_SIGNAL, FUNCTION, GATING_SIGNAL, INDEX, INPUT_PORT, INPUT_PORTS, \
     MAPPING_PROJECTION, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MECHANISM_VALUE, NAME, \
-    OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, OUTPUT_STD_DEV, OUTPUT_VARIANCE, \
+    OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, OUTPUT_STD_DEV, OUTPUT_VARIANCE, \
     OWNER_VALUE, PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, PROJECTION_TYPE, \
-    RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_OUTPUT_STATES, STATE, VALUE, VARIABLE, \
-    output_state_spec_to_parameter_name
+    RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_OUTPUT_PORTS, STATE, VALUE, VARIABLE, \
+    output_port_spec_to_parameter_name
 from psyneulink.core.globals.parameters import Parameter, ParameterError
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -609,27 +609,27 @@ from psyneulink.core.globals.utilities import \
     is_numeric, iscompatible, make_readonly_property, recursive_update, ContentAddressableList
 
 __all__ = [
-    'OUTPUTS', 'OutputState', 'OutputStateError', 'PRIMARY', 'SEQUENTIAL',
-    'standard_output_states', 'StandardOutputStates', 'StandardOutputStatesError', 'state_type_keywords',
+    'OUTPUTS', 'OutputPort', 'OutputPortError', 'PRIMARY', 'SEQUENTIAL',
+    'standard_output_ports', 'StandardOutputPorts', 'StandardOutputPortsError', 'state_type_keywords',
 ]
 
-state_type_keywords = state_type_keywords.update({OUTPUT_STATE})
+state_type_keywords = state_type_keywords.update({OUTPUT_PORT})
 
-# class OutputStateLog(IntEnum):
+# class OutputPortLog(IntEnum):
 #     NONE            = 0
 #     TIME_STAMP      = 1 << 0
 #     ALL = TIME_STAMP
 #     DEFAULTS = NONE
 
-OUTPUT_STATE_TYPES = 'outputStateTypes'
+OUTPUT_PORT_TYPES = 'outputPortTypes'
 
-# Used to specify how StandardOutputStates are indexed
+# Used to specify how StandardOutputPorts are indexed
 PRIMARY = 0
 SEQUENTIAL = 'SEQUENTIAL'
 
 DEFAULT_VARIABLE_SPEC = (OWNER_VALUE, 0)
 
-# This is a convenience class that provides list of standard_output_state names in IDE
+# This is a convenience class that provides list of standard_output_port names in IDE
 class OUTPUTS():
     RESULT=RESULT
     MEAN=OUTPUT_MEAN
@@ -643,7 +643,7 @@ class OUTPUTS():
     MAX_ABS_INDICATOR=MAX_INDICATOR
     PROB=PROB
 
-standard_output_states = [{NAME: RESULT},
+standard_output_ports = [{NAME: RESULT},
                           {NAME:OUTPUT_MEAN,
                            FUNCTION:lambda x: np.mean(x)},
                           {NAME: OUTPUT_MEDIAN,
@@ -669,8 +669,8 @@ standard_output_states = [{NAME: RESULT},
                           ]
 
 
-def _parse_output_state_variable(variable, owner, context=None, output_state_name=None):
-    """Return variable for OutputState based on VARIABLE entry of owner's params dict
+def _parse_output_port_variable(variable, owner, context=None, output_port_name=None):
+    """Return variable for OutputPort based on VARIABLE entry of owner's params dict
 
     The format of the VARIABLE entry determines the format returned:
     - if it is a single item, or a single item in a list, a single item is returned;
@@ -685,7 +685,7 @@ def _parse_output_state_variable(variable, owner, context=None, output_state_nam
         elif isinstance(spec, tuple):
             # Tuple indexing item of owner's attribute (e.g.,: OWNER_VALUE, int))
             try:
-                owner_param_name = output_state_spec_to_parameter_name[spec[0]]
+                owner_param_name = output_port_spec_to_parameter_name[spec[0]]
             except KeyError:
                 owner_param_name = spec[0]
 
@@ -703,12 +703,12 @@ def _parse_output_state_variable(variable, owner, context=None, output_state_nam
                 elif getattr(owner.parameters, owner_param_name)._get(context) is None:
                     return None
                 else:
-                    # raise OutputStateError("Can't parse variable ({}) for {} of {}".
-                    #                        format(spec, output_state_name or OutputState.__name__, owner.name))
+                    # raise OutputPortError("Can't parse variable ({}) for {} of {}".
+                    #                        format(spec, output_port_name or OutputPort.__name__, owner.name))
                     raise Exception
             except:
-                raise OutputStateError(f"Can't parse variable ({spec}) for "
-                                       f"{output_state_name or OutputState.__name__} of {owner.name}.")
+                raise OutputPortError(f"Can't parse variable ({spec}) for "
+                                       f"{output_port_name or OutputPort.__name__} of {owner.name}.")
 
         elif isinstance(spec, str) and spec == PARAMS_DICT:
             # Specifies passing owner's params_dict as variable
@@ -716,7 +716,7 @@ def _parse_output_state_variable(variable, owner, context=None, output_state_nam
         elif isinstance(spec, str):
             # Owner's full value or attribute other than its value
             try:
-                owner_param_name = output_state_spec_to_parameter_name[spec]
+                owner_param_name = output_port_spec_to_parameter_name[spec]
             except KeyError:
                 owner_param_name = spec
 
@@ -734,10 +734,10 @@ def _parse_output_state_variable(variable, owner, context=None, output_state_nam
                     else:
                         return getattr(owner.function.parameters, owner_param_name)._get(context)
                 except AttributeError:
-                    raise OutputStateError(f"Can't parse variable ({spec}) for "
-                                           f"{output_state_name or OutputState.__name__} of {owner.name}.")
+                    raise OutputPortError(f"Can't parse variable ({spec}) for "
+                                           f"{output_port_name or OutputPort.__name__} of {owner.name}.")
         else:
-            raise OutputStateError(f"'{VARIABLE.upper()}' entry for {output_state_name or OutputState.__name__} "
+            raise OutputPortError(f"'{VARIABLE.upper()}' entry for {output_port_name or OutputPort.__name__} "
                                    f"specification dictionary of {owner.name} ({spec}) must be "
                                    "numeric or a list of {owner.__class__.__name__} attribute names.")
 
@@ -753,20 +753,20 @@ def _parse_output_state_variable(variable, owner, context=None, output_state_nam
     return fct_variable
 
 
-def _output_state_variable_getter(owning_component=None, context=None, output_state_name=None):
-    return _parse_output_state_variable(owning_component._variable_spec, owning_component.owner, context, output_state_name)
+def _output_port_variable_getter(owning_component=None, context=None, output_port_name=None):
+    return _parse_output_port_variable(owning_component._variable_spec, owning_component.owner, context, output_port_name)
 
 
-class OutputStateError(Exception):
+class OutputPortError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
     def __str__(self):
         return repr(self.error_value)
 
-class OutputState(State_Base):
+class OutputPort(State_Base):
     """
-    OutputState(          \
+    OutputPort(           \
     owner,                \
     reference_value,      \
     variable=None,        \
@@ -786,13 +786,13 @@ class OutputState(State_Base):
 
         Description
         -----------
-            The OutputState class is a type in the State category of Component,
+            The OutputPort class is a type in the State category of Component,
             It is used primarily as the sender for MappingProjections
             Its FUNCTION updates its value:
                 note:  currently, this is the identity function, that simply maps variable to value
 
         Class attributes:
-            + componentType (str) = OUTPUT_STATES
+            + componentType (str) = OUTPUT_PORTS
             + paramClassDefaults (dict)
                 + FUNCTION (Linear)
                 + FUNCTION_PARAMS   (Operation.PRODUCT)
@@ -802,7 +802,7 @@ class OutputState(State_Base):
 
         StateRegistry
         -------------
-            All OutputStates are registered in StateRegistry, which maintains an entry for the subclass,
+            All OutputPorts are registered in StateRegistry, which maintains an entry for the subclass,
               a count for all instances of it, and a dictionary of those instances
 
     COMMENT
@@ -812,18 +812,18 @@ class OutputState(State_Base):
     ---------
 
     owner : Mechanism
-        the `Mechanism <Mechanism>` to which the OutputState belongs; it must be specified or determinable from the
-        context in which the OutputState is created.
+        the `Mechanism <Mechanism>` to which the OutputPort belongs; it must be specified or determinable from the
+        context in which the OutputPort is created.
 
     reference_value : number, list or np.ndarray
-        a template that specifies the format of the OutputState's `variable <OutputState.variable>`;  if it is
+        a template that specifies the format of the OutputPort's `variable <OutputPort.variable>`;  if it is
         specified in addition to the **variable** argument, then these must be compatible (both in the number and
-        type of elements).  It is used to insure the compatibility of the source of the input for the OutputState
-        with its `function <OutputState.function>`.
+        type of elements).  It is used to insure the compatibility of the source of the input for the OutputPort
+        with its `function <OutputPort.function>`.
 
     variable : number, list or np.ndarray
-        specifies the attributes of the  OutputState's `owner <OutputState.owner>` Mechanism to be used by the
-        OutputState's `function <OutputState.function>`  in generating its `value <OutputState.value>`.
+        specifies the attributes of the  OutputPort's `owner <OutputPort.owner>` Mechanism to be used by the
+        OutputPort's `function <OutputPort.function>`  in generating its `value <OutputPort.value>`.
 
     COMMENT:
     size : int, list or ndarray of ints
@@ -835,100 +835,100 @@ class OutputState(State_Base):
     COMMENT
 
     function : Function, function, or method : default Linear
-        specifies the function used to transform and/or combine the items designated by the OutputState's `variable
-        <OutputState.variable>` into its `value <OutputState.value>`, under the possible influence of
-        `GatingProjections <GatingProjection>` received by the OutputState.
+        specifies the function used to transform and/or combine the items designated by the OutputPort's `variable
+        <OutputPort.variable>` into its `value <OutputPort.value>`, under the possible influence of
+        `GatingProjections <GatingProjection>` received by the OutputPort.
 
     COMMENT:
     index : int : default PRIMARY
         specifies the item of the owner Mechanism's `value <Mechanism_Base.value>` used as input for the
-        function specified by the OutputState's `assign <OutputState.assign>` attribute, to determine the
-        OutputState's `value <OutputState.value>`.
+        function specified by the OutputPort's `assign <OutputPort.assign>` attribute, to determine the
+        OutputPort's `value <OutputPort.value>`.
 
     assign : Function, function, or method : default Linear
         specifies the function used to convert the designated item of the owner Mechanism's
-        `value <Mechanism_Base.value>` (specified by the OutputState's :keyword:`index` attribute),
-        before it is assigned as the OutputState's `value <OutputState.value>`.  The function must accept a value that
+        `value <Mechanism_Base.value>` (specified by the OutputPort's :keyword:`index` attribute),
+        before it is assigned as the OutputPort's `value <OutputPort.value>`.  The function must accept a value that
         has the same format (number and type of elements) as the item of the Mechanism's
         `value <Mechanism_Base.value>`.
     COMMENT
 
     projections : list of Projection specifications
-        species the `MappingProjection(s) <MappingProjection>` to be sent by the OutputState, and/or
-        `GatingProjections(s) <GatingProjection>` to be received (see `OutputState_Projections` for additional details);
-        these will be listed in its `efferents <OutputState.efferents>` and `mod_afferents <InputPort.mod_afferents>`
-        attributes, respectively (see `OutputState_Projections` for additional details).
+        species the `MappingProjection(s) <MappingProjection>` to be sent by the OutputPort, and/or
+        `GatingProjections(s) <GatingProjection>` to be received (see `OutputPort_Projections` for additional details);
+        these will be listed in its `efferents <OutputPort.efferents>` and `mod_afferents <InputPort.mod_afferents>`
+        attributes, respectively (see `OutputPort_Projections` for additional details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
-        the OutputState, its function, and/or a custom function and its parameters. Values specified for parameters
+        the OutputPort, its function, and/or a custom function and its parameters. Values specified for parameters
         in the dictionary override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default see `name <OutputState.name>`
-        specifies the name of the OutputState; see OutputState `name <OutputState.name>` for details.
+    name : str : default see `name <OutputPort.name>`
+        specifies the name of the OutputPort; see OutputPort `name <OutputPort.name>` for details.
 
     prefs : PreferenceSet or specification dict : default State.classPreferences
-        specifies the `PreferenceSet` for the OutputState; see `prefs <OutputState.prefs>` for details.
+        specifies the `PreferenceSet` for the OutputPort; see `prefs <OutputPort.prefs>` for details.
 
 
     Attributes
     ----------
 
     owner : Mechanism
-        the Mechanism to which the OutputState belongs.
+        the Mechanism to which the OutputPort belongs.
 
     mod_afferents : List[GatingProjection]
-        `GatingProjections <GatingProjection>` received by the OutputState.
+        `GatingProjections <GatingProjection>` received by the OutputPort.
 
     variable : value, list or np.ndarray
-        the value(s) of the item(s) of the `owner <OutputState.owner>` Mechanism's attributes specified in the
-        **variable** argument of the constructor, or a *VARIABLE* entry in the `OutputState specification dictionary
-        <OutputState_Specification_Dictionary>` used to construct the OutputState.
+        the value(s) of the item(s) of the `owner <OutputPort.owner>` Mechanism's attributes specified in the
+        **variable** argument of the constructor, or a *VARIABLE* entry in the `OutputPort specification dictionary
+        <OutputPort_Specification_Dictionary>` used to construct the OutputPort.
 
     COMMENT:
     index : int
         the item of the owner Mechanism's `value <Mechanism_Base.value>` used as input for the function specified by
-        its `assign <OutputState.assign>` attribute (see `index <OutputState_Index>` for additional details).
+        its `assign <OutputPort.assign>` attribute (see `index <OutputPort_Index>` for additional details).
 
     assign : function or method
         function used to convert the item of the owner Mechanism's `value <Mechanism_Base.value>` specified by
-        the OutputState's `index <OutputState.index>` attribute.  The result is combined with the result of the
-        OutputState's `function <OutputState.function>` to determine both the `value <OutputState.value>` of the
-        OutputState, as well as the value of the corresponding item of the owner Mechanism's `output_values
+        the OutputPort's `index <OutputPort.index>` attribute.  The result is combined with the result of the
+        OutputPort's `function <OutputPort.function>` to determine both the `value <OutputPort.value>` of the
+        OutputPort, as well as the value of the corresponding item of the owner Mechanism's `output_values
         <Mechanism_Base.output_values>`. The default (`Linear`) transfers the value unmodified  (see `assign
-        <OutputState_Assign>` for additional details)
+        <OutputPort_Assign>` for additional details)
     COMMENT
 
     function : Function, function, or method
-        function used to transform and/or combine the value of the items of the OutputState's `variable
-        <OutputState.variable>` into its `value <OutputState.value>`, under the possible influence of
-        `GatingProjections <GatingProjection>` received by the OutputState.
+        function used to transform and/or combine the value of the items of the OutputPort's `variable
+        <OutputPort.variable>` into its `value <OutputPort.value>`, under the possible influence of
+        `GatingProjections <GatingProjection>` received by the OutputPort.
 
     value : number, list or np.ndarray
-        assigned the result of `function <OutputState.function>`;  the same value is assigned to the corresponding item
+        assigned the result of `function <OutputPort.function>`;  the same value is assigned to the corresponding item
         of the owner Mechanism's `output_values <Mechanism_Base.output_values>` attribute.
 
     label : string or number
-        the string label that represents the current `value <OutputState.value>` of the OutputState, according to the
+        the string label that represents the current `value <OutputPort.value>` of the OutputPort, according to the
         owner mechanism's `output_labels_dict <Mechanism.output_labels_dict>`. If the current
-        `value <OutputState.value>` of the OutputState does not have a corresponding label, then the numeric
-        `value <OutputState.value>` is returned.
+        `value <OutputPort.value>` of the OutputPort does not have a corresponding label, then the numeric
+        `value <OutputPort.value>` is returned.
 
     efferents : List[MappingProjection]
-        `MappingProjections <MappingProjection>` sent by the OutputState (i.e., for which the OutputState
+        `MappingProjections <MappingProjection>` sent by the OutputPort (i.e., for which the OutputPort
         is a `sender <Projection_Base.sender>`).
 
     projections : List[Projection]
-        all of the `Projections <Projection>` received and sent by the OutputState.
+        all of the `Projections <Projection>` received and sent by the OutputPort.
 
     name : str
-        the name of the OutputState; if it is not specified in the **name** argument of the constructor, a default is
-        assigned by the OutputStateRegistry of the Mechanism to which the OutputState belongs.  Note that most
-        Mechanisms automatically create one or more `Standard OutputStates <OutputState_Standard>`, that have
-        pre-specified names.  However, if any OutputStates are specified in the **input_ports** argument of the
-        Mechanism's constructor, those replace its Standard OutputStates (see `note
+        the name of the OutputPort; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by the OutputPortRegistry of the Mechanism to which the OutputPort belongs.  Note that most
+        Mechanisms automatically create one or more `Standard OutputPorts <OutputPort_Standard>`, that have
+        pre-specified names.  However, if any OutputPorts are specified in the **input_ports** argument of the
+        Mechanism's constructor, those replace its Standard OutputPorts (see `note
         <Mechanism_Default_State_Suppression_Note>`);  `standard naming conventions <Naming>` apply to the
-        OutputStates specified, as well as any that are added to the Mechanism once it is created.
+        OutputPorts specified, as well as any that are added to the Mechanism once it is created.
 
         .. note::
             Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
@@ -937,7 +937,7 @@ class OutputState(State_Base):
             creation.
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the OutputState; if it is not specified in the **prefs** argument of the
+        the `PreferenceSet` for the OutputPort; if it is not specified in the **prefs** argument of the
         constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
 
@@ -945,8 +945,8 @@ class OutputState(State_Base):
 
     #region CLASS ATTRIBUTES
 
-    componentType = OUTPUT_STATE
-    paramsType = OUTPUT_STATE_PARAMS
+    componentType = OUTPUT_PORT
+    paramsType = OUTPUT_PORT_PARAMS
 
     # stateAttributes = State_Base.stateAttributes | {INDEX, ASSIGN}
 
@@ -961,7 +961,7 @@ class OutputState(State_Base):
     # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     PREFERENCE_SET_NAME: 'OutputStateCustomClassPreferences',
+    #     PREFERENCE_SET_NAME: 'OutputPortCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     class Parameters(State_Base.Parameters):
@@ -970,14 +970,14 @@ class OutputState(State_Base):
             ----------
 
                 variable
-                    see `variable <OutputState.variable>`
+                    see `variable <OutputPort.variable>`
 
                     :default value: numpy.array([0])
                     :type: numpy.ndarray
                     :read only: True
 
         """
-        variable = Parameter(np.array([0]), read_only=True, getter=_output_state_variable_getter, pnl_internal=True, constructor_argument='default_variable')
+        variable = Parameter(np.array([0]), read_only=True, getter=_output_port_variable_getter, pnl_internal=True, constructor_argument='default_variable')
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
@@ -1018,7 +1018,7 @@ class OutputState(State_Base):
         # If owner or reference_value has not been assigned, defer init to State._instantiate_projection()
         # if owner is None or reference_value is None:
         if owner is None:
-            # Temporarily name OutputState
+            # Temporarily name OutputPort
             self._assign_deferred_init_name(name, context)
             # Store args for deferred initialization
             self._init_args = locals().copy()
@@ -1047,8 +1047,8 @@ class OutputState(State_Base):
 
         # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
-        # Consider adding self to owner.output_states here (and removing from ControlProjection._instantiate_sender)
-        #  (test for it, and create if necessary, as per OutputStates in ControlProjection._instantiate_sender),
+        # Consider adding self to owner.output_ports here (and removing from ControlProjection._instantiate_sender)
+        #  (test for it, and create if necessary, as per OutputPorts in ControlProjection._instantiate_sender),
 
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         super().__init__(owner,
@@ -1065,7 +1065,7 @@ class OutputState(State_Base):
     def _validate_against_reference_value(self, reference_value):
         """Validate that State.variable is compatible with the reference_value
 
-        reference_value is the value of the Mechanism to which the OutputState is assigned
+        reference_value is the value of the Mechanism to which the OutputPort is assigned
         """
         return
 
@@ -1112,7 +1112,7 @@ class OutputState(State_Base):
                                                     context=context)
 
     def _check_for_duplicate_projections(self, projection):
-        """Check if projection is redundant with one in efferents of OutputState
+        """Check if projection is redundant with one in efferents of OutputPort
 
         Check for any instantiated projection in efferents with the same receiver as projection
         or one in deferred_init status with receiver specification that is the same type as projection.
@@ -1133,17 +1133,17 @@ class OutputState(State_Base):
         return duplicate
 
     def _get_primary_state(self, mechanism):
-        return mechanism.output_state
+        return mechanism.output_port
 
     def _parse_arg_variable(self, default_variable):
-        return _parse_output_state_variable(default_variable, self.owner)
+        return _parse_output_port_variable(default_variable, self.owner)
 
     def _parse_function_variable(self, variable, context=None):
-        return _parse_output_state_variable(variable, self.owner)
+        return _parse_output_port_variable(variable, self.owner)
 
     @tc.typecheck
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
-        """Get variable spec and/or connections specified in an OutputState specification tuple
+        """Get variable spec and/or connections specified in an OutputPort specification tuple
 
         Tuple specification can be:
             (state_spec, connections)
@@ -1156,7 +1156,7 @@ class OutputState(State_Base):
              - params dict with VARIABLE and/or PROJECTIONS entries if either of them was specified
 
         """
-        # FIX: ADD FACILITY TO SPECIFY WEIGHTS AND/OR EXPONENTS FOR INDIVIDUAL OutputState SPECS
+        # FIX: ADD FACILITY TO SPECIFY WEIGHTS AND/OR EXPONENTS FOR INDIVIDUAL OutputPort SPECS
         #      CHANGE EXPECTATION OF *PROJECTIONS* ENTRY TO BE A SET OF TUPLES WITH THE WEIGHT AND EXPONENT FOR IT
         #      THESE CAN BE USED BY THE InputPort's LinearCombination Function
         #          (AKIN TO HOW THE MECHANISM'S FUNCTION COMBINES InputPort VALUES)
@@ -1168,7 +1168,7 @@ class OutputState(State_Base):
         state_spec = state_specific_spec
 
         if isinstance(state_specific_spec, dict):
-            # state_dict[VARIABLE] = _parse_output_state_variable(state_dict[VARIABLE], owner)
+            # state_dict[VARIABLE] = _parse_output_port_variable(state_dict[VARIABLE], owner)
             # # MODIFIED 3/10/18 NEW:
             # if state_dict[VARIABLE] is None:
             #     state_dict[VARIABLE] = DEFAULT_VARIABLE_SPEC
@@ -1194,9 +1194,9 @@ class OutputState(State_Base):
                 if reference_value is None:
                     state_dict[REFERENCE_VALUE]=state_spec
                 elif  not iscompatible(state_spec, reference_value):
-                    raise OutputStateError("Value in first item of 2-item tuple specification for {} of {} ({}) "
+                    raise OutputPortError("Value in first item of 2-item tuple specification for {} of {} ({}) "
                                      "is not compatible with its {} ({})".
-                                     format(OutputState.__name__, owner.name, state_spec,
+                                     format(OutputPort.__name__, owner.name, state_spec,
                                             REFERENCE_VALUE, reference_value))
                 projection_spec = tuple_spec[1]
 
@@ -1205,10 +1205,10 @@ class OutputState(State_Base):
                                                                                            state_specific_spec[-1])
 
             if not len(tuple_spec) in {2,3} :
-                raise OutputStateError("Tuple provided in {} specification dictionary for {} ({}) must have "
+                raise OutputPortError("Tuple provided in {} specification dictionary for {} ({}) must have "
                                        "either 2 ({} and {}) or 3 (optional additional {}) items, "
                                        "or must be a {}".
-                                       format(OutputState.__name__, owner.name, tuple_spec,
+                                       format(OutputPort.__name__, owner.name, tuple_spec,
                                               STATE, PROJECTION, 'variable spec', ProjectionTuple.__name__))
 
 
@@ -1222,7 +1222,7 @@ class OutputState(State_Base):
 
                 tuple_variable_spec = tuple_spec[TUPLE_VARIABLE_INDEX]
 
-                # Make sure OutputState's variable has not already been specified
+                # Make sure OutputPort's variable has not already been specified
                 dict_variable_spec = None
                 if VARIABLE in params_dict and params_dict[VARIABLE] is not None:
                     dict_variable_spec = params_dict[VARIABLE]
@@ -1230,7 +1230,7 @@ class OutputState(State_Base):
                     dict_variable_spec = params_dict[VARIABLE]
                 if dict_variable_spec:
                     name = state_dict[NAME] or self.__name__
-                    raise OutputStateError("Specification of {} in item 2 of 3-item tuple for {} ({})"
+                    raise OutputPortError("Specification of {} in item 2 of 3-item tuple for {} ({})"
                                            "conflicts with its specification elsewhere in the constructor for {} ({})".
                                            format(VARIABLE, name, tuple_spec[TUPLE_VARIABLE_INDEX],
                                                   owner.name, dict_variable_spec))
@@ -1240,13 +1240,13 @@ class OutputState(State_Base):
                     tuple_variable_spec = (OWNER_VALUE, tuple_variable_spec)
 
                 # validate that it is a legitimate spec
-                _parse_output_state_variable(tuple_variable_spec, owner)
+                _parse_output_port_variable(tuple_variable_spec, owner)
 
                 params_dict[VARIABLE] = tuple_variable_spec
 
 
         elif state_specific_spec is not None:
-            raise OutputStateError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
+            raise OutputPortError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
                                   format(self.__class__.__name__, state_specific_spec))
 
         return state_spec, params_dict
@@ -1269,7 +1269,7 @@ class OutputState(State_Base):
 
     @staticmethod
     def _get_state_function_value(owner, function, variable):
-        fct_variable = _parse_output_state_variable(variable, owner)
+        fct_variable = _parse_output_port_variable(variable, owner)
 
         # If variable has not been specified, assume it is the default of (OWNER_VALUE,0), and use that value
         if fct_variable is None:
@@ -1282,7 +1282,7 @@ class OutputState(State_Base):
             except AttributeError:
                 fct_variable = None
 
-        fct = _parse_output_state_function(owner, OutputState.__name__, function, fct_variable is PARAMS_DICT)
+        fct = _parse_output_port_function(owner, OutputPort.__name__, function, fct_variable is PARAMS_DICT)
 
         try:
             # return fct(variable=fct_variable)
@@ -1291,12 +1291,12 @@ class OutputState(State_Base):
             try:
                 return fct(fct_variable)
             except TypeError as e:
-                raise OutputStateError("Error in function assigned to {} of {}: {}".
-                                       format(OutputState.__name__, owner.name, e.args[0]))
+                raise OutputPortError("Error in function assigned to {} of {}: {}".
+                                       format(OutputPort.__name__, owner.name, e.args[0]))
 
     @property
     def variable(self):
-        return _parse_output_state_variable(self._variable, self.owner)
+        return _parse_output_port_variable(self._variable, self.owner)
 
     @variable.setter
     def variable(self, variable):
@@ -1308,8 +1308,8 @@ class OutputState(State_Base):
 
     @property
     def owner_value_index(self):
-        """Return index or indices of items of owner.value for any to which OutputState's variable has been assigned
-        If the OutputState has been assigned to:
+        """Return index or indices of items of owner.value for any to which OutputPort's variable has been assigned
+        If the OutputPort has been assigned to:
         - the entire owner value (i.e., OWNER_VALUE on its own, not in a tuple)
             return owner.value
         - a single item of owner.value (i.e.,  owner.value==(OWNER,index))
@@ -1353,7 +1353,7 @@ class OutputState(State_Base):
             label_dictionary = self.owner.output_labels_dict
         except AttributeError:
             label_dictionary = {}
-        return self._get_value_label(label_dictionary, self.owner.output_states, context=context)
+        return self._get_value_label(label_dictionary, self.owner.output_ports, context=context)
 
     @property
     def _dict_summary(self):
@@ -1366,37 +1366,37 @@ class OutputState(State_Base):
         }
 
 
-def _instantiate_output_states(owner, output_states=None, context=None):
-    """Call State._instantiate_state_list() to instantiate ContentAddressableList of OutputState(s)
+def _instantiate_output_ports(owner, output_ports=None, context=None):
+    """Call State._instantiate_state_list() to instantiate ContentAddressableList of OutputPort(s)
 
-    Create ContentAddressableList of OutputState(s) specified in paramsCurrent[OUTPUT_STATES]
+    Create ContentAddressableList of OutputPort(s) specified in paramsCurrent[OUTPUT_PORTS]
 
-    If output_states is not specified:
-        - use owner.output_states as list of OutputState specifications
-        - if owner.output_states is empty, use owner.value to create a default OutputState
+    If output_ports is not specified:
+        - use owner.output_ports as list of OutputPort specifications
+        - if owner.output_ports is empty, use owner.value to create a default OutputPort
 
-    For each OutputState:
+    For each OutputPort:
          check for VARIABLE and FUNCTION specifications:
              if it is a State, get from variable and function attributes
              if it is dict, look for VARIABLE and FUNCTION entries (and INDEX and ASSIGN for backward compatibility)
              if it is anything else, assume variable spec is (OWNER_VALUE, 0) and FUNCTION is Linear
-         get OutputState's value using _parse_output_state_variable() and append to reference_value
-             so that it matches specification of OutputStates (by # and function return values)
+         get OutputPort's value using _parse_output_port_variable() and append to reference_value
+             so that it matches specification of OutputPorts (by # and function return values)
 
     When completed:
-        - self.output_states contains a ContentAddressableList of one or more OutputStates;
-        - self.output_state contains first or only OutputState in list;
-        - paramsCurrent[OUTPUT_STATES] contains the same ContentAddressableList (of one or more OutputStates)
-        - each OutputState properly references, for its variable, the specified attributes of its owner Mechanism
-        - if there is only one OutputState, it is assigned the full value of its owner.
+        - self.output_ports contains a ContentAddressableList of one or more OutputPorts;
+        - self.output_port contains first or only OutputPort in list;
+        - paramsCurrent[OUTPUT_PORTS] contains the same ContentAddressableList (of one or more OutputPorts)
+        - each OutputPort properly references, for its variable, the specified attributes of its owner Mechanism
+        - if there is only one OutputPort, it is assigned the full value of its owner.
 
     (See State._instantiate_state_list() for additional details)
 
     IMPLEMENTATION NOTE:
-        default(s) for self.paramsCurrent[OUTPUT_STATES] (self.defaults.value) are assigned here
+        default(s) for self.paramsCurrent[OUTPUT_PORTS] (self.defaults.value) are assigned here
         rather than in _validate_params, as it requires function to have been instantiated first
 
-    Returns list of instantiated OutputStates
+    Returns list of instantiated OutputPorts
     """
 
     reference_value = []
@@ -1424,112 +1424,112 @@ def _instantiate_output_states(owner, output_states=None, context=None):
         else:
             owner_value = converted_to_2d
 
-    # This allows method to be called by Mechanism.add_input_ports() with set of user-specified output_states,
-    #    while calls from init_methods continue to use owner.output_states (i.e., OutputState specifications
-    #    assigned in the **output_states** argument of the Mechanism's constructor)
-    output_states = output_states or owner.output_states
+    # This allows method to be called by Mechanism.add_input_ports() with set of user-specified output_ports,
+    #    while calls from init_methods continue to use owner.output_ports (i.e., OutputPort specifications
+    #    assigned in the **output_ports** argument of the Mechanism's constructor)
+    output_ports = output_ports or owner.output_ports
 
-    # Get the value of each OutputState
+    # Get the value of each OutputPort
     # IMPLEMENTATION NOTE:
-    # Should change the default behavior such that, if len(owner_value) == len owner.paramsCurrent[OUTPUT_STATES]
-    #        (that is, there is the same number of items in owner_value as there are OutputStates)
-    #        then increment index so as to assign each item of owner_value to each OutputState
+    # Should change the default behavior such that, if len(owner_value) == len owner.paramsCurrent[OUTPUT_PORTS]
+    #        (that is, there is the same number of items in owner_value as there are OutputPorts)
+    #        then increment index so as to assign each item of owner_value to each OutputPort
     # IMPLEMENTATION NOTE:  SHOULD BE REFACTORED TO USE _parse_state_spec TO PARSE ouput_states arg
-    if output_states:
-        for i, output_state in enumerate(output_states):
+    if output_ports:
+        for i, output_port in enumerate(output_ports):
 
-            # OutputState object
-            if isinstance(output_state, OutputState):
-                if output_state.initialization_status == ContextFlags.DEFERRED_INIT:
+            # OutputPort object
+            if isinstance(output_port, OutputPort):
+                if output_port.initialization_status == ContextFlags.DEFERRED_INIT:
                     try:
-                        output_state_value = OutputState._get_state_function_value(owner,
-                                                                                   # MODIFIED 9/22/19 OLD:
-                                                                                   # output_state.function,
-                                                                                   # MODIFIED 9/22/19 NEW: [JDC]
-                                                                                   output_state._init_args[FUNCTION],
-                                                                                   # MODIFIED 9/22/19 END
-                                                                                   output_state._init_args[VARIABLE])
+                        output_port_value = OutputPort._get_state_function_value(owner,
+                                                                                  # MODIFIED 9/22/19 OLD:
+                                                                                  # output_port.function,
+                                                                                  # MODIFIED 9/22/19 NEW: [JDC]
+                                                                                  output_port._init_args[FUNCTION],
+                                                                                  # MODIFIED 9/22/19 END
+                                                                                  output_port._init_args[VARIABLE])
                     # For backward compatibility with INDEX and ASSIGN
                     except AttributeError:
-                        index = output_state.index
-                        output_state_value = owner_value[index]
-                elif output_state.value is None:
-                    output_state_value = output_state.function()
+                        index = output_port.index
+                        output_port_value = owner_value[index]
+                elif output_port.value is None:
+                    output_port_value = output_port.function()
 
                 else:
-                    output_state_value = output_state.value
+                    output_port_value = output_port.value
 
             else:
-                # parse output_state
+                # parse output_port
                 from psyneulink.core.components.states.state import _parse_state_spec
-                output_state = _parse_state_spec(state_type=OutputState, owner=owner, state_spec=output_state)
+                output_port = _parse_state_spec(state_type=OutputPort, owner=owner, state_spec=output_port)
 
-                _maintain_backward_compatibility(output_state, output_state[NAME], owner)
+                _maintain_backward_compatibility(output_port, output_port[NAME], owner)
 
-                # If OutputState's name matches the name entry of a dict in standard_output_states:
-                #    - use the named Standard OutputState
-                #    - merge initial specifications into std_output_state (giving precedence to user's specs)
-                if output_state[NAME] and hasattr(owner, STANDARD_OUTPUT_STATES):
-                    std_output_state = owner.standard_output_states.get_state_dict(output_state[NAME])
-                    if std_output_state is not None:
-                        _maintain_backward_compatibility(std_output_state, output_state[NAME], owner)
-                        recursive_update(output_state, std_output_state, non_destructive=True)
+                # If OutputPort's name matches the name entry of a dict in standard_output_ports:
+                #    - use the named Standard OutputPort
+                #    - merge initial specifications into std_output_port (giving precedence to user's specs)
+                if output_port[NAME] and hasattr(owner, STANDARD_OUTPUT_PORTS):
+                    std_output_port = owner.standard_output_ports.get_state_dict(output_port[NAME])
+                    if std_output_port is not None:
+                        _maintain_backward_compatibility(std_output_port, output_port[NAME], owner)
+                        recursive_update(output_port, std_output_port, non_destructive=True)
 
-                if FUNCTION in output_state and output_state[FUNCTION] is not None:
-                    output_state_value = OutputState._get_state_function_value(owner,
-                                                                               output_state[FUNCTION],
-                                                                               output_state[VARIABLE])
+                if FUNCTION in output_port and output_port[FUNCTION] is not None:
+                    output_port_value = OutputPort._get_state_function_value(owner,
+                                                                              output_port[FUNCTION],
+                                                                              output_port[VARIABLE])
                 else:
-                    output_state_value = _parse_output_state_variable(output_state[VARIABLE], owner)
-                output_state[VALUE] = output_state_value
+                    output_port_value = _parse_output_port_variable(output_port[VARIABLE], owner)
+                output_port[VALUE] = output_port_value
 
-            output_states[i] = output_state
-            reference_value.append(output_state_value)
+            output_ports[i] = output_port
+            reference_value.append(output_port_value)
 
     else:
         reference_value = owner_value
 
-    if hasattr(owner, OUTPUT_STATE_TYPES):
-        # If owner has only one type in OutputStateTypes, generate state_types list with that for all entries
-        if not isinstance(owner.outputStateTypes, list):
-            state_types = owner.outputStateTypes
+    if hasattr(owner, OUTPUT_PORT_TYPES):
+        # If owner has only one type in OutputPortTypes, generate state_types list with that for all entries
+        if not isinstance(owner.outputPortTypes, list):
+            state_types = owner.outputPortTypes
         else:
-            # If no OutputState specified, used first state_type in outputStateTypes as default
-            if output_states is None:
-                state_types = owner.outputStateTypes[0]
+            # If no OutputPort specified, used first state_type in outputPortTypes as default
+            if output_ports is None:
+                state_types = owner.outputPortTypes[0]
             else:
-                # Construct list with an entry for the state_type of each OutputState in output_states
+                # Construct list with an entry for the state_type of each OutputPort in output_ports
                 state_types = []
-                for output_state in output_states:
-                    state_types.append(output_state.__class__)
+                for output_port in output_ports:
+                    state_types.append(output_port.__class__)
     else:
-        # Use OutputState as default
-        state_types = OutputState
+        # Use OutputPort as default
+        state_types = OutputPort
 
     state_list = _instantiate_state_list(owner=owner,
-                                         state_list=output_states,
+                                         state_list=output_ports,
                                          state_types=state_types,
-                                         state_param_identifier=OUTPUT_STATE,
+                                         state_param_identifier=OUTPUT_PORT,
                                          reference_value=reference_value,
                                          reference_value_name="output",
                                          context=context)
 
-    # Call from Mechanism.add_states, so add to rather than assign output_states (i.e., don't replace)
+    # Call from Mechanism.add_states, so add to rather than assign output_ports (i.e., don't replace)
     if context.source & (ContextFlags.COMMAND_LINE | ContextFlags.METHOD):
-        owner.output_states.extend(state_list)
+        owner.output_ports.extend(state_list)
     else:
-        owner._output_states = state_list
+        owner._output_ports = state_list
 
     # Assign value of require_projection_in_composition
-    for state in owner._output_states:
-        # Assign True for owner's primary OutputState and the value has not already been set in OutputState constructor
-        if state.require_projection_in_composition is None and owner.output_state == state:
+    for state in owner._output_ports:
+        # Assign True for owner's primary OutputPort and the value has not already been set in OutputPort constructor
+        if state.require_projection_in_composition is None and owner.output_port == state:
             state.parameters.require_projection_in_composition._set(True, context)
 
     return state_list
 
 
-class StandardOutputStatesError(Exception):
+class StandardOutputPortsError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -1537,53 +1537,53 @@ class StandardOutputStatesError(Exception):
         return repr(self.error_value)
 
 
-class StandardOutputStates():
-    """Collection of OutputState specification dicts for `standard OutputStates <OutputState_Standard>` of a class.
+class StandardOutputPorts():
+    """Collection of OutputPort specification dicts for `standard OutputPorts <OutputPort_Standard>` of a class.
 
     Parses specification of VARIABLE, assigning indices to OWNER_VALUE if specified.
-    Adds <NAME_INDEX> of each OutputState as property of the owner's class, that returns the index of the OutputState
+    Adds <NAME_INDEX> of each OutputPort as property of the owner's class, that returns the index of the OutputPort
     in the list.
 
 
     Arguments
     ---------
     owner : Component
-        the Component to which this OutputState belongs
+        the Component to which this OutputPort belongs
 
-    output_state_dicts : list of dicts
-        list of dictionaries specifying OutputStates for the Component specified by `owner`
+    output_port_dicts : list of dicts
+        list of dictionaries specifying OutputPorts for the Component specified by `owner`
 
     indices : PRIMARY, SEQUENTIAL, list of ints
-        specifies how to assign the (OWNER_VALUE, int) entry for each dict listed in `output_state_dicts`;
+        specifies how to assign the (OWNER_VALUE, int) entry for each dict listed in `output_port_dicts`;
 
         The effects of each value of indices are as follows:
 
-            * *PRIMARY* -- assigns (OWNER_VALUE, PRIMARY) to all output_states for which a VARIABLE entry is not
+            * *PRIMARY* -- assigns (OWNER_VALUE, PRIMARY) to all output_ports for which a VARIABLE entry is not
               specified;
 
-            * *SEQUENTIAL* -- assigns sequentially incremented int to (OWNER_VALUE, int) spec of each OutputState,
-              ignoring any VARIABLE entries previously specified for individual OutputStates;
+            * *SEQUENTIAL* -- assigns sequentially incremented int to (OWNER_VALUE, int) spec of each OutputPort,
+              ignoring any VARIABLE entries previously specified for individual OutputPorts;
 
-            * list of ints -- assigns each int to an (OWNER_VALUE, int) entry of the corresponding OutputState in
-              `output_state_dicts, ignoring any VARIABLE entries previously specified for individual OutputStates;
+            * list of ints -- assigns each int to an (OWNER_VALUE, int) entry of the corresponding OutputPort in
+              `output_port_dicts, ignoring any VARIABLE entries previously specified for individual OutputPorts;
 
-            * None -- assigns `None` to VARIABLE entries for all OutputStates for which it is not already specified.
+            * None -- assigns `None` to VARIABLE entries for all OutputPorts for which it is not already specified.
 
     Attributes
     ----------
     data : dict
-        dictionary of OutputState specification dictionaries
+        dictionary of OutputPort specification dictionaries
 
     indices : list
-        list of default indices for each OutputState specified
+        list of default indices for each OutputPort specified
 
     names : list
-        list of the default names for each OutputState
+        list of the default names for each OutputPort
 
     Methods
     -------
     get_state_dict(name)
-        returns a copy of the designated OutputState specification dictionary
+        returns a copy of the designated OutputPort specification dictionary
     """
 
     keywords = {PRIMARY, SEQUENTIAL, ALL}
@@ -1591,19 +1591,19 @@ class StandardOutputStates():
     @tc.typecheck
     def __init__(self,
                  owner:Component,
-                 output_state_dicts:list,
+                 output_port_dicts:list,
                  indices:tc.optional(tc.any(int, str, list))=None):
         self.owner = owner
-        self.data = self._instantiate_std_state_list(output_state_dicts, indices)
+        self.data = self._instantiate_std_state_list(output_port_dicts, indices)
 
-    def _instantiate_std_state_list(self, output_state_dicts, indices):
+    def _instantiate_std_state_list(self, output_port_dicts, indices):
 
-        dict_list = output_state_dicts.copy()
+        dict_list = output_port_dicts.copy()
 
-        # Validate that all items in output_state_dicts are dicts
-        for item in output_state_dicts:
+        # Validate that all items in output_port_dicts are dicts
+        for item in output_port_dicts:
             if not isinstance(item, dict):
-                raise StandardOutputStatesError(
+                raise StandardOutputPortsError(
                     "All items of {} for {} must be dicts (but {} is not)".
                     format(self.__class__.__name__, self.owner.componentName, item))
 
@@ -1613,22 +1613,22 @@ class StandardOutputStates():
         # - it has the appropriate number of items
         # - they are all ints
         # and then assign each int to an (OWNER_VALUE, int) VARIABLE entry in the corresponding dict
-        # in output_state_dicts
-        # OutputState
+        # in output_port_dicts
+        # OutputPort
         if isinstance(indices, list):
-            if len(indices) != len(output_state_dicts):
-                raise StandardOutputStatesError("Length of the list of indices "
+            if len(indices) != len(output_port_dicts):
+                raise StandardOutputPortsError("Length of the list of indices "
                                                 "provided to {} for {} ({}) "
                                                 "must equal the number of "
-                                                "OutputStates dicts provided "
+                                                "OutputPorts dicts provided "
                                                 "({}) length".format(
                         self.__class__.__name__,
                         self.owner.name,
                         len(indices),
-                        len(output_state_dicts)))
+                        len(output_port_dicts)))
 
             if not all(isinstance(item, int) for item in indices):
-                raise StandardOutputStatesError("All the items in the list of "
+                raise StandardOutputPortsError("All the items in the list of "
                                                 "indices provided to {} for {} "
                                                 "of {}) must be ints".
                                                 format(self.__class__.__name__,
@@ -1638,12 +1638,12 @@ class StandardOutputStates():
             for index, state_dict in zip(indices, dict_list):
                 state_dict.update({VARIABLE:(OWNER_VALUE, index)})
 
-        # Assign indices sequentially based on order of items in output_state_dicts arg
+        # Assign indices sequentially based on order of items in output_port_dicts arg
         elif indices is SEQUENTIAL:
             for index, state_dict in enumerate(dict_list):
                 state_dict.update({VARIABLE:(OWNER_VALUE, index)})
 
-        # Assign (OWNER_VALUE, PRIMARY) as VARIABLE for all OutputStates in output_state_dicts that don't
+        # Assign (OWNER_VALUE, PRIMARY) as VARIABLE for all OutputPorts in output_port_dicts that don't
         #    have VARIABLE (or INDEX) specified (INDEX is included here for backward compatibility)
         elif indices is PRIMARY:
             for state_dict in dict_list:
@@ -1652,7 +1652,7 @@ class StandardOutputStates():
                 state_dict.update({VARIABLE:(OWNER_VALUE, PRIMARY)})
 
         # Validate all INDEX specifications, parse any assigned as ALL, and
-        # Add names of each OutputState as property of the owner's class that returns its name string
+        # Add names of each OutputPort as property of the owner's class that returns its name string
         for state in dict_list:
             if INDEX in state:
                 if state[INDEX] in ALL:
@@ -1660,14 +1660,14 @@ class StandardOutputStates():
                 elif state[INDEX] in PRIMARY:
                     state_dict.update({VARIABLE:(OWNER_VALUE, PRIMARY)})
                 elif state[INDEX] in SEQUENTIAL:
-                    raise OutputStateError("\'{}\' incorrectly assigned to individual {} in {} of {}.".
-                                           format(SEQUENTIAL.upper(), OutputState.__name__, OUTPUT_STATE.upper(),
+                    raise OutputPortError("\'{}\' incorrectly assigned to individual {} in {} of {}.".
+                                           format(SEQUENTIAL.upper(), OutputPort.__name__, OUTPUT_PORT.upper(),
                                                   self.name))
                 del state[INDEX]
             setattr(self.owner.__class__, state[NAME], make_readonly_property(state[NAME]))
 
-        # For each OutputState dict with a VARIABLE entry that references it's owner's value (by index)
-        # add <NAME_INDEX> as property of the OutputState owner's class that returns its index.
+        # For each OutputPort dict with a VARIABLE entry that references it's owner's value (by index)
+        # add <NAME_INDEX> as property of the OutputPort owner's class that returns its index.
         for state in dict_list:
             if isinstance(state[VARIABLE], tuple):
                 index = state[VARIABLE][1]
@@ -1680,19 +1680,19 @@ class StandardOutputStates():
         return dict_list
 
     @tc.typecheck
-    def add_state_dicts(self, output_state_dicts:list, indices:tc.optional(tc.any(int, str, list))=None):
-        self.data.extend(self._instantiate_std_state_list(output_state_dicts, indices))
+    def add_state_dicts(self, output_port_dicts:list, indices:tc.optional(tc.any(int, str, list))=None):
+        self.data.extend(self._instantiate_std_state_list(output_port_dicts, indices))
         assert True
 
     @tc.typecheck
     def get_state_dict(self, name:str):
-        """Return a copy of the named OutputState dict
+        """Return a copy of the named OutputPort dict
         """
         if next((item for item in self.names if name is item), None):
-            # assign dict to owner's output_state list
+            # assign dict to owner's output_port list
             return self.data[self.names.index(name)].copy()
-        # raise StandardOutputStatesError("{} not recognized as name of {} for {}".
-        #                                 format(name, StandardOutputStates.__class__.__name__, self.owner.name))
+        # raise StandardOutputPortsError("{} not recognized as name of {} for {}".
+        #                                 format(name, StandardOutputPorts.__class__.__name__, self.owner.name))
         return None
 
     # @tc.typecheck
@@ -1707,15 +1707,15 @@ class StandardOutputStates():
     # def indices(self):
     #     return [item[INDEX] for item in self.data]
 
-def _parse_output_state_function(owner, output_state_name, function, params_dict_as_variable=False):
+def _parse_output_port_function(owner, output_port_name, function, params_dict_as_variable=False):
     """Parse specification of function as Function, Function class, Function.function, function_type or method_type.
 
     If params_dict_as_variable is True, and function is a Function, check whether it allows params_dict as variable;
     if it is and does, leave as is,
-    otherwise, wrap in lambda function that provides first item of OutputState's value as the functions argument.
+    otherwise, wrap in lambda function that provides first item of OutputPort's value as the functions argument.
     """
     if function is None:
-        function = OutputState.defaults.function
+        function = OutputPort.defaults.function
 
     if isinstance(function, (function_type, method_type)):
         return function
@@ -1724,9 +1724,9 @@ def _parse_output_state_function(owner, output_state_name, function, params_dict
         function = function()
 
     if not isinstance(function, Function):
-        raise OutputStateError("Specification of \'{}\' for {} of {} must be a {}, the class or function of one "
+        raise OutputPortError("Specification of \'{}\' for {} of {} must be a {}, the class or function of one "
                                "or a callable object (Python function or method)".
-                               format(FUNCTION.upper(), output_state_name, owner.name, Function.__name__))
+                               format(FUNCTION.upper(), output_port_name, owner.name, Function.__name__))
     if params_dict_as_variable:
         # Function can accept params_dict as its variable
         if hasattr(function, 'params_dict_as_variable'):
@@ -1737,14 +1737,14 @@ def _parse_output_state_function(owner, output_state_name, function, params_dict
                 warnings.warn("{} specified as {} is incompatible with {} specified as {} for {} of {}; "
                               "1st item of {}'s {} attribute will be used instead".
                               format(PARAMS_DICT.upper(), VARIABLE.upper(), function.name, FUNCTION.upper(),
-                                     OutputState.name, owner.name, owner.name, VALUE))
+                                     OutputPort.name, owner.name, owner.name, VALUE))
             return lambda x: function(x[OWNER_VALUE][0])
     return function
 
 
 @tc.typecheck
 def _maintain_backward_compatibility(d:dict, name, owner):
-    """Maintain compatibility with use of INDEX, ASSIGN and CALCULATE in OutputState specification"""
+    """Maintain compatibility with use of INDEX, ASSIGN and CALCULATE in OutputPort specification"""
 
     def replace_entries(x):
 
@@ -1754,7 +1754,7 @@ def _maintain_backward_compatibility(d:dict, name, owner):
 
         if INDEX in x:
             index_present = True
-            # if output_state[INDEX] is SEQUENTIAL:
+            # if output_port[INDEX] is SEQUENTIAL:
             #     return
             if x[INDEX] is ALL:
                 x[VARIABLE] = OWNER_VALUE
@@ -1784,20 +1784,20 @@ def _maintain_backward_compatibility(d:dict, name, owner):
         warnings.warn("The use of \'INDEX\' has been deprecated; it is still supported, but entry in {} specification "
                       "dictionary for {} of {} should be changed to \'VARIABLE: (OWNER_VALUE, <index int>)\' "
                       " for future compatibility.".
-                      format(OutputState.__name__, name, owner.name))
+                      format(OutputPort.__name__, name, owner.name))
         assert False
     if a:
         warnings.warn("The use of \'ASSIGN\' has been deprecated; it is still supported, but entry in {} specification "
                       "dictionary for {} of {} should be changed to \'FUNCTION\' for future compatibility.".
-                      format(OutputState.__name__, name, owner.name))
+                      format(OutputPort.__name__, name, owner.name))
         assert False
     if c:
         warnings.warn("The use of \'CALCULATE\' has been deprecated; it is still supported, but entry in {} "
                       "specification dictionary for {} of {} should be changed to \'FUNCTION\' "
-                      "for future compatibility.".format(OutputState.__name__, name, owner.name))
+                      "for future compatibility.".format(OutputPort.__name__, name, owner.name))
 
     if name is MECHANISM_VALUE:
-        warnings.warn("The name of the \'MECHANISM_VALUE\' StandardOutputState has been changed to \'OWNER_VALUE\';  "
+        warnings.warn("The name of the \'MECHANISM_VALUE\' StandardOutputPort has been changed to \'OWNER_VALUE\';  "
                       "it will still work, but should be changed in {} specification of {} for future compatibility.".
-                      format(OUTPUT_STATES, owner.name))
+                      format(OUTPUT_PORTS, owner.name))
         assert False

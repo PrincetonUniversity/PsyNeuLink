@@ -80,7 +80,7 @@ T0 = 0.2 # T0
 inputLayer = pnl.TransferMechanism(#default_variable=[[0.0, 0.0]],
                                    size=2,
                                    function=pnl.Linear(slope=1, intercept=0),
-                                   output_states = [pnl.RESULT],
+                                   output_ports = [pnl.RESULT],
                                    name='Input')
 inputLayer.set_log_conditions([pnl.RESULT])
 
@@ -94,7 +94,7 @@ activation = pnl.RecurrentTransferMechanism(default_variable=[[0.0, 0.0]],
                                             integrator_mode = True,
                                             integrator_function=pnl.AdaptiveIntegrator(rate=(tau)),
                                             initial_value=np.array([[0.0, 0.0]]),
-                                            output_states = [pnl.RESULT],
+                                            output_ports = [pnl.RESULT],
                                             name = 'Activity')
 
 activation.set_log_conditions([pnl.RESULT, "mod_gain"])
@@ -103,7 +103,7 @@ activation.set_log_conditions([pnl.RESULT, "mod_gain"])
 stimulusInfo = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
                                      size = 2,
                                      function = pnl.Linear(slope=1, intercept=0),
-                                     output_states = [pnl.RESULT],
+                                     output_ports = [pnl.RESULT],
                                      name = "Stimulus Info")
 
 stimulusInfo.set_log_conditions([pnl.RESULT])
@@ -112,14 +112,14 @@ controlledElement = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
                                           size = 2,
                                           function=pnl.Linear(slope=1, intercept= 0),
                                           input_ports=pnl.InputPort(combine=pnl.PRODUCT),
-                                          output_states = [pnl.RESULT],
+                                          output_ports = [pnl.RESULT],
                                           name = 'Stimulus Info * Activity')
 
 controlledElement.set_log_conditions([pnl.RESULT])
 
 ddmCombination = pnl.TransferMechanism(size = 1,
                                        function = pnl.Linear(slope=1, intercept=0),
-                                       output_states = [pnl.RESULT],
+                                       output_ports = [pnl.RESULT],
                                        name = "DDM Integrator")
 ddmCombination.set_log_conditions([pnl.RESULT])
 
@@ -128,7 +128,7 @@ decisionMaker = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate = DRIFT
                                                                  threshold = THRESHOLD,
                                                                  noise = NOISE,
                                                                  t0 = T0),
-                                                                 output_states = [pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME,
+                                                                 output_ports = [pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME,
                                                                                   pnl.PROBABILITY_UPPER_THRESHOLD, pnl.PROBABILITY_LOWER_THRESHOLD],
                                                                  name='DDM')
 

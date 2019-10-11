@@ -68,7 +68,7 @@ COMMENT:
                     to suppress creation of a ParameterState for individual parameters.  This should be done
                     for any parameter than can take a value or a string that is a keyword as its specification
                     (i.e., of the arg for the parameter in the Component's constructor) but should not have a
-                    ParameterState (e.g., input_port and output_state), as otherwise the
+                    ParameterState (e.g., input_port and output_port), as otherwise the
                     specification will be interpreted as a numeric parameter (in the case of a value) or
                     a parameter of the keyword's type, a ParameterState will be created, and then it's value,
                     rather than the parameter's actual value, will be returned when the parameter is accessed
@@ -132,7 +132,7 @@ The specification of the initial value of a parameter can take any of the follow
       ModulatoryProjection's `receiver <Projection_Base.receiver>`. If the ModulatorySignal and/or
       ModulatoryProjection already exist, their value(s) must be valid one(s) for the parameter.  Note that only
       Control and Learning Modulatory components can be assigned to a ParameterState (Gating components cannot be
-      used -- they can only be assigned to `InputPorts <InputPort>` and `OutputStates <OutputState>`).
+      used -- they can only be assigned to `InputPorts <InputPort>` and `OutputPorts <OutputPort>`).
 
     .. _ParameterState_Tuple_Specification:
 
@@ -871,7 +871,7 @@ def _instantiate_parameter_states(owner, function=None, context=None):
         return
     # Instantiate ParameterState for each param in user_params (including all params in function_params dict),
     #     using its value as the state_spec
-    # Exclude input_ports and output_states which are also in user_params
+    # Exclude input_ports and output_ports which are also in user_params
     # IMPLEMENTATION NOTE:  Use user_params_for_instantiation since user_params may have been overwritten
     #                       when defaults were assigned to paramsCurrent in Component.__init__,
     #                       (since that will assign values to the properties of each param;

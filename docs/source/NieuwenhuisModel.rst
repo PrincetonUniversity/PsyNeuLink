@@ -106,7 +106,7 @@ where *C* =0.90 and *d* = 0.5 (see `Nieuwenhuis_Execution` for additional detail
 
 **COMBINE VALUES**: an `ObjectiveMechanism`, specified in the **objective_mechanism** argument of the
 LCControlMechanism constructor, with a `Linear <Linear>` function of **slope**=1 and **intercept**=0.  Its
-**monitored_output_states** argument is assigned a `2-item tuple <InputPort_State_Mechanism_Tuple>` specifying the
+**monitored_output_ports** argument is assigned a `2-item tuple <InputPort_State_Mechanism_Tuple>` specifying the
 *DECISION LAYER* and a matrix for the `MappingProjection` from it to *COMBINE VALUES*.  The matrix is assigned as a
 3x1 numpy array, with weights of 0.3 for its first two elements and 0.0 for its third, corresponding to
 T1, T2 and distractor units in the *DECISION LAYER*, respectively.  This combines the values of the T1 and T2 units,

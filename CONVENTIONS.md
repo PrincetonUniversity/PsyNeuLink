@@ -29,7 +29,7 @@ Made up of two types of classes:
 - *State*
     - **InputPort**
     - **ParameterState**
-    - **OutputState**
+    - **OutputPort**
     - *ModulatorySignal*
         - **LearningSignal**
         - **ControlSignal**

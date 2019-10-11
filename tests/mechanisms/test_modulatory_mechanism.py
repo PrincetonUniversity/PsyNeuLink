@@ -33,7 +33,7 @@ class TestControlMechanism:
     #                 ControlSignal(name="CS2", modulates=(BIAS, m)),
     #             ]
     #     )
-    #     assert  c.output_states.names == ['CS1', 'GS', 'CS2']
+    #     assert  c.output_ports.names == ['CS1', 'GS', 'CS2']
     #     assert m.parameter_states['gain'].mod_afferents[0].sender.owner == c
     #     assert m.parameter_states['bias'].mod_afferents[0].sender.owner == c
     #     assert m.input_port.mod_afferents[0].sender.owner == c

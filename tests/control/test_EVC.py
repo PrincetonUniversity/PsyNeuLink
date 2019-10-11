@@ -22,7 +22,7 @@ def test_EVC():
         name='Input',
     )
     Reward = TransferMechanism(
-        output_states=[RESULT, OUTPUT_MEAN, OUTPUT_VARIANCE],
+        output_ports=[RESULT, OUTPUT_MEAN, OUTPUT_VARIANCE],
         name='Reward'
     )
     Decision = DDM(
@@ -49,7 +49,7 @@ def test_EVC():
             starting_point=(0),
             t0=0.45
         ),
-        output_states=[
+        output_ports=[
             DECISION_VARIABLE,
             RESPONSE_TIME,
             PROBABILITY_UPPER_THRESHOLD
@@ -63,7 +63,7 @@ def test_EVC():
     Decision.input_port.prefs.paramValidationPref = False
     for mech in [Input, Reward, Decision]:
         mech.function.prefs.paramValidationPref = False
-        for os in mech.output_states:
+        for os in mech.output_ports:
             os.prefs.paramValidationPref = False
         for instate in mech.input_ports:
             instate.prefs.paramValidationPref = False
@@ -260,7 +260,7 @@ def test_EVC_gratton():
         ),
         prefs=mechanism_prefs,
         name='Decision',
-        output_states=[
+        output_ports=[
             DECISION_VARIABLE,
             RESPONSE_TIME,
             PROBABILITY_UPPER_THRESHOLD
@@ -485,7 +485,7 @@ def test_laming_validation_specify_control_signals():
     )
     Reward = TransferMechanism(
         name='Reward',
-        output_states=[RESULT, OUTPUT_MEAN, OUTPUT_VARIANCE]
+        output_ports=[RESULT, OUTPUT_MEAN, OUTPUT_VARIANCE]
     )
     Decision = DDM(
         function=DriftDiffusionAnalytical(
@@ -495,7 +495,7 @@ def test_laming_validation_specify_control_signals():
             starting_point=0,
             t0=0.45
         ),
-        output_states=[
+        output_ports=[
             DECISION_VARIABLE,
             RESPONSE_TIME,
             PROBABILITY_UPPER_THRESHOLD
@@ -628,7 +628,7 @@ def test_stateful_mechanism_in_simulation():
         integrator_mode=True,
     )
     Reward = TransferMechanism(
-        output_states=[RESULT, OUTPUT_MEAN, OUTPUT_VARIANCE],
+        output_ports=[RESULT, OUTPUT_MEAN, OUTPUT_VARIANCE],
         name='Reward'
     )
     Decision = DDM(
@@ -655,7 +655,7 @@ def test_stateful_mechanism_in_simulation():
             starting_point=(0),
             t0=0.45
         ),
-        output_states=[
+        output_ports=[
             DECISION_VARIABLE,
             RESPONSE_TIME,
             PROBABILITY_UPPER_THRESHOLD

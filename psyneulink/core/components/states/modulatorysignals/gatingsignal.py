@@ -14,10 +14,10 @@ Overview
 
 A GatingSignal is a type of `ModulatorySignal <ModulatorySignal>` that is specialized for use with a `GatingMechanism`
 and one or more `GatingProjections <GatingProjection>`, to modify the `value <State_Base.value>`\\(s) of the
-`InputPort(s) <InputPort>` and/or `OutputState(s) <OutputState>` to which they project. A GatingSignal receives the
+`InputPort(s) <InputPort>` and/or `OutputPort(s) <OutputPort>` to which they project. A GatingSignal receives the
 value from the `gating_allocation <GatingMechanism.gating_allocation>` of the GatingMechanism to which it belongs,
 and assigns that as the value of its `gating_signal <GatingSignal.gating_signal>` to its `GatingProjection(s)
-<GatingProjection>`, each of which projects to an InputPort or OutputState and is used to modulate the `value
+<GatingProjection>`, each of which projects to an InputPort or OutputPort and is used to modulate the `value
 <State_Base.value>` of that State.
 
 
@@ -26,11 +26,11 @@ and assigns that as the value of its `gating_signal <GatingSignal.gating_signal>
 Creating a GatingSignal
 -----------------------
 
-A GatingSignal is created automatically whenever an `InputPort` or `OutputState` of a `Mechanism <Mechanism>` is
+A GatingSignal is created automatically whenever an `InputPort` or `OutputPort` of a `Mechanism <Mechanism>` is
 specified for gating.  This can be done either in the **gate** argument of the constructor for a `GatingMechanism
 <GatingMechanism_GatingSignals>`, or in the `specification of projections <State_Projections>` to the InputPort or
-OutputState.  Although a GatingSignal can be created directly using its constructor (or any of the other ways for
-`creating an OutputState <OutputStates_Creation>`), this is usually not necessary nor is it advisable, as a GatingSignal
+OutputPort.  Although a GatingSignal can be created directly using its constructor (or any of the other ways for
+`creating an OutputPort <OutputPorts_Creation>`), this is usually not necessary nor is it advisable, as a GatingSignal
 has dedicated components and requirements for configuration that must be met for it to function properly.
 
 .. _GatingSignal_Specification:
@@ -39,11 +39,11 @@ has dedicated components and requirements for configuration that must be met for
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a GatingSignal is specified in the **gate** argument of the constructor for a `GatingMechanism`, the
-InputPort(s) and/or OutputState(s) it gates must be specified. This can take any of the following forms:
+InputPort(s) and/or OutputPort(s) it gates must be specified. This can take any of the following forms:
 
-  * **InputPort** or **OutputState** of a Mechanism;
+  * **InputPort** or **OutputPort** of a Mechanism;
   ..
-  * **Mechanism** -- the `primary `InputPort <InputPort_Primary>` or `OutputState <OutputState_Primary>` is used;
+  * **Mechanism** -- the `primary `InputPort <InputPort_Primary>` or `OutputPort <OutputPort_Primary>` is used;
   ..
   * **specification dictionary** -- can take either of the following two forms:
 
@@ -67,7 +67,7 @@ InputPort(s) and/or OutputState(s) it gates must be specified. This can take any
     (e.g., a *MODULATION* entry, the value of which determines how the GatingSignal modulates the
     `value <State_Base.value>` of the State(s) that it gates; or a *VARIABLE* entry specifying which item
     of the GatingMechanism's `gating_allocation <GatingMechanism.gating_allocation>` it should use as its `value
-    <GatingSignal,value>`;  see `OutputState_Customization`).
+    <GatingSignal,value>`;  see `OutputPort_Customization`).
   ..
   * **2-item tuple:** *(<State name or list of State names>, <Mechanism>)* -- the 1st item must be the name of the
     State (or list of State names), and the 2nd item the Mechanism to which it (they) belong(s); this is a convenience
@@ -80,7 +80,7 @@ Structure
 ---------
 
 A GatingSignal is owned by a `GatingMechanism`, and associated with one or more `GatingProjections <GatingProjection>`,
-each of which projects to the InputPort or OutputState that it gates.
+each of which projects to the InputPort or OutputPort that it gates.
 
 .. _GatingSignal_Projections:
 
@@ -132,7 +132,7 @@ is executed is determined by the GatingSignal's `modulation <GatingSignal.modula
 modulation operates).
 
 .. note::
-   The change in the `value <State_Base.value>` of InputPorts and OutputStates in response to the execution of a
+   The change in the `value <State_Base.value>` of InputPorts and OutputPorts in response to the execution of a
    GatingSignal are not applied until the Mechanism(s) to which those states belong are next executed;
    see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
 
@@ -141,20 +141,20 @@ modulation operates).
 Examples
 --------
 
-**Gate an InputPort and OutputState**.  In the following example, `GatingMechanism` is configured to gate the
-`primary InputPort <InputPort_Primary>` of one Mechanism, and the `primary OutputState <OutputState_Primary>`
+**Gate an InputPort and OutputPort**.  In the following example, `GatingMechanism` is configured to gate the
+`primary InputPort <InputPort_Primary>` of one Mechanism, and the `primary OutputPort <OutputPort_Primary>`
 of another::
 
     >>> import psyneulink as pnl
     >>> my_mechanism_A = pnl.TransferMechanism(name="Mechanism A")
     >>> my_mechanism_B = pnl.TransferMechanism(name="Mechanism B")
     >>> my_gating_mechanism = pnl.GatingMechanism(gate=[my_mechanism_A.input_port,
-    ...                                                 my_mechanism_B.output_state])
+    ...                                                 my_mechanism_B.output_port])
 
 Note that, in the **gate** argument, the first item references a Mechanism (``my_mechanism_A``) rather than
 one of its states -- this is all that is necessary, since the default for a `GatingSignal` is to modulate the
 `primary InputPort <InputPort_Primary>` of a Mechanism.  The second item explicitly specifies the State to be gated,
-since it is an OutputState.  This will generate two GatingSignals, each of which will multiplicatively modulate the
+since it is an OutputPort.  This will generate two GatingSignals, each of which will multiplicatively modulate the
 value of the State to which it projects.  This is because, by default, the `modulation <GatingSignal.modulation>`
 attribute of a GatingSignal is the *MULTIPLICATIVE_PARAM* for the `function <State_Base.function>` of the State to which
 it projects.  For an InputPort, the default `function <InputPort.function>` is `Linear` and its *MULTIPLICATIVE_PARAM*
@@ -231,13 +231,13 @@ import typecheck as tc
 
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.core.components.states.outputstate import PRIMARY, SEQUENTIAL, _output_state_variable_getter
+from psyneulink.core.components.states.outputport import PRIMARY, SEQUENTIAL, _output_port_variable_getter
 from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultGatingAllocation
 from psyneulink.core.globals.keywords import \
     CONTEXT, GATE, GATING_PROJECTION, GATING_SIGNAL, INPUT_PORT, INPUT_PORTS, \
-    OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTIONS, PROJECTION_TYPE, RECEIVER, VARIABLE
+    OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, PROJECTIONS, PROJECTION_TYPE, RECEIVER, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -273,13 +273,13 @@ class GatingSignal(ControlSignal):
         prefs=None)
 
     A subclass of `ModulatorySignal <ModulatorySignal>` used by a `GatingMechanism` to modulate the value(s)
-    of one more `InputPort(s) <InputPort>` and/or `OutputState(s) <OutputState>`.
+    of one more `InputPort(s) <InputPort>` and/or `OutputPort(s) <OutputPort>`.
 
     COMMENT:
 
         Description
         -----------
-            The GatingSignal class is a subtype of the OutputState class in the State category of Component,
+            The GatingSignal class is a subtype of the OutputPort class in the State category of Component,
             It is used primarily as the sender for GatingProjections
             Its FUNCTION updates its value:
                 note:  currently, this is the identity function, that simply maps variable to self.value
@@ -295,7 +295,7 @@ class GatingSignal(ControlSignal):
 
         StateRegistry
         -------------
-            All OutputStates are registered in StateRegistry, which maintains an entry for the subclass,
+            All OutputPorts are registered in StateRegistry, which maintains an entry for the subclass,
               a count for all instances of it, and a dictionary of those instances
     COMMENT
 
@@ -409,12 +409,12 @@ class GatingSignal(ControlSignal):
 
     componentType = GATING_SIGNAL
     componentName = 'GatingSignal'
-    paramsType = OUTPUT_STATE_PARAMS
+    paramsType = OUTPUT_PORT_PARAMS
 
     stateAttributes = ControlSignal.stateAttributes | {GATE}
 
-    connectsWith = [INPUT_PORT, OUTPUT_STATE]
-    connectsWithAttribute = [INPUT_PORTS, OUTPUT_STATES]
+    connectsWith = [INPUT_PORT, OUTPUT_PORT]
+    connectsWithAttribute = [INPUT_PORTS, OUTPUT_PORTS]
     projectionSocket = RECEIVER
     modulators = []
 
@@ -422,7 +422,7 @@ class GatingSignal(ControlSignal):
     # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     PREFERENCE_SET_NAME: 'OutputStateCustomClassPreferences',
+    #     PREFERENCE_SET_NAME: 'OutputPortCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     class Parameters(ControlSignal.Parameters):
@@ -452,7 +452,7 @@ class GatingSignal(ControlSignal):
         """
         variable = Parameter(np.array([defaultGatingAllocation]),
                              aliases='allocation',
-                             getter=_output_state_variable_getter,
+                             getter=_output_port_variable_getter,
                              pnl_internal=True, constructor_argument='default_variable'
         )
         value = Parameter(np.array([defaultGatingAllocation]), read_only=True, aliases=['intensity'], pnl_internal=True)
@@ -506,8 +506,8 @@ class GatingSignal(ControlSignal):
 
         # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
-        # Consider adding self to owner.output_states here (and removing from GatingProjection._instantiate_sender)
-        #  (test for it, and create if necessary, as per OutputStates in GatingProjection._instantiate_sender),
+        # Consider adding self to owner.output_ports here (and removing from GatingProjection._instantiate_sender)
+        #  (test for it, and create if necessary, as per OutputPorts in GatingProjection._instantiate_sender),
 
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         super().__init__(owner=owner,
@@ -554,7 +554,7 @@ class GatingSignal(ControlSignal):
             if params_dict[PROJECTIONS] is None:
                 raise GatingSignalError("PROGRAM ERROR: No entry found in {} params dict for {} "
                                          "with specification of {}, {} or GatingProjection(s) to it".
-                                            format(GATING_SIGNAL, INPUT_PORT, OUTPUT_STATE, owner.name))
+                                            format(GATING_SIGNAL, INPUT_PORT, OUTPUT_PORT, owner.name))
             return state_spec, params_dict
 
     def _instantiate_cost_functions(self, context):

@@ -933,7 +933,7 @@ def convert_to_np_array(value, dimension):
 
         # KAM 6/28/18: added exception for cases when even np does not recognize the shape/dtype
         # Needed this specifically for the following shape: variable = [[0.0], [0.0], np.array([[0.0, 0.0]])]
-        # Due to a custom OutputState variable (variable = [owner value[0], owner param, owner InputPort variable])
+        # Due to a custom OutputPort variable (variable = [owner value[0], owner param, owner InputPort variable])
         # FIX: (1) is this exception specific enough? (2) this is not actually converting to an np.array but in this
         # case (as far as I know) we cannot convert to np -- should we warn other methods that this value is "not np"?
         except ValueError:
@@ -1078,18 +1078,18 @@ class ContentAddressableList(UserList):
     entries.
 
     The key with which it is created is also assigned as a property of the class, that returns a list
-    with the keyed attribute of its entries.  For example, the `output_states <Mechanism_Base.output_states>` attribute
-    of a `Mechanism` is a ContentAddressableList of the Mechanism's `OutputStates <OutputState>`, keyed by their
-    names.  Therefore, ``my_mech.output_states.names`` returns the names of all of the Mechanism's OutputStates::
+    with the keyed attribute of its entries.  For example, the `output_ports <Mechanism_Base.output_ports>` attribute
+    of a `Mechanism` is a ContentAddressableList of the Mechanism's `OutputPorts <OutputPort>`, keyed by their
+    names.  Therefore, ``my_mech.output_ports.names`` returns the names of all of the Mechanism's OutputPorts::
 
         >>> import psyneulink as pnl
-        >>> print(pnl.DDM().output_states.names)
+        >>> print(pnl.DDM().output_ports.names)
         ['DECISION_VARIABLE', 'RESPONSE_TIME']
 
     The keyed attribute can also be used to access an item of the list.  For examples::
 
-        >>> print(pnl.DDM().output_states['DECISION_VARIABLE'])
-        (OutputState DECISION_VARIABLE)
+        >>> print(pnl.DDM().output_ports['DECISION_VARIABLE'])
+        (OutputPort DECISION_VARIABLE)
 
     Supports:
       * getting and setting entries in the list using keys (string), in addition to numeric indices.

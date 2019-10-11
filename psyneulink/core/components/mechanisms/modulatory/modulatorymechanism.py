@@ -34,8 +34,8 @@ There are two primary types of ModulatoryMechanism:
     and a ControlMechanism has a `costs <ControlMechanism.costs>` and a `net_outcome <ControlMechanism.net_outcome>`
     that is computed based on the `costs <ControlSignal.costs>` of its ControlSignals. A ControlMechanism can be
     assigned only the `ControlSignal` class of `ModulatorySignal`, but can be also be assigned other generic
-    `OutputStates <OutputState>` that appear after its ControlSignals in its `output_states
-    <ControlMechanism.output_states>` attribute.
+    `OutputPorts <OutputPort>` that appear after its ControlSignals in its `output_ports
+    <ControlMechanism.output_ports>` attribute.
 
 COMMENT:
 ..
@@ -45,9 +45,9 @@ COMMENT:
     `gating_allocation <GatingMechanism.gating_allocation>`, each item of which is assigned to one of its
     `GatingSignals <ControlSignal>`;  each of those generates a `gating_signal <ControlSignal.control_signal>`
     that is used by its `GatingProjection(s) <ControlProjection>` to modulate the parameter of a `function
-    <State_Base.function>` (and thereby the `value <State_Base.value>`) of an `InputPort` or `OutputState`.
+    <State_Base.function>` (and thereby the `value <State_Base.value>`) of an `InputPort` or `OutputPort`.
     A GatingMechanism can be assigned only the `GatingSignal` class of `ModulatorySignal`, but can be also be assigned
-    other generic `OutputStates <OutputState>`.
+    other generic `OutputPorts <OutputPort>`.
 COMMENT.
 ..
 * `LearningMechanism`
@@ -56,8 +56,8 @@ COMMENT.
     <LearningMechanism.learning_signal>` that is provided to its `LearningSignal(s) <LearningSignal>`, and used by
     their `LearningProjections <LearningProjection>` to modulate the `matrix <MappingProjection.matrix>` parameter
     of a `MappingProjection`. A LearningMechanism can be assigned only the `LearningSignal` class of `ModulatorySignal`
-    as its `OuputStates <OutputState>`, but can be also be assigned other generic `OutputStates <OutputState>`,
-    that appear after its LearningSignals in its `output_states <LearningMechanism.output_states>` attribute.
+    as its `OuputStates <OutputPort>`, but can be also be assigned other generic `OutputPorts <OutputPort>`,
+    that appear after its LearningSignals in its `output_ports <LearningMechanism.output_ports>` attribute.
 
 See `ModulatorySignal <ModulatorySignal_Naming>` for conventions used for the names of Modulatory components.
 

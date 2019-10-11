@@ -31,7 +31,7 @@ A LearningSignal is created automatically whenever a `MappingProjection` is `spe
 <LearningMechanism_Creation>` and the Projection belongs to the same `Composition <Composition>` as the
 `LearningMechanism`. LearningSignals can also be specified in the **learning_signals** argument of the constructor
 for a `LearningMechanism`. Although a LearningSignal can be created directly using its constructor (or any of the
-other ways for `creating an OutputState <OutputStates_Creation>`), this is neither necessary nor advisable, as a
+other ways for `creating an OutputPort <OutputPorts_Creation>`), this is neither necessary nor advisable, as a
 LearningSignal has dedicated Components and requirements for configuration that must be met for it to function properly.
 
 .. _LearningSignal_Specification:
@@ -141,7 +141,7 @@ LearningMechanism's `learning_signal <LearningMechanism.learning_signal>` as its
 `function <LearningSignal.function>` can be assigned another `TransferFunction`, or any other function that takes a
 scalar, ndarray or matrix and returns a similar value.
 
-.. note:: The `index <OutputState.OutputState.index>` and `assign <OutputState.OutputState.assign>`
+.. note:: The `index <OutputPort.OutputPort.index>` and `assign <OutputPort.OutputPort.assign>`
         attributes of a LearningSignal are automatically assigned and should not be modified.
 
 
@@ -173,11 +173,11 @@ import typecheck as tc
 
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
-from psyneulink.core.components.states.outputstate import PRIMARY
+from psyneulink.core.components.states.outputport import PRIMARY
 from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    CONTEXT, LEARNED_PARAM, LEARNING_PROJECTION, LEARNING_SIGNAL, OUTPUT_STATE_PARAMS, \
+    CONTEXT, LEARNED_PARAM, LEARNING_PROJECTION, LEARNING_SIGNAL, OUTPUT_PORT_PARAMS, \
     PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -217,7 +217,7 @@ class LearningSignal(ModulatorySignal):
 
         Description
         -----------
-            The LearningSignal class is a subtype of the OutputState type in the State category of Component,
+            The LearningSignal class is a subtype of the OutputPort type in the State category of Component,
             It is used as the sender for LearningProjections
             Its FUNCTION updates its value:
                 note:  currently, this is the identity function, that simply maps variable to self.value
@@ -233,7 +233,7 @@ class LearningSignal(ModulatorySignal):
 
         StateRegistry
         -------------
-            All OutputStates are registered in StateRegistry, which maintains an entry for the subclass,
+            All OutputPorts are registered in StateRegistry, which maintains an entry for the subclass,
               a count for all instances of it, and a dictionary of those instances
     COMMENT
 
@@ -332,7 +332,7 @@ class LearningSignal(ModulatorySignal):
     #region CLASS ATTRIBUTES
 
     componentType = LEARNING_SIGNAL
-    paramsType = OUTPUT_STATE_PARAMS
+    paramsType = OUTPUT_PORT_PARAMS
 
     stateAttributes = ModulatorySignal.stateAttributes
 
@@ -345,7 +345,7 @@ class LearningSignal(ModulatorySignal):
     # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     PREFERENCE_SET_NAME: 'OutputStateCustomClassPreferences',
+    #     PREFERENCE_SET_NAME: 'OutputPortCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
@@ -401,8 +401,8 @@ class LearningSignal(ModulatorySignal):
 
         # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
-        # Consider adding self to owner.output_states here (and removing from LearningProjection._instantiate_sender)
-        #  (test for it, and create if necessary, as per OutputStates in LearningProjection._instantiate_sender),
+        # Consider adding self to owner.output_ports here (and removing from LearningProjection._instantiate_sender)
+        #  (test for it, and create if necessary, as per OutputPorts in LearningProjection._instantiate_sender),
 
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         super().__init__(owner=owner,

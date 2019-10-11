@@ -227,7 +227,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
         specifies the input to the mechanism to use if none is provided in a call to its
         `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method;
         also serves as a template to specify the length of `variable <KWTAMechanism.variable>` for
-        `function <KWTAMechanism.function>`, and the `primary OutputState <OutputState_Primary>`
+        `function <KWTAMechanism.function>`, and the `primary OutputPort <OutputPort_Primary>`
         of the mechanism.
 
     size : int, list or np.ndarray of ints
@@ -349,7 +349,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
         the `matrix <AutoAssociativeProjection.matrix>` parameter of the `recurrent_projection` for the Mechanism.
 
     recurrent_projection : AutoAssociativeProjection
-        an `AutoAssociativeProjection` that projects from the Mechanism's `primary OutputState <OutputState_Primary>`
+        an `AutoAssociativeProjection` that projects from the Mechanism's `primary OutputPort <OutputPort_Primary>`
         back to its `primary inputPort <Mechanism_InputPorts>`.
 
     integrator_function :  IntegratorFunction
@@ -459,12 +459,12 @@ class KWTAMechanism(RecurrentTransferMechanism):
     COMMENT:
         CORRECTED:
         value : 1d np.array
-            the output of ``function``;  also assigned to ``value`` of the TRANSFER_RESULT OutputState
+            the output of ``function``;  also assigned to ``value`` of the TRANSFER_RESULT OutputPort
             and the first item of ``output_values``.
     COMMENT
 
-    output_states : Dict[str, OutputState]
-        an OrderedDict with the following `OutputStates <OutputState>`:
+    output_ports : Dict[str, OutputPort]
+        an OrderedDict with the following `OutputPorts <OutputPort>`:
 
         * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function
           <KWTAMechanism.function>`;
@@ -478,8 +478,8 @@ class KWTAMechanism(RecurrentTransferMechanism):
           (e.g., the `Logistic` function).
 
     output_values : List[array(float64), array(float64)]
-        a list with the `value <OutputState.value>` of each of the Mechanism's `output_states
-        <KohonenMechanism.output_states>`.
+        a list with the `value <OutputPort.value>` of each of the Mechanism's `output_ports
+        <KohonenMechanism.output_ports>`.
 
     name : str
         the name of the KWTAMechanism; if it is not specified in the **name** argument of the constructor, a
@@ -551,7 +551,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
     paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({'function': Logistic})  # perhaps hacky? not sure (7/10/17 CW)
 
-    standard_output_states = RecurrentTransferMechanism.standard_output_states.copy()
+    standard_output_ports = RecurrentTransferMechanism.standard_output_ports.copy()
 
     @tc.typecheck
     def __init__(self,
@@ -573,17 +573,17 @@ class KWTAMechanism(RecurrentTransferMechanism):
                  inhibition_only=True,
                  clip=None,
                  input_ports:tc.optional(tc.any(list, dict)) = None,
-                 output_states:tc.optional(tc.any(str, Iterable))=RESULT,
+                 output_ports:tc.optional(tc.any(str, Iterable))=RESULT,
                  params=None,
                  name=None,
                  prefs: is_pref_set = None,
                  **kwargs
                  ):
-        # Default output_states is specified in constructor as a string rather than a list
+        # Default output_ports is specified in constructor as a string rather than a list
         # to avoid "gotcha" associated with mutable default arguments
         # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
-        if output_states is None:
-            output_states = [RESULT]
+        if output_ports is None:
+            output_ports = [RESULT]
 
         params = self._assign_args_to_param_dicts(input_ports=input_ports,
                                                   integrator_mode=integrator_mode,
@@ -613,7 +613,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
                          noise=noise,
                          integration_rate=integration_rate,
                          clip=clip,
-                         output_states=output_states,
+                         output_ports=output_ports,
                          params=params,
                          name=name,
                          prefs=prefs,
@@ -745,9 +745,9 @@ class KWTAMechanism(RecurrentTransferMechanism):
         #     - Mean of the activation values across units
         #     - Variance of the activation values across units
         # Return:
-        #     value of input transformed by TransferMechanism function in OutputState[TransferOuput.RESULT].value
-        #     mean of items in RESULT OutputState[TransferOuput.OUTPUT_MEAN].value
-        #     variance of items in RESULT OutputState[TransferOuput.OUTPUT_VARIANCE].value
+        #     value of input transformed by TransferMechanism function in OutputPort[TransferOuput.RESULT].value
+        #     mean of items in RESULT OutputPort[TransferOuput.OUTPUT_MEAN].value
+        #     variance of items in RESULT OutputPort[TransferOuput.OUTPUT_VARIANCE].value
         #
         # Arguments:
         #
@@ -761,7 +761,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
         # - context (str)
         #
         # Returns the following values in self.value (2D np.array) and in
-        #     the value of the corresponding OutputState in the self.output_states list:
+        #     the value of the corresponding OutputPort in the self.output_ports list:
         #     - activation value (float)
         #     - mean activation value (float)
         #     - standard deviation of activation values (float)
@@ -771,7 +771,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
         # :param params: (dict)
         # :param time_scale: (TimeScale)
         # :param context: (str)
-        # :rtype self.output_state.value: (number)
+        # :rtype self.output_port.value: (number)
         # """
         #
         # # NOTE: This was heavily based on 6/20/17 devel branch version of _execute from TransferMechanism.py

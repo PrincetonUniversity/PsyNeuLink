@@ -73,7 +73,7 @@ added to an outer array, such that each item of variable corresponds to an Input
 ProcessingMechanism's `function <ProcessingMechanism.function>`, and the function executes.
 
 3. The result of the ProcessingMechanism's `function <ProcessingMechanism.function>` is placed in the Mechanism's
-`value <ProcessingMechanism.value>` attribute, and OutputStates are generated based on `value
+`value <ProcessingMechanism.value>` attribute, and OutputPorts are generated based on `value
 <ProcessingMechanism.value>`.
 
 A ProcessingMechanism may be executed by calling its execute method directly:
@@ -141,7 +141,7 @@ class ProcessingMechanism_Base(Mechanism_Base):
                  size=None,
                  input_ports=None,
                  function=None,
-                 output_states=None,
+                 output_ports=None,
                  params=None,
                  name=None,
                  prefs=None,
@@ -164,7 +164,7 @@ class ProcessingMechanism_Base(Mechanism_Base):
                          size=size,
                          input_ports=input_ports,
                          function=function,
-                         output_states=output_states,
+                         output_ports=output_ports,
                          params=params,
                          name=name,
                          prefs=prefs,
@@ -210,7 +210,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
         the input to the Mechanism to use if none is provided in a call to its
         `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` methods;
         also serves as a template to specify the length of `variable <ProcessingMechanism.variable>` for
-        `function <ProcessingMechanism.function>`, and the `primary outputState <OutputState_Primary>` of the
+        `function <ProcessingMechanism.function>`, and the `primary outputPort <OutputPort_Primary>` of the
         Mechanism.
 
     size : int, list or np.ndarray of ints
@@ -285,7 +285,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                  default_variable=None,
                  size=None,
                  input_ports:tc.optional(tc.any(list, dict))=None,
-                 output_states:tc.optional(tc.any(str, Iterable))=None,
+                 output_ports:tc.optional(tc.any(str, Iterable))=None,
                  function=Linear,
                  params=None,
                  name=None,
@@ -294,14 +294,14 @@ class ProcessingMechanism(ProcessingMechanism_Base):
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
                                                   input_ports=input_ports,
-                                                  output_states=output_states,
+                                                  output_ports=output_ports,
                                                   params=params)
 
         super(ProcessingMechanism, self).__init__(default_variable=default_variable,
                                                   size=size,
                                                   input_ports=input_ports,
                                                   function=function,
-                                                  output_states=output_states,
+                                                  output_ports=output_ports,
                                                   params=params,
                                                   name=name,
                                                   prefs=prefs,

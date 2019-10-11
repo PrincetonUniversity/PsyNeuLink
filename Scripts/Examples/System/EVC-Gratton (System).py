@@ -72,7 +72,7 @@ Decision = pnl.DDM(
     ),
     prefs=mechanism_prefs,
     name='Decision',
-    output_states=[
+    output_ports=[
         pnl.DECISION_VARIABLE,
         pnl.RESPONSE_TIME,
         pnl.PROBABILITY_UPPER_THRESHOLD,

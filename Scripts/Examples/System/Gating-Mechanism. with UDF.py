@@ -46,10 +46,10 @@ Output_Layer = pnl.TransferMechanism(
         default_variable=[0, 0, 0],
         function=psyneulink.core.components.functions.transferfunctions.Linear,
         # function=pnl.Logistic,
-        # output_states={pnl.NAME: 'RESULTS USING UDF',
+        # output_ports={pnl.NAME: 'RESULTS USING UDF',
         #                pnl.VARIABLE: [(pnl.OWNER_VALUE,0), pnl.TIME_STEP],
         #                pnl.FUNCTION: my_sinusoidal_fct}
-        output_states={pnl.NAME: 'RESULTS USING UDF',
+        output_ports={pnl.NAME: 'RESULTS USING UDF',
                        # pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
                        pnl.FUNCTION: psyneulink.core.components.functions.transferfunctions.Linear(slope=pnl.GATING)
                        # pnl.FUNCTION: pnl.Logistic(gain=pnl.GATING)
@@ -70,7 +70,7 @@ Gating_Mechanism = pnl.GatingMechanism(
     size=[1],
     gating_signals=[
         # Output_Layer
-        Output_Layer.output_state,
+        Output_Layer.output_port,
     ]
 )
 
@@ -107,8 +107,8 @@ def show_target(context=None):
           Gating_Mechanism.gating_signals[0].efferents[0].receiver.name)
     print('- Input_Layer.value:                  ', Input_Layer.parameters.value.get(context))
     print('- Output_Layer.value:                 ', Output_Layer.parameters.value.get(context))
-    print('- Output_Layer.output_state.variable: ', Output_Layer.output_state.parameters.variable.get(context))
-    print('- Output_Layer.output_state.value:    ', Output_Layer.output_state.parameters.value.get(context))
+    print('- Output_Layer.output_port.variable: ', Output_Layer.output_port.parameters.variable.get(context))
+    print('- Output_Layer.output_port.value:    ', Output_Layer.output_port.parameters.value.get(context))
 
 mySystem = pnl.System(processes=[p, g])
 

@@ -43,8 +43,8 @@ An IntegratorMechanism has a single `InputPort`, the `value <InputPort.InputPort
 used as the  `variable <IntegratorMechanism.variable>` for its `function <IntegratorMechanism.function>`.
 The default for `function <IntegratorMechanism.function>` is `AdaptiveIntegrator(rate=0.5)`. However,
 a custom function can also be specified,  so long as it takes a numeric value, or a list or np.ndarray of numeric
-values as its input, and returns a value of the same type and format.  The Mechanism has a single `OutputState`,
-the `value <OutputState.OutputState.value>` of which is assigned the result of  the call to the Mechanism's
+values as its input, and returns a value of the same type and format.  The Mechanism has a single `OutputPort`,
+the `value <OutputPort.OutputPort.value>` of which is assigned the result of  the call to the Mechanism's
 `function  <IntegratorMechanism.function>`.
 
 .. _IntegratorMechanism_Execution
@@ -53,7 +53,7 @@ Execution
 ---------
 
 When an IntegratorMechanism is executed, it carries out the specified integration, and assigns the
-result to the `value <IntegratorMechanism.value>` of its `primary OutputState <OutputState_Primary>`.  For the default
+result to the `value <IntegratorMechanism.value>` of its `primary OutputPort <OutputPort_Primary>`.  For the default
 function (`IntegratorFunction`), if the value specified for **default_variable** is a list or array, or **size** is greater
 than 1, each element of the array is independently integrated.  If its `rate <IntegratorFunction.rate>` parameter is a
 single value,  that rate will be used for integrating each element.  If the `rate <IntegratorFunction.rate>` parameter is a
@@ -138,7 +138,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         the input to the Mechanism to use if none is provided in a call to its
         `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` methods;
         also serves as a template to specify the length of `variable <IntegratorMechanism.variable>` for
-        `function <IntegratorMechanism.function>`, and the `primary outputState <OutputState_Primary>` of the
+        `function <IntegratorMechanism.function>`, and the `primary outputPort <OutputPort_Primary>` of the
         Mechanism.
 
     size : int, list or np.ndarray of ints
@@ -204,7 +204,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
     paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({
-    #     OUTPUT_STATES:[PREDICTION_MECHANISM_OUTPUT]
+    #     OUTPUT_PORTS:[PREDICTION_MECHANISM_OUTPUT]
     # })
 
     @tc.typecheck
@@ -213,7 +213,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                  size=None,
                  input_ports:tc.optional(tc.any(list, dict))=None,
                  function=None,
-                 output_states:tc.optional(tc.any(str, Iterable))=RESULTS,
+                 output_ports:tc.optional(tc.any(str, Iterable))=RESULTS,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -223,7 +223,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(input_ports=input_ports,
-                                                  output_states=output_states,
+                                                  output_ports=output_ports,
                                                   function=function,
                                                   params=params)
 

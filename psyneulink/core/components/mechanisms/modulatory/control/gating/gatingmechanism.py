@@ -36,17 +36,17 @@ and net_outcome.  In all other respects it is identical to its parent class, Con
 Creating A GatingMechanism
 ---------------------------
 
-A GatingMechanism is created by calling its constructor.  When a GatingMechanism is created, the OutputStates it
-monitors and the `InputPorts <InputPort>` and/or `OutputStates <OutputState>` it modulates can be specified in the
+A GatingMechanism is created by calling its constructor.  When a GatingMechanism is created, the OutputPorts it
+monitors and the `InputPorts <InputPort>` and/or `OutputPorts <OutputPort>` it modulates can be specified in the
 **montior_for_gating** and **gate** arguments of its constructor, respectively.  Each can be specified in several
 ways, paralleling those used for a ControlMechanism, and described in `ControlMechanism_Monitor_for_Control` and
 `ControlMechanism_Control_Signals` respectively. If neither the **montior_for_gating** or **gate** arguments is
-specified, then only the GatingMechanism is constructed, and its inputs and the InputPorts and/or OutputStates it
+specified, then only the GatingMechanism is constructed, and its inputs and the InputPorts and/or OutputPorts it
 modulates must be specified in some other way.
 COMMENT:
 TBI FOR COMPOSITION
 A GatingMechanism is also created automatically if `gating
-is specified <GatingMechanism_Specifying_Gating>` for an `InputPort`, `OutputState` or `Mechanism <Mechanism>`,
+is specified <GatingMechanism_Specifying_Gating>` for an `InputPort`, `OutputPort` or `Mechanism <Mechanism>`,
 in which case a `GatingProjection` is automatically created that projects from the GatingMechanism to the specified
 target.
 COMMENT
@@ -56,7 +56,7 @@ COMMENT
 *Specifying gating*
 ~~~~~~~~~~~~~~~~~~~
 
-A GatingMechanism is used to modulate the value of an `InputPort` or `OutputState`. An InputPort or OutputState can
+A GatingMechanism is used to modulate the value of an `InputPort` or `OutputPort`. An InputPort or OutputPort can
 be specified for gating by assigning it a `GatingProjection` or `GatingSignal` anywhere that the Projections to a State
 or its `ModulatorySignals can be specified <State_Creation>`.  A `Mechanism <Mechanism>` can also be specified for
 gating, in which case the `primary InputPort <InputPort_Primary>` of the specified Mechanism is used.  States
@@ -73,7 +73,7 @@ GatingSignals
 A `GatingSignal` is created for each item listed in the **gate** argument of the constructor, and all of the
 GatingSignals for a GatingMechanism are listed in its `gating_signals <GatingMechanism.gating_signals>` attribute.
 Each GatingSignal is assigned one or more `GatingProjections <GatingProjection>` to the InputPort(s) and/or
-OutputState(s) it gates. By default, the `function <GatingMechanism.function>` of GatingMechanism generates a `value
+OutputPort(s) it gates. By default, the `function <GatingMechanism.function>` of GatingMechanism generates a `value
 <GatingMechanism.value>` -- its `gating_allocation <GatingSignal.gating_allocation>` -- with a single item, that is
 used by all of the GatingMechanism's GatingSignals.  However,  if a custom `function <GatingMechanism.function>` is
 specified that generates a `gating_allocation <GatingSignal.gating_allocation>` with more than one item, different
@@ -115,12 +115,12 @@ A GatingMechanism's `function <GatingMechanism.function>` is determined and oper
 *Output*
 ~~~~~~~~
 
-The OutputStates of a GatingMechanism are `GatingSignals <GatingSignal>` (listed in its `gating_signals
-<GatingMechanism.gating_signals>` attribute). It  has a `GatingSignal` for each `InputPort` and/or `OutputState`
+The OutputPorts of a GatingMechanism are `GatingSignals <GatingSignal>` (listed in its `gating_signals
+<GatingMechanism.gating_signals>` attribute). It  has a `GatingSignal` for each `InputPort` and/or `OutputPort`
 specified in the **gate** argument of its constructor, that sends a `GatingProjection` to those States.
 The GatingSignals are listed in the `gating_signals <GatingMechanism.gating_signals>` attribute;  since they are a 
-type of `OutputState`, they are also listed in the GatingMechanism's `output_states <GatingMechanism.output_states>` 
-attribute. The InputPorts and/or OutputStates modulated by a GatingMechanism's GatingSignals can be displayed using 
+type of `OutputPort`, they are also listed in the GatingMechanism's `output_ports <GatingMechanism.output_ports>`
+attribute. The InputPorts and/or OutputPorts modulated by a GatingMechanism's GatingSignals can be displayed using 
 its `show <GatingMechanism.show>` method. If the GatingMechanism's `function <GatingMechanism.function>` generates a
 `gating_allocation <GatingMechanism.gating_allocation>` with a single value (the default), then this is used as the
 `allocation <GatingSignal.alloction>` for all of the GatingMechanism's `gating_signals
@@ -135,7 +135,7 @@ the GatingMechanism's constructor), or an error is generated.  The `default_allo
 have not been assigned their own `default_allocation  <GatingSignal.default_allocation>`. The `allocation
 <GatingSignal.allocation>` is used by each GatingSignal to determine its `intensity  <GatingSignal.intensity>`,
 which is then assigned to the `value <GatingProjection.value>` of the GatingSignal's `GatingProjection`.   The `value
-<GatingProjection.value>` of the GatingProjection is used to modify the value of the InputPort and/or OutputState it
+<GatingProjection.value>` of the GatingProjection is used to modify the value of the InputPort and/or OutputPort it
 gates (see `GatingSignal_Modulation` for description of how a GatingSignal modulates the value of a parameter).
 
 .. _GatingMechanism_Execution:
@@ -267,11 +267,11 @@ class GatingMechanism(ControlMechanism):
         Description:
             # VERIFY:
             Protocol for instantiating unassigned GatingProjections (i.e., w/o a sender specified):
-               If sender is not specified for a GatingProjection (e.g., in an InputPort or OutputState tuple spec)
+               If sender is not specified for a GatingProjection (e.g., in an InputPort or OutputPort tuple spec)
                    it is flagged for deferred_init() in its __init__ method
                When the next GatingMechanism is instantiated, if its params[MAKE_DEFAULT_GATING_MECHANISM] == True, its
                    _take_over_as_default_gating_mechanism method is called in _instantiate_attributes_after_function;
-                   it then iterates through all of the InputPorts and OutputStates of all of the Mechanisms in its
+                   it then iterates through all of the InputPorts and OutputPorts of all of the Mechanisms in its
                    System, identifies ones without a sender specified, calls its deferred_init() method,
                    instantiates a GatingSignal for it, and assigns it as the GatingProjection's sender.
 
@@ -296,11 +296,11 @@ class GatingMechanism(ControlMechanism):
             T1 = TransferMechanism(size = [3, 2])
             T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
 
-    monitor_for_gating : List[OutputState or Mechanism] : default None
-        specifies the `OutputStates <OutputState>` to be monitored by the `ObjectiveMechanism`, if specified in an
+    monitor_for_gating : List[OutputPort or Mechanism] : default None
+        specifies the `OutputPorts <OutputPort>` to be monitored by the `ObjectiveMechanism`, if specified in an
         **objective_mechanism** argument (see `ControlMechanism_ObjectiveMechanism`), or directly by the
         GatingMechanism itself if **objective_mechanism** is not specified.  If any specification is a Mechanism
-        (rather than its OutputState), its `primary OutputState <OutputState_Primary>` is used (see
+        (rather than its OutputPort), its `primary OutputPort <OutputPort_Primary>` is used (see
         `ControlMechanism_Monitor_for_Control` for additional details).
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
@@ -312,8 +312,8 @@ class GatingMechanism(ControlMechanism):
         which the **default_allocation** was not specified in its constructor (see default_allocation
         <GatingMechanism.default_allocation>` for additional details).
 
-    gate : List[GatingSignal, InputPort, OutputState, Mechanism, tuple[str, Mechanism], or dict]
-        specifies the `InputPorts <InputPort>` and/or `OutputStates <OutputStates>` to be gated by the
+    gate : List[GatingSignal, InputPort, OutputPort, Mechanism, tuple[str, Mechanism], or dict]
+        specifies the `InputPorts <InputPort>` and/or `OutputPorts <OutputPorts>` to be gated by the
         GatingMechanism; the number of items must equal the length of the **default_gating_allocation**
         argument; if a `Mechanism <Mechanism>` is specified, its `primary InputPort <InputPort_Primary>`
         is used (see `GatingMechanism_GatingSignals for details).
@@ -344,8 +344,8 @@ class GatingMechanism(ControlMechanism):
         and is the same format as its `gating_allocation <GatingMechanis.gating_allocation>` (unless a custom
         `function <GatingMechanism.function>` has been assigned).
 
-    monitor_for_gating : List[OutputState]
-        each item is an `OutputState` monitored by the GatingMechanism or its `objective_mechanism
+    monitor_for_gating : List[OutputPort]
+        each item is an `OutputPort` monitored by the GatingMechanism or its `objective_mechanism
         <ControlMechanism.objective_mechanism>` if that is specified (see `ControlMechanism_ObjectiveMechanism`);
         in the latter case, the list returned is ObjectiveMechanism's `monitor <ObjectiveMechanism.monitor>` attribute.
 
@@ -367,8 +367,8 @@ class GatingMechanism(ControlMechanism):
 
     gating_signals : ContentAddressableList[GatingSignal]
         list of `GatingSignals <GatingSignals>` for the GatingMechanism, each of which sends
-        `GatingProjection(s) <GatingProjection>` to the `InputPort(s) <InputPort>` and/or `OutputStates <OutputState>`
-        that it gates; same as GatingMechanism `output_states <Mechanism_Base.output_states>` attribute.
+        `GatingProjection(s) <GatingProjection>` to the `InputPort(s) <InputPort>` and/or `OutputPorts <OutputPort>`
+        that it gates; same as GatingMechanism `output_ports <Mechanism_Base.output_ports>` attribute.
 
     gating_projections : List[GatingProjection]
         list of all of the `GatingProjections <GatingProjection>` assigned to the GatingMechanism's
@@ -408,7 +408,7 @@ class GatingMechanism(ControlMechanism):
 
     initMethod = INIT_EXECUTE_METHOD_ONLY
 
-    outputStateTypes = GatingSignal
+    outputPortTypes = GatingSignal
     stateListAttr = ControlMechanism.stateListAttr.copy()
     stateListAttr.update({GatingSignal:GATING_SIGNALS})
 
@@ -524,7 +524,7 @@ class GatingMechanism(ControlMechanism):
                                                modulation=self.modulation,
                                                state_spec=gating_signal_spec,
                                                context=context)
-        if not type(gating_signal) in convert_to_list(self.outputStateTypes):
+        if not type(gating_signal) in convert_to_list(self.outputPortTypes):
             raise ProjectionError(f'{type(gating_signal)} inappropriate for {self.name}')
         return gating_signal
 
@@ -547,7 +547,7 @@ class GatingMechanism(ControlMechanism):
         # FIX:         DOCUMENT THAT VALUE OF GATING ENTRY CAN BE A PROJECTION
         # FIX:         RE-WRITE parse_state_spec TO TAKE TUPLE THAT SPECIFIES (PARAM VALUE, GATING SIGNAL)
         #                       RATHER THAN (PARAM VALUE, GATING PROJECTION)
-        # FIX: NOT CLEAR THIS IS GETTING USED AT ALL; ALSO, ??REDUNDANT WITH CALL IN _instantiate_output_states
+        # FIX: NOT CLEAR THIS IS GETTING USED AT ALL; ALSO, ??REDUNDANT WITH CALL IN _instantiate_output_ports
         # If GatingProjections were specified, implement them
         if GATING_PROJECTIONS in self.paramsCurrent:
             if self.paramsCurrent[GATING_PROJECTIONS]:
@@ -558,10 +558,10 @@ class GatingMechanism(ControlMechanism):
 
         # FIX 5/23/17: INTEGRATE THIS WITH ASSIGNMENT OF gating_signals
         # FIX:         (E.G., CHECK IF SPECIFIED GatingSignal ALREADY EXISTS)
-        # Check the input_ports and output_states of the System's Mechanisms
+        # Check the input_ports and output_ports of the System's Mechanisms
         #    for any GatingProjections with deferred_init()
         for mech in self.system.mechanisms:
-            for state in mech._input_ports + mech._output_states:
+            for state in mech._input_ports + mech._output_ports:
                 for projection in state.mod_afferents:
                     # If projection was deferred for init, initialize it now and instantiate for self
                     if (projection.initialization_status == ContextFlags.DEFERRED_INIT
@@ -581,7 +581,7 @@ class GatingMechanism(ControlMechanism):
     def gating_signals(self):
         try:
             return ContentAddressableList(component_type=GatingSignal,
-                                          list=[state for state in self.output_states
+                                          list=[state for state in self.output_ports
                                                 if isinstance(state, GatingSignal)])
         except:
             return None

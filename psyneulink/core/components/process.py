@@ -168,8 +168,8 @@ specified in any of the following ways:
   ..
   * **Default assignment** -- for any Mechanism that does not receive a MappingProjection from another Mechanism in the
     Process (specified using one of the methods above), a `MappingProjection` is automatically created from the
-    Mechanism that precedes it in the `pathway <Process.pathway>`. If the format of the `value <OutputState.value>`
-    of the preceding Mechanism's `primary OutputState <OutputState_Primary>` matches that of the next Mechanism, then an
+    Mechanism that precedes it in the `pathway <Process.pathway>`. If the format of the `value <OutputPort.value>`
+    of the preceding Mechanism's `primary OutputPort <OutputPort_Primary>` matches that of the next Mechanism, then an
     `IDENTITY_MATRIX` is used for the Projection's `matrix <MappingProjection.matrix>` parameter;  if the formats do not
     match, or `learning has been specified <Process_Learning_Sequence>` either for the Projection or the Process, then a
     `FULL_CONNECTIVITY_MATRIX` is used.  If the Mechanism is the `origin_mechanism <Process.origin_mechanism>`
@@ -509,7 +509,7 @@ class ProcessError(Exception):
 
 kwProcessInputPort = 'ProcessInputPort'
 kwTarget = 'target'
-from psyneulink.core.components.states.outputstate import OutputState
+from psyneulink.core.components.states.outputport import OutputPort
 
 # DOCUMENT:  HOW DO MULTIPLE PROCESS INPUTS RELATE TO # OF InputPortS IN FIRST MECHANISM
 #            WHAT HAPPENS IF LENGTH OF INPUT TO PROCESS DOESN'T MATCH LENGTH OF VARIABLE FOR FIRST MECHANISM??
@@ -552,7 +552,7 @@ class Process(Process_Base):
                 * if no pathway is provided:
                     no mechanism is used
                 * the input to the Process is assigned as the input to its ORIGIN Mechanism
-                * the output of the Process is taken as the value of the primary OutputState of its TERMINAL Mechanism
+                * the output of the Process is taken as the value of the primary OutputPort of its TERMINAL Mechanism
 
         Class attributes
         ----------------
@@ -652,11 +652,11 @@ class Process(Process_Base):
         their `variable <Mechanism_Base.variable>` attribute (i.e., the default input for that Mechanism).
 
     value: 2d np.array
-        same as the `value <OutputState.value>` of the `primary OutputState <OutputState_Primary>` of
+        same as the `value <OutputPort.value>` of the `primary OutputPort <OutputPort_Primary>` of
         `terminal_mechanism <Process.terminal_mechanism>`.
 
-    output_state : State
-        the `primary OutputState <OutputState_Primary>` of `terminal_mechanism <Process.terminal_mechanism>`.
+    output_port : State
+        the `primary OutputPort <OutputPort_Primary>` of `terminal_mechanism <Process.terminal_mechanism>`.
 
     output : list
         same as the `output_values <Mechanism_Base.output_values>` attribute of `terminal_mechanism
@@ -795,7 +795,7 @@ class Process(Process_Base):
         associated with a MappingProjection, that is applied in addition to any specified for the Process or the
         relevant LearningMechanism.
 
-    results : List[OutputState.value]
+    results : List[OutputPort.value]
         the return values from a sequence of executions of the Process;  its value is `None` if the Process has not
         been executed.
 
@@ -935,7 +935,7 @@ class Process(Process_Base):
         """Call methods that must be run before function method is instantiated
 
         Need to do this before _instantiate_function as mechanisms in pathway must be instantiated
-            in order to assign input Projection and self.outputState to first and last mechanisms, respectively
+            in order to assign input Projection and self.outputPort to first and last mechanisms, respectively
 
         :param function:
         :param context:
@@ -977,7 +977,7 @@ class Process(Process_Base):
 
         Iterate through Pathway, parsing and instantiating each Mechanism item;
             - raise exception if two Projections are found in a row;
-            - for last Mechanism in Pathway, assign ouputState to Process.outputState
+            - for last Mechanism in Pathway, assign ouputState to Process.outputPort
         Iterate through Pathway, assigning Projections to Mechanisms:
             - first Mechanism in Pathway:
                 if it does NOT already have any projections:
@@ -1040,8 +1040,8 @@ class Process(Process_Base):
         self._terminal_mechs = [pathway[-1]]
         self.terminal_mechanisms = MechanismList(self, self._terminal_mechs)
 
-        # # Assign process OutputState to last mechanisms in pathway
-        # self.outputState = self.last_mechanism.outputState
+        # # Assign process OutputPort to last mechanisms in pathway
+        # self.outputPort = self.last_mechanism.outputPort
 
         # PARSE AND INSTANTIATE PROJECTION ENTRIES  ------------------------------------
 
@@ -1072,9 +1072,9 @@ class Process(Process_Base):
         # Otherwise, just set Process output info to the corresponding info for the last mechanism in the pathway
         else:
             # MODIFIED 6/24/18 OLD:
-            # value = self.pathway[-1].output_state.value
+            # value = self.pathway[-1].output_port.value
             # MODIFIED 6/24/18 NEW:
-            value = self.last_mechanism.output_state.value
+            value = self.last_mechanism.output_port.value
             # MODIFIED 6/24/18 END
             try:
                 # Could be mutable, so assign copy
@@ -1153,10 +1153,10 @@ class Process(Process_Base):
             # If this is the last mechanism in the pathway, and it has a self-recurrent Projection,
             #    add that to the pathway so that it can be identified and assigned for learning if so specified
             if i+1 == len(pathway):
-                if mech.output_states and any(any(proj.receiver.owner is mech
+                if mech.output_ports and any(any(proj.receiver.owner is mech
                            for proj in state.efferents)
-                       for state in mech.output_states):
-                    for state in mech.output_states:
+                       for state in mech.output_ports):
+                    for state in mech.output_ports:
                         for proj in state.efferents:
                             if proj.receiver.owner is mech:
                                 pathway.append(proj)
@@ -1290,7 +1290,7 @@ class Process(Process_Base):
                 # Check if Mechanism already has a Projection from the preceding Mechanism, by testing whether the
                 #    preceding mechanism is the sender of any projections received by the current one's inputPort
 # FIX: THIS SHOULD BE DONE FOR ALL InputPortS
-# FIX: POTENTIAL PROBLEM - EVC *CAN* HAVE MULTIPLE PROJECTIONS FROM (DIFFERENT OutputStates OF) THE SAME MECHANISM
+# FIX: POTENTIAL PROBLEM - EVC *CAN* HAVE MULTIPLE PROJECTIONS FROM (DIFFERENT OutputPorts OF) THE SAME MECHANISM
 
                 # PRECEDING ITEM IS A MECHANISM
                 projection_list = item.input_port.path_afferents
@@ -2212,7 +2212,7 @@ class Process(Process_Base):
         -------
 
         output of Process : ndarray
-            the `value <OutputState.value>` of the `primary OutputState <OutputState_Primary>` of the
+            the `value <OutputPort.value>` of the `primary OutputPort <OutputPort_Primary>` of the
             `terminal_mechanism <Process.terminal_mechanism>` of the Process.
 
         COMMENT:
@@ -2286,7 +2286,7 @@ class Process(Process_Base):
             self._report_process_completion(separator=True, context=context)
 
         # FIX:  WHICH SHOULD THIS BE?
-        return self.output_state.parameters.value._get(context)
+        return self.output_port.parameters.value._get(context)
         # return self.output
 
     def _execute_learning(self, context=None, target=None):
@@ -2464,8 +2464,8 @@ class Process(Process_Base):
         Returns
         -------
 
-        <Process>.results : List[OutputState.value]
-            list of the `value <OutputState.value>`\\s of the `primary OutputState <OutputState_Primary>` for the
+        <Process>.results : List[OutputPort.value]
+            list of the `value <OutputPort.value>`\\s of the `primary OutputPort <OutputPort_Primary>` for the
             `terminal_mechanism <Process.terminal_mechanism>` of the Process returned for each execution.
 
         """
@@ -2522,21 +2522,21 @@ class Process(Process_Base):
         #       format(self.name,
         #              mechanism.name,
         #              re.sub('[\[,\],\n]','',
-        #                     str(mechanism.outputState.value))))
+        #                     str(mechanism.outputPort.value))))
 
     def _report_process_completion(self, context=None, separator=False):
 
         print("\n\'{}' completed:\n- output: {}".
               format(append_type_to_name(self),
-                     re.sub(r'[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in self.output_state.parameters.value.get(context)]))))
+                     re.sub(r'[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in self.output_port.parameters.value.get(context)]))))
 
         if self.learning:
             from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import MSE
             for mech in self.target_mechanisms:
-                if not MSE in mech.output_states:
+                if not MSE in mech.output_ports:
                     continue
                 print("\n- MSE: {:0.3}".
-                      format(float(mech.output_states[MSE].parameters.value.get(context))))
+                      format(float(mech.output_ports[MSE].parameters.value.get(context))))
 
         elif separator:
             print("\n\n****************************************\n")
@@ -2576,8 +2576,8 @@ class Process(Process_Base):
 
         print ("\n\tTerminal Mechanism: ".format(self.name))
         print("\t\t{}".format(self.terminal_mechanism.name))
-        for output_state in self.terminal_mechanism.output_states:
-            print("\t\t\t{0}".format(output_state.name))
+        for output_port in self.terminal_mechanism.output_ports:
+            print("\t\t\t{0}".format(output_port.name))
 
         print ("\n---------------------------------------------------------")
 
@@ -2597,13 +2597,13 @@ class Process(Process_Base):
         return self._all_mechanisms.names
 
     @property
-    def output_state(self):
-        return self.last_mechanism.output_state
+    def output_port(self):
+        return self.last_mechanism.output_port
 
     @property
     def output(self):
         # FIX: THESE NEED TO BE PROPERLY MAPPED
-        # return np.array(list(item.value for item in self.last_mechanism.output_states.values()))
+        # return np.array(list(item.value for item in self.last_mechanism.output_ports.values()))
         return self.last_mechanism.output_values
 
     @property
@@ -2628,7 +2628,7 @@ class Process(Process_Base):
         ))
 
 
-class ProcessInputPort(OutputState):
+class ProcessInputPort(OutputPort):
     """Represents inputs and targets specified in a call to the Process' `execute <Process.execute>` and `run
     <Process.run>` methods.
 
@@ -2652,14 +2652,14 @@ class ProcessInputPort(OutputState):
     <Process.terminal_mechanisms>`.  See `Process_Input_And_Output` for additional details.
 
     COMMENT:
-    .. Declared as a sublcass of OutputState so that it is recognized as a legitimate sender to a Projection
+    .. Declared as a sublcass of OutputPort so that it is recognized as a legitimate sender to a Projection
        in Projection_Base._instantiate_sender()
 
        value is used to represent the corresponding item of the input arg to process.execute or process.run
     COMMENT
 
     """
-    class Parameters(OutputState.Parameters):
+    class Parameters(OutputPort.Parameters):
         """
             Attributes
             ----------

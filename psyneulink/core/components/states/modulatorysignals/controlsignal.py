@@ -32,7 +32,7 @@ control <ControlMechanism_Control_Signals>`.  ControlSignals can also be specifi
 of the constructor for a `ControlMechanism <ControlMechanism>`, as well as in the `specification of the parameter
 <ParameterState_Specification>` that the ControlSignal is intended to modulate (also see `Modualory Specificadtion
 <ParameterState_Modulatory_Specification>`.  Although a ControlSignal can also be  created on its own using its
-constructor (or any of the other ways for `creating an OutputState <OutputStates_Creation>`), this is usually not
+constructor (or any of the other ways for `creating an OutputPort <OutputPorts_Creation>`), this is usually not
 necessary nor is it advisable, as a ControlSignal has dedicated components and requirements for configuration that
 must be met for it to function properly.
 
@@ -192,7 +192,7 @@ the enabled cost components are summed, however this can be modified by specifyi
     disabled for a ControlSignal, it cannot be re-enabled using `toggle_cost_function`.
     COMMENT
 
-.. note:: The `index <OutputState.OutputState.index>` and `assign <OutputState.OutputState.assign>`
+.. note:: The `index <OutputPort.OutputPort.index>` and `assign <OutputPort.OutputPort.assign>`
         attributes of a ControlSignal are automatically assigned and should not be modified.
 
 .. _ControlSignal_Execution:
@@ -263,10 +263,10 @@ COMMENT:
 
     my_mech_A = TransferMechanism(function=Logistic)
     my_mech_B = TransferMechanism(function=Linear,
-                                 output_states=[RESULT, OUTPUT_MEAN])
+                                 output_ports=[RESULT, OUTPUT_MEAN])
 
-    my_ocm = OptimizationControlMechanism(monitor_for_control=[my_mech_A.output_states[RESULT],
-                                                               my_mech_B.output_states[OUTPUT_MEAN]],
+    my_ocm = OptimizationControlMechanism(monitor_for_control=[my_mech_A.output_ports[RESULT],
+                                                               my_mech_B.output_ports[OUTPUT_MEAN]],
                                           control_signals=[(GAIN, my_mech_A),
                                                            {NAME: INTERCEPT,
                                                             MECHANISM: my_mech_B,
@@ -279,14 +279,14 @@ the `gain <Logistic.gain>` parameter of the `Logistic` function for ``my_mech_A`
 
     >>> my_mech_A = TransferMechanism(function=Logistic)
     >>> my_mech_B = TransferMechanism(function=Linear,
-    ...                                   output_states=[RESULT, OUTPUT_MEAN])
+    ...                                   output_ports=[RESULT, OUTPUT_MEAN])
 
     >>> process_a = Process(pathway=[my_mech_A])
     >>> process_b = Process(pathway=[my_mech_B])
 
     >>> my_system = System(processes=[process_a, process_b],
-    ...                        monitor_for_control=[my_mech_A.output_states[RESULTS],
-    ...                                             my_mech_B.output_states[OUTPUT_MEAN]],
+    ...                        monitor_for_control=[my_mech_A.output_ports[RESULTS],
+    ...                                             my_mech_B.output_ports[OUTPUT_MEAN]],
     ...                        control_signals=[(GAIN, my_mech_A),
     ...                                         {NAME: INTERCEPT,
     ...                                          MECHANISM: my_mech_B,
@@ -317,14 +317,14 @@ from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
 from psyneulink.core.components.functions.transferfunctions import Exponential, Linear, CostFunctions
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
-from psyneulink.core.components.states.outputstate import SEQUENTIAL, _output_state_variable_getter
+from psyneulink.core.components.states.outputport import SEQUENTIAL, _output_port_variable_getter
 from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     ALLOCATION_SAMPLES, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, \
     INPUT_PORT, INPUT_PORTS, \
-    OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, \
+    OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, \
     PARAMETER_STATE, PARAMETER_STATES, \
     PROJECTION_TYPE, RECEIVER, SUM
 from psyneulink.core.globals.parameters import Parameter, get_validator_by_function, get_validator_by_type_only
@@ -421,7 +421,7 @@ class ControlSignal(ModulatorySignal):
 
         Description
         -----------
-            The ControlSignal class is a subtype of the OutputState type in the State category of Component,
+            The ControlSignal class is a subtype of the OutputPort type in the State category of Component,
             It is used as the sender for ControlProjections
             Its FUNCTION updates its value:
                 note:  currently, this is the identity function, that simply maps variable to self.value
@@ -437,7 +437,7 @@ class ControlSignal(ModulatorySignal):
 
         StateRegistry
         -------------
-            All OutputStates are registered in StateRegistry, which maintains an entry for the subclass,
+            All OutputPorts are registered in StateRegistry, which maintains an entry for the subclass,
               a count for all instances of it, and a dictionary of those instances
     COMMENT
 
@@ -624,7 +624,7 @@ class ControlSignal(ModulatorySignal):
     #region CLASS ATTRIBUTES
 
     componentType = CONTROL_SIGNAL
-    paramsType = OUTPUT_STATE_PARAMS
+    paramsType = OUTPUT_PORT_PARAMS
 
     class Parameters(ModulatorySignal.Parameters):
         """
@@ -711,7 +711,7 @@ class ControlSignal(ModulatorySignal):
         variable = Parameter(
             np.array([defaultControlAllocation]),
             aliases='allocation',
-            getter=_output_state_variable_getter,
+            getter=_output_port_variable_getter,
             pnl_internal=True, constructor_argument='default_variable'
         )
 
@@ -756,8 +756,8 @@ class ControlSignal(ModulatorySignal):
                                                           DURATION_COST_FUNCTION,
                                                           COMBINE_COSTS_FUNCTION}
 
-    connectsWith = [PARAMETER_STATE, INPUT_PORT, OUTPUT_STATE]
-    connectsWithAttribute = [PARAMETER_STATES, INPUT_PORTS, OUTPUT_STATES]
+    connectsWith = [PARAMETER_STATE, INPUT_PORT, OUTPUT_PORT]
+    connectsWithAttribute = [PARAMETER_STATES, INPUT_PORTS, OUTPUT_PORTS]
     projectionSocket = RECEIVER
     modulators = []
 
@@ -765,11 +765,11 @@ class ControlSignal(ModulatorySignal):
     # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     PREFERENCE_SET_NAME: 'OutputStateCustomClassPreferences',
+    #     PREFERENCE_SET_NAME: 'OutputPortCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    # paramClassDefaults = OutputState.paramClassDefaults.copy()
+    # paramClassDefaults = OutputPort.paramClassDefaults.copy()
     paramClassDefaults.update({
         PROJECTION_TYPE: CONTROL_PROJECTION,
         CONTROLLED_PARAMS:None
@@ -811,7 +811,7 @@ class ControlSignal(ModulatorySignal):
         if params and ALLOCATION_SAMPLES in params and params[ALLOCATION_SAMPLES] is not None:
             allocation_samples = params[ALLOCATION_SAMPLES]
 
-        # Note index and assign are not used by ControlSignal, but included here for consistency with OutputState
+        # Note index and assign are not used by ControlSignal, but included here for consistency with OutputPort
         # If index has not been specified, but the owner has, control_allocation has been determined, so use that
         index = index or SEQUENTIAL
 
@@ -827,8 +827,8 @@ class ControlSignal(ModulatorySignal):
 
         # FIX: ??MOVE THIS TO _validate_params OR ANOTHER _instantiate METHOD??
         # IMPLEMENTATION NOTE:
-        # Consider adding self to owner.output_states here (and removing from ControlProjection._instantiate_sender)
-        #  (test for it, and create if necessary, as per OutputStates in ControlProjection._instantiate_sender),
+        # Consider adding self to owner.output_ports here (and removing from ControlProjection._instantiate_sender)
+        #  (test for it, and create if necessary, as per OutputPorts in ControlProjection._instantiate_sender),
 
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         super().__init__(owner=owner,

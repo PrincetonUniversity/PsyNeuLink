@@ -95,7 +95,7 @@ task_decision = pnl.DDM(
                 noise=0.4,
                 t0=.4
         ),
-        output_states=[
+        output_ports=[
             pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
             pnl.DDM_OUTPUT.PROBABILITY_LOWER_THRESHOLD,
             pnl.DDM_OUTPUT.RESPONSE_TIME
@@ -132,10 +132,10 @@ lvoc = pnl.OptimizationControlMechanism(
     # computes value of processing, reward received
     objective_mechanism=pnl.ObjectiveMechanism(
         name='LVOC ObjectiveMechanism',
-        monitor=[task_decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD],
-                 task_decision.output_states[pnl.PROBABILITY_LOWER_THRESHOLD],
+        monitor=[task_decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
+                 task_decision.output_ports[pnl.PROBABILITY_LOWER_THRESHOLD],
                  reward,
-                 task_decision.output_states[pnl.RESPONSE_TIME]],
+                 task_decision.output_ports[pnl.RESPONSE_TIME]],
         function=objective_function
     ),
     # posterior weight distribution

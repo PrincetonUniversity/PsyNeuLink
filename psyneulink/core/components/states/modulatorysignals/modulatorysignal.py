@@ -30,7 +30,7 @@ Sections
 Overview
 --------
 
-A ModulatorySignal is a subclas of `OutputState` that belongs to a `ModulatoryMechanism <ModulatoryMechanism>`, and is
+A ModulatorySignal is a subclas of `OutputPort` that belongs to a `ModulatoryMechanism <ModulatoryMechanism>`, and is
 used to `modulate <ModulatorySignal_Modulation>` the `value <State_Base.value>` of one or more `States <State>` by way
 of one or more `ModulatoryProjctions <ModulatoryProjection>`. A ModulatorySignal modulates the value of a State by
 modifying a  parameter of thatState's `function <State_Base.function>`.  There are three types of ModulatorySignals,
@@ -42,12 +42,12 @@ each of which is  associated wth a particular type of `ModulatoryMechanism <Modu
     of the `ControlMechanism <ControlMechanism>` to which it belongs, and uses it to modulate the parameter of a
     `Mechanism <Mechanism>` or its `function <Mechanism_Base.function>` (and thereby the `value
     <Mechanism_Base.value>` of that Mechanism), or a parameter of the `function <State_Base.function>` one of the
-    Mechanism's `InputPorts <InputPort>` or `OutputStates <OutputState>` (and thereby the `value <State_Base.value>`
+    Mechanism's `InputPorts <InputPort>` or `OutputPorts <OutputPort>` (and thereby the `value <State_Base.value>`
     of the corresponding State).
 ..
 * `GatingSignal` takes the `allocation <GatingSignal.allocation>` assigned to it by the `function
     <GatingMechanism.function>` of the `GatingMechanism` to which it belongs, and uses it to modulate the parameter
-    of the `function <State_Base.function>` of an `InputPort` or `OutputState` (and hence that State's `value
+    of the `function <State_Base.function>` of an `InputPort` or `OutputPort` (and hence that State's `value
     <State_Base.value>`).  A GatingMechanism and GatingSignal can be thought of as implementing a form of control
     specialized for gating the input to and/or output of a Mechanism.
 ..
@@ -125,7 +125,7 @@ Although a ModulatorySignal can be assigned more than one `ModulatoryProjection 
 all of those Projections receive and convey the same modulatory `value <ModulatorySignal.value>` from the
 ModulatorySignal, and use the same form of `modulation <ModulatorySignal_Modulation>`.  This is a common use for some
 ModulatorySignals (e.g., the use of a single `GatingSignal` to gate multiple `InputPort(s) <InputPort>` or
-`OutputState(s) <OutputState>`), but requires more specialized circumstances for others (e.g., the use of a single
+`OutputPort(s) <OutputPort>`), but requires more specialized circumstances for others (e.g., the use of a single
 `LearningSignal` for more than one `MappingProjection`, or a single `ControlSignal` for the parameters of more than
 one Mechanism or function).
 
@@ -159,7 +159,7 @@ ModulatorySignals used and the type of State modulated:
   * **modulation of a** `Mechanism`\\s input or output -- a `GatingSignal` is specialized for this purpose, though a
     `ControlSignal` can also be used;  these modulate an `InputPort` of the Mechanism, that determines the
     Mechanism's `variable <Mechanism_Base.variable>` used as the input to its `function <Mechanism_Base.function>`,
-    or an `OutputState` of the Mechanism, that determines how the `value <Mechanism_Base.value>` of the Mechanism
+    or an `OutputPort` of the Mechanism, that determines how the `value <Mechanism_Base.value>` of the Mechanism
     (i.e., the result of its `function <Mechanism_Base.function>`) is used to generate the output of the Mechanism.
 
   * **modulation of a** `MappingProjection` -- a `LearningSignal` must be used; this modulates the `ParameterState` for
@@ -181,10 +181,10 @@ and shown in the `figure below <ModulatorySignal_Anatomy_Figure>`.
   +====================================+========================+==============================+========================================+============================+
   | Modulate the parameter of a        |                        |                              | Mechanism `ParameterState` (by default)|                            |
   | Mechanism's `function              | `ControlSignal` (blue) |     *MULTIPLICATIVE*         | but can also be an                     |     `Linear` (`slope`)     |
-  | <Mechanism_Base.function>`         |                        |                              | `InputPort` or `OutputState`          |                            |
+  | <Mechanism_Base.function>`         |                        |                              | `InputPort` or `OutputPort`          |                            |
   +------------------------------------+------------------------+------------------------------+----------------------------------------+----------------------------+
   | Modulate the input or output of    |                        |                              |                                        |                            |
-  | a Mechanism's `function            | `GatingSignal` (brown) |     *MULTIPLICATIVE*         |  Mechanism `InputPort`/`OutputState`  |     `Linear` (`slope`)     |
+  | a Mechanism's `function            | `GatingSignal` (brown) |     *MULTIPLICATIVE*         |  Mechanism `InputPort`/`OutputPort`  |     `Linear` (`slope`)     |
   | <Mechanism_Base.function>`         |                        |                              |                                        |                            |
   +------------------------------------+------------------------+------------------------------+----------------------------------------+----------------------------+
   | Modulate a MappingProjection's     |                        |                              |                                        |   `AccumulatorIntegrator`  |
@@ -212,8 +212,8 @@ detail under `ModulatorySignal_Implementation`.
    <ModulatorySignal_Types>` for each type of ModulatorySignal, and the default Function and modulated parameter of
    its recipient State are listed in the `table <ModulatorySignal_Table>` above. Note that the `ControlMechanism`
    and `ControlSignal <ControlSignal>` are shown in the figure modulating the `ParameterState` of a Mechanism;
-   however, like Gating components, they can also be used to modulate `InputPorts <InputPort>` and `OutputStates
-   <OutputState>`. The `figure <ModulatorySignal_Detail_Figure>` below shows a detailed view of how ModulatorySignals
+   however, like Gating components, they can also be used to modulate `InputPorts <InputPort>` and `OutputPorts
+   <OutputPort>`. The `figure <ModulatorySignal_Detail_Figure>` below shows a detailed view of how ModulatorySignals
    modulate the parameters of a State's `function <State_Base.function>`.
 
 
@@ -404,7 +404,7 @@ Class Reference
 """
 
 from psyneulink.core.components.component import component_keywords
-from psyneulink.core.components.states.outputstate import OutputState
+from psyneulink.core.components.states.outputport import OutputPort
 from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import MAYBE, MECHANISM, MODULATION, MODULATORY_SIGNAL, VARIABLE, PROJECTIONS
@@ -441,7 +441,7 @@ modulatory_signal_keywords = {MECHANISM, MODULATION}
 modulatory_signal_keywords.update(component_keywords)
 
 
-class ModulatorySignal(OutputState):
+class ModulatorySignal(OutputPort):
     """
     ModulatorySignal(                                  \
         owner,                                         \
@@ -453,7 +453,7 @@ class ModulatorySignal(OutputState):
         name=None,                                     \
         prefs=None)
 
-    Subclass of `OutputState` used by a `ModulatoryMechanism <ModulatoryMechanism>` to modulate the value
+    Subclass of `OutputPort` used by a `ModulatoryMechanism <ModulatoryMechanism>` to modulate the value
     of one more `States <State>`.
 
     .. note::
@@ -464,7 +464,7 @@ class ModulatorySignal(OutputState):
 
         Description
         -----------
-            The ModulatorySignal class is a subtype of the OutputState class in the State category of Component,
+            The ModulatorySignal class is a subtype of the OutputPort class in the State category of Component,
             It is used primarily as the sender for GatingProjections
             Its FUNCTION updates its value:
                 note:  currently, this is the identity function, that simply maps variable to self.value
@@ -480,7 +480,7 @@ class ModulatorySignal(OutputState):
 
         StateRegistry
         -------------
-            All OutputStates are registered in StateRegistry, which maintains an entry for the subclass,
+            All OutputPorts are registered in StateRegistry, which maintains an entry for the subclass,
               a count for all instances of it, and a dictionary of those instances
     COMMENT
 
@@ -582,9 +582,9 @@ class ModulatorySignal(OutputState):
     """
 
     componentType = MODULATORY_SIGNAL
-    # paramsType = OUTPUT_STATE_PARAMS
+    # paramsType = OUTPUT_PORT_PARAMS
 
-    class Parameters(OutputState.Parameters):
+    class Parameters(OutputPort.Parameters):
         """
             Attributes
             ----------
@@ -598,13 +598,13 @@ class ModulatorySignal(OutputState):
         """
         modulation = None
 
-    stateAttributes = OutputState.stateAttributes | {MODULATION}
+    stateAttributes = OutputPort.stateAttributes | {MODULATION}
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     PREFERENCE_SET_NAME: 'OutputStateCustomClassPreferences',
+    #     PREFERENCE_SET_NAME: 'OutputPortCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
@@ -633,7 +633,7 @@ class ModulatorySignal(OutputState):
         # Deferred initialization
         # if self.initialization_status & (ContextFlags.DEFERRED_INIT | ContextFlags.INITIALIZING):
         if self.initialization_status & ContextFlags.DEFERRED_INIT:
-            # If init was deferred, it may have been because owner was not yet known (see OutputState.__init__),
+            # If init was deferred, it may have been because owner was not yet known (see OutputPort.__init__),
             #   and so modulation hasn't had a chance to be assigned to the owner's value
             #   (i.e., if it was not specified in the constructor), so do it now;
             #   however modulation has already been assigned to params, so need to assign it there

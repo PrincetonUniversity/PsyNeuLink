@@ -64,7 +64,7 @@ Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
         starting_point=(x_0),
         t0=t0
     ),name='Decision',
-    output_states=[
+    output_ports=[
         pnl.DECISION_VARIABLE,
         pnl.RESPONSE_TIME,
         pnl.PROBABILITY_UPPER_THRESHOLD,
@@ -135,7 +135,7 @@ Umemoto_comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanis
         feature_function=pnl.AdaptiveIntegrator(rate=1.0),
         objective_mechanism=pnl.ObjectiveMechanism(
                 monitor_for_control=[Reward,
-                                     (Decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD], 1, -1)],
+                                     (Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD], 1, -1)],
         ),
         function=pnl.GridSearch(save_values=True),
         control_signals=[Target_Rep_Control_Signal,

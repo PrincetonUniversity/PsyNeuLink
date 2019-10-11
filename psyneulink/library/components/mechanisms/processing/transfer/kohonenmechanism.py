@@ -126,7 +126,7 @@ class KohonenMechanism(TransferMechanism):
         specifies the input to the mechanism to use if none is provided in a call to its
         `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method;
         also serves as a template to specify the length of `variable <KohonenMechanism.variable>` for
-        `function <KohonenMechanism.function>`, and the `primary OutputState <OutputState_Primary>`
+        `function <KohonenMechanism.function>`, and the `primary OutputPort <OutputPort_Primary>`
         of the mechanism.
 
     size : int, list or np.ndarray of ints
@@ -326,24 +326,24 @@ class KohonenMechanism(TransferMechanism):
     COMMENT:
         CORRECTED:
         value : 1d np.array
-            the output of ``function``;  also assigned to ``value`` of the TRANSFER_RESULT OutputState
+            the output of ``function``;  also assigned to ``value`` of the TRANSFER_RESULT OutputPort
             and the first item of ``output_values``.
     COMMENT
 
-    output_states : Dict[str, OutputState]
-        an OrderedDict with the following `OutputStates <OutputState>`:
+    output_ports : Dict[str, OutputPort]
+        an OrderedDict with the following `OutputPorts <OutputPort>`:
 
-        * `TRANSFER_RESULT`, the `value <OutputState.value>` of which is the **result** of `function
+        * `TRANSFER_RESULT`, the `value <OutputPort.value>` of which is the **result** of `function
           <KohonenMechanism.function>`;
 
-        * `MOST_ACTIVE`, the `value <OutputState.value>` of which is a "one hot" encoding of the most active
+        * `MOST_ACTIVE`, the `value <OutputPort.value>` of which is a "one hot" encoding of the most active
           element of the Mechanism's `value <KohonenMechanism.value>` in the last execution (used by the
           `learning_mechanism <KohonenMechanisms.learning_mechanism>` to modify the `learned_projection
           <KohonenMechanism.learned_projection>`.
 
     output_values : List[array(float64), array(float64)]
-        a list with the `value <OutputState.value>` of each of the Mechanism's `output_states
-        <KohonenMechanism.output_states>`.
+        a list with the `value <OutputPort.value>` of each of the Mechanism's `output_ports
+        <KohonenMechanism.output_ports>`.
 
     name : str
         the name of the Kohonen Mechanism; if it is not specified in the **name** argument of the constructor, a
@@ -403,8 +403,8 @@ class KohonenMechanism(TransferMechanism):
     paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({'function': Linear})  # perhaps hacky? not sure (7/10/17 CW)
 
-    standard_output_states = TransferMechanism.standard_output_states.copy()
-    standard_output_states.extend([{NAME:MAX_ACTIVITY_OUTPUT,
+    standard_output_ports = TransferMechanism.standard_output_ports.copy()
+    standard_output_ports.extend([{NAME:MAX_ACTIVITY_OUTPUT,
                                     VARIABLE:(OWNER_VALUE,0),
                                     FUNCTION: OneHot(mode=MAX_INDICATOR)}
                                    ])
@@ -425,23 +425,23 @@ class KohonenMechanism(TransferMechanism):
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function:is_function_type=Kohonen(distance_function=GAUSSIAN),
                  learned_projection:tc.optional(MappingProjection)=None,
-                 additional_output_states:tc.optional(tc.any(str, Iterable))=None,
+                 additional_output_ports:tc.optional(tc.any(str, Iterable))=None,
                  name=None,
                  prefs: is_pref_set = None,
                  **kwargs
                  ):
-        # # Default output_states is specified in constructor as a string rather than a list
+        # # Default output_ports is specified in constructor as a string rather than a list
         # # to avoid "gotcha" associated with mutable default arguments
         # # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
-        # if output_states is None:
-        #     output_states = [RESULT]
+        # if output_ports is None:
+        #     output_ports = [RESULT]
 
-        output_states = [RESULT, {NAME: INPUT_PATTERN, VARIABLE: OWNER_VARIABLE}]
-        if additional_output_states:
-            if isinstance(additional_output_states, list):
-                output_states += additional_output_states
+        output_ports = [RESULT, {NAME: INPUT_PATTERN, VARIABLE: OWNER_VARIABLE}]
+        if additional_output_ports:
+            if isinstance(additional_output_ports, list):
+                output_ports += additional_output_ports
             else:
-                output_states.append(additional_output_states)
+                output_ports.append(additional_output_ports)
 
         self._learning_enabled = enable_learning
         self._learning_enable_deferred = False
@@ -452,7 +452,7 @@ class KohonenMechanism(TransferMechanism):
                 learning_function=learning_function,
                 learned_projection=learned_projection,
                 enable_learning=enable_learning,
-                output_states=output_states)
+                output_ports=output_ports)
 
         super().__init__(default_variable=default_variable,
                          size=size,
@@ -463,7 +463,7 @@ class KohonenMechanism(TransferMechanism):
                          noise=noise,
                          integration_rate=integration_rate,
                          clip=clip,
-                         output_states=output_states,
+                         output_ports=output_ports,
                          params=params,
                          name=name,
                          prefs=prefs,
@@ -499,10 +499,10 @@ class KohonenMechanism(TransferMechanism):
           specified, they are used to construct the LearningMechanism, otherwise the values specified in the
           KohonenMechanism's constructor are used;
         ..
-        * a `MappingProjection` from the KohonenMechanism's `primary OutputState <OutputState_Primary>`
+        * a `MappingProjection` from the KohonenMechanism's `primary OutputPort <OutputPort_Primary>`
           to the LearningMechanism's *ACTIVATION_INPUT* InputPort;
         ..
-        * a `LearningProjection` from the LearningMechanism's *LEARNING_SIGNAL* OutputState to the learned_projection;
+        * a `LearningProjection` from the LearningMechanism's *LEARNING_SIGNAL* OutputPort to the learned_projection;
           by default this is the KohonenMechanism's `learned_projection <KohonenMechanism.learned_projection>`;
           however a different one can be specified.
 
@@ -541,7 +541,7 @@ class KohonenMechanism(TransferMechanism):
                                                                        learned_projection=self.learned_projection,
                                                                        context=context)
 
-        self.learning_projection = self.learning_mechanism.output_states[LEARNING_SIGNAL].efferents[0]
+        self.learning_projection = self.learning_mechanism.output_ports[LEARNING_SIGNAL].efferents[0]
 
         if self.learning_mechanism is None:
             self.learning_enabled = False
@@ -572,13 +572,13 @@ class KohonenMechanism(TransferMechanism):
                           name="Error Projection for {}".format(learning_mechanism.name))
 
         # Instantiate Projection from learned_projection's receiver (Mechanism's input) to LearningMechanism
-        MappingProjection(sender=self.output_states[INPUT_PATTERN],
+        MappingProjection(sender=self.output_ports[INPUT_PATTERN],
                           receiver=learning_mechanism.input_ports[ACTIVATION_OUTPUT],
                           matrix=IDENTITY_MATRIX,
                           name="Error Projection for {}".format(learning_mechanism.name))
 
         # Instantiate Projection from LearningMechanism to learned_projection
-        LearningProjection(sender=learning_mechanism.output_states[LEARNING_SIGNAL],
+        LearningProjection(sender=learning_mechanism.output_ports[LEARNING_SIGNAL],
                            receiver=self.matrix,
                            name="{} for {}".format(LearningProjection.className, self.learned_projection.name))
 

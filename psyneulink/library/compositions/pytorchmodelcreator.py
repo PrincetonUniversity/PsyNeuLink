@@ -786,7 +786,7 @@ class PytorchModelCreator(torch.nn.Module):
             detached_value = value.detach().cpu().numpy()
             component.parameters.value._set(
                 detached_value, context, skip_history=True, skip_log=True)
-            component.output_state.parameters.value._set(
+            component.output_port.parameters.value._set(
                 detached_value, context, skip_history=True, skip_log=True)
 
     @handle_external_context()

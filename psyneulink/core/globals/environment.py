@@ -758,9 +758,9 @@ def run(obj,
    Returns
    -------
 
-    <obj>.results : List[OutputState.value]
-        list of the values, for each `TRIAL`, of the OutputStates for a Mechanism run directly,
-        or of the OutputStates of the `TERMINAL` Mechanisms for the Process or System run.
+    <obj>.results : List[OutputPort.value]
+        list of the values, for each `TRIAL`, of the OutputPorts for a Mechanism run directly,
+        or of the OutputPorts of the `TERMINAL` Mechanisms for the Process or System run.
     """
     from psyneulink.core.globals.context import ContextFlags
 
@@ -845,7 +845,7 @@ def run(obj,
     if obj.learning_rate is not None:
         from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
         for learning_mech in obj.learning_mechanisms.mechanisms:
-            for projection in learning_mech.output_state.efferents:
+            for projection in learning_mech.output_port.efferents:
                 if isinstance(projection, LearningProjection):
                     projection.function_obj.learning_rate = obj.learning_rate
 
@@ -1102,7 +1102,7 @@ def _adjust_target_dict(component, target_dict):
     for mech in target_dict:
         # If any mechanism in the target dict does not have a projection to a target, raise an error
         if not any(target is projection.receiver.owner for
-                   projection in mech.output_state.efferents
+                   projection in mech.output_port.efferents
                    for target in component.target_mechanisms):
             raise RunError("{} does not project to a target Mechanism in {}".format(mech.name, component.name))
 
@@ -1118,7 +1118,7 @@ def _adjust_target_dict(component, target_dict):
     num_targets = -1
     for mech, target_list in target_dict.items():
         if isinstance(target_list, (float, list, np.ndarray)):
-            for efferent_projection in mech.output_state.efferents:
+            for efferent_projection in mech.output_port.efferents:
                 for input_port in efferent_projection.receiver.owner.input_ports:
                     if input_port.name == TARGET:
                         input_port_variable = input_port.socket_template
@@ -1145,7 +1145,7 @@ def _adjust_target_dict(component, target_dict):
                         raise RunError("Target specification ({}) for {} is not valid. The shape of {} is not compatible "
                                        "with the TARGET input state of the corresponding ComparatorMechanism ({})"
                                        .format(target_list, mech.name, target_value,
-                                               mech.output_state.efferents[0].receiver.owner.name))
+                                               mech.output_port.efferents[0].receiver.owner.name))
                 current_num_targets = len(adjusted_targets[mech])
                 # verify that all mechanisms have provided the same number of inputs
                 if num_targets == -1:
@@ -1156,7 +1156,7 @@ def _adjust_target_dict(component, target_dict):
                                    .format(component.name, current_num_targets, mech.name))
 
         elif callable(target_list):
-            _validate_target_function(target_list, mech.output_state.efferents[0].receiver.owner, mech)
+            _validate_target_function(target_list, mech.output_port.efferents[0].receiver.owner, mech)
             adjusted_targets[mech] = target_list
     return adjusted_targets, num_targets
 
@@ -1273,19 +1273,19 @@ def _parse_target_labels(obj, target_dict, mechanisms_to_parse):
 
         if subdicts:    # If there are subdicts, validate
             for key in mech.output_labels_dict:
-                output_state = mech.output_states[key]
-                for proj in output_state.efferents:
+                output_port = mech.output_ports[key]
+                for proj in output_port.efferents:
                     if proj.receiver.name == SAMPLE:
-                        output_state_index = mech.output_states.index(output_state)
-                        output_state_name = output_state.name
+                        output_port_index = mech.output_ports.index(output_port)
+                        output_port_name = output_port.name
 
             for i in range(len(targets)):
                 trial_target = targets[i]
                 if isinstance(trial_target, str):
-                    if output_state_index in mech.output_labels_dict:
-                        targets[i] = mech.output_labels_dict[output_state_index][trial_target]
-                    elif output_state_name in mech.output_labels_dict:
-                        targets[i] = mech.output_labels_dict[output_state_name][trial_target]
+                    if output_port_index in mech.output_labels_dict:
+                        targets[i] = mech.output_labels_dict[output_port_index][trial_target]
+                    elif output_port_name in mech.output_labels_dict:
+                        targets[i] = mech.output_labels_dict[output_port_name][trial_target]
 
         else:
             for i, stim in enumerate(targets):

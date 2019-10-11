@@ -152,7 +152,7 @@ class BasePreferenceSet(PreferenceSet):
                 State types:
                     InputPort.classPreferences
                     ParameterState.classPreferences
-                    OutputState.classPreferences
+                    OutputPort.classPreferences
                 Projection types:
                     ControlProjection.classPreferences
                     MappingProjection.classPreferences

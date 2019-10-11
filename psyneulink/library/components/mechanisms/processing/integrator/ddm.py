@@ -79,9 +79,9 @@ argument of the DDM's consructor, to accomodate use of the DDM with other Mechan
 (e.g., representing the stimuli associated with each of the two choices). By default, the **input_format** is
 *SCALAR*.  However, if it is specified as *ARRAY*, the DDM's InputPort is configured to accept a 1d 2-item vector,
 and to use `Reduce` as its Function, which subtracts the 2nd element of the vector from the 1st, and provides this as
-the input to the DDM's `function <DDM.function>`.  If *ARRAY* is specified, two  `Standard OutputStates
-<DDM_Standard_OutputStates>` are added to the DDM, that allow the result of the decision process to be represented
-as an array corresponding to the input array (see `below <DDM_Custom_OutputStates>`).
+the input to the DDM's `function <DDM.function>`.  If *ARRAY* is specified, two  `Standard OutputPorts
+<DDM_Standard_OutputPorts>` are added to the DDM, that allow the result of the decision process to be represented
+as an array corresponding to the input array (see `below <DDM_Custom_OutputPorts>`).
 
 COMMENT:
 ADD EXAMPLE HERE
@@ -105,8 +105,8 @@ When the path integration function is selected, the mechanism carries out step-w
 execution of the mechanism computes one step. (see `DDM_Modes` and `DDM_Execution` for additional details).
 
 The `value <DDM.value>` of the DDM Mechanism may have up to ten items. The first two of these are always assigned, and
-are represented by the DDM Mechanism's two default `output_states <DDM.output_states>`: `DECISION_VARIABLE
-<DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`.  Other `output_states <DDM.output_states>` may be
+are represented by the DDM Mechanism's two default `output_ports <DDM.output_ports>`: `DECISION_VARIABLE
+<DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`.  Other `output_ports <DDM.output_ports>` may be
 automatically assigned, depending on the `function <DDM.function>` that has been assigned to the DDM, as shown in the
 table below:
 
@@ -116,7 +116,7 @@ table below:
 +                                    +----------------------------+----------------------------+
 |                                    | `DriftDiffusionAnalytical` | `DriftDiffusionIntegrator` |
 |                                    |   (`analytic               |   (`path integration)      |
-| **OutputStates:**                  |   <DDM_Analytic_Mode>`)    |   <DDM_Integration_Mode>`) |
+| **OutputPorts:**                  |   <DDM_Analytic_Mode>`)    |   <DDM_Integration_Mode>`) |
 +------------------------------------+----------------------------+----------------------------+
 | `DECISION_VARIABLE                 |                            |                            |
 | <DDM_DECISION_VARIABLE>`           |       X                    |          X                 |
@@ -150,15 +150,15 @@ table below:
 +------------------------------------+----------------------------+----------------------------+
 
 
-.. _DDM_Custom_OutputStates:
+.. _DDM_Custom_OutputPorts:
 
-The `output_states <DDM.output_states>` assigned to a DDM can be customized by specifying a list of the desired DDM
-`Standard OutputStates <DDM_Standard_OutputStates>` in the **output_states** argument of its constructor, or the
-*OUTPUT_STATES* entry of an `OutputState specification dictionary <OutputState_Specification_Dictionary>`.  This can
-include two additional `Standard OutputStates <DDM_Standard_OutputStates>` for the DDM - `DECISION_VARIABLE_ARRAY
+The `output_ports <DDM.output_ports>` assigned to a DDM can be customized by specifying a list of the desired DDM
+`Standard OutputPorts <DDM_Standard_OutputPorts>` in the **output_ports** argument of its constructor, or the
+*OUTPUT_PORTS* entry of an `OutputPort specification dictionary <OutputPort_Specification_Dictionary>`.  This can
+include two additional `Standard OutputPorts <DDM_Standard_OutputPorts>` for the DDM - `DECISION_VARIABLE_ARRAY
 <DDM_OUTPUT.DDM_DECISION_VARIABLE_ARRAY>` and `SELECTED_INPUT_ARRAY <DDM_OUTPUT.DDM_SELECTED_INPUT_ARRAY>`,
 that are available  if the *ARRAY* option is specified in its **input_format** argument (see `DDM_Input`).  As with
-any Mechanism, `customized OutputStates <OutputState_Customization>` can also be created and assigned.
+any Mechanism, `customized OutputPorts <OutputPort_Customization>` can also be created and assigned.
 
 .. _DDM_Modes:
 
@@ -175,8 +175,8 @@ The Drift Diffusion Model `Functions <Function>` that calculate analytic solutio
 `function <DDM.function>`, the mechanism generates a single estimate of the outcome for the decision process (see
 `DDM_Execution` for details). In addition to `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and
 `RESPONSE_TIME <DDM_RESPONSE_TIME>`, the Function returns an accuracy value (represented in the
-`PROBABILITY_UPPER_THRESHOLD <DDM_PROBABILITY_UPPER_THRESHOLD>` OutputState), and an error rate value (in the `PROBABILITY_LOWER_THRESHOLD <DDM_PROBABILITY_LOWER_THRESHOLD>`
-OutputState, and moments (mean, variance, and skew) for conditional (correct\\positive or incorrect\\negative) response time distributions.
+`PROBABILITY_UPPER_THRESHOLD <DDM_PROBABILITY_UPPER_THRESHOLD>` OutputPort), and an error rate value (in the `PROBABILITY_LOWER_THRESHOLD <DDM_PROBABILITY_LOWER_THRESHOLD>`
+OutputPort, and moments (mean, variance, and skew) for conditional (correct\\positive or incorrect\\negative) response time distributions.
 These are; the mean RT for correct responses  (`RT_CORRECT_MEAN <DDM_RT_CORRECT_MEAN>`, the RT variance for correct responses
 (`RT_CORRECT_VARIANCE <DDM_RT_CORRECT_VARIANCE>`, the RT skew for correct responses (`RT_CORRECT_SKEW <DDM_RT_CORRECT_SKEW>`,
 the mean RT for incorrect responses  (`RT_INCORRECT_MEAN <DDM_RT_INCORRECT_MEAN>`, the RT variance for incorrect
@@ -227,16 +227,16 @@ each item in the `default_variable` argument, corresponding to each of the decis
 (see :ref:`Input <DDM_Input>` above). The decision process can be configured to execute in different modes.  The
 `function <DDM.function>` parameters is the primary determinants of how the
 decision process is executed, and what information is returned. The `function <DDM.function>` parameter specifies
-the analytical solution to use. The number of `OutputStates <OutputState>` is determined by the `function <DDM.function>` in use (see
+the analytical solution to use. The number of `OutputPorts <OutputPort>` is determined by the `function <DDM.function>` in use (see
 :ref:`list of output values <DDM_Results>` below).
 
-[TBI - average_output_states ARGUMENT/OPTION AFTER IMPLEMENTING MULTIPROCESS DDM]
+[TBI - average_output_ports ARGUMENT/OPTION AFTER IMPLEMENTING MULTIPROCESS DDM]
 OUTPUT MEASURE?? OUTCOME MEASURE?? RESULT?? TYPE OF RESULT??
-If only a single decision process was run, then the value of each outputState is the corresponding output of
+If only a single decision process was run, then the value of each outputPort is the corresponding output of
 the decision process.  If there is more than one decision process (i.e., the input has more than one item), then
-the content of the outputStates is determined by the ``average_output_states`` argument.  If it is `True`,
-then each outputState (and item of ``output_values``) contains a single value, which is the average of the output
-values of that type over all of the processes run.  If ``average_output_states`` is :keyword:`False` (the default),
+the content of the outputPorts is determined by the ``average_output_ports`` argument.  If it is `True`,
+then each outputPort (and item of ``output_values``) contains a single value, which is the average of the output
+values of that type over all of the processes run.  If ``average_output_ports`` is :keyword:`False` (the default),
 then the value of each ouputState is a 1d array, each element of which is the outcome of that type for the
 corresponding decision process.
 COMMENT
@@ -362,16 +362,16 @@ from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism i
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.core.components.states.outputstate import SEQUENTIAL, StandardOutputStates
+from psyneulink.core.components.states.outputport import SEQUENTIAL, StandardOutputPorts
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INPUT_PORT_VARIABLES, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE, PREFERENCE_SET_NAME
+from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INPUT_PORT_VARIABLES, NAME, OUTPUT_PORTS, OWNER_VALUE, VARIABLE, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, is_same_function_spec, object_has_single_value
 
 __all__ = [
-    'DDM', 'DDM_OUTPUT', 'DDM_standard_output_states', 'DDMError',
+    'DDM', 'DDM_OUTPUT', 'DDM_standard_output_ports', 'DDMError',
     'DECISION_VARIABLE', 'DECISION_VARIABLE_ARRAY', 'PROBABILITY_LOWER_THRESHOLD', 'PROBABILITY_UPPER_THRESHOLD',
     'RESPONSE_TIME', 'RT_CORRECT_MEAN', 'RT_CORRECT_VARIANCE',
     'SCALAR', 'SELECTED_INPUT_ARRAY', 'ARRAY', 'VECTOR'
@@ -402,14 +402,14 @@ VECTOR='VECTOR'
 
 def decision_variable_to_array(x):
     """Generate "one-hot" 1d array designating selected action from DDM's scalar decision variable
-    (used to generate value of OutputState for action_selection Mechanism
+    (used to generate value of OutputPort for action_selection Mechanism
     """
     if x >= 0:
         return [x,0]
     else:
         return [0,x]
 
-DDM_standard_output_states = [{NAME: DECISION_VARIABLE,},           # Upper or lower threshold for Analtyic function
+DDM_standard_output_ports = [{NAME: DECISION_VARIABLE,},           # Upper or lower threshold for Analtyic function
                               {NAME: RESPONSE_TIME},                # TIME_STEP within TRIAL for Integrator function
                               {NAME: PROBABILITY_UPPER_THRESHOLD},  # Accuracy (TRIAL mode only)
                               {NAME: PROBABILITY_LOWER_THRESHOLD},  # Error rate (TRIAL mode only)
@@ -421,12 +421,12 @@ DDM_standard_output_states = [{NAME: DECISION_VARIABLE,},           # Upper or l
                               {NAME: RT_INCORRECT_SKEW},            # (DriftDiffusionAnalytical only)
                               ]
 
-# This is a convenience class that provides list of standard_output_state names in IDE
+# This is a convenience class that provides list of standard_output_port names in IDE
 class DDM_OUTPUT():
     """
-    .. _DDM_Standard_OutputStates:
+    .. _DDM_Standard_OutputPorts:
 
-    `Standard OutputStates <OutputState_Standard>` for `DDM`:
+    `Standard OutputPorts <OutputPort_Standard>` for `DDM`:
 
     .. _DDM_DECISION_VARIABLE:
 
@@ -591,7 +591,7 @@ class DDM_OUTPUT():
     DECISION_VARIABLE_ARRAY=DECISION_VARIABLE_ARRAY
     SELECTED_INPUT_ARRAY=SELECTED_INPUT_ARRAY
 # THE FOLLOWING WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
-# for item in [item[NAME] for item in DDM_standard_output_states]:
+# for item in [item[NAME] for item in DDM_standard_output_ports]:
 #     setattr(DDM_OUTPUT.__class__, item, item)
 
 
@@ -606,7 +606,7 @@ class DDMError(Exception):
 class DDM(ProcessingMechanism):
     # DOCUMENT:   COMBINE WITH INITIALIZATION WITH PARAMETERS
     #             ADD INFO ABOUT B VS. N&F
-    #             ADD _instantiate_output_states TO INSTANCE METHODS, AND EXPLAIN RE: NUM OUTPUT VALUES FOR B VS. N&F
+    #             ADD _instantiate_output_ports TO INSTANCE METHODS, AND EXPLAIN RE: NUM OUTPUT VALUES FOR B VS. N&F
     """
     DDM(                               \
     default_variable=None,             \
@@ -644,7 +644,7 @@ class DDM(ProcessingMechanism):
                                                                   THRESHOLD:<>
                                                                   NOISE:<>
                                                                   NON_DECISION_TIME:<>},
-                                          OUTPUT_STATES: [DDM_DECISION_VARIABLE,
+                                          OUTPUT_PORTS: [DDM_DECISION_VARIABLE,
                                                           DDM_RESPONSE_TIME,
                                                           DDM_PROBABILITY_UPPER_THRESHOLD,
                                                           DDM_PROBABILITY_LOWER_THRESHOLD,
@@ -669,7 +669,7 @@ class DDM(ProcessingMechanism):
     default_variable : value, list or np.ndarray : default FUNCTION_PARAMS[STARTING_POINT]
         the input to the Mechanism used if none is provided in a call to its `execute <Mechanism_Base.execute>` or
         `run <Mechanism_Base.run>` methods; also serves as a template to specify the length of the `variable
-        <DDM.variable>` for its `function <DDM.function>`, and the `primary OutputState <OuputState_Primary>` of the
+        <DDM.variable>` for its `function <DDM.function>`, and the `primary OutputPort <OuputState_Primary>` of the
         DDM (see `Input` <DDM_Creation>` for how an input with a length of greater than 1 is handled).
 
     size : int, list or np.ndarray of ints
@@ -724,22 +724,22 @@ class DDM(ProcessingMechanism):
         <DDM.function>` attribute.  The first two items are always assigned the values of `DECISION_VARIABLE
         <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>` (though their interpretation depends on the
         `function <DDM.function>` and corresponding `mode of <DDM_Modes>` of operation).  See `DDM_Modes`,
-        `DDM_Execution`, and `DDM Standard OutputStates <DDM_Standard_OutputStates>` for additional information about
+        `DDM_Execution`, and `DDM Standard OutputPorts <DDM_Standard_OutputPorts>` for additional information about
         other values that can be reported and their interpretation.
 
-    output_states : ContentAddressableList[OutputState]
-        list of the DDM's `OutputStates <OutputState>`.  There are always two OutputStates, `DECISION_VARIABLE
+    output_ports : ContentAddressableList[OutputPort]
+        list of the DDM's `OutputPorts <OutputPort>`.  There are always two OutputPorts, `DECISION_VARIABLE
         <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`; additional ones may be included
-        based on the `function <DDM.function>` and/or any specifications made in the **output_states** argument of the
-        DDM's constructor (see `DDM Standard OutputStates <DDM_Standard_OutputStates>`).
+        based on the `function <DDM.function>` and/or any specifications made in the **output_ports** argument of the
+        DDM's constructor (see `DDM Standard OutputPorts <DDM_Standard_OutputPorts>`).
 
     output_values : List[array(float64),array(float64),array(float64),array(float64)]
-        each item is the `value <OutputState.value> of the corresponding OutputState in `output_states
-        <DDM.output_states>`.  The first two items are always the `value <OutputState.value>`\\s of the
-        `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>` OutputStates;  additional
+        each item is the `value <OutputPort.value> of the corresponding OutputPort in `output_ports
+        <DDM.output_ports>`.  The first two items are always the `value <OutputPort.value>`\\s of the
+        `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>` OutputPorts;  additional
         ones may be included, based on the `function <DDM.function>` and any specifications made in the
-        **output_states** argument of the DDM's constructor (see `DDM Standard OutputStates
-        <DDM_Standard_OutputStates>`).
+        **output_ports** argument of the DDM's constructor (see `DDM Standard OutputPorts
+        <DDM_Standard_OutputPorts>`).
 
     name : str
         the name of the DDM; if it is not specified in the **name** argument of the constructor, a default is
@@ -753,11 +753,11 @@ class DDM(ProcessingMechanism):
         MOVE TO METHOD DEFINITIONS:
         Instance methods:
             - _instantiate_function(context)
-                deletes params not in use, in order to restrict outputStates to those that are computed for
+                deletes params not in use, in order to restrict outputPorts to those that are computed for
                 specified params
             - execute(variable, params, context)
                 executes specified version of DDM and returns outcome values (in self.value and values of
-                self.output_states)
+                self.output_ports)
             - _out_update(particle, drift, noise, time_step_size, decay)
                 single update for OU (special case l=0 is DDM) -- from Michael Shvartsman
             - _ddm_update(particle, a, s, dt)
@@ -824,7 +824,7 @@ class DDM(ProcessingMechanism):
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        OUTPUT_STATES: None})
+        OUTPUT_PORTS: None})
 
     @tc.typecheck
     def __init__(self,
@@ -837,14 +837,14 @@ class DDM(ProcessingMechanism):
                                                    noise=0.5,
                                                    t0=.200),
                  input_ports=None,
-                 output_states:tc.optional(tc.any(str, Iterable))=(DECISION_VARIABLE, RESPONSE_TIME),
+                 output_ports:tc.optional(tc.any(str, Iterable))=(DECISION_VARIABLE, RESPONSE_TIME),
                  params=None,
                  name=None,
                  prefs: is_pref_set = None,
                  **kwargs):
 
-        self.standard_output_states = StandardOutputStates(self,
-                                                           DDM_standard_output_states,
+        self.standard_output_ports = StandardOutputPorts(self,
+                                                           DDM_standard_output_ports,
                                                            indices=SEQUENTIAL)
 
         if input_format is not None and input_ports is not None:
@@ -859,9 +859,9 @@ class DDM(ProcessingMechanism):
         #        2-item array as its variable
         #        Reduce as its function, which will generate an array of len 1
         #        and therefore specify size of Mechanism's variable as 1
-        #    OutputStates that report the decision variable and selected input in array format
+        #    OutputPorts that report the decision variable and selected input in array format
         #        IMPLEMENTATION NOTE:
-        #            These are created here rather than as StandardOutputStates
+        #            These are created here rather than as StandardOutputPorts
         #            since they require input_format==ARRAY to be meaningful
         if input_format in {ARRAY, VECTOR}:
             size=1 # size of variable for DDM Mechanism
@@ -870,7 +870,7 @@ class DDM(ProcessingMechanism):
                  VARIABLE: np.array([[0.0, 0.0]]),
                  FUNCTION: Reduce(weights=[1,-1])}
             ]
-            self.standard_output_states.add_state_dicts([
+            self.standard_output_ports.add_state_dicts([
                 # Provides a 1d 2-item array with:
                 #    decision variable in position corresponding to threshold crossed, and 0 in the other position
                 {NAME: DECISION_VARIABLE_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
@@ -895,17 +895,17 @@ class DDM(ProcessingMechanism):
 
             ])
 
-        # Default output_states is specified in constructor as a tuple rather than a list
+        # Default output_ports is specified in constructor as a tuple rather than a list
         # to avoid "gotcha" associated with mutable default arguments
         # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
-        if isinstance(output_states, (str, tuple)):
-            output_states = list(output_states)
+        if isinstance(output_ports, (str, tuple)):
+            output_ports = list(output_ports)
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
                                                   # input_format=input_format,
                                                   input_ports=input_ports,
-                                                  output_states=output_states,
+                                                  output_ports=output_ports,
                                                   params=params)
 
         # IMPLEMENTATION NOTE: this manner of setting default_variable works but is idiosyncratic
@@ -925,7 +925,7 @@ class DDM(ProcessingMechanism):
 
         super(DDM, self).__init__(default_variable=default_variable,
                                   input_ports=input_ports,
-                                  output_states=output_states,
+                                  output_ports=output_ports,
                                   function=function,
                                   params=params,
                                   name=name,
@@ -1086,7 +1086,7 @@ class DDM(ProcessingMechanism):
             - mean RT
             - mean, variance, and skew of RT for correct (posititive threshold) responses
             - mean, variance, and skew of RT for incorrect (negative threshold) responses
-        Return current decision variable (self.outputState.value) and other output values (self.output_states[].value
+        Return current decision variable (self.outputPort.value) and other output values (self.output_ports[].value
         Arguments:
         # CONFIRM:
         variable (float): set to self.value (= self.input_value)
@@ -1098,7 +1098,7 @@ class DDM(ProcessingMechanism):
             + NOISE (float)
         - context (str)
         Returns the following values in self.value (2D np.array) and in
-            the value of the corresponding outputState in the self.output_states dict:
+            the value of the corresponding outputPort in the self.output_ports dict:
             - decision variable (float)
             - mean error rate (float)
             - mean RT (float)
@@ -1109,7 +1109,7 @@ class DDM(ProcessingMechanism):
         :param variable (float)
         :param params: (dict)
         :param context: (str)
-        :rtype self.outputState.value: (number)
+        :rtype self.outputPort.value: (number)
         """
 
         if variable is None or np.isnan(variable):
@@ -1174,7 +1174,7 @@ class DDM(ProcessingMechanism):
         if isinstance(self.function, IntegratorFunction):
             new_values = self.function.reinitialize(*args, context=context)
             self.parameters.value._set(np.array(new_values), context)
-            self._update_output_states(context=context)
+            self._update_output_ports(context=context)
 
     @handle_external_context()
     def is_finished(self, context=None):

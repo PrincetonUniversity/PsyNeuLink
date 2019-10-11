@@ -26,7 +26,7 @@ shape as the individual items.
 All CombinationFunctions must have two attributes - **multiplicative_param** and **additive_param** -
 each of which is assigned the name of one of the function's parameters;
 this is for use by ModulatoryProjections (and, in particular, GatingProjections,
-when the CombinationFunction is used as the function of an InputPort or OutputState).
+when the CombinationFunction is used as the function of an InputPort or OutputPort).
 
 
 """
@@ -58,7 +58,7 @@ class CombinationFunction(Function_Base):
     All CombinationFunctions must have two attributes - multiplicative_param and additive_param -
         each of which is assigned the name of one of the function's parameters;
         this is for use by ModulatoryProjections (and, in particular, GatingProjections,
-        when the CombinationFunction is used as the function of an InputPort or OutputState).
+        when the CombinationFunction is used as the function of an InputPort or OutputPort).
 
     """
     componentType = COMBINATION_FUNCTION_TYPE

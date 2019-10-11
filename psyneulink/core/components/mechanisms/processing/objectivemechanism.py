@@ -13,10 +13,10 @@
 Overview
 --------
 
-An ObjectiveMechanism is a `ProcessingMechanism <ProcessingMechanism>` that monitors the `OutputStates <OutputState>`
+An ObjectiveMechanism is a `ProcessingMechanism <ProcessingMechanism>` that monitors the `OutputPorts <OutputPort>`
 of one or more other ProcessingMechanisms specified in its `monitor <ObjectiveMechanism.monitor>` attribute,
 and evaluates them using its `function <ObjectiveMechanism.function>`. The result of the evaluation is placed in the
-ObjectiveMechanism's *OUTCOME* (`primary <OutputState_Primary>`) OutputState.  ObjectiveMechanisms are typically used
+ObjectiveMechanism's *OUTCOME* (`primary <OutputPort_Primary>`) OutputPort.  ObjectiveMechanisms are typically used
 closely with (and often created automatically by) `ModulatoryMechanisms <ModulatoryMechanism>`.
 
 .. _ObjectiveMechanism_Creation:
@@ -40,28 +40,28 @@ FOR DEVELOPERS:
     The monitor argument is in effect an alias to the input_ports argument
     of the constructor for a Mechanism;  it is simply assigned to input_port in the __init__ method
     and the specifications are handled by an override of the Mechanism's _instantiate_input_ports method.
-    The monitor property returns the OutputStates that project to the Mechanism's InputPorts
+    The monitor property returns the OutputPorts that project to the Mechanism's InputPorts
 COMMENT
 
-The **monitor** argument of an ObjectiveMechanism's constructor specifies the `OutputStates <OutputState>` it monitors.
+The **monitor** argument of an ObjectiveMechanism's constructor specifies the `OutputPorts <OutputPort>` it monitors.
 This takes the place of the **input_ports** argument used by most other forms of `Mechanism <Mechanism>`, and is used
-by the ObjectiveMechanism to create an `InputPort` for each OutputState it monitors, along with a `MappingProjection`
-from the OutputState to that InputPort.  The **monitor** argument takes a list of items that can
+by the ObjectiveMechanism to create an `InputPort` for each OutputPort it monitors, along with a `MappingProjection`
+from the OutputPort to that InputPort.  The **monitor** argument takes a list of items that can
 include any of the `forms of specification <InputPort_Specification>` used in a standard **input_ports** argument.
-For the **monitor** argument, this is usually a list of OutputStates to be monitored.  However, as with a standard
-**input_ports** argument, the **monitor** argument can include Mechanisms (in which case their `primary Outputstate
-<OutputState_Primary>` is used) or the `InputPort(s) <InputPort>` of other Mechanisms (in which case the
-ObjectiveMechanism will be assigned Projections from all of the OutputStates that project to the specified InputPort
+For the **monitor** argument, this is usually a list of OutputPorts to be monitored.  However, as with a standard
+**input_ports** argument, the **monitor** argument can include Mechanisms (in which case their `primary OutputPort
+<OutputPort_Primary>` is used) or the `InputPort(s) <InputPort>` of other Mechanisms (in which case the
+ObjectiveMechanism will be assigned Projections from all of the OutputPorts that project to the specified InputPort
 -- that is, it will `shadow their inputs <InputPort_Shadow_Inputs>`). Items in the *monitor* argument can also be
 used to specify attributes of the InputPort and/or MappingProjection(s) to it, that the ObjectiveMechanism creates to
-monitor the specified OutputState.  In general, the `value <OutputState.value>` of each specified OutputState determines
+monitor the specified OutputPort.  In general, the `value <OutputPort.value>` of each specified OutputPort determines
 the format of the `variable <InputPort.variable>` of the InputPort that is created for it by the ObjectiveMechanism.
 However, this can be overridden using the ObjectiveMechanism's `default_variable <ObjectiveMechanism.default_variable>`
 or `size <ObjectiveMechanism.size>` attributes (see `Mechanism InputPort specification
-<Mechanism_InputPort_Specification>`), or by specifying a Projection from the OutputState to the InputPort (see
+<Mechanism_InputPort_Specification>`), or by specifying a Projection from the OutputPort to the InputPort (see
 `Input Source Specification <InputPort_Projection_Source_Specification>`). If an item in the
-**monitor** argument specifies an InputPort for the ObjectiveMechanism, but not the OutputState to
-be monitored, the InputPort is created but will be ignored until an OutputState (and MappingProjection from it) are
+**monitor** argument specifies an InputPort for the ObjectiveMechanism, but not the OutputPort to
+be monitored, the InputPort is created but will be ignored until an OutputPort (and MappingProjection from it) are
 specified for that InputPort.
 
 COMMENT:
@@ -71,33 +71,33 @@ ADD DISCUSSION OF monitor_weights_and_exponents ARGUMENT HERE
 COMMENT
 
 COMMENT:
-Note that some forms of specification may depend on specifications made for the OutputState referenced, the Mechanism
+Note that some forms of specification may depend on specifications made for the OutputPort referenced, the Mechanism
 to which it belongs, and/or the Process or System to which that Mechanism belongs. These interactions (and the
 precedence afforded to each) are described below.
 
-  * **OutputState** -- a reference to the `OutputState <OutputState>` of a Mechanism;  this creates an InputPort
-    with a `variable <InputPort.variable>` that matches the format of the `value <OutputState.value>` of the
-    specified OutputState, and a `MappingProjection` between them using an *IDENTITY_MATRIX*.
+  * **OutputPort** -- a reference to the `OutputPort <OutputPort>` of a Mechanism;  this creates an InputPort
+    with a `variable <InputPort.variable>` that matches the format of the `value <OutputPort.value>` of the
+    specified OutputPort, and a `MappingProjection` between them using an *IDENTITY_MATRIX*.
 
       TBI
-      Note that an outputState can be *excluded* from being monitored by assigning `None` as the value of its
+      Note that an outputPort can be *excluded* from being monitored by assigning `None` as the value of its
       `monitoring_status` attribute.  This specification takes precedence over any others;  that is, it suppresses
-      monitoring of that OutputState, irrespective of any other specifications that might otherwise apply to that
-      OutputState, including those described below.
+      monitoring of that OutputPort, irrespective of any other specifications that might otherwise apply to that
+      OutputPort, including those described below.
   ..
   TBI
-  * **Mechanism** -- by default, the Mechanism's `primary OutputState <OutputState_Primary>` is used.  However,
-    if the Mechanism has any OutputStates specified in its `monitored_states` attribute, those are used (except for
+  * **Mechanism** -- by default, the Mechanism's `primary OutputPort <OutputPort_Primary>` is used.  However,
+    if the Mechanism has any OutputPorts specified in its `monitored_states` attribute, those are used (except for
     any that specify `None` as their `monitoring_status`). This specification takes precedence over any of the other
-    types listed below:  if it is `None`, then none of that Mechanism's OutputStates are monitored; if it
-    specifies OutputStates to be monitored, those are monitored even if they do not satisfy any of the conditions
+    types listed below:  if it is `None`, then none of that Mechanism's OutputPorts are monitored; if it
+    specifies OutputPorts to be monitored, those are monitored even if they do not satisfy any of the conditions
     described in the specifications below.
 
 TBI FOR COMPOSITION:
-The OutputStates monitored by the ObjectiveMechanism are listed in its `monitor <ObjectiveMechanism.monitor>`
+The OutputPorts monitored by the ObjectiveMechanism are listed in its `monitor <ObjectiveMechanism.monitor>`
 attribute.  When an ObjectiveMechanism is created by a `ControlMechanism`, or a `System` for its `controller
-<System.controller>`, these may pass a set of OutputStates to be monitored to the ObjectiveMechanism.  A
-ControlMechanism passes OutputState specifications listed in its **objective_mechanism** argument (see
+<System.controller>`, these may pass a set of OutputPorts to be monitored to the ObjectiveMechanism.  A
+ControlMechanism passes OutputPort specifications listed in its **objective_mechanism** argument (see
 `ControlMechanism_ObjectiveMechanism`), and a System passes any listed in its **monitor_for_control** argument (see
 `System_Control_Specification`).
 COMMENT
@@ -107,9 +107,9 @@ FIX 8/27/19 [JDC]:
 GENERALIZE TO ControlMechanism
 COMMENT
 
-The OutputStates monitored by the ObjectiveMechanism are listed in its `monitor <ObjectiveMechanism.monitor>` attribute.
-When an ObjectiveMechanism is created by a `ControlMechanism`, these may pass a set of OutputStates to be monitored to
-the ObjectiveMechanism.  A ControlMechanism passes OutputState specifications listed in its **objective_mechanism**
+The OutputPorts monitored by the ObjectiveMechanism are listed in its `monitor <ObjectiveMechanism.monitor>` attribute.
+When an ObjectiveMechanism is created by a `ControlMechanism`, these may pass a set of OutputPorts to be monitored to
+the ObjectiveMechanism.  A ControlMechanism passes OutputPort specifications listed in its **objective_mechanism**
 argument (see `ControlMechanism_ObjectiveMechanism`).
 
 .. _ObjectiveMechanism_Structure:
@@ -123,25 +123,25 @@ Structure
 *Input*
 ~~~~~~~
 
-An ObjectiveMechanism has one `InputPort <InputPort>` for each of the OutputStates specified in its
+An ObjectiveMechanism has one `InputPort <InputPort>` for each of the OutputPorts specified in its
 **monitor** argument (see `ObjectiveMechanism_Monitor`). Each InputPort receives a `MappingProjection` from the
-corresponding OutputState, the values of which are used by the ObjectiveMechanism's
-`function <ObjectiveMechanism.function>` to generate the value of its *OUTCOME* `OutputState
+corresponding OutputPort, the values of which are used by the ObjectiveMechanism's
+`function <ObjectiveMechanism.function>` to generate the value of its *OUTCOME* `OutputPort
 <ObjectiveMechanism_Output>`.  The InputPorts are listed in the ObjectiveMechanism's `input_ports
-<ObjectiveMechanism.input_ports>` attribute, and the monitored OutputStates from which they receive projections are
+<ObjectiveMechanism.input_ports>` attribute, and the monitored OutputPorts from which they receive projections are
 listed in the same order its `monitor <ObjectiveMechanism.monitor>` attribute.
 
 COMMENT:
   FIX: Shadowing inputs may generate an exception to this, if the shadowed InputPort receives more than one projection.
-       In that case, there will be more than on OutputState listed in monitor for the corresponding input_port
+       In that case, there will be more than on OutputPort listed in monitor for the corresponding input_port
 COMMENT
 
 By default, the format of the `variable <InputPort.variable>` for each InputPort is determined by the `value
-<OutputState.value>` of the monitored OutputState(s) to which it corresponds.  However, if either the
+<OutputPort.value>` of the monitored OutputPort(s) to which it corresponds.  However, if either the
 **default_variable** or **size** argument is specified in an Objective Mechanism's constructor, or a `variable
 <InputPort.variable>` is `specified for an InputPort <InputPort_Specification>` for one or more of the items in
 its **monitor** argument, then that is used as the format for the corresponding InputPort(s).  This can be used to
-transform the `value <OutputState.value>` of a monitored OutputState into different form for the `variable
+transform the `value <OutputPort.value>` of a monitored OutputPort into different form for the `variable
 <InputPort.variable>` of the InputPort (see the `first example <ObjectiveMechanism_Monitor_Examples>` below).
 
 If the weight and/or exponent is specified for ay item in the **monitor** argument of the ObjectiveMechanism's
@@ -158,7 +158,7 @@ with that of the other InputPorts to generate the ObjectiveMechanism's `output <
 
 The ObjectiveMechanism's `function <ObjectiveMechanism.function>` uses the values of its `input_ports
 <ObjectiveMechanism.input_ports>` to compute an `objective (or "loss") function
-<https://en.wikipedia.org/wiki/Loss_function>`_, that is assigned as the value of its *OUTCOME* `OutputState
+<https://en.wikipedia.org/wiki/Loss_function>`_, that is assigned as the value of its *OUTCOME* `OutputPort
 <ObjectiveMechanism_Output>`.  By default, it uses a `LinearCombination` function to sum the values of the values of
 the items in its `variable <ObjectiveMechanism.variable>`. However, by assigning values to the 'weight
 <InputPort.weight>` and/or 'exponent <InputPort.exponent>` attributes of the corresponding InputPorts,
@@ -176,7 +176,7 @@ If it implements :keyword:`weight` and/or :keyword:`exponent` attributes, those 
 *Output*
 ~~~~~~~~
 
-The `primary OutputState <OutputState_Primary>` of an Objective mechanism is a 1d array, named *OUTCOME*, that is the
+The `primary OutputPort <OutputPort_Primary>` of an Objective mechanism is a 1d array, named *OUTCOME*, that is the
 result of its `function <ObjectiveMechanism.function>` (as described above).
 
 
@@ -185,10 +185,10 @@ result of its `function <ObjectiveMechanism.function>` (as described above).
 Execution
 ---------
 
-When an ObjectiveMechanism is executed, it updates its input_ports with the values of the OutputStates listed in
+When an ObjectiveMechanism is executed, it updates its input_ports with the values of the OutputPorts listed in
 its `monitor <ObjectiveMechanism.monitor>` attribute, and then uses its `function <ObjectiveMechanism.function>` to
 evaluate these.  The result is assigned as to its `value <ObjectiveMechanism.value>` attribute as the value of its
-*OUTCOME* (`primary <OutputState_Primary>`) OutputState.
+*OUTCOME* (`primary <OutputPort_Primary>`) OutputPort.
 
 .. _ObjectiveMechanism_Examples:
 
@@ -226,7 +226,7 @@ ObjectiveMechanism to force the InputPort for the ObjectiveMechanism to have a s
     >>> my_objective_mech = pnl.ObjectiveMechanism(default_variable=[[0],[0]],
     ...                                            monitor=[my_action_select_mech, my_reward_mech])
 
-Note that the OutputStates for the ``my_action_selection`` and ``my_reward_mech`` are specified
+Note that the OutputPorts for the ``my_action_selection`` and ``my_reward_mech`` are specified
 in `monitor`.  If that were the only specification, the InputPort created for ``my_action_select_mech``
 would be a vector of length 3.  This is overridden by specifying `default_variable` as an array with two
 single-value arrays (one corresponding to ``my_action_select_mech`` and the other to ``my_reward_mech``).  This forces
@@ -253,7 +253,7 @@ itself (see `ObjectiveMechanism_Input` for a full explanation).
 .. _ObjectiveMechanism_Projection_Example:
 
 Another way to specify the `variable <InputPort.variable>` for the InputPort of an ObjectiveMechanism is to
-specify the Projections it receives from the OutputState it monitors.  The following example uses a `tuple
+specify the Projections it receives from the OutputPort it monitors.  The following example uses a `tuple
 specification <InputPort_Tuple_Specification:>` to assign the matrix for the MappingProjection from
 ``my_action_select_mech`` to the corresponding InputPort of ``my_objective_mech``::
 
@@ -277,7 +277,7 @@ However, this too can be customized in a variety of ways.
 
 The simplest way is to assign values to the `weight <InputPort.weight>` and/or `exponent <InputPort.exponent>`
 attributes of its InputPorts.  This can be done by placing them in a `tuple specification
-<InputPort_Tuple_Specification>` for the OutputState that provides value for the InputPort. In the example
+<InputPort_Tuple_Specification>` for the OutputPort that provides value for the InputPort. In the example
 below, the ObjectiveMechanism used in the previous example is further customized to subtract the value of the action
 selected from the value of the reward::
 
@@ -290,25 +290,25 @@ included, even though it is the default value;  when a tuple is used, the weight
 specified.  Notice also that ``my_reward_mech`` does not use a tuple, so it will be assigned defaults for both the
 weight and exponent parameters.
 
-.. _ObjectiveMechanism_Multiple_OutputStates_Example:
+.. _ObjectiveMechanism_Multiple_OutputPorts_Example:
 
-An ObjectiveMechanism can also be configured to monitor multiple OutputStates of the same Mechanism.  In the following
+An ObjectiveMechanism can also be configured to monitor multiple OutputPorts of the same Mechanism.  In the following
 example, an ObjectiveMechanism is configured to calculate the reward rate for a `DDM` Mechanism, by specifying
-OutputStates for the DDM that report its response time and accuracy::
+OutputPorts for the DDM that report its response time and accuracy::
 
-    >>> my_decision_mech = pnl.DDM(output_states=[pnl.RESPONSE_TIME,
+    >>> my_decision_mech = pnl.DDM(output_ports=[pnl.RESPONSE_TIME,
     ...                                           pnl.PROBABILITY_UPPER_THRESHOLD])
 
     >>> my_objective_mech = pnl.ObjectiveMechanism(monitor=[
     ...                                              my_reward_mech,
-    ...                                              my_decision_mech.output_states[pnl.PROBABILITY_UPPER_THRESHOLD],
-    ...                                              (my_decision_mech.output_states[pnl.RESPONSE_TIME], 1, -1)])
+    ...                                              my_decision_mech.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
+    ...                                              (my_decision_mech.output_ports[pnl.RESPONSE_TIME], 1, -1)])
 
-This specifies that the ObjectiveMechanism should multiply the `value <OutputState.value>` of ``my_reward_mech``'s
-`primary OutputState <OutputState_Primary>` by the `value <OutpuState.value>` of ``my_decision_mech``'s
+This specifies that the ObjectiveMechanism should multiply the `value <OutputPort.value>` of ``my_reward_mech``'s
+`primary OutputPort <OutputPort_Primary>` by the `value <OutpuState.value>` of ``my_decision_mech``'s
 *PROBABILITY_UPPER_THRESHOLD*, and divide the result by ``my_decision_mech``'s *RESPONSE_TIME* `value
-<OutputState.value>`.  The two OutputStates of ``my_decision_mech`` are referenced as items in the `output_states
-<Mechanism_Base.output_states>` list of ``my_decision_mech``.  However, a `2-item (State name, Mechanism) tuple
+<OutputPort.value>`.  The two OutputPorts of ``my_decision_mech`` are referenced as items in the `output_ports
+<Mechanism_Base.output_ports>` list of ``my_decision_mech``.  However, a `2-item (State name, Mechanism) tuple
 <InputPort_State_Mechanism_Tuple>` can be used to reference them more simply, as follows::
 
     >>> my_objective_mech = pnl.ObjectiveMechanism(monitor=[
@@ -358,7 +358,7 @@ from collections import namedtuple
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.core.components.states.outputstate import OutputState, PRIMARY, standard_output_states
+from psyneulink.core.components.states.outputport import OutputPort, PRIMARY, standard_output_ports
 from psyneulink.core.components.states.inputport import InputPort, INPUT_PORT
 from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.globals.context import ContextFlags
@@ -373,26 +373,26 @@ from psyneulink.core.globals.utilities import ContentAddressableList, type_match
 
 __all__ = [
     'DEFAULT_MONITORED_STATE_WEIGHT', 'DEFAULT_MONITORED_STATE_EXPONENT', 'DEFAULT_MONITORED_STATE_MATRIX',
-    'MONITOR', 'MONITOR_SUFFIX', 'MONITORED_OUTPUT_STATE_NAME_SUFFIX', 'MONITORED_OUTPUT_STATES',
+    'MONITOR', 'MONITOR_SUFFIX', 'MONITORED_OUTPUT_PORT_NAME_SUFFIX', 'MONITORED_OUTPUT_PORTS',
     'OBJECTIVE_OUTPUT', 'ObjectiveMechanism', 'ObjectiveMechanismError', 'OUTCOME', 'ROLE'
 ]
 
 ROLE = 'role'
 MONITOR = 'monitor'
 MONITOR_SUFFIX = '_Monitor'
-MONITORED_OUTPUT_STATES = 'monitored_output_states'
-MONITORED_OUTPUT_STATE_NAME_SUFFIX = '_Monitor'
+MONITORED_OUTPUT_PORTS = 'monitored_output_ports'
+MONITORED_OUTPUT_PORT_NAME_SUFFIX = '_Monitor'
 
 DEFAULT_MONITORED_STATE_WEIGHT = None
 DEFAULT_MONITORED_STATE_EXPONENT = None
 DEFAULT_MONITORED_STATE_MATRIX = None
 
-# This is a convenience class that provides list of standard_output_state names in IDE
+# This is a convenience class that provides list of standard_output_port names in IDE
 class OBJECTIVE_OUTPUT():
     """
-    .. _ObjectiveMechanism_Standard_OutputStates:
+    .. _ObjectiveMechanism_Standard_OutputPorts:
 
-    `Standard OutputStates <OutputState_Standard>` for `ObjectiveMechanism`:
+    `Standard OutputPorts <OutputPort_Standard>` for `ObjectiveMechanism`:
 
     .. _OBJECTIVE_MECHANISM_OUTCOME
 
@@ -420,13 +420,13 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         default_variable,             \
         size,                         \
         function=LinearCombination,   \
-        output_states=OUTCOME,        \
+        output_ports=OUTCOME,        \
         params=None,                  \
         name=None,                    \
         prefs=None)
 
     Subclass of `ProcessingMechanism <ProcessingMechanism>` that evaluates the value(s)
-    of one or more `OutputStates <OutputState>`.
+    of one or more `OutputPorts <OutputPort>`.
 
     COMMENT:
         Description:
@@ -455,8 +455,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     Arguments
     ---------
 
-    monitor : List[`OutputState`, 'InputPort`, `Mechanism`, str, value, dict, `MonitoredOutputStatesOption`] or dict
-        specifies the OutputStates, the `values <OutputState.value>` of which will be monitored, and evaluated by
+    monitor : List[`OutputPort`, 'InputPort`, `Mechanism`, str, value, dict, `MonitoredOutputPortsOption`] or dict
+        specifies the OutputPorts, the `values <OutputPort.value>` of which will be monitored, and evaluated by
         `function <ObjectiveMechanism.function>` (see `ObjectiveMechanism_Monitor` for details of specification).
 
     default_variable : number, list or np.ndarray : default monitor
@@ -473,7 +473,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     COMMENT:
     input_ports :  List[InputPort, value, str or dict] or Dict[] : default None
         specifies the names and/or formats to use for the values of the InputPorts that receive the input from the
-        OutputStates specified in the monitor** argument; if specified, there must be one for each item
+        OutputPorts specified in the monitor** argument; if specified, there must be one for each item
         specified in the **monitor** argument.
     COMMENT
 
@@ -481,8 +481,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         specifies the function used to evaluate the values listed in `monitor` <ObjectiveMechanism.monitor>`
         (see `function <ObjectiveMechanism.function>` for details).
 
-    output_states :  List[OutputState, value, str or dict] or Dict[] : default [OUTCOME]
-        specifies the OutputStates for the Mechanism;
+    output_ports :  List[OutputPort, value, str or dict] or Dict[] : default [OUTCOME]
+        specifies the OutputPorts for the Mechanism;
 
     role: Optional[LEARNING, CONTROL]
         specifies if the ObjectiveMechanism is being used for learning or control (see `role` for details).
@@ -503,19 +503,19 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     Attributes
     ----------
 
-    variable : 2d ndarray : default array of values of OutputStates in monitor_output_states
+    variable : 2d ndarray : default array of values of OutputPorts in monitor_output_ports
         the input to Mechanism's `function <TransferMechanism.function>`.
 
-    monitor : ContentAddressableList[OutputState]
-        determines the OutputStates, the `values <OutputState.value>` of which are monitored, and evaluated by the
+    monitor : ContentAddressableList[OutputPort]
+        determines the OutputPorts, the `values <OutputPort.value>` of which are monitored, and evaluated by the
         ObjectiveMechanism's `function <ObjectiveMechanism.function>`.  Each item in the list refers to an
-        `OutputState` containing the value to be monitored, with a `MappingProjection` from it to an
+        `OutputPort` containing the value to be monitored, with a `MappingProjection` from it to an
         corresponding `InputPort` listed in the `input_ports <ObjectiveMechanism.input_ports>` attribute
 
         .. note::
            If any of the ObjectiveMechanism's `input_ports <ObjectiveMechanism.input_ports>` were specified to `shadow
            the InputPort <InputPort_Shadow_Inputs>` of another Mechanism, and any of those shadowed InputPorts
-           receives more than one `Projection`, then the list of monitored OutputStates in `monitor` will be longer
+           receives more than one `Projection`, then the list of monitored OutputPorts in `monitor` will be longer
            than the list of the ObjectiveMechanism's `input_ports <ObjectiveMechanisms.input_ports>`.
 
     monitor_weights_and_exponents : List[Tuple(float, float)]
@@ -526,7 +526,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
     input_ports : ContentAddressableList[InputPort]
         contains the InputPorts of the ObjectiveMechanism, each of which receives a `MappingProjection` from the
-        OutputStates specified in its `monitor <ObjectiveMechanism.monitor>` attribute.
+        OutputPorts specified in its `monitor <ObjectiveMechanism.monitor>` attribute.
 
     function : CombinationFunction, ObjectiveFunction, function, or method
         the function used to evaluate the values monitored by the ObjectiveMechanism.  The function can be
@@ -542,16 +542,16 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     value : 1d np.array
         the output of the evaluation carried out by the ObjectiveMechanism's `function <ObjectiveMechanism.function>`.
 
-    output_state : OutputState
-        contains the `primary OutputState <OutputState_Primary>` of the ObjectiveMechanism; the default is
-        its *OUTCOME* `OutputState <ObjectiveMechanism_Output>`, the value of which is equal to the
+    output_port : OutputPort
+        contains the `primary OutputPort <OutputPort_Primary>` of the ObjectiveMechanism; the default is
+        its *OUTCOME* `OutputPort <ObjectiveMechanism_Output>`, the value of which is equal to the
         `value <ObjectiveMechanism.value>` attribute of the ObjectiveMechanism.
 
-    output_states : ContentAddressableList[OutputState]
-        by default, contains only the *OUTCOME* (`primary <OutputState_Primary>`) OutputState of the ObjectiveMechanism.
+    output_ports : ContentAddressableList[OutputPort]
+        by default, contains only the *OUTCOME* (`primary <OutputPort_Primary>`) OutputPort of the ObjectiveMechanism.
 
     output_values : 2d np.array
-        contains one item that is the value of the *OUTCOME* `OutputState <ObjectiveMechanism_Output>`.
+        contains one item that is the value of the *OUTCOME* `OutputPort <ObjectiveMechanism_Output>`.
 
     name : str
         the name of the ObjectiveMechanism; if it is not specified in the **name** argument of the constructor, a
@@ -606,7 +606,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         FUNCTION: LinearCombination,
         })
 
-    standard_output_states = standard_output_states.copy()
+    standard_output_ports = standard_output_ports.copy()
 
     # FIX:  TYPECHECK MONITOR TO LIST OR ZIP OBJECT
     @tc.typecheck
@@ -615,44 +615,44 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  default_variable=None,
                  size=None,
                  function=LinearCombination,
-                 output_states:tc.optional(tc.any(str, Iterable))=OUTCOME,
+                 output_ports:tc.optional(tc.any(str, Iterable))=OUTCOME,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  **kwargs):
 
         # For backward compatibility
-        if MONITORED_OUTPUT_STATES in kwargs:
+        if MONITORED_OUTPUT_PORTS in kwargs:
             if monitor:
                 raise ObjectiveMechanismError(f'Can\'t specifiy both {repr(MONITOR)} ({monitor}) '
-                                              f'and {repr(MONITORED_OUTPUT_STATES)} ({kwargs[MONITORED_OUTPUT_STATES]})'
+                                              f'and {repr(MONITORED_OUTPUT_PORTS)} ({kwargs[MONITORED_OUTPUT_PORTS]})'
                                               f' args of {self.name} specified; pick one!')
-            warnings.warn(f'Use of {repr(MONITORED_OUTPUT_STATES)} as arg of {self.__class__.__name__} is deprecated;  '
+            warnings.warn(f'Use of {repr(MONITORED_OUTPUT_PORTS)} as arg of {self.__class__.__name__} is deprecated;  '
                           f'use {repr(MONITOR)} instead')
-            monitor = kwargs.pop(MONITORED_OUTPUT_STATES)
+            monitor = kwargs.pop(MONITORED_OUTPUT_PORTS)
         monitor = monitor or None # deal with possibility of empty list
         input_ports = monitor
-        if output_states is None or output_states is OUTCOME:
-            output_states = [OUTCOME]
+        if output_ports is None or output_ports is OUTCOME:
+            output_ports = [OUTCOME]
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(input_ports=input_ports,
-                                                  output_states=output_states,
+                                                  output_ports=output_ports,
                                                   function=function,
                                                   params=params)
 
         self._learning_role = None
 
-        from psyneulink.core.components.states.outputstate import StandardOutputStates
-        if not isinstance(self.standard_output_states, StandardOutputStates):
-            self.standard_output_states = StandardOutputStates(self,
-                                                               self.standard_output_states,
+        from psyneulink.core.components.states.outputport import StandardOutputPorts
+        if not isinstance(self.standard_output_ports, StandardOutputPorts):
+            self.standard_output_ports = StandardOutputPorts(self,
+                                                               self.standard_output_ports,
                                                                indices=PRIMARY)
 
         super().__init__(default_variable=default_variable,
                          size=size,
                          input_ports=input_ports,
-                         output_states=output_states,
+                         output_ports=output_ports,
                          function=function,
                          params=params,
                          name=name,
@@ -677,7 +677,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                           format(target_set[ROLE], self.name))
 
     def _instantiate_input_ports(self, monitor_specs=None, reference_value=None, context=None):
-        """Instantiate InputPorts specified in **input_ports** argument of constructor or each OutputState
+        """Instantiate InputPorts specified in **input_ports** argument of constructor or each OutputPort
         specified in monitor_specs
 
         Called during initialization as well as by _add_to_monitor(),
@@ -697,7 +697,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             input_ports = self.input_ports or None
             input_ports = super()._instantiate_input_ports(input_ports=input_ports, context=context)
         else:
-            # Parse any spec that is an InputPort into the OutputState(s) that project to it
+            # Parse any spec that is an InputPort into the OutputPort(s) that project to it
             monitor_specs = _parse_monitor_specs(monitor_specs)
 
             # Instantiate InputPorts corresponding to items specified in monitor
@@ -709,7 +709,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         return input_ports
 
     def _name_input_ports(self, input_ports):
-        # If InputPorts are not already named, name them based on the OutputStates that project to them
+        # If InputPorts are not already named, name them based on the OutputPorts that project to them
         from psyneulink.core.globals.registry import remove_instance_from_registry, register_instance
         if not input_ports:
             return
@@ -729,17 +729,17 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             register_instance(state, state.name, InputPort, self._stateRegistry, INPUT_PORT)
 
     def add_to_monitor(self, monitor_specs, context=None):
-        """Instantiate `OutputStates <OutputState>` to be monitored by the ObjectiveMechanism.
+        """Instantiate `OutputPorts <OutputPort>` to be monitored by the ObjectiveMechanism.
 
         Used by other Components to add a `State` or list of States to be monitored by the ObjectiveMechanism.
         The **monitor_spec** can be any of the following:
-        - MonitoredOutputStateTuple
+        - MonitoredOutputPortTuple
         - `Mechanism`;
-        - `OutputState`;
+        - `OutputPort`;
         - `tuple specification <InputPort_Tuple_Specification>`;
         - `State specification dictionary <InputPort_Specification_Dictionary>`;
         - list with any of the above.
-        If the item is a Mechanism, its `primary OutputState <OutputState_Primary>` is used.
+        If the item is a Mechanism, its `primary OutputPort <OutputPort_Primary>` is used.
         """
         monitor_specs = list(monitor_specs)
 
@@ -751,32 +751,32 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         # Get reference value
         reference_value = []
-        # Get value of each OutputState or, if a Projection from it is specified, then the Projection's value
+        # Get value of each OutputPort or, if a Projection from it is specified, then the Projection's value
         for i, spec in enumerate(monitor_specs):
             from psyneulink.core.components.states.inputport import InputPort
-            from psyneulink.core.components.system import MonitoredOutputStateTuple
+            from psyneulink.core.components.system import MonitoredOutputPortTuple
             from psyneulink.core.components.projections.projection import _get_projection_value_shape
 
-            # If it is a MonitoredOutputStateTuple, create InputPort specification dictionary
-            if isinstance(spec, MonitoredOutputStateTuple):
+            # If it is a MonitoredOutputPortTuple, create InputPort specification dictionary
+            if isinstance(spec, MonitoredOutputPortTuple):
                 # If matrix is specified, let it determine the variable
                 if spec.matrix is not None:
                     variable = None
-                # Otherwise, use OutputState's value as variable for InputPort
+                # Otherwise, use OutputPort's value as variable for InputPort
                 else:
-                    variable = spec.output_state.value
-                spec = {NAME: spec.output_state.name,
+                    variable = spec.output_port.value
+                spec = {NAME: spec.output_port.name,
                         VARIABLE: variable,
                         WEIGHT: spec.weight,
                         EXPONENT: spec.exponent,
-                        PROJECTIONS: [(spec.output_state, spec.matrix)]}
+                        PROJECTIONS: [(spec.output_port, spec.matrix)]}
                 monitor_specs[i] = spec
 
-            # Parse spec to get value of OutputState and (possibly) the Projection from it
+            # Parse spec to get value of OutputPort and (possibly) the Projection from it
             input_port = _parse_state_spec(owner=self, state_type = InputPort, state_spec=spec)
 
             # There should be only one ProjectionTuple specified,
-            #    that designates the OutputState and (possibly) a Projection from it
+            #    that designates the OutputPort and (possibly) a Projection from it
             if len(input_port[PARAMS][PROJECTIONS])!=1:
                 raise ObjectiveMechanismError("PROGRAM ERROR: Failure to parse item in monitor_specs "
                                               "for {} (item: {})".format(self.name, spec))
@@ -788,7 +788,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             elif MATRIX in projection_tuple.projection:
                 reference_value.append(_get_projection_value_shape(projection_tuple.state,
                                                                    projection_tuple.projection[MATRIX]))
-            # Otherwise, use its sender's (OutputState) value
+            # Otherwise, use its sender's (OutputPort) value
             else:
                 reference_value.append(projection_tuple.state.value)
 
@@ -802,11 +802,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                       context=context
                                                       )
 
-        output_states = [[projection.sender for projection in state.path_afferents] for state in input_ports]
+        output_ports = [[projection.sender for projection in state.path_afferents] for state in input_ports]
 
         self._instantiate_function_weights_and_exponents(context=context)
 
-        return output_states
+        return output_ports
 
     def _instantiate_attributes_after_function(self, context=None):
         """Assign InputPort weights and exponents to ObjectiveMechanism's function
@@ -856,7 +856,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 for projection in input_port.path_afferents:
                     monitor.append(projection.sender)
 
-            return ContentAddressableList(component_type=OutputState,
+            return ContentAddressableList(component_type=OutputPort,
                                           list=[projection.sender for input_port in self.input_ports
                                                 for projection in input_port.path_afferents])
 
@@ -881,17 +881,17 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
     # For backward compatibility
     @property
-    def monitored_output_states(self):
+    def monitored_output_ports(self):
         return self.monitor
 
     # For backward compatibility
     @property
-    def monitored_output_states_weights_and_exponents(self):
+    def monitored_output_ports_weights_and_exponents(self):
         return self.monitor_weights_and_exponents
 
     # For backward compatibility
-    @monitored_output_states_weights_and_exponents.setter
-    def monitored_output_states_weights_and_exponents(self, weights_and_exponents_tuples):
+    @monitored_output_ports_weights_and_exponents.setter
+    def monitored_output_ports_weights_and_exponents(self, weights_and_exponents_tuples):
         self.monitor_weights_and_exponents = weights_and_exponents_tuples
 
 
@@ -941,7 +941,7 @@ def _parse_monitor_specs(monitor_specs):
 #     context=None
 # ):
 #
-#     from psyneulink.core.components.states.outputstate import OutputState
+#     from psyneulink.core.components.states.outputPort import OutputPort
 #     from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 #     from psyneulink.core.components.projections.projection import ProjectionTuple
 #
@@ -958,7 +958,7 @@ def _parse_monitor_specs(monitor_specs):
 #                                      "in call to instantiate monitoring projections for {}".
 #                                      format(len(receiver_projection_specs), len(receiver_list), owner.name))
 #
-#     # Instantiate InputPort with Projection from OutputState specified by sender
+#     # Instantiate InputPort with Projection from OutputPort specified by sender
 #     for sender, receiver, recvr_projs in zip(sender_list, receiver_list, receiver_projection_specs):
 #         # IMPLEMENTATION NOTE:  If there is more than one Projection specified for a receiver, only the 1st is used;
 #         #                           (there should only be one if a 2-item tuple was used to specify the InputPort,
@@ -974,9 +974,9 @@ def _parse_monitor_specs(monitor_specs):
 #         if isinstance(projection_spec, ProjectionTuple):
 #             projection_spec = projection_spec.projection
 #
-#         # IMPLEMENTATION NOTE:  This may not handle situations properly in which the OutputState is specified
+#         # IMPLEMENTATION NOTE:  This may not handle situations properly in which the OutputPort is specified
 #         #                           by a 2-item tuple (i.e., with a Projection specification as its second item)
-#         if isinstance(sender, OutputState):
+#         if isinstance(sender, OutputPort):
 #             # Projection has been specified for receiver and initialization begun, so call deferred_init()
 #             if receiver.path_afferents:
 #                 if not receiver.path_afferents[0].initialization_status == ContextFlags.DEFERRED_INIT:

@@ -733,9 +733,9 @@ class TestTrainingCorrectness:
                 # get target for terminal node whose output state corresponds to current output
                 correct_value = None
                 curr_CIM_input_port = sem_net.output_CIM.input_ports[j]
-                for output_state in sem_net.output_CIM_states.keys():
-                    if sem_net.output_CIM_states[output_state][0] == curr_CIM_input_port:
-                        node = output_state.owner
+                for output_port in sem_net.output_CIM_states.keys():
+                    if sem_net.output_CIM_states[output_port][0] == curr_CIM_input_port:
+                        node = output_port.owner
                         correct_value = targets_dict[node][i]
 
                 # compare model output for terminal node on current trial with target for terminal node on current trial

@@ -36,12 +36,12 @@ class TestLCControlMechanism:
         S.add_controller(LC)
 
 
-        for output_state in LC.output_states:
-            output_state.parameters.value.set(output_state.value * starting_value_LC, S, override=True)
+        for output_port in LC.output_ports:
+            output_port.parameters.value.set(output_port.value * starting_value_LC, S, override=True)
 
         LC.reinitialize_when = pnl.Never()
 
-        gain_created_by_LC_output_state_1 = []
+        gain_created_by_LC_output_port_1 = []
         mod_gain_assigned_to_A = []
         base_gain_assigned_to_A = []
         mod_gain_assigned_to_B = []
@@ -50,7 +50,7 @@ class TestLCControlMechanism:
         def report_trial(system):
             from psyneulink import parse_context
             context = parse_context(system)
-            gain_created_by_LC_output_state_1.append(LC.output_states[0].parameters.value.get(context))
+            gain_created_by_LC_output_port_1.append(LC.output_ports[0].parameters.value.get(context))
             mod_gain_assigned_to_A.append([A.get_mod_gain(system)])
             mod_gain_assigned_to_B.append([B.get_mod_gain(system)])
             base_gain_assigned_to_A.append(A.function.gain)
@@ -69,7 +69,7 @@ class TestLCControlMechanism:
             assert base_gain_assigned_to_B[i] == user_specified_gain
 
         # (3) LC output on trial n becomes gain of A and B on trial n + 1
-        assert np.allclose(mod_gain_assigned_to_A[1:], gain_created_by_LC_output_state_1[0:-1])
+        assert np.allclose(mod_gain_assigned_to_A[1:], gain_created_by_LC_output_port_1[0:-1])
 
         # (4) mechanisms A and B should always have the same gain values (b/c they are identical)
         assert np.allclose(mod_gain_assigned_to_A, mod_gain_assigned_to_B)
@@ -101,7 +101,7 @@ class TestLCControlMechanism:
         # LLVM returns combination of all output states so let's do that for
         # Python as well
         if mode == 'Python':
-            val = [s.value for s in LC.output_states]
+            val = [s.value for s in LC.output_ports]
 
         benchmark(EX, [10.0])
 
@@ -215,11 +215,11 @@ class TestLCControlMechanism:
         results = comp.run(inputs={mech:[[2],[2],[2]], control_mech:[2]}, num_trials=2)
         np.allclose(results, [[4],[4],[4]])
 
-    def test_control_of_all_output_states(self):
-        mech = pnl.ProcessingMechanism(output_states=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 0)},
+    def test_control_of_all_output_ports(self):
+        mech = pnl.ProcessingMechanism(output_ports=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 0)},
                                                       {pnl.VARIABLE: (pnl.OWNER_VALUE, 0)},
                                                       {pnl.VARIABLE: (pnl.OWNER_VALUE, 0)}],)
-        control_mech = pnl.ControlMechanism(control=mech.output_states)
+        control_mech = pnl.ControlMechanism(control=mech.output_ports)
         comp = pnl.Composition()
         comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
         results = comp.run(inputs={mech:[[2]], control_mech:[3]}, num_trials=2)

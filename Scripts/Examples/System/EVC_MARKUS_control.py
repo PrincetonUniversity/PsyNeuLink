@@ -44,7 +44,7 @@ Decision = pnl.DDM(function=psyneulink.core.components.functions.distributionfun
         starting_point=(0),
         t0=0.15
     ),name='Decision',
-    output_states=[
+    output_ports=[
         pnl.DECISION_VARIABLE,
         pnl.RESPONSE_TIME,
         pnl.PROBABILITY_UPPER_THRESHOLD,
@@ -150,7 +150,7 @@ stim_list_dict = {
 }
 
 def x():
-    print(Decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD].parameters.value.get(mySystem))
+    print(Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD].parameters.value.get(mySystem))
 
 mySystem.run(num_trials=nTrials,
              inputs=stim_list_dict,

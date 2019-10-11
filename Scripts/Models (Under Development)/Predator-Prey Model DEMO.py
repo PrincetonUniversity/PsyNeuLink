@@ -134,7 +134,7 @@ def get_action(variable=[[0,0],[0,0],[0,0]]):
 #    note: unitization is done in main loop, to allow compilation of LinearCombination function in ObjectiveMech) (TBI)
 action_mech = ProcessingMechanism(default_variable=[[0,0],[0,0],[0,0]],
                                   function=get_action, name='ACTION',
-                                  output_states='agent action')
+                                  output_ports='agent action')
 
 # ************************************** BASIC COMPOSITION *************************************************************
 

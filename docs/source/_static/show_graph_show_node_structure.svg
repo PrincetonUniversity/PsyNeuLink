@@ -71,7 +71,7 @@
            x="0 9.3240004 16.643999 20.639999 27.959999 35.279999 39.276001 47.268002 51.264 57.936001 61.931999 68.603996 72.599998"
            y="0"
            sodipodi:role="line"
-           id="tspan3754">OutputState-0</tspan></text>
+           id="tspan3754">OutputPort-0</tspan></text>
 <text
          transform="matrix(1,0,0,-1,138,166.39843)"
          style="font-style:italic;font-variant:normal;font-weight:bold;font-size:12px;font-family:Arial;-inkscape-font-specification:Arial-BoldItalicMT;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
@@ -193,7 +193,7 @@
            x="0 9.3240004 16.643999 20.639999 27.959999 35.279999 39.276001 47.268002 51.264 57.936001 61.931999 68.603996 72.599998"
            y="0"
            sodipodi:role="line"
-           id="tspan3816">OutputState-0</tspan></text>
+           id="tspan3816">OutputPort-0</tspan></text>
 <text
          transform="matrix(1,0,0,-1,138,378.39843)"
          style="font-style:italic;font-variant:normal;font-weight:bold;font-size:12px;font-family:Arial;-inkscape-font-specification:Arial-BoldItalicMT;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"

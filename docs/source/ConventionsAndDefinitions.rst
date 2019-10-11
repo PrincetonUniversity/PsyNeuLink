@@ -127,10 +127,10 @@ Two types of Components are the basic building blocks of PsyNeuLink models, Mech
        that modify the parameter(s) of the State's function, and thereby the value of the parameter of the Mechanism's
        `function <Mechanism.function>`.
 
-   + `OutputState`
+   + `OutputPort`
        Represents an output of the Mechanism.
        Takes an item of the Mechanism's `value <Mechanism.value>` as the `variable <State.variable>` for the State's
-       `function <State.function>`, assigns the result as the State's `value <OutputState.value>`, and provides that
+       `function <State.function>`, assigns the result as the State's `value <OutputPort.value>`, and provides that
        to one or more efferent PathwayProjections.  It can also receive one or more `modulatory projections
        <ModulatoryProjection>` (`ControlProjection` or `GatingProjection`), that modify the parameter(s) of the State's
        function, and thereby the State's `value <State.value>`.

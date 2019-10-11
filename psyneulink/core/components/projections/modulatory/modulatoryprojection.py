@@ -32,7 +32,7 @@ that modulate different types of Components and their States:
 ..
 * `GatingProjection`
     takes the `value <GatingSignal.value>` of a `GatingSignal` belonging to a `GatingMechanism`, and conveys it
-    to the `InputPort` or `OutputState` of a `ProcessingMechanism <ProcessingMechanism>` for use by the State's
+    to the `InputPort` or `OutputPort` of a `ProcessingMechanism <ProcessingMechanism>` for use by the State's
     `function <State_Base.function>` in modulating its `value <State_Base.value>`.
 
 .. _Projection_Creation:
@@ -121,7 +121,7 @@ class ModulatoryProjection_Base(Projection_Base):
     receiver : Optional[State or Mechanism]
         specifies the State to which the ModulatoryProjection projects.
 
-    sender : Optional[OutputState or Mechanism] : default None
+    sender : Optional[OutputPort or Mechanism] : default None
         specifies the Component from which the ModulatoryProjection projects.
 
     weight : number : default None
@@ -157,7 +157,7 @@ class ModulatoryProjection_Base(Projection_Base):
         the State to which the ModulatoryProjection projects, the `function <State_Base.function>` of which is
         modulated by it.
 
-    sender : LEARNING_SIGNAL OutputState of a LearningMechanism
+    sender : LEARNING_SIGNAL OutputPort of a LearningMechanism
         the `ModulatorySignal <ModulatorySignal>` from which the ModulatoryProjection projects.
 
     variable : 2d np.array

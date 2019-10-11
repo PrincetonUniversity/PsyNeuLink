@@ -37,14 +37,14 @@ def test_reinforcement():
     )
 
     # print ('reward prediction weights: \n', action_selection.input_ports[0].path_afferents[0].matrix)
-    # print ('targetMechanism weights: \n', action_selection.output_states.sendsToProjections[0].matrix)
+    # print ('targetMechanism weights: \n', action_selection.output_ports.sendsToProjections[0].matrix)
 
     reward_values = [10, 10, 10]
 
     # Must initialize reward (won't be used, but needed for declaration of lambda function)
-    action_selection.output_state.value = [0, 0, 1]
+    action_selection.output_port.value = [0, 0, 1]
     # Get reward value for selected action)
-    reward = lambda: [reward_values[int(np.nonzero(action_selection.output_state.value)[0])]]
+    reward = lambda: [reward_values[int(np.nonzero(action_selection.output_port.value)[0])]]
 
     def print_header(system):
         print("\n\n**** TRIAL: ", system.scheduler.clock.simple_time)
@@ -52,8 +52,8 @@ def test_reinforcement():
     def show_weights():
         print('Reward prediction weights: \n', action_selection.input_ports[0].path_afferents[0].get_mod_matrix(s))
         print('\nAction selected:  {}; predicted reward: {}'.format(
-            np.nonzero(action_selection.output_state.value)[0][0],
-            action_selection.output_state.value[np.nonzero(action_selection.output_state.value)[0][0]],
+            np.nonzero(action_selection.output_port.value)[0][0],
+            action_selection.output_port.value[np.nonzero(action_selection.output_port.value)[0][0]],
         ))
 
     input_list = {input_layer: [[1, 1, 1]]}
@@ -124,7 +124,7 @@ def test_reinforcement_fixed_targets():
 
     action_selection = pnl.DDM(input_format=pnl.ARRAY,
                                function=pnl.DriftDiffusionAnalytical(),
-                               output_states=[pnl.SELECTED_INPUT_ARRAY],
+                               output_ports=[pnl.SELECTED_INPUT_ARRAY],
                                name='DDM')
 
     p = Process(pathway=[input_layer, action_selection],

@@ -4,7 +4,7 @@ import psyneulink as pnl
 # Mechanisms
 Input = pnl.TransferMechanism(name='Input')
 reward = pnl.TransferMechanism(
-    output_states=[pnl.RESULT, pnl.OUTPUT_MEAN, pnl.OUTPUT_VARIANCE], name='reward'
+    output_ports=[pnl.RESULT, pnl.OUTPUT_MEAN, pnl.OUTPUT_VARIANCE], name='reward'
 )
 Decision = pnl.DDM(
     function=pnl.DriftDiffusionAnalytical(
@@ -30,7 +30,7 @@ Decision = pnl.DDM(
         starting_point=0,
         t0=0.45,
     ),
-    output_states=[
+    output_ports=[
         pnl.DECISION_VARIABLE,
         pnl.RESPONSE_TIME,
         pnl.PROBABILITY_UPPER_THRESHOLD,
@@ -53,8 +53,8 @@ comp.add_controller(
             function=pnl.LinearCombination(operation=pnl.PRODUCT),
             monitor=[
                 reward,
-                Decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD],
-                (Decision.output_states[pnl.RESPONSE_TIME], -1, 1),
+                Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
+                (Decision.output_ports[pnl.RESPONSE_TIME], -1, 1),
             ],
         ),
         function=pnl.GridSearch,

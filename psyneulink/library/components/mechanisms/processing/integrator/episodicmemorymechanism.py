@@ -33,7 +33,7 @@ Structure
 An EpisodicMemoryMechanism has at least one `InputPorts <InputPort>`, its *CONTENT_INPUT* and,
 optionally, an *ASSOC_INPUT* InputPort (if its *assoc_size* is specified and is not 0) that represent
 an item to store;  a `function <EpisodicMemoryMechanism.function>` that stores and retrieves content-assoc pairs from its
-memory; and at least one `OutputStates <OutputState>`, *CONTENT_OUTPUT*, as well as a 2nd, *CONTENT_OUTPUT* if it has
+memory; and at least one `OutputPorts <OutputPort>`, *CONTENT_OUTPUT*, as well as a 2nd, *CONTENT_OUTPUT* if it has
 an *ASSOC_INPUT* InputPort, that represent a retrieved item. The default function is a `ContentAddressableMemory` that
 implements a simple form of content-addressable memory, but a custom function can be specified, so long as it meets the
 following requirements:
@@ -57,13 +57,13 @@ the following operations:
 
     * retrieves an item from its memory based on the `value <InputPort.value>` of its *CONTENT_INPUT* `InputPort`;
       if no retrieval is made, appropriately shaped zero-valued arrays are assigned to the `value
-      <OutputState.value>` of the *CONTENT_OUTPUT* and, if specified, it *ASSOC_OUTPUT* OutputStates.
+      <OutputPort.value>` of the *CONTENT_OUTPUT* and, if specified, it *ASSOC_OUTPUT* OutputPorts.
     ..
     * stores the `value <InputPort.value>` of its *CONTENT_INPUT* and, if specified, *ASSOC_INPUT* `InputPorts
     <InputPort>` in its memory.
     ..
     * assigns the value of the retrieved item's content in the EpisodicMemoryMechanism's  *CONTENT_OUTPUT*
-    `OutputState`, and the value of the assoc of the retrieved item in the *ASSOC_OUTPUT* OutputState.
+    `OutputPort`, and the value of the assoc of the retrieved item in the *ASSOC_OUTPUT* OutputPort.
 
     .. note::
          The order of storage and retieval is determined by the function.
@@ -72,7 +72,7 @@ the following operations:
          `value <InputPort.value>` of *CONTENT* used to retrieve the item.
 
          If no retrieval is made, appropriately shaped zero-valued arrays are assigned as the `value
-         <OutputState.value>` of the *CONTENT_OUTPUT* and, if specified, *ASSOC_OUTPUT* OutputStates.
+         <OutputPort.value>` of the *CONTENT_OUTPUT* and, if specified, *ASSOC_OUTPUT* OutputPorts.
 
 .. _EpisodicMemoryMechanism_Class_Reference:
 
@@ -89,7 +89,7 @@ from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import ContentAddressableMemory
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.states.inputport import InputPort
-from psyneulink.core.components.states.inputport import OutputState
+from psyneulink.core.components.states.inputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CONTEXT, NAME, OWNER_VALUE, SIZE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
@@ -133,7 +133,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
 
     assoc_size : int : default 0
         specifies length of the assoc stored in the `function <EpisodicMemoryMechanism.function>`\\s memory;
-        if it is 0 (the default) then no *ASSOC_INPUT* InputPort or *ASSOC_OUTPUT* OutputState are created.
+        if it is 0 (the default) then no *ASSOC_INPUT* InputPort or *ASSOC_OUTPUT* OutputPort are created.
 
     function : function : default ContentAddressableMemory
         specifies the function that implements a memory store and methods to store to and retrieve from it.  It
@@ -200,16 +200,16 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         default_variable = [np.zeros(content_size)]
 
         input_ports = [{NAME:CONTENT_INPUT, SIZE:content_size}]
-        output_states = [{NAME: CONTENT_OUTPUT, VARIABLE: (OWNER_VALUE, 0)}]
+        output_ports = [{NAME: CONTENT_OUTPUT, VARIABLE: (OWNER_VALUE, 0)}]
 
         if assoc_size:
             input_ports.append({NAME:ASSOC_INPUT, SIZE:assoc_size})
-            output_states.append({NAME: ASSOC_OUTPUT, VARIABLE: (OWNER_VALUE, 1)})
+            output_ports.append({NAME: ASSOC_OUTPUT, VARIABLE: (OWNER_VALUE, 1)})
             default_variable.append(np.zeros(assoc_size))
 
         params = self._assign_args_to_param_dicts(function=function,
                                                   input_ports=input_ports,
-                                                  output_states=output_states,
+                                                  output_ports=output_ports,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -232,18 +232,18 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
             return value
 
 
-    def _instantiate_output_states(self, context=None):
-        if len(self.input_ports) != len(self.output_states):
+    def _instantiate_output_ports(self, context=None):
+        if len(self.input_ports) != len(self.output_ports):
             assert False, \
                 f'PROGRAM ERROR: Number of {InputPort.__class__.__name__}s and ' \
-                f'{OutputState.__class__.__name__}s do not match in {self.name}'
-        for i, input_port_spec, output_state_spec in zip(range(len(self.input_ports)-1),
+                f'{OutputPort.__class__.__name__}s do not match in {self.name}'
+        for i, input_port_spec, output_port_spec in zip(range(len(self.input_ports)-1),
                                                           self.input_ports,
-                                                          self.output_states):
+                                                          self.output_ports):
             if input_port_spec.value is []:
-                del self.output_states[i]
+                del self.output_ports[i]
 
-        return super()._instantiate_output_states(context=context)
+        return super()._instantiate_output_ports(context=context)
 
     def _parse_function_variable(self, variable, context=None):
 

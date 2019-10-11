@@ -24,8 +24,8 @@ class TestReinitialize:
         #  0.0 + 1.0 * 1.0 * 1.0 + 0.0
         D.execute(1.0)
         assert np.allclose(np.asfarray(D.value),  [[1.0], [1.0]])
-        assert np.allclose(D.output_states[0].value[0][0], 1.0)
-        assert np.allclose(D.output_states[1].value[0][0], 1.0)
+        assert np.allclose(D.output_ports[0].value[0][0], 1.0)
+        assert np.allclose(D.output_ports[1].value[0][0], 1.0)
 
         # reinitialize function
         D.function.reinitialize(2.0, 0.1)
@@ -33,8 +33,8 @@ class TestReinitialize:
         assert np.allclose(D.function.previous_value, 2.0)
         assert np.allclose(D.function.previous_time, 0.1)
         assert np.allclose(np.asfarray(D.value),  [[1.0], [1.0]])
-        assert np.allclose(D.output_states[0].value[0][0], 1.0)
-        assert np.allclose(D.output_states[1].value[0][0], 1.0)
+        assert np.allclose(D.output_ports[0].value[0][0], 1.0)
+        assert np.allclose(D.output_ports[1].value[0][0], 1.0)
 
         # reinitialize function without value spec
         D.function.reinitialize()
@@ -42,8 +42,8 @@ class TestReinitialize:
         assert np.allclose(D.function.previous_value, 0.0)
         assert np.allclose(D.function.previous_time, 0.0)
         assert np.allclose(np.asfarray(D.value), [[1.0], [1.0]])
-        assert np.allclose(D.output_states[0].value[0][0], 1.0)
-        assert np.allclose(D.output_states[1].value[0][0], 1.0)
+        assert np.allclose(D.output_ports[0].value[0][0], 1.0)
+        assert np.allclose(D.output_ports[1].value[0][0], 1.0)
 
         # reinitialize mechanism
         D.reinitialize(2.0, 0.1)
@@ -51,22 +51,22 @@ class TestReinitialize:
         assert np.allclose(D.function.previous_value, 2.0)
         assert np.allclose(D.function.previous_time, 0.1)
         assert np.allclose(np.asfarray(D.value), [[2.0], [0.1]])
-        assert np.allclose(D.output_states[0].value, 2.0)
-        assert np.allclose(D.output_states[1].value, 0.1)
+        assert np.allclose(D.output_ports[0].value, 2.0)
+        assert np.allclose(D.output_ports[1].value, 0.1)
 
         D.execute(1.0)
         #  2.0 + 1.0 = 3.0 ; 0.1 + 1.0 = 1.1
         assert np.allclose(np.asfarray(D.value), [[[3.0]], [[1.1]]])
-        assert np.allclose(D.output_states[0].value[0][0], 3.0)
-        assert np.allclose(D.output_states[1].value[0][0], 1.1)
+        assert np.allclose(D.output_ports[0].value[0][0], 3.0)
+        assert np.allclose(D.output_ports[1].value[0][0], 1.1)
 
         # reinitialize mechanism without value spec
         D.reinitialize()
         assert np.allclose(D.function.value[0], 0.0)
         assert np.allclose(D.function.previous_value, 0.0)
         assert np.allclose(D.function.previous_time, 0.0)
-        assert np.allclose(D.output_states[0].value[0], 0.0)
-        assert np.allclose(D.output_states[1].value[0], 0.0)
+        assert np.allclose(D.output_ports[0].value[0], 0.0)
+        assert np.allclose(D.output_ports[1].value[0], 0.0)
 
         # reinitialize only decision variable
         D.function.initializer = 1.0
@@ -75,8 +75,8 @@ class TestReinitialize:
         assert np.allclose(D.function.value[0], 1.0)
         assert np.allclose(D.function.previous_value, 1.0)
         assert np.allclose(D.function.previous_time, 0.0)
-        assert np.allclose(D.output_states[0].value[0], 1.0)
-        assert np.allclose(D.output_states[1].value[0], 0.0)
+        assert np.allclose(D.output_ports[0].value[0], 1.0)
+        assert np.allclose(D.output_ports[1].value[0], 0.0)
 
 
 class TestThreshold:
@@ -177,14 +177,14 @@ class TestThreshold:
     #
     #     sched = Scheduler(system=S)
 
-class TestOutputStates:
+class TestOutputPorts:
 
     def test_selected_input_array(self):
         action_selection = DDM(
             input_format=ARRAY,
             function=DriftDiffusionAnalytical(
             ),
-            output_states=[SELECTED_INPUT_ARRAY],
+            output_ports=[SELECTED_INPUT_ARRAY],
             name='DDM'
         )
         action_selection.execute([1.0])

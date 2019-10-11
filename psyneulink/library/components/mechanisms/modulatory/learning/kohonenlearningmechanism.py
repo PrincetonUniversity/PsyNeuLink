@@ -40,7 +40,7 @@ An KohonenLearningMechanism is identical to a `LearningMechanism` in all respect
     `learned_projection <KohonenMechanism.learned_projection>`. It does not have a *LEARNING_SIGNAL* `InputPort`
     (since it implements a form of unsupervised learning).
 
-  * it has a single *LEARNING_SIGNAL* `OutputState` that sends a `LearningProjection` to the `matrix
+  * it has a single *LEARNING_SIGNAL* `OutputPort` that sends a `LearningProjection` to the `matrix
     <MappingProjection.matrix>` parameter of the KohonenMechanism's `learned_projection
     <KohonenMechanism.learned_projection>`.
 
@@ -53,7 +53,7 @@ An KohonenLearningMechanism is identical to a `LearningMechanism` in all respect
     a list containing two 1d arrays (the `value <InputPort.value>` of its *ACTIVATION_INPUT* and *ACTIVATION_OUTPUT*
     InputPorts) and a 2d array (the current weight matrix of its `matrix <KohonenLearningMechanism.matrix>`
     attribute), and it returns a `learning_signal <LearningMechanism.learning_signal>`
-    (a weight change matrix assigned to the Mechanism's *LEARNING_SIGNAL* OutputState), but not an `error_signal
+    (a weight change matrix assigned to the Mechanism's *LEARNING_SIGNAL* OutputPort), but not an `error_signal
     <LearningMechanism.error_signal>`.
 
   * its `learning_rate <KohonenLearningMechanism.learning_rate>` can be specified as a 1d or 2d array (or
@@ -96,14 +96,14 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     ADDITIVE, CONTROL_PROJECTIONS, INPUT_PORTS, KOHONEN_LEARNING_MECHANISM, \
-    LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE
+    LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_PORTS, OWNER_VALUE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, parameter_spec
 
 __all__ = [
-    'KohonenLearningMechanism', 'KohonenLearningMechanismError', 'input_port_names', 'output_state_names',
+    'KohonenLearningMechanism', 'KohonenLearningMechanismError', 'input_port_names', 'output_port_names',
 ]
 
 # Parameters:
@@ -112,7 +112,7 @@ parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
 projection_keywords.update({LEARNING_PROJECTION, LEARNING})
 
 input_port_names = [ACTIVATION_INPUT, ACTIVATION_OUTPUT]
-output_state_names = [LEARNING_SIGNAL]
+output_port_names = [LEARNING_SIGNAL]
 
 # DefaultTrainingMechanism = ObjectiveMechanism
 
@@ -198,7 +198,7 @@ class KohonenLearningMechanism(LearningMechanism):
     activity_source : KohonenMechanism
         the `KohonenMechanism` with which the KohonenLearningMechanism is associated.
 
-    input_ports : ContentAddressableList[OutputState]
+    input_ports : ContentAddressableList[OutputPort]
         has a two items, that contains the KohonenLearningMechanism's *ACTIVATION_INPUT*  and *ACTIVATION_OUTPUT*
         `InputPorts`.
 
@@ -246,22 +246,22 @@ class KohonenLearningMechanism(LearningMechanism):
         `LearningMechanism`, it can be assigned additional LearningSignals and/or LearningProjections to train
         additional ones;  in such cases, the `value <LearningSignal>` for all of the LearningSignals is the
         the same:  the KohonenLearningMechanism's `learning_signal
-        <KohonenLearningMechanism.learning_signal>` attribute.  Since LearningSignals are `OutputStates
-        <OutputState>`, they are also listed in the KohonenLearningMechanism's `output_states
-        <KohonenLearningMechanism.output_states>` attribute.
+        <KohonenLearningMechanism.learning_signal>` attribute.  Since LearningSignals are `OutputPorts
+        <OutputPort>`, they are also listed in the KohonenLearningMechanism's `output_ports
+        <KohonenLearningMechanism.output_ports>` attribute.
 
     learning_projections : List[LearningProjection]
         list of all of the LearningProjections <LearningProjection>` from the KohonenLearningMechanism, listed
         in the order of the `LearningSignals <LearningSignal>` to which they belong (that is, in the order they are
         listed in the `learning_signals <KohonenLearningMechanism.learning_signals>` attribute).
 
-    output_states : ContentAddressableList[OutputState]
-        list of the KohonenLearningMechanism's `OutputStates <OutputState>`, beginning with its
+    output_ports : ContentAddressableList[OutputPort]
+        list of the KohonenLearningMechanism's `OutputPorts <OutputPort>`, beginning with its
         `learning_signals <KohonenLearningMechanism.learning_signals>`, and followed by any additional
-        (user-specified) `OutputStates <OutputState>`.
+        (user-specified) `OutputPorts <OutputPort>`.
 
     output_values : 2d np.array
-        the first item is the `value <OutputState.value>` of the LearningMechanism's `learning_signal
+        the first item is the `value <OutputPort.value>` of the LearningMechanism's `learning_signal
         <KohonenLearningMechanism.learning_signal>`.
 
     modulation : ModulationParam
@@ -343,7 +343,7 @@ class KohonenLearningMechanism(LearningMechanism):
     paramClassDefaults.update({
         CONTROL_PROJECTIONS: None,
         INPUT_PORTS:input_port_names,
-        OUTPUT_STATES:[{NAME:LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
+        OUTPUT_PORTS:[{NAME:LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
                         VARIABLE: (OWNER_VALUE,0)}
                        ]})
 
@@ -434,14 +434,14 @@ class KohonenLearningMechanism(LearningMechanism):
 
         return [learning_signal]
 
-    def _update_output_states(self, context=None, runtime_params=None):
+    def _update_output_ports(self, context=None, runtime_params=None):
         """Update the weights for the MappingProjection for which this is the KohonenLearningMechanism
 
-        Must do this here, so it occurs after LearningMechanism's OutputState has been updated.
+        Must do this here, so it occurs after LearningMechanism's OutputPort has been updated.
         This insures that weights are updated within the same trial in which they have been learned
         """
 
-        super()._update_output_states(context, runtime_params)
+        super()._update_output_ports(context, runtime_params)
 
         if context.composition is not None:
             context.add_flag(ContextFlags.LEARNING)

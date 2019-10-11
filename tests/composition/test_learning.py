@@ -40,7 +40,7 @@ class TestReinforcement:
             input_layer.log.set_log_conditions(items=pnl.VALUE)
             action_selection = pnl.DDM(input_format=pnl.ARRAY,
                                        function=pnl.DriftDiffusionAnalytical(),
-                                       output_states=[pnl.SELECTED_INPUT_ARRAY],
+                                       output_ports=[pnl.SELECTED_INPUT_ARRAY],
                                        name='DDM')
             action_selection.log.set_log_conditions(items=pnl.SELECTED_INPUT_ARRAY)
 
@@ -144,7 +144,7 @@ class TestReinforcement:
             input_layer.log.set_log_conditions(items=pnl.VALUE)
             action_selection = pnl.DDM(input_format=pnl.ARRAY,
                                        function=pnl.DriftDiffusionAnalytical(),
-                                       output_states=[pnl.SELECTED_INPUT_ARRAY],
+                                       output_ports=[pnl.SELECTED_INPUT_ARRAY],
                                        name='DDM')
             action_selection.log.set_log_conditions(items=pnl.SELECTED_INPUT_ARRAY)
 
@@ -958,12 +958,12 @@ class TestBackProp:
         # Note:  numbers based on test of System in tests/learning/test_stroop
 
         composition_and_expected_outputs = [
-            (color_comp.output_states[0].parameters.value.get(comp), np.array([1., 1.])),
-            (word_comp.output_states[0].parameters.value.get(comp), np.array([-2., -2.])),
-            (hidden_comp.output_states[0].parameters.value.get(comp), np.array([0.13227553, 0.01990677])),
-            (response_comp.output_states[0].parameters.value.get(comp), np.array([0.51044657, 0.5483048])),
-            (comp.nodes['Comparator'].output_states[0].parameters.value.get(comp), np.array([0.48955343, 0.4516952])),
-            (comp.nodes['Comparator'].output_states[pnl.MSE].parameters.value.get(comp), np.array(
+            (color_comp.output_ports[0].parameters.value.get(comp), np.array([1., 1.])),
+            (word_comp.output_ports[0].parameters.value.get(comp), np.array([-2., -2.])),
+            (hidden_comp.output_ports[0].parameters.value.get(comp), np.array([0.13227553, 0.01990677])),
+            (response_comp.output_ports[0].parameters.value.get(comp), np.array([0.51044657, 0.5483048])),
+            (comp.nodes['Comparator'].output_ports[0].parameters.value.get(comp), np.array([0.48955343, 0.4516952])),
+            (comp.nodes['Comparator'].output_ports[pnl.MSE].parameters.value.get(comp), np.array(
                     0.22184555903789838)),
             (comp.projections['MappingProjection from Color[RESULTS] to Hidden[InputPort-0]'].get_mod_matrix(comp),
              np.array([

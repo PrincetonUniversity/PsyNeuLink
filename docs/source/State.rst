@@ -10,7 +10,7 @@ States
    *Subclasses:*
    InputPort
    ParameterState
-   OutputState
+   OutputPort
    ModulatorySignals <ModulatorySignal>
 
 .. automodule:: psyneulink.core.components.states.state

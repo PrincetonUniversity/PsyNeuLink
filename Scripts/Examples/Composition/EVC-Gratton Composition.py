@@ -20,7 +20,7 @@ Decision = DDM(name='Decision',
                                                  noise=(0.5),
                                                  starting_point=(0),
                                                  t0=0.15),
-               output_states=[DECISION_VARIABLE,
+               output_ports=[DECISION_VARIABLE,
                               RESPONSE_TIME,
                               PROBABILITY_UPPER_THRESHOLD]
                )
@@ -60,7 +60,7 @@ flanker_rep_control_signal = ControlSignal(modulates=[(SLOPE, Flanker_Rep)],
 
 objective_mech = ObjectiveMechanism(function=LinearCombination(operation=PRODUCT),
                                     monitor=[reward,
-                                             (Decision.output_states[
+                                             (Decision.output_ports[
                                                   PROBABILITY_UPPER_THRESHOLD], 1, -1)])
 # Model Based OCM (formerly controller)
 evc_gratton.add_controller(controller=OptimizationControlMechanism(agent_rep=evc_gratton,
@@ -174,9 +174,9 @@ expected_sim_results_array = [
 
 for trial in range(len(evc_gratton.results)):
     assert np.allclose(expected_results_array[trial],
-                       # Note: Skip decision variable OutputState
+                       # Note: Skip decision variable OutputPort
                        evc_gratton.results[trial][1:])
 for simulation in range(len(evc_gratton.simulation_results)):
     assert np.allclose(expected_sim_results_array[simulation],
-                       # Note: Skip decision variable OutputState
+                       # Note: Skip decision variable OutputPort
                        evc_gratton.simulation_results[simulation][1:])

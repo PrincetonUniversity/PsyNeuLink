@@ -71,21 +71,21 @@ value, the other one set to zero), and assigned a `Linear` function with **slope
 **COLOR HIDDEN LAYER**: a `RecurrentTransferMechanism` with **size**\ =2 (one element for each of the two colors, and
 assigned a `Logistic` function with **gain**\ =4.0 and **bias**\ =1.0. The **integrator_mode**\ =\ `True`
 and **smoothing_factor**\ =0.03. Both units receive mutually inhibitory weights (**hetero**\ =-2). A python function that
-sets the output of the `Logistic` function to 0 when it receives 0 as an input is specified on the `output_states`. It
+sets the output of the `Logistic` function to 0 when it receives 0 as an input is specified on the `output_ports`. It
 simply subtracts 0.018 from the output of a logistic function and if this leads to a value below 0,
 outputs a 0 as a minimum value.
 
 **WORD HIDDEN LAYER**: a `RecurrentTransferMechanism` with **size**\ =2 (one element for each of the two words, and
 assigned a `Logistic` function with **gain**\ =4.0 and **bias**\ =1.0. The **integrator_mode**\ =\ `True`
 and **smoothing_factor**\ =0.03. Both units receive mutually inhibitory weights (**hetero**\ =-2). A python function that
-sets the output of the `Logistic` function to 0 when it receives 0 as an input is specified on the `output_states`. It
+sets the output of the `Logistic` function to 0 when it receives 0 as an input is specified on the `output_ports`. It
 simply subtracts 0.018 from the output of a logistic function and if this leads to a value below 0,
 outputs a 0 as a minimum value.
 
 **TASK DEMAND LAYER**: a `RecurrentTransferMechanism` with **size**\ =2 (one element for each of the two tasks, and
 assigned a `Logistic` function with **gain**\ =4.0 and **bias**\ =1.0. The **integrator_mode**\ =\ `True`
 and **smoothing_factor**\ =0.03. Both units receive mutually inhibitory weights (**hetero**\ =-2). A python function that
-sets the output of the `Logistic` function to 0 when it receives 0 as an input is specified on the `output_states`. It
+sets the output of the `Logistic` function to 0 when it receives 0 as an input is specified on the `output_ports`. It
 simply subtracts 0.018 from the output of a logistic function and if this leads to a value below 0,
 outputs a 0 as a minimum value. A second output state is specified that computes the conflict between the two task
 units.
@@ -93,7 +93,7 @@ units.
 **WORD HIDDEN LAYER**: a `RecurrentTransferMechanism` with **size**\ =2 (one element for each of the two responses, and
 assigned a `Logistic` function with **gain**\ =4.0 and **bias**\ =1.0. The **integrator_mode**\ =\ `True`
 and **smoothing_factor**\ =0.03. Both units receive mutually inhibitory weights (**hetero**\ =-2). A python function that
-sets the output of the `Logistic` function to 0 when it receives 0 as an input is specified on the `output_states`. It
+sets the output of the `Logistic` function to 0 when it receives 0 as an input is specified on the `output_ports`. It
 simply subtracts 0.018 from the output of a logistic function and if this leads to a value below 0,
 outputs a 0 as a minimum value.
 

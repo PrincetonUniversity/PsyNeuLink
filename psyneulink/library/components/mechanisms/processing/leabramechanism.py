@@ -78,7 +78,7 @@ Execution
 ---------
 
 The LeabraMechanism passes input and training data to the leabra Network it wraps, and the LeabraMechanism passes its
-leabra Network's output (after one "trial", default 200 cycles in PsyNeuLink) to its primary `OutputState`. For details
+leabra Network's output (after one "trial", default 200 cycles in PsyNeuLink) to its primary `OutputPort`. For details
 on Leabra, see `O'Reilly and Munakata, 2016 <https://grey.colorado.edu/emergent/index.php/Leabra>`_ and the
 `leabra Python package on Github <https://github.com/benureau/leabra>`_.
 
@@ -102,9 +102,9 @@ except ImportError:
 from psyneulink.core.components.functions.function import Function_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutputStates, standard_output_states
+from psyneulink.core.components.states.outputport import PRIMARY, StandardOutputPorts, standard_output_ports
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import FUNCTION, INPUT_PORTS, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, NETWORK, OUTPUT_STATES, PREFERENCE_SET_NAME
+from psyneulink.core.globals.keywords import FUNCTION, INPUT_PORTS, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, NETWORK, OUTPUT_PORTS, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -112,15 +112,15 @@ from psyneulink.core.scheduling.time import TimeScale
 
 __all__ = [
     'build_leabra_network', 'convert_to_2d_input', 'input_port_names', 'LeabraError', 'LeabraFunction', 'LeabraMechanism',
-    'LEARNING_TARGET', 'MAIN_INPUT', 'MAIN_OUTPUT', 'output_state_name', 'run_leabra_network', 'train_leabra_network',
+    'LEARNING_TARGET', 'MAIN_INPUT', 'MAIN_OUTPUT', 'output_port_name', 'run_leabra_network', 'train_leabra_network',
 ]
 
-# Used to name input_ports and output_states:
+# Used to name input_ports and output_ports:
 MAIN_INPUT = 'main_input'
 LEARNING_TARGET = 'learning_target'
 MAIN_OUTPUT = 'main_output'
 input_port_names = [MAIN_INPUT, LEARNING_TARGET]
-output_state_name = [MAIN_OUTPUT]
+output_port_name = [MAIN_OUTPUT]
 
 
 class LeabraError(Exception):
@@ -440,20 +440,20 @@ class LeabraMechanism(ProcessingMechanism_Base):
         the leabra.Network object which is executed by the LeabraMechanism. For more info about leabra Networks,
         please see the `leabra package <https://github.com/benureau/leabra>` on Github.
 
-    output_states : *ContentAddressableList[OutputState]* : default [`RESULT <TRANSFER_MECHANISM_RESULT>`]
-        list of Mechanism's `OutputStates <OutputStates>`.  By default there is a single OutputState,
+    output_ports : *ContentAddressableList[OutputPort]* : default [`RESULT <TRANSFER_MECHANISM_RESULT>`]
+        list of Mechanism's `OutputPorts <OutputPorts>`.  By default there is a single OutputPort,
         `RESULT <TRANSFER_MECHANISM_RESULT>`, that contains the result of a call to the Mechanism's
-        `function <LeabraMechanism.function>`;  additional `standard <TransferMechanism_Standard_OutputStates>`
-        and/or custom OutputStates may be included, based on the specifications made in the **output_states** argument
+        `function <LeabraMechanism.function>`;  additional `standard <TransferMechanism_Standard_OutputPorts>`
+        and/or custom OutputPorts may be included, based on the specifications made in the **output_ports** argument
         of the Mechanism's constructor.
 
     output_values : List[array(float64)]
-        each item is the `value <OutputState.value>` of the corresponding OutputState in `output_states
-        <LeabraMechanism.output_states>`.  The default is a single item containing the result of the
+        each item is the `value <OutputPort.value>` of the corresponding OutputPort in `output_ports
+        <LeabraMechanism.output_ports>`.  The default is a single item containing the result of the
         TransferMechanism's `function <LeabraMechanism.function>`;  additional
         ones may be included, based on the specifications made in the
-        **output_states** argument of the Mechanism's constructor (see `TransferMechanism Standard OutputStates
-        <TransferMechanism_Standard_OutputStates>`).
+        **output_ports** argument of the Mechanism's constructor (see `TransferMechanism Standard OutputPorts
+        <TransferMechanism_Standard_OutputPorts>`).
 
     name : str : default LeabraMechanism-<index>
         the name of the Mechanism.
@@ -487,9 +487,9 @@ class LeabraMechanism(ProcessingMechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({FUNCTION: LeabraFunction,
                                INPUT_PORTS: input_port_names,
-                               OUTPUT_STATES: output_state_name})
+                               OUTPUT_PORTS: output_port_name})
 
-    standard_output_states = standard_output_states.copy()
+    standard_output_ports = standard_output_ports.copy()
 
     class Parameters(ProcessingMechanism_Base.Parameters):
         """
@@ -581,9 +581,9 @@ class LeabraMechanism(ProcessingMechanism_Base):
 
         function = LeabraFunction(network=leabra_network)
 
-        if not isinstance(self.standard_output_states, StandardOutputStates):
-            self.standard_output_states = StandardOutputStates(self,
-                                                               self.standard_output_states,
+        if not isinstance(self.standard_output_ports, StandardOutputPorts):
+            self.standard_output_ports = StandardOutputPorts(self,
+                                                               self.standard_output_ports,
                                                                indices=PRIMARY)
 
         params = self._assign_args_to_param_dicts(function=function,

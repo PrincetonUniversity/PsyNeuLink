@@ -42,7 +42,7 @@ def test_basic(variable, func, params, expected, benchmark):
     m = EpisodicMemoryMechanism(content_size=len(variable[0]), assoc_size=len(variable[1]), function=f)
     m.execute(variable)
     m.execute(variable)
-    res = [s.value for s in m.output_states]
+    res = [s.value for s in m.output_ports]
     assert np.allclose(res[0], expected[0])
     assert np.allclose(res[1], expected[1])
     benchmark(m.execute, variable)

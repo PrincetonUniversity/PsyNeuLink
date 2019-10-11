@@ -158,7 +158,7 @@ The four types of Components in PsyNeuLink, Mechanisms, Projections, States and 
        There is currently one on type of PathwayProjection:
 
        + `MappingProjection`
-         Takes the value of the `OutputState` of one Mechanism, and converts it as necessary to provide it as
+         Takes the value of the `OutputPort` of one Mechanism, and converts it as necessary to provide it as
          the variable for the `InputPort` of another Mechanism.
 
    + `ModulatoryProjection`
@@ -197,10 +197,10 @@ The four types of Components in PsyNeuLink, Mechanisms, Projections, States and 
        parameter(s) of the State's `function <State_Base.function>, and thereby the value of the parameters used by the
        Mechanism's `function <Mechanism_Base.function>`.
 
-   + `OutputState`
+   + `OutputPort`
        Represents an output of the Mechanism.
        Takes an item of the Mechanism's `value <Mechanism_Base.value>` as the `variable <State_Base.variable>` for the
-       State's `function <State_Base.function>`, assigns the result as the State's `value <OutputState.value>`, and
+       State's `function <State_Base.function>`, assigns the result as the State's `value <OutputPort.value>`, and
        provides that to one or more efferent PathwayProjections.  It can also receive one or more
        `GatingProjections <GatingProjection>`, that modify parameter(s) of the State's function, and thereby the
        State's `value <State_Base.value>`.

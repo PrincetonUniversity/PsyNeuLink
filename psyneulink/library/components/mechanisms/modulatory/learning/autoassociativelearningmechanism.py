@@ -33,14 +33,14 @@ Structure
 
 An AutoAssociativeLearningMechanism is identical to a `LearningMechanism` in all respects except the following:
 
-  * it has only a single *ACTIVATION_INPUT* `InputPort`, that receives a `MappingProjection` from an `OutputState` of
+  * it has only a single *ACTIVATION_INPUT* `InputPort`, that receives a `MappingProjection` from an `OutputPort` of
     the `RecurrentTransferMechanism` with which it is associated (identified by the `activity_source
     <AutoAssociativeLearningMechanism.activity_source>`);
 
-  * it has a single *LEARNING_SIGNAL* `OutputState` that sends a `LearningProjection` to the `matrix
+  * it has a single *LEARNING_SIGNAL* `OutputPort` that sends a `LearningProjection` to the `matrix
     <AutoAssociativeProjection.matrix>` parameter of an 'AutoAssociativeProjection` (typically, the
     `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` of a RecurrentTransferMechanism),
-    but not an *ERROR_SIGNAL* OutputState.
+    but not an *ERROR_SIGNAL* OutputPort.
 
   * it has no `input_source <LearningMechanism.input_source>`, `output_source <LearningMechanism.output_source>`,
     or `error_source <LearningMechanism.error_source>` attributes;  instead, it has a single `activity_source
@@ -50,7 +50,7 @@ An AutoAssociativeLearningMechanism is identical to a `LearningMechanism` in all
   * its `function <AutoAssociativeLearningMechanism.function>` takes as its `variable <Function_Base.variable>`
     a list or 1d np.array of numeric entries, corresponding in length to the AutoAssociativeLearningMechanism's
     *ACTIVATION_INPUT* InputPort; and it returns a `learning_signal <LearningMechanism.learning_signal>`
-    (a weight change matrix assigned to the Mechanism's *LEARNING_SIGNAL* OutputState), but not necessarily an
+    (a weight change matrix assigned to the Mechanism's *LEARNING_SIGNAL* OutputPort), but not necessarily an
     `error_signal <LearningMechanism.error_signal>`.
 
   * its `learning_rate <AutoAssociativeLearningMechanism.learning_rate>` can be specified as a 1d or 2d array (or
@@ -93,14 +93,14 @@ from psyneulink.core.components.projections.projection import Projection_Base, p
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     ADDITIVE, AUTOASSOCIATIVE_LEARNING_MECHANISM, CONTROL_PROJECTIONS, INPUT_PORTS, \
-    LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE
+    LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_PORTS, OWNER_VALUE, VARIABLE
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, parameter_spec
 
 __all__ = [
     'AutoAssociativeLearningMechanism', 'AutoAssociativeLearningMechanismError', 'DefaultTrainingMechanism',
-    'input_port_names', 'output_state_names',
+    'input_port_names', 'output_port_names',
 ]
 
 # Parameters:
@@ -109,7 +109,7 @@ parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
 projection_keywords.update({LEARNING_PROJECTION, LEARNING})
 
 input_port_names = [ACTIVATION_INPUT]
-output_state_names = [LEARNING_SIGNAL]
+output_port_names = [LEARNING_SIGNAL]
 
 DefaultTrainingMechanism = ObjectiveMechanism
 
@@ -190,13 +190,13 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     variable : 2d np.array
         has a single item, that serves as the template for the input required by the AutoAssociativeLearningMechanism's
         `function <AutoAssociativeLearningMechanism.function>`, corresponding to the `value
-        <OutputState.value>` of the `activity_source <AutoAssociativeLearningMechanism.activity_source>`.
+        <OutputPort.value>` of the `activity_source <AutoAssociativeLearningMechanism.activity_source>`.
 
-    activity_source : OutputState
-        the `OutputState` that is the `sender <AutoAssociativeProjection.sender>` of the `AutoAssociativeProjection`
+    activity_source : OutputPort
+        the `OutputPort` that is the `sender <AutoAssociativeProjection.sender>` of the `AutoAssociativeProjection`
         that the Mechanism trains.
 
-    input_ports : ContentAddressableList[OutputState]
+    input_ports : ContentAddressableList[OutputPort]
         has a single item, that contains the AutoAssociativeLearningMechanism's single *ACTIVATION_INPUT* `InputPort`.
 
     primary_learned_projection : AutoAssociativeProjection
@@ -249,24 +249,24 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         additional ones;  in such cases, the `value <LearningSignal>` for all of the LearningSignals is the
         the same:  the AutoAssociativeLearningMechanism's `learning_signal
         <AutoAssociativeLearningMechanism.learning_signal>` attribute, based on its `activity_source
-        <AutoAssociativeLearningMechanism.activity_source>`.  Since LearningSignals are `OutputStates
-        <OutputState>`, they are also listed in the AutoAssociativeLearningMechanism's `output_states
-        <AutoAssociativeLearningMechanism.output_states>` attribute.
+        <AutoAssociativeLearningMechanism.activity_source>`.  Since LearningSignals are `OutputPorts
+        <OutputPort>`, they are also listed in the AutoAssociativeLearningMechanism's `output_ports
+        <AutoAssociativeLearningMechanism.output_ports>` attribute.
 
     learning_projections : List[LearningProjection]
         list of all of the LearningProjections <LearningProjection>` from the AutoAssociativeLearningMechanism, listed
         in the order of the `LearningSignals <LearningSignal>` to which they belong (that is, in the order they are
         listed in the `learning_signals <AutoAssociativeLearningMechanism.learning_signals>` attribute).
 
-    output_states : ContentAddressableList[OutputState]
-        list of the AutoAssociativeLearningMechanism's `OutputStates <OutputState>`, beginning with its
+    output_ports : ContentAddressableList[OutputPort]
+        list of the AutoAssociativeLearningMechanism's `OutputPorts <OutputPort>`, beginning with its
         `learning_signals <AutoAssociativeLearningMechanism.learning_signals>`, and followed by any additional
-        (user-specified) `OutputStates <OutputState>`.
+        (user-specified) `OutputPorts <OutputPort>`.
 
     output_values : 2d np.array
-        the first item is the `value <OutputState.value>` of the LearningMechanism's `learning_signal
-        <AutoAssociativeLearningMechanism.learning_signal>`, followed by the `value <OutputState.value>`\\s
-        of any additional (user-specified) OutputStates.
+        the first item is the `value <OutputPort.value>` of the LearningMechanism's `learning_signal
+        <AutoAssociativeLearningMechanism.learning_signal>`, followed by the `value <OutputPort.value>`\\s
+        of any additional (user-specified) OutputPorts.
 
     modulation : ModulationParam
         the default form of modulation used by the AutoAssociativeLearningMechanism's `LearningSignal(s)
@@ -317,7 +317,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     paramClassDefaults.update({
         CONTROL_PROJECTIONS: None,
         INPUT_PORTS:input_port_names,
-        OUTPUT_STATES:[{NAME:LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
+        OUTPUT_PORTS:[{NAME:LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
                         VARIABLE: (OWNER_VALUE,0)}
                        ]})
 
@@ -429,14 +429,14 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
         return value
 
-    def _update_output_states(self, context=None, runtime_params=None):
+    def _update_output_ports(self, context=None, runtime_params=None):
         """Update the weights for the AutoAssociativeProjection for which this is the AutoAssociativeLearningMechanism
 
-        Must do this here, so it occurs after LearningMechanism's OutputState has been updated.
+        Must do this here, so it occurs after LearningMechanism's OutputPort has been updated.
         This insures that weights are updated within the same trial in which they have been learned
         """
 
-        super()._update_output_states(context, runtime_params)
+        super()._update_output_ports(context, runtime_params)
 
         from psyneulink.core.components.process import Process
         if self.parameters.learning_enabled._get(context) and context.composition and not isinstance(context.composition, Process):

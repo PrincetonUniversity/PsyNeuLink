@@ -181,7 +181,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.components.projections.projection import Projection_Base, projection_keywords
 from psyneulink.core.components.shellclasses import ShellClass
 from psyneulink.core.components.states.modulatorysignals.learningsignal import LearningSignal
-from psyneulink.core.components.states.outputstate import OutputState
+from psyneulink.core.components.states.outputport import OutputPort
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.keywords import \
@@ -244,7 +244,7 @@ class LearningProjection(ModulatoryProjection_Base):
     COMMENT:
         Description:
             The LearningProjection class is a componentType in the Projection category of Function.
-            It implements a Projection from the LEARNING_SIGNAL outputState of a LearningMechanism to the MATRIX
+            It implements a Projection from the LEARNING_SIGNAL outputPort of a LearningMechanism to the MATRIX
             parameterState of a MappingProjection that modifies its matrix parameter.
             It's function takes the output of a LearningMechanism (its learning_signal attribute), and provides this
             to the parameterState to which it projects, possibly scaled by the LearningProjection's learning_rate.
@@ -550,7 +550,7 @@ class LearningProjection(ModulatoryProjection_Base):
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate sender and receiver
 
-        Insure `sender <LearningProjection>` is a LearningMechanism or the OutputState of one.
+        Insure `sender <LearningProjection>` is a LearningMechanism or the OutputPort of one.
         Insure `receiver <LearningProjection>` is a MappingProjection or the matrix ParameterState of one.
         """
 
@@ -567,14 +567,14 @@ class LearningProjection(ModulatoryProjection_Base):
                                                   "which is not currently supported".format(sender.name))
                 sender = self.sender = sender.learning_signals[0]
 
-            if any(s in {OutputState, LearningSignal, LearningMechanism} for s in {sender, type(sender)}):
-                # If it is the outputState of a LearningMechanism, check that it is a list or 1D np.array
-                if isinstance(sender, OutputState):
+            if any(s in {OutputPort, LearningSignal, LearningMechanism} for s in {sender, type(sender)}):
+                # If it is the outputPort of a LearningMechanism, check that it is a list or 1D np.array
+                if isinstance(sender, OutputPort):
                     if not isinstance(sender.value, (list, np.ndarray)):
-                        raise LearningProjectionError("Sender for \'{}\' (OutputState of LearningMechanism \'{}\') "
+                        raise LearningProjectionError("Sender for \'{}\' (OutputPort of LearningMechanism \'{}\') "
                                                       "must be a list or 1D np.array".format(self.name, sender.name))
                     if not np.array(sender.value).ndim >= 1:
-                        raise LearningProjectionError("OutputState of \'{}\' (LearningMechanism for \'{}\') must be "
+                        raise LearningProjectionError("OutputPort of \'{}\' (LearningMechanism for \'{}\') must be "
                                                       "an ndarray with dim >= 1".format(sender.owner.name, self.name))
                 # If specification is a LearningMechanism class, pass (it will be instantiated in _instantiate_sender)
                 elif inspect.isclass(sender) and issubclass(sender,  LearningMechanism):
@@ -582,7 +582,7 @@ class LearningProjection(ModulatoryProjection_Base):
 
             else:
                 raise LearningProjectionError("The sender arg for {} ({}) must be a LearningMechanism, "
-                                              "the OutputState or LearningSignal of one, or a reference to the class"
+                                              "the OutputPort or LearningSignal of one, or a reference to the class"
                                               .format(self.name, sender.name))
 
 
@@ -610,7 +610,7 @@ class LearningProjection(ModulatoryProjection_Base):
         # assignment to attribute necessary because of uses in _instantiate_learning_components
         self.sender = sender
 
-        if not isinstance(self.sender, (OutputState, LearningMechanism)):
+        if not isinstance(self.sender, (OutputPort, LearningMechanism)):
             from psyneulink.core.components.mechanisms.modulatory.learning.learningauxiliary \
                 import _instantiate_learning_components
             context.source = ContextFlags.METHOD
@@ -618,12 +618,12 @@ class LearningProjection(ModulatoryProjection_Base):
                                              # TODO: do we need this argument?
                                              context=context)
 
-        if isinstance(self.sender, OutputState) and not isinstance(self.sender.owner, LearningMechanism):
+        if isinstance(self.sender, OutputPort) and not isinstance(self.sender.owner, LearningMechanism):
             raise LearningProjectionError("Sender specified for LearningProjection {} ({}) is not a LearningMechanism".
                                           format(self.name, self.sender.owner.name))
 
         # This assigns LearningProjection as an outgoing projection from the LearningMechanism's LearningSignal
-        #    OutputState and formats the LearningProjection's defaults.variable to be compatible with
+        #    OutputPort and formats the LearningProjection's defaults.variable to be compatible with
         #    the LearningSignal's value
         super()._instantiate_sender(self.sender, context=context)
 

@@ -97,8 +97,8 @@ the Logs of their `States <State>`.  Specifically the Logs of these Components c
     `parameter_states <Mechanism_Base.parameter_states>` attribute);  this includes all of the `user configurable
     <Component_User_Params>` parameters of the Mechanism and its `function <Mechanism_Base.function>`.
 
-  * *OutputStates* -- the `value <OutputState.value>` of any `OutputState` (listed in the Mechanism's `output_states
-    <Mechanism_Base.output_states>` attribute).
+  * *OutputPorts* -- the `value <OutputPort.value>` of any `OutputPort` (listed in the Mechanism's `output_ports
+    <Mechanism_Base.output_ports>` attribute).
 ..
 * **Projections**
 
@@ -162,7 +162,7 @@ Examples
 --------
 
 The following example creates a Process with two `TransferMechanisms <TransferMechanism>`, one that projects to
-another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputState` of the first and the
+another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputPort` of the first and the
 `MappingProjection` from the first to the second::
 
     # Create a Process with two TransferMechanisms, and get a reference for the Projection created between them:
@@ -183,7 +183,7 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
     >> proj_A_to_B.loggable_items
     {'value': 'OFF', 'matrix': 'OFF'}
 
-    # Assign the noise parameter and RESULTS OutputState of my_mech_A, and the matrix of the Projection, to be logged
+    # Assign the noise parameter and RESULTS OutputPort of my_mech_A, and the matrix of the Projection, to be logged
     >>> my_mech_A.set_log_conditions([pnl.NOISE, pnl.RESULTS])
     >>> proj_A_to_B.set_log_conditions(pnl.MATRIX)
 
@@ -713,9 +713,9 @@ class Log:
             return []
 
     @property
-    def output_state_items(self):
+    def output_port_items(self):
         try:
-            return self.owner.output_states.names
+            return self.owner.output_ports.names
         except AttributeError:
             return []
 
@@ -735,7 +735,7 @@ class Log:
 
     @property
     def all_items(self):
-        return sorted(self.parameter_items + self.input_port_items + self.output_state_items + self.parameter_state_items + self.function_items)
+        return sorted(self.parameter_items + self.input_port_items + self.output_port_items + self.parameter_state_items + self.function_items)
 
     def _get_parameter_from_item_string(self, string):
         # KDM 8/15/18: can easily cache these results if it occupies too much time, assuming
@@ -757,7 +757,7 @@ class Log:
             pass
 
         try:
-            return self.owner.output_states[string].parameters.value
+            return self.owner.output_ports[string].parameters.value
         except (AttributeError, TypeError):
             pass
 

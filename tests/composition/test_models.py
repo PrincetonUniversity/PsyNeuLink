@@ -269,11 +269,11 @@ class TestModels:
 
         expected_output = [
             (myMechanism.input_ports[0].parameters.value.get(z), np.array([40.])),
-            (myMechanism.output_states[0].parameters.value.get(z), np.array([10.])),
+            (myMechanism.output_ports[0].parameters.value.get(z), np.array([10.])),
             (myMechanism_2.input_ports[0].parameters.value.get(z), np.array([10.])),
-            (myMechanism_2.output_states[0].parameters.value.get(z), np.array([20.])),
+            (myMechanism_2.output_ports[0].parameters.value.get(z), np.array([20.])),
             (myMechanism_3.input_ports[0].parameters.value.get(z), np.array([20.])),
-            (myMechanism_3.output_states[0].parameters.value.get(z), np.array([30.])),
+            (myMechanism_3.output_ports[0].parameters.value.get(z), np.array([30.])),
             (result, np.array([30.])),
         ]
 
@@ -471,8 +471,8 @@ class TestModels:
         #   CREATE THRESHOLD FUNCTION
         # first value of DDM's value is DECISION_VARIABLE
         def pass_threshold(mech1, mech2, thresh, context=None):
-            results1 = mech1.output_states[0].parameters.value.get(context)
-            results2 = mech2.output_states[0].parameters.value.get(context)
+            results1 = mech1.output_ports[0].parameters.value.get(context)
+            results2 = mech2.output_ports[0].parameters.value.get(context)
             for val in results1:
                 if val >= thresh:
                     return True
@@ -604,7 +604,7 @@ class TestModels:
             integrator_mode=True,  # Set IntegratorFunction mode to True
             integration_rate=Lambda,  # smoothing factor ==  integration rate
             hetero=inhibition,  # Inhibition among units within a layer
-            output_states=[{  # Create new output state by applying
+            output_ports=[{  # Create new output state by applying
                 pnl.NAME: 'SPECIAL_LOGISTIC',  # the "my_special_Logistic" function
                 pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
                 pnl.FUNCTION: my_special_Logistic
@@ -618,7 +618,7 @@ class TestModels:
             integrator_mode=True,  # Set IntegratorFunction mode to True
             integration_rate=Lambda,  # smoothing factor ==  integration rate
             hetero=inhibition,  # Inhibition among units within a layer
-            output_states=[{  # Create new output state by applying
+            output_ports=[{  # Create new output state by applying
                 pnl.NAME: 'SPECIAL_LOGISTIC',  # the "my_special_Logistic" function
                 pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
                 pnl.FUNCTION: my_special_Logistic
@@ -632,7 +632,7 @@ class TestModels:
             integrator_mode=True,  # Set IntegratorFunction mode to True
             integration_rate=Lambda,  # smoothing factor ==  integration rate
             hetero=inhibition,  # Inhibition among units within a layer
-            output_states=[{  # Create new output state by applying
+            output_ports=[{  # Create new output state by applying
                 pnl.NAME: 'SPECIAL_LOGISTIC',  # the "my_special_Logistic" function
                 pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
                 pnl.FUNCTION: my_special_Logistic
@@ -648,7 +648,7 @@ class TestModels:
             integrator_mode=True,  # Set IntegratorFunction mode to True
             integration_rate=Lambda,  # smoothing factor ==  integration rate
             hetero=inhibition_task,  # Inhibition among units within a layer
-            output_states=[  # Create new output state by applying
+            output_ports=[  # Create new output state by applying
                 {
                     pnl.NAME: 'SPECIAL_LOGISTIC',  # the "my_conflict_function" function
                     pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
@@ -733,7 +733,7 @@ class TestModels:
         # specify the receiver of the projection
         task_conflict_to_response_weights = pnl.MappingProjection(
             matrix=np.array([[-1.0, -1.0]]),
-            sender=task_demand_layer.output_states[1],
+            sender=task_demand_layer.output_ports[1],
             receiver=response_layer
         )
 
@@ -795,8 +795,8 @@ class TestModels:
             PCTC.add_linear_processing_pathway(pathway)
 
         def pass_threshold(response_layer, thresh, context=None):
-            results1 = response_layer.output_state.parameters.value.get(context)[0]  # red response
-            results2 = response_layer.output_state.parameters.value.get(context)[1]  # green response
+            results1 = response_layer.output_port.parameters.value.get(context)[0]  # red response
+            results2 = response_layer.output_port.parameters.value.get(context)[1]  # green response
             if results1 >= thresh or results2 >= thresh:
                 return True
             return False
@@ -920,7 +920,7 @@ class TestModels:
     #                                                     hetero=-2.0,
     #                                                     integrator_mode=True,
     #                                                     integration_rate=0.01,
-    #                                                     output_states=[pnl.RECURRENT_OUTPUT.RESULT,
+    #                                                     output_ports=[pnl.RECURRENT_OUTPUT.RESULT,
     #                                                                    {pnl.NAME: 'DECISION_ENERGY',
     #                                                                     pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
     #                                                                     pnl.FUNCTION: pnl.Stability(

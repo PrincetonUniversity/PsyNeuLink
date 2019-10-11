@@ -2008,7 +2008,7 @@ class BackPropagation(LearningFunction):
                                     "must be a 2d array or matrix".
                                     format(param_type_string, ERROR_MATRIX, self.name, error_matrix))
 
-            # The length of the sender outputState.value (the error signal) must be the
+            # The length of the sender outputPort.value (the error signal) must be the
             #     same as the width (# columns) of the MappingProjection's weight matrix (# of receivers)
 
             # Validate that columns (number of receiver elements) of error_matrix equals length of error_signal

@@ -114,8 +114,8 @@ The following arguments of its constructor are specific to the OptimizationContr
   following, singly or combined in a list:
 
   * *InputPort specification* -- this can be any form of `InputPort specification <InputPort_Specification>`
-    that resolves to an OutputState from which the InputPort receives a Projection;  the `value
-    <OutputState.value>` of that OutputState is used as the feature. Each of these InputPorts is marked as
+    that resolves to an OutputPort from which the InputPort receives a Projection;  the `value
+    <OutputPort.value>` of that OutputPort is used as the feature. Each of these InputPorts is marked as
     `internal_only <InputPorts.internal_only>` = `True`.
 
   Features can also be added to an existing OptimizationControlMechanism using its `add_features` method.  If the
@@ -205,10 +205,10 @@ Features can be of two types:
   created on the OptimziationControlMechanism for each feature, that receives a `Projection` paralleling
   the input to be shadowed.
 ..
-* *Output Features* -- these are the `value <OutputState.value>` of an `OutputState` of some other `Mechanism` in
+* *Output Features* -- these are the `value <OutputPort.value>` of an `OutputPort` of some other `Mechanism` in
   the Composition.  These too are specified in the **features** argument of the OptimizationControlMechanism's
   constructor (see `OptimizationControlMechanism_Creation`), and each is assigned a `Projection` from the specified
-  OutputState(s) to the InputPort of the OptimizationControlMechanism for that feature.
+  OutputPort(s) to the InputPort of the OptimizationControlMechanism for that feature.
 
 The current `value <InputPort.value>` of the InputPorts for the features are listed in the `feature_values
 <OptimizationControlMechanism.feature_values>` attribute.
@@ -401,7 +401,7 @@ from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism i
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.states.inputport import InputPort, _parse_shadow_inputs
-from psyneulink.core.components.states.outputstate import OutputState
+from psyneulink.core.components.states.outputport import OutputPort
 from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
@@ -463,16 +463,16 @@ class OptimizationControlMechanism(ControlMechanism):
     Arguments
     ---------
 
-    objective_mechanism : ObjectiveMechanism or List[OutputState specification]
+    objective_mechanism : ObjectiveMechanism or List[OutputPort specification]
         specifies either an `ObjectiveMechanism` to use for the OptimizationControlMechanism, or a list of the
-        `OutputState <OutputState>`\\s it should monitor; if a list of `OutputState specifications
+        `OutputPort <OutputPort>`\\s it should monitor; if a list of `OutputPort specifications
         <ObjectiveMechanism_Monitor>` is used, a default ObjectiveMechanism is created and the list
-        is passed to its **monitored_output_states** argument.
+        is passed to its **monitored_output_ports** argument.
 
-    features : Mechanism, OutputState, Projection, dict, or list containing any of these
+    features : Mechanism, OutputPort, Projection, dict, or list containing any of these
         specifies Components, the values of which are assigned to `feature_values
         <OptimizationControlMechanism.feature_values>` and used to predict `net_outcome <ControlMechanism.net_outcome>`.
-        Any `InputPort specification <InputPort_Specification>` can be used that resolves to an `OutputState` that
+        Any `InputPort specification <InputPort_Specification>` can be used that resolves to an `OutputPort` that
         projects to the InputPort.
 
     feature_function : Function or function : default None
@@ -714,7 +714,7 @@ class OptimizationControlMechanism(ControlMechanism):
     @tc.typecheck
     def __init__(self,
                  agent_rep=None,
-                 features: tc.optional(tc.any(Iterable, Mechanism, OutputState, InputPort)) = None,
+                 features: tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort)) = None,
                  feature_function: tc.optional(tc.any(is_function_type)) = None,
                  num_estimates = None,
                  search_function: tc.optional(tc.any(is_function_type)) = None,
@@ -772,7 +772,7 @@ class OptimizationControlMechanism(ControlMechanism):
         **feature_function** arguments of the OptimizationControlMechanism constructor.
         """
 
-        # Specify *OUTCOME* InputPort;  receives Projection from *OUTCOME* OutputState of objective_mechanism
+        # Specify *OUTCOME* InputPort;  receives Projection from *OUTCOME* OutputPort of objective_mechanism
         outcome_input_port = {NAME:OUTCOME, PARAMS:{INTERNAL_ONLY:True}}
 
         # If any features were specified (assigned to self.input_ports in __init__):
@@ -797,11 +797,11 @@ class OptimizationControlMechanism(ControlMechanism):
                                                         f"{state.name} should receive exactly one projection, "
                                                         f"but it receives {len(state.path_afferents)} projections.")
 
-    def _instantiate_output_states(self, context=None):
+    def _instantiate_output_ports(self, context=None):
         """Assign CostFunctions.DEFAULTS as default for cost_option of ControlSignals.
         OptimizationControlMechanism requires use of at least one of the cost options
         """
-        super()._instantiate_output_states(context)
+        super()._instantiate_output_ports(context)
 
         for control_signal in self.control_signals:
             if control_signal.cost_options is None:
@@ -1004,23 +1004,23 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _get_evaluate_param_struct_type(self, ctx):
         num_estimates = ctx.int32_ty
-        intensity_cost = [ctx.get_param_struct_type(os.intensity_cost_function) for os in self.output_states]
+        intensity_cost = [ctx.get_param_struct_type(os.intensity_cost_function) for os in self.output_ports]
         intensity_cost_struct = pnlvm.ir.LiteralStructType(intensity_cost)
         return pnlvm.ir.LiteralStructType([intensity_cost_struct, num_estimates])
 
     def _get_evaluate_param_initializer(self, context):
         num_estimates = self.parameters.num_estimates.get(context) or 0
         # FIXME: The intensity cost function is not setup with the right execution id
-        intensity_cost = tuple((os.intensity_cost_function._get_param_initializer(None) for os in self.output_states))
+        intensity_cost = tuple((os.intensity_cost_function._get_param_initializer(None) for os in self.output_ports))
         return (intensity_cost, num_estimates)
 
     def _get_evaluate_state_struct_type(self, ctx):
-        intensity_cost = [ctx.get_state_struct_type(os.intensity_cost_function) for os in self.output_states]
+        intensity_cost = [ctx.get_state_struct_type(os.intensity_cost_function) for os in self.output_ports]
         intensity_cost_struct = pnlvm.ir.LiteralStructType(intensity_cost)
         return pnlvm.ir.LiteralStructType([intensity_cost_struct])
 
     def _get_evaluate_state_initializer(self, context):
-        intensity_cost = tuple((os.intensity_cost_function._get_state_initializer(context) for os in self.output_states))
+        intensity_cost = tuple((os.intensity_cost_function._get_state_initializer(context) for os in self.output_ports))
         return (intensity_cost,)
 
     def _get_evaluate_input_struct_type(self, ctx):
@@ -1051,7 +1051,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # calculate cost function
         total_cost = builder.alloca(ctx.float_ty)
         builder.store(ctx.float_ty(-0.0), total_cost)
-        for i, os in enumerate(self.output_states):
+        for i, os in enumerate(self.output_ports):
             # FIXME: Add support for other cost types
             assert os.cost_options == CostFunctions.INTENSITY
 
@@ -1117,11 +1117,11 @@ class OptimizationControlMechanism(ControlMechanism):
             builder.store(builder.load(base_comp_data), comp_data)
 
             # Apply allocation sample to simulation data
-            assert len(self.output_states) == len(allocation_sample.type.pointee)
+            assert len(self.output_ports) == len(allocation_sample.type.pointee)
             idx = self.agent_rep._get_node_index(self)
             ocm_out = builder.gep(comp_data, [ctx.int32_ty(0), ctx.int32_ty(0),
                                               ctx.int32_ty(idx)])
-            for i, _ in enumerate(self.output_states):
+            for i, _ in enumerate(self.output_ports):
                 idx = ctx.int32_ty(i)
                 sample_ptr = builder.gep(allocation_sample, [ctx.int32_ty(0), idx])
                 sample_dst = builder.gep(ocm_out, [ctx.int32_ty(0), idx, ctx.int32_ty(0)])
@@ -1211,8 +1211,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return fun_out, builder
 
-    def _gen_llvm_output_state_parse_variable(self, ctx, builder, params, context, value, state):
-        i = self.output_states.index(state)
+    def _gen_llvm_output_port_parse_variable(self, ctx, builder, params, context, value, state):
+        i = self.output_ports.index(state)
         os_input = builder.alloca(pnlvm.ir.ArrayType(ctx.float_ty, 1))
         val_ptr = builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
         dest_ptr = builder.gep(os_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -1229,7 +1229,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         value = [np.atleast_1d(a) for a in control_allocation]
         self.parameters.value._set(value, context)
-        self._update_output_states(context=context, runtime_params=runtime_params,
+        self._update_output_ports(context=context, runtime_params=runtime_params,
                                    )
 
     # @property

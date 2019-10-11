@@ -51,14 +51,14 @@ class TestGilzenratMechanisms:
 
         P = Process(pathway=[G])
         S = System(processes=[P])
-        G.output_state.value = [0.0]
+        G.output_port.value = [0.0]
 
         # - - - - - LCAMechanism integrator functions - - - - -
         # X = previous_value + (rate * previous_value + variable) * self.time_step_size + noise
         # f(X) = 2.0*X + 0
 
         # - - - - - starting values - - - - -
-        # variable = G.output_state.value + stimulus = 0.0 + 1.0 = 1.0
+        # variable = G.output_port.value + stimulus = 0.0 + 1.0 = 1.0
         # previous_value = initial_value = 1.0
         # single_run = S.execute([[1.0]])
         # np.testing.assert_allclose(single_run, np.array([[2.0]]))

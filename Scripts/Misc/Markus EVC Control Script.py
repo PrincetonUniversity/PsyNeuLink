@@ -56,7 +56,7 @@ Decision = pnl.DDM(function=psyneulink.core.components.functions.distributionfun
         starting_point=0,
         t0=0.15
     ),name='Decision',
-    output_states=[
+    output_ports=[
         pnl.DECISION_VARIABLE,
         pnl.RESPONSE_TIME,
         pnl.PROBABILITY_UPPER_THRESHOLD,
@@ -151,7 +151,7 @@ mySystem.controller.objective_mechanism.set_log_conditions('PROBABILITY_UPPER_TH
 mySystem.controller.objective_mechanism.set_log_conditions('OFFSET_RT')
 
 # print('current input value',mySystem.controller.input_ports.values)
-# print('current objective mech output value',mySystem.controller.objective_mechanism.output_states.values)
+# print('current objective mech output value',mySystem.controller.objective_mechanism.output_ports.values)
 #
 
 
@@ -223,7 +223,7 @@ mySystem.run(num_trials=nTrials,inputs=stim_list_dict)
 # Target_Rep.log.print_entries()
 # Decision.log.print_entries()
 
-# print('output state of objective mechanism', mySystem.controller.objective_mechanism.output_states.values)
+# print('output state of objective mechanism', mySystem.controller.objective_mechanism.output_ports.values)
 #
 # print('input state of EVC Control mechanism', mySystem.controller.input_port.value)
 #

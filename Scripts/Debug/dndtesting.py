@@ -150,8 +150,8 @@ print('hidden receive: ')
 for hidden_afferent in hidden.input_ports[0].path_afferents:
     print('- ', hidden_afferent.sender.owner.name)
 
-print(ContentAddressableMemory.output_states.names)
-print(ContentAddressableMemory.output_states.values)
+print(ContentAddressableMemory.output_ports.names)
+print(ContentAddressableMemory.output_ports.values)
 
 print(input)
 
@@ -160,7 +160,7 @@ print(input)
 #print(ContentAddressableMemory.values)
 #ContentAddressableMemory.dict.insert_memory([1,1])
 
-print(ContentAddressableMemory.output_states.values)
+print(ContentAddressableMemory.output_ports.values)
 
 input = [0,1]
 print(ContentAddressableMemory.input_ports)

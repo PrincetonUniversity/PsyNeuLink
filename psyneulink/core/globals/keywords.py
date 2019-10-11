@@ -25,7 +25,7 @@ https://princetonuniversity.github.io/PsyNeuLink/Keywords.html
 
 __all__ = [
     'ACCUMULATOR_INTEGRATOR', 'ACCUMULATOR_INTEGRATOR_FUNCTION',
-    'ADAPTIVE', 'ADAPTIVE_INTEGRATOR_FUNCTION', 'ADAPTIVE_MECHANISM', 'ADD_INPUT_PORT', 'ADD_OUTPUT_STATE',
+    'ADAPTIVE', 'ADAPTIVE_INTEGRATOR_FUNCTION', 'ADAPTIVE_MECHANISM', 'ADD_INPUT_PORT', 'ADD_OUTPUT_PORT',
     'ADDITIVE', 'ADDITIVE_PARAM', 'AFTER', 'ALL', 'ALLOCATION_SAMPLES', 'ANGLE',
     'ARGUMENT_THERAPY_FUNCTION', 'ARRANGEMENT', 'ASSERT', 'ASSIGN', 'ASSIGN_VALUE', 'AUTO','AUTO_ASSIGN_MATRIX',
     'AUTO_ASSOCIATIVE_PROJECTION', 'HAS_INITIALIZERS', 'AUTOASSOCIATIVE_LEARNING_MECHANISM',
@@ -83,7 +83,7 @@ __all__ = [
     'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT', 'OFF', 'OFFSET', 'OLDEST',
     'ON',  'ONLINE', 'OPERATION', 'OPTIMIZATION_FUNCTION_TYPE', 'ORIGIN','ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION',
     'OUTCOME', 'OUTCOME_FUNCTION', 'OUTPUT', 'OUTPUT_LABELS_DICT', 'OUTPUT_MEAN', 'OUTPUT_MEDIAN', 'OUTPUT_STD_DEV',
-    'OUTPUT_STATE', 'OUTPUT_STATE_PARAMS', 'output_state_spec_to_parameter_name', 'OUTPUT_STATES', 'OUTPUT_TYPE',
+    'OUTPUT_PORT', 'OUTPUT_PORT_PARAMS', 'output_port_spec_to_parameter_name', 'OUTPUT_PORTS', 'OUTPUT_TYPE',
     'OUTPUT_VARIANCE', 'OVERRIDE', 'OVERRIDE_PARAM', 'OVERWRITE',
     'OWNER', 'OWNER_EXECUTION_COUNT', 'OWNER_EXECUTION_TIME', 'OWNER_VALUE', 'OWNER_VARIABLE',
     'PARAM_CLASS_DEFAULTS', 'PARAM_INSTANCE_DEFAULTS', 'PARAMETER_STATE', 'PARAMETER_STATE_PARAMS',
@@ -100,7 +100,7 @@ __all__ = [
     'RELU_FUNCTION', 'REST', 'RESULT', 'RESULTS', 'ROLES', 'RL_FUNCTION', 'RUN',
     'SAMPLE', 'SAVE_ALL_VALUES_AND_POLICIES', 'SCALAR', 'SCALE', 'SCHEDULER', 'SELF', 'SENDER',
     'SEPARATOR_BAR', 'SIMPLE', 'SIMPLE_INTEGRATOR_FUNCTION', 'SINGLETON', 'SIZE', 'SLOPE', 'SOFT_CLAMP',
-    'SOFTMAX_FUNCTION', 'SOURCE', 'STABILITY_FUNCTION', 'STANDARD_ARGS', 'STANDARD_DEVIATION', 'STANDARD_OUTPUT_STATES',
+    'SOFTMAX_FUNCTION', 'SOURCE', 'STABILITY_FUNCTION', 'STANDARD_ARGS', 'STANDARD_DEVIATION', 'STANDARD_OUTPUT_PORTS',
     'STATE', 'STATE_COMPONENT_CATEGORY', 'STATE_CONTEXT', 'STATE_NAME', 'STATE_PARAMS', 'STATE_PREFS', 'STATE_TYPE',
     'STATE_VALUE', 'STATES', 'SUBTRACTION', 'SUM',
     'SYSTEM', 'SYSTEM_COMPONENT_CATEGORY', 'SYSTEM_DEFAULT_CONTROLLER', 'SYSTEM_INIT',
@@ -517,7 +517,7 @@ INPUT_PORT = "InputPort"
 PROCESS_INPUT_PORT = "ProcessInputPort"
 SYSTEM_INPUT_PORT = "SystemInputPort"
 PARAMETER_STATE = "ParameterState"
-OUTPUT_STATE = "OutputState"
+OUTPUT_PORT = "OutputPort"
 MODULATORY_SIGNAL = 'ModulatorySignal'
 LEARNING_SIGNAL = 'LearningSignal'
 CONTROL_SIGNAL = 'ControlSignal'
@@ -716,7 +716,7 @@ MECHANISM_PARAM_VALUE = "Mechanism Parameter Value"                 # Used to sp
 MECHANISM_DEFAULTParams = "Mechanism Default Parameters"           # Used in mechanism specification dict
 CONDITION = 'condition'
 
-# Keywords for OUTPUT_STATE_VARIABLE dict:
+# Keywords for OUTPUT_PORT_VARIABLE dict:
 OWNER_VARIABLE = 'OWNER_VARIABLE'
 OWNER_VALUE = 'OWNER_VALUE'
 OWNER_EXECUTION_COUNT = 'EXECUTION_COUNT'
@@ -727,7 +727,7 @@ PARAMS_DICT = 'PARAMS_DICT'
 # this exists because keywords like OWNER_VALUE are set as properties
 # on Mechanisms, so you can't just change the string value to map
 # as you want - the property "value" will be overwritten then
-output_state_spec_to_parameter_name = {
+output_port_spec_to_parameter_name = {
     OWNER_VARIABLE: VARIABLE,
     OWNER_VALUE: VALUE,
     INPUT_PORT_VARIABLES: 'input_port_variables',
@@ -835,7 +835,7 @@ STATE_NAME = "StateName"
 STATE_PREFS = "StatePrefs"
 STATE_CONTEXT = "StateContext"
 ADD_INPUT_PORT = 'AddNewInputPort'     # Used by Mechanism._add_projection_to()
-ADD_OUTPUT_STATE = 'AddNewOutputState'   # Used by Mechanism._add_projection_from()
+ADD_OUTPUT_PORT = 'AddNewOutputPort'   # Used by Mechanism._add_projection_from()
 FULL = 'FULL'
 OWNER = 'owner'
 REFERENCE_VALUE = 'reference_value'
@@ -853,10 +853,10 @@ INTERNAL_ONLY = 'internal_only'
 PARAMETER_STATES = 'parameter_states'
 PARAMETER_STATE_PARAMS = 'parameter_state_params'
 
-# OutputStates:
-OUTPUT_STATES = 'output_states'
-OUTPUT_STATE_PARAMS = 'output_states_params'
-STANDARD_OUTPUT_STATES = 'standard_output_states'
+# OutputPorts:
+OUTPUT_PORTS = 'output_ports'
+OUTPUT_PORT_PARAMS = 'output_ports_params'
+STANDARD_OUTPUT_PORTS = 'standard_output_ports'
 INDEX = 'index'       # For backward compatibility with INDEX and ASSIGN
 ASSIGN = 'assign'     # For backward compatibility with INDEX and ASSIGN
 CALCULATE = 'assign'  # For backward compatibility with CALCULATE

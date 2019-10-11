@@ -12,7 +12,7 @@ from psyneulink.core.components.projections.projection import ProjectionError
 from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.states.inputport import InputPort
 from psyneulink.core.components.states.state import StateError
-from psyneulink.core.globals.keywords import FUNCTION, INPUT_PORTS, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, RESULTS, VARIABLE
+from psyneulink.core.globals.keywords import FUNCTION, INPUT_PORTS, MECHANISM, NAME, OUTPUT_PORTS, PROJECTIONS, RESULTS, VARIABLE
 
 mismatches_specified_default_variable_error_text = 'not compatible with its specified default variable'
 mismatches_default_variable_format_error_text = 'is not compatible with its expected format'
@@ -186,14 +186,14 @@ class TestInputPortSpec:
     # Mechanism specification
 
     def test_mech_spec_list(self):
-        R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
+        R1 = TransferMechanism(output_ports=['FIRST', 'SECOND'])
         T = TransferMechanism(
             default_variable=[[0]],
             input_ports=[R1]
         )
         np.testing.assert_array_equal(T.defaults.variable, np.array([[0]]))
         assert len(T.input_ports) == 1
-        assert T.input_port.path_afferents[0].sender == R1.output_state
+        assert T.input_port.path_afferents[0].sender == R1.output_port
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
@@ -201,7 +201,7 @@ class TestInputPortSpec:
     # Mechanism specification outside of a list
 
     def test_mech_spec_standalone(self):
-        R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
+        R1 = TransferMechanism(output_ports=['FIRST', 'SECOND'])
         # Mechanism outside of list specification
         T = TransferMechanism(
             default_variable=[[0]],
@@ -209,20 +209,20 @@ class TestInputPortSpec:
         )
         np.testing.assert_array_equal(T.defaults.variable, np.array([[0]]))
         assert len(T.input_ports) == 1
-        assert T.input_port.path_afferents[0].sender == R1.output_state
+        assert T.input_port.path_afferents[0].sender == R1.output_port
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
     # TEST 8
-    # OutputState specification
+    # OutputPort specification
 
-    def test_output_state_spec_list_two_items(self):
-        R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
+    def test_output_port_spec_list_two_items(self):
+        R1 = TransferMechanism(output_ports=['FIRST', 'SECOND'])
         T = TransferMechanism(
             default_variable=[[0], [0]],
             input_ports=[
-                R1.output_states['FIRST'],
-                R1.output_states['SECOND']
+                R1.output_ports['FIRST'],
+                R1.output_ports['SECOND']
             ]
         )
         np.testing.assert_array_equal(T.defaults.variable, np.array([[0], [0]]))
@@ -236,36 +236,36 @@ class TestInputPortSpec:
 
     # ------------------------------------------------------------------------------------------------
     # TEST 9
-    # OutputState specification outside of a list
+    # OutputPort specification outside of a list
 
-    def test_output_state_spec_standalone(self):
-        R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
+    def test_output_port_spec_standalone(self):
+        R1 = TransferMechanism(output_ports=['FIRST', 'SECOND'])
         T = TransferMechanism(
             default_variable=[0],
-            input_ports=R1.output_states['FIRST']
+            input_ports=R1.output_ports['FIRST']
         )
         np.testing.assert_array_equal(T.defaults.variable, np.array([[0]]))
         assert len(T.input_ports) == 1
         assert T.input_ports.names[0] == 'InputPort-0'
-        T.input_port.path_afferents[0].sender == R1.output_state
+        T.input_port.path_afferents[0].sender == R1.output_port
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
     # TEST 10
-    # OutputStates in PROJECTIONS entries of a specification dictiontary, using with names (and one outside of a list)
+    # OutputPorts in PROJECTIONS entries of a specification dictiontary, using with names (and one outside of a list)
 
     def test_specification_dict(self):
-        R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
+        R1 = TransferMechanism(output_ports=['FIRST', 'SECOND'])
         T = TransferMechanism(
             default_variable=[[0], [0]],
             input_ports=[
                 {
                     NAME: 'FROM DECISION',
-                    PROJECTIONS: [R1.output_states['FIRST']]
+                    PROJECTIONS: [R1.output_ports['FIRST']]
                 },
                 {
                     NAME: 'FROM RESPONSE_TIME',
-                    PROJECTIONS: R1.output_states['SECOND']
+                    PROJECTIONS: R1.output_ports['SECOND']
                 }
             ])
         np.testing.assert_array_equal(T.defaults.variable, np.array([[0], [0]]))
@@ -279,13 +279,13 @@ class TestInputPortSpec:
 
     # ------------------------------------------------------------------------------------------------
     # TEST 11
-    # default_variable override of value of OutputState specification
+    # default_variable override of value of OutputPort specification
 
     def test_default_variable_override_mech_list(self):
 
         R2 = TransferMechanism(size=3)
 
-        # default_variable override of OutputState.value
+        # default_variable override of OutputPort.value
         T = TransferMechanism(
             default_variable=[[0, 0]],
             input_ports=[R2]
@@ -298,7 +298,7 @@ class TestInputPortSpec:
 
     # ------------------------------------------------------------------------------------------------
     # TEST 12
-    # 2-item tuple specification with default_variable override of OutputState.value
+    # 2-item tuple specification with default_variable override of OutputPort.value
 
     def test_2_item_tuple_spec(self):
         R2 = TransferMechanism(size=3)
@@ -374,13 +374,13 @@ class TestInputPortSpec:
     # PROJECTIONS specification in InputPort specification dictionary
 
     def test_projection_in_specification_dict(self):
-        R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
+        R1 = TransferMechanism(output_ports=['FIRST', 'SECOND'])
         T = TransferMechanism(
             input_ports=[{
                 NAME: 'My InputPort with Two Projections',
                 PROJECTIONS: [
-                    R1.output_states['FIRST'],
-                    R1.output_states['SECOND']
+                    R1.output_ports['FIRST'],
+                    R1.output_ports['SECOND']
                 ]
             }]
         )
@@ -394,14 +394,14 @@ class TestInputPortSpec:
 
     # ------------------------------------------------------------------------------------------------
     # TEST 17
-    # MECHANISMS/OUTPUT_STATES entries in params specification dict
+    # MECHANISMS/OUTPUT_PORTS entries in params specification dict
 
-    def test_output_state_in_specification_dict(self):
-        R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
+    def test_output_port_in_specification_dict(self):
+        R1 = TransferMechanism(output_ports=['FIRST', 'SECOND'])
         T = TransferMechanism(
             input_ports=[{
                 MECHANISM: R1,
-                OUTPUT_STATES: ['FIRST', 'SECOND']
+                OUTPUT_PORTS: ['FIRST', 'SECOND']
             }]
         )
         np.testing.assert_array_equal(T.defaults.variable, np.array([[0]]))
@@ -563,7 +563,7 @@ class TestInputPortSpec:
         assert mismatches_specified_default_variable_error_text in str(error_text.value)
 
         with pytest.raises(FunctionError) as error_text:
-            m = TransferMechanism(size=3, output_states=[pnl.TRANSFER_OUTPUT.MEAN])
+            m = TransferMechanism(size=3, output_ports=[pnl.TRANSFER_OUTPUT.MEAN])
             p = MappingProjection(sender=m, matrix=[[0,0,0], [0,0,0]])
             T = TransferMechanism(input_ports=[p])
         assert re.match(
@@ -572,7 +572,7 @@ class TestInputPortSpec:
         )
 
         with pytest.raises(FunctionError) as error_text:
-            m2 = TransferMechanism(size=2, output_states=[pnl.TRANSFER_OUTPUT.MEAN])
+            m2 = TransferMechanism(size=2, output_ports=[pnl.TRANSFER_OUTPUT.MEAN])
             p2 = MappingProjection(sender=m2, matrix=[[1,1,1],[1,1,1]])
             T2 = TransferMechanism(input_ports=[p2])
         assert re.match(
@@ -633,7 +633,7 @@ class TestInputPortSpec:
     # ------------------------------------------------------------------------------------------------
     # TEST 38
 
-    def test_outputstate_(self):
+    def test_outputPort_(self):
         with pytest.raises(MechanismError) as error_text:
             p = MappingProjection()
             TransferMechanism(default_variable=[0, 0], input_ports=[{VARIABLE: [0, 0, 0], PROJECTIONS: [p]}])
@@ -718,7 +718,7 @@ class TestInputPortSpec:
 
     def test_2_item_tuple_with_state_name_list_and_mechanism(self):
 
-        # T1 has OutputStates of with same lengths,
+        # T1 has OutputPorts of with same lengths,
         #    so T2 should use that length for its InputPort variable (since it is not otherwise specified)
         T1 = TransferMechanism(input_ports=[[0,0],[0,0]])
         T2 = TransferMechanism(input_ports=[(['RESULT', 'RESULT-1'], T1)])
@@ -726,7 +726,7 @@ class TestInputPortSpec:
         assert T2.input_ports[0].path_afferents[0].sender.name == 'RESULT'
         assert T2.input_ports[0].path_afferents[1].sender.name == 'RESULT-1'
 
-        # T1 has OutputStates with different lengths both of which are specified by T2 to project to a singe InputPort,
+        # T1 has OutputPorts with different lengths both of which are specified by T2 to project to a singe InputPort,
         #    so T2 should use its variable default as format for the InputPort (since it is not otherwise specified)
         T1 = TransferMechanism(input_ports=[[0,0],[0,0,0]])
         T2 = TransferMechanism(input_ports=[(['RESULT', 'RESULT-1'], T1)])
@@ -737,7 +737,7 @@ class TestInputPortSpec:
     # ------------------------------------------------------------------------------------------------
     # TEST 34
 
-    def test_lists_of_mechanisms_and_output_states(self):
+    def test_lists_of_mechanisms_and_output_ports(self):
 
         # Test "bare" list of Mechanisms
         T0 = TransferMechanism(name='T0')
@@ -755,15 +755,15 @@ class TestInputPortSpec:
         assert T3.input_ports[0].path_afferents[1].sender.owner.name=='T1'
         assert T3.input_ports[0].path_afferents[1].matrix.shape == (2,1)
 
-        # Test "bare" list of OutputStates
-        T4= TransferMechanism(name='T4', input_ports=[[T0.output_states[0], T1.output_states[1]]])
+        # Test "bare" list of OutputPorts
+        T4= TransferMechanism(name='T4', input_ports=[[T0.output_ports[0], T1.output_ports[1]]])
         assert len(T4.input_ports[0].path_afferents)==2
         assert T4.input_ports[0].path_afferents[0].sender.owner.name=='T0'
         assert T4.input_ports[0].path_afferents[1].sender.owner.name=='T1'
         assert T4.input_ports[0].path_afferents[1].matrix.shape == (3,1)
 
-        # Test list of OutputStates in 4-item tuple specification
-        T5 = TransferMechanism(name='T5', input_ports=[([T0.output_states[0], T1.output_states[1]],
+        # Test list of OutputPorts in 4-item tuple specification
+        T5 = TransferMechanism(name='T5', input_ports=[([T0.output_ports[0], T1.output_ports[1]],
                                                          None, None,
                                                          InputPort)])
         assert len(T5.input_ports[0].path_afferents)==2
@@ -779,10 +779,10 @@ class TestInputPortSpec:
         T1 = TransferMechanism(name='T6')
         G = GatingMechanism(gating_signals=['a','b'])
         T2 = TransferMechanism(input_ports=[[T1, G]],
-                               output_states=[G.gating_signals['b']])
+                               output_ports=[G.gating_signals['b']])
         assert T2.input_ports[0].path_afferents[0].sender.owner.name=='T6'
         assert T2.input_ports[0].mod_afferents[0].sender.name=='a'
-        assert T2.output_states[0].mod_afferents[0].sender.name=='b'
+        assert T2.output_ports[0].mod_afferents[0].sender.name=='b'
 
     # ------------------------------------------------------------------------------------------------
     # THOROUGH TESTING OF mech, 2-item, 3-item and 4-item tuple specifications with and without default_variable/size

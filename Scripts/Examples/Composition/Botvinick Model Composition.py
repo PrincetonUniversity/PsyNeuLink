@@ -44,7 +44,7 @@ response_layer = pnl.RecurrentTransferMechanism(size=2,
                                                 hetero=-2.0,
                                                 integrator_mode=True,
                                                 integration_rate=0.01,
-                                                output_states = [pnl.RECURRENT_OUTPUT.RESULT,
+                                                output_ports = [pnl.RECURRENT_OUTPUT.RESULT,
                                                                  {pnl.NAME: 'DECISION_ENERGY',
                                                                   pnl.VARIABLE: (pnl.OWNER_VALUE,0),
                                                                   pnl.FUNCTION: pnl.Stability(

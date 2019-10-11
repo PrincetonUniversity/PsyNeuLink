@@ -1513,7 +1513,7 @@ class TestTransferMechanismMultipleInputPorts:
             name='T',
             function=Linear(slope=2.0, intercept=1.0),
             default_variable=[[0.0, 0.0], [0.0, 0.0]],
-            output_states=[OUTPUT_MEAN]
+            output_ports=[OUTPUT_MEAN]
         )
         val = T.execute([[1.0, 2.0], [3.0, 4.0]])
 
@@ -1558,7 +1558,7 @@ class TestTransferMechanismMultipleInputPorts:
     @pytest.mark.parametrize('mode', ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
-    def test_multiple_output_states_for_multiple_input_ports(self, benchmark, mode):
+    def test_multiple_output_ports_for_multiple_input_ports(self, benchmark, mode):
         T = TransferMechanism(input_ports=['a','b','c'])
         if mode == 'Python':
             val = benchmark(T.execute, [[1], [2], [3]])
@@ -1572,20 +1572,20 @@ class TestTransferMechanismMultipleInputPorts:
 
         assert len(T.variable)==3
         assert all(a==b for a,b in zip(val, [[ 1.],[ 2.],[ 3.]]))
-        assert len(T.output_states)==3
+        assert len(T.output_ports)==3
 
     # @pytest.mark.mechanism
     # @pytest.mark.transfer_mechanism
     # @pytest.mark.mimo
-    # def test_OWNER_VALUE_standard_output_state(self):
+    # def test_OWNER_VALUE_standard_output_port(self):
     #     from psyneulink.core.globals.keywords import OWNER_VALUE
     #     T = TransferMechanism(input_ports=[[[0],[0]],'b','c'],
-    #                               output_states=OWNER_VALUE)
+    #                               output_ports=OWNER_VALUE)
     #     print(T.value)
     #     val = T.execute([[[1],[4]],[2],[3]])
     #     expected_val = [[[1],[4]],[2],[3]]
-    #     assert len(T.output_states)==1
-    #     assert len(T.output_states[OWNER_VALUE].value)==3
+    #     assert len(T.output_ports)==1
+    #     assert len(T.output_ports[OWNER_VALUE].value)==3
     #     assert all(all(a==b for a,b in zip(x,y)) for x,y in zip(val, expected_val))
 
 
@@ -1983,18 +1983,18 @@ class TestClip:
                            [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])
 
 
-class TestOutputStates:
-    def test_output_states_match_input_ports(self):
+class TestOutputPorts:
+    def test_output_ports_match_input_ports(self):
         T = TransferMechanism(default_variable=[[0], [0], [0]])
         assert len(T.input_ports) == 3
-        assert len(T.output_states) == 3
+        assert len(T.output_ports) == 3
 
         T.execute(input=[[1.0], [2.0], [3.0]])
 
         assert np.allclose(T.value, [[1.0], [2.0], [3.0]])
-        assert np.allclose(T.output_states[0].value, [1.0])
-        assert np.allclose(T.output_states[1].value, [2.0])
-        assert np.allclose(T.output_states[2].value, [3.0])
+        assert np.allclose(T.output_ports[0].value, [1.0])
+        assert np.allclose(T.output_ports[1].value, [2.0])
+        assert np.allclose(T.output_ports[2].value, [3.0])
 
     def test_add_input_ports(self):
         T = TransferMechanism(default_variable=[[0], [0], [0]])
@@ -2005,16 +2005,16 @@ class TestOutputStates:
         T.add_states([I])
         print("Number of input states: ", len(T.input_ports))
         print(T.input_ports, "\n\n")
-        print("Number of output states: ", len(T.output_states))
-        print(T.output_states)
+        print("Number of output states: ", len(T.output_ports))
+        print(T.output_ports)
 
         # assert len(T.input_ports) == 4
-        # assert len(T.output_states) == 4
+        # assert len(T.output_ports) == 4
         #
         # T.execute(input=[[1.0], [2.0], [3.0], [4.0]])
         #
         # assert np.allclose(T.value, [[1.0], [2.0], [3.0], [4.0]])
-        # assert np.allclose(T.output_states[0].value, [1.0])
-        # assert np.allclose(T.output_states[1].value, [2.0])
-        # assert np.allclose(T.output_states[2].value, [3.0])
-        # assert np.allclose(T.output_states[3].value, [4.0])
+        # assert np.allclose(T.output_ports[0].value, [1.0])
+        # assert np.allclose(T.output_ports[1].value, [2.0])
+        # assert np.allclose(T.output_ports[2].value, [3.0])
+        # assert np.allclose(T.output_ports[3].value, [4.0])

@@ -146,16 +146,16 @@ class TestNaming:
 
     # ------------------------------------------------------------------------------------------------
     # TEST 10
-    # Test that OutputStates are properly named
+    # Test that OutputPorts are properly named
 
-        T1 = pnl.TransferMechanism(output_states=['MY OUTPUT_STATE',[0]])
-        assert T1.output_states[0].name == 'MY OUTPUT_STATE'
-        assert T1.output_states[1].name == 'OutputState-0'
-        O = pnl.OutputState(owner=T1)
-        assert T1.output_states[2].name == 'OutputState-1'
-        O2 = pnl.OutputState()
+        T1 = pnl.TransferMechanism(output_ports=['MY OUTPUT_PORT',[0]])
+        assert T1.output_ports[0].name == 'MY OUTPUT_PORT'
+        assert T1.output_ports[1].name == 'OutputPort-0'
+        O = pnl.OutputPort(owner=T1)
+        assert T1.output_ports[2].name == 'OutputPort-1'
+        O2 = pnl.OutputPort()
         T1.add_states([O2])
-        assert T1.output_states[3].name == 'OutputState-2'
+        assert T1.output_ports[3].name == 'OutputPort-2'
 
     # ------------------------------------------------------------------------------------------------
     # TEST 11
@@ -216,9 +216,9 @@ class TestNaming:
 
         # GatingProjections to ProcessingMechanism from GatingSignals of existing GatingMechanism
         T5 = pnl.TransferMechanism(name='T5',
-                                   input_ports=[T3.output_states[pnl.RESULTS],
+                                   input_ports=[T3.output_ports[pnl.RESULTS],
                                                  G3.gating_signals['GatingSignal-0 divergent GatingSignal']],
-                                   output_states=[G3.gating_signals['GatingSignal-0 divergent GatingSignal']])
+                                   output_ports=[G3.gating_signals['GatingSignal-0 divergent GatingSignal']])
 
     def test_composition_names(self):
         C1 = pnl.Composition()

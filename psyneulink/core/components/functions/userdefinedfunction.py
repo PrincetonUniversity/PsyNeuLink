@@ -58,7 +58,7 @@ class UserDefinedFunction(Function_Base):
       ordinary PsyNeuLink `Functions <Function>`.  If the UDF is assigned to (or automatically created for) a
       `Mechanism` or `Projection <Projection>`, these parameters are each automatically assigned a `ParameterState`
       so that they can be modulated by `ControlSignals <ControlSignal>` or `LearningSignals <LearningSignal>`,
-      respectively.  If the UDF is assigned to (or automatically created for) an `InputPort` or `OutputState`,
+      respectively.  If the UDF is assigned to (or automatically created for) an `InputPort` or `OutputPort`,
       and any of the parameters are specified as `Function_Modulatory_Params` (see `below <UDF_Modulatory_Params>`),
       then they can be modulated by `GatingSignals <GatingSignal>`. The function or method wrapped by the UDF is called
       with these parameters by their name and with their current values (i.e., as determined by any
@@ -81,7 +81,7 @@ class UserDefinedFunction(Function_Base):
          *MULTIPLICATIVE_PARAM*: <parameter name>\n
          *ADDITIVE_PARAM*: <parameter name>
       These are used only when the UDF is assigned as the `function <State_Base.function>` of an InputPort or
-      OutputState that receives one more more `GatingProjections <GatingProjection>`.
+      OutputPort that receives one more more `GatingProjections <GatingProjection>`.
 
       COMMENT:
       # IMPLEMENT INTERFACE FOR OTHER ModulationParam TYPES (i.e., for ability to add new custom ones)
@@ -230,18 +230,18 @@ class UserDefinedFunction(Function_Base):
 
     **Assigning of a custom function to a State**
 
-    A custom function can also be assigned as the `function <State_Base.function>` of an `InputPort` or `OutputState`.
-    For example, the following assigns ``my_sinusoidal_fct`` to the `function <OutputState.function>` of an OutputState
+    A custom function can also be assigned as the `function <State_Base.function>` of an `InputPort` or `OutputPort`.
+    For example, the following assigns ``my_sinusoidal_fct`` to the `function <OutputPort.function>` of an OutputPort
     of ``my_mech``, rather the Mechanism's `function <Mechanism_Base.function>`::
 
         >>> my_wave_mech = pnl.ProcessingMechanism(size=1,
         ...                                        function=pnl.Linear,
-        ...                                        output_states=[{pnl.NAME: 'SINUSOIDAL OUTPUT',
+        ...                                        output_ports=[{pnl.NAME: 'SINUSOIDAL OUTPUT',
         ...                                                       pnl.VARIABLE: [(pnl.OWNER_VALUE, 0),pnl.EXECUTION_COUNT],
         ...                                                       pnl.FUNCTION: my_sinusoidal_fct}])
 
-    For details on how to specify a function of an OutputState, see `OutputState Customization <OutputState_Customization>`.
-    Below is an example plot of the output of the 'SINUSOIDAL OUTPUT' `OutputState` from my_wave_mech above, as the
+    For details on how to specify a function of an OutputPort, see `OutputPort Customization <OutputPort_Customization>`.
+    Below is an example plot of the output of the 'SINUSOIDAL OUTPUT' `OutputPort` from my_wave_mech above, as the
     execution count increments, when the input to the mechanism is 0.005 for 1000 runs::
 
 .. figure:: _static/sinusoid_005.png
@@ -250,7 +250,7 @@ class UserDefinedFunction(Function_Base):
 
 .. _UDF_Modulatory_Params_Examples:
 
-    The parameters of a custom function assigned to an InputPort or OutputState can also be used for `gating
+    The parameters of a custom function assigned to an InputPort or OutputPort can also be used for `gating
     <GatingMechanism_Specifying_Gating>`.  However, this requires that its `Function_Modulatory_Params` be specified
     (see `above <UDF_Modulatory_Params>`). This can be done by including a **params** argument in the definition of
     the function itself::
@@ -274,7 +274,7 @@ class UserDefinedFunction(Function_Base):
 
 
     The ``phase`` and ``amplitude`` parameters of ``my_sinusoidal_fct`` can now be used as the
-    `Function_Modulatory_Params` for gating any InputPort or OutputState to which the function is assigned (see
+    `Function_Modulatory_Params` for gating any InputPort or OutputPort to which the function is assigned (see
     `GatingMechanism_Specifying_Gating` and `GatingSignal_Examples`).
 
     **Class Definition:**

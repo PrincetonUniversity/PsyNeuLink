@@ -91,7 +91,7 @@ from psyneulink.core.components.functions.transferfunctions import LinearMatrix,
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import projection_keywords
 from psyneulink.core.components.shellclasses import Mechanism
-from psyneulink.core.components.states.outputstate import OutputState
+from psyneulink.core.components.states.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import AUTO_ASSOCIATIVE_PROJECTION, DEFAULT_MATRIX, HOLLOW_MATRIX, MATRIX
 from psyneulink.core.globals.parameters import Parameter
@@ -149,7 +149,8 @@ class AutoAssociativeProjection(MappingProjection):
         name=None,                                          \
         prefs=None)
 
-    Implements a MappingProjection that is self-recurrent on a `RecurrentTransferMechanism`; an AutoAssociativeProjection
+    Implements a MappingProjection that is self-recurrent on a `RecurrentTransferMechanism`; an
+    AutoAssociativeProjection
     represents connections between nodes in a single-layer recurrent network. It multiplies the output of the
     `RecurrentTransferMechanism` by a matrix, then presents the product as input to the `RecurrentTransferMechanism`.
 
@@ -170,9 +171,9 @@ class AutoAssociativeProjection(MappingProjection):
         simply specifies both the sender and receiver of the AutoAssociativeProjection. Setting owner=myMechanism is
         identical to setting sender=myMechanism and receiver=myMechanism.
 
-    sender : Optional[OutputState or Mechanism]
+    sender : Optional[OutputPort or Mechanism]
         specifies the source of the Projection's input. If a Mechanism is specified, its
-        `primary OutputState <OutputState_Primary>` will be used. If it is not specified, it will be assigned in
+        `primary OutputPort <OutputPort_Primary>` will be used. If it is not specified, it will be assigned in
         the context in which the Projection is used.
 
     receiver : Optional[InputPort or Mechanism]
@@ -204,7 +205,7 @@ class AutoAssociativeProjection(MappingProjection):
 
     componentType : AUTO_ASSOCIATIVE_PROJECTION
 
-    sender : OutputState
+    sender : OutputPort
         identifies the source of the Projection's input.
 
     receiver: InputPort
@@ -332,12 +333,12 @@ class AutoAssociativeProjection(MappingProjection):
 
     # def _update_auto_and_hetero(self, owner_mech=None, runtime_params=None, time_scale=TimeScale.TRIAL, context=None):
     #     if owner_mech is None:
-    #         if isinstance(self.sender, OutputState):
+    #         if isinstance(self.sender, OutputPort):
     #             owner_mech = self.sender.owner
     #         elif isinstance(self.sender, Mechanism):
     #             owner_mech = self.sender
     #         else:
-    #             raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
+    #             raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputPort: currently"
     #                                        " the sender is {}".
     #                                        format(self.__class__.__name__, self.name, self.sender))
     #     if AUTO in owner_mech._parameter_states and HETERO in owner_mech._parameter_states:
@@ -362,12 +363,12 @@ class AutoAssociativeProjection(MappingProjection):
     #     """
     #     super()._update_parameter_states(runtime_params, context)
     #
-    #     if isinstance(self.sender, OutputState):
+    #     if isinstance(self.sender, OutputPort):
     #         owner_mech = self.sender.owner
     #     elif isinstance(self.sender, Mechanism):
     #         owner_mech = self.sender
     #     else:
-    #         raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently the"
+    #         raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputPort: currently the"
     #                                    " sender is {}".
     #                                    format(self.__class__.__name__, self.name, self.sender))
     #
@@ -381,13 +382,13 @@ class AutoAssociativeProjection(MappingProjection):
 
     @property
     def owner_mech(self):
-        if isinstance(self.sender, OutputState):
+        if isinstance(self.sender, OutputPort):
             return self.sender.owner
         elif isinstance(self.sender, Mechanism):
             return self.sender
         else:
             raise AutoAssociativeError(
-                "The sender of the {} \'{}\' must be a Mechanism or OutputState: currently the sender is {}".format(
+                "The sender of the {} \'{}\' must be a Mechanism or OutputPort: currently the sender is {}".format(
                     self.__class__.__name__, self.name, self.sender
                 )
             )

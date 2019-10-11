@@ -99,7 +99,7 @@ class TestRecurrentTransferMechanismInputs:
             size=3
         )
         np.testing.assert_allclose(R.recurrent_projection.matrix, R.matrix)
-        assert R.recurrent_projection.sender is R.output_state
+        assert R.recurrent_projection.sender is R.output_port
         assert R.recurrent_projection.receiver is R.input_port
 
     @pytest.mark.mechanism
@@ -165,7 +165,7 @@ class TestRecurrentTransferMechanismInputs:
                                        hetero=-2.0,
                                        integrator_mode=True,
                                        integration_rate=0.01,
-                                       output_states = [RECURRENT_OUTPUT.RESULT])
+                                       output_ports = [RECURRENT_OUTPUT.RESULT])
         if mode == 'Python':
             EX = R.execute
         elif mode == 'LLVM':
@@ -309,7 +309,7 @@ class TestRecurrentTransferMechanismMatrix:
             size=3,
             hetero=-1
         )
-        # (7/28/17 CW) these numbers assume that execute() leaves its value in the outputState of the mechanism: if
+        # (7/28/17 CW) these numbers assume that execute() leaves its value in the outputPort of the mechanism: if
         # the behavior of execute() changes, feel free to change these numbers
         val = R.execute([-1, -2, -3])
         np.testing.assert_allclose(val, [[-1, -2, -3]])
@@ -983,10 +983,10 @@ class TestRecurrentTransferMechanismInSystem:
                 [0.0,        0.0,  0.0,         0.0]
             ]
         )
-        np.testing.assert_allclose(R.output_state.parameters.value.get(S), [1.18518086, 0.0, 1.18518086, 0.0])
+        np.testing.assert_allclose(R.output_port.parameters.value.get(S), [1.18518086, 0.0, 1.18518086, 0.0])
 
         # Reset state so learning of new pattern is "uncontaminated" by activity from previous one
-        R.output_state.parameters.value.set([0, 0, 0, 0], S, override=True)
+        R.output_port.parameters.value.set([0, 0, 0, 0], S, override=True)
         inputs_dict = {R:[0,1,0,1]}
         S.run(num_trials=4,
               inputs=inputs_dict)
@@ -999,7 +999,7 @@ class TestRecurrentTransferMechanismInSystem:
                 [0.0,        0.23700501, 0.0,        0.        ]
             ]
         )
-        np.testing.assert_allclose(R.output_state.parameters.value.get(S),[0.0, 1.18518086, 0.0, 1.18518086])
+        np.testing.assert_allclose(R.output_port.parameters.value.get(S),[0.0, 1.18518086, 0.0, 1.18518086])
 
 
 # this doesn't work consistently due to EVC's issue with the scheduler
@@ -1016,7 +1016,7 @@ class TestRecurrentTransferMechanismInSystem:
 #             function=Linear)
 #         p = Process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismControl.simple_prefs)
 #         s = System(processes=[p], prefs=TestRecurrentTransferMechanismControl.simple_prefs, controller = EVCControlMechanism,
-#            enable_controller = True, monitor_for_control = [T.output_state], control_signals=[('auto', R), ('hetero', R)])
+#            enable_controller = True, monitor_for_control = [T.output_port], control_signals=[('auto', R), ('hetero', R)])
 #         s.run(inputs = {R: [[1, 3, 2, 5]]})
 #         print('T.value: ', T.value)
 #         np.testing.assert_allclose(T.value, [[-.09645391388158941, -.09645391388158941, -.09645391388158941]])

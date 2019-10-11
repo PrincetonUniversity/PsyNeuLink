@@ -118,11 +118,11 @@ ocm = OptimizationControlMechanism(features=[player_obs.input_port, predator_obs
                                                     prey_obs,
                                                     prey_obs.input_port
                                                     ]
-                                           # monitored_output_states=[player_input, player_obs,
+                                           # monitored_output_ports=[player_input, player_obs,
                                            #                          predator_input, predator_obs,
                                            #                          prey_input, prey_obs
                                            #                          ]
-                                           # monitored_output_states=[agent_comp.input_CIM_states[
+                                           # monitored_output_ports=[agent_comp.input_CIM_states[
                                            #                              player_obs.input_port][1],
                                            #                          player_obs,
                                            #                          agent_comp.input_CIM_states[

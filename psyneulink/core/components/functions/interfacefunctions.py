@@ -140,7 +140,7 @@ class InterfaceStateMap(InterfaceFunction):
            a single value or array to be transformed.
 
         corresponding_input_port : InputPort : default None
-            the InputPort on the owner CompositionInterfaceMechanism to which this OutputState corresponds
+            the InputPort on the owner CompositionInterfaceMechanism to which this OutputPort corresponds
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the

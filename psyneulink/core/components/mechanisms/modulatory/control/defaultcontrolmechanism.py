@@ -59,14 +59,14 @@ class DefaultControlMechanism(ControlMechanism):
 
     COMMENT:
         Description:
-            Implements default source of control signals, with one inputPort and outputState for each.
-            Uses defaultControlAllocation as input(s) and pass value(s) unchanged to outputState(s) and
+            Implements default source of control signals, with one inputPort and outputPort for each.
+            Uses defaultControlAllocation as input(s) and pass value(s) unchanged to outputPort(s) and
             ControlProjection(s)
 
             Every ControlProjection is assigned this Mechanism as its sender by default (i.e., unless a sender is
                 explicitly specified in its constructor).
 
-            An inputPort and outputState is created for each ControlProjection assigned:
+            An inputPort and outputPort is created for each ControlProjection assigned:
                 the inputPort is assigned the
                 :py:constant:`defaultControlAllocation <Defaults.defaultControlAllocation>` value;
                 when the DefaultControlMechanism executes, it simply assigns the same value to the ControlProjection.
@@ -126,13 +126,13 @@ class DefaultControlMechanism(ControlMechanism):
     def _instantiate_input_ports(self, context=None):
         """Instantiate input_value attribute
 
-        Instantiate input_ports and monitored_output_states attributes (in case they are referenced)
-            and assign any OutputStates that project to the input_ports to monitored_output_states
+        Instantiate input_ports and monitored_output_ports attributes (in case they are referenced)
+            and assign any OutputPorts that project to the input_ports to monitored_output_ports
 
         IMPLEMENTATION NOTE:  At present, these are dummy assignments, simply to satisfy the requirements for
                               subclasses of ControlMechanism;  in the future, an _instantiate_objective_mechanism()
-                              method should be implemented that also implements an _instantiate_monitored_output_states
-                              method, and that can be used to add OutputStates/Mechanisms to be monitored.
+                              method should be implemented that also implements an _instantiate_monitored_output_ports
+                              method, and that can be used to add OutputPorts/Mechanisms to be monitored.
         """
 
         if not hasattr(self, INPUT_PORTS):
@@ -140,7 +140,7 @@ class DefaultControlMechanism(ControlMechanism):
         elif self.input_ports:
             for input_port in self.input_ports:
                 for projection in input_port.path_afferents:
-                    self.monitored_output_states.append(projection.sender)
+                    self.monitored_output_ports.append(projection.sender)
 
     def _instantiate_control_signal(self, control_signal, context=None):
         """Instantiate requested ControlSignal, ControlProjection and associated InputPort

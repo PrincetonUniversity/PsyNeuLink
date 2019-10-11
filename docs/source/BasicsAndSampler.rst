@@ -584,7 +584,7 @@ PsyNeuLink has a native class -- `LearningMechanism` -- that can be used to impl
 including unsupervised forms (such as `Hebbian`) and supervised forms (such as reinforcment learning and
 backpropagation). LearningMechanisms take as their input a target and/or an error signal, provided by a
 `MappingProjection` from the source of the error signal (either a ComparatorMechanism or another LearningMechanism).
-LearningMechanisms use `LearningSignals` (a type of `OutputState`) to send a `LearningProjection` to the
+LearningMechanisms use `LearningSignals` (a type of `OutputPort`) to send a `LearningProjection` to the
 `MappingProjection` that is being learned.  The type of learning implemented by a LearningMechanism is determined by
 the class of `LearningFunction <LearningFunctions>` assigned as its `function <LearningMechanism.function>`.  In some
 cases (such as multilayered backpropagation networks), configuration of the LearningMechanisms and corresponding

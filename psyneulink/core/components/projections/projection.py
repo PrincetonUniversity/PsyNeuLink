@@ -28,7 +28,7 @@ Overview
 Projections allow information to be passed between `Mechanisms <Mechanism>`.  A Projection takes its input from
 its `sender <Projection_Base.sender>` and transmits that information to its `receiver <Projection_Base.receiver>`.  The
 `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>` of a Projection are always `States <State>`:
-the `sender <Projection_Base.sender>` is always the `OutputState` of a `Mechanism <Mechanism>`; the `receiver
+the `sender <Projection_Base.sender>` is always the `OutputPort` of a `Mechanism <Mechanism>`; the `receiver
 <Projection_Base.receiver>` depends upon the type of Projection.  There are two broad categories of Projections,
 each of which has subtypes that differ in the type of information they transmit, how they do this, and the type of
 `State <State>` to which they project (i.e., of their `receiver <Projection_Base.receiver>`):
@@ -38,7 +38,7 @@ each of which has subtypes that differ in the type of information they transmit,
     `pathway <Process.pathway>`.  There is currently one on type of PathwayProjection:
 
   * `MappingProjection`
-      takes the `value <OutputState.value>` of an `OutputState` of a `ProcessingMechanism <ProcessingMechanism>`
+      takes the `value <OutputPort.value>` of an `OutputPort` of a `ProcessingMechanism <ProcessingMechanism>`
       converts it by convolving it with the MappingProjection's `matrix <MappingProjection.MappingProjection.matrix>`
       parameter, and transmits the result to the `InputPort` of another ProcessingMechanism.  Typically,
       MappingProjections are used to connect Mechanisms in the `pathway` of a `Process`, though they can be use for
@@ -46,9 +46,9 @@ each of which has subtypes that differ in the type of information they transmit,
       <ModulatoryMechanism>`).
 
 * `ModulatoryProjection <ModulatoryProjection>`
-    takes the `value <OutputState.value>` of a `ModulatorySignal <ModulatorySignal>` of a `ModulatoryMechanism
+    takes the `value <OutputPort.value>` of a `ModulatorySignal <ModulatorySignal>` of a `ModulatoryMechanism
     <ProcessingMechanism>`, uses it to regulate modify the `value <State_Base.value>` of an `InputPort`,
-    `ParameterState` or `OutputState` of another Component.  ModulatorySignals are specialized types of `OutputState`,
+    `ParameterState` or `OutputPort` of another Component.  ModulatorySignals are specialized types of `OutputPort`,
     that are used to specify how to modify the `value <State_Base.value>` of the `State <State>` to which a
     ModulatoryProjection projects. There are three types of ModulatoryProjections, corresponding to the three types
     of ModulatoryMechanisms (and corresponding ModulatorySignals; see `figure <ModulatorySignal_Anatomy_Figure>`),
@@ -68,7 +68,7 @@ each of which has subtypes that differ in the type of information they transmit,
   ..
   * `GatingProjection`
       takes the `value <GatingSignal.value>` of a `GatingSignal` of a `GatingMechanism`, and transmits this to
-      the `InputPort` or `OutputState` of a `ProcessingMechanism <ProcessingMechanism>` that uses this to modify the
+      the `InputPort` or `OutputPort` of a `ProcessingMechanism <ProcessingMechanism>` that uses this to modify the
       State's `value <State_Base.value>`
 
 .. _Projection_Creation:
@@ -130,7 +130,7 @@ Projection in context:
         additional details.
 
       * *GATING_PROJECTION* (or *GATING*) -- this can be used when specifying an `InputPort
-        <InputPort_Projection_Source_Specification>` or an `OutputState <OutputState_Projections>`, to create a
+        <InputPort_Projection_Source_Specification>` or an `OutputPort <OutputPort_Projections>`, to create a
         default `GatingProjection` to the `State <State>`. If the GatingProjection's `sender <GatingProjection.sender>`
         cannot be inferred from the context in which this specification occurs, then its `initialization is deferred
         <GatingProjection_Deferred_Initialization>` until it can be determined (e.g., a `GatingMechanism` or
@@ -145,7 +145,7 @@ Projection in context:
     attribute of its `receiver <MappingProjection.receiver>`.
   ..
   * **Mechanism** -- creates a `MappingProjection` to either the `primary InputPort <InputPort_Primary>` or
-    `primary OutputState <OutputState_Primary>`, depending on the type of Mechanism and context of the specification.
+    `primary OutputPort <OutputPort_Primary>`, depending on the type of Mechanism and context of the specification.
   ..
   * **State** -- creates a `Projection` to or from the specified `State`, depending on the type of State and the
     context of the specification.
@@ -170,7 +170,7 @@ Projection in context:
         manner as described above for keyword specifications.
 
       COMMENT:
-          WHAT ABOUT SPECIFICATION USING OutputState/ModulatorySignal OR Mechanism? OR Matrix OR Matrix keyword
+          WHAT ABOUT SPECIFICATION USING OutputPort/ModulatorySignal OR Mechanism? OR Matrix OR Matrix keyword
       COMMENT
 
       COMMENT:  ??IMPLEMENTED FOR PROJECTION PARAMS??
@@ -264,17 +264,17 @@ of a State are listed in its `projections <State_Base.projections>` attribute.
     |     Projection       |   sender                              |  receiver                                        |
     |                      |   *(attribute)*                       |  *(attribute)*                                   |
     +======================+=======================================+==================================================+
-    | `MappingProjection`  | `OutputState`                         | `InputPort`                                     |
-    |                      | (`efferents <OutputState.efferents>`) | (`path_afferents <InputPort.path_afferents>`)   |
+    | `MappingProjection`  | `OutputPort`                         | `InputPort`                                     |
+    |                      | (`efferents <OutputPort.efferents>`) | (`path_afferents <InputPort.path_afferents>`)   |
     +----------------------+---------------------------------------+--------------------------------------------------+
     | `LearningProjection` | `LearningSignal`                      | `ParameterState`                                 |
-    |                      | (`efferents <OutputState.efferents>`) | (`mod_afferents <ParameterState.mod_afferents>`) |
+    |                      | (`efferents <OutputPort.efferents>`) | (`mod_afferents <ParameterState.mod_afferents>`) |
     +----------------------+---------------------------------------+--------------------------------------------------+
     | `ControlProjection`  | `ControlSignal`                       | `ParameterState`                                 |
-    |                      | (`efferents <OutputState.efferents>`) | (`mod_afferents <ParameterState.mod_afferents>`) |
+    |                      | (`efferents <OutputPort.efferents>`) | (`mod_afferents <ParameterState.mod_afferents>`) |
     +----------------------+---------------------------------------+--------------------------------------------------+
-    | `GatingProjection`   | `GatingSignal`                        | `InputPort` or `OutputState`                    |
-    |                      | (`efferents <OutputState.efferents>`) | (`mod_afferents <State_Base.mod_afferents>`)     |
+    | `GatingProjection`   | `GatingSignal`                        | `InputPort` or `OutputPort`                    |
+    |                      | (`efferents <OutputPort.efferents>`) | (`mod_afferents <State_Base.mod_afferents>`)     |
     +----------------------+---------------------------------------+--------------------------------------------------+
 
 .. _Projection_Sender:
@@ -282,23 +282,23 @@ of a State are listed in its `projections <State_Base.projections>` attribute.
 *Sender*
 ~~~~~~~~
 
-This must be an `OutputState` or a `ModulatorySignal <ModulatorySignal>` (a subclass of OutputState specialized for
-`ModulatoryProjections <ModulatoryProjection>`).  The Projection is assigned to the OutputState or ModulatorySignal's
+This must be an `OutputPort` or a `ModulatorySignal <ModulatorySignal>` (a subclass of OutputPort specialized for
+`ModulatoryProjections <ModulatoryProjection>`).  The Projection is assigned to the OutputPort or ModulatorySignal's
 `efferents <State_Base.efferents>` list and, for ModulatoryProjections, to the list of ModulatorySignals specific to
-the `ModulatoryMechanism <ModulatoryMechanism>` from which it projects.  The OutputState or ModulatorySignal's `value
-<OutputState.value>` is used as the `variable <Function.variable>` for Projection's `function
+the `ModulatoryMechanism <ModulatoryMechanism>` from which it projects.  The OutputPort or ModulatorySignal's `value
+<OutputPort.value>` is used as the `variable <Function.variable>` for Projection's `function
 <Projection_Base.function>`.
 
 A sender can be specified as:
 
-  * an **OutputState** or **ModulatorySignal**, as appropriate for the Projection's type, using any of the ways for
-    `specifying an OutputState <OutputState_Specification>`.
+  * an **OutputPort** or **ModulatorySignal**, as appropriate for the Projection's type, using any of the ways for
+    `specifying an OutputPort <OutputPort_Specification>`.
   ..
-  * a **Mechanism**;  for a `MappingProjection`, the Mechanism's `primary OutputState <OutputState_Primary>` is
+  * a **Mechanism**;  for a `MappingProjection`, the Mechanism's `primary OutputPort <OutputPort_Primary>` is
     assigned as the `sender <Projection_Base.sender>`; for a `ModulatoryProjection <ModulatoryProjection>`, a
     `ModulatorySignal <ModulatorySignal>` of the appropriate type is created and assigned to the Mechanism.
 
-If the `sender <Projection_Base.sender>` is not specified and it can't be determined from the context, or an OutputState
+If the `sender <Projection_Base.sender>` is not specified and it can't be determined from the context, or an OutputPort
 specification is not associated with a Mechanism that can be determined from , then the initialization of the
 Projection is `deferred <Projection_Deferred_Initialization>`.
 
@@ -312,7 +312,7 @@ The `receiver <Projection_Base.receiver>` required by a Projection depends on it
     * MappingProjection: `InputPort`
     * LearningProjection: `ParameterState` (for the `matrix <MappingProjection>` of a `MappingProjection`)
     * ControlProjection: `ParameterState`
-    * GatingProjection: `InputPort` or OutputState`
+    * GatingProjection: `InputPort` or OutputPort`
 
 A `MappingProjection` (as a `PathwayProjection <PathwayProjection>`) is assigned to the `path_afferents
 <State.path_afferents>` attribute of its `receiver <Projection_Base.receiver>`.  The ModulatoryProjections are assigned
@@ -375,10 +375,10 @@ GET FROM Scratch Pad
 
 for example, if a ProjectionTuple is used in the context of an
     `InputPort specification
-    <InputPort_Specification>` to specify a MappingProjection to it from an `OutputState` that is specified
+    <InputPort_Specification>` to specify a MappingProjection to it from an `OutputPort` that is specified
     in the first item of the tuple, and a Projection specification is included in the fourth, its sender (and/or the
     sending dimensions of its `matrix <MappingProjection.matrix>` parameter) must be compatible with the specified
-    OutputState (see `examples <XXX>` below)
+    OutputPort (see `examples <XXX>` below)
 
 COMMENT
 
@@ -399,7 +399,7 @@ from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Pro
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.states.state import StateError
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATING, GATING_PROJECTION, GATING_SIGNAL, INPUT_PORT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_RECEIVER_STATE, MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_SENDER_STATE, NAME, OUTPUT_STATE, OUTPUT_STATES, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, STANDARD_ARGS, STATE, STATES, WEIGHT, ADD_INPUT_PORT, ADD_OUTPUT_STATE, PROJECTION_COMPONENT_CATEGORY
+from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATING, GATING_PROJECTION, GATING_SIGNAL, INPUT_PORT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_RECEIVER_STATE, MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_SENDER_STATE, NAME, OUTPUT_PORT, OUTPUT_PORTS, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, STANDARD_ARGS, STATE, STATES, WEIGHT, ADD_INPUT_PORT, ADD_OUTPUT_PORT, PROJECTION_COMPONENT_CATEGORY
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
@@ -525,7 +525,7 @@ class Projection_Base(Projection):
     ----------
 
     variable : value
-        input to Projection, received from `value <OutputState.value>` of `sender <Projection_Base.sender>`.
+        input to Projection, received from `value <OutputPort.value>` of `sender <Projection_Base.sender>`.
 
     sender : State
         State from which Projection receives its input (see `Projection_Sender` for additional information).
@@ -665,10 +665,10 @@ class Projection_Base(Projection):
         * Receiver is required, since can't instantiate a Projection without a receiving State
         * If sender and/or receiver is a Mechanism, the appropriate State is inferred as follows:
             MappingProjection:
-                sender = <Mechanism>.output_state
+                sender = <Mechanism>.output_port
                 receiver = <Mechanism>.input_port
             ControlProjection:
-                sender = <Mechanism>.output_state
+                sender = <Mechanism>.output_port
                 receiver = <Mechanism>.paramsCurrent[<param>] IF AND ONLY IF there is a single one
                             that is a ParameterState;  otherwise, an exception is raised
         * _instantiate_sender, _instantiate_receiver must be called before _instantiate_function:
@@ -809,17 +809,17 @@ class Projection_Base(Projection):
         _instantiate_parameter_states(owner=self, function=function, context=context)
 
     def _instantiate_sender(self, sender, context=None):
-        """Assign self.sender to OutputState of sender
+        """Assign self.sender to OutputPort of sender
 
         Assume self.sender has been assigned in _validate_params, from either sender arg or PROJECTION_SENDER
         Validate, and assign projection to sender's efferents attribute
 
-        If self.sender is a Mechanism, re-assign it to <Mechanism>.output_state
-        If self.sender is a State class reference, validate that it is a OutputState
+        If self.sender is a Mechanism, re-assign it to <Mechanism>.output_port
+        If self.sender is a State class reference, validate that it is a OutputPort
         Assign projection to sender's efferents attribute
         """
         from psyneulink.core.compositions.composition import Composition
-        from psyneulink.core.components.states.outputstate import OutputState
+        from psyneulink.core.components.states.outputport import OutputPort
 
         if not (
             isinstance(sender, (Composition, Mechanism, State, Process_Base))
@@ -830,19 +830,19 @@ class Projection_Base(Projection):
                 f"(including paramClassDefaults: {self.paramClassDefaults[PROJECTION_SENDER]})."
 
         # If self.sender is specified as a Mechanism (rather than a State),
-        #     get relevant OutputState and assign it to self.sender
-        # IMPLEMENTATION NOTE: Assume that self.sender should be the primary OutputState; if that is not the case,
+        #     get relevant OutputPort and assign it to self.sender
+        # IMPLEMENTATION NOTE: Assume that self.sender should be the primary OutputPort; if that is not the case,
         #                      self.sender should either be explicitly assigned, or handled in an override of the
         #                      method by the relevant subclass prior to calling super
         if isinstance(sender, Composition):
             sender = sender.output_CIM
         if isinstance(sender, Mechanism):
-            sender = sender.output_state
+            sender = sender.output_port
         self.sender = sender
 
-        # At this point, self.sender should be a OutputState
-        if not isinstance(self.sender, OutputState):
-            raise ProjectionError("Sender specified for {} ({}) must be a Mechanism or an OutputState".
+        # At this point, self.sender should be a OutputPort
+        if not isinstance(self.sender, OutputPort):
+            raise ProjectionError("Sender specified for {} ({}) must be a Mechanism or an OutputPort".
                                   format(self.name, self.sender))
 
         # Assign projection to self.sender's efferents list attribute
@@ -1231,7 +1231,7 @@ def _parse_projection_spec(projection_spec,
     # Mechanism object or class
     elif (isinstance(projection_spec, Mechanism)
           or (isinstance(projection_spec, type) and issubclass(projection_spec, Mechanism))):
-        proj_spec_dict[PROJECTION_TYPE] = projection_spec.outputStateTypes.paramClassDefaults[PROJECTION_TYPE]
+        proj_spec_dict[PROJECTION_TYPE] = projection_spec.outputPortTypes.paramClassDefaults[PROJECTION_TYPE]
 
     # Dict
     elif isinstance(projection_spec, dict):
@@ -1310,7 +1310,7 @@ def _parse_connection_specs(connectee_state_type,
     In both cases, the connection specification can be a single (stand-alone) item or a list of them.
 
     Projection(s) in connection(s) can be specified in any of the ways a Projection can be specified;
-        * Mechanism specifications are resolved to a primary InputPort or OutputState, as appropriate
+        * Mechanism specifications are resolved to a primary InputPort or OutputPort, as appropriate
         * State specifications are assumed to be for connect_with State,
             and checked for compatibilty of assignment (using projection_socket)
         * keyword specifications are resolved to corresponding Projection class
@@ -1357,7 +1357,7 @@ def _parse_connection_specs(connectee_state_type,
     from psyneulink.core.components.states.state import _get_state_for_socket
     from psyneulink.core.components.states.state import StateRegistry
     from psyneulink.core.components.states.inputport import InputPort
-    from psyneulink.core.components.states.outputstate import OutputState
+    from psyneulink.core.components.states.outputport import OutputPort
     from psyneulink.core.components.states.parameterstate import ParameterState
     from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
     from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import _is_control_spec
@@ -1400,32 +1400,32 @@ def _parse_connection_specs(connectee_state_type,
         #     to validate the state spec and append ProjectionTuple to connect_with_states
         if isinstance(connection, (Mechanism, State, type)):
             # FIX: 10/3/17 - REPLACE THIS (AND ELSEWHERE) WITH ProjectionTuple THAT HAS BOTH SENDER AND RECEIVER
-            # FIX: 11/28/17 - HACKS TO HANDLE PROJECTION FROM GatingSignal TO InputPort or OutputState
+            # FIX: 11/28/17 - HACKS TO HANDLE PROJECTION FROM GatingSignal TO InputPort or OutputPort
             # FIX:            AND PROJECTION FROM ControlSignal to ParameterState
             # # If it is a ModulatoryMechanism specification, get its ModulatorySignal class
             # # (so it is recognized by _is_projection_spec below (Mechanisms are not for secondary reasons)
             # if isinstance(connection, type) and issubclass(connection, ModulatoryMechanism_Base):
-            #     connection = connection.outputStateTypes
-            if ((isinstance(connectee_state_type, (InputPort, OutputState, ParameterState))
+            #     connection = connection.outputPortTypes
+            if ((isinstance(connectee_state_type, (InputPort, OutputPort, ParameterState))
                  or isinstance(connectee_state_type, type)
-                and issubclass(connectee_state_type, (InputPort, OutputState, ParameterState)))
+                and issubclass(connectee_state_type, (InputPort, OutputPort, ParameterState)))
                 and _is_modulatory_spec(connection)):
                 # Convert ModulatoryMechanism spec to corresponding ModulatorySignal spec
                 if isinstance(connection, type) and issubclass(connection, ModulatoryMechanism_Base):
-                    # If the connection supports multiple outputStateTypes,
+                    # If the connection supports multiple outputPortTypes,
                     #    get the one compatible with the current connectee:
-                    output_state_types = connection.outputStateTypes
-                    if not isinstance(output_state_types, list):
-                        output_state_types = [output_state_types]
-                    output_state_type = [o for o in output_state_types if o.__name__ in
+                    output_port_types = connection.outputPortTypes
+                    if not isinstance(output_port_types, list):
+                        output_port_types = [output_port_types]
+                    output_port_type = [o for o in output_port_types if o.__name__ in
                                           connectee_state_type.connectsWith]
-                    assert len(output_state_type)==1, \
-                        f"PROGRAM ERROR:  More than one {OutputState.__name__} type found for {connection}  " \
-                            f"({output_state_types}) that can be assigned a modulatory {Projection.__name__} " \
+                    assert len(output_port_type)==1, \
+                        f"PROGRAM ERROR:  More than one {OutputPort.__name__} type found for {connection}  " \
+                            f"({output_port_types}) that can be assigned a modulatory {Projection.__name__} " \
                             f"to {connectee_state_type.__name__} of {owner.name}"
-                    connection = output_state_type[0]
+                    connection = output_port_type[0]
                 elif isinstance(connection, ModulatoryMechanism_Base):
-                    connection = connection.output_state
+                    connection = connection.output_port
 
                 projection_spec = connection
 
@@ -1634,14 +1634,14 @@ def _parse_connection_specs(connectee_state_type,
 
             # Validate state specification, and get actual state referenced if it has been instantiated
             try:
-                # FIX: 11/28/17 HACK TO DEAL WITH GatingSignal Projection to OutputState
+                # FIX: 11/28/17 HACK TO DEAL WITH GatingSignal Projection to OutputPort
                 # FIX: 5/11/19: CORRECTED TO HANDLE ControlMechanism SPECIFIED FOR GATING
                 if ((_is_gating_spec(first_item) or _is_control_spec(first_item))
-                    and (isinstance(last_item, OutputState) or last_item == OutputState)
+                    and (isinstance(last_item, OutputPort) or last_item == OutputPort)
                 ):
                     projection_socket = SENDER
-                    state_types = [OutputState]
-                    mech_state_attribute = [OUTPUT_STATES]
+                    state_types = [OutputPort]
+                    mech_state_attribute = [OUTPUT_PORTS]
                 else:
                     state_types = connects_with
                     mech_state_attribute=connect_with_attr
@@ -1691,25 +1691,25 @@ def _parse_connection_specs(connectee_state_type,
             # Validate projection specification
             if _is_projection_spec(projection_spec) or _is_modulatory_spec(projection_spec) or projection_spec is None:
 
-                # FIX: 11/21/17 THIS IS A HACK TO DEAL WITH GatingSignal Projection TO InputPort or OutputState
+                # FIX: 11/21/17 THIS IS A HACK TO DEAL WITH GatingSignal Projection TO InputPort or OutputPort
                 from psyneulink.core.components.states.inputport import InputPort
-                from psyneulink.core.components.states.outputstate import OutputState
+                from psyneulink.core.components.states.outputport import OutputPort
                 from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
                 from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
                 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
                 if (not isinstance(projection_spec, GatingProjection)
                     and isinstance(state, GatingSignal)
-                    and connectee_state_type in {InputPort, OutputState}):
+                    and connectee_state_type in {InputPort, OutputPort}):
                     projection_spec = state
                 if (
                         (not isinstance(projection_spec, GatingProjection)
                          and state.__class__ == GatingSignal
-                         and connectee_state_type in {InputPort, OutputState})
+                         and connectee_state_type in {InputPort, OutputPort})
                 # # MODIFIED 9/27/19 NEW: [JDC]
                 #     or
                 #         (not isinstance(projection_spec, ControlProjection)
                 #          and state.__class__ == ControlSignal
-                #          and connectee_state_type in {InputPort, OutputState})
+                #          and connectee_state_type in {InputPort, OutputPort})
                 ):
                     projection_spec = state
 
@@ -1829,14 +1829,14 @@ def _validate_connection_request(
         # Projection has been instantiated
         else:
             # Determine whether the State to which the Projection's socket has been assigned is in connect_with_states
-            # FIX: 11/4/17 - THIS IS A HACK TO DEAL WITH THE CASE IN WHICH THE connectee_state IS AN OutputState
+            # FIX: 11/4/17 - THIS IS A HACK TO DEAL WITH THE CASE IN WHICH THE connectee_state IS AN OutputPort
             # FIX:               THE projection_socket FOR WHICH IS USUALLY A RECEIVER;
             # FIX:           HOWEVER, IF THE projection_spec IS A GatingSignal
             # FIX:               THEN THE projection_socket MUST BE SENDER
-            from psyneulink.core.components.states.outputstate import OutputState
+            from psyneulink.core.components.states.outputport import OutputPort
             from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
             from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
-            if connectee_state is OutputState and isinstance(projection_spec, (GatingProjection, ControlProjection)):
+            if connectee_state is OutputPort and isinstance(projection_spec, (GatingProjection, ControlProjection)):
                 projection_socket = SENDER
             projection_socket_state = getattr(projection_spec, projection_socket)
             if  issubclass(projection_socket_state.__class__, connect_with_states):
@@ -2092,70 +2092,70 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 def _add_projection_from(sender, state, projection_spec, receiver, context=None):
-    """Assign an "outgoing" Projection from an OutputState of a sender Mechanism
+    """Assign an "outgoing" Projection from an OutputPort of a sender Mechanism
 
     projection_spec can be any valid specification of a projection_spec (see State._instantiate_projections_to_state)
-    state must be a specification of an OutputState
-    Specification of OutputState can be any of the following:
-            - OUTPUT_STATE - assigns projection_spec to (primary) OutputState
-            - OutputState object
-            - index for Mechanism OutputStates OrderedDict
-            - name of OutputState (i.e., key for Mechanism.OutputStates OrderedDict))
-            - the keyword ADD_OUTPUT_STATE or the name for an OutputState to be added
+    state must be a specification of an OutputPort
+    Specification of OutputPort can be any of the following:
+            - OUTPUT_PORT - assigns projection_spec to (primary) OutputPort
+            - OutputPort object
+            - index for Mechanism OutputPorts OrderedDict
+            - name of OutputPort (i.e., key for Mechanism.OutputPorts OrderedDict))
+            - the keyword ADD_OUTPUT_PORT or the name for an OutputPort to be added
 
     Args:
         sender (Mechanism):
         projection_spec: (Projection, dict, or str)
-        state (OutputState, str, or value):
+        state (OutputPort, str, or value):
         context:
     """
 
 
     from psyneulink.core.components.states.state import _instantiate_state
     from psyneulink.core.components.states.state import State_Base
-    from psyneulink.core.components.states.outputstate import OutputState
+    from psyneulink.core.components.states.outputport import OutputPort
 
     # Validate that projection is not already assigned to sender; if so, warn and ignore
 
     if isinstance(projection_spec, Projection):
         projection = projection_spec
-        if ((isinstance(sender, OutputState) and projection.sender is sender) or
-                (isinstance(sender, Mechanism) and projection.sender is sender.output_state)):
+        if ((isinstance(sender, OutputPort) and projection.sender is sender) or
+                (isinstance(sender, Mechanism) and projection.sender is sender.output_port)):
             if sender.verbosePref:
                 warnings.warn("Request to assign {} as sender of {}, but it has already been assigned".
                               format(sender.name, projection.name))
                 return
 
-    if not isinstance(state, (int, str, OutputState)):
+    if not isinstance(state, (int, str, OutputPort)):
         raise ProjectionError("State specification for {0} (as sender of {1}) must be the name, reference to "
-                              "or index of an OutputState of {0} )".format(sender.name, projection_spec))
+                              "or index of an OutputPort of {0} )".format(sender.name, projection_spec))
 
     # state is State object, so use that
     if isinstance(state, State_Base):
         state._instantiate_projection_from_state(projection_spec=projection_spec, receiver=receiver, context=context)
         return
 
-    # Generic OUTPUT_STATE is specified, so use (primary) OutputState
-    elif state is OUTPUT_STATE:
-        sender.output_state._instantiate_projections_to_state(projections=projection_spec, context=context)
+    # Generic OUTPUT_PORT is specified, so use (primary) OutputPort
+    elif state is OUTPUT_PORT:
+        sender.output_port._instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 
-    # input_port is index into OutputStates OrderedDict, so get corresponding key and assign to output_state
+    # input_port is index into OutputPorts OrderedDict, so get corresponding key and assign to output_port
     elif isinstance(state, int):
         try:
-            key = list(sender.output_states.keys)[state]
+            key = list(sender.output_ports.keys)[state]
         except IndexError:
-            raise ProjectionError("Attempt to assign projection_spec ({0}) to OutputState {1} of {2} "
-                                 "but it has only {3} OutputStates".
-                                 format(projection_spec.name, state, sender.name, len(sender.output_states)))
+            raise ProjectionError("Attempt to assign projection_spec ({0}) to OutputPort {1} of {2} "
+                                 "but it has only {3} OutputPorts".
+                                 format(projection_spec.name, state, sender.name, len(sender.output_ports)))
         else:
-            output_state = key
+            output_port = key
 
-    # output_state is string (possibly key retrieved above)
-    #    so try as key in output_states ContentAddressableList (i.e., as name of an OutputState)
+    # output_port is string (possibly key retrieved above)
+    #    so try as key in output_ports ContentAddressableList (i.e., as name of an OutputPort)
     if isinstance(state, str):
         try:
-            sender.output_state[state]._instantiate_projections_to_state(projections=projection_spec, context=context)
+            sender.output_port[state]._instantiate_projections_to_state(projections=projection_spec, context=context)
         except KeyError:
             pass
         else:
@@ -2164,31 +2164,31 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
                               format(projection_spec.name, state, sender.name))
             # return
 
-    # output_state is either the name for a new OutputState or ADD_OUTPUT_STATE
-    if not state is ADD_OUTPUT_STATE:
+    # output_port is either the name for a new OutputPort or ADD_OUTPUT_PORT
+    if not state is ADD_OUTPUT_PORT:
         if sender.prefs.verbosePref:
-            reassign = input("\nAdd new OutputState named {0} to {1} (as sender for {2})? (y/n):".
-                             format(output_state, sender.name, projection_spec.name))
+            reassign = input("\nAdd new OutputPort named {0} to {1} (as sender for {2})? (y/n):".
+                             format(output_port, sender.name, projection_spec.name))
             while reassign != 'y' and reassign != 'n':
-                reassign = input("\nAdd {0} to {1}? (y/n):".format(output_state, sender.name))
+                reassign = input("\nAdd {0} to {1}? (y/n):".format(output_port, sender.name))
             if reassign == 'n':
                 raise ProjectionError("Unable to assign projection {0} to sender {1}".
                                       format(projection_spec.name, sender.name))
 
-    output_state = _instantiate_state(owner=sender,
-                                      state_type=OutputState,
-                                      name=output_state,
+    output_port = _instantiate_state(owner=sender,
+                                      state_type=OutputPort,
+                                      name=output_port,
                                       reference_value=projection_spec.value,
                                       reference_value_name='Projection_spec value for new InputPort',
                                       context=context)
-    #  Update output_state and output_states
+    #  Update output_port and output_ports
     try:
-        sender.output_states[output_state.name] = output_state
-    # No OutputState(s) yet, so create them
+        sender.output_ports[output_port.name] = output_port
+    # No OutputPort(s) yet, so create them
     except AttributeError:
         from psyneulink.core.components.states.state import State_Base
-        sender.output_states = ContentAddressableList(component_type=State_Base,
-                                                      list=[output_state],
-                                                      name=sender.name+'.output_states')
+        sender.output_ports = ContentAddressableList(component_type=State_Base,
+                                                      list=[output_port],
+                                                      name=sender.name+'.output_ports')
 
-    output_state._instantiate_projections_to_state(projections=projection_spec, context=context)
+    output_port._instantiate_projections_to_state(projections=projection_spec, context=context)

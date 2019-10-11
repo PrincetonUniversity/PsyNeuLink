@@ -126,10 +126,10 @@ def test_gating_with_UDF_with_composition():
         default_variable=[0, 0, 0],
         function=psyneulink.core.components.functions.transferfunctions.Linear,
         # function=pnl.Logistic,
-        # output_states={pnl.NAME: 'RESULTS USING UDF',
+        # output_ports={pnl.NAME: 'RESULTS USING UDF',
         #                pnl.VARIABLE: [(pnl.OWNER_VALUE,0), pnl.TIME_STEP],
         #                pnl.FUNCTION: my_sinusoidal_fct}
-        output_states={
+        output_ports={
             pnl.NAME: 'RESULTS USING UDF',
             # pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
             pnl.FUNCTION: psyneulink.core.components.functions.transferfunctions.Linear(slope=pnl.GATING)
@@ -140,7 +140,7 @@ def test_gating_with_UDF_with_composition():
         size=[1],
         gating_signals=[
             # Output_Layer
-            Output_Layer.output_state,
+            Output_Layer.output_port,
         ]
     )
 

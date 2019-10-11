@@ -65,7 +65,7 @@ from psyneulink.core.components.functions.transferfunctions import get_matrix
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import projection_keywords
 from psyneulink.core.components.shellclasses import Mechanism
-from psyneulink.core.components.states.outputstate import OutputState
+from psyneulink.core.components.states.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import DEFAULT_MATRIX, FUNCTION_PARAMS, MASKED_MAPPING_PROJECTION, MATRIX
 from psyneulink.core.globals.parameters import Parameter
@@ -107,9 +107,9 @@ class MaskedMappingProjection(MappingProjection):
     Arguments
     ---------
 
-    sender : Optional[OutputState or Mechanism]
+    sender : Optional[OutputPort or Mechanism]
         specifies the source of the Projection's input. If a Mechanism is specified, its
-        `primary OutputState <OutputState_Primary>` will be used. If it is not specified, it will be assigned in
+        `primary OutputPort <OutputPort_Primary>` will be used. If it is not specified, it will be assigned in
         the context in which the Projection is used.
 
     receiver : Optional[InputPort or Mechanism]
@@ -149,7 +149,7 @@ class MaskedMappingProjection(MappingProjection):
 
     componentType : MASKED_MAPPING_PROJECTION
 
-    sender : OutputState
+    sender : OutputPort
         identifies the source of the Projection's input.
 
     receiver: InputPort
