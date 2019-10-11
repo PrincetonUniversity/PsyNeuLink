@@ -309,7 +309,16 @@ class ControlProjection(ModulatoryProjection_Base):
 
         """
         function = Parameter(Linear, stateful=False, loggable=False)
-        control_signal = Parameter(None, read_only=True, getter=_control_signal_getter, setter=_control_signal_setter)
+        control_signal = Parameter(None, read_only=True, getter=_control_signal_getter, setter=_control_signal_setter, pnl_internal=True)
+
+        control_signal_params = Parameter(
+            None,
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            user=False,
+            pnl_internal=True
+        )
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({

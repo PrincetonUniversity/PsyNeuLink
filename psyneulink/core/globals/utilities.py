@@ -95,6 +95,8 @@ import copy
 import inspect
 import logging
 import numbers
+import psyneulink
+import re
 import time
 import warnings
 import weakref
@@ -108,7 +110,7 @@ from psyneulink.core.globals.keywords import DISTANCE_METRICS, EXPONENTIAL, GAUS
 
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
-    'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'NodeRole', 'get_class_attributes', 'flatten_list',
+    'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'NodeRole', 'get_class_attributes', 'flatten_list', 'get_all_explicit_arguments',
     'get_modulationOperation_name', 'get_value_from_array', 'is_component',
     'is_distance_metric', 'is_matrix',
     'insert_list', 'is_matrix_spec', 'all_within_range', 'is_iterable',
@@ -116,7 +118,7 @@ __all__ = [
     'is_value_spec', 'iscompatible', 'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
     'make_readonly_property', 'merge_param_dicts',
     'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY','MODULATION_OVERRIDE',
-    'multi_getattr', 'np_array_less_than_2d', 'object_has_single_value', 'optional_parameter_spec', 'normpdf',
+    'multi_getattr', 'np_array_less_than_2d', 'object_has_single_value', 'optional_parameter_spec', 'normpdf', 'parse_valid_identifier', 'parse_string_to_psyneulink_object_string',
     'parameter_spec', 'powerset', 'random_matrix', 'ReadOnlyOrderedDict', 'safe_equals', 'safe_len',
     'scalar_distance', 'sinusoid',
     'tensor_power', 'TEST_CONDTION', 'type_match',
@@ -1700,3 +1702,73 @@ def unproxy_weakproxy(proxy):
             True
     """
     return proxy.__repr__.__self__
+
+
+def parse_valid_identifier(orig_identifier):
+    """
+        Returns
+        -------
+            A version of **orig_identifier** with characters replaced
+            so that it is a valid python identifier
+    """
+    change_invalid_beginning = re.sub(r'^([^a-zA-Z_])', r'_\1', orig_identifier)
+    return re.sub(r'[^a-zA-Z0-9_]', '_', change_invalid_beginning)
+
+
+def parse_string_to_psyneulink_object_string(string):
+    """
+        Returns
+        -------
+            a string corresponding to **string** that is an attribute
+            of psyneulink if it exists, otherwise None
+
+            The output of this function will cause
+            getattr(psyneulink, <output>) to return a psyneulink object
+    """
+    try:
+        eval(f'psyneulink.{string}')
+        return string
+    except (AttributeError, SyntaxError, TypeError):
+        pass
+
+    # handle potential psyneulink keyword
+    try:
+        # insert space between camel case words
+        keyword = re.sub('([a-z])([A-Z])', r'\1 \2', string)
+        keyword = keyword.upper().replace(' ', '_')
+        eval(f'psyneulink.{keyword}')
+        return keyword
+    except (AttributeError, SyntaxError, TypeError):
+        pass
+
+    return None
+
+
+def get_all_explicit_arguments(cls_, func_str):
+    """
+        Returns
+        -------
+            all explicitly specified (named) arguments for the function
+            **cls_**.**funct_str** including any arguments specified in
+            functions of the same name on parent classes, if \\*args or
+            \\*\\*kwargs are specified
+    """
+    all_arguments = set()
+
+    for cls_ in cls_.__mro__:
+        func = getattr(cls_, func_str)
+        has_args_or_kwargs = False
+
+        for arg_name, arg in inspect.signature(func).parameters.items():
+            if (
+                arg.kind is inspect.Parameter.VAR_POSITIONAL
+                or arg.kind is inspect.Parameter.VAR_KEYWORD
+            ):
+                has_args_or_kwargs = True
+            else:
+                all_arguments.add(arg_name)
+
+        if not has_args_or_kwargs:
+            break
+
+    return all_arguments

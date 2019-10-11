@@ -3,3 +3,4 @@ numpy
 pillow
 typecheck-decorator==1.2
 llvmlite
+dill

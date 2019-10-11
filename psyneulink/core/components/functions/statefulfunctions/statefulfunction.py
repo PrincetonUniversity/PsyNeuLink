@@ -193,8 +193,8 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         """
         noise = Parameter(0.0, modulable=True)
         rate = Parameter(1.0, modulable=True)
-        previous_value = np.array([0])
-        initializer = np.array([0])
+        previous_value = Parameter(np.array([0]), pnl_internal=True)
+        initializer = Parameter(np.array([0]), pnl_internal=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({

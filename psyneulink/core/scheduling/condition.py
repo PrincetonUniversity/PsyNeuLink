@@ -293,9 +293,13 @@ Class Reference
 """
 
 import collections
+import dill
+import inspect
 import logging
 import warnings
 
+from psyneulink.core.globals.json import JSONDumpable
+from psyneulink.core.globals.keywords import MODEL_SPEC_ID_TYPE
 from psyneulink.core.globals.parameters import parse_context
 from psyneulink.core.globals.utilities import call_with_pruned_args
 from psyneulink.core.scheduling.time import TimeScale
@@ -404,7 +408,7 @@ class ConditionSet(object):
             self.add_condition(owner, conditions[owner])
 
 
-class Condition(object):
+class Condition(JSONDumpable):
     """
     Used in conjunction with a `Scheduler` to specify the condition under which a `Component` should be
     allowed to execute.
@@ -488,6 +492,33 @@ class Condition(object):
             execution_id=execution_id,
             **kwargs_to_pass
         )
+
+    @property
+    def _dict_summary(self):
+        from psyneulink.core.components.component import Component
+
+        if type(self) is Condition:
+            try:
+                func_val = inspect.getsource(self.func)
+            except OSError:
+                func_val = dill.dumps(self.func)
+        else:
+            func_val = None
+
+        args_list = []
+        for a in self.args:
+            if isinstance(a, Component):
+                a = a.name
+            elif isinstance(a, Condition):
+                a = a._dict_summary
+            args_list.append(a)
+
+        return {
+            MODEL_SPEC_ID_TYPE: self.__class__.__name__,
+            'function': func_val,
+            'args': args_list,
+            'kwargs': self.kwargs,
+        }
 
 
 class _DependencyValidation:
