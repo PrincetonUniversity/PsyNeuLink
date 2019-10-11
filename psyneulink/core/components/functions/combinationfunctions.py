@@ -77,7 +77,7 @@ class CombinationFunction(Function_Base):
 
         """
         # variable = np.array([0, 0])
-        variable = Parameter(np.array([0]), read_only=True)
+        variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
     # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
     def __init__(self, default_variable,
@@ -1974,7 +1974,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
                     :type: float
 
         """
-        variable = np.array([[1], [1]])
+        variable = Parameter(np.array([[1], [1]]), pnl_internal=True, constructor_argument='default_variable')
         gamma = Parameter(1.0, modulable=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()

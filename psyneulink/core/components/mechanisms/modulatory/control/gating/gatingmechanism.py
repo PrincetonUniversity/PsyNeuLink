@@ -448,12 +448,14 @@ class GatingMechanism(ControlMechanism):
 
         """
         # This must be a list, as there may be more than one (e.g., one per control_signal)
-        value = Parameter(np.array([defaultGatingAllocation]), aliases='control_allocation')
-        gating_allocation = Parameter(np.array([defaultGatingAllocation]),
-                                      # aliases='control_allocation',  # Overrides ControlMechanism's Parameter
-                                      getter=_gating_allocation_getter,
-                                      setter=_gating_allocation_setter,
-                                      read_only=True)
+        value = Parameter(np.array([defaultGatingAllocation]), aliases='control_allocation', pnl_internal=True)
+        gating_allocation = Parameter(
+            np.array([defaultGatingAllocation]),
+            getter=_gating_allocation_getter,
+            setter=_gating_allocation_setter,
+            read_only=True,
+            pnl_internal=True
+        )
 
     @tc.typecheck
     def __init__(self,

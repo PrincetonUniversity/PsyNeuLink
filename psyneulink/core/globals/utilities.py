@@ -95,6 +95,8 @@ import copy
 import inspect
 import logging
 import numbers
+import psyneulink
+import re
 import time
 import warnings
 import weakref
@@ -108,7 +110,7 @@ from psyneulink.core.globals.keywords import DISTANCE_METRICS, EXPONENTIAL, GAUS
 
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
-    'convert_all_elements_to_np_array', 'NodeRole', 'get_class_attributes', 'flatten_list',
+    'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'NodeRole', 'get_class_attributes', 'flatten_list', 'get_all_explicit_arguments',
     'get_modulationOperation_name', 'get_value_from_array', 'is_component',
     'is_distance_metric', 'is_matrix',
     'insert_list', 'is_matrix_spec', 'all_within_range', 'is_iterable',
@@ -116,8 +118,9 @@ __all__ = [
     'is_value_spec', 'iscompatible', 'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
     'make_readonly_property', 'merge_param_dicts',
     'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY','MODULATION_OVERRIDE',
-    'multi_getattr', 'np_array_less_than_2d', 'object_has_single_value', 'optional_parameter_spec', 'normpdf',
-    'parameter_spec', 'powerset', 'random_matrix', 'ReadOnlyOrderedDict', 'safe_len', 'scalar_distance', 'sinusoid',
+    'multi_getattr', 'np_array_less_than_2d', 'object_has_single_value', 'optional_parameter_spec', 'normpdf', 'parse_valid_identifier', 'parse_string_to_psyneulink_object_string',
+    'parameter_spec', 'powerset', 'random_matrix', 'ReadOnlyOrderedDict', 'safe_equals', 'safe_len',
+    'scalar_distance', 'sinusoid',
     'tensor_power', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy'
 ]
@@ -777,14 +780,16 @@ def get_deepcopy_with_shared(shared_keys=None, shared_types=None):
     return __deepcopy__
 
 
-def copy_dict_or_list_with_shared(obj, shared_types=None):
+def copy_iterable_with_shared(obj, shared_types=None):
     try:
         shared_types = tuple(shared_types)
     except TypeError:
-        shared_types = ()
+        shared_types = (shared_types, )
 
     dict_types = (dict, collections.UserDict)
     list_types = (list, collections.UserList, collections.deque)
+    tuple_types = (tuple, )
+    all_types_using_recursion = dict_types + list_types + tuple_types
 
     if isinstance(obj, dict_types):
         result = obj.__class__()
@@ -792,8 +797,8 @@ def copy_dict_or_list_with_shared(obj, shared_types=None):
             # key can never be unhashable dict or list
             new_k = k if isinstance(k, shared_types) else copy.deepcopy(k)
 
-            if isinstance(v, dict_types + list_types):
-                new_v = copy_dict_or_list_with_shared(v, shared_types)
+            if isinstance(v, all_types_using_recursion):
+                new_v = copy_iterable_with_shared(v, shared_types)
             elif isinstance(v, shared_types):
                 new_v = v
             else:
@@ -804,9 +809,14 @@ def copy_dict_or_list_with_shared(obj, shared_types=None):
             except UtilitiesError:
                 # handle ReadOnlyOrderedDict
                 result.__additem__(new_k, new_v)
-    elif isinstance(obj, list_types):
+
+    elif isinstance(obj, list_types + tuple_types):
+        is_tuple = isinstance(obj, tuple_types)
+        if is_tuple:
+            result = list()
+
         # If this is a deque, make sure we copy the maxlen parameter as well
-        if isinstance(obj, collections.deque):
+        elif isinstance(obj, collections.deque):
             # FIXME: Should have a better method for supporting properties like this in general
             # We could do something like result = copy(obj); result.clear() but that would be
             # wasteful copying I guess.
@@ -815,13 +825,20 @@ def copy_dict_or_list_with_shared(obj, shared_types=None):
             result = obj.__class__()
 
         for item in obj:
-            if isinstance(item, dict_types + list_types):
-                new_item = copy_dict_or_list_with_shared(item, shared_types)
+            if isinstance(item, all_types_using_recursion):
+                new_item = copy_iterable_with_shared(item, shared_types)
             elif isinstance(item, shared_types):
                 new_item = item
             else:
                 new_item = copy.deepcopy(item)
             result.append(new_item)
+
+        if is_tuple:
+            try:
+                result = obj.__class__(result)
+            except TypeError:
+                # handle namedtuple
+                result = obj.__class__(*result)
     else:
         raise TypeError
 
@@ -1497,6 +1514,23 @@ def safe_len(arr, fallback=1):
         return fallback
 
 
+def safe_equals(x, y):
+    """
+        An == comparison that handles numpy's new behavior of returning
+        an array of booleans instead of a single boolean for ==
+    """
+    with warnings.catch_warnings():
+        warnings.simplefilter('error')
+        try:
+            val = x == y
+            if isinstance(val, bool):
+                return val
+            else:
+                raise ValueError
+        except (ValueError, DeprecationWarning, FutureWarning):
+            return np.array_equal(x, y)
+
+
 import typecheck as tc
 @tc.typecheck
 def _get_arg_from_stack(arg_name:str):
@@ -1676,3 +1710,73 @@ def unproxy_weakproxy(proxy):
             True
     """
     return proxy.__repr__.__self__
+
+
+def parse_valid_identifier(orig_identifier):
+    """
+        Returns
+        -------
+            A version of **orig_identifier** with characters replaced
+            so that it is a valid python identifier
+    """
+    change_invalid_beginning = re.sub(r'^([^a-zA-Z_])', r'_\1', orig_identifier)
+    return re.sub(r'[^a-zA-Z0-9_]', '_', change_invalid_beginning)
+
+
+def parse_string_to_psyneulink_object_string(string):
+    """
+        Returns
+        -------
+            a string corresponding to **string** that is an attribute
+            of psyneulink if it exists, otherwise None
+
+            The output of this function will cause
+            getattr(psyneulink, <output>) to return a psyneulink object
+    """
+    try:
+        eval(f'psyneulink.{string}')
+        return string
+    except (AttributeError, SyntaxError, TypeError):
+        pass
+
+    # handle potential psyneulink keyword
+    try:
+        # insert space between camel case words
+        keyword = re.sub('([a-z])([A-Z])', r'\1 \2', string)
+        keyword = keyword.upper().replace(' ', '_')
+        eval(f'psyneulink.{keyword}')
+        return keyword
+    except (AttributeError, SyntaxError, TypeError):
+        pass
+
+    return None
+
+
+def get_all_explicit_arguments(cls_, func_str):
+    """
+        Returns
+        -------
+            all explicitly specified (named) arguments for the function
+            **cls_**.**funct_str** including any arguments specified in
+            functions of the same name on parent classes, if \\*args or
+            \\*\\*kwargs are specified
+    """
+    all_arguments = set()
+
+    for cls_ in cls_.__mro__:
+        func = getattr(cls_, func_str)
+        has_args_or_kwargs = False
+
+        for arg_name, arg in inspect.signature(func).parameters.items():
+            if (
+                arg.kind is inspect.Parameter.VAR_POSITIONAL
+                or arg.kind is inspect.Parameter.VAR_KEYWORD
+            ):
+                has_args_or_kwargs = True
+            else:
+                all_arguments.add(arg_name)
+
+        if not has_args_or_kwargs:
+            break
+
+    return all_arguments

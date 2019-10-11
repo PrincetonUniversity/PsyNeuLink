@@ -248,9 +248,7 @@ from psyneulink.core.globals.keywords import MULTIPLICATIVE
 from psyneulink.core.globals.context import Context, ContextError, ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
 from psyneulink.core.globals.log import LogCondition, LogEntry, LogError
-from psyneulink.core.globals.utilities import \
-    call_with_pruned_args, copy_dict_or_list_with_shared, get_alias_property_getter, get_alias_property_setter, \
-    get_deepcopy_with_shared, unproxy_weakproxy
+from psyneulink.core.globals.utilities import call_with_pruned_args, copy_iterable_with_shared, get_alias_property_getter, get_alias_property_setter, get_deepcopy_with_shared, unproxy_weakproxy
 
 __all__ = [
     'Defaults', 'get_validator_by_function', 'get_validator_by_type_only', 'Parameter', 'ParameterAlias', 'ParameterError',
@@ -514,6 +512,12 @@ class Parameter(types.SimpleNamespace):
 
             :Developer Notes: Can be manually set, but will trigger a warning unless override=True
 
+        pnl_internal
+            whether the parameter is an idiosyncrasy of PsyNeuLink or it is more intrinsic to the conceptual operation
+            of the Component on which it resides
+
+            :default: False
+
         aliases
             other names by which the parameter goes (e.g. allocation is the same as variable for ControlSignal).
 
@@ -597,6 +601,16 @@ class Parameter(types.SimpleNamespace):
             inspection.
 
             :default: False
+
+        constructor_argument
+            if not None, this indicates the argument in the owning Component's
+            constructor that this Parameter corresponds to. Typically this is
+            used in Parameters that save specification types, as in
+            `input_states_spec <Mechanism.input_states_spec>` and
+            `output_states_spec <Mechanism.output_states_spec>`
+
+            :default: None
+
     """
     # The values of these attributes will never be inherited from parent Parameters
     # KDM 7/12/18: consider inheriting ONLY default_value?
@@ -604,7 +618,7 @@ class Parameter(types.SimpleNamespace):
 
     # for user convenience - these attributes will be hidden from the repr
     # display if the function is True based on the value of the attribute
-    _hidden_if_unset_attrs = {'aliases', 'getter', 'setter'}
+    _hidden_if_unset_attrs = {'aliases', 'getter', 'setter', 'constructor_argument'}
     _hidden_if_false_attrs = {'read_only', 'modulable', 'fallback_default', 'retain_old_simulation_data'}
     _hidden_when = {
         **{k: lambda self, val: val is None for k in _hidden_if_unset_attrs},
@@ -627,6 +641,7 @@ class Parameter(types.SimpleNamespace):
         modulation_combination_function=None,
         read_only=False,
         function_arg=True,
+        pnl_internal=False,
         aliases=None,
         user=True,
         values=None,
@@ -640,6 +655,7 @@ class Parameter(types.SimpleNamespace):
         history_min_length=0,
         fallback_default=False,
         retain_old_simulation_data=False,
+        constructor_argument=None,
         _owner=None,
         _inherited=False,
         _user_specified=False,
@@ -664,6 +680,7 @@ class Parameter(types.SimpleNamespace):
             modulation_combination_function=modulation_combination_function,
             read_only=read_only,
             function_arg=function_arg,
+            pnl_internal=pnl_internal,
             aliases=aliases,
             user=user,
             values=values,
@@ -677,6 +694,7 @@ class Parameter(types.SimpleNamespace):
             history_min_length=history_min_length,
             fallback_default=fallback_default,
             retain_old_simulation_data=retain_old_simulation_data,
+            constructor_argument=constructor_argument,
             _inherited=_inherited,
             _user_specified=_user_specified,
         )
@@ -1069,7 +1087,7 @@ class Parameter(types.SimpleNamespace):
                 shared_types = (Component, types.MethodType)
 
                 if isinstance(new_val, (dict, list)):
-                    new_val = copy_dict_or_list_with_shared(new_val, shared_types)
+                    new_val = copy_iterable_with_shared(new_val, shared_types)
                 elif not isinstance(new_val, shared_types):
                     new_val = copy.deepcopy(new_val)
 

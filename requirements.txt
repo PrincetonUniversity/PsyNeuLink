@@ -4,3 +4,4 @@ pillow
 typecheck-decorator==1.2
 llvmlite
 elfi
+dill

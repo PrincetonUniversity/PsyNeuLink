@@ -670,7 +670,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                     :type: int
 
         """
-        variable = Parameter([[0],[0]])
+        variable = Parameter([[0],[0]], pnl_internal=True, constructor_argument='default_variable')
         retrieval_prob = Parameter(1.0, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         key_size = Parameter(1, stateful=True)
@@ -680,7 +680,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         rate = Parameter(1.0, modulable=True)
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_entries = Parameter(1000)
-        random_state = Parameter(None, modulable=False, stateful=True)
+        random_state = Parameter(None, modulable=False, stateful=True, pnl_internal=True)
 
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)

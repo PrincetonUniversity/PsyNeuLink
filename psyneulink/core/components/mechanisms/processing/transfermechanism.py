@@ -912,7 +912,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         integrator_mode = Parameter(False, setter=_integrator_mode_setter)
         integration_rate = Parameter(0.5, modulable=True)
         initial_value = None
-        previous_value = Parameter(None, read_only=True)
+        previous_value = Parameter(None, read_only=True, pnl_internal=True)
         integrator_function = Parameter(AdaptiveIntegrator, stateful=False, loggable=False)
         integrator_function_value = Parameter([[0]], read_only=True)
         has_integrated = Parameter(False, user=False)
@@ -986,6 +986,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 default_variable=default_variable,
                 size=size,
                 input_states=input_states,
+                output_states=output_states,
                 function=function,
                 params=params,
                 name=name,
