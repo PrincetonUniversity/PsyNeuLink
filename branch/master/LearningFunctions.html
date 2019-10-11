@@ -1,0 +1,968 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>LearningFunctions &mdash; PsyNeuLink 0.6.0.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'./',
+              VERSION:'0.6.0.3',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Composition" href="Composition.html" />
+    <link rel="prev" title="OptimizationFunctions" href="OptimizationFunctions.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PsyNeuLink
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.6.0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
+<li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Core.html">Core</a> &raquo;</li>
+        
+          <li><a href="Component.html">Component</a> &raquo;</li>
+        
+          <li><a href="Functions.html">Functions</a> &raquo;</li>
+        
+      <li>LearningFunctions</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/LearningFunctions.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="learningfunctions">
+<h1>LearningFunctions<a class="headerlink" href="#learningfunctions" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<span class="target" id="module-psyneulink.core.components.functions.learningfunctions"></span><ul class="simple">
+<li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM" title="psyneulink.core.components.functions.learningfunctions.BayesGLM"><code class="xref any py py-class docutils literal"><span class="pre">BayesGLM</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen" title="psyneulink.core.components.functions.learningfunctions.Kohonen"><code class="xref any py py-class docutils literal"><span class="pre">Kohonen</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian" title="psyneulink.core.components.functions.learningfunctions.Hebbian"><code class="xref any py py-class docutils literal"><span class="pre">Hebbian</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian"><code class="xref any py py-class docutils literal"><span class="pre">ContrastiveHebbian</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement" title="psyneulink.core.components.functions.learningfunctions.Reinforcement"><code class="xref any py py-class docutils literal"><span class="pre">Reinforcement</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation" title="psyneulink.core.components.functions.learningfunctions.BackPropagation"><code class="xref any py py-class docutils literal"><span class="pre">BackPropagation</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.TDLearning" title="psyneulink.core.components.functions.learningfunctions.TDLearning"><code class="xref any py py-class docutils literal"><span class="pre">TDLearning</span></code></a></li>
+</ul>
+<p>Functions that parameterize a function.</p>
+<dl class="class">
+<dt id="psyneulink.core.components.functions.learningfunctions.LearningFunction">
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="descname">LearningFunction</code><span class="sig-paren">(</span><em>default_variable</em>, <em>params</em>, <em>function=None</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract class of <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> used for learning.</p>
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.LearningFunction.variable">
+<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list or array</em> – most LearningFunctions take a list or 2d array that must contain three items:</p>
+<ul class="simple">
+<li>the input to the parameter being modified (variable[LEARNING_ACTIVATION_INPUT]);</li>
+<li>the output of the parameter being modified (variable[LEARNING_ACTIVATION_OUTPUT]);</li>
+<li>the error associated with the output (variable[LEARNING_ERROR_OUTPUT]).</li>
+</ul>
+<p>However, the exact specification depends on the funtion’s type.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.LearningFunction.default_learning_rate">
+<code class="descname">default_learning_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction.default_learning_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>numeric</em> – the value used for the function’s <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction.learning_rate" title="psyneulink.core.components.functions.learningfunctions.LearningFunction.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> parameter if none of the
+following are specified:  the <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for the <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> to
+which the function has been assigned, the <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.learning_rate" title="psyneulink.core.components.process.Process.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for any <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> or
+the <a class="reference internal" href="System.html#psyneulink.core.components.system.System.learning_rate" title="psyneulink.core.components.system.System.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for any <a class="reference internal" href="System.html"><span class="doc">System</span></a> to which that LearningMechanism belongs.
+The exact form of the value (i.e., whether it is a scalar or array) depends on the function’s type.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.LearningFunction.learning_rate">
+<code class="descname">learning_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction.learning_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>numeric</em> – generally used to multiply the result of the function before it is returned;  however, both the form of the
+value (i.e., whether it is a scalar or array) and how it is used depend on the function’s type.</p>
+</dd></dl>
+
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
+<li><em>The number of items returned and their format depend on the function’s type.</em></li>
+<li>Most return an array (used as the <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> by a     <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>), and some also return a similarly formatted array containing either the     error received (in the third item of the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction.variable" title="psyneulink.core.components.functions.learningfunctions.LearningFunction.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>) or a     version of it modified by the function.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM">
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="descname">BayesGLM</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>mu_0=0</em>, <em>sigma_0=1</em>, <em>gamma_shape_0=1</em>, <em>gamma_size_0=1</em>, <em>params=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use Bayesian linear regression to find means and distributions of weights that predict dependent variable(s).</p>
+<p><code class="xref any docutils literal"><span class="pre">function</span></code> uses a normal linear model:</p>
+<blockquote>
+<div><div class="math">
+\[dependent\ variable(s) = predictor(s)\ \Theta + \epsilon,\]</div>
+<p>with predictor(s) in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.variable" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>[0] and dependent variable(s) in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.variable" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>[1], and a normal-gamma prior distribution of weights (<span class="math">\(\Theta\)</span>), to update
+the weight distribution parameters <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_n" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_n"><code class="xref any py py-attr docutils literal"><span class="pre">mu_n</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_n" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_n"><code class="xref any py py-attr docutils literal"><span class="pre">Lambda_n</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_n" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_n"><code class="xref any py py-attr docutils literal"><span class="pre">gamma_shape_n</span></code></a>, and <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_n" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_n"><code class="xref any py py-attr docutils literal"><span class="pre">gamma_size_n</span></code></a>, and returns an array of prediction
+weights sampled from the multivariate normal-gamma distribution [based on Falk Lieder’s BayesianGLM.m,
+adapted for Python by Yotam Sagiv and for PsyNeuLink by Jon Cohen; useful reference:</p>
+</div></blockquote>
+<p><a class="reference external" href="http://www2.stat.duke.edu/~sayan/Sta613/2017/read/chapter_9.pdf">Bayesian Inference</a>.]</p>
+<div class="admonition hint">
+<p class="first admonition-title">Hint</p>
+<p class="last">The <strong>mu_0</strong> or <strong>sigma_0</strong> arguments of the consructor can be used in place of <strong>default_variable</strong> to define
+the size of the predictors array and, correspondingly, the weights array returned by the function (see
+<strong>Parameters</strong> below).</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>default_variable</strong> (<em>3d array : default None</em>) – first item of axis 0 must be a 2d array with one or more 1d arrays to use as predictor vectors, one for
+each sample to be fit;  second item must be a 2d array of equal length to the first item, with a 1d array
+containing a scalar that is the dependent (to-be-predicted) value for the corresponding sample in the first
+item.  If <code class="xref any docutils literal"><span class="pre">None</span></code> is specified, but either <strong>mu_0</strong> or <strong>sigma_0 is specified, then the they are used to
+determine the shape of `variable &lt;BayesGLM.variable&gt;`.  If neither **mu_0</strong> nor <strong>sigma_0</strong> are specified,
+then the shape of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.variable" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is determined by the first call to its <code class="xref any docutils literal"><span class="pre">function</span></code>, as are <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior"><code class="xref any py py-attr docutils literal"><span class="pre">mu_prior</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior"><code class="xref any py py-attr docutils literal"><span class="pre">sigma_prior</span></code></a>,
+<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_prior" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_prior"><code class="xref any py py-attr docutils literal"><span class="pre">gamma_shape_prior</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_prior" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_prior"><code class="xref any py py-attr docutils literal"><span class="pre">gamma_size_prior</span></code></a>.</li>
+<li><strong>mu_0</strong> (<em>int</em><em>, </em><em>float</em><em> or </em><em>1d array : default 0</em>) – specifies initial value of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior"><code class="xref any py py-attr docutils literal"><span class="pre">mu_prior</span></code></a> (the prior for the mean of the distribution for
+the prediction weights returned by the function).  If a scalar is specified, the same value will be used
+for all elements of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior"><code class="xref any py py-attr docutils literal"><span class="pre">mu_prior</span></code></a>;  if it is an array, it must be the same length as
+the predictor array(s) in axis 0 of <strong>default_variable</strong>.  If <strong>default_variable</strong> is not specified, the
+specification for <strong>mu_0</strong> is used to determine the shape of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.variable" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and
+<code class="xref any docutils literal"><span class="pre">sigma_prior</span></code>.</li>
+<li><strong>sigma_0</strong> (<em>int</em><em>, </em><em>float</em><em> or </em><em>1d array : default 0</em>) – specifies initial value of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_prior" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_prior"><code class="xref any py py-attr docutils literal"><span class="pre">sigma_prior</span></code></a> (the prior for the variance of the distribution
+for the prediction weights returned by the function).  If a scalar is specified, the same value will be used for
+all elements of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_prior" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_prior"><code class="xref any py py-attr docutils literal"><span class="pre">Lambda_prior</span></code></a>;  if it is an array, it must be the same length as the
+predictor array(s) in axis 0 of <strong>default_variable</strong>.  If neither <strong>default_variable</strong> nor <strong>mu_0</strong> is
+specified, the specification for <strong>sigma_0</strong> is used to determine their shapes.</li>
+<li><strong>gamma_shape_0</strong> (<em>int</em><em> or </em><em>float : default 1</em>) – specifies the shape of the gamma distribution from which samples of the weights are drawn (see documentation
+for <a class="reference external" href="https://docs.scipy.org/doc/numpy-1.15.0/reference/generated/numpy.random.gamma.html">numpy.random.gamma</a>.</li>
+<li><strong>gamma_size_0</strong> (<em>int</em><em> or </em><em>float : default 1</em>) – <p>specifies the size of the gamma distribution from which samples of the weights are drawn (see documentation for
+<a class="reference external" href="https://docs.scipy.org/doc/numpy-1.15.0/reference/generated/numpy.random.gamma.html">numpy.random.gamma</a>.</p>
+</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the Function.</li>
+<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.variable">
+<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>3d array</em> – samples used to update parameters of prediction weight distributions.
+variable[0] is a 2d array of predictor vectors, all of the same length;
+variable[1] is a 2d array of scalar dependent variables, one for each predictor vector.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_0">
+<code class="descname">mu_0</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_0" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int, float or 2d array</em> – determines the initial prior(s) for the means of the distributions of the prediction weights;
+if it is a scalar, that value is assigned as the priors for all means.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior">
+<code class="descname">mu_prior</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d array</em> – current priors for the means of the distributions of the predictions weights.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_n">
+<code class="descname">mu_n</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_n" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d array</em> – current means for the distributions of the prediction weights.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.sigma_0">
+<code class="descname">sigma_0</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.sigma_0" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int, float or 2d array</em> – value used to determine the initial prior(s) for the variances of the distributions of the prediction
+weights; if it is a scalar, that value is assigned as the priors for all variances.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_prior">
+<code class="descname">Lambda_prior</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_prior" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d array</em> – current priors for the variances of the distributions of the predictions weights.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_n">
+<code class="descname">Lambda_n</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_n" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d array</em> – current variances for the distributions of the prediction weights.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_0">
+<code class="descname">gamma_shape_0</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_0" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int or float</em> – determines the initial value used for the shape parameter of the gamma distribution used to sample the
+prediction weights.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_prior">
+<code class="descname">gamma_shape_prior</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_prior" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int or float</em> – current prior for the shape parameter of the gamma distribution used to sample the prediction weights.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_n">
+<code class="descname">gamma_shape_n</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_n" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int or float</em> – current value of the shape parameter of the gamma distribution used to sample the prediction weights.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_0">
+<code class="descname">gamma_size_0</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_0" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int or float</em> – determines the initial value used for the size parameter of the gamma distribution used to sample the
+prediction weights.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_prior">
+<code class="descname">gamma_size_prior</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_prior" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int or float</em> – current prior for the size parameter of the gamma distribution used to sample the prediction weights.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_n">
+<code class="descname">gamma_size_n</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_n" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d array with single scalar value</em> – current value of the size parameter of the gamma distribution used to sample the prediction weights.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.weights_sample">
+<code class="descname">weights_sample</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.weights_sample" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d array</em> – last sample of prediction weights drawn in call to <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.sample_weights" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.sample_weights"><code class="xref any py py-meth docutils literal"><span class="pre">sample_weights</span></code></a> and returned by
+<code class="xref any docutils literal"><span class="pre">function</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.owner">
+<code class="descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> – <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> to which the Function belongs.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : default Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.initialize_priors">
+<code class="descname">initialize_priors</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.initialize_priors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the prior parameters (<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior"><code class="xref any py py-attr docutils literal"><span class="pre">mu_prior</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_prior" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_prior"><code class="xref any py py-attr docutils literal"><span class="pre">Lamba_prior</span></code></a>,
+<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_prior" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_prior"><code class="xref any py py-attr docutils literal"><span class="pre">gamma_shape_prior</span></code></a>, and <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_prior" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_prior"><code class="xref any py py-attr docutils literal"><span class="pre">gamma_size_prior</span></code></a>)
+to their initial (_0) values, and assign current (_n) values to the priors</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.sample_weights">
+<code class="descname">sample_weights</code><span class="sig-paren">(</span><em>gamma_shape_n</em>, <em>gamma_size_n</em>, <em>mu_n</em>, <em>Lambda_n</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.sample_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw a sample of prediction weights from the distributions parameterized by <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_n" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_n"><code class="xref any py py-attr docutils literal"><span class="pre">mu_n</span></code></a>,
+<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_n" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_n"><code class="xref any py py-attr docutils literal"><span class="pre">Lambda_n</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_n" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_n"><code class="xref any py py-attr docutils literal"><span class="pre">gamma_shape_n</span></code></a>, and <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_n" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_n"><code class="xref any py py-attr docutils literal"><span class="pre">gamma_size_n</span></code></a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.components.functions.learningfunctions.Kohonen">
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="descname">Kohonen</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>learning_rate=None</em>, <em>distance_measure=GAUSSIAN</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates a matrix of weight changes using the Kohenen learning rule.</p>
+<p>The Kohonen learning rule is used to implement a <a class="reference external" href="http://scholarpedia.org/article/Kohonen_network">Kohonen netowrk</a>, which is an instance of the more general category of
+<a class="reference external" href="https://en.wikipedia.org/wiki/Self-organizing_map">self organizing map (SOM)</a>, that modifies the weights to
+each element in the network in proportion to its difference from the current input pattern and the distance of
+that element from the one with the weights most similar to the current input pattern.</p>
+<p><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.function" title="psyneulink.core.components.functions.learningfunctions.Kohonen.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> calculates and returns a matrix of weight changes from an array of activity values
+(in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>[1]) and a weight matrix that generated them (in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>[2]) using the Kohonen learning rule:</p>
+<div class="math">
+\[learning\_rate * distance_j * variable[0]-w_j\]</div>
+<p>where <span class="math">\(distance_j\)</span> is the distance of the jth element of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>[1] from the
+element with the weights most similar to activity array in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>[1],
+and <span class="math">\(w_j\)</span> is the column of the matrix in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>[2] that corresponds to
+the jth element of the activity array in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>[1].</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable</strong> (<em>List</em><em>[</em><em>array</em><em>(</em><em>float64</em><em>)</em><em>, </em><em>array</em><em>(</em><em>float64</em><em>)</em><em>, </em><em>2d array</em><em>[</em><em>[</em><em>float64</em><em>]</em><em>]</em><em>] </em><em>: default class_defaults.variable</em>) – input pattern, array of activation values, and matrix used to calculate the weights changes.</li>
+<li><strong>learning_rate</strong> (<em>scalar</em><em> or </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d array</em><em>, or </em><em>np.matrix of numeric values: default default_learning_rate</em>) – specifies the learning rate used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.function" title="psyneulink.core.components.functions.learningfunctions.Kohonen.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>; supersedes any specification  for the
+<a class="reference internal" href="Process.html"><span class="doc">Process</span></a> and/or <a class="reference internal" href="System.html"><span class="doc">System</span></a> to which the function’s <code class="xref any docutils literal"><span class="pre">owner</span></code> belongs (see <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate" title="psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for details).</li>
+<li><strong>distance_measure</strong> (<em>GAUSSIAN</em><em>, </em><em>LINEAR</em><em>, </em><em>EXPONENTIAL</em><em>, </em><em>SINUSOID</em><em> or </em><a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function"><em>function</em></a>) – specifies the method used to calculate the distance of each element in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>[2]
+from the one with the greatest value.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the function.
+Values specified for parameters in the dictionary override any assigned to those parameters in arguments
+of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the Function.</li>
+<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.Kohonen.variable">
+<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[array(float64), array(float64), 2d array[[float64]]]</em> – input pattern, array of activation values, and weight matrix  used to generate the weight change matrix
+returned by <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.function" title="psyneulink.core.components.functions.learningfunctions.Kohonen.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate">
+<code class="descname">learning_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float, 1d or 2d array</em> – used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.function" title="psyneulink.core.components.functions.learningfunctions.Kohonen.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to scale the weight change matrix returned by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.function" title="psyneulink.core.components.functions.learningfunctions.Kohonen.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  If specified, it supersedes any learning_rate specified for the <code class="xref any docutils literal"><span class="pre">Process</span></code> and/or <a class="reference internal" href="System.html#system-learning"><span class="std std-ref">System</span></a> to which the function’s <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.owner" title="psyneulink.core.components.functions.learningfunctions.Kohonen.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>
+belongs.  If it is a scalar, it is multiplied by the weight change matrix;  if it is a 1d array, it is
+multiplied Hadamard (elementwise) by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> &lt;Kohonen.variable&gt;` before calculating the weight change
+matrix;  if it is a 2d array, it is multiplied Hadamard (elementwise) by the weight change matrix; if it is
+<code class="xref any docutils literal"><span class="pre">None</span></code>, then the <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.learning_rate" title="psyneulink.core.components.process.Process.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> specified for the Process to which the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.owner" title="psyneulink.core.components.functions.learningfunctions.Kohonen.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> belongs is used;  and, if that is <code class="xref any docutils literal"><span class="pre">None</span></code>, then the <a class="reference internal" href="System.html#psyneulink.core.components.system.System.learning_rate" title="psyneulink.core.components.system.System.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a>
+for the System to which it belongs is used. If all are <code class="xref any docutils literal"><span class="pre">None</span></code>, then the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.default_learning_rate" title="psyneulink.core.components.functions.learningfunctions.Kohonen.default_learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">default_learning_rate</span></code></a> is used.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.Kohonen.default_learning_rate">
+<code class="descname">default_learning_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.default_learning_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – the value used for the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate" title="psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> if it is not otherwise specified.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.Kohonen.function">
+<code class="descname">function</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>function</em> – calculates a matrix of weight changes from: i) the difference between an input pattern (variable
+&lt;Kohonen.variable&gt;`[0]) and the weights in a weigh matrix (<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>[2]) to each
+element of an activity array (<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>[1]); and ii) the distance of each element of
+the activity array (variable &lt;Kohonen.variable&gt;`[1])) from the one with the weights most similar to the
+input array (variable &lt;Kohonen.variable&gt;`[0])) using <code class="xref any docutils literal"><span class="pre">distance_measure</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.Kohonen.owner">
+<code class="descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> – <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> to which the Function belongs.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.Kohonen.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : default Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.components.functions.learningfunctions.Hebbian">
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="descname">Hebbian</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>learning_rate=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian" title="Permalink to this definition">¶</a></dt>
+<dd><p id="hebbian-learning-rule">Calculate a matrix of weight changes using the Hebbian (correlational) learning rule.</p>
+<p><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.function" title="psyneulink.core.components.functions.learningfunctions.Hebbian.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> calculates a matrix of weight changes from a 1d array of activity values in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.variable" title="psyneulink.core.components.functions.learningfunctions.Hebbian.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> using the <a class="reference external" href="https://en.wikipedia.org/wiki/Hebbian_theory#Principles">Hebbian learning rule</a>:</p>
+<div class="math">
+\[\Delta w_{ij} = learning\_rate * a_ia_j\ if\ i \neq j,\ else\ 0\]</div>
+<p>where <span class="math">\(a_i\)</span> and <span class="math">\(a_j\)</span> are elements of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.variable" title="psyneulink.core.components.functions.learningfunctions.Hebbian.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable</strong> (<em>List</em><em>[</em><em>number</em><em>] or </em><em>1d array : default class_defaults.variable</em>) – specifies the activation values, the pair-wise products of which are used to generate the a weight change matrix.</li>
+<li><strong>learning_rate</strong> (<em>scalar</em><em> or </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d array</em><em>, or </em><em>np.matrix of numeric values: default default_learning_rate</em>) – specifies the learning rate used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.function" title="psyneulink.core.components.functions.learningfunctions.Hebbian.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>; supersedes any specification  for the
+<a class="reference internal" href="Process.html"><span class="doc">Process</span></a> and/or <a class="reference internal" href="System.html"><span class="doc">System</span></a> to which the function’s <code class="xref any docutils literal"><span class="pre">owner</span></code> belongs (see <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate" title="psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for details).</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the function.
+Values specified for parameters in the dictionary override any assigned to those parameters in arguments
+of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the Function.</li>
+<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.Hebbian.variable">
+<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d array</em> – activation values, the pair-wise products of which are used to generate the weight change matrix returned by
+the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.function" title="psyneulink.core.components.functions.learningfunctions.Hebbian.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate">
+<code class="descname">learning_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float, 1d or 2d array</em> – used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.function" title="psyneulink.core.components.functions.learningfunctions.Hebbian.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to scale the weight change matrix returned by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.function" title="psyneulink.core.components.functions.learningfunctions.Hebbian.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  If specified, it supersedes any learning_rate specified for the <code class="xref any docutils literal"><span class="pre">Process</span></code> and/or <a class="reference internal" href="System.html#system-learning"><span class="std std-ref">System</span></a> to which the function’s <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.owner" title="psyneulink.core.components.functions.learningfunctions.Hebbian.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>
+belongs.  If it is a scalar, it is multiplied by the weight change matrix;  if it is a 1d array, it is
+multiplied Hadamard (elementwise) by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.variable" title="psyneulink.core.components.functions.learningfunctions.Hebbian.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> &lt;Hebbian.variable&gt;` before calculating the weight change
+matrix;  if it is a 2d array, it is multiplied Hadamard (elementwise) by the weight change matrix; if it is
+<code class="xref any docutils literal"><span class="pre">None</span></code>, then the <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.learning_rate" title="psyneulink.core.components.process.Process.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> specified for the Process to which the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.owner" title="psyneulink.core.components.functions.learningfunctions.Hebbian.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> belongs is used;  and, if that is <code class="xref any docutils literal"><span class="pre">None</span></code>, then the <a class="reference internal" href="System.html#psyneulink.core.components.system.System.learning_rate" title="psyneulink.core.components.system.System.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a>
+for the System to which it belongs is used. If all are <code class="xref any docutils literal"><span class="pre">None</span></code>, then the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.default_learning_rate" title="psyneulink.core.components.functions.learningfunctions.Hebbian.default_learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">default_learning_rate</span></code></a> is used.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.Hebbian.default_learning_rate">
+<code class="descname">default_learning_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.default_learning_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – the value used for the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate" title="psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> if it is not otherwise specified.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.Hebbian.function">
+<code class="descname">function</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>function</em> – calculates the pairwise product of all elements in the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.variable" title="psyneulink.core.components.functions.learningfunctions.Hebbian.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, and then
+scales that by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate" title="psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> to generate the weight change matrix
+returned by the function.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.Hebbian.owner">
+<code class="descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> – <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> to which the Function belongs.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.Hebbian.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : default Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian">
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="descname">ContrastiveHebbian</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>learning_rate=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian" title="Permalink to this definition">¶</a></dt>
+<dd><p id="contrastivehebbian-learning-rule">Calculate a matrix of weight changes using the Contrastive Hebbian learning rule.</p>
+<p><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> calculates a matrix of weight changes from a 1d array of activity values
+in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> using the <a class="reference external" href="https://www.sciencedirect.com/science/article/pii/B978148321448150007X">ContrastiveHebbian learning rule</a>:</p>
+<div class="math">
+\[\Delta w_{ij} = learning\_rate * (a_i^+a_j^+ - a_i^-a_j^-) \ if\ i \neq j,\ else\ 0\]</div>
+<p>where <span class="math">\(a_i^+\)</span> and <span class="math">\(a_j^+\)</span> are the activites of elements of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
+in the <a class="reference internal" href="ContrastiveHebbianMechanism.html#contrastivehebbian-plus-phase"><span class="std std-ref">plus_phase</span></a> of execution, and <span class="math">\(a_i^-\)</span> and <span class="math">\(a_j^-\)</span> are the
+activities of those elements in the <a class="reference internal" href="ContrastiveHebbianMechanism.html#contrastivehebbian-minus-phase"><span class="std std-ref">minus phase</span></a> of execution.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable</strong> (<em>List</em><em>[</em><em>number</em><em>] or </em><em>1d array : default class_defaults.variable</em>) – specifies the activation values, the pair-wise products of which are used to generate the a weight change matrix.</li>
+<li><strong>learning_rate</strong> (<em>scalar</em><em> or </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d array</em><em>, or </em><em>np.matrix of numeric values: default default_learning_rate</em>) – specifies the learning rate used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>; supersedes any specification
+for the <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> and/or <a class="reference internal" href="System.html"><span class="doc">System</span></a> to which the function’s <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.owner" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> belongs (see
+<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for details).</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the function.
+Values specified for parameters in the dictionary override any assigned to those parameters in arguments
+of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the Function.</li>
+<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable">
+<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d array</em> – activation values, the pair-wise products of which are used to generate the weight change matrix returned by
+the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate">
+<code class="descname">learning_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float, 1d or 2d array</em> – used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to scale the weight change matrix returned by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  If specified, it supersedes any learning_rate specified for the <code class="xref any docutils literal"><span class="pre">Process</span></code> and/or <a class="reference internal" href="System.html#system-learning"><span class="std std-ref">System</span></a> to which the function’s <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.owner" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> belongs.  If it is a scalar, it is multiplied by the weight change matrix;  if it
+is a 1d array, it is multiplied Hadamard (elementwise) by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> &lt;ContrastiveHebbian.variable&gt;`
+before calculating the weight change matrix;  if it is a 2d array, it is multiplied Hadamard (elementwise) by
+the weight change matrix; if it is <code class="xref any docutils literal"><span class="pre">None</span></code>, then the <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.learning_rate" title="psyneulink.core.components.process.Process.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> specified for the
+Process to which the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.owner" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> belongs is used;  and, if that is <code class="xref any docutils literal"><span class="pre">None</span></code>, then the
+<a class="reference internal" href="System.html#psyneulink.core.components.system.System.learning_rate" title="psyneulink.core.components.system.System.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for the System to which it belongs is used. If all are <code class="xref any docutils literal"><span class="pre">None</span></code>, then the
+<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.default_learning_rate" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.default_learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">default_learning_rate</span></code></a> is used.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.default_learning_rate">
+<code class="descname">default_learning_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.default_learning_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – the value used for the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> if it is not otherwise specified.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function">
+<code class="descname">function</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>function</em> – calculates the pairwise product of all elements in the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, and then
+scales that by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> to generate the weight change matrix
+returned by the function.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.owner">
+<code class="descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> – <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> to which the Function belongs.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : default Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.components.functions.learningfunctions.Reinforcement">
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="descname">Reinforcement</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>learning_rate=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate error term for a single item in an input array, scaled by the learning_rate.</p>
+<p><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.function" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> takes an array (<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a>) with
+only one non-zero value, and returns an array of the same length with the one non-zero value replaced by
+<span class="math">\(\Delta w\)</span> – the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.error_signal" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> scaled by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.learning_rate" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a>:</p>
+<div class="math">
+\[\Delta w_i = learning\_rate * error\_signal_i\ if\ activation\_output_i \neq 0,\ otherwise\ 0\]</div>
+<p>The non-zero item in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a> can be thought of as the predicted
+likelihood of a stimulus or value of an action, and the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.error_signal" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> as the error in
+the prediction for that value.</p>
+<div class="admonition note" id="reinforcement-note">
+<p class="first admonition-title">Note</p>
+<p>To preserve compatibility with other LearningFunctions:</p>
+<ul class="simple">
+<li>the <strong>variable</strong> argument of both the constructor and calls to <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.function" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
+must have three items, although only the 2nd and 3rd items are used; these are referenced by the
+<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.error_signal" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a>
+attributes, respectively (the first item is used by other LearningFunctions as their <code class="xref any docutils literal"><span class="pre">activation_input</span></code> attribute).</li>
+</ul>
+<ul class="last simple">
+<li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.function" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> returns two copies of the error array
+(the first is a “place-marker”, where a matrix of weights changes is often returned).</li>
+</ul>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>default_variable</strong> (<em>List</em><em> or </em><em>2d array : default class_defaults.variable</em>) – <p>template for the three items provided as the variable in the call to the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.function" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
+(in order):</p>
+<blockquote>
+<div><ul>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_input" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_input"><code class="xref any py py-attr docutils literal"><span class="pre">activation_input</span></code></a> (1d array) (not used);</li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a> (1d array with only one non-zero value);</li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.error_signal" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a>  (1d array with a single scalar element).</li>
+</ul>
+</div></blockquote>
+</li>
+<li><strong>learning_rate</strong> (<em>float : default default_learning_rate</em>) – supersedes any specification for the <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> and/or <a class="reference internal" href="System.html"><span class="doc">System</span></a> to which the function’s
+<code class="xref any docutils literal"><span class="pre">owner</span></code> belongs (see <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.learning_rate" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for details).</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the Function.</li>
+<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.Reinforcement.variable">
+<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d array</em> –</p>
+<p>specifies three values used as input to the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.function" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_input" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_input"><code class="xref any py py-attr docutils literal"><span class="pre">activation_input</span></code></a>,</li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a>, and</li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.error_signal" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a>.</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_input">
+<code class="descname">activation_input</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_input" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d array</em> – first item of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.variable" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;  this is not used (it is implemented for compatibility
+with other LearningFunctions).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output">
+<code class="descname">activation_output</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d array</em> – second item of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.variable" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;  contains a single “prediction” or “action” value as one
+of its elements, the others of which are zero.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.Reinforcement.error_signal">
+<code class="descname">error_signal</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.error_signal" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d array</em> – third item of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.variable" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>; contains a single scalar value, specifying the error
+associated with the non-zero item in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.Reinforcement.learning_rate">
+<code class="descname">learning_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.learning_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
+<code class="xref any docutils literal"><span class="pre">Process</span></code> and/or <a class="reference internal" href="System.html#system-learning"><span class="std std-ref">System</span></a> to which the function’s
+<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.owner" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> belongs.  If it is <code class="xref any docutils literal"><span class="pre">None</span></code>, then the <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.learning_rate" title="psyneulink.core.components.process.Process.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a>
+specified for the Process to which the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.owner" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> belongs is used;  and, if that is <code class="xref any docutils literal"><span class="pre">None</span></code>,
+then the <a class="reference internal" href="System.html#psyneulink.core.components.system.System.learning_rate" title="psyneulink.core.components.system.System.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for the System to which it belongs is used. If all are
+<code class="xref any docutils literal"><span class="pre">None</span></code>, then the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.default_learning_rate" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.default_learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">default_learning_rate</span></code></a> is used.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.Reinforcement.default_learning_rate">
+<code class="descname">default_learning_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.default_learning_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – the value used for the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.learning_rate" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> if it is not otherwise specified.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.Reinforcement.function">
+<code class="descname">function</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>function</em> – the function that computes the weight change matrix, and returns that along with the
+<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.error_signal" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> received.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.Reinforcement.owner">
+<code class="descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> – <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> to which the Function belongs.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.Reinforcement.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : default Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation">
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="descname">BackPropagation</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>activation_derivative_fct=Logistic().derivative</em>, <em>learning_rate=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate and return a matrix of weight changes and weighted error signal from arrays of inputs, outputs and error
+terms.</p>
+<p><code class="xref any docutils literal"><span class="pre">function</span></code> calculates a matrix of weight changes using the
+<a class="reference external" href="https://en.wikipedia.org/wiki/Backpropagation">backpropagation</a> (<a class="reference external" href="http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html">Generalized Delta Rule</a>) learning algorithm, computed as:</p>
+<blockquote>
+<div><div class="math">
+\[weight\_change\_matrix = learning\_rate * activation\_input * \frac{\delta E}{\delta W}\]</div>
+<p>where</p>
+<div class="math">
+\[\frac{\delta E}{\delta W} = \frac{\delta E}{\delta A} * \frac{\delta A}{\delta W}\]</div>
+<p>is the derivative of the error_signal with respect to the weights, in which:</p>
+<blockquote>
+<div><p><span class="math">\(\frac{\delta E}{\delta A} = error\_matrix \bullet error\_signal\)</span></p>
+<p>is the derivative of the error with respect to activation_output (i.e., the weighted contribution to the
+error_signal of each unit that receives activity from the weight matrix being learned), and</p>
+<p><span class="math">\(\frac{\delta A}{\delta W} = activation\_derivative\_fct(input=activation\_input,output=activation\_output)\)</span></p>
+<p>is the derivative of the activation function responsible for generating activation_output
+at the point that generates each of its entries.</p>
+</div></blockquote>
+</div></blockquote>
+<p>The values of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_input" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_input"><code class="xref any py py-attr docutils literal"><span class="pre">activation_input</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a> and  <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> are specified as
+items of the <code class="xref any docutils literal"><span class="pre">variable</span></code> both in the constructor for the BackPropagation Function,
+and in calls to its <code class="xref any docutils literal"><span class="pre">function</span></code>.  Although <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_matrix" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_matrix"><code class="xref any py py-attr docutils literal"><span class="pre">error_matrix</span></code></a>
+is not specified in the constructor, it is required as an argument of the <code class="xref any docutils literal"><span class="pre">function</span></code>;
+it is assumed that it’s value is determined in context at the time of execution (e.g., by a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>
+that uses the BackPropagation LearningFunction).</p>
+<p>The BackPropagation <code class="xref any docutils literal"><span class="pre">function</span></code> returns the <em>weight_change_matrix</em> as well as the
+<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> it receives weighted by the contribution made by each
+element of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a> as a function of the
+<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_matrix" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_matrix"><code class="xref any py py-attr docutils literal"><span class="pre">error_matrix</span></code></a> <span class="math">\(\frac{\delta E}{\delta W}\)</span>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable</strong> (<em>List</em><em> or </em><em>2d array</em><em> [</em><em>length 3 in axis 0</em><em>] </em><em>: default class_defaults.variable</em>) – specifies a template for the three items provided as the variable in the call to the
+<code class="xref any docutils literal"><span class="pre">function</span></code> (in order):
+<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_input" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_input"><code class="xref any py py-attr docutils literal"><span class="pre">activation_input</span></code></a> (1d array),
+<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a> (1d array),
+<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> (1d array).</li>
+<li><strong>activation_derivative_fct</strong> (<em>Function</em><em> or </em><a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function"><em>function</em></a>) – specifies the derivative for the function of the Mechanism that generates
+<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a>.</li>
+<li><strong>learning_rate</strong> (<em>float : default default_learning_rate</em>) – supersedes any specification for the <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> and/or <a class="reference internal" href="System.html"><span class="doc">System</span></a> to which the function’s
+<code class="xref any docutils literal"><span class="pre">owner</span></code> belongs (see <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.learning_rate" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for details).</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the Function.</li>
+<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation.variable">
+<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d array</em> –  contains the three values used as input to the <code class="xref any docutils literal"><span class="pre">function</span></code>:
+<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_input" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_input"><code class="xref any py py-attr docutils literal"><span class="pre">activation_input</span></code></a>,
+<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a>, and
+<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_input">
+<code class="descname">activation_input</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_input" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d array</em> – the input to the matrix being modified; same as 1st item of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.variable" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output">
+<code class="descname">activation_output</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d array</em> – the output of the function for which the matrix being modified provides the input;
+same as 2nd item of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.variable" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_derivative_fct">
+<code class="descname">activation_derivative_fct</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_derivative_fct" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Function or function</em> – the derivative for the function of the Mechanism that generates
+<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal">
+<code class="descname">error_signal</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d array</em> – the error signal for the next matrix (layer above) in the learning sequence, or the error computed from the
+target (training signal) and the output of the last Mechanism in the sequence;
+same as 3rd item of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.variable" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_matrix">
+<code class="descname">error_matrix</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d array or ParameterState</em> – matrix, the input of which is <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a> and the output of which
+is used to calculate the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a>; if it is a <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a>,
+it refers to the MATRIX parameterState of the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> being learned.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation.learning_rate">
+<code class="descname">learning_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.learning_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
+<code class="xref any docutils literal"><span class="pre">process</span></code> and/or <a class="reference internal" href="System.html#psyneulink.core.components.system.System.learning_rate" title="psyneulink.core.components.system.System.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">system</span></code></a> to which the function’s  <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.owner" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> belongs.  If it is <code class="xref any docutils literal"><span class="pre">None</span></code>, then the learning_rate specified for the process to
+which the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.owner" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> belongs is used;  and, if that is <code class="xref any docutils literal"><span class="pre">None</span></code>, then the learning_rate for
+the system to which it belongs is used. If all are <code class="xref any docutils literal"><span class="pre">None</span></code>, then the
+<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.default_learning_rate" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.default_learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">default_learning_rate</span></code></a> is used.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation.default_learning_rate">
+<code class="descname">default_learning_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.default_learning_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – the value used for the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.learning_rate" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> if it is not otherwise specified.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation.owner">
+<code class="descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> – <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> to which the Function belongs.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : default Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.components.functions.learningfunctions.TDLearning">
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="descname">TDLearning</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>learning_rate=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.TDLearning" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implement temporal difference learning using the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement" title="psyneulink.core.components.functions.learningfunctions.Reinforcement"><code class="xref any py py-class docutils literal"><span class="pre">Reinforcement</span></code></a> Function
+(see <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement" title="psyneulink.core.components.functions.learningfunctions.Reinforcement"><code class="xref any py py-class docutils literal"><span class="pre">Reinforcement</span></code></a> for class details).</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Composition.html" class="btn btn-neutral float-right" title="Composition" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="OptimizationFunctions.html" class="btn btn-neutral float-left" title="OptimizationFunctions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

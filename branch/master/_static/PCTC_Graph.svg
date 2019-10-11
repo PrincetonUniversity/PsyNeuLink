@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+
+
+<!-- Page 1 -->
+<svg x="0" y="0" width="1045" height="875" viewBox="0 0 1045 875" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+style="display: block;margin-left: auto;margin-right: auto;">
+<defs>
+
+<style type="text/css"><![CDATA[
+
+.g0_1{
+fill: none;
+stroke: #00FF00;
+stroke-width: 4.5833335;
+stroke-linecap: butt;
+stroke-linejoin: round;
+stroke-miterlimit: 1;
+}
+.g1_1{
+fill: none;
+stroke: #000000;
+stroke-width: 1.5277778;
+stroke-linecap: butt;
+stroke-linejoin: round;
+stroke-miterlimit: 1;
+}
+.g2_1{
+stroke: #000000;
+stroke-width: 1.5277778;
+stroke-linecap: butt;
+stroke-linejoin: round;
+stroke-miterlimit: 1;
+}
+.g3_1{
+fill: none;
+stroke: #FF0000;
+stroke-width: 4.5833335;
+stroke-linecap: butt;
+stroke-linejoin: round;
+stroke-miterlimit: 1;
+}
+
+.s1_1{
+font-size: 18.33px;
+font-family: ArialMT_8;
+fill: #000000;
+}
+
+]]></style>
+
+</defs>
+<path d="M0,0
+L0,875
+L1045,875
+L1045,0 Z " 
+fill="#FFFFFF" stroke="none" />
+<path d="M601.9,760.9c0,-29.4,-24.4,-53.2,-54.5,-53.2c-30.1,0,-54.5,23.8,-54.5,53.2c0,29.5,24.4,53.3,54.5,53.3c30.1,0,54.5,-23.8,54.5,-53.3Z" class="g0_1" />
+<text x="520" y="743" class="s1_1">out (2)</text>
+<text x="526" y="765" class="s1_1">BIAS</text>
+<text x="526" y="786" class="s1_1">in (2)</text>
+<path d="M291.2,599.2c0,-29.4,-50.1,-53.2,-112,-53.2c-61.8,0,-112,23.8,-112,53.2c0,29.4,50.2,53.3,112,53.3c61.9,0,112,-23.9,112,-53.3Z" class="g1_1" />
+<text x="152" y="582" class="s1_1">out (2)</text>
+<text x="112" y="603" dx="0,0,0,0,0,0,0,0,-1.4,0,0" class="s1_1">COLOR_LAYER</text>
+<text x="158" y="624" class="s1_1">in (2)</text>
+<path d="M497.8,738C441,713.6,346.8,673,275.5,642.2" class="g1_1" />
+<path d="M273.1,647L261.2,636l16.1,1.2Z" class="g2_1" />
+<path d="M614.9,275.8c0,-29.4,-48,-53.3,-107.2,-53.3c-59.2,0,-107.2,23.9,-107.2,53.3c0,29.4,48,53.2,107.2,53.2c59.2,0,107.2,-23.8,107.2,-53.2Z" class="g1_1" />
+<text x="481" y="258" class="s1_1">out (2)</text>
+<text x="444" y="279" dx="0,0,0,0,0,0,0,-1.4,0,0" class="s1_1">WORD_LAYER</text>
+<text x="486" y="300" class="s1_1">in (2)</text>
+<path d="M596.3,736.6c32.1,-17.8,71.5,-46.1,90.2,-84c20.9,-42.6,13.7,-61.3,0,-106.7C662.2,465.7,605.3,387.6,562.2,336.4" class="g1_1" />
+<path d="M558,339.7l-5.9,-15l14,8.1Z" class="g2_1" />
+<path d="M272.6,628.9c26.2,-1.3,46.3,-11.2,46.3,-29.7c0,-14.6,-12.5,-23.8,-30.7,-27.7" class="g1_1" />
+<path d="M287.1,576.8l-14.5,-7.2l15.8,-3.4Z" class="g2_1" />
+<path d="M514.6,437.5c0,-29.4,-44.1,-53.3,-98.6,-53.3c-54.4,0,-98.5,23.9,-98.5,53.3c0,29.4,44.1,53.2,98.5,53.2c54.5,0,98.6,-23.8,98.6,-53.2Z" class="g1_1" />
+<text x="381" y="420" class="s1_1">out (2,1)</text>
+<text x="358" y="441" dx="0,-1.4,0,0,0,0,0,-1.4,0,0" class="s1_1">TASK_LAYER</text>
+<text x="395" y="462" class="s1_1">in (2)</text>
+<path d="M236.5,553.1c30,-21,67.2,-45.9,100,-67.2" class="g1_1" />
+<path d="M334.1,481.2l15.7,-3.8l-9.9,12.7Z" class="g2_1" />
+<path d="M495.9,114C495.9,84.6,434.2,60.8,358,60.8C281.8,60.8,220.1,84.6,220.1,114c0,29.4,61.7,53.3,137.9,53.3c76.2,0,137.9,-23.9,137.9,-53.3Z" class="g3_1" />
+<text x="331" y="97" class="s1_1">out (2)</text>
+<text x="272" y="118" dx="0,0,0,0,0,0,0,0,0,0,0,-1.4,0,0" class="s1_1">RESPONSE_LAYER</text>
+<text x="337" y="139" class="s1_1">in (2)</text>
+<path d="M198.2,546.5C230.8,458.7,297.4,279.1,333.4,181.8" class="g1_1" />
+<path d="M328.6,179.4L339,166.9l-.3,16.2Z" class="g2_1" />
+<path d="M297.1,760.9c0,-29.4,-52.8,-53.2,-117.9,-53.2c-65.1,0,-117.8,23.8,-117.8,53.2c0,29.5,52.7,53.3,117.8,53.3c65.1,0,117.9,-23.8,117.9,-53.3Z" class="g0_1" />
+<text x="152" y="743" class="s1_1">out (2)</text>
+<text x="107" y="765" class="s1_1">COLORS_INPUT</text>
+<text x="158" y="786" class="s1_1">in (2)</text>
+<path d="M179.2,707.5c0,-12.5,0,-26,0,-39.1" class="g1_1" />
+<path d="M173.9,668.1l5.3,-15.3l5.4,15.3Z" class="g2_1" />
+<path d="M360.9,482.2c-29.5,20.6,-66.4,45.4,-99.3,66.7" class="g1_1" />
+<path d="M264.5,553.4l-15.8,3.8l10,-12.7Z" class="g2_1" />
+<path d="M498.7,467.2c24.6,-.9,43.8,-10.8,43.8,-29.7c0,-14.8,-11.7,-24.1,-28.5,-27.9" class="g1_1" />
+<path d="M513.3,414.9l-14.6,-7.1l15.9,-3.5Z" class="g2_1" />
+<path d="M400.7,384.7c-4.9,-17.5,-10,-37.3,-13.7,-55.6C377.2,280.7,369.8,225.4,364.9,183.2" class="g1_1" />
+<path d="M359.6,183.4l3.6,-15.7l7,14.6Z" class="g2_1" />
+<path d="M435.9,384.9c7.7,-14.6,16.9,-30.6,26,-45.8" class="g1_1" />
+<path d="M457.4,336.3l12.5,-10.2l-3.4,15.8Z" class="g2_1" />
+<path d="M473.3,143.4c28.8,-2,50.3,-11.8,50.3,-29.4c0,-14.2,-14.2,-23.3,-35,-27.4" class="g1_1" />
+<path d="M487.8,91.9L473.3,84.7l15.8,-3.4Z" class="g2_1" />
+<path d="M487.9,328.5c-7.9,14.7,-17.2,31,-26.4,46.3" class="g1_1" />
+<path d="M465.9,377.7l-12.5,10.2l3.4,-15.8Z" class="g2_1" />
+<path d="M463.2,227.1C448.1,211,431,192.9,415,176" class="g1_1" />
+<path d="M410.8,179.3l-6.6,-14.8l14.3,7.4Z" class="g2_1" />
+<path d="M597,305.4c25.6,-1.1,45.3,-11,45.3,-29.6c0,-14.7,-12.3,-24,-30,-27.8" class="g1_1" />
+<path d="M611.5,253.3L597,246.1l15.8,-3.4Z" class="g2_1" />
+<path d="M672.1,599.2C672.1,569.8,599.2,546,509.2,546c-89.9,0,-162.8,23.8,-162.8,53.2c0,29.4,72.9,53.3,162.8,53.3c90,0,162.9,-23.9,162.9,-53.3Z" class="g0_1" />
+<text x="482" y="582" class="s1_1">out (2)</text>
+<text x="406" y="603" class="s1_1">PROACTIVE_CONTROL</text>
+<text x="488" y="624" class="s1_1">in (2)</text>
+<path d="M479.2,546.6c-8.3,-14.1,-17.4,-29.7,-26.1,-44.4" class="g1_1" />
+<path d="M448.5,504.8l-3.1,-15.9l12.3,10.5Z" class="g2_1" />
+<path d="M984.4,437.5c0,-29.4,-50.6,-53.3,-113.1,-53.3c-62.4,0,-113.1,23.9,-113.1,53.3c0,29.4,50.7,53.2,113.1,53.2c62.5,0,113.1,-23.8,113.1,-53.2Z" class="g0_1" />
+<text x="844" y="420" class="s1_1">out (2)</text>
+<text x="803" y="441" class="s1_1">WORDS_INPUT</text>
+<text x="850" y="462" class="s1_1">in (2)</text>
+<path d="M789.7,400.4C733.9,376,659.9,343.7,601.6,318.3" class="g1_1" />
+<path d="M599,323L587.2,312l16.1,1.2Z" class="g2_1" />
+
+
+<!-- Any embedded fonts defined here -->
+<style type="text/css" ><![CDATA[
+
+@font-face {
+	font-family: ArialMT_8;
+	src: url("fonts/ArialMT_8.woff") format("woff");
+}
+
+]]></style>
+
+</svg>
