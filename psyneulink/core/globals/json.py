@@ -364,7 +364,7 @@ def _parse_parameter_value(value, component_identifiers=None):
         # handle IO port specification
         match = re.match(r'(.+)\.(.+)_ports\.(.+)', value)
         if match is not None:
-            comp_name, state_type, name = match.groups()
+            comp_name, port_type, name = match.groups()
             comp_identifer = parse_valid_identifier(comp_name)
 
             if comp_identifer in component_identifiers:
@@ -374,7 +374,7 @@ def _parse_parameter_value(value, component_identifiers=None):
                 else:
                     name = f"'{name}'"
 
-                return f'{comp_identifer}.{state_type}_states[{name}]'
+                return f'{comp_identifer}.{port_type}_ports[{name}]'
 
         # if value is just a non-fixed component name, use the fixed name
         identifier = parse_valid_identifier(value)
