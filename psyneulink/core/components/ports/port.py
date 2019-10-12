@@ -23,30 +23,30 @@ used to send ModulatoryProjections), as summarized in the table below:
 .. table:: **Port Types and Associated Projection Types**
    :align: left
 
-   +-------------------+--------------------+------------------------+-----------------+-------------------------------+
-   | *Port Type*      | *Owner*            |      *Description*     | *Modulated by*  |       *Specification*         |
-   +===================+====================+========================+=================+===============================+
-   | `InputPort`      |  `Mechanism        |receives input from     | `GatingSignal`  |`InputPort` constructor;      |
-   |                   |  <Mechanism>`      |`MappingProjection`     |                 |`Mechanism <Mechanism>`        |
-   |                   |                    |                        |                 |constructor or its             |
-   |                   |                    |                        |                 |`add_states` method            |
-   +-------------------+--------------------+------------------------+-----------------+-------------------------------+
-   |`ParameterPort`   |  `Mechanism        |represents parameter    | `LearningSignal`|Implicitly whenever a          |
-   |                   |  <Mechanism>` or   |value for a `Component  | and/or          |parameter value is             |
-   |                   |  `Projection       |<Component>`            | `ControlSignal` |`specified                     |
-   |                   |  <Projection>`     |or its `function        |                 |<ParameterPort_Specification>`|
-   |                   |                    |<Component.function>`   |                 |                               |
-   +-------------------+--------------------+------------------------+-----------------+-------------------------------+
-   | `OutputPort`     |  `Mechanism        |provides output to      | `GatingSignal`  |`OutputPort` constructor;     |
-   |                   |  <Mechanism>`      |`MappingProjection`     |                 |`Mechanism <Mechanism>`        |
-   |                   |                    |                        |                 |constructor or its             |
-   |                   |                    |                        |                 |`add_states` method            |
-   +-------------------+--------------------+------------------------+-----------------+-------------------------------+
-   |`ModulatorySignal  |`ModulatoryMechanism  |provides value for      |                 |`ModulatoryMechanism             |
-   |<ModulatorySignal>`|<ModulatoryMechanism>`|`ModulatoryProjection   |                 |<ModulatoryMechanism>`           |
-   |                   |                    |<ModulatoryProjection>` |                 |constructor; tuple in Port    |
-   |                   |                    |                        |                 |or parameter specification     |
-   +-------------------+--------------------+------------------------+-----------------+-------------------------------+
+   +-------------------+----------------------+-----------------------+-----------------+------------------------------+
+   | *Port Type*       | *Owner*              |      *Description*    | *Modulated by*  |       *Specification*        |
+   +===================+======================+=======================+=================+==============================+
+   | `InputPort`       |  `Mechanism          |receives input from    | `GatingSignal`  |`InputPort` constructor;      |
+   |                   |  <Mechanism>`        |`MappingProjection`    |                 |`Mechanism <Mechanism>`       |
+   |                   |                      |                       |                 |constructor or its            |
+   |                   |                      |                       |                 |`add_states` method           |
+   +-------------------+----------------------+-----------------------+-----------------+------------------------------+
+   |`ParameterPort`    |  `Mechanism          |represents parameter   | `LearningSignal`|Implicitly whenever a         |
+   |                   |  <Mechanism>` or     |value for a `Component | and/or          |parameter value is            |
+   |                   |  `Projection         |<Component>`           | `ControlSignal` |`specified                    |
+   |                   |  <Projection>`       |or its `function       |                 |<ParameterPort_Specification>`|
+   |                   |                      |<Component.function>`  |                 |                              |
+   +-------------------+----------------------+-----------------------+-----------------+------------------------------+
+   | `OutputPort`      |  `Mechanism          |provides output to     | `GatingSignal`  |`OutputPort` constructor;     |
+   |                   |  <Mechanism>`        |`MappingProjection`    |                 |`Mechanism <Mechanism>`       |
+   |                   |                      |                       |                 |constructor or its            |
+   |                   |                      |                       |                 |`add_states` method           |
+   +-------------------+----------------------+-----------------------+-----------------+------------------------------+
+   |`ModulatorySignal  |`ModulatoryMechanism  |provides value for     |                 |`ModulatoryMechanism          |
+   |<ModulatorySignal>`|<ModulatoryMechanism>`|`ModulatoryProjection  |                 |<ModulatoryMechanism>`        |
+   |                   |                      |<ModulatoryProjection>`|                 |constructor; tuple in Port    |
+   |                   |                      |                       |                 |or parameter specification    |
+   +-------------------+----------------------+-----------------------+-----------------+------------------------------+
 
 COMMENT:
 
@@ -224,22 +224,22 @@ The following types of Projections can be specified for each type of Port:
         :align: left
 
         +------------------+-------------------------------+-------------------------------------+
-        | *Port Type*     || *PROJECTIONS* specification  || *Assigned to Attribute*            |
+        | *Port Type*      | *PROJECTIONS* specification   | *Assigned to Attribute*             |
         +==================+===============================+=====================================+
-        |`InputPort`      || `PathwayProjection(s)        || `path_afferents                    |
-        |                  |   <PathwayProjection>`        |   <InputPort.path_afferents>`      |
-        |                  || `GatingProjection(s)         || `mod_afferents                     |
-        |                  |   <GatingProjection>`         |   <InputPort.mod_afferents>`       |
+        |`InputPort`       | `PathwayProjection(s)         | `path_afferents                     |
+        |                  |   <PathwayProjection>`        |   <InputPort.path_afferents>`       |
+        |                  |  `GatingProjection(s)         |  `mod_afferents                     |
+        |                  |   <GatingProjection>`         |   <InputPort.mod_afferents>`        |
         +------------------+-------------------------------+-------------------------------------+
-        |`ParameterPort`  || `ControlProjection(s)        || `mod_afferents                     |
-        |                  |   <ControlProjection>`        |   <ParameterPort.mod_afferents>`   |
+        |`ParameterPort`   | `ControlProjection(s)         | `mod_afferents                      |
+        |                  |   <ControlProjection>`        |   <ParameterPort.mod_afferents>`    |
         +------------------+-------------------------------+-------------------------------------+
-        |`OutputPort`     || `PathwayProjection(s)        || `efferents                         |
-        |                  |   <PathwayProjection>`        |   <OutputPort.efferents>`          |
-        |                  || `GatingProjection(s)         || `mod_afferents                     |
-        |                  |   <GatingProjection>`         |   <OutputPort.mod_afferents>`      |
+        |`OutputPort`      | `PathwayProjection(s)         | `efferents                          |
+        |                  |   <PathwayProjection>`        |   <OutputPort.efferents>`           |
+        |                  |  `GatingProjection(s)         |  `mod_afferents                     |
+        |                  |   <GatingProjection>`         |   <OutputPort.mod_afferents>`       |
         +------------------+-------------------------------+-------------------------------------+
-        |`ModulatorySignal`|| `ModulatoryProjection(s)     || `efferents                         |
+        |`ModulatorySignal`|  `ModulatoryProjection(s)     |  `efferents                         |
         |                  |   <ModulatoryProjection>`     |   <ModulatorySignal.efferents>`     |
         +------------------+-------------------------------+-------------------------------------+
 
@@ -540,7 +540,8 @@ specifies that the InputPort of ``my_mech`` should receive a `GatingProjection` 
 
 Conversely, ModulatoryProjections can also be specified from a Mechanism to one or more States that it modulates.  In
 the following example, a `ControlMechanism` is created that sends `ControlProjections <ControlProjection>` to the
-`drift_rate <DriftDiffusionAnalytical.drift_rate>` and `threshold <DriftDiffusionAnalytical.threshold>` ParameterPorts of a `DDM` Mechanism::
+`drift_rate <DriftDiffusionAnalytical.drift_rate>` and `threshold <DriftDiffusionAnalytical.threshold>`
+ParameterPorts of a `DDM` Mechanism::
 
     my_mech = pnl.DDM(name='MY DDM')
     my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.NAME: 'MY DDM DRIFT RATE AND THREHOLD CONTROL SIGNAL',
