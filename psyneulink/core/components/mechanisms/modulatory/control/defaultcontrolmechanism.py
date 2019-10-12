@@ -176,7 +176,7 @@ class DefaultControlMechanism(ControlMechanism):
     def _instantiate_default_input_port(self, input_port_name, input_port_value, context=None):
         """Instantiate inputPort for ControlMechanism
 
-        NOTE: This parallels ObjectMechanism._instantiate_input_port_for_monitored_state()
+        NOTE: This parallels ObjectMechanism._instantiate_input_port_for_monitored_port()
               It is implemented here to spare having to instantiate a "dummy" (and superfluous) ObjectiveMechanism
               for the sole purpose of creating input_ports for each value of defaultControlAllocation to assign
               to the ControlProjections.

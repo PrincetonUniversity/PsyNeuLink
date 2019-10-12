@@ -1262,7 +1262,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 if self.system:
                     if not isinstance(spec, (list, ContentAddressableList)):
                         spec = [spec]
-                    self.system._validate_monitored_states_in_system(spec, context=context)
+                    self.system._validate_monitored_ports_in_system(spec, context=context)
 
         if SYSTEM in target_set:
             if not isinstance(target_set[SYSTEM], System_Base):
@@ -1626,16 +1626,16 @@ class ControlMechanism(ModulatoryMechanism_Base):
         print("\n\tMonitoring the following Mechanism OutputPorts:")
         for state in self.objective_mechanism.input_ports:
             for projection in state.path_afferents:
-                monitored_state = projection.sender
+                monitored_port = projection.sender
                 monitored_port_Mech = projection.sender.owner
                 # ContentAddressableList
-                monitored_port_index = self.monitored_output_ports.index(monitored_state)
+                monitored_port_index = self.monitored_output_ports.index(monitored_port)
 
                 weight = self.monitored_output_ports_weights_and_exponents[monitored_port_index][0]
                 exponent = self.monitored_output_ports_weights_and_exponents[monitored_port_index][1]
 
                 print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
-                       format(monitored_port_Mech.name, monitored_state.name, weight, exponent))
+                       format(monitored_port_Mech.name, monitored_port.name, weight, exponent))
 
         try:
             if self.control_signals:
@@ -1676,7 +1676,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         """
         output_ports = self.objective_mechanism.add_to_monitor(monitor_specs=monitor_specs, context=context)
         if self.system:
-            self.system._validate_monitored_states_in_system(output_ports, context=context)
+            self.system._validate_monitored_ports_in_system(output_ports, context=context)
 
     def _add_process(self, process, role:str):
         super()._add_process(process, role)
@@ -1736,7 +1736,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         # Validate that all of the ControlMechanism's monitored_output_ports and controlled parameters
         #    are in the new System
-        system._validate_monitored_states_in_system(self.monitored_output_ports)
+        system._validate_monitored_ports_in_system(self.monitored_output_ports)
         system._validate_control_signals(self.control_signals)
 
         # Get any and all OutputPorts specified in:

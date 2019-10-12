@@ -1872,7 +1872,7 @@ class Mechanism_Base(Mechanism):
                     (since execute method must be instantiated before self.defaults.value is known)
                 if OUTPUT_PORTS is a list or OrderedDict, it is passed along (to instantiate_output_ports)
                 if it is a OutputPort class ref, object or specification dict, it is placed in a list
-            + MONITORED_STATES:
+            + MONITORED_PORTS:
                 ** DOCUMENT
 
         Note: PARAMETER_PORTS are validated separately -- ** DOCUMENT WHY

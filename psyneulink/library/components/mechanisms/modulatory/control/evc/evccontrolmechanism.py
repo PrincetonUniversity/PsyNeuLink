@@ -627,8 +627,8 @@ class EVCControlMechanism(ControlMechanism):
             controller._get_simulation_system_inputs gets inputs for a simulated run (using predictionMechanisms)
             controller._assign_simulation_inputs assigns value of prediction_mechanisms to inputs of `ORIGIN` Mechanisms
             controller.run will execute a specified number of trials with the simulation inputs
-            controller.monitored_states is a list of the Mechanism OutputPorts being monitored for outcome
-            controller.input_value is a list of current outcome values (values for monitored_states)
+            controller.monitored_ports is a list of the Mechanism OutputPorts being monitored for outcome
+            controller.input_value is a list of current outcome values (values for monitored_ports)
             controller.monitored_output_ports_weights_and_exponents is a list of parameterizations for OutputPorts
             controller.control_signals is a list of control_signal objects
             controller.control_signal_search_space is a list of all allocationPolicies specifed by allocation_samples
@@ -1290,7 +1290,7 @@ class EVCControlMechanism(ControlMechanism):
         # Get outcomes for current control_allocation
         #    = the values of the monitored output ports (self.input_ports)
         # self.objective_mechanism.execute(context=EVC_SIMULATION)
-        monitored_states = self._update_input_ports(context=context, runtime_params=runtime_params)
+        monitored_ports = self._update_input_ports(context=context, runtime_params=runtime_params)
 
         # # MODIFIED 9/18/18 OLD:
         # for i in range(len(self.control_signals)):
@@ -1307,7 +1307,7 @@ class EVCControlMechanism(ControlMechanism):
         self.parameters.control_signal_costs._set(control_signal_costs, context)
         # MODIFIED 9/18/18 END
 
-        return monitored_states
+        return monitored_ports
 
     # The following implementation of function attributes as properties insures that even if user sets the value of a
     #    function directly (i.e., without using assign_params), it will still be wrapped as a UserDefinedFunction.

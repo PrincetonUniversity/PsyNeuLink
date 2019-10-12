@@ -988,15 +988,15 @@ class LCControlMechanism(ControlMechanism):
         else:
             for state in self.objective_mechanism.input_ports:
                 for projection in state.path_afferents:
-                    monitored_state = projection.sender
+                    monitored_port = projection.sender
                     monitored_port_Mech = projection.sender.owner
-                    monitored_port_index = self.monitored_output_ports.index(monitored_state)
+                    monitored_port_index = self.monitored_output_ports.index(monitored_port)
 
                     weight = self.monitored_output_ports_weights_and_exponents[monitored_port_index][0]
                     exponent = self.monitored_output_ports_weights_and_exponents[monitored_port_index][1]
 
                     print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
-                           format(monitored_port_Mech.name, monitored_state.name, weight, exponent))
+                           format(monitored_port_Mech.name, monitored_port.name, weight, exponent))
 
         print ("\n\tModulating the following parameters:".format(self.name))
         # Sort for consistency of output:

@@ -2261,7 +2261,7 @@ class System(System_Base):
         # Convert references to Mechanisms and/or OutputPorts in all_specs to MonitoredOutputPortTuples;
         # Each spec to be converted should be one of the following:
         #    - a MonitoredOutputPortsOption (parsed below);
-        #    - a MonitoredOutputPortsTuple (returned by _get_monitored_states_for_system when
+        #    - a MonitoredOutputPortsTuple (returned by _get_monitored_ports_for_system when
         #          specs were initially processed by the System to parse its *monitor_for_control* argument;
         #    - a specification for an existing Mechanism or OutputPorts from the *monitor_for_control* arg of System.
         all_specs_extracted_from_tuples=[]
@@ -2546,8 +2546,8 @@ class System(System_Base):
                                                                            matrix=spec.matrix)
         return output_port_tuples
 
-    def _validate_monitored_states_in_system(self, monitored_states, context=None):
-        for spec in monitored_states:
+    def _validate_monitored_ports_in_system(self, monitored_ports, context=None):
+        for spec in monitored_ports:
             # if not any((spec is mech.name or spec in mech.output_ports.names)
             if not any((spec in {mech, mech.name} or spec in mech.output_ports or spec in mech.output_ports.names)
                        for mech in self.mechanisms):

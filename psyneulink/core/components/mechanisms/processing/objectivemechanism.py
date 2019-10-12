@@ -87,7 +87,7 @@ precedence afforded to each) are described below.
   ..
   TBI
   * **Mechanism** -- by default, the Mechanism's `primary OutputPort <OutputPort_Primary>` is used.  However,
-    if the Mechanism has any OutputPorts specified in its `monitored_states` attribute, those are used (except for
+    if the Mechanism has any OutputPorts specified in its `monitored_ports` attribute, those are used (except for
     any that specify `None` as their `monitoring_status`). This specification takes precedence over any of the other
     types listed below:  if it is `None`, then none of that Mechanism's OutputPorts are monitored; if it
     specifies OutputPorts to be monitored, those are monitored even if they do not satisfy any of the conditions

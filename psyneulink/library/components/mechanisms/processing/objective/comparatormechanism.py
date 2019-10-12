@@ -24,7 +24,7 @@ Creating a ComparatorMechanism
 ComparatorMechanisms are generally created automatically when other PsyNeuLink components are created (such as
 `LearningMechanisms <LearningMechanism_Creation>`).  A ComparatorMechanism can also be created directly by calling
 its constructor.  Its **sample** and **target** arguments are used to specify the OutputPorts that provide the
-sample and target inputs, respectively (see `ObjectiveMechanism_Monitored_States` for details concerning their
+sample and target inputs, respectively (see `ObjectiveMechanism_Monitored_ports` for details concerning their
 specification, which are special versions of an ObjectiveMechanism's **monitor** argument).  When the
 ComparatorMechanism is created, two InputPorts are created, one each for its sample and target inputs (and named,
 by default, *SAMPLE* and *TARGET*). Each is assigned a MappingProjection from the corresponding OutputPort specified
