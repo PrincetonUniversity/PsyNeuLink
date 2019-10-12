@@ -46,7 +46,7 @@ class TestACConstructor:
     #     comp = AutodiffComposition()
     #     assert isinstance(comp.target_CIM, CompositionInterfaceMechanism)
     #     assert comp.target_CIM.composition == comp
-    #     assert comp.target_CIM_states == {}
+    #     assert comp.target_CIM_ports == {}
 
     def test_pytorch_representation(self):
         comp = AutodiffComposition()
@@ -733,8 +733,8 @@ class TestTrainingCorrectness:
                 # get target for terminal node whose output state corresponds to current output
                 correct_value = None
                 curr_CIM_input_port = sem_net.output_CIM.input_ports[j]
-                for output_port in sem_net.output_CIM_states.keys():
-                    if sem_net.output_CIM_states[output_port][0] == curr_CIM_input_port:
+                for output_port in sem_net.output_CIM_ports.keys():
+                    if sem_net.output_CIM_ports[output_port][0] == curr_CIM_input_port:
                         node = output_port.owner
                         correct_value = targets_dict[node][i]
 

@@ -81,7 +81,7 @@ COMMENT:
 
 COMMENT
 
-.. _State_Creation:
+.. _Port_Creation:
 
 Creating a Port
 ----------------
@@ -151,7 +151,7 @@ A Port can be specified using any of the following:
           the Port, and/or `ModulatorySignals <ModulatorySignal>` from which it should receive projections (see
           `Port_Projections` below).
 
-      .. _State_Port_Name_Entry:
+      .. _Port_Port_Name_Entry:
 
       * *<str>*:List[<`projection specification <Projection_Specification>`>,...]
           this must be the only entry in the dictionary, and the string cannot be a PsyNeuLink
@@ -187,13 +187,13 @@ A Port can be specified using any of the following:
       States;  the type of Port being created determines the type and directionality of the Projection(s) and,
       if Mechanism(s) are specified, which of their primary States are used (see Port subclasses for specifics).
 
-   .. _State_Tuple_Specification:
+   .. _Port_Tuple_Specification:
 
     * **Tuple specifications** -- these are convenience formats that can be used to compactly specify a Port
       by specifying other Components with which it should be connected by Projection(s). Different States support
       different forms, but all support the following two forms:
 
-      .. _State_2_Item_Tuple:
+      .. _Port_2_Item_Tuple:
 
       * **2-item tuple:** *(<Port name or list of Port names>, <Mechanism>)* -- 1st item is the name of a Port or
         list of them, and the 2nd item is the Mechanism to which they belong; a Projection is created to or from each
@@ -267,12 +267,12 @@ functional (i.e., used during the execution of `Mechanisms <Mechanism_Base_Execu
 <Composition_Execution>`, irrespective of whether it has any `Projections <Projection>` assigned to it.
 
 
-.. _State_Structure:
+.. _Port_Structure:
 
 Structure
 ---------
 
-.. _State_Owner:
+.. _Port_Owner:
 
 *Owner*
 ~~~~~~~
@@ -336,7 +336,7 @@ In addition, like all PsyNeuLink Components, it also has the three following cor
       <OutputPort_Assign>` attribute and/or a `GatingSignal`, and used as the `value <Projection_Base.value>` of
       the Projections listed in its `efferents <OutputPort.path_efferents>` attribute.
 
-.. _State_Modulation:
+.. _Port_Modulation:
 
 *Modulation*
 ~~~~~~~~~~~~
@@ -353,7 +353,7 @@ ModulatorySignal can also be configured to override the Port's `value <Port_Base
 or to disable modulation, using one of the values of `ModulationParam` for its
 `modulation <ModulatorySignal.modulation>` attribute (see `ModulatorySignal_Modulation` for a more detailed discussion).
 
-.. _State_Execution:
+.. _Port_Execution:
 
 Execution
 ---------
@@ -413,7 +413,7 @@ belong.  For example, the following specifies that ``my_mech`` should have an In
 The InputPort was specified by a string (for its name) in the **input_ports** argument.  It can also be specified in
 a variety of other ways, as described `above <Port_specification>` and illustrated in the examples below.
 Note that when one or more States is specified in the argument of a Mechanism's constructor, it replaces any defaults
-States created by the Mechanism when none are specified (see `note <Mechanism_Default_State_Suppression_Note>`.
+States created by the Mechanism when none are specified (see `note <Mechanism_Default_Port_Suppression_Note>`.
 
 .. _port_value_Spec_Example:
 
@@ -438,7 +438,7 @@ Note that in the first print state, the InputPort was referenced as the first on
 as the `primary InputPort <Input_port.primary>` of ``my_mech``, using its `input_port <Mechanism_Base.input_port>`
 attribute (note the singular).
 
-.. _State_Multiple_InputSates_Example:
+.. _Port_Multiple_InputSates_Example:
 
 *Multiple InputPorts*
 
@@ -459,7 +459,7 @@ than one InputPort.  OutputPorts can be specified in a similar way, using the **
         <Mechanism_Base.function>` is assigned, and can be accessed and subsequently modified, as described under
         `ParameterPort_Specification>`.
 
-.. _State_Standard_OutputPorts_Example:
+.. _Port_Standard_OutputPorts_Example:
 
 *OutputPorts*
 
@@ -470,7 +470,7 @@ The following example specifies two OutputPorts for ``my_mech``, using its `Stan
 
 As with InputPorts, specification of OutputPorts in the **output_ports** argument suppresses the creation of any
 default OutputPorts that would have been created if no OutputPorts were specified (see `note
-<Mechanism_Default_State_Suppression_Note>` above).  For example, TransferMechanisms create a *RESULT* OutputPort
+<Mechanism_Default_Port_Suppression_Note>` above).  For example, TransferMechanisms create a *RESULT* OutputPort
 by default, that contains the result of their `function <OutputPort.function>`.  This default behavior is suppressed
 by any specifications in its **output_ports** argument.  Therefore, to retain a *RESULTS* OutputPort,
 it must be included in the **output_ports** argument along with any others that are specified, as in the example
@@ -536,7 +536,7 @@ specifies that the InputPort of ``my_mech`` should receive a `GatingProjection` 
                                                    pnl.PROJECTIONS:[my_gating_mech]}])
 
 
-.. _State_Modulatory_Projections_Examples:
+.. _Port_Modulatory_Projections_Examples:
 
 Conversely, ModulatoryProjections can also be specified from a Mechanism to one or more States that it modulates.  In
 the following example, a `ControlMechanism` is created that sends `ControlProjections <ControlProjection>` to the
@@ -584,7 +584,7 @@ example (sans the custom name; though as the printout below shows, the default n
     > MY DDM threshold ControlSignal
     >    MY DDM: (ParameterPort threshold)
 
-.. _State_Port_Name_Entry_Example:
+.. _Port_Port_Name_Entry_Example:
 
 *Convenience formats*
 
@@ -615,7 +615,7 @@ This produces the same result as the `earlier example <State_Modulatory_Projecti
 once again in a simpler and easier to read form.  However, it be used only to specify Projections for a Port to or
 from the States of a single Mechanism;  Projections involving other Mechanisms must be assigned to other States.
 
-.. _State_Create_Port_Examples:
+.. _Port_Create_Port_Examples:
 
 *Create and then assign a state*
 
@@ -657,7 +657,7 @@ when it was created, as shown by printing the `input_ports <Mechanism_Base.input
 As a consequence, ``my_input_port`` is  **not** the `primary InputPort <InputPort_Primary>` for ``mech_B`` (i.e.,
 input_ports[0]), but rather its second InputPort (input_ports[1]). This is differs from specifying the InputPort
 as part of the constructor for the Mechanism, which suppresses generation of the default InputPort,
-as in the first example above (see `note <Mechanism_Default_State_Suppression_Note>`).
+as in the first example above (see `note <Mechanism_Default_Port_Suppression_Note>`).
 
 COMMENT:
 
@@ -722,7 +722,7 @@ The following creates
 
 COMMENT
 
-.. _State_Class_Reference:
+.. _Port_Class_Reference:
 
 Class Reference
 ---------------
@@ -771,7 +771,7 @@ from psyneulink.core.globals.utilities import \
     merge_param_dicts, MODULATION_OVERRIDE, type_match
 
 __all__ = [
-    'Port_Base', 'state_keywords', 'port_type_keywords', 'StateError', 'StateRegistry', 'PORT_SPEC'
+    'Port_Base', 'state_keywords', 'port_type_keywords', 'PortError', 'StateRegistry', 'PORT_SPEC'
 ]
 
 state_keywords = component_keywords.copy()
@@ -791,12 +791,12 @@ state_keywords.update({MECHANISM,
                        })
 port_type_keywords = {PORT_TYPE}
 
-STANDARD_STATE_ARGS = {PORT_TYPE, OWNER, REFERENCE_VALUE, VARIABLE, NAME, PARAMS, PREFS_ARG}
+STANDARD_PORT_ARGS = {PORT_TYPE, OWNER, REFERENCE_VALUE, VARIABLE, NAME, PARAMS, PREFS_ARG}
 PORT_SPEC = 'port_spec'
 REMOVE_STATES = 'REMOVE_STATES'
 
 
-def _is_state_class(spec):
+def _is_port_class(spec):
     if inspect.isclass(spec) and issubclass(spec, Port):
         return True
     return False
@@ -806,7 +806,7 @@ def _is_state_class(spec):
 #        Individual stateRegistries (used for naming) are created for each Mechanism
 StateRegistry = {}
 
-class StateError(Exception):
+class PortError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -998,7 +998,7 @@ class Port_Base(Port):
         the name is not  specified in the **name** argument of its constructor, a default name is assigned by the
         subclass (see subclass for details).
 
-        .. _State_Naming_Note:
+        .. _Port_Naming_Note:
 
         .. note::
             Unlike other PsyNeuLink Components, States names are "scoped" within a Mechanism, meaning that States with
@@ -1119,7 +1119,7 @@ class Port_Base(Port):
 
         # Enforce that subclass must implement and _execute method
         if not hasattr(self, '_execute'):
-            raise StateError("{}, as a subclass of {}, must implement an _execute() method".
+            raise PortError("{}, as a subclass of {}, must implement an _execute() method".
                              format(self.__class__.__name__, STATE))
 
         # Assign args to params and functionParams dicts
@@ -1176,13 +1176,13 @@ class Port_Base(Port):
 
             def checkAndCastInt(x):
                 if not isinstance(x, numbers.Number):
-                    raise StateError("Size ({}) is not a number.".format(x))
+                    raise PortError("Size ({}) is not a number.".format(x))
                 if x < 1:
-                    raise StateError("Size ({}) is not a positive number.".format(x))
+                    raise PortError("Size ({}) is not a positive number.".format(x))
                 try:
                     int_x = int(x)
                 except:
-                    raise StateError(
+                    raise PortError(
                         "Failed to convert size argument ({}) for {} {} to an integer. For States, size "
                         "should be a number, which is an integer or can be converted to integer.".
                         format(x, type(self), self.name))
@@ -1198,7 +1198,7 @@ class Port_Base(Port):
                 if variable is not None:
                     variable = np.atleast_1d(variable)
             except:
-                raise StateError("Failed to convert variable (of type {}) to a 1D array.".format(type(variable)))
+                raise PortError("Failed to convert variable (of type {}) to a 1D array.".format(type(variable)))
             # endregion
 
             # region if variable is None and size is not None, make variable a 1D array of zeros of length = size
@@ -1215,7 +1215,7 @@ class Port_Base(Port):
             if variable is not None and size is not None:  # try tossing this "if" check
                 # If they conflict, raise exception
                 if size != len(variable):
-                    raise StateError("The size arg of {} ({}) conflicts with the length of its variable arg ({})".
+                    raise PortError("The size arg of {} ({}) conflicts with the length of its variable arg ({})".
                                      format(self.name, size, variable))
 
         return variable
@@ -1336,7 +1336,7 @@ class Port_Base(Port):
               ModulatorySignal: _instantiate_projections_from_state (.efferents)
         """
 
-        raise StateError("{} must implement _instantiate_projections (called for {})".
+        raise PortError("{} must implement _instantiate_projections (called for {})".
                          format(self.__class__.__name__,
                                 self.name))
 
@@ -1413,7 +1413,7 @@ class Port_Base(Port):
                 projection = projection_type(**projection_spec)
 
             else:
-                raise StateError("PROGRAM ERROR: Unrecognized {} specification ({}) returned "
+                raise PortError("PROGRAM ERROR: Unrecognized {} specification ({}) returned "
                                  "from _parse_connection_specs for connection from {} to {} of {}".
                                  format(Projection.__name__,projection_spec,sender.__name__,self.name,self.owner.name))
 
@@ -1427,7 +1427,7 @@ class Port_Base(Port):
 
                 # validate receiver
                 if proj_receiver is not None and proj_receiver != self:
-                    raise StateError("Projection ({}) assigned to {} of {} already has a receiver ({})".
+                    raise PortError("Projection ({}) assigned to {} of {} already has a receiver ({})".
                                      format(projection_type.__name__, self.name, self.owner.name, proj_receiver.name))
                 projection._init_args[RECEIVER] = self
 
@@ -1437,13 +1437,13 @@ class Port_Base(Port):
                     # If the Projection already has Port as its sender,
                     #    it must be the same as the one specified in the connection spec
                     if isinstance(proj_sender, Port) and proj_sender != state:
-                        raise StateError("Projection assigned to {} of {} from {} already has a sender ({})".
+                        raise PortError("Projection assigned to {} of {} from {} already has a sender ({})".
                                          format(self.name, self.owner.name, state.name, proj_sender.name))
                     # If the Projection has a Mechanism specified as its sender:
                     elif isinstance(state, Port):
                         #    Connection spec (state) is specified as a Port,
                         #    so validate that Port belongs to Mechanism and is of the correct type
-                        sender = _get_state_for_socket(owner=self.owner,
+                        sender = _get_port_for_socket(owner=self.owner,
                                                        mech=proj_sender,
                                                        port_spec=state,
                                                        port_types=state.__class__,
@@ -1451,7 +1451,7 @@ class Port_Base(Port):
                     elif isinstance(proj_sender, Mechanism) and inspect.isclass(state) and issubclass(state, Port):
                         #    Connection spec (state) is specified as Port type
                         #    so try to get that Port type for the Mechanism
-                        sender = _get_state_for_socket(owner=self.owner,
+                        sender = _get_port_for_socket(owner=self.owner,
                                                        connectee_port_type=self.__class__,
                                                        port_spec=proj_sender,
                                                        port_types=state)
@@ -1475,7 +1475,7 @@ class Port_Base(Port):
                 elif inspect.isclass(sender) and issubclass(sender, Port):
                     sender_name = sender.__name__
                 else:
-                    raise StateError("SENDER of {} to {} of {} is neither a Port or Port class".
+                    raise PortError("SENDER of {} to {} of {} is neither a Port or Port class".
                                      format(projection_type.__name__, self.name, self.owner.name))
                 projection._assign_default_projection_name(state=self,
                                                            sender_name=sender_name,
@@ -1508,7 +1508,7 @@ class Port_Base(Port):
                 if isinstance(projection, PathwayProjection_Base):
                     if not iscompatible(projection.defaults.value, self.defaults.variable[0]):
                     # if len(projection.value) != self.defaults.variable.shape[-1]:
-                        raise StateError("Output of function for {} ({}) is not compatible with value of {} ({}).".
+                        raise PortError("Output of function for {} ({}) is not compatible with value of {} ({}).".
                                          format(projection.name, projection.value, self.name, self.defaults.value))
 
                 # ModualatoryProjection:
@@ -1519,7 +1519,7 @@ class Port_Base(Port):
                     mod_proj_spec_value = type_match(projection.defaults.value, type(mod_param_value))
                     if (mod_param_value is not None
                         and not iscompatible(mod_param_value, mod_proj_spec_value)):
-                        raise StateError("Output of function for {} ({}) is not compatible with value of {} ({}).".
+                        raise PortError("Output of function for {} ({}) is not compatible with value of {} ({}).".
                                              format(projection.name, projection.defaults.value, self.name, self.defaults.value))
 
             # ASSIGN TO STATE
@@ -1666,7 +1666,7 @@ class Port_Base(Port):
             receiver_state = _get_receiver_state(receiver)
             connection_receiver_state = _get_receiver_state(connection)
             if receiver_state != connection_receiver_state:
-                raise StateError("PROGRAM ERROR: Port specified as receiver ({}) should "
+                raise PortError("PROGRAM ERROR: Port specified as receiver ({}) should "
                                  "be the same as the one specified in the connection {}.".
                                  format(receiver_state, connection_receiver_state))
 
@@ -1674,7 +1674,7 @@ class Port_Base(Port):
                 and receiver
                 and not isinstance(receiver, (Port, Mechanism))
                 and not (inspect.isclass(receiver) and issubclass(receiver, (Port, Mechanism)))):
-                raise StateError("Receiver ({}) of {} from {} must be a {}, {}, a class of one, or a {}".
+                raise PortError("Receiver ({}) of {} from {} must be a {}, {}, a class of one, or a {}".
                                  format(receiver, projection_spec, self.name,
                                         Port.__name__, Mechanism.__name__, ProjectionTuple.__name__))
 
@@ -1693,7 +1693,7 @@ class Port_Base(Port):
                                              InputPort.__name__))
                     receiver = receiver.input_port
 
-                    raise StateError("Receiver {} of {} from {} is a {}, but the specified {} is a {} so "
+                    raise PortError("Receiver {} of {} from {} is a {}, but the specified {} is a {} so "
                                      "target {} can't be determined".
                                      format(receiver, projection_spec, self.name, Mechanism.__name__,
                                             Projection.__name__, default_projection_type.__name__,
@@ -1748,7 +1748,7 @@ class Port_Base(Port):
                         rcvr_str = " to {}".format(receiver.name)
                     else:
                         rcvr_str = " to {}".format(receiver.__name__)
-                raise StateError("PROGRAM ERROR: Unrecognized {} specification ({}) returned "
+                raise PortError("PROGRAM ERROR: Unrecognized {} specification ({}) returned "
                                  "from _parse_connection_specs for connection from {} of {}{}".
                                  format(Projection.__name__,projection_spec,self.name,self.owner.name,rcvr_str))
 
@@ -1756,7 +1756,7 @@ class Port_Base(Port):
             receiver = proj_recvr or receiver  # If receiver was not specified, assign it receiver from projection_spec
             if proj_recvr and receiver and not proj_recvr is receiver:
                 # Note: if proj_recvr is None, it will be assigned under handling of deferred_init below
-                raise StateError("Receiver ({}) specified for Projection ({}) "
+                raise PortError("Receiver ({}) specified for Projection ({}) "
                                  "is not the same as the one specified in {} ({})".
                                  format(proj_recvr, projection.name, ProjectionTuple.__name__, receiver))
 
@@ -1792,7 +1792,7 @@ class Port_Base(Port):
                     # Validate variable
                     #    - check that input to Projection is compatible with self.value
                     if not iscompatible(self.defaults.value, projection.defaults.variable):
-                        raise StateError("Input to {} ({}) is not compatible with the value ({}) of "
+                        raise PortError("Input to {} ({}) is not compatible with the value ({}) of "
                                          "the Port from which it is supposed to project ({})".
                                          format(projection.name, projection.defaults.variable, self.defaults.value, self.name))
 
@@ -1807,7 +1807,7 @@ class Port_Base(Port):
                     #    - check that projection's value is compatible with the receiver's variable
                     if isinstance(projection, PathwayProjection_Base):
                         if not iscompatible(projection.value, receiver.socket_template):
-                            raise StateError("Output of {} ({}) is not compatible with the variable ({}) of "
+                            raise PortError("Output of {} ({}) is not compatible with the variable ({}) of "
                                              "the Port to which it is supposed to project ({}).".
                                              format(projection.name, projection.value,
                                                     receiver.defaults.variable, receiver.name, ))
@@ -1823,7 +1823,7 @@ class Port_Base(Port):
                         mod_proj_spec_value = type_match(projection.value, type(mod_param_value))
                         if (mod_param_value is not None
                             and not iscompatible(mod_param_value, mod_proj_spec_value)):
-                            raise StateError(f"Output of {projection.name} ({mod_proj_spec_value}) is not compatible "
+                            raise PortError(f"Output of {projection.name} ({mod_proj_spec_value}) is not compatible "
                                              f"with the value of {receiver.name} ({mod_param_value}).")
 
 
@@ -1842,7 +1842,7 @@ class Port_Base(Port):
             return projection
 
     def _get_primary_state(self, mechanism):
-        raise StateError("PROGRAM ERROR: {} does not implement _get_primary_state method".
+        raise PortError("PROGRAM ERROR: {} does not implement _get_primary_state method".
                          format(self.__class__.__name__))
 
     def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
@@ -1862,7 +1862,7 @@ class Port_Base(Port):
                             parse the specified value as the Port specification
          - params: state-specific parameters that will be included in the PARAMS entry of the Port specification dict
          """
-        raise StateError("PROGRAM ERROR: {} does not implement _parse_port_specific_specs method".
+        raise PortError("PROGRAM ERROR: {} does not implement _parse_port_specific_specs method".
                          format(self.__class__.__name__))
 
     def _update(self, context=None, params=None):
@@ -1882,7 +1882,7 @@ class Port_Base(Port):
         except (KeyError, TypeError):
             self.stateParams = {}
         except (AttributeError):
-            raise StateError("PROGRAM ERROR: paramsType not specified for {}".format(self.name))
+            raise PortError("PROGRAM ERROR: paramsType not specified for {}".format(self.name))
 
         # # Flag format of input
         # if isinstance(self.value, numbers.Number):
@@ -2020,7 +2020,7 @@ class Port_Base(Port):
                     #    to be sure there are no other conflicting OVERRIDES assigned
                     if self.owner.paramValidationPref:
                         if modulatory_override:
-                            raise StateError(f"Illegal assignment of {MODULATION_OVERRIDE} to more than one "
+                            raise PortError(f"Illegal assignment of {MODULATION_OVERRIDE} to more than one "
                                              f"{MODULATORY_SIGNAL} ({projection.name} and {modulatory_override[2]}).")
                         modulatory_override = (MODULATION_OVERRIDE, projection_value, projection)
                         continue
@@ -2117,7 +2117,7 @@ class Port_Base(Port):
         receiver = receiver or self
 
         if not isinstance(mod_proj, ModulatoryProjection_Base):
-            raise StateError(f'Specification of {MODULATORY_PROJECTION} to {receiver.full_name} ({mod_proj}) '
+            raise PortError(f'Specification of {MODULATORY_PROJECTION} to {receiver.full_name} ({mod_proj}) '
                                 f'is not a {ModulatoryProjection_Base.__name__}')
 
         # Get modulation specification from the Projection sender's modulation attribute
@@ -2313,13 +2313,13 @@ class Port_Base(Port):
         return builder
 
     @staticmethod
-    def _get_state_function_value(owner, function, variable):
+    def _get_port_function_value(owner, function, variable):
         """Execute the function of a Port and return its value
         # FIX: CONSIDER INTEGRATING THIS INTO _EXECUTE FOR STATE?
 
         This is a stub, that a Port subclass can override to treat its function in a Port-specific manner.
         Used primarily during validation, when the function may not have been fully instantiated yet
-        (e.g., InputPort must sometimes embed its variable in a list-- see InputPort._get_state_function_value).
+        (e.g., InputPort must sometimes embed its variable in a list-- see InputPort._get_port_function_value).
         """
         return function.execute(variable, context=Context(source=ContextFlags.UNSET))
 
@@ -2408,7 +2408,7 @@ def _instantiate_port_list(owner,
     # KAM 6/21/18 modified to include tuple as an option for state_list
     if not isinstance(state_list, (ContentAddressableList, list, np.ndarray, tuple)):
         # This shouldn't happen, as items of state_list should be validated to be one of the above in _validate_params
-        raise StateError("PROGRAM ERROR: {} for {} is not a recognized \'{}\' specification for {}; "
+        raise PortError("PROGRAM ERROR: {} for {} is not a recognized \'{}\' specification for {}; "
                          "it should have been converted to a list in Mechanism._validate_params)".
                          format(state_list, owner.name, port_Param_identifier, owner.__class__.__name__))
 
@@ -2424,7 +2424,7 @@ def _instantiate_port_list(owner,
         # Insure that reference_value is an indexible item (list, >=2D np.darray, or otherwise)
         num_constraint_items = len(reference_value)
     except:
-        raise StateError(f"PROGRAM ERROR: reference_value ({reference_value}) for {reference_value_name} of "
+        raise PortError(f"PROGRAM ERROR: reference_value ({reference_value}) for {reference_value_name} of "
                          f"{[s.__name__ for s in port_types]} must be an indexable object (e.g., list or np.ndarray).")
     # If number of States does not equal the number of items in reference_value, raise exception
     if num_states != num_constraint_items:
@@ -2432,7 +2432,7 @@ def _instantiate_port_list(owner,
             comparison_string = 'more'
         else:
             comparison_string = 'fewer'
-        raise StateError(f"There are {comparison_string} {port_Param_identifier}s specified ({num_states}) "
+        raise PortError(f"There are {comparison_string} {port_Param_identifier}s specified ({num_states}) "
                          f"than the number of items ({num_constraint_items}) in the {reference_value_name} "
                          f"of the function for {repr(owner.name)}.")
 
@@ -2469,7 +2469,7 @@ def _instantiate_port_list(owner,
 
 
 @tc.typecheck
-def _instantiate_state(port_type:_is_state_class,           # Port's type
+def _instantiate_state(port_type:_is_port_class,           # Port's type
                        owner:tc.any(Mechanism, Projection),  # Port's owner
                        reference_value,                      # constraint for Port's value and default for variable
                        name:tc.optional(str)=None,           # state's name if specified
@@ -2582,12 +2582,12 @@ def _instantiate_state(port_type:_is_state_class,           # Port's type
         # Port's assigned value is incompatible with its reference_value (presumably its owner Mechanism's variable)
         reference_value = reference_value if reference_value is not None else state.reference_value
         if not iscompatible(state.value, reference_value):
-            raise StateError("{}'s value attribute ({}) is incompatible with the {} ({}) of its owner ({})".
+            raise PortError("{}'s value attribute ({}) is incompatible with the {} ({}) of its owner ({})".
                              format(state.name, state.value, REFERENCE_VALUE, reference_value, owner.name))
 
         # Port has already been assigned to an owner
         if state.owner is not None and not state.owner is owner:
-            raise StateError("Port {} does not belong to the owner for which it is specified ({})".
+            raise PortError("Port {} does not belong to the owner for which it is specified ({})".
                              format(state.name, owner.name))
         return state
 
@@ -2680,12 +2680,12 @@ def _parse_port_type(owner, port_spec):
     if isinstance(port_spec, dict):
         if PORT_TYPE in port_spec:
             if not inspect.isclass(port_spec[PORT_TYPE]) and issubclass(port_spec[PORT_TYPE], Port):
-                raise StateError("STATE entry of state specification for {} ({})"
+                raise PortError("STATE entry of state specification for {} ({})"
                                  "is not a Port or type of Port".
                                  format(owner.name, port_spec[STATE]))
             return port_spec[PORT_TYPE]
 
-    raise StateError("{} is not a legal Port specification for {}".format(port_spec, owner.name))
+    raise PortError("{} is not a legal Port specification for {}".format(port_spec, owner.name))
 
 
 PORT_SPEC_INDEX = 0
@@ -2820,11 +2820,11 @@ def _parse_port_spec(port_type=None,
         try:
             port_type = StateRegistry[port_type].subclass
         except KeyError:
-            raise StateError("{} specified as a string (\'{}\') must be the name of a sublcass of {}".
+            raise PortError("{} specified as a string (\'{}\') must be the name of a sublcass of {}".
                              format(PORT_TYPE, port_type, Port.__name__))
         port_dict[PORT_TYPE] = port_type
     elif not inspect.isclass(port_type) or not issubclass(port_type, Port):
-        raise StateError("\'port_type\' arg ({}) must be a sublcass of {}".format(port_type,
+        raise PortError("\'port_type\' arg ({}) must be a sublcass of {}".format(port_type,
                                                                                    Port.__name__))
     port_type_name = port_type.__name__
 
@@ -2894,7 +2894,7 @@ def _parse_port_spec(port_type=None,
                                                             port_spec=new_port_specification)
                     assert True
                 except AttributeError:
-                    raise StateError("Attempt to assign a {} ({}) to {} that belongs to another {} ({})".
+                    raise PortError("Attempt to assign a {} ({}) to {} that belongs to another {} ({})".
                                      format(Port.__name__, port_specification.name, owner.name,
                                             Mechanism.__name__, state_owner.name))
             return port_specification
@@ -2949,7 +2949,7 @@ def _parse_port_spec(port_type=None,
         if sender is not None and matrix is not None and matrix is not AUTO_ASSIGN_MATRIX:
             # Get sender of Projection to determine its value
             from psyneulink.core.components.ports.outputport import OutputPort
-            sender = _get_state_for_socket(owner=owner,
+            sender = _get_port_for_socket(owner=owner,
                                            connectee_port_type=port_type,
                                            port_spec=sender,
                                            port_types=[OutputPort])
@@ -2962,7 +2962,7 @@ def _parse_port_spec(port_type=None,
         # If Port's reference_value has been specified, check for compatibility with projection_spec's value
         elif (reference_value is not None and projection_value is not None
             and not iscompatible(reference_value, projection_value)):
-            raise StateError("{} of {} ({}) is not compatible with {} of {} ({}) for {}".
+            raise PortError("{} of {} ({}) is not compatible with {} of {} ({}) for {}".
                              format(VALUE, Projection.__name__, projection_value, REFERENCE_VALUE,
                                     port_dict[PORT_TYPE].__name__, reference_value, owner.name))
 
@@ -2991,7 +2991,7 @@ def _parse_port_spec(port_type=None,
     # elif isinstance(port_specification, function_type):
     #     port_dict[REFERENCE_VALUE] = get_param_value_for_function(owner, port_specification)
     #     if port_dict[REFERENCE_VALUE] is None:
-    #         raise StateError("PROGRAM ERROR: port_spec for {} of {} is a function ({}), but failed to return a value".
+    #         raise PortError("PROGRAM ERROR: port_spec for {} of {} is a function ({}), but failed to return a value".
     #                          format(port_type_name, owner.name, port_specification))
 
     # FIX: THIS SHOULD REALLY BE PARSED IN A STATE-SPECIFIC WAY:
@@ -3065,7 +3065,7 @@ def _parse_port_spec(port_type=None,
 
                 mech = port_specific_args[MECHANISM]
                 if not isinstance(mech, Mechanism):
-                    raise StateError("Value of the {} entry ({}) in the "
+                    raise PortError("Value of the {} entry ({}) in the "
                                      "specification dictionary for {} of {} is "
                                      "not a {}".format(MECHANISM,
                                                        mech,
@@ -3087,7 +3087,7 @@ def _parse_port_spec(port_type=None,
                                 state = state_attr[state]
                             except:
                                 name = owner.name if not 'unnamed' in owner.name else 'a ' + owner.__class__.__name__
-                                raise StateError("Unrecognized name ({}) for {} "
+                                raise PortError("Unrecognized name ({}) for {} "
                                                  "of {} in specification of {} "
                                                  "for {}".format(state,
                                                                  STATES,
@@ -3118,7 +3118,7 @@ def _parse_port_spec(port_type=None,
                     params[PROJECTIONS] = port_specific_args[key]
                     del port_specific_args[key]
                 else:
-                    raise StateError("There is more than one entry of the {} "
+                    raise PortError("There is more than one entry of the {} "
                                      "specification dictionary for {} ({}) "
                                      "that is not a keyword; there should be "
                                      "only one (used to name the Port, with a "
@@ -3146,7 +3146,7 @@ def _parse_port_spec(port_type=None,
         #     warnings.warn("PROGRAM ERROR: port_spec for {} of {} is an unrecognized specification ({})".
         #                  format(port_type_name, owner.name, port_spec))
         # return
-        raise StateError("PROGRAM ERROR: port_spec for {} of {} is an unrecognized specification ({})".
+        raise PortError("PROGRAM ERROR: port_spec for {} of {} is an unrecognized specification ({})".
                          format(port_type_name, owner.name, port_specification))
 
     # If variable is none, use value:
@@ -3171,19 +3171,19 @@ def _parse_port_spec(port_type=None,
         spec_function = port_dict[PARAMS][FUNCTION]
         # if isinstance(spec_function, Function):
         if isinstance(spec_function, (Function, function_type, method_type)):
-            spec_function_value = port_type._get_state_function_value(owner, spec_function, port_dict[VARIABLE])
+            spec_function_value = port_type._get_port_function_value(owner, spec_function, port_dict[VARIABLE])
         elif inspect.isclass(spec_function) and issubclass(spec_function, Function):
             try:
                 spec_function = spec_function(**port_dict[PARAMS][FUNCTION_PARAMS])
             except (KeyError, TypeError):
                 spec_function = spec_function()
-            spec_function_value = port_type._get_state_function_value(owner, spec_function, port_dict[VARIABLE])
+            spec_function_value = port_type._get_port_function_value(owner, spec_function, port_dict[VARIABLE])
         else:
-            raise StateError('port_spec value for FUNCTION ({0}) must be a function, method, '
+            raise PortError('port_spec value for FUNCTION ({0}) must be a function, method, '
                              'Function class or instance of one'.
                              format(spec_function))
     except (KeyError, TypeError):
-        spec_function_value = port_type._get_state_function_value(owner, None, port_dict[VARIABLE])
+        spec_function_value = port_type._get_port_function_value(owner, None, port_dict[VARIABLE])
         spec_function = port_type.class_defaults.function
 
 
@@ -3194,33 +3194,33 @@ def _parse_port_spec(port_type=None,
     # else:
     #     if not np.asarray(port_dict[VALUE]).shape == np.asarray(spec_function_value).shape:
     #         port_Name = port_dict[NAME] or 'unnamed'
-    #         raise StateError('port_spec value ({}) specified for {} {} of {} is not compatible with '
+    #         raise PortError('port_spec value ({}) specified for {} {} of {} is not compatible with '
     #                          'the value ({}) computed from the port_spec function ({})'.
     #                          format(port_dict[VALUE], port_Name, port_type.__name__,
     #                                 port_dict[OWNER].name, spec_function_value, spec_function))
 
     if port_dict[REFERENCE_VALUE] is not None and not iscompatible(port_dict[VALUE], port_dict[REFERENCE_VALUE]):
-        raise StateError("Port value ({}) does not match reference_value ({}) for {} of {})".
+        raise PortError("Port value ({}) does not match reference_value ({}) for {} of {})".
                          format(port_dict[VALUE], port_dict[REFERENCE_VALUE], port_type.__name__, owner.name))
 
     return port_dict
 
 
-# FIX: REPLACE mech_state_attribute WITH DETERMINATION FROM port_type
+# FIX: REPLACE mech_port_attribute WITH DETERMINATION FROM port_type
 # FIX:          ONCE STATE CONNECTION CHARACTERISTICS HAVE BEEN IMPLEMENTED IN REGISTRY
 @tc.typecheck
-def _get_state_for_socket(owner,
-                          connectee_port_type:tc.optional(_is_state_class)=None,
+def _get_port_for_socket(owner,
+                          connectee_port_type:tc.optional(_is_port_class)=None,
                           port_spec=None,
-                          port_types:tc.optional(tc.any(list, _is_state_class))=None,
+                          port_types:tc.optional(tc.any(list, _is_port_class))=None,
                           mech:tc.optional(Mechanism)=None,
-                          mech_state_attribute:tc.optional(tc.any(str, list))=None,
+                          mech_port_attribute:tc.optional(tc.any(str, list))=None,
                           projection_socket:tc.optional(tc.any(str, set))=None):
     """Take some combination of Mechanism, state name (string), Projection, and projection_socket, and return
     specified Port(s)
 
     If port_spec is:
-        Port name (str), then *mech* and *mech_state_attribute* args must be specified
+        Port name (str), then *mech* and *mech_port_attribute* args must be specified
         Mechanism, then *port_type* must be specified; primary Port is returned
         Projection, *projection_socket* arg must be specified;
                     Projection must be instantiated or in deferred_init, with projection_socket attribute assigned
@@ -3236,9 +3236,9 @@ def _get_state_for_socket(owner,
         _is_projection_spec, _validate_connection_request, _parse_projection_spec
     from psyneulink.core.globals.utilities import is_matrix
 
-    # # If the mech_state_attribute specified has more than one item, get the primary one
-    # if isinstance(mech_state_attribute, list):
-    #     mech_state_attribute = mech_state_attribute[0]
+    # # If the mech_port_attribute specified has more than one item, get the primary one
+    # if isinstance(mech_port_attribute, list):
+    #     mech_port_attribute = mech_port_attribute[0]
 
     # port_types should be a list, and port_type its first (or only) item
     if isinstance(port_types, list):
@@ -3305,12 +3305,12 @@ def _get_state_for_socket(owner,
     if isinstance(port_spec, str):
 
         if mech is None:
-            raise StateError("PROGRAM ERROR: A {} must be specified to specify its {} ({}) by name".
+            raise PortError("PROGRAM ERROR: A {} must be specified to specify its {} ({}) by name".
                              format(Mechanism.__name__, Port.__name__, port_spec))
-        if mech_state_attribute is None:
-            raise StateError("PROGRAM ERROR: The attribute of {} that holds the requested Port ({}) must be specified".
+        if mech_port_attribute is None:
+            raise PortError("PROGRAM ERROR: The attribute of {} that holds the requested Port ({}) must be specified".
                              format(mech.name, port_spec))
-        for attr in mech_state_attribute:
+        for attr in mech_port_attribute:
             try:
                 stateListAttribute = getattr(mech, attr)
                 state = stateListAttribute[port_spec]
@@ -3321,20 +3321,20 @@ def _get_state_for_socket(owner,
             else:
                 break
         if stateListAttribute is None:
-            raise StateError("PROGRAM ERROR: {} attribute(s) not found on {}'s type ({})".
-                             format(mech_state_attribute, mech.name, mech.__class__.__name__))
+            raise PortError("PROGRAM ERROR: {} attribute(s) not found on {}'s type ({})".
+                             format(mech_port_attribute, mech.name, mech.__class__.__name__))
         if state is None:
-            if len(mech_state_attribute)==1:
-                attr_name = mech_state_attribute[0] + " attribute"
+            if len(mech_port_attribute)==1:
+                attr_name = mech_port_attribute[0] + " attribute"
             else:
-                attr_name = " or ".join(f"{repr(attr)}" for (attr) in mech_state_attribute) + " attributes"
-            raise StateError(f"{mech.name} does not have a {Port.__name__} named \'{port_spec}\' in its {attr_name}.")
+                attr_name = " or ".join(f"{repr(attr)}" for (attr) in mech_port_attribute) + " attributes"
+            raise PortError(f"{mech.name} does not have a {Port.__name__} named \'{port_spec}\' in its {attr_name}.")
 
     # Get primary Port of specified type
     elif isinstance(port_spec, Mechanism):
 
         if port_type is None:
-            raise StateError("PROGRAM ERROR: The type of Port requested for {} must be specified "
+            raise PortError("PROGRAM ERROR: The type of Port requested for {} must be specified "
                              "to get its primary Port".format(port_spec.name))
         try:
             state = port_type._get_primary_state(port_type, port_spec)
@@ -3347,14 +3347,14 @@ def _get_state_for_socket(owner,
                                       f"as a {projection_socket} of a {Projection.__name__} "
                                       f"{PROJECTION_DIRECTION[projection_socket]} {connectee_port_type.__name__} of "
                                       f"{owner.name}")
-        except StateError:
-            if mech_state_attribute:
+        except PortError:
+            if mech_port_attribute:
                 try:
-                    state = getattr(port_spec, mech_state_attribute)[0]
+                    state = getattr(port_spec, mech_port_attribute)[0]
                 except:
-                    raise StateError("{} does not seem to have an {} attribute"
-                                     .format(port_spec.name, mech_state_attribute))
-            for attr in mech_state_attribute:
+                    raise PortError("{} does not seem to have an {} attribute"
+                                     .format(port_spec.name, mech_port_attribute))
+            for attr in mech_port_attribute:
                 try:
                     state = getattr(port_spec, attr)[0]
                 except :
@@ -3362,8 +3362,8 @@ def _get_state_for_socket(owner,
                 else:
                     break
                 if state is None:
-                    raise StateError("PROGRAM ERROR: {} attribute(s) not found on {}'s type ({})".
-                                     format(mech_state_attribute, mech.name, mech.__class__.__name__))
+                    raise PortError("PROGRAM ERROR: {} attribute(s) not found on {}'s type ({})".
+                                     format(mech_port_attribute, mech.name, mech.__class__.__name__))
 
     # # Get
     # elif isinstance(port_spec, type) and issubclass(port_spec, Mechanism):
@@ -3384,9 +3384,9 @@ def _get_state_for_socket(owner,
 
     else:
         if port_spec is None:
-            raise StateError("PROGRAM ERROR: Missing state specification for {}".format(owner.name))
+            raise PortError("PROGRAM ERROR: Missing state specification for {}".format(owner.name))
         else:
-            raise StateError("Unrecognized state specification: {} for {}".format(port_spec, owner.name))
+            raise PortError("Unrecognized state specification: {} for {}".format(port_spec, owner.name))
 
     return state
 
@@ -3398,7 +3398,7 @@ def _is_legal_port_spec_tuple(owner, port_spec, port_type_name=None):
     port_type_name = port_type_name or STATE
 
     if len(port_spec) != 2:
-        raise StateError("Tuple provided as port_spec for {} of {} ({}) must have exactly two items".
+        raise PortError("Tuple provided as port_spec for {} of {} ({}) must have exactly two items".
                          format(port_type_name, owner.name, port_spec))
     if not (_is_projection_spec(port_spec[1]) or
                 # IMPLEMENTATION NOTE: Mechanism or Port allowed as 2nd item of tuple or
@@ -3407,6 +3407,6 @@ def _is_legal_port_spec_tuple(owner, port_spec, port_type_name=None):
                 isinstance(port_spec[1], (Mechanism, Port))
                            or (isinstance(port_spec[0], Mechanism) and
                                        port_spec[1] in port_spec[0]._parameter_ports)):
-        raise StateError("2nd item of tuple in port_spec for {} of {} ({}) must be a specification "
+        raise PortError("2nd item of tuple in port_spec for {} of {} ({}) must be a specification "
                          "for a Mechanism, Port, or Projection".
                          format(port_type_name, owner.__class__.__name__, port_spec[1]))

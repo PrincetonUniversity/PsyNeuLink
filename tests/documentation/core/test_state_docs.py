@@ -3,7 +3,7 @@ import pytest
 import doctest
 import psyneulink as pnl
 
-def test_state_docs():
+def test_port_docs():
     # get examples of mechanisms that can be used with GatingSignals/Mechanisms
     pass
 

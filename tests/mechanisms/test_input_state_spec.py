@@ -11,7 +11,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.components.projections.projection import ProjectionError
 from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.ports.inputport import InputPort
-from psyneulink.core.components.ports.port import StateError
+from psyneulink.core.components.ports.port import PortError
 from psyneulink.core.globals.keywords import FUNCTION, INPUT_PORTS, MECHANISM, NAME, OUTPUT_PORTS, PROJECTIONS, RESULTS, VARIABLE
 
 mismatches_specified_default_variable_error_text = 'not compatible with its specified default variable'
@@ -82,7 +82,7 @@ class TestInputPortSpec:
     # number of items in the Mechanism's default_variable (i.e., its length in axis 0).
     def test_fewer_input_ports_than_default_variable_error(self):
 
-        with pytest.raises(StateError) as error_text:
+        with pytest.raises(PortError) as error_text:
             TransferMechanism(
                 default_variable=[[0], [0]],
                 input_ports=['HELLO']
@@ -97,7 +97,7 @@ class TestInputPortSpec:
     # number of items in the Mechanism's default_variable (i.e., its length in axis 0).
     def test_more_input_ports_than_default_variable_error(self):
 
-        with pytest.raises(StateError) as error_text:
+        with pytest.raises(PortError) as error_text:
             TransferMechanism(
                 default_variable=[[0], [0]],
                 input_ports=[[32], [24], 'HELLO']
@@ -127,7 +127,7 @@ class TestInputPortSpec:
     #      seems to be adding the two axis2 values
     def test_mismatch_dim_input_ports_with_default_variable_error(self):
 
-        with pytest.raises(StateError) as error_text:
+        with pytest.raises(PortError) as error_text:
             TransferMechanism(
                 default_variable=[[0], [0]],
                 input_ports=[[[32],[24]],'HELLO']
@@ -671,7 +671,7 @@ class TestInputPortSpec:
     # TEST 29
 
     def test_add_input_port_with_projection_by_assigning_owner_error(self):
-        with pytest.raises(StateError) as error_text:
+        with pytest.raises(PortError) as error_text:
             S1 = TransferMechanism()
             S2 = TransferMechanism()
             TransferMechanism(name='T',
@@ -694,7 +694,7 @@ class TestInputPortSpec:
     # TEST 31
 
     def test_multiple_states_specified_using_port_Name_format_error(self):
-        with pytest.raises(StateError) as error_text:
+        with pytest.raises(PortError) as error_text:
             # Don't bother to specify anything as the value for each entry in the dict, since doesn't get there
             TransferMechanism(input_ports=[{'MY STATE A':{},
                                              'MY STATE B':{}}])

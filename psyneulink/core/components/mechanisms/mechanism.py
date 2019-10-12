@@ -137,7 +137,7 @@ added to an existing Mechanism using its `add_states <Mechanism_Base.add_states>
 not needed and can have consequences that must be considered (e.g., see `note <Mechanism_Add_InputPorts_Note>`),
 and therefore is not recommended.
 
-.. _Mechanism_Default_State_Suppression_Note:
+.. _Mechanism_Default_Port_Suppression_Note:
 
     .. note::
        When States are specified in the **input_ports** or **output_ports** arguments of a Mechanism's constructor,
@@ -512,7 +512,7 @@ owner's `variable <Mechanism_Base.variable>` attribute. The InputPorts are appen
 Mechanism's `input_ports <Mechanism_Base.input_ports>` attribute.  Adding in States in this manner does **not**
 replace any existing States, including any default States generated when the Mechanism was constructed (this is
 contrast to States specified in a Mechanism's constructor which **do** `replace any default Port(s) of the same type
-<Mechanism_Default_State_Suppression_Note>`).
+<Mechanism_Default_Port_Suppression_Note>`).
 
 .. _Mechanism_Add_InputPorts_Note:
 
@@ -2098,7 +2098,7 @@ class Mechanism_Base(Mechanism):
             udf_parameters_lacking_states = {param_name: cfp[param_name] for param_name in cfp if param_name not in self.parameter_ports.names}
 
             _instantiate_parameter_port(self, FUNCTION_PARAMS, udf_parameters_lacking_states, context=context, function=self.function)
-            self._parse_param_state_sources()
+            self._parse_param_port_sources()
         except AttributeError:
             pass
 
@@ -2683,9 +2683,9 @@ class Mechanism_Base(Mechanism):
         return self.function._get_state_initializer(context)
 
     def _get_state_initializer(self, context):
-        states_state_init = self._get_ports_state_initializer(context)
+        ports_state_init = self._get_ports_state_initializer(context)
         function_state_init = self._get_function_state_initializer(context)
-        state_init_list = [states_state_init, function_state_init]
+        state_init_list = [ports_state_init, function_state_init]
 
         return tuple(state_init_list)
 
@@ -2762,7 +2762,7 @@ class Mechanism_Base(Mechanism):
 
         return is_output, builder
 
-    def _gen_llvm_param_states(self, func, f_params_in, ctx, builder,
+    def _gen_llvm_param_ports(self, func, f_params_in, ctx, builder,
                                mech_params, mech_state, mech_input):
         # Allocate a shadow structure to overload user supplied parameters
         f_params_out = builder.alloca(f_params_in.type.pointee)
@@ -2771,19 +2771,19 @@ class Mechanism_Base(Mechanism):
         builder.store(builder.load(f_params_in), f_params_out)
 
         # Filter out param ports without corresponding params for this function
-        param_states = [p for p in self._parameter_ports if p.name in func._get_param_ids()]
+        param_ports = [p for p in self._parameter_ports if p.name in func._get_param_ids()]
 
         def _get_output_ptr(b, i):
-            ptr = ctx.get_param_ptr(func, b, f_params_out, param_states[i].name)
+            ptr = ctx.get_param_ptr(func, b, f_params_out, param_ports[i].name)
             return b, ptr
 
         def _fill_input(b, s_input, i):
-            param_in_ptr = ctx.get_param_ptr(func, b, f_params_in, param_states[i].name)
+            param_in_ptr = ctx.get_param_ptr(func, b, f_params_in, param_ports[i].name)
             raw_ps_input = b.gep(s_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
             b.store(b.load(param_in_ptr), raw_ps_input)
             return b
 
-        builder = self._gen_llvm_states(ctx, builder, param_states,
+        builder = self._gen_llvm_states(ctx, builder, param_ports,
                                         _get_output_ptr, _fill_input,
                                         mech_params, mech_state, mech_input)
         return f_params_out, builder
@@ -2834,7 +2834,7 @@ class Mechanism_Base(Mechanism):
         is_output, builder = self._gen_llvm_input_ports(ctx, builder, params, context, arg_in)
 
         mf_params_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        mf_params, builder = self._gen_llvm_param_states(self.function, mf_params_ptr, ctx, builder, params, context, arg_in)
+        mf_params, builder = self._gen_llvm_param_ports(self.function, mf_params_ptr, ctx, builder, params, context, arg_in)
 
         mf_ctx = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
         value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_ctx, is_output)
@@ -2921,7 +2921,7 @@ class Mechanism_Base(Mechanism):
     def _show_structure(self,
                        show_functions:bool=False,
                        show_mech_function_params:bool=False,
-                       show_state_function_params:bool=False,
+                       show_port_function_params:bool=False,
                        show_values:bool=False,
                        use_labels:bool=False,
                        show_headers:bool=False,
@@ -2952,7 +2952,7 @@ class Mechanism_Base(Mechanism):
         show_mech_function_params : bool : default False
             show the parameters of the Mechanism's `function <Component.function>` if **show_functions** is True.
 
-        show_state_function_params : bool : default False
+        show_port_function_params : bool : default False
             show parameters for the `function <Component.function>` of the Mechanism's States if **show_functions** is
             True).
 
@@ -3139,7 +3139,7 @@ class Mechanism_Base(Mechanism):
                 function = ''
                 fct_params = ''
                 if include_function:
-                    if show_state_function_params:
+                    if show_port_function_params:
                         fct_params = []
                         for param in [param for param in self.function_parameters
                                       if param.modulable and param.name not in {ADDITIVE_PARAM, MULTIPLICATIVE_PARAM}]:

@@ -397,7 +397,7 @@ from psyneulink.core.components.component import Component
 from psyneulink.core.components.functions.transferfunctions import LinearMatrix, get_matrix
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Projection, Port
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
-from psyneulink.core.components.ports.port import StateError
+from psyneulink.core.components.ports.port import PortError
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATING, GATING_PROJECTION, GATING_SIGNAL, INPUT_PORT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_RECEIVER_STATE, MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_SENDER_STATE, NAME, OUTPUT_PORT, OUTPUT_PORTS, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, STANDARD_ARGS, STATE, STATES, WEIGHT, ADD_INPUT_PORT, ADD_OUTPUT_PORT, PROJECTION_COMPONENT_CATEGORY
 from psyneulink.core.globals.parameters import Parameter
@@ -1354,7 +1354,7 @@ def _parse_connection_specs(connectee_port_type,
 
     """
 
-    from psyneulink.core.components.ports.port import _get_state_for_socket
+    from psyneulink.core.components.ports.port import _get_port_for_socket
     from psyneulink.core.components.ports.port import StateRegistry
     from psyneulink.core.components.ports.inputport import InputPort
     from psyneulink.core.components.ports.outputport import OutputPort
@@ -1485,9 +1485,9 @@ def _parse_connection_specs(connectee_port_type,
                             raise ProjectionError("{} specified by name ({}) is not in a {} entry".
                                                   format(Port.__name__, state_connect_spec, Mechanism.__name__))
 
-                        # Call _get_state_for_socket to parse if it is a str,
+                        # Call _get_port_for_socket to parse if it is a str,
                         #    and in either case to make sure it belongs to mech
-                        state = _get_state_for_socket(owner=owner,
+                        state = _get_port_for_socket(owner=owner,
                                                       port_spec=state_connect_spec,
                                                       port_types=connect_with_attr,
                                                       mech=mech,
@@ -1507,7 +1507,7 @@ def _parse_connection_specs(connectee_port_type,
                         # Get STATE entry
                         port_spec = state_connect_spec[STATE]
                         # Parse it to get reference to actual Port make sure it belongs to mech:
-                        state = _get_state_for_socket(owner=owner,
+                        state = _get_port_for_socket(owner=owner,
                                                     port_spec=port_spec,
                                                     port_types=connect_with_attr,
                                                     mech=mech,
@@ -1523,7 +1523,7 @@ def _parse_connection_specs(connectee_port_type,
                         # Get STATE entry
                         port_spec = state_connect_spec[0]
                         # Parse it to get reference to actual Port make sure it belongs to mech:
-                        state = _get_state_for_socket(owner=owner,
+                        state = _get_port_for_socket(owner=owner,
                                                     port_spec=port_spec,
                                                     port_types=connect_with_attr,
                                                     mech=mech,
@@ -1586,7 +1586,7 @@ def _parse_connection_specs(connectee_port_type,
                      # Call _parse_connection_spec for each Port or Mechanism, to generate a conection spec for each
                     for connect_with_spec in first_item:
                         if not isinstance(connect_with_spec, (Port, Mechanism)):
-                              raise StateError(f"Item in the list used to specify a {last_item.__name__} "
+                              raise PortError(f"Item in the list used to specify a {last_item.__name__} "
                                                f"for {owner.name} ({connect_with_spec.__name__}) "
                                                f"is not a {Port.__name__} or {Mechanism.__name__}")
                         c = _parse_connection_specs(connectee_port_type=connectee_port_type,
@@ -1641,23 +1641,23 @@ def _parse_connection_specs(connectee_port_type,
                 ):
                     projection_socket = SENDER
                     port_types = [OutputPort]
-                    mech_state_attribute = [OUTPUT_PORTS]
+                    mech_port_attribute = [OUTPUT_PORTS]
                 else:
                     port_types = connects_with
-                    mech_state_attribute=connect_with_attr
+                    mech_port_attribute=connect_with_attr
 
-                state = _get_state_for_socket(owner=owner,
+                state = _get_port_for_socket(owner=owner,
                                               connectee_port_type=connectee_port_type,
                                               port_spec=port_spec,
                                               port_types=port_types,
                                               mech=mech,
-                                              mech_state_attribute=mech_state_attribute,
+                                              mech_port_attribute=mech_port_attribute,
                                               projection_socket=projection_socket)
-            except StateError as e:
+            except PortError as e:
                 raise ProjectionError(f"Problem with specification for {Port.__name__} in {Projection.__name__} "
                                       f"specification{(' for ' + owner.name) if owner else ' '}: " + e.error_value)
 
-            # Check compatibility with any Port(s) returned by _get_state_for_socket
+            # Check compatibility with any Port(s) returned by _get_port_for_socket
 
             if isinstance(state, list):
                 states = state

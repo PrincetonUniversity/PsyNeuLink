@@ -412,7 +412,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
             EVC_max = float('-Infinity')
             EVC_max_policy = np.zeros_like(control_signal_search_space[0])
             EVC_max_port_values = np.zeros_like(controller.get_input_values(context))
-            max_value_state_policy_tuple = (EVC_max, EVC_max_port_values, EVC_max_policy)
+            max_value_port_policy_tuple = (EVC_max, EVC_max_port_values, EVC_max_policy)
             # FIX:  INITIALIZE TO FULL LENGTH AND ASSIGN DEFAULT VALUES (MORE EFFICIENT):
             EVC_values = np.array([])
             EVC_policies = np.array([[]])
@@ -458,7 +458,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                     # EVC_max_policy = allocation_vector.copy()
                     EVC_max_port_values = controller.get_input_values(context)
                     EVC_max_policy = allocation_vector
-                    max_value_state_policy_tuple = (EVC_max, EVC_max_port_values, EVC_max_policy)
+                    max_value_port_policy_tuple = (EVC_max, EVC_max_port_values, EVC_max_policy)
 
             #endregion
 
@@ -466,7 +466,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
             if MPI_IMPLEMENTATION:
                 # combine max result tuples from all processes and distribute to all processes
-                max_tuples = Comm.allgather(max_value_state_policy_tuple)
+                max_tuples = Comm.allgather(max_value_port_policy_tuple)
                 # get tuple with "EVC max of maxes"
                 max_of_max_tuples = max(max_tuples, key=lambda max_tuple: max_tuple[0])
                 # get EVC_max, state values and allocation policy associated with "max of maxes"
@@ -487,9 +487,9 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
             # # TEST PRINT:
             # import re
             # print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_port_values: {}\n\t\tEVC_max_policy: {}".
-            #       format(re.sub('[\[,\],\n]','',str(max_value_state_policy_tuple[0])),
-            #              re.sub('[\[,\],\n]','',str(max_value_state_policy_tuple[1])),
-            #              re.sub('[\[,\],\n]','',str(max_value_state_policy_tuple[2]))),
+            #       format(re.sub('[\[,\],\n]','',str(max_value_port_policy_tuple[0])),
+            #              re.sub('[\[,\],\n]','',str(max_value_port_policy_tuple[1])),
+            #              re.sub('[\[,\],\n]','',str(max_value_port_policy_tuple[2]))),
             #       flush=True)
 
             # FROM MIKE ANDERSON (ALTERNTATIVE TO allgather:  REDUCE USING A FUNCTION OVER LOCAL VERSION)

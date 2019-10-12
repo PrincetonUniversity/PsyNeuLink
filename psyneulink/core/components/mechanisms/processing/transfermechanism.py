@@ -189,7 +189,7 @@ all of these can be modulated by one or more `GatingSignals <GatingSignal_Modula
 
     .. note::
        If any OutputPorts are specified in the **output_ports** argument of the TransferMechanism's constructor,
-       then, `as with any Mechanism <Mechanism_Default_State_Suppression_Note>`, its default OutputPorts are not
+       then, `as with any Mechanism <Mechanism_Default_Port_Suppression_Note>`, its default OutputPorts are not
        automatically generated.  Therefore, an OutputPort with the appropriate `index <OutputPort.index>` must be
        explicitly specified for each and every item of the Mechanism's `value <TransferMechanism.value>` (corresponding
        to each InputPort) for which an OutputPort is needed.
@@ -1390,7 +1390,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             # IntegratorFunction function is the second in the function param aggregate
             if_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(1)])
             if_param_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-            if_params, builder = self._gen_llvm_param_states(self.integrator_function, if_param_ptr, ctx, builder, params, context, arg_in)
+            if_params, builder = self._gen_llvm_param_ports(self.integrator_function, if_param_ptr, ctx, builder, params, context, arg_in)
 
             mf_in, builder = self._gen_llvm_invoke_function(ctx, builder, self.integrator_function, if_params, if_context, is_out)
         else:
@@ -1399,7 +1399,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Main function is the first in the function param aggregate
         mf_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(0)])
         mf_param_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        mf_params, builder = self._gen_llvm_param_states(self.function, mf_param_ptr, ctx, builder, params, context, arg_in)
+        mf_params, builder = self._gen_llvm_param_ports(self.function, mf_param_ptr, ctx, builder, params, context, arg_in)
 
         mf_out, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_context, mf_in)
 

@@ -1336,10 +1336,10 @@ class RecurrentTransferMechanism(TransferMechanism):
         self.parameters.matrix._set(val, self.most_recent_context)
 
         if hasattr(self, '_parameter_ports') and 'matrix' in self._parameter_ports:
-            param_state = self._parameter_ports['matrix']
+            param_port = self._parameter_ports['matrix']
 
-            if hasattr(param_state.function, 'initializer'):
-                param_state.function.reinitialize = val
+            if hasattr(param_port.function, 'initializer'):
+                param_port.function.reinitialize = val
 
     @property
     def auto(self):

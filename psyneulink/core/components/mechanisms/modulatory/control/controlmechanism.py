@@ -1629,10 +1629,10 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 monitored_state = projection.sender
                 monitored_port_Mech = projection.sender.owner
                 # ContentAddressableList
-                monitored_state_index = self.monitored_output_ports.index(monitored_state)
+                monitored_port_index = self.monitored_output_ports.index(monitored_state)
 
-                weight = self.monitored_output_ports_weights_and_exponents[monitored_state_index][0]
-                exponent = self.monitored_output_ports_weights_and_exponents[monitored_state_index][1]
+                weight = self.monitored_output_ports_weights_and_exponents[monitored_port_index][0]
+                exponent = self.monitored_output_ports_weights_and_exponents[monitored_port_index][1]
 
                 print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
                        format(monitored_port_Mech.name, monitored_state.name, weight, exponent))

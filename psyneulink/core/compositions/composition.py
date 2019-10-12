@@ -1480,7 +1480,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             mediates input values for the INPUT nodes of the Composition. If the Composition is nested, then the
             input_CIM and its InputPorts serve as proxies for the Composition itself in terms of afferent projections.
 
-        input_CIM_states : dict
+        input_CIM_ports : dict
             a dictionary in which keys are InputPorts of INPUT Nodes in a composition, and values are lists
             containing two items: the corresponding InputPort and OutputPort on the input_CIM.
 
@@ -1491,7 +1491,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             aggregates output values from the OUTPUT nodes of the Composition. If the Composition is nested, then the
             output_CIM and its OutputPorts serve as proxies for Composition itself in terms of efferent projections.
 
-        output_CIM_states : dict
+        output_CIM_ports : dict
             a dictionary in which keys are OutputPorts of OUTPUT Nodes in a composition, and values are lists
             containing two items: the corresponding InputPort and OutputPort on the input_CIM.
 
@@ -1659,9 +1659,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                         composition=self)
         self.parameter_CIM = CompositionInterfaceMechanism(name=self.name + " Parameter_CIM",
                                                         composition=self)
-        self.input_CIM_states = {}
-        self.output_CIM_states = {}
-        self.parameter_CIM_states = {}
+        self.input_CIM_ports = {}
+        self.output_CIM_ports = {}
+        self.parameter_CIM_ports = {}
 
         self.shadows = {}
 
@@ -1794,7 +1794,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._check_feedback(scheduler=scheduler, context=context)
         self._determine_node_roles(context=context)
-        self._create_CIM_states(context=context)
+        self._create_CIM_ports(context=context)
         self._update_shadow_projections(context=context)
         self._check_for_projection_assignments(context=context)
         self.needs_update_graph = False
@@ -2290,7 +2290,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.nodes_to_roles[node].remove(role)
 
     tc.typecheck
-    def _create_CIM_states(self, context=None):
+    def _create_CIM_ports(self, context=None):
         """
             - remove the default InputPort and OutputPort from the CIMs if this is the first time that real
               InputPorts and OutputPorts are being added to the CIMs
@@ -2305,9 +2305,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             - build two dictionaries:
 
-                (1) input_CIM_states = { INPUT Node InputPort: (InputCIM InputPort, InputCIM OutputPort) }
+                (1) input_CIM_ports = { INPUT Node InputPort: (InputCIM InputPort, InputCIM OutputPort) }
 
-                (2) output_CIM_states = { OUTPUT Node OutputPort: (OutputCIM InputPort, OutputCIM OutputPort) }
+                (2) output_CIM_ports = { OUTPUT Node OutputPort: (OutputCIM InputPort, OutputCIM OutputPort) }
 
             - if the Node has any shadows, create the appropriate projections as needed.
 
@@ -2349,7 +2349,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 current_input_node_input_ports.add(input_port)
 
                 # if there is not a corresponding CIM output state, add one
-                if input_port not in set(self.input_CIM_states.keys()):
+                if input_port not in set(self.input_CIM_ports.keys()):
                     interface_input_port = InputPort(owner=self.input_CIM,
                                                       variable=input_port.defaults.value,
                                                       reference_value=input_port.defaults.value,
@@ -2362,7 +2362,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                              corresponding_input_port=interface_input_port),
                                                         name="INPUT_CIM_" + node.name + "_" + input_port.name)
 
-                    self.input_CIM_states[input_port] = [interface_input_port, interface_output_port]
+                    self.input_CIM_ports[input_port] = [interface_input_port, interface_output_port]
 
                     projection = MappingProjection(sender=interface_output_port,
                                                    receiver=input_port,
@@ -2385,12 +2385,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                            + input_port.owner.name + "-" + input_port.name + ")")
                 shadow_projection._activate_for_compositions(self)
 
-        sends_to_input_ports = set(self.input_CIM_states.keys())
+        sends_to_input_ports = set(self.input_CIM_ports.keys())
 
         # For any ports still registered on the CIM that does not map to a corresponding INPUT node I.S.:
         for input_port in sends_to_input_ports.difference(current_input_node_input_ports):
             for projection in input_port.path_afferents:
-                if projection.sender == self.input_CIM_states[input_port][1]:
+                if projection.sender == self.input_CIM_ports[input_port][1]:
                     # remove the corresponding projection from the INPUT node's path afferents
                     input_port.path_afferents.remove(projection)
 
@@ -2400,15 +2400,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         for shadow in self.shadows[projection.receiver.owner]:
                             for shadow_input_port in shadow.input_ports:
                                 for shadow_projection in shadow_input_port.path_afferents:
-                                    if shadow_projection.sender == self.input_CIM_states[input_port][1]:
+                                    if shadow_projection.sender == self.input_CIM_ports[input_port][1]:
                                         shadow_input_port.path_afferents.remove(shadow_projection)
 
             # remove the CIM input and output ports associated with this INPUT node input state
-            self.input_CIM.input_ports.remove(self.input_CIM_states[input_port][0])
-            self.input_CIM.output_ports.remove(self.input_CIM_states[input_port][1])
+            self.input_CIM.input_ports.remove(self.input_CIM_ports[input_port][0])
+            self.input_CIM.output_ports.remove(self.input_CIM_ports[input_port][1])
 
             # and from the dictionary of CIM output state/input state pairs
-            del self.input_CIM_states[input_port]
+            del self.input_CIM_ports[input_port]
 
         # OUTPUT CIMS
         # loop over all OUTPUT nodes
@@ -2417,7 +2417,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for output_port in node.output_ports:
                 current_output_node_output_ports.add(output_port)
                 # if there is not a corresponding CIM output state, add one
-                if output_port not in set(self.output_CIM_states.keys()):
+                if output_port not in set(self.output_CIM_ports.keys()):
 
                     interface_input_port = InputPort(owner=self.output_CIM,
                                                       variable=output_port.defaults.value,
@@ -2431,7 +2431,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         reference_value=output_port.defaults.value,
                         name="OUTPUT_CIM_" + node.name + "_" + output_port.name)
 
-                    self.output_CIM_states[output_port] = [interface_input_port, interface_output_port]
+                    self.output_CIM_ports[output_port] = [interface_input_port, interface_output_port]
 
                     proj_name = "(" + output_port.name + ") to (" + interface_input_port.name + ")"
 
@@ -2447,12 +2447,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if isinstance(node, Composition):
                         proj._activate_for_compositions(node)
 
-        previous_output_node_output_ports = set(self.output_CIM_states.keys())
+        previous_output_node_output_ports = set(self.output_CIM_ports.keys())
         for output_port in previous_output_node_output_ports.difference(current_output_node_output_ports):
             # remove the CIM input and output ports associated with this Terminal Node output state
-            self.output_CIM.remove_states(self.output_CIM_states[output_port][0])
-            self.output_CIM.remove_states(self.output_CIM_states[output_port][1])
-            del self.output_CIM_states[output_port]
+            self.output_CIM.remove_states(self.output_CIM_ports[output_port][0])
+            self.output_CIM.remove_states(self.output_CIM_ports[output_port][1])
+            del self.output_CIM_ports[output_port]
 
         # PARAMETER CIMS
         if self.controller:
@@ -2476,8 +2476,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if mech in nested_nodes:
                         comp = nested_nodes[mech]
                         pcim = comp.parameter_CIM
-                        pcim_states = comp.parameter_CIM_states
-                        if receiver not in pcim_states:
+                        pcIM_ports = comp.parameter_CIM_ports
+                        if receiver not in pcIM_ports:
                             if not pcim.connected_to_composition:
                                 pcim.input_ports.remove(pcim.input_port)
                                 pcim.output_ports.remove(pcim.output_port)
@@ -2498,7 +2498,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             )
                             for projection in control_signal.projections:
                                 projection._activate_for_compositions(comp)
-                            pcim_states[receiver] = (modulatory_signal, input_port)
+                            pcIM_ports[receiver] = (modulatory_signal, input_port)
 
             for comp in nested_comps:
                 pcim = comp.parameter_CIM
@@ -2508,14 +2508,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         connected_to_controller = True
                 if not connected_to_controller:
                     for efferent in controller.efferents:
-                        if efferent.receiver in pcim_states:
+                        if efferent.receiver in pcIM_ports:
                             input_projection = MappingProjection(
                                 sender = efferent.sender,
-                                receiver = pcim_states[efferent.receiver][1]
+                                receiver = pcIM_ports[efferent.receiver][1]
                             )
                             input_projection._activate_for_compositions(comp)
 
-    def _get_nested_node_CIM_state(self,
+    def _get_nested_node_CIM_port(self,
                                    node: Mechanism,
                                    node_state: tc.any(InputPort, OutputPort),
                                    role: tc.enum(NodeRole.INPUT, NodeRole.OUTPUT)
@@ -2524,7 +2524,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Return relevant state of relevant CIM if found and nested Composition in which it was found, else (None, None)
         """
 
-        nested_comp = CIM_state_for_nested_node = CIM = None
+        nested_comp = CIM_port_for_nested_node = CIM = None
 
         nested_comps = [c for c in self.nodes if isinstance(c, Composition)]
         for nc in nested_comps:
@@ -2536,7 +2536,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                   NodeRole.__name__, repr(role)))
                 # With the current implementation, there should never be multiple nested compositions that contain the
                 # same mechanism -- because all nested compositions are passed the same execution ID
-                # if CIM_state_for_nested_node:
+                # if CIM_port_for_nested_node:
                 #     warnings.warn("{} found with {} of {} in more than one nested {} of {}; "
                 #                   "only first one found (in {}) will be used".
                 #                   format(node.name, NodeRole.__name__, repr(role),
@@ -2544,10 +2544,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #     continue
 
                 if isinstance(node_state, InputPort):
-                    CIM_state_for_nested_node = nc.input_CIM_states[node_state][0]
+                    CIM_port_for_nested_node = nc.input_CIM_ports[node_state][0]
                     CIM = nc.input_CIM
                 elif isinstance(node_state, OutputPort):
-                    CIM_state_for_nested_node = nc.output_CIM_states[node_state][1]
+                    CIM_port_for_nested_node = nc.output_CIM_ports[node_state][1]
                     CIM = nc.output_CIM
                 else:
                     # IMPLEMENTATION NOTE:  Place marker for future implementation of ParameterPort handling
@@ -2557,7 +2557,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 nested_comp = nc
                 break
 
-        return CIM_state_for_nested_node, CIM_state_for_nested_node, nested_comp, CIM
+        return CIM_port_for_nested_node, CIM_port_for_nested_node, nested_comp, CIM
 
     def _update_shadows_dict(self, node):
         # Create an empty entry for this node in the Composition's "shadows" dict
@@ -2931,7 +2931,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # if the sender is IN a nested Composition AND sender is an OUTPUT Node
             # then use the corresponding CIM on the nested comp as the sender going forward
             sender, sender_output_port, graph_sender, sender_mechanism = \
-                self._get_nested_node_CIM_state(sender_mechanism,
+                self._get_nested_node_CIM_port(sender_mechanism,
                                                 sender_output_port,
                                                 NodeRole.OUTPUT)
             nested_compositions.append(graph_sender)
@@ -3011,7 +3011,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # if the receiver is IN a nested Composition AND receiver is an INPUT Node
             # then use the corresponding CIM on the nested comp as the receiver going forward
             receiver, receiver_input_port, graph_receiver, receiver_mechanism = \
-                self._get_nested_node_CIM_state(receiver_mechanism, receiver_input_port, NodeRole.INPUT)
+                self._get_nested_node_CIM_port(receiver_mechanism, receiver_input_port, NodeRole.INPUT)
 
             nested_compositions.append(graph_receiver)
             # Otherwise, there was a mistake in the spec
@@ -5516,7 +5516,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 'show_functions': any(key in show_node_structure for key in {FUNCTIONS, ALL}),
                                 'show_mech_function_params': any(key in show_node_structure
                                                                  for key in {MECH_FUNCTION_PARAMS, ALL}),
-                                'show_state_function_params': any(key in show_node_structure
+                                'show_port_function_params': any(key in show_node_structure
                                                                   for key in {STATE_FUNCTION_PARAMS, ALL}),
                                 'show_values': any(key in show_node_structure for key in {VALUES, ALL}),
                                 'use_labels': any(key in show_node_structure for key in {LABELS, ALL}),
@@ -5528,7 +5528,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 'show_conditions': show_node_structure in {CONDITIONS, ALL},
                                 'show_functions': show_node_structure in {FUNCTIONS, ALL},
                                 'show_mech_function_params': show_node_structure in {MECH_FUNCTION_PARAMS, ALL},
-                                'show_state_function_params': show_node_structure in {STATE_FUNCTION_PARAMS, ALL},
+                                'show_port_function_params': show_node_structure in {STATE_FUNCTION_PARAMS, ALL},
                                 'show_values': show_node_structure in {VALUES, LABELS, ALL},
                                 'use_labels': show_node_structure in {LABELS, ALL},
                                 'show_headers': show_headers,
@@ -5696,7 +5696,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         show_mech_function_params : bool : default False
             show the parameters of the Mechanism's `function <Component.function>` if **show_functions** is True.
 
-        show_state_function_params : bool : default False
+        show_port_function_params : bool : default False
             show parameters for the `function <Component.function>` of the Mechanism's States if **show_functions** is
             True).
 
@@ -6837,7 +6837,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 node.recurrent_projection.sender.parameters.value._set([0.0], context)
                         elif node in no_clamp_inputs:
                             for input_port in node.input_ports:
-                                self.input_CIM_states[input_port][1].parameters.value._set(0.0, context)
+                                self.input_CIM_ports[input_port][1].parameters.value._set(0.0, context)
 
                 # EXECUTE A MECHANISM ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -6970,7 +6970,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if node in pulse_clamp_inputs:
                             for input_port in node.input_ports:
                                 # clamp = None --> "turn off" input node
-                                self.input_CIM_states[input_port][1].parameters.value._set(0, context)
+                                self.input_CIM_ports[input_port][1].parameters.value._set(0, context)
 
                 # Store new value generated by node,
                 #    then set back to frozen value for use by other nodes in execution_set
@@ -7152,7 +7152,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         first_value = values[0]
                         for i in range(len(first_value)):
                             input_port = nested_input_node.external_input_ports[i]
-                            input_cim_input_port = node.input_CIM_states[input_port][0]
+                            input_cim_input_port = node.input_CIM_ports[input_port][0]
                             translated_stimulus_dict[input_cim_input_port] = [first_value[i]]
                             # then loop through the stimulus dictionary again for each remaining trial
                             for trial in range(1, num_trials):
@@ -7260,9 +7260,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for input_port in self.input_CIM.input_ports:
             # "input_port" is an InputPort on the input CIM
 
-            for key in self.input_CIM_states:
+            for key in self.input_CIM_ports:
                 # "key" is an InputPort on an origin Node of the Composition
-                if self.input_CIM_states[key][0] == input_port:
+                if self.input_CIM_ports[key][0] == input_port:
                     origin_input_port = key
                     origin_node = key.owner
                     index = origin_node.input_ports.index(origin_input_port)
@@ -7519,23 +7519,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 ctx.int32_ty(output_port_idx)])
 
                 # Get location of projection output (in mechanism's input structure
-                rec_state = proj.receiver
-                assert rec_state.owner is node or rec_state.owner is node.input_CIM
+                rec_port = proj.receiver
+                assert rec_port.owner is node or rec_port.owner is node.input_CIM
                 indices = [0]
-                if proj in rec_state.owner.path_afferents:
-                    rec_state_idx = rec_state.owner.input_ports.index(rec_state)
+                if proj in rec_port.owner.path_afferents:
+                    rec_port_idx = rec_port.owner.input_ports.index(rec_port)
 
-                    assert proj in rec_state.pathway_projections
-                    projection_idx = rec_state.pathway_projections.index(proj)
+                    assert proj in rec_port.pathway_projections
+                    projection_idx = rec_port.pathway_projections.index(proj)
 
                     # Adjust for AutoAssociative projections
                     for i in range(projection_idx):
-                        if isinstance(rec_state.pathway_projections[i], AutoAssociativeProjection):
+                        if isinstance(rec_port.pathway_projections[i], AutoAssociativeProjection):
                             projection_idx -= 1
-                    indices.extend([rec_state_idx, projection_idx])
-                elif proj in rec_state.owner.mod_afferents:
-                    projection_idx = rec_state.owner.mod_afferents.index(proj)
-                    indices.extend([len(rec_state.owner.input_ports), projection_idx])
+                    indices.extend([rec_port_idx, projection_idx])
+                elif proj in rec_port.owner.mod_afferents:
+                    projection_idx = rec_port.owner.mod_afferents.index(proj)
+                    indices.extend([len(rec_port.owner.input_ports), projection_idx])
                 else:
                     assert False, "Projection neither pathway nor modulatory"
 

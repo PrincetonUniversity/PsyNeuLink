@@ -4249,14 +4249,14 @@ class TestCompositionInterface:
 
         comp.run(inputs={A: [1.0]})
 
-        for terminal_state in comp.output_CIM_states:
+        for terminal_state in comp.output_CIM_ports:
             # all CIM output state keys in the CIM --> Terminal mapping dict are on the actual output CIM
-            assert (comp.output_CIM_states[terminal_state][0] in comp.output_CIM.input_ports) and \
-                   (comp.output_CIM_states[terminal_state][1] in comp.output_CIM.output_ports)
+            assert (comp.output_CIM_ports[terminal_state][0] in comp.output_CIM.input_ports) and \
+                   (comp.output_CIM_ports[terminal_state][1] in comp.output_CIM.output_ports)
 
         # all Terminal Output ports are in the CIM --> Terminal mapping dict
-        assert C.output_ports[0] in comp.output_CIM_states.keys()
-        assert C.output_ports[1] in comp.output_CIM_states.keys()
+        assert C.output_ports[0] in comp.output_CIM_ports.keys()
+        assert C.output_ports[1] in comp.output_CIM_ports.keys()
 
         assert len(comp.output_CIM.output_ports) == 2
 
@@ -4286,16 +4286,16 @@ class TestCompositionInterface:
         comp.add_projection(MappingProjection(sender=B, receiver=E), B, E)
         comp.run(inputs={A: [1.0]})
 
-        for terminal_state in comp.output_CIM_states:
+        for terminal_state in comp.output_CIM_ports:
             # all CIM output state keys in the CIM --> Terminal mapping dict are on the actual output CIM
-            assert (comp.output_CIM_states[terminal_state][0] in comp.output_CIM.input_ports) and \
-                   (comp.output_CIM_states[terminal_state][1] in comp.output_CIM.output_ports)
+            assert (comp.output_CIM_ports[terminal_state][0] in comp.output_CIM.input_ports) and \
+                   (comp.output_CIM_ports[terminal_state][1] in comp.output_CIM.output_ports)
 
         # all Terminal Output ports are in the CIM --> Terminal mapping dict
-        assert C.output_port in comp.output_CIM_states.keys()
-        assert D.output_port in comp.output_CIM_states.keys()
-        assert E.output_ports[0] in comp.output_CIM_states.keys()
-        assert E.output_ports[1] in comp.output_CIM_states.keys()
+        assert C.output_port in comp.output_CIM_ports.keys()
+        assert D.output_port in comp.output_CIM_ports.keys()
+        assert E.output_ports[0] in comp.output_CIM_ports.keys()
+        assert E.output_ports[1] in comp.output_CIM_ports.keys()
 
         assert len(comp.output_CIM.output_ports) == 4
 

@@ -927,7 +927,7 @@ class OutputPort(Port_Base):
         Mechanisms automatically create one or more `Standard OutputPorts <OutputPort_Standard>`, that have
         pre-specified names.  However, if any OutputPorts are specified in the **input_ports** argument of the
         Mechanism's constructor, those replace its Standard OutputPorts (see `note
-        <Mechanism_Default_State_Suppression_Note>`);  `standard naming conventions <Naming>` apply to the
+        <Mechanism_Default_Port_Suppression_Note>`);  `standard naming conventions <Naming>` apply to the
         OutputPorts specified, as well as any that are added to the Mechanism once it is created.
 
         .. note::
@@ -1268,7 +1268,7 @@ class OutputPort(Port_Base):
             return None
 
     @staticmethod
-    def _get_state_function_value(owner, function, variable):
+    def _get_port_function_value(owner, function, variable):
         fct_variable = _parse_output_port_variable(variable, owner)
 
         # If variable has not been specified, assume it is the default of (OWNER_VALUE,0), and use that value
@@ -1286,7 +1286,7 @@ class OutputPort(Port_Base):
 
         try:
             # return fct(variable=fct_variable)
-            return Port_Base._get_state_function_value(owner=owner, function=fct, variable=fct_variable)
+            return Port_Base._get_port_function_value(owner=owner, function=fct, variable=fct_variable)
         except:
             try:
                 return fct(fct_variable)
@@ -1442,7 +1442,7 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
             if isinstance(output_port, OutputPort):
                 if output_port.initialization_status == ContextFlags.DEFERRED_INIT:
                     try:
-                        output_port_value = OutputPort._get_state_function_value(owner,
+                        output_port_value = OutputPort._get_port_function_value(owner,
                                                                                   # MODIFIED 9/22/19 OLD:
                                                                                   # output_port.function,
                                                                                   # MODIFIED 9/22/19 NEW: [JDC]
@@ -1476,7 +1476,7 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
                         recursive_update(output_port, std_output_port, non_destructive=True)
 
                 if FUNCTION in output_port and output_port[FUNCTION] is not None:
-                    output_port_value = OutputPort._get_state_function_value(owner,
+                    output_port_value = OutputPort._get_port_function_value(owner,
                                                                               output_port[FUNCTION],
                                                                               output_port[VARIABLE])
                 else:
@@ -1594,9 +1594,9 @@ class StandardOutputPorts():
                  output_port_dicts:list,
                  indices:tc.optional(tc.any(int, str, list))=None):
         self.owner = owner
-        self.data = self._instantiate_std_state_list(output_port_dicts, indices)
+        self.data = self._instantiate_std_port_list(output_port_dicts, indices)
 
-    def _instantiate_std_state_list(self, output_port_dicts, indices):
+    def _instantiate_std_port_list(self, output_port_dicts, indices):
 
         dict_list = output_port_dicts.copy()
 
@@ -1681,7 +1681,7 @@ class StandardOutputPorts():
 
     @tc.typecheck
     def add_port_dicts(self, output_port_dicts:list, indices:tc.optional(tc.any(int, str, list))=None):
-        self.data.extend(self._instantiate_std_state_list(output_port_dicts, indices))
+        self.data.extend(self._instantiate_std_port_list(output_port_dicts, indices))
         assert True
 
     @tc.typecheck

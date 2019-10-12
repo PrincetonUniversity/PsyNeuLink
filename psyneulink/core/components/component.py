@@ -2955,13 +2955,13 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         if self.function.has_initializers:
             self.has_initializers = True
 
-        self._parse_param_state_sources()
+        self._parse_param_port_sources()
 
     def _instantiate_attributes_after_function(self, context=None):
         if hasattr(self, "_parameter_ports"):
-            for param_state in self._parameter_ports:
-                setattr(self.__class__, "mod_"+param_state.name, make_property_mod(param_state.name))
-                setattr(self.__class__, "get_mod_" + param_state.name, make_stateful_getter_mod(param_state.name))
+            for param_port in self._parameter_ports:
+                setattr(self.__class__, "mod_"+param_port.name, make_property_mod(param_port.name))
+                setattr(self.__class__, "get_mod_" + param_port.name, make_stateful_getter_mod(param_port.name))
 
     def _instantiate_value(self, context=None):
         #  - call self.execute to get value, since the value of a Component is defined as what is returned by its
@@ -3070,11 +3070,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         self.most_recent_context = context
         return value
 
-    def _parse_param_state_sources(self):
+    def _parse_param_port_sources(self):
         try:
-            for param_state in self._parameter_ports:
-                if param_state.source is FUNCTION:
-                    param_state.source = self.function
+            for param_port in self._parameter_ports:
+                if param_port.source is FUNCTION:
+                    param_port.source = self.function
         except AttributeError:
             pass
 
@@ -3540,7 +3540,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     def function(self, value):
         # TODO: currently no validation, should replicate from _instantiate_function
         self.parameters.function._set(value, Context())
-        self._parse_param_state_sources()
+        self._parse_param_port_sources()
 
     @property
     def function_params(self):
@@ -3675,7 +3675,7 @@ def make_property(name):
         #    also, get parameter_port_owner if one exists
         from psyneulink.core.components.functions.function import Function_Base
         if isinstance(self, Function_Base) and hasattr(self, 'owner') and self.owner is not None:
-            param_state_owner = self.owner
+            param_port_owner = self.owner
             # NOTE CW 1/26/18: if you're getting an error (such as "self.owner has no attribute function_params", or
             # "function_params" has no attribute __additem__ (this happens when it's a dict rather than a
             # ReadOnlyOrderedDict)) it may be caused by function_params not being included in paramInstanceDefaults,
@@ -3684,17 +3684,17 @@ def make_property(name):
             # we do not want to update function_params with the base value, only param state value
             # self.owner.function_params.__additem__(name, val)
         else:
-            param_state_owner = self
+            param_port_owner = self
 
         # If the parameter is associated with a ParameterPort, assign the value to the ParameterPort's variable
-        # if hasattr(param_state_owner, '_parameter_ports') and name in param_state_owner._parameter_ports:
-        #     param_state = param_state_owner._parameter_ports[name]
+        # if hasattr(param_port_owner, '_parameter_ports') and name in param_port_owner._parameter_ports:
+        #     param_port = param_port_owner._parameter_ports[name]
         #
         #     # MODIFIED 7/24/17 CW: If the ParameterPort's function has an initializer attribute (i.e. it's an
         #     # integrator function), then also reset the 'previous_value' and 'initializer' attributes by setting
         #     # 'reinitialize'
-        #     if hasattr(param_state.function, 'initializer'):
-        #         param_state.function.reinitialize = val
+        #     if hasattr(param_port.function, 'initializer'):
+        #         param_port.function.reinitialize = val
 
     # Create the property
     prop = property(getter).setter(setter)

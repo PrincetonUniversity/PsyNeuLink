@@ -360,7 +360,7 @@ from psyneulink.core.components.component import Component, function_type, metho
 from psyneulink.core.components.functions.function import get_param_value_for_keyword
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
-from psyneulink.core.components.ports.port import StateError, Port_Base, _instantiate_state, port_type_keywords
+from psyneulink.core.components.ports.port import PortError, Port_Base, _instantiate_state, port_type_keywords
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     CONTEXT, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, FUNCTION, FUNCTION_PARAMS, \
@@ -633,7 +633,7 @@ class ParameterPort(Port_Base):
             pathway_proj_names = []
             for proj in pathway_projections:
                 pathway_proj_names.append(proj.name + ' ')
-            raise StateError("{} not allowed for {}: {}".
+            raise PortError("{} not allowed for {}: {}".
                              format(PathwayProjection_Base.__self__.__name__,
                                     self.__class__.__name__,
                                     pathway_proj_names))
@@ -699,7 +699,7 @@ class ParameterPort(Port_Base):
                     if reference_value is None:
                         port_dict[REFERENCE_VALUE]=port_spec
                     elif  not iscompatible(port_spec, reference_value):
-                        raise StateError("Value in first item of 2-item tuple specification for {} of {} ({}) "
+                        raise PortError("Value in first item of 2-item tuple specification for {} of {} ({}) "
                                          "is not compatible with its {} ({})".
                                          format(ParameterPort.__name__, owner.name, port_spec,
                                                 REFERENCE_VALUE, reference_value))
@@ -749,7 +749,7 @@ class ParameterPort(Port_Base):
                         if port_dict[REFERENCE_VALUE] is None:
                             # FIX: - PUTTING THIS HERE IS A HACK...
                             # FIX:     MOVE TO _parse_port_spec UNDER PROCESSING OF ProjectionTuple SPEC
-                            # FIX:     USING _get_state_for_socket
+                            # FIX:     USING _get_port_for_socket
                             # from psyneulink.core.components.projections.projection import _parse_projection_spec
 
                             # defaults.value?
@@ -819,7 +819,7 @@ class ParameterPort(Port_Base):
         return port_spec, params_dict
 
     @staticmethod
-    def _get_state_function_value(owner, function, variable):
+    def _get_port_function_value(owner, function, variable):
         """Return parameter variable (since ParameterPort's function never changes the form of its variable"""
         return variable
 

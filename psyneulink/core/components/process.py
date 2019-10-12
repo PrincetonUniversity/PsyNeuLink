@@ -1304,7 +1304,7 @@ class Process(Process_Base):
                         if self.learning:
                             # Make sure Projection includes a learningSignal and add one if it doesn't
                             try:
-                                matrix_param_state = projection._parameter_ports[MATRIX]
+                                matrix_param_port = projection._parameter_ports[MATRIX]
 
                             # Projection doesn't have a _parameter_ports attrib, so assign one with self.learning
                             except AttributeError:
@@ -1339,12 +1339,12 @@ class Process(Process_Base):
                                 if not (
                                     any(
                                         isinstance(projection, LearningProjection)
-                                        for projection in matrix_param_state.mod_afferents
+                                        for projection in matrix_param_port.mod_afferents
                                     )
                                 ):
                                     projs = _add_projection_to(
                                         projection,
-                                        matrix_param_state,
+                                        matrix_param_port,
                                         projection_spec=self.learning
                                     )
                                     for p in projs:

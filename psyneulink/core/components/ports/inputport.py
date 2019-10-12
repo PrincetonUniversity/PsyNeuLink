@@ -133,7 +133,7 @@ InputPorts can also be **added** to a Mechanism, either by creating the InputPor
 Mechanism in the InputPort's **owner** argument, or by using the Mechanism's `add_states <Mechanism_Base.add_states>`
 method (see `examples <State_Create_Port_Examples>` in Port).
 
-    .. _InputPort_Add_State_Note:
+    .. _InputPort_Add_Port_Note:
 
     .. note::
        Adding InputPorts *does not replace* any that the Mechanism generates by default;  rather they are added to the
@@ -486,7 +486,7 @@ from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, LinearCombination, Reduce
 from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import Buffer
 from psyneulink.core.components.ports.outputport import OutputPort
-from psyneulink.core.components.ports.port import StateError, Port_Base, _instantiate_port_list, port_type_keywords
+from psyneulink.core.components.ports.port import PortError, Port_Base, _instantiate_port_list, port_type_keywords
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     COMBINE, CONTROL_SIGNAL, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_PORT, INPUT_PORTS, INPUT_PORT_PARAMS, \
@@ -676,7 +676,7 @@ class InputPort(Port_Base):
         assigned by the InputPortRegistry of the Mechanism to which the InputPort belongs.  Note that some Mechanisms
         automatically create one or more non-default InputPorts, that have pre-specified names.  However, if any
         InputPorts are specified in the **input_ports** argument of the Mechanism's constructor, those replace those
-        InputPorts (see `note <Mechanism_Default_State_Suppression_Note>`), and `standard naming conventions <Naming>`
+        InputPorts (see `note <Mechanism_Default_Port_Suppression_Note>`), and `standard naming conventions <Naming>`
         apply to the InputPorts specified, as well as any that are added to the Mechanism once it is created.
 
         .. note::
@@ -1077,7 +1077,7 @@ class InputPort(Port_Base):
                     if reference_value is None:
                         port_dict[REFERENCE_VALUE]=port_spec
                     elif  not iscompatible(port_spec, reference_value):
-                        raise StateError("Value in first item of 2-item tuple specification for {} of {} ({}) "
+                        raise PortError("Value in first item of 2-item tuple specification for {} of {} ({}) "
                                          "is not compatible with its {} ({})".
                                          format(InputPort.__name__, owner.name, port_spec,
                                                 REFERENCE_VALUE, reference_value))
@@ -1121,7 +1121,7 @@ class InputPort(Port_Base):
                     for projection_spec in params_dict[PROJECTIONS]:
                         # FIX: 10/3/17 - PUTTING THIS HERE IS A HACK...
                         # FIX:           MOVE TO _parse_port_spec UNDER PROCESSING OF ProjectionTuple SPEC
-                        # FIX:           USING _get_state_for_socket
+                        # FIX:           USING _get_port_for_socket
                         # from psyneulink.core.components.projections.projection import _parse_projection_spec
 
                         # Try to get matrix for projection
@@ -1132,7 +1132,7 @@ class InputPort(Port_Base):
                                      projection_spec.state.initialization_status == ContextFlags.DEFERRED_INIT):
                                 continue
                             else:
-                                raise StateError("PROGRAM ERROR: indeterminate value for {} "
+                                raise PortError("PROGRAM ERROR: indeterminate value for {} "
                                                  "specified to project to {} of {}".
                                                  format(projection_spec.state.name, self.__name__, owner.name))
 
@@ -1230,7 +1230,7 @@ class InputPort(Port_Base):
                 params_dict[EXPONENT] = exponent
 
             else:
-                raise StateError("Tuple provided as port_spec for {} of {} ({}) must have either 2, 3 or 4 items".
+                raise PortError("Tuple provided as port_spec for {} of {} ({}) must have either 2, 3 or 4 items".
                                  format(InputPort.__name__, owner.name, tuple_spec))
 
         elif port_specific_spec is not None:
@@ -1326,7 +1326,7 @@ class InputPort(Port_Base):
         return None
 
     @staticmethod
-    def _get_state_function_value(owner, function, variable):
+    def _get_port_function_value(owner, function, variable):
         """Put InputPort's variable in a list if its function is LinearCombination and variable is >=2d
 
         InputPort variable must be embedded in a list so that LinearCombination (its default function)
@@ -1349,7 +1349,7 @@ class InputPort(Port_Base):
         # if function is None, use Port's default function
         function = function or InputPort.defaults.function
 
-        return Port_Base._get_state_function_value(owner=owner, function=function, variable=variable)
+        return Port_Base._get_port_function_value(owner=owner, function=function, variable=variable)
 
 
 def _instantiate_input_ports(owner, input_ports=None, reference_value=None, context=None):
