@@ -326,8 +326,9 @@ In addition, like all PsyNeuLink Components, it also has the three following cor
       influence of a `ControlSignal` (for a `Mechanism <Mechanism>`) or a `LearningSignal` (for a `MappingProjection`);
       for an OutputPort, it conveys the result  of the Mechanism's function to its `output_values
       <Mechanism_Base.output_values>` attribute, under the potential influence of a `GatingSignal`.  See
-      `ModulatorySignals <ModulatorySignal_Structure>` and the `ModulatoryMechanism <ModulatoryMechanism>` associated with
-      each type for a description of how they can be used to modulate the `function <Port_Base.function>` of a Port.
+      `ModulatorySignals <ModulatorySignal_Structure>` and the `ModulatoryMechanism <ModulatoryMechanism>` associated
+      with each type for a description of how they can be used to modulate the `function <Port_Base.function>` of a
+      Port.
     ..
     * `value <Port_Base.value>`:  for an `InputPort` this is the combined value of the `PathwayProjections` it
       receives;  for a `ParameterPort`, this represents the value of the parameter that will be used by the Port's
@@ -350,8 +351,8 @@ assigns one of its parameters as its *ADDITIVE_PARAM* and another as its *MULTIP
 `modulation <ModulatorySignal.modulation>` attribute of a ModulatorySignal determines which of these to modify when the
 Port uses it `function <Port_Base.function>` to calculate its `value  <Port_Base.value>`.  However, the
 ModulatorySignal can also be configured to override the Port's `value <Port_Base.value>` (i.e., assign it directly),
-or to disable modulation, using one of the values of `ModulationParam` for its
-`modulation <ModulatorySignal.modulation>` attribute (see `ModulatorySignal_Modulation` for a more detailed discussion).
+or to disable modulation, using one of the values of `ModulationParam` for its `modulation
+<ModulatorySignal.modulation>` attribute (see `ModulatorySignal_Modulation` for a more detailed discussion).
 
 .. _Port_Execution:
 
@@ -1520,8 +1521,8 @@ class Port_Base(Port):
                     mod_proj_spec_value = type_match(projection.defaults.value, type(mod_param_value))
                     if (mod_param_value is not None
                         and not iscompatible(mod_param_value, mod_proj_spec_value)):
-                        raise PortError("Output of function for {} ({}) is not compatible with value of {} ({}).".
-                                             format(projection.name, projection.defaults.value, self.name, self.defaults.value))
+                        raise PortError(f"Output of function for {projection.name} ({projection.defaults.value}) "
+                                        f"is not compatible with value of {self.name} ({self.defaults.value}).")
 
             # ASSIGN TO STATE
 
@@ -1787,15 +1788,15 @@ class Port_Base(Port):
                         receiver_name=projection.receiver.name
                     )
 
-                # when this is called during initialization, doesn't make sense to validate here because the projection values
-                # are set later to the values they're being validated against here
+                # when this is called during initialization, doesn't make sense to validate here
+                # because the projection values are set later to the values they're being validated against here
                 else:
                     # Validate variable
                     #    - check that input to Projection is compatible with self.value
                     if not iscompatible(self.defaults.value, projection.defaults.variable):
-                        raise PortError("Input to {} ({}) is not compatible with the value ({}) of "
-                                         "the Port from which it is supposed to project ({})".
-                                         format(projection.name, projection.defaults.variable, self.defaults.value, self.name))
+                        raise PortError(f"Input to {projection.name} ({projection.defaults.variable}) "
+                                        f"is not compatible with the value ({self.defaults.value}) of "
+                                        f"the Port from which it is supposed to project ({self.name}).")
 
                     # Validate value:
                     #    - check that output of projection's function (projection_spec.value) is compatible with
@@ -1808,10 +1809,9 @@ class Port_Base(Port):
                     #    - check that projection's value is compatible with the receiver's variable
                     if isinstance(projection, PathwayProjection_Base):
                         if not iscompatible(projection.value, receiver.socket_template):
-                            raise PortError("Output of {} ({}) is not compatible with the variable ({}) of "
-                                             "the Port to which it is supposed to project ({}).".
-                                             format(projection.name, projection.value,
-                                                    receiver.defaults.variable, receiver.name, ))
+                            raise PortError(f"Output of {projection.name} ({projection.value}) "
+                                            f"is not compatible with the variable ({receiver.defaults.variable}) of "
+                                            f"the Port to which it is supposed to project ({receiver.name}).")
 
                     # ModualatoryProjection:
                     #    - check that projection's value is compatible with value of the function param being modulated
@@ -1825,7 +1825,7 @@ class Port_Base(Port):
                         if (mod_param_value is not None
                             and not iscompatible(mod_param_value, mod_proj_spec_value)):
                             raise PortError(f"Output of {projection.name} ({mod_proj_spec_value}) is not compatible "
-                                             f"with the value of {receiver.name} ({mod_param_value}).")
+                                            f"with the value of {receiver.name} ({mod_param_value}).")
 
 
             # ASSIGN TO STATE
@@ -2069,8 +2069,9 @@ class Port_Base(Port):
         # FIX: THIS IS INEFFICIENT;  SHOULD REPLACE WITH IF STATEMENTS
         # KDM 7/26/18: even though we pass these as runtime_params, those don't actually get used by the function; these
         # values instead apparently are being set to attributes elsewhere. Though, these runtime_params could be helpful
-        # if trying to truly functionalize functions, as they could be passed in as proper arguments (e.g. runtime_params
-        # may be {'slope': 2}, which could be passed as **runtime_params to a Linear function with parameter slope)
+        # if trying to truly functionalize functions, as they could be passed in as proper arguments
+        # (e.g. runtime_params may be {'slope': 2}, which could be passed as **runtime_params to a Linear function
+        # with parameter slope)
         try:
             # pass only function params (which implement the effects of any ModulatoryProjections)
             function_params = self.stateParams[FUNCTION_PARAMS]
