@@ -635,7 +635,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
         super()._instantiate_attributes_before_function(function=function, context=context)
 
         # this index is saved so the KWTAMechanism mechanism knows which input state represents inhibition
-        # (it will be wrong if the user deletes an input state: currently, deleting input states is not supported,
+        # (it will be wrong if the user deletes an input state: currently, deleting input ports is not supported,
         # so it shouldn't be a problem)
         self.indexOfInhibitionInputPort = len(self.input_ports) - 1
 

@@ -88,7 +88,7 @@ def new_episode():
     initial_observation = ddqn_agent.env.reset()
     new_episode_flag = True
 
-    # Initialize both states to verdical state based on first observation
+    # Initialize both ports to verdical state based on first observation
     perceptual_state = veridical_state = ddqn_agent.buffer.next(initial_observation, is_new_episode=True)
 
 def get_optimal_action(observation):

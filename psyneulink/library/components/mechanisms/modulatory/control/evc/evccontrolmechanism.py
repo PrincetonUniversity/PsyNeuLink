@@ -386,9 +386,9 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.shellclasses import Function, System_Base
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.core.components.states.outputport import OutputPort
-from psyneulink.core.components.states.parameterport import ParameterPort
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.components.ports.outputport import OutputPort
+from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM, INIT_FUNCTION_METHOD_ONLY, \
@@ -447,7 +447,7 @@ class EVCControlMechanism(ControlMechanism):
         # - specification of System:  required param: SYSTEM
         # - kwDefaultController:  True =>
         #         takes over all unassigned ControlProjections (i.e., without a sender) in its System;
-        #         does not take monitored states (those are created de-novo)
+        #         does not take monitored ports (those are created de-novo)
         # TBI: - CONTROL_PROJECTIONS:
         #         list of projections to add (and for which outputPorts should be added)
 
@@ -1247,7 +1247,7 @@ class EVCControlMechanism(ControlMechanism):
 
         runtime_params : Optional[Dict[str, Dict[str, Dict[str, value]]]]
             a dictionary that can include any of the parameters used as arguments to instantiate the mechanisms,
-            their functions, or Projection(s) to any of their states.  See `Mechanism_Runtime_Parameters` for a full
+            their functions, or Projection(s) to any of their ports.  See `Mechanism_Runtime_Parameters` for a full
             description.
 
         """
@@ -1288,7 +1288,7 @@ class EVCControlMechanism(ControlMechanism):
         self.system._animate = animate_buffer
 
         # Get outcomes for current control_allocation
-        #    = the values of the monitored output states (self.input_ports)
+        #    = the values of the monitored output ports (self.input_ports)
         # self.objective_mechanism.execute(context=EVC_SIMULATION)
         monitored_states = self._update_input_ports(context=context, runtime_params=runtime_params)
 

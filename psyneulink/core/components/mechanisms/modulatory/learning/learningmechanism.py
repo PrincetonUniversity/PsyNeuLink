@@ -518,8 +518,8 @@ from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Mechanism
-from psyneulink.core.components.states.modulatorysignals.learningsignal import LearningSignal
-from psyneulink.core.components.states.parameterport import ParameterPort
+from psyneulink.core.components.ports.modulatorysignals.learningsignal import LearningSignal
+from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ADDITIVE, AFTER, ASSERT, CONTEXT, CONTROL_PROJECTIONS, ENABLED, INPUT_PORTS, \
@@ -1100,9 +1100,9 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set,context=context)
 
-        from psyneulink.core.components.states.state import _parse_port_spec
-        from psyneulink.core.components.states.outputport import OutputPort
-        from psyneulink.core.components.states.modulatorysignals.learningsignal import LearningSignal
+        from psyneulink.core.components.ports.port import _parse_port_spec
+        from psyneulink.core.components.ports.outputport import OutputPort
+        from psyneulink.core.components.ports.modulatorysignals.learningsignal import LearningSignal
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.core.components.projections.projection import _validate_receiver
 
@@ -1185,8 +1185,8 @@ class LearningMechanism(ModulatoryMechanism_Base):
     def _instantiate_output_ports(self, context=None):
 
         from psyneulink.core.globals.registry import register_category
-        from psyneulink.core.components.states.modulatorysignals.learningsignal import LearningSignal
-        from psyneulink.core.components.states.state import Port_Base, _instantiate_state
+        from psyneulink.core.components.ports.modulatorysignals.learningsignal import LearningSignal
+        from psyneulink.core.components.ports.port import Port_Base, _instantiate_state
 
         # Create registry for LearningSignals (to manage names)
         register_category(entry=LearningSignal,

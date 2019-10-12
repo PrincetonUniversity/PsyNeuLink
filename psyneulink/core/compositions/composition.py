@@ -213,7 +213,7 @@ element of the list represents the input value to the key Node on trial i.
 .. _Composition_Run_Inputs_Fig_States:
 
 .. figure:: _static/input_spec_states.svg
-   :alt: Example input specifications with input states
+   :alt: Example input specifications with input ports
 
 
 Each input value must be compatible with the shape of the key `INPUT <NodeRole.INPUT>` Node's `external_input_values
@@ -1109,11 +1109,11 @@ from psyneulink.core.components.projections.modulatory.controlprojection import 
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
-from psyneulink.core.components.states.state import Port
-from psyneulink.core.components.states.inputport import InputPort, SHADOW_INPUTS
-from psyneulink.core.components.states.parameterport import ParameterPort
-from psyneulink.core.components.states.outputport import OutputPort
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.components.ports.port import Port
+from psyneulink.core.components.ports.inputport import InputPort, SHADOW_INPUTS
+from psyneulink.core.components.ports.parameterport import ParameterPort
+from psyneulink.core.components.ports.outputport import OutputPort
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import AFTER, ALL, BEFORE, BOLD, BOTH, COMPARATOR_MECHANISM, COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROLLER, CONTROL_SIGNAL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, SAMPLE, SIMULATIONS, SOFT_CLAMP, TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
@@ -2316,7 +2316,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             - if composition has a controller, remove default InputPort and OutputPort of all nested compositions'
               `parameter CIMs <Composition.parameter_CIM>` which contain nodes that will be modulated and whose default
-              states have not already been removed
+              ports have not already been removed
 
             - delete afferents of compositions' parameter CIMs if their sender is no longer the controller of any of
               the composition's parent compositions
@@ -2345,7 +2345,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in input_nodes:
 
             for input_port in node.external_input_ports:
-                # add it to our set of current input states
+                # add it to our set of current input ports
                 current_input_node_input_ports.add(input_port)
 
                 # if there is not a corresponding CIM output state, add one
@@ -2387,7 +2387,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         sends_to_input_ports = set(self.input_CIM_states.keys())
 
-        # For any states still registered on the CIM that does not map to a corresponding INPUT node I.S.:
+        # For any ports still registered on the CIM that does not map to a corresponding INPUT node I.S.:
         for input_port in sends_to_input_ports.difference(current_input_node_input_ports):
             for projection in input_port.path_afferents:
                 if projection.sender == self.input_CIM_states[input_port][1]:
@@ -2403,7 +2403,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     if shadow_projection.sender == self.input_CIM_states[input_port][1]:
                                         shadow_input_port.path_afferents.remove(shadow_projection)
 
-            # remove the CIM input and output states associated with this INPUT node input state
+            # remove the CIM input and output ports associated with this INPUT node input state
             self.input_CIM.input_ports.remove(self.input_CIM_states[input_port][0])
             self.input_CIM.output_ports.remove(self.input_CIM_states[input_port][1])
 
@@ -2449,7 +2449,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         previous_output_node_output_ports = set(self.output_CIM_states.keys())
         for output_port in previous_output_node_output_ports.difference(current_output_node_output_ports):
-            # remove the CIM input and output states associated with this Terminal Node output state
+            # remove the CIM input and output ports associated with this Terminal Node output state
             self.output_CIM.remove_states(self.output_CIM_states[output_port][0])
             self.output_CIM.remove_states(self.output_CIM_states[output_port][1])
             del self.output_CIM_states[output_port]
@@ -2821,7 +2821,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Note: do all of the following even if Projection is a existing_projections,
         #   as these conditions shoud apply to the exisiting one (and it won't hurt to try again if they do)
 
-        # Create "shadow" projections to any input states that are meant to shadow this projection's receiver
+        # Create "shadow" projections to any input ports that are meant to shadow this projection's receiver
         # (note: do this even if there is a duplciate and they are not allowed, as still want to shadow that projection)
         if receiver_mechanism in self.shadows and len(self.shadows[receiver_mechanism]) > 0:
             for shadow in self.shadows[receiver_mechanism]:
@@ -4521,7 +4521,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except AttributeError:
                 self.parameters.simulation_results._set([self.get_output_values(context)], base_context)
 
-        # Update input states in order to get correct value for "outcome" (from objective mech)
+        # Update input ports in order to get correct value for "outcome" (from objective mech)
         self.controller._update_input_ports(context, runtime_params)
         outcome = self.controller.input_port.parameters.value._get(context)
 
@@ -5788,7 +5788,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                           include_function: bool = False,
                           include_value: bool = False,
                           use_label: bool = False):
-            """Return string with name of states in ContentAddressableList with functions and/or values as specified"""
+            """Return string with name of ports in ContentAddressableList with functions and/or values as specified"""
             states = open_bracket
             for i, state in enumerate(state_list):
                 if i:
@@ -6626,10 +6626,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If self is a nested composition, its input CIM will obtain its value in one of two ways,
         # depending on whether or not it is being executed within a simulation.
         # If it is a simulation, then we need to use the _assign_values_to_input_CIM method, which parses the inputs
-        # argument of the execute method into a suitable shape for the input states of the input_CIM.
+        # argument of the execute method into a suitable shape for the input ports of the input_CIM.
         # If it is not a simulation, we can simply execute the input CIM.
         #
-        # If self is an unnested composition, we must update the input states for any input nodes that are Compositions.
+        # If self is an unnested composition, we must update the input ports for any input nodes that are Compositions.
         # This is done to update the variable for their input CIMs, which allows the _adjust_execution_stimuli
         # method to properly validate input for those nodes.
         # -DS
@@ -7092,10 +7092,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return All(*cond)
 
     def _input_matches_variable(self, input_value, var):
-        # input_value states are uniform
+        # input_value ports are uniform
         if np.shape(np.atleast_2d(input_value)) == np.shape(var):
             return "homogeneous"
-        # input_value states have different lengths
+        # input_value ports have different lengths
         elif len(np.shape(var)) == 1 and isinstance(var[0], (list, np.ndarray)):
             for i in range(len(input_value)):
                 if len(input_value[i]) != len(var[i]):
@@ -7167,20 +7167,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     stimuli[node] = adjusted_stimulus_list
                     stim_list = adjusted_stimulus_list  # ADDED CW 12/21/18: This line fixed a bug, but it might be a hack
 
-            # excludes any input states marked "internal_only" (usually recurrent)
+            # excludes any input ports marked "internal_only" (usually recurrent)
             # KDM 3/29/19: changed to use defaults equivalent of node.external_input_values
             input_must_match = [input_port.defaults.value for input_port in node.input_ports
                                 if not input_port.internal_only]
 
             if input_must_match == []:
-                # all input states are internal_only
+                # all input ports are internal_only
                 continue
 
             check_spec_type = self._input_matches_variable(stim_list, input_must_match)
             # If a node provided a single input, wrap it in one more list in order to represent trials
             if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
                 if check_spec_type == "homogeneous":
-                    # np.atleast_2d will catch any single-input states specified without an outer list
+                    # np.atleast_2d will catch any single-input ports specified without an outer list
                     # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
                     adjusted_stimuli[node] = [np.atleast_2d(stim_list)]
                 else:
@@ -7203,7 +7203,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 "for systems, put your inputs"
                         raise RunError(err_msg)
                     elif check_spec_type == "homogeneous":
-                        # np.atleast_2d will catch any single-input states specified without an outer list
+                        # np.atleast_2d will catch any single-input ports specified without an outer list
                         # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
                         adjusted_stimuli[node].append(np.atleast_2d(stim))
                     else:
@@ -7239,7 +7239,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # If a node provided a single input, wrap it in one more list in order to represent trials
             if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
                 if check_spec_type == "homogeneous":
-                    # np.atleast_2d will catch any single-input states specified without an outer list
+                    # np.atleast_2d will catch any single-input ports specified without an outer list
                     # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
                     adjusted_stimuli[node] = np.atleast_2d(stimulus)
                 else:

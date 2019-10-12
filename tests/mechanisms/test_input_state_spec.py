@@ -10,8 +10,8 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import ProjectionError
 from psyneulink.core.components.functions.function import FunctionError
-from psyneulink.core.components.states.inputport import InputPort
-from psyneulink.core.components.states.state import StateError
+from psyneulink.core.components.ports.inputport import InputPort
+from psyneulink.core.components.ports.port import StateError
 from psyneulink.core.globals.keywords import FUNCTION, INPUT_PORTS, MECHANISM, NAME, OUTPUT_PORTS, PROJECTIONS, RESULTS, VARIABLE
 
 mismatches_specified_default_variable_error_text = 'not compatible with its specified default variable'
@@ -808,7 +808,7 @@ class TestInputPortSpec:
         (None, None, [(transfer_mech, None)], 3, 3),
         (None, None, [(transfer_mech, 1, 1)], 3, 3),
         (None, None, [(transfer_mech, 1, 1, None)], 3, 3),
-        # tests of input states with different variable and value shapes
+        # tests of input ports with different variable and value shapes
         # ([[0,0]], None, [{VARIABLE: [[0], [0]], FUNCTION: LinearCombination}], 2, 2),
         # (None, 2, [{VARIABLE: [[0], [0]], FUNCTION: LinearCombination}], 2, 2),
         (None, 1, [{VARIABLE: [0, 0], FUNCTION: Reduce(weights=[1, -1])}], 2, 1),
@@ -816,7 +816,7 @@ class TestInputPortSpec:
         # (None, None, [(transfer_mech, None)], 3, 3),
         # (None, None, [(transfer_mech, 1, 1)], 3, 3),
         # (None, None, [(transfer_mech, 1, 1, None)], 3, 3),
-        # # tests of input states with different variable and value shapes
+        # # tests of input ports with different variable and value shapes
         # ([[0]], None, [{VARIABLE: [[0], [0]], FUNCTION: LinearCombination}], 2, 1),
         # (None, 1, [{VARIABLE: [0, 0], FUNCTION: Reduce(weights=[1, -1])}], 2, 1),
     ])

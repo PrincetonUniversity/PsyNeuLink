@@ -98,7 +98,7 @@ class TestLCControlMechanism:
 
         val = EX([10.0])
 
-        # LLVM returns combination of all output states so let's do that for
+        # LLVM returns combination of all output ports so let's do that for
         # Python as well
         if mode == 'Python':
             val = [s.value for s in LC.output_ports]

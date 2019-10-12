@@ -156,7 +156,7 @@ COMMENT
 .. _Composition_Run_Inputs_Fig_States:
 
 .. figure:: _static/input_spec_states.svg
-   :alt: Example input specifications with input states
+   :alt: Example input specifications with input ports
 
 .. note::
     Keep in mind that a mechanism's `external_input_values <MechanismBase.external_input_values>` attribute contains
@@ -972,10 +972,10 @@ def run(obj,
 
 @tc.typecheck
 def _input_matches_external_input_port_values(input, value_to_compare):
-    # input states are uniform
+    # input ports are uniform
     if np.shape(np.atleast_2d(input)) == np.shape(value_to_compare):
         return "homogeneous"
-    # input states have different lengths
+    # input ports have different lengths
     elif len(np.shape(value_to_compare)) == 1 and isinstance(value_to_compare[0], (list, np.ndarray)):
         for i in range(len(input)):
             if len(input[i]) != len(value_to_compare[i]):
@@ -1032,7 +1032,7 @@ def _adjust_stimulus_dict(obj, stimuli):
         # If a mechanism provided a single input, wrap it in one more list in order to represent trials
         if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
             if check_spec_type == "homogeneous":
-                # np.atleast_2d will catch any single-input states specified without an outer list
+                # np.atleast_2d will catch any single-input ports specified without an outer list
                 # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
                 adjusted_stimuli[mech] = [np.atleast_2d(stim_list)]
             else:
@@ -1062,7 +1062,7 @@ def _adjust_stimulus_dict(obj, stimuli):
                                             " values) to represent the outside stimulus for the inhibition input state"
                     raise RunError(err_msg)
                 elif check_spec_type == "homogeneous":
-                    # np.atleast_2d will catch any single-input states specified without an outer list
+                    # np.atleast_2d will catch any single-input ports specified without an outer list
                     # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
                     adjusted_stimuli[mech].append(np.atleast_2d(stim))
                 else:
@@ -1190,9 +1190,9 @@ def _parse_input_labels(obj, stimuli, mechanisms_to_parse):
 
         if subdicts:    # If there are subdicts, validate
             # if len(mech.input_labels_dict) != len(mech.input_ports):
-            #     raise RunError("If input labels are specified at the level of input states, then one input state label "
+            #     raise RunError("If input labels are specified at the level of input ports, then one input state label "
             #                    "sub-dictionary must be provided for each input state. {} has {} input state label "
-            #                    "sub-dictionaries, but {} input states.".format(mech.name,
+            #                    "sub-dictionaries, but {} input ports.".format(mech.name,
             #                                                                    len(mech.input_labels_dict),
             #                                                                    len(mech.input_ports)))
             for k in mech.input_labels_dict:

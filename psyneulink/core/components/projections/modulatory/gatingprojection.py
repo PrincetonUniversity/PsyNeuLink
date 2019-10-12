@@ -367,8 +367,8 @@ class GatingProjection(ModulatoryProjection_Base):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         if self.initialization_status == ContextFlags.INITIALIZING:
-            from psyneulink.core.components.states.inputport import InputPort
-            from psyneulink.core.components.states.outputport import OutputPort
+            from psyneulink.core.components.ports.inputport import InputPort
+            from psyneulink.core.components.ports.outputport import OutputPort
             if not isinstance(self.receiver, (InputPort, OutputPort, Mechanism)):
                 raise GatingProjectionError("Receiver specified for {} {} is not a "
                                             "Mechanism, InputPort or OutputPort".

@@ -178,7 +178,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
+from psyneulink.core.components.ports.modulatorysignals.gatingsignal import GatingSignal
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultGatingAllocation
 from psyneulink.core.globals.keywords import \
@@ -231,7 +231,7 @@ def _gating_allocation_setter(value, owning_component=None, context=None):
 
 # def _control_allocation_getter(owning_component=None, context=None):
 #     from psyneulink.core.components.mechanisms.modulatory.controlmechanism import ControlMechanism
-#     from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
+#     from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 #     raise GatingMechanismError(f"'control_allocation' attribute is not implemented on {owning_component.name};  "
 #                                 f"consider using a {ControlMechanism.__name__} instead, "
 #                                 f"or a {ControlMechanism.__name__} if both {ControlSignal.__name__}s and "
@@ -239,7 +239,7 @@ def _gating_allocation_setter(value, owning_component=None, context=None):
 #
 # def _control_allocation_setter(value, owning_component=None, context=None, **kwargs):
 #     from psyneulink.core.components.mechanisms.modulatory.controlmechanism import ControlMechanism
-#     from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
+#     from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 #     raise GatingMechanismError(f"'control_allocation' attribute is not implemented on {owning_component.name};  "
 #                                 f"consider using a {ControlMechanism.__name__} instead, "
 #                                 f"or a {ControlMechanism.__name__} if both {ControlSignal.__name__}s and "
@@ -502,7 +502,7 @@ class GatingMechanism(ControlMechanism):
 
     def _register_control_signal_type(self, context=None):
         from psyneulink.core.globals.registry import register_category
-        from psyneulink.core.components.states.state import Port_Base
+        from psyneulink.core.components.ports.port import Port_Base
 
         # Create registry for GatingSignals (to manage names)
         register_category(entry=GatingSignal,
@@ -512,7 +512,7 @@ class GatingMechanism(ControlMechanism):
 
     def _instantiate_control_signal_type(self, gating_signal_spec, context):
         """Instantiate actual ControlSignal, or subclass if overridden"""
-        from psyneulink.core.components.states.state import _instantiate_state
+        from psyneulink.core.components.ports.port import _instantiate_state
         from psyneulink.core.components.projections.projection import ProjectionError
 
         allocation_parameter_default = self.parameters.gating_allocation.default_value
@@ -594,7 +594,7 @@ class GatingMechanism(ControlMechanism):
     # @property
     # def control_signals(self):
     #     from psyneulink.core.components.mechanisms.modulatory.controlmechanism import ControlMechanism
-    #     from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
+    #     from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
     #     raise GatingMechanismError(f"'control_signals' attribute is not implemented on {self.name} (a "
     #                                f"{self.__class__.__name__}); consider using a {ControlMechanism.__name__} "
     #                                f"instead, or a {ControlMechanism.__name__} if both {ControlSignal.__name__}s "
@@ -603,7 +603,7 @@ class GatingMechanism(ControlMechanism):
     # @control_signals.setter
     # def control_signals(self, value):
     #     from psyneulink.core.components.mechanisms.modulatory.controlmechanism import ControlMechanism
-    #     from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
+    #     from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
     #     raise GatingMechanismError(f"'control_signals' attribute is not implemented on {self.name} (a "
     #                                f"{self.__class__.__name__}); consider using a {ControlMechanism.__name__} "
     #                                f"instead, or a {ControlMechanism.__name__} if both {ControlSignal.__name__}s "

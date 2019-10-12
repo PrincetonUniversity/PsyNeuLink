@@ -466,9 +466,9 @@ from psyneulink.core.components.projections.modulatory.learningprojection import
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import _add_projection_to, _is_projection_spec
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Projection, System_Base
-from psyneulink.core.components.states.modulatorysignals.learningsignal import LearningSignal
-from psyneulink.core.components.states.parameterport import ParameterPort
-from psyneulink.core.components.states.state import _instantiate_state, _instantiate_port_list
+from psyneulink.core.components.ports.modulatorysignals.learningsignal import LearningSignal
+from psyneulink.core.components.ports.parameterport import ParameterPort
+from psyneulink.core.components.ports.port import _instantiate_state, _instantiate_port_list
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, ENABLED, FUNCTION, FUNCTION_PARAMS, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, \
@@ -509,7 +509,7 @@ class ProcessError(Exception):
 
 kwProcessInputPort = 'ProcessInputPort'
 kwTarget = 'target'
-from psyneulink.core.components.states.outputport import OutputPort
+from psyneulink.core.components.ports.outputport import OutputPort
 
 # DOCUMENT:  HOW DO MULTIPLE PROCESS INPUTS RELATE TO # OF InputPortS IN FIRST MECHANISM
 #            WHAT HAPPENS IF LENGTH OF INPUT TO PROCESS DOESN'T MATCH LENGTH OF VARIABLE FOR FIRST MECHANISM??
@@ -1789,7 +1789,7 @@ class Process(Process_Base):
         # - if there is a single Process input value and multiple mechanism.input_ports,
         #     instantiate a single Process input state with projections to each of the mechanism.input_ports
         # - if there are multiple Process input values and a single mechanism.input_port,
-        #     instantiate multiple Process input states each with a Projection to the single mechanism.input_port
+        #     instantiate multiple Process input ports each with a Projection to the single mechanism.input_port
         else:
             for i in range(num_mechanism_input_ports):
                 if mechanism.input_ports[i].internal_only:

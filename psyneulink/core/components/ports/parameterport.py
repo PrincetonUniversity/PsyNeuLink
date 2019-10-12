@@ -359,8 +359,8 @@ import typecheck as tc
 from psyneulink.core.components.component import Component, function_type, method_type, parameter_keywords
 from psyneulink.core.components.functions.function import get_param_value_for_keyword
 from psyneulink.core.components.shellclasses import Mechanism, Projection
-from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
-from psyneulink.core.components.states.state import StateError, Port_Base, _instantiate_state, port_type_keywords
+from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
+from psyneulink.core.components.ports.port import StateError, Port_Base, _instantiate_state, port_type_keywords
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     CONTEXT, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, FUNCTION, FUNCTION_PARAMS, \
@@ -906,7 +906,7 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
     If param_name is FUNCTION_PARAMS and param is a matrix (presumably for a MappingProjection)
         modify ParameterPort's function to be LinearCombination (rather Linear which is the default)
     """
-    from psyneulink.core.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
+    from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
     from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 
     def _get_tuple_for_single_item_modulatory_spec(obj, name, value):
@@ -1041,7 +1041,7 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
             # # IMPLEMENTATION NOTE:  need to copy, since _instantiate_state() calls _parse_port_value()
             # #                       for constraints before port_spec, which moves items to subdictionaries,
             # #                       which would make them inaccessible to the subsequent parse of port_spec
-            from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
+            from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
             from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
             if (
                 is_iterable(function_param_value)

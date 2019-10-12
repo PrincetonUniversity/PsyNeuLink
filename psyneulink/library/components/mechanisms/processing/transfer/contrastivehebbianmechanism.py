@@ -169,7 +169,7 @@ In addition to its primary `function <ContrastiveHebbianMechanism.function>`, if
 is specified as *CONVERGENCE*, then its `convergence_function <ContrastiveHebbianMechanism.convergence_function>`,
 that is used to determine when the corresponding `phase of execution <ContrastiveHebbian_Execution>` is complete.
 Its `learning_function <ContrastiveHebbianMechanism.learning_function>` is automatically assigned as
-`ContrastiveHebbian`, but this can be replaced by any function that takes two 1d arrays ("activity states") and
+`ContrastiveHebbian`, but this can be replaced by any function that takes two 1d arrays ("activity ports") and
 compares them to determine the `matrix <MappingProjection.matrix>`  of the Mechanism's `recurrent_projection
 <ContrastiveHebbianMechanism.recurrent_projection>`.  If **mode** is specified as `SIMPLE_HEBBIAN
 <ContrastiveHebbian_SIMPLE_HEBBIAN>`), the default `function <ContrastiveHebbianMechanism.function>` is `Hebbian`,
@@ -311,7 +311,7 @@ from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear, get_matrix
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
-from psyneulink.core.components.states.outputport import PRIMARY, StandardOutputPorts
+from psyneulink.core.components.ports.outputport import PRIMARY, StandardOutputPorts
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CONTRASTIVE_HEBBIAN_MECHANISM, COUNT, FUNCTION, HARD_CLAMP, HOLLOW_MATRIX, MAX_ABS_DIFF, NAME, SIZE, SOFT_CLAMP, TARGET, VARIABLE
 from psyneulink.core.globals.parameters import Parameter

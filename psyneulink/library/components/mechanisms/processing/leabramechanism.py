@@ -57,7 +57,7 @@ target for the LeabraMechanism. The input to the *MAIN_INPUT* InputPort should h
 `output_size <LeabraMechanism.output_size>`.
 
 .. note::
-    Currently, there is a bug where LeabraMechanism (and other Mechanisms with multiple input states) cannot be
+    Currently, there is a bug where LeabraMechanism (and other Mechanisms with multiple input ports) cannot be
     used as `ORIGIN Mechanisms <System_Mechanisms>` for a `System`. If you desire to use a LeabraMechanism as an ORIGIN
     Mechanism, you can work around this bug by creating two `TransferMechanisms <Transfer_Overview>` as ORIGIN
     Mechanisms instead, and have these two TransferMechanisms pass their output to the InputPorts of the
@@ -102,7 +102,7 @@ except ImportError:
 from psyneulink.core.components.functions.function import Function_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.core.components.states.outputport import PRIMARY, StandardOutputPorts, standard_output_ports
+from psyneulink.core.components.ports.outputport import PRIMARY, StandardOutputPorts, standard_output_ports
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import FUNCTION, INPUT_PORTS, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, NETWORK, OUTPUT_PORTS, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter

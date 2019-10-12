@@ -332,7 +332,7 @@ class OptimizationFunction(Function_Base):
         save_samples = Parameter(False, pnl_internal=True)
         save_values = Parameter(False, pnl_internal=True)
 
-        # these are created as parameter states, but should they be?
+        # these are created as parameter ports, but should they be?
         max_iterations = Parameter(None, modulable=True)
 
         saved_samples = Parameter([], read_only=True, pnl_internal=True)

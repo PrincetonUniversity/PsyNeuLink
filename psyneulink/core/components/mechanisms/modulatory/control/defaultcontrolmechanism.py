@@ -145,7 +145,7 @@ class DefaultControlMechanism(ControlMechanism):
     def _instantiate_control_signal(self, control_signal, context=None):
         """Instantiate requested ControlSignal, ControlProjection and associated InputPort
         """
-        from psyneulink.core.components.states.parameterport import ParameterPort
+        from psyneulink.core.components.ports.parameterport import ParameterPort
 
         if isinstance(control_signal, dict):
             if CONTROL in control_signal:
@@ -233,8 +233,8 @@ class DefaultControlMechanism(ControlMechanism):
         variable_item_index = self.defaults.variable.size-1
 
         # Instantiate inputPort
-        from psyneulink.core.components.states.state import _instantiate_state
-        from psyneulink.core.components.states.inputport import InputPort
+        from psyneulink.core.components.ports.port import _instantiate_state
+        from psyneulink.core.components.ports.inputport import InputPort
         input_port = _instantiate_state(owner=self,
                                          port_type=InputPort,
                                          name=input_port_name,
@@ -247,7 +247,7 @@ class DefaultControlMechanism(ControlMechanism):
         if self.input_ports:
             self._input_ports[input_port.name] = input_port
         else:
-            from psyneulink.core.components.states.state import Port_Base
+            from psyneulink.core.components.ports.port import Port_Base
             self._input_ports = ContentAddressableList(component_type=Port_Base,
                                                         list=[input_port],
                                                         name=self.name+'.input_ports')

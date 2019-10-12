@@ -15,7 +15,7 @@ from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
 from psyneulink.core.components.process import Process
-from psyneulink.core.components.states.inputport import InputPort
+from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.system import System
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.keywords import INSTANTANEOUS_MODE_VALUE, INTEGRATOR_MODE_VALUE, REINITIALIZE
@@ -2003,9 +2003,9 @@ class TestOutputPorts:
                       reference_value=[4.0],
                       name="extra input state")
         T.add_states([I])
-        print("Number of input states: ", len(T.input_ports))
+        print("Number of input ports: ", len(T.input_ports))
         print(T.input_ports, "\n\n")
-        print("Number of output states: ", len(T.output_ports))
+        print("Number of output ports: ", len(T.output_ports))
         print(T.output_ports)
 
         # assert len(T.input_ports) == 4

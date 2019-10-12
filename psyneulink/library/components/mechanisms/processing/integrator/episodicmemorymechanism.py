@@ -88,8 +88,8 @@ import numpy as np
 from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import ContentAddressableMemory
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.core.components.states.inputport import InputPort
-from psyneulink.core.components.states.inputport import OutputPort
+from psyneulink.core.components.ports.inputport import InputPort
+from psyneulink.core.components.ports.inputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CONTEXT, NAME, OWNER_VALUE, SIZE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter

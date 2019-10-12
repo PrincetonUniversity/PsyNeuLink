@@ -45,7 +45,7 @@ __all__ = ['ObjectiveFunction', 'Stability', 'Distance', 'Energy', 'Entropy']
 
 
 class ObjectiveFunction(Function_Base):
-    """Abstract class of `Function` used for evaluating states.
+    """Abstract class of `Function` used for evaluating ports.
     """
 
     componentType = OBJECTIVE_FUNCTION_TYPE
@@ -273,7 +273,7 @@ class Stability(ObjectiveFunction):
         if MATRIX in target_set:
 
             from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-            from psyneulink.core.components.states.parameterport import ParameterPort
+            from psyneulink.core.components.ports.parameterport import ParameterPort
 
             matrix = target_set[MATRIX]
 
@@ -335,7 +335,7 @@ class Stability(ObjectiveFunction):
 
         """
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-        from psyneulink.core.components.states.parameterport import ParameterPort
+        from psyneulink.core.components.ports.parameterport import ParameterPort
 
         # this mirrors the transformation in _function
         # it is a hack, and a general solution should be found
@@ -372,7 +372,7 @@ class Stability(ObjectiveFunction):
 
     def _update_default_variable(self, new_default_variable, context):
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-        from psyneulink.core.components.states.parameterport import ParameterPort
+        from psyneulink.core.components.ports.parameterport import ParameterPort
 
         # this mirrors the transformation in _function
         # it is a hack, and a general solution should be found

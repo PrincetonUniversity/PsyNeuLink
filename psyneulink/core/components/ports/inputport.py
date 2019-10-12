@@ -485,8 +485,8 @@ from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, LinearCombination, Reduce
 from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import Buffer
-from psyneulink.core.components.states.outputport import OutputPort
-from psyneulink.core.components.states.state import StateError, Port_Base, _instantiate_port_list, port_type_keywords
+from psyneulink.core.components.ports.outputport import OutputPort
+from psyneulink.core.components.ports.port import StateError, Port_Base, _instantiate_port_list, port_type_keywords
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     COMBINE, CONTROL_SIGNAL, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_PORT, INPUT_PORTS, INPUT_PORT_PARAMS, \

@@ -160,7 +160,7 @@ class InterfaceStateMap(InterfaceFunction):
 
         if self.corresponding_input_port.owner.parameters.value._get(context) is not None:
 
-            # If CIM's variable does not match its value, then a new pair of states was added since the last execution
+            # If CIM's variable does not match its value, then a new pair of ports was added since the last execution
             if not np.shape(self.corresponding_input_port.owner.get_input_values(context)) == np.shape(self.corresponding_input_port.owner.parameters.value._get(context)):
                 return self.corresponding_input_port.owner.defaults.variable[index]
 

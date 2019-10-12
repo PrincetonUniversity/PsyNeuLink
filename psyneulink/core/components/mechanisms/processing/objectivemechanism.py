@@ -358,9 +358,9 @@ from collections import namedtuple
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.core.components.states.outputport import OutputPort, PRIMARY, standard_output_ports
-from psyneulink.core.components.states.inputport import InputPort, INPUT_PORT
-from psyneulink.core.components.states.state import _parse_port_spec
+from psyneulink.core.components.ports.outputport import OutputPort, PRIMARY, standard_output_ports
+from psyneulink.core.components.ports.inputport import InputPort, INPUT_PORT
+from psyneulink.core.components.ports.port import _parse_port_spec
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     CONTEXT, CONTROL, EXPONENT, EXPONENTS, FUNCTION, LEARNING, MATRIX, NAME, \
@@ -643,7 +643,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         self._learning_role = None
 
-        from psyneulink.core.components.states.outputport import StandardOutputPorts
+        from psyneulink.core.components.ports.outputport import StandardOutputPorts
         if not isinstance(self.standard_output_ports, StandardOutputPorts):
             self.standard_output_ports = StandardOutputPorts(self,
                                                                self.standard_output_ports,
@@ -753,7 +753,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         reference_value = []
         # Get value of each OutputPort or, if a Projection from it is specified, then the Projection's value
         for i, spec in enumerate(monitor_specs):
-            from psyneulink.core.components.states.inputport import InputPort
+            from psyneulink.core.components.ports.inputport import InputPort
             from psyneulink.core.components.system import MonitoredOutputPortTuple
             from psyneulink.core.components.projections.projection import _get_projection_value_shape
 
@@ -941,7 +941,7 @@ def _parse_monitor_specs(monitor_specs):
 #     context=None
 # ):
 #
-#     from psyneulink.core.components.states.outputPort import OutputPort
+#     from psyneulink.core.components.ports.outputPort import OutputPort
 #     from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 #     from psyneulink.core.components.projections.projection import ProjectionTuple
 #

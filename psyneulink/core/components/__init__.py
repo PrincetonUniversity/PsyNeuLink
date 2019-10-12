@@ -8,7 +8,7 @@
 #
 # ***********************************************  Init ****************************************************************
 """
-This module provides core psyneulink mechanisms, projections, functions, and states
+This module provides core psyneulink mechanisms, projections, functions, and ports
 
 https://princetonuniversity.github.io/PsyNeuLink/Component.html
 """
@@ -32,7 +32,7 @@ from . import mechanisms
 from . import process
 from . import projections
 from . import shellclasses
-from . import states
+from . import ports
 from . import system
 
 from .component import *
@@ -41,7 +41,7 @@ from .mechanisms import *
 from .process import *
 from .projections import *
 from .shellclasses import *
-from .states import *
+from .ports import *
 from .system import *
 
 __all__ = [
@@ -53,7 +53,7 @@ __all__.extend(mechanisms.__all__)
 __all__.extend(process.__all__)
 __all__.extend(projections.__all__)
 __all__.extend(shellclasses.__all__)
-__all__.extend(states.__all__)
+__all__.extend(ports.__all__)
 __all__.extend(system.__all__)
 
 kwInitPy = '__init__.py'
@@ -111,7 +111,7 @@ SystemDefaultControlMechanism = DefaultControlMechanism
 
 # Note:  This is used only for assignment of default projection types for each state subclass
 #        Individual stateRegistries (used for naming) are created for each owner (mechanism or projection) of a state
-#        Note: all states that belong to a given owner are registered in the owner's _stateRegistry,
+#        Note: all ports that belong to a given owner are registered in the owner's _stateRegistry,
 #              which maintains a dict for each state type that it uses, a count for all instances of that type,
 #              and a dictionary of those instances;  NONE of these are registered in the StateRegistry.
 #              This is so that the same name can be used for instances of a state type by different owners,
@@ -119,25 +119,25 @@ SystemDefaultControlMechanism = DefaultControlMechanism
 #              while still indexing multiple uses of the same base name within an owner
 #
 # Port registry
-from psyneulink.core.components.states.state import StateRegistry
-from psyneulink.core.components.states.state import Port_Base
+from psyneulink.core.components.ports.port import StateRegistry
+from psyneulink.core.components.ports.port import Port_Base
 
 # InputPort
-from psyneulink.core.components.states.inputport import InputPort
+from psyneulink.core.components.ports.inputport import InputPort
 register_category(entry=InputPort,
                   base_class=Port_Base,
                   registry=StateRegistry,
                   context=kwInitPy)
 
 # ParameterPort
-from psyneulink.core.components.states.parameterport import ParameterPort
+from psyneulink.core.components.ports.parameterport import ParameterPort
 register_category(entry=ParameterPort,
                   base_class=Port_Base,
                   registry=StateRegistry,
                   context=kwInitPy)
 
 # OutputPort
-from psyneulink.core.components.states.outputport import OutputPort
+from psyneulink.core.components.ports.outputport import OutputPort
 register_category(entry=OutputPort,
                   base_class=Port_Base,
                   registry=StateRegistry,
@@ -158,21 +158,21 @@ register_category(entry=SystemInputPort,
                   context=kwInitPy)
 
 # LearningSignal
-from psyneulink.core.components.states.modulatorysignals.learningsignal import LearningSignal
+from psyneulink.core.components.ports.modulatorysignals.learningsignal import LearningSignal
 register_category(entry=LearningSignal,
                   base_class=Port_Base,
                   registry=StateRegistry,
                   context=kwInitPy)
 
 # ControlSignal
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 register_category(entry=ControlSignal,
                   base_class=Port_Base,
                   registry=StateRegistry,
                   context=kwInitPy)
 
 # GatingSignal
-from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
+from psyneulink.core.components.ports.modulatorysignals.gatingsignal import GatingSignal
 register_category(entry=GatingSignal,
                   base_class=Port_Base,
                   registry=StateRegistry,

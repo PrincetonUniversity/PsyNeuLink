@@ -400,9 +400,9 @@ from psyneulink.core.components.functions.transferfunctions import CostFunctions
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.shellclasses import Function
-from psyneulink.core.components.states.inputport import InputPort, _parse_shadow_inputs
-from psyneulink.core.components.states.outputport import OutputPort
-from psyneulink.core.components.states.state import _parse_port_spec
+from psyneulink.core.components.ports.inputport import InputPort, _parse_shadow_inputs
+from psyneulink.core.components.ports.outputport import OutputPort
+from psyneulink.core.components.ports.port import _parse_port_spec
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
@@ -1293,7 +1293,7 @@ class OptimizationControlMechanism(ControlMechanism):
     def _model_spec_parameter_blacklist(self):
         # default_variable is hidden in constructor arguments,
         # and anyway assigning it is problematic because it is modified
-        # several times when creating input states, and assigning function that
+        # several times when creating input ports, and assigning function that
         # fits the control allocation
         return super()._model_spec_parameter_blacklist.union({
             'variable',

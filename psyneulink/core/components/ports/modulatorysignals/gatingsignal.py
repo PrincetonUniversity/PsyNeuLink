@@ -56,7 +56,7 @@ InputPort(s) and/or OutputPort(s) it gates must be specified. This can take any 
         * *MECHANISM*: Mechanism
             the Mechanism must be the one to the which the Port to be gated belongs.
 
-    * for gating multiple states, the dictionary can have the following entry:
+    * for gating multiple ports, the dictionary can have the following entry:
 
         * <str>:list
             the string used as the key specifies the name to be used for the GatingSignal,
@@ -133,7 +133,7 @@ modulation operates).
 
 .. note::
    The change in the `value <Port_Base.value>` of InputPorts and OutputPorts in response to the execution of a
-   GatingSignal are not applied until the Mechanism(s) to which those states belong are next executed;
+   GatingSignal are not applied until the Mechanism(s) to which those ports belong are next executed;
    see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
 
 .. _GatingSignal_Examples:
@@ -152,7 +152,7 @@ of another::
     ...                                                 my_mechanism_B.output_port])
 
 Note that, in the **gate** argument, the first item references a Mechanism (``my_mechanism_A``) rather than
-one of its states -- this is all that is necessary, since the default for a `GatingSignal` is to modulate the
+one of its ports -- this is all that is necessary, since the default for a `GatingSignal` is to modulate the
 `primary InputPort <InputPort_Primary>` of a Mechanism.  The second item explicitly specifies the Port to be gated,
 since it is an OutputPort.  This will generate two GatingSignals, each of which will multiplicatively modulate the
 value of the Port to which it projects.  This is because, by default, the `modulation <GatingSignal.modulation>`
@@ -230,9 +230,9 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.functions.transferfunctions import Linear
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.core.components.states.outputport import PRIMARY, SEQUENTIAL, _output_port_variable_getter
-from psyneulink.core.components.states.state import Port_Base
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.components.ports.outputport import PRIMARY, SEQUENTIAL, _output_port_variable_getter
+from psyneulink.core.components.ports.port import Port_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultGatingAllocation
 from psyneulink.core.globals.keywords import \

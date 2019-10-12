@@ -1109,11 +1109,11 @@ class ContentAddressableList(UserList):
         and the convenience of access and assignment by name (e.g., akin to a dict).
         Lists are used (instead of a dict or OrderedDict) since:
             - ordering is in many instances convenient, and in some critical (e.g., for consistent mapping from
-                collections of states to other variables, such as lists of their values);
+                collections of ports to other variables, such as lists of their values);
             - they are most commonly accessed either exhaustively (e.g., in looping through them during execution),
                 or by key (e.g., to get the first, "primary" one), which makes the efficiencies of a dict for
                 accessing by key/name less critical;
-            - the number of states in a collection for a given Mechanism is likely to be small so that, even when
+            - the number of ports in a collection for a given Mechanism is likely to be small so that, even when
                 accessed by key/name, the inefficiencies of searching a list are likely to be inconsequential.
 
     Arguments

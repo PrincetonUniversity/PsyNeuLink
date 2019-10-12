@@ -144,7 +144,7 @@ from psyneulink.core.components.functions.selectionfunctions import max_vs_avg, 
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import LeakyCompetingIntegrator
 from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
-from psyneulink.core.components.states.outputport import PRIMARY, StandardOutputPorts
+from psyneulink.core.components.ports.outputport import PRIMARY, StandardOutputPorts
 from psyneulink.core.globals.keywords import BETA, ENERGY, ENTROPY, FUNCTION, INITIALIZER, LCA_MECHANISM, NAME, NOISE, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, RATE, RESULT, TIME_STEP_SIZE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags

@@ -19,7 +19,7 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TRANSFER_OUTPUT, TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.components.states.inputport import InputPort
+from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.compositions.composition import Composition, CompositionError
 from psyneulink.core.compositions.pathwaycomposition import PathwayComposition
 from psyneulink.core.compositions.systemcomposition import SystemComposition
@@ -1961,7 +1961,7 @@ class TestRun:
             error_text.value)
 
     def test_LPP_wrong_component(self):
-        from psyneulink.core.components.states.inputport import InputPort
+        from psyneulink.core.components.ports.inputport import InputPort
         comp = Composition()
         Nonsense = InputPort()
         A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=2.0))
@@ -4001,7 +4001,7 @@ class TestCompositionInterface:
             #        TRIAL 1     TRIAL 2
             # A : [ [ [0,0] ] , [ [0, 0] ]  ]
 
-            # two trials of multiple input states each
+            # two trials of multiple input ports each
             #        TRIAL 1     TRIAL 2
 
             #       TRIAL1 IS1      IS2      IS3     TRIAL2    IS1      IS2
@@ -4056,7 +4056,7 @@ class TestCompositionInterface:
             #        TRIAL 1     TRIAL 2
             # A : [ [ [0,0] ] , [ [0, 0] ]  ]
 
-            # two trials of multiple input states each
+            # two trials of multiple input ports each
             #        TRIAL 1     TRIAL 2
 
             #       TRIAL1 IS1      IS2      IS3     TRIAL2    IS1      IS2
@@ -4254,7 +4254,7 @@ class TestCompositionInterface:
             assert (comp.output_CIM_states[terminal_state][0] in comp.output_CIM.input_ports) and \
                    (comp.output_CIM_states[terminal_state][1] in comp.output_CIM.output_ports)
 
-        # all Terminal Output states are in the CIM --> Terminal mapping dict
+        # all Terminal Output ports are in the CIM --> Terminal mapping dict
         assert C.output_ports[0] in comp.output_CIM_states.keys()
         assert C.output_ports[1] in comp.output_CIM_states.keys()
 
@@ -4291,7 +4291,7 @@ class TestCompositionInterface:
             assert (comp.output_CIM_states[terminal_state][0] in comp.output_CIM.input_ports) and \
                    (comp.output_CIM_states[terminal_state][1] in comp.output_CIM.output_ports)
 
-        # all Terminal Output states are in the CIM --> Terminal mapping dict
+        # all Terminal Output ports are in the CIM --> Terminal mapping dict
         assert C.output_port in comp.output_CIM_states.keys()
         assert D.output_port in comp.output_CIM_states.keys()
         assert E.output_ports[0] in comp.output_CIM_states.keys()

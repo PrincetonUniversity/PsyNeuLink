@@ -92,7 +92,7 @@ from psyneulink.core.components.functions.learningfunctions import Hebbian
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism, LearningTiming, LearningType
 from psyneulink.core.components.projections.projection import Projection_Base, projection_keywords
-from psyneulink.core.components.states.parameterport import ParameterPort
+from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     ADDITIVE, CONTROL_PROJECTIONS, INPUT_PORTS, KOHONEN_LEARNING_MECHANISM, \

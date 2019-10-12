@@ -1679,8 +1679,8 @@ class Port_Base(Port):
                                         Port.__name__, Mechanism.__name__, ProjectionTuple.__name__))
 
             if isinstance(receiver, Mechanism):
-                from psyneulink.core.components.states.inputport import InputPort
-                from psyneulink.core.components.states.parameterport import ParameterPort
+                from psyneulink.core.components.ports.inputport import InputPort
+                from psyneulink.core.components.ports.parameterport import ParameterPort
 
                 # If receiver is a Mechanism and Projection is a MappingProjection,
                 #    use primary InputPort (and warn if verbose is set)
@@ -1962,7 +1962,7 @@ class Port_Base(Port):
                 # with a masked linear matrix and removing this special class?
                 and not isinstance(projection, MaskedMappingProjection)
                 and projection.function._is_identity(context)
-                # has no parameter states with afferents (these can modulate parameters and make it non-identity)
+                # has no parameter ports with afferents (these can modulate parameters and make it non-identity)
                 and len(list(itertools.chain.from_iterable([p.all_afferents for p in projection.parameter_ports]))) == 0
                 # matrix parameter state may be a non identity Accumulator integrator
                 and all(pstate.function._is_identity(context) for pstate in projection.parameter_ports)
@@ -2169,7 +2169,7 @@ class Port_Base(Port):
             if isinstance(list(labels_dict.values())[0], dict):
                 subdicts = True
 
-        if not subdicts:    # Labels are specified at the mechanism level - not individual states
+        if not subdicts:    # Labels are specified at the mechanism level - not individual ports
             # label dict only applies to index 0 state
             if all_states.index(self) == 0:
                 for label in labels_dict:
@@ -2362,7 +2362,7 @@ def _instantiate_port_list(owner,
         - INPUT_PORT
         - OUTPUT_PORT
         (note: this is not a list, even if port_types is, since it is about the attribute to which the
-               states will be assigned)
+               ports will be assigned)
     - reference_value (2D np.array): set of 1D np.ndarrays used as default values and
         for compatibility testing in instantiation of Port(s):
         - INPUT_PORT: self.defaults.variable
@@ -2448,7 +2448,7 @@ def _instantiate_port_list(owner,
         port_types = [port_types[0]] * len(state_list)
     # for index, port_spec, port_type in enumerate(zip(state_list, port_types)):
     for index, port_spec, port_type in zip(list(range(len(state_list))), state_list, port_types):
-        # # Get name of state, and use as index to assign to states ContentAddressableList
+        # # Get name of state, and use as index to assign to ports ContentAddressableList
         # default_name = port_type._assign_default_port_Name(port_type)
         # name = default_name or None
 
@@ -2737,7 +2737,7 @@ def _parse_port_spec(port_type=None,
     """
     from psyneulink.core.components.projections.projection \
         import _is_projection_spec, _parse_projection_spec, _parse_connection_specs, ProjectionTuple
-    from psyneulink.core.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
+    from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
     from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
     from psyneulink.core.components.projections.projection import _get_projection_value_shape
 
@@ -2948,7 +2948,7 @@ def _parse_port_spec(port_type=None,
 
         if sender is not None and matrix is not None and matrix is not AUTO_ASSIGN_MATRIX:
             # Get sender of Projection to determine its value
-            from psyneulink.core.components.states.outputport import OutputPort
+            from psyneulink.core.components.ports.outputport import OutputPort
             sender = _get_state_for_socket(owner=owner,
                                            connectee_port_type=port_type,
                                            port_spec=sender,

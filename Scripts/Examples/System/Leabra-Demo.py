@@ -46,7 +46,7 @@ train_flag = False  # should the LeabraMechanism and leabra network learn?
 # The leabra network and LeabraMechanism experience this bug equally.
 
 # NOTE: The reason TransferMechanisms are used below is because there is currently a bug where LeabraMechanism
-# (and other `Mechanism`s with multiple input states) cannot be used as origin Mechanisms for a System. If you desire
+# (and other `Mechanism`s with multiple input ports) cannot be used as origin Mechanisms for a System. If you desire
 # to use a LeabraMechanism as an origin Mechanism, you can work around this bug by creating two `TransferMechanism`s
 # as origin Mechanisms instead, and have these two TransferMechanisms pass their output to the InputPorts of
 # the LeabraMechanism.

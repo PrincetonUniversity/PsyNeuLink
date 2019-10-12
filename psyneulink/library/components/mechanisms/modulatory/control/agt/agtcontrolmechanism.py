@@ -151,7 +151,7 @@ from psyneulink.core.components.functions.statefulfunctions.integratorfunctions 
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import MONITORED_OUTPUT_PORTS, ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Mechanism, System_Base
-from psyneulink.core.components.states.outputport import OutputPort
+from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import \
     CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, INIT_EXECUTE_METHOD_ONLY, \
     MECHANISM, MULTIPLICATIVE, OBJECTIVE_MECHANISM

@@ -196,10 +196,10 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.components.states.inputport import InputPort
-from psyneulink.core.components.states.outputport import PRIMARY, StandardOutputPorts
-from psyneulink.core.components.states.parameterport import ParameterPort
-from psyneulink.core.components.states.state import _instantiate_state
+from psyneulink.core.components.ports.inputport import InputPort
+from psyneulink.core.components.ports.outputport import PRIMARY, StandardOutputPorts
+from psyneulink.core.components.ports.parameterport import ParameterPort
+from psyneulink.core.components.ports.port import _instantiate_state
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_PORT, MATRIX, MAX_ABS_DIFF, NAME, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT
 from psyneulink.core.globals.parameters import Parameter
@@ -471,7 +471,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         specifies whether the mechanism's `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`
         points to a separate input state. By default, if False, the recurrent_projection points to its `primary
         InputPort <InputPort_Primary>`. If True, the recurrent_projection points to a separate input state, and
-        the values of all input states are combined using `LinearCombination <function.LinearCombination>` *before*
+        the values of all input ports are combined using `LinearCombination <function.LinearCombination>` *before*
         being passed to the RecurrentTransferMechanism's `function <RecurrentTransferMechanism.function>`.
 
     combination_function : function : default LinearCombination
@@ -592,7 +592,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         specifies whether the mechanism's `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`
         points to a separate input state. If False, the recurrent_projection points to its `primary
         InputPort <InputPort_Primary>`. If True, the recurrent_projection points to a separate input state, and
-        the values of all input states are combined using `LinearCombination <function.LinearCombination>` *before*
+        the values of all input ports are combined using `LinearCombination <function.LinearCombination>` *before*
         being passed to the RecurrentTransferMechanism's `function <RecurrentTransferMechanism.function>`.
 
     combination_function : function
@@ -1308,7 +1308,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     def _update_parameter_ports(self, context=None, runtime_params=None):
         for state in self._parameter_ports:
             # (8/2/17 CW) because the auto and hetero params are solely used by the AutoAssociativeProjection
-            # (the RecurrentTransferMechanism doesn't use them), the auto and hetero param states are updated in the
+            # (the RecurrentTransferMechanism doesn't use them), the auto and hetero param ports are updated in the
             # projection's _update_parameter_ports, and accordingly are not updated here
             if state.name != AUTO and state.name != HETERO:
                 state._update(context=context, params=runtime_params)

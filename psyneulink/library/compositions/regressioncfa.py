@@ -45,8 +45,8 @@ from enum import Enum
 from itertools import product
 
 from psyneulink.core.components.functions.learningfunctions import BayesGLM
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.core.components.states.state import _parse_port_spec
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.components.ports.port import _parse_port_spec
 from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
 from psyneulink.core.globals.keywords import ALL, CONTROL_SIGNALS, DEFAULT_VARIABLE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter

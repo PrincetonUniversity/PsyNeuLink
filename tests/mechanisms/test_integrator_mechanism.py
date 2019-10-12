@@ -512,7 +512,7 @@ class TestIntegratorFunctions:
 
         if mode == 'Python':
             val = I.execute(var)
-            # LLVM versions report values of output states. Collect it here
+            # LLVM versions report values of output ports. Collect it here
             val = [x.value for x in I.output_ports]
             benchmark(I.execute, var)
         elif mode == 'LLVM':

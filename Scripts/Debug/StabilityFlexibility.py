@@ -7,7 +7,7 @@ import psyneulink as pnl
 # the associated accuracy of the trial will be the probability that the DDM hits the upper threshold
 def computeAccuracy(variable):
 
-    # variable is the list of values given by the monitored output states in the Objective Mechanism
+    # variable is the list of values given by the monitored output ports in the Objective Mechanism
 
     print("Inputs to ComputeAccuracy Function: ", variable)
 

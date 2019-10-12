@@ -172,9 +172,9 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.functions.transferfunctions import Linear
-from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
-from psyneulink.core.components.states.outputport import PRIMARY
-from psyneulink.core.components.states.state import Port_Base
+from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
+from psyneulink.core.components.ports.outputport import PRIMARY
+from psyneulink.core.components.ports.port import Port_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     CONTEXT, LEARNED_PARAM, LEARNING_PROJECTION, LEARNING_SIGNAL, OUTPUT_PORT_PARAMS, \

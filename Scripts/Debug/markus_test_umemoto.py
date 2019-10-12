@@ -206,7 +206,7 @@ def x():
     # print(Decision.output_ports[pnl.RESPONSE_TIME].value)
     # print(Target_Rep.input_values)
     # print("target rep variable:", Target_Rep.input_ports[0].variable)
-    # print("target rep input states:", Target_Rep.input_ports)
+    # print("target rep input ports:", Target_Rep.input_ports)
     # print("output target stim", Target_Stim.output_values)
     #
     # print(Target_Rep.path_afferents)

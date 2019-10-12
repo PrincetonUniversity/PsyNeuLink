@@ -361,8 +361,8 @@ from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import _is_control_spec
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.core.components.states.outputport import SEQUENTIAL, StandardOutputPorts
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.components.ports.outputport import SEQUENTIAL, StandardOutputPorts
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INPUT_PORT_VARIABLES, NAME, OUTPUT_PORTS, OWNER_VALUE, VARIABLE, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
@@ -1011,7 +1011,7 @@ class DDM(ProcessingMechanism):
         # if len(variable) > 1 and not self.input_format in {ARRAY, VECTOR}:
         if not object_has_single_value(variable) and not object_has_single_value(np.array(variable)):
             raise DDMError("Length of input to DDM ({}) is greater than 1, implying there are multiple "
-                           "input states, which is currently not supported in DDM, but may be supported"
+                           "input ports, which is currently not supported in DDM, but may be supported"
                            " in the future under a multi-process DDM. Please use a single numeric "
                            "item as the default_variable, or use size = 1.".format(variable))
         # # MODIFIED 6/28/17 (CW): changed len(variable) > 1 to len(variable[0]) > 1
@@ -1170,7 +1170,7 @@ class DDM(ProcessingMechanism):
         if context.execution_id is NotImplemented:
             context.execution_id = self.most_recent_context.execution_id
 
-        # (1) reinitialize function, (2) update mechanism value, (3) update output states
+        # (1) reinitialize function, (2) update mechanism value, (3) update output ports
         if isinstance(self.function, IntegratorFunction):
             new_values = self.function.reinitialize(*args, context=context)
             self.parameters.value._set(np.array(new_values), context)

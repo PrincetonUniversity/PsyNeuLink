@@ -323,7 +323,7 @@ In the examples above, `reinitialize <AdaptiveIntegrator.reinitialize>` was appl
 integrator function.
 The key difference between the `integrator_function's reinitialize <AdaptiveIntegrator.reinitialize>` and the
 `TransferMechanism's reinitialize <TransferMechanism.reinitialize>` is that the latter will also execute the mechanism's
-function and update its output states. This is useful if the mechanism's value or any of its output state values will
+function and update its output ports. This is useful if the mechanism's value or any of its output state values will
 be used or checked *before* the mechanism's next execution. (This may be true if, for example, the mechanism is
 `recurrent <RecurrentTransferMechanism>`, the mechanism is responsible for `modulating <ModulatorySignal_Modulation`
 other components, or if a `Scheduler` condition depends on the mechanism's activity.)
@@ -365,8 +365,8 @@ from psyneulink.core.components.functions.userdefinedfunction import UserDefined
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import _is_control_spec
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.core.components.states.inputport import InputPort
-from psyneulink.core.components.states.outputport import OutputPort, PRIMARY, StandardOutputPorts, standard_output_ports
+from psyneulink.core.components.ports.inputport import InputPort
+from psyneulink.core.components.ports.outputport import OutputPort, PRIMARY, StandardOutputPorts, standard_output_ports
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     FUNCTION, INITIALIZER, INSTANTANEOUS_MODE_VALUE, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, \

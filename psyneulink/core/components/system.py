@@ -452,8 +452,8 @@ from psyneulink.core.components.process import Process, ProcessInputPort, Proces
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import Projection
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, System_Base
-from psyneulink.core.components.states.inputport import InputPort
-from psyneulink.core.components.states.parameterport import ParameterPort
+from psyneulink.core.components.ports.inputport import InputPort
+from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ALL, BOLD, COMPONENT, CONDITION, CONTROL, CONTROLLER, CYCLE, FUNCTION, FUNCTIONS, \
@@ -1001,7 +1001,7 @@ class System(System_Base):
         """
         super(System, self)._validate_variable(variable, context)
 
-        # Force System variable specification to be a 2D array (to accommodate multiple input states of 1st mech(s)):
+        # Force System variable specification to be a 2D array (to accommodate multiple input ports of 1st mech(s)):
         if variable is None:
             return
 
@@ -1643,7 +1643,7 @@ class System(System_Base):
         self.defaults.variable = convert_to_np_array(self.defaults.variable, 2)
         # should add Utility to allow conversion to 3D array
         # An example: when input state values are vectors, then self.defaults.variable is a 3D array because
-        # an origin mechanism could have multiple input states if there is a recurrent input state. However,
+        # an origin mechanism could have multiple input ports if there is a recurrent input state. However,
         # if input state values are all non-vector objects, such as strings, then self.defaults.variable
         # would be a 2D array. so we should convert that to a 3D array
 
@@ -1676,7 +1676,7 @@ class System(System_Base):
             # (this avoids duplication from multiple passes through _instantiate_graph)
             if any(self is projection.sender.owner for projection in origin_mech.input_port.path_afferents):
                 continue
-            # added a for loop to iterate over origin_mech.input_ports to allow for multiple input states in an
+            # added a for loop to iterate over origin_mech.input_ports to allow for multiple input ports in an
             # origin mechanism (useful only if origin mechanism is a KWTAMechanism) Check, for each ORIGIN mechanism,
             # that the length of the corresponding item of self.defaults.variable matches the length of the
             #  ORIGIN inputPort's defaults.variable attribute
@@ -2195,7 +2195,7 @@ class System(System_Base):
             - precedence is given to MonitoredOutputPortsOptions specification in Mechanism > controller > System
         * controller.monitored_output_ports is a list, each item of which is an OutputPort from which a Projection
             will be instantiated to a corresponding InputPort of the ControlMechanism
-        * controller.input_ports is the usual ordered dict of states,
+        * controller.input_ports is the usual ordered dict of ports,
             each of which receives a Projection from a corresponding OutputPort in controller.monitored_output_ports
 
         Returns list of MonitoredOutputPortTuples: (OutputPort, weight, exponent, matrix)
@@ -4974,7 +4974,7 @@ class System(System_Base):
 
 SYSTEM_TARGET_INPUT_PORT = 'SystemInputPort'
 
-from psyneulink.core.components.states.outputport import OutputPort
+from psyneulink.core.components.ports.outputport import OutputPort
 class SystemInputPort(OutputPort):
     """Represents inputs and targets specified in a call to the System's `execute <Process.execute>` and `run
     <Process.run>` methods.

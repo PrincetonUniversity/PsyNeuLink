@@ -135,9 +135,9 @@ from psyneulink.core.components.functions.combinationfunctions import LinearComb
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Mechanism
-from psyneulink.core.components.states.inputport import InputPort
-from psyneulink.core.components.states.outputport import OutputPort, PRIMARY, StandardOutputPorts
-from psyneulink.core.components.states.state import _parse_port_spec
+from psyneulink.core.components.ports.inputport import InputPort
+from psyneulink.core.components.ports.outputport import OutputPort, PRIMARY, StandardOutputPorts
+from psyneulink.core.components.ports.port import _parse_port_spec
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.keywords import COMPARATOR_MECHANISM, FUNCTION, INPUT_PORTS, NAME, OUTCOME, SAMPLE, TARGET, VARIABLE, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter

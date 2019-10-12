@@ -396,8 +396,8 @@ import typecheck as tc
 from psyneulink.core.components.component import Component
 from psyneulink.core.components.functions.transferfunctions import LinearMatrix, get_matrix
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Projection, Port
-from psyneulink.core.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
-from psyneulink.core.components.states.state import StateError
+from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
+from psyneulink.core.components.ports.port import StateError
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATING, GATING_PROJECTION, GATING_SIGNAL, INPUT_PORT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_RECEIVER_STATE, MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_SENDER_STATE, NAME, OUTPUT_PORT, OUTPUT_PORTS, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, STANDARD_ARGS, STATE, STATES, WEIGHT, ADD_INPUT_PORT, ADD_OUTPUT_PORT, PROJECTION_COMPONENT_CATEGORY
 from psyneulink.core.globals.parameters import Parameter
@@ -687,8 +687,8 @@ class Projection_Base(Projection):
         :param context: (str)
         :return: None
         """
-        from psyneulink.core.components.states.parameterport import ParameterPort
-        from psyneulink.core.components.states.state import Port_Base
+        from psyneulink.core.components.ports.parameterport import ParameterPort
+        from psyneulink.core.components.ports.port import Port_Base
 
         params = self._assign_args_to_param_dicts(weight=weight,
                                                   exponent=exponent,
@@ -805,7 +805,7 @@ class Projection_Base(Projection):
 
     def _instantiate_parameter_ports(self, function=None, context=None):
 
-        from psyneulink.core.components.states.parameterport import _instantiate_parameter_ports
+        from psyneulink.core.components.ports.parameterport import _instantiate_parameter_ports
         _instantiate_parameter_ports(owner=self, function=function, context=context)
 
     def _instantiate_sender(self, sender, context=None):
@@ -819,7 +819,7 @@ class Projection_Base(Projection):
         Assign projection to sender's efferents attribute
         """
         from psyneulink.core.compositions.composition import Composition
-        from psyneulink.core.components.states.outputport import OutputPort
+        from psyneulink.core.components.ports.outputport import OutputPort
 
         if not (
             isinstance(sender, (Composition, Mechanism, Port, Process_Base))
@@ -878,9 +878,9 @@ class Projection_Base(Projection):
                                            f"{sender.owner.name} that already has an identical {Projection.__name__}.")
 
     def _instantiate_attributes_after_function(self, context=None):
-        from psyneulink.core.components.states.parameterport import _instantiate_parameter_port
+        from psyneulink.core.components.ports.parameterport import _instantiate_parameter_port
         self._instantiate_receiver(context=context)
-        # instantiate parameter states from UDF custom parameters if necessary
+        # instantiate parameter ports from UDF custom parameters if necessary
         try:
             cfp = self.function.cust_fct_params
             udf_parameters_lacking_states = {param_name: cfp[param_name] for param_name in cfp if param_name not in self.parameter_ports.names}
@@ -1297,7 +1297,7 @@ def _parse_connection_specs(connectee_port_type,
         connectsWith : Port
            - specifies the type (subclass) of Port with which the connectee_port_type should be connected
         connectsWithAttribute : str
-           - specifies the name of the attribute of the Mechanism that holds the states of the connectsWith's type
+           - specifies the name of the attribute of the Mechanism that holds the ports of the connectsWith's type
         projectionSocket : [SENDER or RECEIVER]
            - specifies for this method whether to use a Projection's sender or receiver for the connection
         modulators : ModulatorySignal
@@ -1354,11 +1354,11 @@ def _parse_connection_specs(connectee_port_type,
 
     """
 
-    from psyneulink.core.components.states.state import _get_state_for_socket
-    from psyneulink.core.components.states.state import StateRegistry
-    from psyneulink.core.components.states.inputport import InputPort
-    from psyneulink.core.components.states.outputport import OutputPort
-    from psyneulink.core.components.states.parameterport import ParameterPort
+    from psyneulink.core.components.ports.port import _get_state_for_socket
+    from psyneulink.core.components.ports.port import StateRegistry
+    from psyneulink.core.components.ports.inputport import InputPort
+    from psyneulink.core.components.ports.outputport import OutputPort
+    from psyneulink.core.components.ports.parameterport import ParameterPort
     from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
     from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import _is_control_spec
     from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import _is_gating_spec
@@ -1493,7 +1493,7 @@ def _parse_connection_specs(connectee_port_type,
                                                       mech=mech,
                                                       projection_socket=projection_socket)
                         if isinstance(state, list):
-                            assert False, 'Got list of allowable states for {} as specification for {} of {}'.\
+                            assert False, 'Got list of allowable ports for {} as specification for {} of {}'.\
                                           format(state_connect_spec, projection_socket, mech.name)
 
                         # Assign state along with dict's default values to tuple
@@ -1513,7 +1513,7 @@ def _parse_connection_specs(connectee_port_type,
                                                     mech=mech,
                                                     projection_socket=projection_socket)
                         if isinstance(state, list):
-                            assert False, 'Got list of allowable states for {} as specification for {} of {}'.\
+                            assert False, 'Got list of allowable ports for {} as specification for {} of {}'.\
                                            format(state_connect_spec, projection_socket, mech.name)
                         # Re-assign to STATE entry of dict (to preserve any other connection specifications in dict)
                         state_connect_spec[STATE] = state
@@ -1529,7 +1529,7 @@ def _parse_connection_specs(connectee_port_type,
                                                     mech=mech,
                                                     projection_socket=projection_socket)
                         if isinstance(state, list):
-                            assert False, 'Got list of allowable states for {} as specification for {} of {}'.\
+                            assert False, 'Got list of allowable ports for {} as specification for {} of {}'.\
                                            format(state_connect_spec, projection_socket, mech.name)
                         # Replace parsed value in original tuple, but...
                         #    tuples are immutable, so have to create new one, with port_spec as (new) first item
@@ -1671,7 +1671,7 @@ def _parse_connection_specs(connectee_port_type,
                     port_type = item.__class__
 
                 # # Test that port_type is in the list for state's connects_with
-                from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
+                from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 
                 # KAM 7/26/18 modified to allow ControlMechanisms to be terminal nodes of compositions
                 # We could only include ControlSignal in the allowed types if the receiver is a CIM?
@@ -1692,9 +1692,9 @@ def _parse_connection_specs(connectee_port_type,
             if _is_projection_spec(projection_spec) or _is_modulatory_spec(projection_spec) or projection_spec is None:
 
                 # FIX: 11/21/17 THIS IS A HACK TO DEAL WITH GatingSignal Projection TO InputPort or OutputPort
-                from psyneulink.core.components.states.inputport import InputPort
-                from psyneulink.core.components.states.outputport import OutputPort
-                from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
+                from psyneulink.core.components.ports.inputport import InputPort
+                from psyneulink.core.components.ports.outputport import OutputPort
+                from psyneulink.core.components.ports.modulatorysignals.gatingsignal import GatingSignal
                 from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
                 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
                 if (not isinstance(projection_spec, GatingProjection)
@@ -1833,7 +1833,7 @@ def _validate_connection_request(
             # FIX:               THE projection_socket FOR WHICH IS USUALLY A RECEIVER;
             # FIX:           HOWEVER, IF THE projection_spec IS A GatingSignal
             # FIX:               THEN THE projection_socket MUST BE SENDER
-            from psyneulink.core.components.states.outputport import OutputPort
+            from psyneulink.core.components.ports.outputport import OutputPort
             from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
             from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
             if connectee_state is OutputPort and isinstance(projection_spec, (GatingProjection, ControlProjection)):
@@ -2012,9 +2012,9 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
     # IMPLEMENTATION NOTE:  ADD FULL SET OF ParameterPort SPECIFICATIONS
     #                       CURRENTLY, ASSUMES projection_spec IS AN ALREADY INSTANTIATED PROJECTION
 
-    from psyneulink.core.components.states.state import _instantiate_state
-    from psyneulink.core.components.states.state import Port_Base
-    from psyneulink.core.components.states.inputport import InputPort
+    from psyneulink.core.components.ports.port import _instantiate_state
+    from psyneulink.core.components.ports.port import Port_Base
+    from psyneulink.core.components.ports.inputport import InputPort
 
     if not isinstance(state, (int, str, Port)):
         raise ProjectionError("Port specification(s) for {} (as receiver(s) of {}) contain(s) one or more items"
@@ -2111,9 +2111,9 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
     """
 
 
-    from psyneulink.core.components.states.state import _instantiate_state
-    from psyneulink.core.components.states.state import Port_Base
-    from psyneulink.core.components.states.outputport import OutputPort
+    from psyneulink.core.components.ports.port import _instantiate_state
+    from psyneulink.core.components.ports.port import Port_Base
+    from psyneulink.core.components.ports.outputport import OutputPort
 
     # Validate that projection is not already assigned to sender; if so, warn and ignore
 
@@ -2186,7 +2186,7 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
         sender.output_ports[output_port.name] = output_port
     # No OutputPort(s) yet, so create them
     except AttributeError:
-        from psyneulink.core.components.states.state import Port_Base
+        from psyneulink.core.components.ports.port import Port_Base
         sender.output_ports = ContentAddressableList(component_type=Port_Base,
                                                       list=[output_port],
                                                       name=sender.name+'.output_ports')

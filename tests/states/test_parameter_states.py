@@ -63,7 +63,7 @@ class TestParameterPorts:
         assert B.mod_noise == 0.6
 
     def test_direct_call_to_constructor_error(self):
-        from psyneulink.core.components.states.parameterport import ParameterPort, ParameterPortError
+        from psyneulink.core.components.ports.parameterport import ParameterPort, ParameterPortError
         with pytest.raises(ParameterPortError) as error_text:
             ParameterPort(owner='SOMETHING')
         assert "Contructor for ParameterPort cannot be called directly(context: None" in str(error_text.value)

@@ -1911,7 +1911,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             for param_name in runtime_params:
                 # (1) store current attribute value in _runtime_params_reset so that it can be reset later
                 # (2) assign runtime param values to attributes (which calls validation via properties)
-                # (3) update parameter states if needed
+                # (3) update parameter ports if needed
                 if hasattr(self, param_name):
                     if param_name in {FUNCTION, INPUT_PORTS, OUTPUT_PORTS}:
                         continue
@@ -1958,7 +1958,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
               IMPLEMENTATION NOTE:  for now, treating class defaults as hard coded;
                                     could be changed in the future simply by commenting out code below
 
-          If not context:  instantiates function and any states specified in request set
+          If not context:  instantiates function and any ports specified in request set
                            (if they have changed from the previous value(s))
 
         :param variable: (anything but a dict (variable) - value to assign as defaults.variable
@@ -2239,7 +2239,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         Call _instantiate_defaults with context = COMMAND_LINE, and "validated_set" as target_set.
         Update paramInstanceDefaults with validated_set so that any instantiations (below) are done in proper context.
-        Instantiate any items in request set that require it (i.e., function or states).
+        Instantiate any items in request set that require it (i.e., function or ports).
 
         """
         self._assign_params(request_set=request_set, context=context)
@@ -2424,7 +2424,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         """
             Transforms **variable** into a form that Components expect. Used to allow
             users to pass input in convenient forms, like a single float when a list
-            for input states is expected
+            for input ports is expected
 
             Returns
             -------
@@ -2746,7 +2746,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         """
         from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
         from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-        from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
+        from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
 
         ALLOWABLE_TUPLE_SPEC_KEYWORDS = MODULATORY_SPEC_KEYWORDS
         ALLOWABLE_TUPLE_SPEC_CLASSES = (ModulatoryProjection_Base, ModulatorySignal, ModulatoryMechanism_Base)
@@ -2870,7 +2870,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # KDM 11/12/18: parse an instance of a Function's .function method to itself
         # (not sure how worth it this is, but it existed in Scripts/Examples/Reinforcement-Learning REV)
         # purposely not attempting to parse a class Function.function
-        # JDC 3/6/19:  ?what about parameter states for its parameters (see python function problem below)?
+        # JDC 3/6/19:  ?what about parameter ports for its parameters (see python function problem below)?
         if isinstance(function, types.MethodType):
             try:
                 if isinstance(function.__self__, Function):
@@ -2950,7 +2950,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             raise ComponentError(f'Unsupported function type: {type(function)}, function={function}.')
 
         # KAM added 6/14/18 for functions that do not pass their has_initializers status up to their owner via property
-        # FIX: need comprehensive solution for has_initializers; need to determine whether states affect mechanism's
+        # FIX: need comprehensive solution for has_initializers; need to determine whether ports affect mechanism's
         # has_initializers status
         if self.function.has_initializers:
             self.has_initializers = True
@@ -3330,8 +3330,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     @property
     def _dict_summary(self):
         from psyneulink.core.compositions.composition import Composition
-        from psyneulink.core.components.states.state import Port
-        from psyneulink.core.components.states.outputport import OutputPort
+        from psyneulink.core.components.ports.port import Port
+        from psyneulink.core.components.ports.outputport import OutputPort
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 
         def parse_parameter_value(value):

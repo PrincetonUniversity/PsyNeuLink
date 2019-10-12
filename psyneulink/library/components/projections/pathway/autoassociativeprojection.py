@@ -91,7 +91,7 @@ from psyneulink.core.components.functions.transferfunctions import LinearMatrix,
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import projection_keywords
 from psyneulink.core.components.shellclasses import Mechanism
-from psyneulink.core.components.states.outputport import OutputPort
+from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import AUTO_ASSOCIATIVE_PROJECTION, DEFAULT_MATRIX, HOLLOW_MATRIX, MATRIX
 from psyneulink.core.globals.parameters import Parameter
@@ -355,8 +355,8 @@ class AutoAssociativeProjection(MappingProjection):
         # Two possible solutions: allow control to be done on projections, or build a more general way to allow
         # projections to read parameters from mechanisms.
     # def _update_parameter_ports(self, runtime_params=None, context=None):
-    #     """Update this projection's owner mechanism's `auto` and `hetero` parameter states as well! The owner mechanism
-    #     should be a RecurrentTransferMechanism, which DOES NOT update its own `auto` and `hetero` parameter states during
+    #     """Update this projection's owner mechanism's `auto` and `hetero` parameter ports as well! The owner mechanism
+    #     should be a RecurrentTransferMechanism, which DOES NOT update its own `auto` and `hetero` parameter ports during
     #     its _update_parameter_ports function (so that the ParameterPort is not redundantly updated).
     #     Thus, if you want to have an AutoAssociativeProjection on a mechanism that's not a RecurrentTransferMechanism,
     #     your mechanism must similarly exclude `auto` and `hetero` from updating.

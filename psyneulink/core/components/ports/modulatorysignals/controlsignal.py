@@ -316,9 +316,9 @@ from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
 from psyneulink.core.components.functions.transferfunctions import Exponential, Linear, CostFunctions
-from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
-from psyneulink.core.components.states.outputport import SEQUENTIAL, _output_port_variable_getter
-from psyneulink.core.components.states.state import Port_Base
+from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
+from psyneulink.core.components.ports.outputport import SEQUENTIAL, _output_port_variable_getter
+from psyneulink.core.components.ports.port import Port_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \

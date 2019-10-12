@@ -593,7 +593,7 @@ from collections import OrderedDict
 from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.components.functions.function import Function, function_type, method_type
 from psyneulink.core.components.functions.selectionfunctions import OneHot
-from psyneulink.core.components.states.state import Port_Base, _instantiate_port_list, port_type_keywords
+from psyneulink.core.components.ports.port import Port_Base, _instantiate_port_list, port_type_keywords
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ALL, ASSIGN, CALCULATE, CONTEXT, CONTROL_SIGNAL, FUNCTION, GATING_SIGNAL, INDEX, INPUT_PORT, INPUT_PORTS, \
@@ -1012,7 +1012,7 @@ class OutputPort(Port_Base):
                 function=function,
                 params=params)
 
-        # setting here to ensure even deferred init states have this attribute
+        # setting here to ensure even deferred init ports have this attribute
         self._variable_spec = variable
 
         # If owner or reference_value has not been assigned, defer init to Port._instantiate_projection()
@@ -1097,7 +1097,7 @@ class OutputPort(Port_Base):
         function_value is converted to returned value by assign function
 
         """
-        from psyneulink.core.components.states.modulatorysignals.modulatorysignal import \
+        from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import \
             _is_modulatory_spec
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 
@@ -1461,7 +1461,7 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
 
             else:
                 # parse output_port
-                from psyneulink.core.components.states.state import _parse_port_spec
+                from psyneulink.core.components.ports.port import _parse_port_spec
                 output_port = _parse_port_spec(port_type=OutputPort, owner=owner, port_spec=output_port)
 
                 _maintain_backward_compatibility(output_port, output_port[NAME], owner)

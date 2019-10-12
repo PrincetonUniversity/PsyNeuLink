@@ -652,7 +652,7 @@ def test_DDM_size_too_large():
 
 # ------------------------------------------------------------------------------------------------
 # TEST 4
-# size = [1,1], check too-many-input-states error
+# size = [1,1], check too-many-input-ports error
 
 
 def test_DDM_size_too_long():

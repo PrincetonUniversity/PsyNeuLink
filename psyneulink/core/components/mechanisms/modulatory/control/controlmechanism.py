@@ -570,11 +570,11 @@ from psyneulink.core.components.functions.combinationfunctions import LinearComb
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.core.components.shellclasses import Composition_Base, System_Base
-from psyneulink.core.components.states.state import Port, _parse_port_spec
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.core.components.states.inputport import InputPort
-from psyneulink.core.components.states.outputport import OutputPort
-from psyneulink.core.components.states.parameterport import ParameterPort
+from psyneulink.core.components.ports.port import Port, _parse_port_spec
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.components.ports.inputport import InputPort
+from psyneulink.core.components.ports.outputport import OutputPort
+from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
@@ -1214,7 +1214,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         """
         from psyneulink.core.components.system import MonitoredOutputPortTuple
         from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-        from psyneulink.core.components.states.inputport import InputPort
+        from psyneulink.core.components.ports.inputport import InputPort
 
         super(ControlMechanism, self)._validate_params(request_set=request_set,
                                                        target_set=target_set,
@@ -1348,13 +1348,13 @@ class ControlMechanism(ModulatoryMechanism_Base):
         Notes:
         * self.monitored_output_ports is a list, each item of which is a Mechanism.output_port from which a
           Projection will be instantiated to a corresponding InputPort of the ControlMechanism
-        * self.input_ports is the usual ordered dict of states,
+        * self.input_ports is the usual ordered dict of ports,
             each of which receives a Projection from a corresponding OutputPort in self.monitored_output_ports
         """
         from psyneulink.core.components.system import MonitoredOutputPortTuple
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism, ObjectiveMechanismError
-        from psyneulink.core.components.states.inputport import EXPONENT_INDEX, WEIGHT_INDEX
+        from psyneulink.core.components.ports.inputport import EXPONENT_INDEX, WEIGHT_INDEX
         from psyneulink.core.components.functions.function import FunctionError
 
         # GET OutputPorts to Monitor (to specify as or add to ObjectiveMechanism's monitored_output_ports attribute
@@ -1393,7 +1393,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             if monitored_output_ports:
                 self.objective_mechanism.add_to_monitor(monitor_specs=monitored_output_ports,
                                                         context=context)
-        # Otherwise, instantiate ObjectiveMechanism with list of states in monitored_output_ports
+        # Otherwise, instantiate ObjectiveMechanism with list of ports in monitored_output_ports
         else:
             try:
                 self.objective_mechanism = ObjectiveMechanism(monitor=monitored_output_ports,
@@ -1477,7 +1477,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
     def _register_control_signal_type(self, context=None):
         from psyneulink.core.globals.registry import register_category
-        from psyneulink.core.components.states.state import Port_Base
+        from psyneulink.core.components.ports.port import Port_Base
 
         # Create registry for ControlSignals (to manage names)
         register_category(entry=ControlSignal,
@@ -1564,7 +1564,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
     def _instantiate_control_signal_type(self, control_signal_spec, context):
         """Instantiate actual ControlSignal, or subclass if overridden"""
-        from psyneulink.core.components.states.state import _instantiate_state
+        from psyneulink.core.components.ports.port import _instantiate_state
         from psyneulink.core.components.projections.projection import ProjectionError
 
         allocation_parameter_default = self.parameters.control_allocation.default_value

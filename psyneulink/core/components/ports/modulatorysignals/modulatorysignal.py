@@ -404,8 +404,8 @@ Class Reference
 """
 
 from psyneulink.core.components.component import component_keywords
-from psyneulink.core.components.states.outputport import OutputPort
-from psyneulink.core.components.states.state import Port_Base
+from psyneulink.core.components.ports.outputport import OutputPort
+from psyneulink.core.components.ports.port import Port_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import MAYBE, MECHANISM, MODULATION, MODULATORY_SIGNAL, VARIABLE, PROJECTIONS
 from psyneulink.core.globals.defaults import defaultModulatoryAllocation

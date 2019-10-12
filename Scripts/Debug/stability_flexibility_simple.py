@@ -3,7 +3,7 @@ import numpy as np
 
 def computeAccuracy(variable):
 
-	# variable is the list of values given by the monitored output states in the Objective Mechanism
+	# variable is the list of values given by the monitored output ports in the Objective Mechanism
 
 	print("\n\nInputs to ComputeAccuracy Function: ", variable)
 
