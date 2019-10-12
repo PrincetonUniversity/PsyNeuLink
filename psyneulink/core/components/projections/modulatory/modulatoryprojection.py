@@ -16,7 +16,7 @@ Overview
 
 A ModulatoryProjection is a subclass of `Projection <Projection>` that takes the value of a
 `ModulatorySignal <ModulatorySignal>` belonging to a `ModulatoryMechanism <ModulatoryMechanism>`, and uses that to
-modulate the function of the `State <State>` to which it projects.  There are three types of ModulatoryProjections,
+modulate the function of the `Port <Port>` to which it projects.  There are three types of ModulatoryProjections,
 that modulate different types of Components and their States:
 
 * `LearningProjection`
@@ -32,8 +32,8 @@ that modulate different types of Components and their States:
 ..
 * `GatingProjection`
     takes the `value <GatingSignal.value>` of a `GatingSignal` belonging to a `GatingMechanism`, and conveys it
-    to the `InputPort` or `OutputPort` of a `ProcessingMechanism <ProcessingMechanism>` for use by the State's
-    `function <State_Base.function>` in modulating its `value <State_Base.value>`.
+    to the `InputPort` or `OutputPort` of a `ProcessingMechanism <ProcessingMechanism>` for use by the Port's
+    `function <Port_Base.function>` in modulating its `value <Port_Base.value>`.
 
 .. _Projection_Creation:
 
@@ -43,7 +43,7 @@ Creating a ModulatoryProjection
 A ModulatoryProjection is a base class, and cannot be instantiated directly.  However, the three types of
 ModulatoryProjections listed above can be created directly, by calling the constructor for the desired type.
 More commonly, however, ModulatoryProjections are either specified in the context of the States to or from
-which they project (`State_Projections` in State, and `Projection_Specification`), or are `created automatically
+which they project (`State_Projections` in Port, and `Projection_Specification`), or are `created automatically
 <Projection_Automatic_Creation>`, the details of which are described in the documentation for each type of
 ModulatoryProjection.
 
@@ -54,24 +54,24 @@ Structure
 
 A ModulatoryProjection has the same basic structure as a `Projection <Projection>`, augmented by type-specific
 attributes and methods described under each type of ModulatoryProjection.  The ModulatoryProjections received by a
-`State <State>` are listed in the State's `mod_afferents` attribute.
+`Port <Port>` are listed in the Port's `mod_afferents` attribute.
 
 .. _ModulatoryProjection_Execution:
 
 Execution
 ---------
 
-A ModulatoryProjection, like any Projection, cannot be executed directly.  It is executed when the `State <State>` to
-which it projects — its `receiver <Projection_Base.receiver>` — is updated;  that occurs when the State's owner
+A ModulatoryProjection, like any Projection, cannot be executed directly.  It is executed when the `Port <Port>` to
+which it projects — its `receiver <Projection_Base.receiver>` — is updated;  that occurs when the Port's owner
 Mechanism is executed.  When a ModulatoryProjection executes, it conveys both the `value <ModulatorySignal.value>` of
 the `ModulatorySignal <ModulatorySignal>` from which it projects, and the ModulatorySignal's `modulation
-<ModulatorySignal.modulation>` attribute, to the State that receives the Projection.  The State assigns the value to
-the parameter of the State's `function <State_Base.function>` specified by the `modulation` attribute, and then calls
-the `function <State_Base.function>` to determine the `value <State_Base.value>` of the State.
+<ModulatorySignal.modulation>` attribute, to the Port that receives the Projection.  The Port assigns the value to
+the parameter of the Port's `function <Port_Base.function>` specified by the `modulation` attribute, and then calls
+the `function <Port_Base.function>` to determine the `value <Port_Base.value>` of the Port.
 
 .. note::
-   The change made to the parameter of the State's Function in response to the execution of a ModulatoryProjection
-   are not applied until the State is updated which, in turn, does not occur until the Mechanism to which the State
+   The change made to the parameter of the Port's Function in response to the execution of a ModulatoryProjection
+   are not applied until the Port is updated which, in turn, does not occur until the Mechanism to which the Port
    belongs is next executed; see :ref:`Lazy Evaluation` for an explanation of "lazy" updating).
 
 .. _ModulatoryProjection_Class_Reference:
@@ -109,7 +109,7 @@ class ModulatoryProjection_Base(Projection_Base):
         name=None,                 \
         prefs=None)
 
-    Subclass of `Projection <Projection>` that modulates the value of a `State <State>`.
+    Subclass of `Projection <Projection>` that modulates the value of a `Port <Port>`.
 
     .. note::
        ModulatoryProjection is an abstract class and should NEVER be instantiated by a call to its constructor.
@@ -118,8 +118,8 @@ class ModulatoryProjection_Base(Projection_Base):
     Arguments
     ---------
 
-    receiver : Optional[State or Mechanism]
-        specifies the State to which the ModulatoryProjection projects.
+    receiver : Optional[Port or Mechanism]
+        specifies the Port to which the ModulatoryProjection projects.
 
     sender : Optional[OutputPort or Mechanism] : default None
         specifies the Component from which the ModulatoryProjection projects.
@@ -154,7 +154,7 @@ class ModulatoryProjection_Base(Projection_Base):
     ----------
 
     receiver : MATRIX ParameterPort of a MappingProjection
-        the State to which the ModulatoryProjection projects, the `function <State_Base.function>` of which is
+        the Port to which the ModulatoryProjection projects, the `function <Port_Base.function>` of which is
         modulated by it.
 
     sender : LEARNING_SIGNAL OutputPort of a LearningMechanism
@@ -169,19 +169,19 @@ class ModulatoryProjection_Base(Projection_Base):
         its `value <ModulatoryProjection_Base.value>`.
 
     value : 2d np.array
-        value used to modulate the `function <State_Base.function>` of the State that is its `receiver
+        value used to modulate the `function <Port_Base.function>` of the Port that is its `receiver
         <ModulatoryProjection_Base.receiver>`.
 
     weight : number
        multiplies the `value <ModulatoryProjection_Base.value>` of the ModulatoryProjection after applying `exponent
        <ModulatoryProjection_Base.exponent>`, and before combining it with any others that project to the same
-       `State` to determine that State's `variable <State_Base.variable>` is modified (see description in `Projection
+       `Port` to determine that Port's `variable <Port_Base.variable>` is modified (see description in `Projection
        <Projection_Weight_Exponent>` for details).
 
     exponent : number
         exponentiates the `value <ModulatoryProjection_Base.value>` of the ModulatoryProjection, before applying
         `weight <ModulatoryProjection_Base.weight>`, and before combining it with any others that project to the same
-        `State` to determine that State's `variable <State.variable>` is modified (see description in `Projection
+        `Port` to determine that Port's `variable <Port.variable>` is modified (see description in `Projection
         <Projection_Weight_Exponent>` for details).
 
     name : str

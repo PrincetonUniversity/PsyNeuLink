@@ -57,7 +57,7 @@ COMMENT
 ~~~~~~~~~~~~~~~~~~~
 
 A GatingMechanism is used to modulate the value of an `InputPort` or `OutputPort`. An InputPort or OutputPort can
-be specified for gating by assigning it a `GatingProjection` or `GatingSignal` anywhere that the Projections to a State
+be specified for gating by assigning it a `GatingProjection` or `GatingSignal` anywhere that the Projections to a Port
 or its `ModulatorySignals can be specified <State_Creation>`.  A `Mechanism <Mechanism>` can also be specified for
 gating, in which case the `primary InputPort <InputPort_Primary>` of the specified Mechanism is used.  States
 (and/or Mechanisms) can also be specified in the  **gate** argument of the constructor for a GatingMechanism. The
@@ -86,7 +86,7 @@ Modulation
 
 Each GatingMechanism has a `modulation <GatingSignal.modulation>` attribute, that provides a default for the way
 in which its GatingSignals modulate the value of the States they gate (see `modulation <ModulatorySignal_Modulation>` 
-for an explanation of how this attribute is specified and used to modulate the value of a State).  Each GatingSignal 
+for an explanation of how this attribute is specified and used to modulate the value of a Port).  Each GatingSignal
 uses this value, unless its value is `individually specified <GatingSignal_Modulation>`.
 
 .. _GatingMechanism_Structure:
@@ -158,13 +158,13 @@ to execute).
 When executed, a GatingMechanism  uses its input to determine the value of its `gating_allocation
 <GatingMechanism.gating_allocation>`, each item of which is used by a corresponding `GatingSignal` to determine its
 `gating_signal <GatingSignal.gating_signal>` and assign to its `GatingProjections <GatingProjection>`. In the
-subsequent `TRIAL`, each GatingProjection's value is used by the State to which it projects to modulate the `value
-<State_Base.value>` of that State (see `modulation <ModulatorySignal_Modulation>` fon an explanation of how the value
-of a State is modulated).
+subsequent `TRIAL`, each GatingProjection's value is used by the Port to which it projects to modulate the `value
+<Port_Base.value>` of that Port (see `modulation <ModulatorySignal_Modulation>` fon an explanation of how the value
+of a Port is modulated).
 
 .. note::
-   A State that receives a `GatingProjection` does not update its `value <State_Base.value>` (and therefore does not
-   reflect the influence of its `GatingSignal`) until that State's owner Mechanism executes
+   A Port that receives a `GatingProjection` does not update its `value <Port_Base.value>` (and therefore does not
+   reflect the influence of its `GatingSignal`) until that Port's owner Mechanism executes
    (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
 
 .. _GatingMechanism_Class_Reference:
@@ -261,7 +261,7 @@ class GatingMechanism(ControlMechanism):
         prefs=None)
 
     Subclass of `ModulatoryMechanism <ModulatoryMechanism>` that gates (modulates) the value(s)
-    of one or more `States <State>`.
+    of one or more `States <Port>`.
 
     COMMENT:
         Description:
@@ -502,11 +502,11 @@ class GatingMechanism(ControlMechanism):
 
     def _register_control_signal_type(self, context=None):
         from psyneulink.core.globals.registry import register_category
-        from psyneulink.core.components.states.state import State_Base
+        from psyneulink.core.components.states.state import Port_Base
 
         # Create registry for GatingSignals (to manage names)
         register_category(entry=GatingSignal,
-                          base_class=State_Base,
+                          base_class=Port_Base,
                           registry=self._stateRegistry,
                           context=context)
 

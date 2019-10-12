@@ -215,7 +215,7 @@ The current `value <InputPort.value>` of the InputPorts for the features are lis
 
 .. _OptimizationControlMechanism_State:
 
-*State*
+*Port*
 ^^^^^^^
 
 The state of the Composition (or part of one) controlled by an OptimizationControlMechanism is defined by a combination

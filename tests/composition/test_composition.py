@@ -4140,9 +4140,9 @@ class TestCompositionInterface:
             slope=1.0)
         A = TransferMechanism(name="composition-pytests-A",
                               default_variable=[[0], [0]],
-                              input_ports=[{NAME: "Input State 1",
+                              input_ports=[{NAME: "Input Port 1",
                                              },
-                                            {NAME: "Input State 2",
+                                            {NAME: "Input Port 2",
                                              }],
                               function=my_fun
                               )
@@ -4174,8 +4174,8 @@ class TestCompositionInterface:
             name="composition-pytests-A",
             default_variable=[[0], [0]],
             input_ports=[
-                {NAME: "Input State 1", },
-                {NAME: "Input State 2", }
+                {NAME: "Input Port 1", },
+                {NAME: "Input Port 2", }
             ],
             function=my_fun
         )
@@ -4205,8 +4205,8 @@ class TestCompositionInterface:
             name="composition-pytests-D",
             default_variable=[[0], [0]],
             input_ports=[
-                {NAME: "Input State 1", },
-                {NAME: "Input State 2", }
+                {NAME: "Input Port 1", },
+                {NAME: "Input Port 2", }
             ],
             function=my_fun
         )
@@ -4375,8 +4375,8 @@ class TestInputPortSpecifications:
             name="composition-pytests-A",
             default_variable=[[0], [0]],
             # input_ports=[
-            #     {NAME: "Input State 1", },
-            #     {NAME: "Input State 2", }
+            #     {NAME: "Input Port 1", },
+            #     {NAME: "Input Port 2", }
             # ],
             function=Linear(slope=1.0)
             # specifying default_variable on the function doesn't seem to matter?
@@ -4398,11 +4398,11 @@ class TestInputPortSpecifications:
 
         # create mechanism A
         I1 = InputPort(
-            name="Input State 1",
+            name="Input Port 1",
             reference_value=[0]
         )
         I2 = InputPort(
-            name="Input State 2",
+            name="Input Port 2",
             reference_value=[0]
         )
         A = TransferMechanism(
@@ -4460,7 +4460,7 @@ class TestInputPortSpecifications:
         A = TransferMechanism(
             name="composition-pytests-A",
             default_variable=[[0], [0]],
-            input_ports=["Input State 1", "Input State 2"],
+            input_ports=["Input Port 1", "Input Port 2"],
             function=Linear(slope=1.0)
         )
 
@@ -4522,11 +4522,11 @@ class TestInputSpecifications:
     def test_3_origins(self):
         comp = Composition()
         I1 = InputPort(
-                        name="Input State 1",
+                        name="Input Port 1",
                         reference_value=[0]
         )
         I2 = InputPort(
-                        name="Input State 2",
+                        name="Input Port 2",
                         reference_value=[0]
         )
         A = TransferMechanism(

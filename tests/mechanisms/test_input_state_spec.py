@@ -123,7 +123,7 @@ class TestInputPortSpec:
     # TEST 2d
     # Mismatch between dimensionality of InputPort variable owner Mechanism's variable
 
-    # FIX: This needs to be handled better in State._parse_state_spec (~Line 3018):
+    # FIX: This needs to be handled better in Port._parse_state_spec (~Line 3018):
     #      seems to be adding the two axis2 values
     def test_mismatch_dim_input_ports_with_default_variable_error(self):
 
@@ -132,7 +132,7 @@ class TestInputPortSpec:
                 default_variable=[[0], [0]],
                 input_ports=[[[32],[24]],'HELLO']
             )
-        assert 'State value' in str(error_text.value) and 'does not match reference_value' in str(error_text.value)
+        assert 'Port value' in str(error_text.value) and 'does not match reference_value' in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 3
@@ -699,7 +699,7 @@ class TestInputPortSpec:
             TransferMechanism(input_ports=[{'MY STATE A':{},
                                              'MY STATE B':{}}])
         assert ('There is more than one entry of the InputPort specification dictionary' in str(error_text.value)
-                and'that is not a keyword; there should be only one (used to name the State, with a list of '
+                and'that is not a keyword; there should be only one (used to name the Port, with a list of '
                    'Projection specifications' in str(error_text.value))
 
     # ------------------------------------------------------------------------------------------------

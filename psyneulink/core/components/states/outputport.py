@@ -49,7 +49,7 @@ its owner. If the OutputPort is created directly, its `owner <OutputPort.owner>`
 **owner** argument of its constructor, in which case it is assigned to the specified Mechanism.  Otherwise, its
 initialization is `deferred <State_Deferred_Initialization>` until
 COMMENT:
-TBI: its `owner <State_Base.owner>` attribute is assigned or
+TBI: its `owner <Port_Base.owner>` attribute is assigned or
 COMMENT
 the OutputPort is assigned to a Mechanism using the Mechanism's `add_states <Mechanism_Base.add_states>` method.
 
@@ -75,7 +75,7 @@ Specifying OutputPorts when a Mechanism is created
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 OutputPorts can be specified for a `Mechanism <Mechanism>` when it is created, in the **output_ports** argument of the
-Mechanism's constructor (see `examples <State_Constructor_Argument_Examples>` in State), or in an *OUTPUT_PORTS* entry
+Mechanism's constructor (see `examples <State_Constructor_Argument_Examples>` in Port), or in an *OUTPUT_PORTS* entry
 of a parameter dictionary assigned to the constructor's **params** argument.  The latter takes precedence over the
 former (that is, if an *OUTPUT_PORTS* entry is included in the parameter dictionary, any specified in the
 **output_ports** argument are ignored).
@@ -140,7 +140,7 @@ Forms of Specification
 ^^^^^^^^^^^^^^^^^^^^^^
 
 OutputPorts can be specified in a variety of ways, that fall into three broad categories:  specifying an OutputPort
-directly; use of a `State specification dictionary <State_Specification>`; or by specifying one or more Components to
+directly; use of a `Port specification dictionary <State_Specification>`; or by specifying one or more Components to
 which it should project. Each of these is described below:
 
     .. _OutputPort_Direct_Specification:
@@ -155,7 +155,7 @@ which it should project. Each of these is described below:
       the first item of the `owner <OutputPort.owner>` Mechanism's `value <Mechanism_Base.value>` as its `variable
       <OutputPort.variable>`, and assigns it as the `owner <OutputPort.owner>` Mechanism's `primary OutputPort
       <OutputPort_Primary>`. If the class name or *OUTPUT_PORT* keyword is used, a default name is assigned to the
-      State; if a string is specified, it is used as the `name <OutputPort.name>` of the OutputPort  (see `Naming`).
+      Port; if a string is specified, it is used as the `name <OutputPort.name>` of the OutputPort  (see `Naming`).
 
     .. _OutputPort_Specification_by_Variable:
 
@@ -169,8 +169,8 @@ which it should project. Each of these is described below:
     **OutputPort Specification Dictionary**
 
     * **OutputPort specification dictionary** -- this can be used to specify the attributes of an OutputPort,
-      using any of the entries that can be included in a `State specification dictionary <State_Specification>`
-      (see `examples <State_Specification_Dictionary_Examples>` in State), including:
+      using any of the entries that can be included in a `Port specification dictionary <State_Specification>`
+      (see `examples <State_Specification_Dictionary_Examples>` in Port), including:
 
       * *VARIABLE*:<keyword or list> - specifies the attribute(s) of its `owner <OutputPort.owner>` Mechanism to use
         as the input to the OutputPort's `function <OutputPort.function>` (see `OutputPort_Customization`); this
@@ -207,7 +207,7 @@ which it should project. Each of these is described below:
 
     COMMENT:
     `examples
-      <State_Projections_Examples>` in State)
+      <State_Projections_Examples>` in Port)
     COMMENT
 
     COMMENT:
@@ -216,8 +216,8 @@ which it should project. Each of these is described below:
     Projections from an OutputPort can be specified either as attributes, in the constructor for an OutputPort (in
     its **projections** argument or in the *PROJECTIONS* entry of an `OutputPort specification dictionary
     <OutputPort_Specification_Dictionary>`), or used to specify the OutputPort itself (using one of the
-    `OutputPort_Forms_of_Specification` described above. See `State Projections <State_Projections>` for additional
-    details concerning the specification of Projections when creating a State.
+    `OutputPort_Forms_of_Specification` described above. See `Port Projections <State_Projections>` for additional
+    details concerning the specification of Projections when creating a Port.
 
     .. _OutputPort_Projections:
 
@@ -229,8 +229,8 @@ which it should project. Each of these is described below:
     the key *PROJECTIONS*.  An OutputPort can be assigned either `MappingProjection(s) <MappingProjection>` or
     `GatingProjection(s) <GatingProjection>`.  MappingProjections are assigned to its `efferents <OutputPort.efferents>`
     attribute and GatingProjections to its `mod_afferents <OutputPort.mod_afferents>` attribute.  See
-    `State Projections <State_Projections>` for additional details concerning the specification of Projections when
-    creating a State.
+    `Port Projections <State_Projections>` for additional details concerning the specification of Projections when
+    creating a Port.
     ------------------------------------------------------------------------------------------------------------------
     COMMENT
 
@@ -257,34 +257,34 @@ which it should project. Each of these is described below:
     * **OutputPort specification tuples** -- these are convenience formats that can be used to compactly specify an
       OutputPort along with Projections to or from it in any of the following ways:
 
-        * **2-item tuple:** *(<State name or list of State names>, <Mechanism>)* -- 1st item must be the name of an
+        * **2-item tuple:** *(<Port name or list of Port names>, <Mechanism>)* -- 1st item must be the name of an
           `InputPort` or `ModulatorySignal`, or a list of such names, and the 2nd item must be the Mechanism to
           which they all belong.  Projections of the relevant types are created for each of the specified States
-          (see `State 2-item tuple <State_2_Item_Tuple>` for additional details).
+          (see `Port 2-item tuple <State_2_Item_Tuple>` for additional details).
 
-        * **2-item tuple:** *(<State, Mechanism, or list of them>, <Projection specification>)* -- this is a contracted
+        * **2-item tuple:** *(<Port, Mechanism, or list of them>, <Projection specification>)* -- this is a contracted
           form of the 3-item tuple described below
 
-        * **3-item tuple:** *(<value, State spec, or list of State specs>, variable spec, Projection specification)* --
-          this allows the specification of State(s) to which the OutputPort should project, together with a
+        * **3-item tuple:** *(<value, Port spec, or list of Port specs>, variable spec, Projection specification)* --
+          this allows the specification of Port(s) to which the OutputPort should project, together with a
           specification of its `variable <OutputPort.variable>` attribute, and (optionally) parameters of the
           Projection(s) to use (e.g., their `weight <Projection_Base.weight>` and/or `exponent
           <Projection_Base.exponent>` attributes.  Each tuple must have at least the first two items (in the
           order listed), and can include the third:
 
-            * **value, State specification, or list of State specifications** -- specifies either the `variable
-              <InputPort.variable>` of the InputPort, or one or more States that should project to it.  The State
-              specification(s) can be a (State name, Mechanism) tuple (see above), and/or include Mechanisms, in which
-              case their `primary InputPort <InputPortPrimary>` is used.  All of the State specifications must be
-              consistent with (that is, their `value <State_Base.value>` must be compatible with the `variable
+            * **value, Port specification, or list of Port specifications** -- specifies either the `variable
+              <InputPort.variable>` of the InputPort, or one or more States that should project to it.  The Port
+              specification(s) can be a (Port name, Mechanism) tuple (see above), and/or include Mechanisms, in which
+              case their `primary InputPort <InputPortPrimary>` is used.  All of the Port specifications must be
+              consistent with (that is, their `value <Port_Base.value>` must be compatible with the `variable
               <Projection_Base.variable>` of) the Projection specified in the fourth item if that is included.
 
             * **variable spec** -- specifies the attributes of the OutputPort's `owner <OutputPort.owner>` Mechanism
               used for its `variable <OutputPort.variable>` (see `OutputPort_Customization`).
 
             * **Projection specification** (optional) -- `specifies a Projection <Projection_Specification>` that
-              must be compatible with the State specification(s) in the 1st item; if there is more than one
-              State specified, and the Projection specification is used, all of the States
+              must be compatible with the Port specification(s) in the 1st item; if there is more than one
+              Port specified, and the Projection specification is used, all of the States
               must be of the same type (i.e.,either InputPorts or GatingSignals), and the `Projection
               Specification <Projection_Specification>` cannot be an instantiated Projection (since a
               Projection cannot be assigned more than one `receiver <Projection_Base.receiver>`).
@@ -330,9 +330,9 @@ below, starting with constraints that are given the highest precedence:
 
 
     * **InputPort or Mechanism** (for which its `primary InputPort <InputPort_Primary>` is used) -- if its
-      `variable <State_Base.variable>` matches the format of the OutputPort's `value <OutputPort.value>`, a
+      `variable <Port_Base.variable>` matches the format of the OutputPort's `value <OutputPort.value>`, a
       `MappingProjection` is created using an `IDENTITY_MATRIX`;  otherwise, a `FULL_CONNECTIVITY_MATRIX` is used
-      that maps the OutputPort's `value <OutputPort.value>` to the InputPort's `variable <State_Base.variable>`.
+      that maps the OutputPort's `value <OutputPort.value>` to the InputPort's `variable <Port_Base.variable>`.
 
     * **MappingProjection** -- if its `matrix <MappingProjection.matrix>` is specified, then the `sender dimensionality
       <Mapping_Matrix_Dimensionality>` of the matrix must be the same as that of the OutputPort's `value
@@ -492,7 +492,7 @@ or::
     >>> my_mech2.add_states(another_decision_entropy_output_port) # doctest: +SKIP
 
 Note that another new OutputPort had to be used for the second example, as trying to
-add the first one created for ``my_mech`` to ``my_mech2`` would have produced an error (since a State already
+add the first one created for ``my_mech`` to ``my_mech2`` would have produced an error (since a Port already
 belonging to one Mechanism can't be added to another.
 
 .. _OutputPort_Structure:
@@ -593,7 +593,7 @@ from collections import OrderedDict
 from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.components.functions.function import Function, function_type, method_type
 from psyneulink.core.components.functions.selectionfunctions import OneHot
-from psyneulink.core.components.states.state import State_Base, _instantiate_state_list, state_type_keywords
+from psyneulink.core.components.states.state import Port_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ALL, ASSIGN, CALCULATE, CONTEXT, CONTROL_SIGNAL, FUNCTION, GATING_SIGNAL, INDEX, INPUT_PORT, INPUT_PORTS, \
@@ -764,7 +764,7 @@ class OutputPortError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-class OutputPort(State_Base):
+class OutputPort(Port_Base):
     """
     OutputPort(           \
     owner,                \
@@ -780,13 +780,13 @@ class OutputPort(State_Base):
     prefs=None,           \
     context=None)
 
-    Subclass of `State <State>` that calculates and represents an output of a `Mechanism <Mechanism>`.
+    Subclass of `Port <Port>` that calculates and represents an output of a `Mechanism <Mechanism>`.
 
     COMMENT:
 
         Description
         -----------
-            The OutputPort class is a type in the State category of Component,
+            The OutputPort class is a type in the Port category of Component,
             It is used primarily as the sender for MappingProjections
             Its FUNCTION updates its value:
                 note:  currently, this is the identity function, that simply maps variable to value
@@ -867,7 +867,7 @@ class OutputPort(State_Base):
     name : str : default see `name <OutputPort.name>`
         specifies the name of the OutputPort; see OutputPort `name <OutputPort.name>` for details.
 
-    prefs : PreferenceSet or specification dict : default State.classPreferences
+    prefs : PreferenceSet or specification dict : default Port.classPreferences
         specifies the `PreferenceSet` for the OutputPort; see `prefs <OutputPort.prefs>` for details.
 
 
@@ -931,7 +931,7 @@ class OutputPort(State_Base):
         OutputPorts specified, as well as any that are added to the Mechanism once it is created.
 
         .. note::
-            Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
+            Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that States with
             the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
             Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
             creation.
@@ -948,7 +948,7 @@ class OutputPort(State_Base):
     componentType = OUTPUT_PORT
     paramsType = OUTPUT_PORT_PARAMS
 
-    # stateAttributes = State_Base.stateAttributes | {INDEX, ASSIGN}
+    # stateAttributes = Port_Base.stateAttributes | {INDEX, ASSIGN}
 
     connectsWith = [INPUT_PORT, GATING_SIGNAL, CONTROL_SIGNAL]
     connectsWithAttribute = [INPUT_PORTS]
@@ -964,7 +964,7 @@ class OutputPort(State_Base):
     #     PREFERENCE_SET_NAME: 'OutputPortCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
-    class Parameters(State_Base.Parameters):
+    class Parameters(Port_Base.Parameters):
         """
             Attributes
             ----------
@@ -979,7 +979,7 @@ class OutputPort(State_Base):
         """
         variable = Parameter(np.array([0]), read_only=True, getter=_output_port_variable_getter, pnl_internal=True, constructor_argument='default_variable')
 
-    paramClassDefaults = State_Base.paramClassDefaults.copy()
+    paramClassDefaults = Port_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
                                # DEFAULT_VARIABLE_SPEC: [(OWNER_VALUE, 0)]
                                })
@@ -1015,7 +1015,7 @@ class OutputPort(State_Base):
         # setting here to ensure even deferred init states have this attribute
         self._variable_spec = variable
 
-        # If owner or reference_value has not been assigned, defer init to State._instantiate_projection()
+        # If owner or reference_value has not been assigned, defer init to Port._instantiate_projection()
         # if owner is None or reference_value is None:
         if owner is None:
             # Temporarily name OutputPort
@@ -1063,7 +1063,7 @@ class OutputPort(State_Base):
                          )
 
     def _validate_against_reference_value(self, reference_value):
-        """Validate that State.variable is compatible with the reference_value
+        """Validate that Port.variable is compatible with the reference_value
 
         reference_value is the value of the Mechanism to which the OutputPort is assigned
         """
@@ -1081,7 +1081,7 @@ class OutputPort(State_Base):
             self._variable_spec = DEFAULT_VARIABLE_SPEC
 
     def _instantiate_projections(self, projections, context=None):
-        """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
+        """Instantiate Projections specified in PROJECTIONS entry of params arg of Port's constructor
 
         Assume specification in projections as ModulatoryProjection if it is a:
             ModulatoryProjection
@@ -1149,7 +1149,7 @@ class OutputPort(State_Base):
             (state_spec, connections)
             (state_spec, variable spec, connections)
 
-        See State._parse_state_specific_spec for additional info.
+        See Port._parse_state_specific_spec for additional info.
 
         Returns:
              - state_spec:  1st item of tuple
@@ -1286,7 +1286,7 @@ class OutputPort(State_Base):
 
         try:
             # return fct(variable=fct_variable)
-            return State_Base._get_state_function_value(owner=owner, function=fct, variable=fct_variable)
+            return Port_Base._get_state_function_value(owner=owner, function=fct, variable=fct_variable)
         except:
             try:
                 return fct(fct_variable)
@@ -1367,7 +1367,7 @@ class OutputPort(State_Base):
 
 
 def _instantiate_output_ports(owner, output_ports=None, context=None):
-    """Call State._instantiate_state_list() to instantiate ContentAddressableList of OutputPort(s)
+    """Call Port._instantiate_state_list() to instantiate ContentAddressableList of OutputPort(s)
 
     Create ContentAddressableList of OutputPort(s) specified in paramsCurrent[OUTPUT_PORTS]
 
@@ -1377,7 +1377,7 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
 
     For each OutputPort:
          check for VARIABLE and FUNCTION specifications:
-             if it is a State, get from variable and function attributes
+             if it is a Port, get from variable and function attributes
              if it is dict, look for VARIABLE and FUNCTION entries (and INDEX and ASSIGN for backward compatibility)
              if it is anything else, assume variable spec is (OWNER_VALUE, 0) and FUNCTION is Linear
          get OutputPort's value using _parse_output_port_variable() and append to reference_value
@@ -1390,7 +1390,7 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
         - each OutputPort properly references, for its variable, the specified attributes of its owner Mechanism
         - if there is only one OutputPort, it is assigned the full value of its owner.
 
-    (See State._instantiate_state_list() for additional details)
+    (See Port._instantiate_state_list() for additional details)
 
     IMPLEMENTATION NOTE:
         default(s) for self.paramsCurrent[OUTPUT_PORTS] (self.defaults.value) are assigned here

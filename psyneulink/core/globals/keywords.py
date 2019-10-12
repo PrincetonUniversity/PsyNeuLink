@@ -496,7 +496,7 @@ FUNCTION_OUTPUT_TYPE_CONVERSION = "enable_output_type_conversion"  # Used in Fun
 SYSTEM_COMPONENT_CATEGORY = "System"
 PROCESS_COMPONENT_CATEGORY = "Process"
 MECHANISM_COMPONENT_CATEGORY = "Mechanism_Base"
-STATE_COMPONENT_CATEGORY = "State_Base"
+STATE_COMPONENT_CATEGORY = "Port_Base"
 PROJECTION_COMPONENT_CATEGORY = "Projection_Base"
 FUNCTION_COMPONENT_CATEGORY = "Function_Base"
 
@@ -654,7 +654,7 @@ STABILITY_FUNCTION = 'Stability Function'
 DISTANCE_FUNCTION = 'Distance Function'
 
 # Interface Functions:
-STATE_MAP_FUNCTION = 'State Map Function'
+STATE_MAP_FUNCTION = 'Port Map Function'
 
 #endregion
 
@@ -764,8 +764,8 @@ K_VALUE = 'k_value'
 THRESHOLD = 'threshold'
 RATIO = 'ratio'
 
-STATE_VALUE = "State value"   # Used in State specification dict                                                #  to specify State value
-STATE_PARAMS = "State params" # Used in State specification dict
+STATE_VALUE = "Port value"   # Used in Port specification dict                                                #  to specify Port value
+STATE_PARAMS = "Port params" # Used in Port specification dict
 
 #endregion
 
@@ -824,12 +824,12 @@ MODULATED_PARAMETER_PREFIX = 'mod_'
 
 #region ----------------------------------------------    STATES  ------------------------------------------------------
 
-STATE = "State"
+STATE = "Port"
 STATE_TYPE = "state_type"
-# These are used as keys in State specification dictionaries
+# These are used as keys in Port specification dictionaries
 STATES = "STATES"
 MODULATES = "modulates"
-PROJECTIONS = "projections"  # Used to specify projection list to State DEPRECATED;  REPLACED BY CONNECTIONS
+PROJECTIONS = "projections"  # Used to specify projection list to Port DEPRECATED;  REPLACED BY CONNECTIONS
 CONNECTIONS = 'CONNECTIONS'
 STATE_NAME = "StateName"
 STATE_PREFS = "StatePrefs"

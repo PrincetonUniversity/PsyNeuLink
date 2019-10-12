@@ -195,7 +195,7 @@ class TestNaming:
 
     def test_gating_signal_and_gating_projection_names(self):
         T3 = pnl.TransferMechanism(name='T3')
-        T4 = pnl.TransferMechanism(name='T4', input_ports=['First State','Second State'])
+        T4 = pnl.TransferMechanism(name='T4', input_ports=['First Port','Second Port'])
 
         # GatingSignal with one GatingProjection
         G1 = pnl.GatingMechanism(gating_signals=[T3])
@@ -204,15 +204,15 @@ class TestNaming:
 
         # GatingSignal with two GatingProjections to two States of same Mechanism
         G2 = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS:[T4.input_ports[0], T4.input_ports[1]]}])
-        assert G2.gating_signals[0].name == 'T4[First State, Second State] GatingSignal'
-        assert G2.gating_signals[0].efferents[0].name == 'GatingProjection for T4[First State]'
-        assert G2.gating_signals[0].efferents[1].name == 'GatingProjection for T4[Second State]'
+        assert G2.gating_signals[0].name == 'T4[First Port, Second Port] GatingSignal'
+        assert G2.gating_signals[0].efferents[0].name == 'GatingProjection for T4[First Port]'
+        assert G2.gating_signals[0].efferents[1].name == 'GatingProjection for T4[Second Port]'
 
         # GatingSignal with two GatingProjections to two States of different Mechanisms
         G3 = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS:[T3, T4]}])
         assert G3.gating_signals[0].name == 'GatingSignal-0 divergent GatingSignal'
         assert G3.gating_signals[0].efferents[0].name == 'GatingProjection for T3[InputPort-0]'
-        assert G3.gating_signals[0].efferents[1].name == 'GatingProjection for T4[First State]'
+        assert G3.gating_signals[0].efferents[1].name == 'GatingProjection for T4[First Port]'
 
         # GatingProjections to ProcessingMechanism from GatingSignals of existing GatingMechanism
         T5 = pnl.TransferMechanism(name='T5',

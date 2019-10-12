@@ -293,7 +293,7 @@ class TestNestedLearning:
         reward_in = pnl.ProcessingMechanism(name='Reward',
                                             size=1)
 
-        perceptual_state = pnl.ProcessingMechanism(name='Current State',
+        perceptual_state = pnl.ProcessingMechanism(name='Current Port',
                                                    function=Concatenate,
                                                    input_ports=[{pnl.NAME: 'STIM',
                                                                   pnl.SIZE: stim_size,
@@ -306,7 +306,7 @@ class TestNestedLearning:
                                          size=num_actions)
 
         # Nested Composition
-        rl_agent_state = pnl.ProcessingMechanism(name='RL Agent State',
+        rl_agent_state = pnl.ProcessingMechanism(name='RL Agent Port',
                                                  size=5)
         rl_agent_action = pnl.ProcessingMechanism(name='RL Agent Action',
                                                   size=5)

@@ -151,7 +151,7 @@ which it connects
 
 **States** have:
 
-* ``dtype`` : the type of accepted input/output for the State. This \
+* ``dtype`` : the type of accepted input/output for the Port. This \
 corresponds to `numpy.dtype <https://docs.scipy.org/doc/numpy/ \
 reference/generated/numpy.dtype.html>`_
 

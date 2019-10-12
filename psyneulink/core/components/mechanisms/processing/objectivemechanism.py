@@ -308,7 +308,7 @@ This specifies that the ObjectiveMechanism should multiply the `value <OutputPor
 `primary OutputPort <OutputPort_Primary>` by the `value <OutpuState.value>` of ``my_decision_mech``'s
 *PROBABILITY_UPPER_THRESHOLD*, and divide the result by ``my_decision_mech``'s *RESPONSE_TIME* `value
 <OutputPort.value>`.  The two OutputPorts of ``my_decision_mech`` are referenced as items in the `output_ports
-<Mechanism_Base.output_ports>` list of ``my_decision_mech``.  However, a `2-item (State name, Mechanism) tuple
+<Mechanism_Base.output_ports>` list of ``my_decision_mech``.  However, a `2-item (Port name, Mechanism) tuple
 <InputPort_State_Mechanism_Tuple>` can be used to reference them more simply, as follows::
 
     >>> my_objective_mech = pnl.ObjectiveMechanism(monitor=[
@@ -731,13 +731,13 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     def add_to_monitor(self, monitor_specs, context=None):
         """Instantiate `OutputPorts <OutputPort>` to be monitored by the ObjectiveMechanism.
 
-        Used by other Components to add a `State` or list of States to be monitored by the ObjectiveMechanism.
+        Used by other Components to add a `Port` or list of States to be monitored by the ObjectiveMechanism.
         The **monitor_spec** can be any of the following:
         - MonitoredOutputPortTuple
         - `Mechanism`;
         - `OutputPort`;
         - `tuple specification <InputPort_Tuple_Specification>`;
-        - `State specification dictionary <InputPort_Specification_Dictionary>`;
+        - `Port specification dictionary <InputPort_Specification_Dictionary>`;
         - list with any of the above.
         If the item is a Mechanism, its `primary OutputPort <OutputPort_Primary>` is used.
         """
@@ -929,7 +929,7 @@ def _parse_monitor_specs(monitor_specs):
     return monitor_specs
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-#                      ??MAYBE INTEGRATE INTO State MODULE (IN _instantate_state)
+#                      ??MAYBE INTEGRATE INTO Port MODULE (IN _instantate_state)
 # KAM commented out _instantiate_monitoring_projections 9/28/18 to avoid confusion because it never gets called
 # @tc.typecheck
 # def _instantiate_monitoring_projections(

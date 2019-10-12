@@ -60,7 +60,7 @@ OutputPorts of differing lengths can be mapped to the sample and target
 InputPorts of a PredictionErrorMechanism (see the `example
 <PredictionErrorMechanism_Example>` below), so long as the latter of of the
 same length. If a projection other than a `FULL_CONNECTIVITY` matrix is
-needed, this can be specified using the *PROJECTION* entry of a `State
+needed, this can be specified using the *PROJECTION* entry of a `Port
 specification dictionary <State_Specification>` for the InputPort in the
 **input_ports** argument.
 

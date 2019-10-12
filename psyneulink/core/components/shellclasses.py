@@ -15,14 +15,14 @@ Shell Classes
 
 Used to allow classes to refer to one another without creating import loops,
 including (but not restricted to) the following dependencies:
-- `Projection <Projection>` subclasses must see (particular) `State <State>` subclasses in order to assign
+- `Projection <Projection>` subclasses must see (particular) `Port <Port>` subclasses in order to assign
   `kwProjectionSender`
-- `State <State>` subclasses must see (particular) `Projection <Projection>` subclasses in order to assign
+- `Port <Port>` subclasses must see (particular) `Projection <Projection>` subclasses in order to assign
   `PROJECTION_TYPE`
 - `Process` must see `Mechanism <Mechanism>` subclasses to assign `PsyNeuLink.Components.DefaultMechanism`
 
 TBI:
-  `Mechanism <Mechanism>`, `Projection <Projection>` (and possibly `State <State>`) classes should be extensible:
+  `Mechanism <Mechanism>`, `Projection <Projection>` (and possibly `Port <Port>`) classes should be extensible:
   developers should be able to create, register and refer to subclasses (plug-ins), without modifying core code
 
 """
@@ -30,7 +30,7 @@ TBI:
 from psyneulink.core.components.component import Component
 
 __all__ = [
-    'Function', 'Mechanism', 'Process_Base', 'Projection', 'ShellClass', 'ShellClassError', 'State', 'System_Base',
+    'Function', 'Mechanism', 'Process_Base', 'Projection', 'ShellClass', 'ShellClassError', 'Port', 'System_Base',
 ]
 
 
@@ -123,7 +123,7 @@ class Mechanism(ShellClass):
 # ********************************************* STATE ******************************************************************
 
 
-class State(ShellClass):
+class Port(ShellClass):
 
     @property
     def owner(self):

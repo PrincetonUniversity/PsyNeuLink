@@ -175,7 +175,7 @@ In addition to its `sender <MappingProjection.sender>`, `receiver <MappingProjec
     <MappingProjection.receiver>`), the dimensionality of the sender is the number of rows and of the receiver
     the number of columns.  More generally, the sender dimensionality is the number of outer dimensions (i.e.,
     starting with axis 0 of numpy array) equal to the number of dimensions of its `sender <MappingProjection.sender>`'s
-    `value <State_Base.value>`, and the receiver dimensionality is the number of inner dimensions equal to its
+    `value <Port_Base.value>`, and the receiver dimensionality is the number of inner dimensions equal to its
     `receiver <MappingProjection.receiver>`'s `variable <MappingProjection.variable>` (equal to the dimensionality of
     the matrix minus its sender dimensionality).
 
@@ -400,7 +400,7 @@ class MappingProjection(PathwayProjection_Base):
     name : str : default see MappingProjection `name <MappingProjection.name>`
         specifies the name of the MappingProjection.
 
-    prefs : PreferenceSet or specification dict : default State.classPreferences
+    prefs : PreferenceSet or specification dict : default Port.classPreferences
         specifies the `PreferenceSet` for the MappingProjection; see `prefs <MappingProjection.prefs>` for details.
 
     Attributes
@@ -542,7 +542,7 @@ class MappingProjection(PathwayProjection_Base):
         self.learning_mechanism = None
         self.has_learning_projection = None
 
-        # If sender or receiver has not been assigned, defer init to State.instantiate_projection_to_state()
+        # If sender or receiver has not been assigned, defer init to Port.instantiate_projection_to_state()
         if sender is None or receiver is None:
             self.initialization_status = ContextFlags.DEFERRED_INIT
 

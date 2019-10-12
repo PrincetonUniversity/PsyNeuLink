@@ -50,7 +50,7 @@ types of Mechanisms in PsyNeuLink:
         generate `ControlSignals <ControlSignal>` used to modify the parameters of those or other Mechanisms.
 
       * `GatingMechanism <GatingMechanism>` - these use their input(s) to determine whether and how to modify the
-        `value <State_Base.value>` of the `InputPort(s) <InputPort>` and/or `OutputPort(s) <OutputPort>` of other
+        `value <Port_Base.value>` of the `InputPort(s) <InputPort>` and/or `OutputPort(s) <OutputPort>` of other
         Mechanisms.
 
       Each type of ModulatoryMechanism is associated with a corresponding type of `ModulatorySignal <ModulatorySignal>`
@@ -148,11 +148,11 @@ and therefore is not recommended.
        (see `examples <State_Standard_OutputPorts_Example>`).  The same is true for default InputPorts and the
        **input_ports** argument.
 
-       This behavior differs from adding a State once the Mechanism is created.  States added to Mechanism using the
+       This behavior differs from adding a Port once the Mechanism is created.  States added to Mechanism using the
        Mechanism's `add_states <Mechanism_Base.add_states>` method, or by assigning the Mechanism in the **owner**
-       argument of the State's constructor, are added to the Mechanism without replacing any of its existing States,
+       argument of the Port's constructor, are added to the Mechanism without replacing any of its existing States,
        including any default States that may have been generated when the Mechanism was created (see `examples
-       <State_Create_State_Examples>` in State).
+       <State_Create_State_Examples>` in Port).
 
 
 Examples
@@ -175,7 +175,7 @@ This shows how the same Mechanism can be specified using a dictionary assigned t
      >>> my_mech = pnl.TransferMechanism(params={pnl.INPUT_PORTS: ['MY_INPUT'],
      ...                                         pnl.OUTPUT_PORTS: [pnl.RESULT, pnl.OUTPUT_MEAN, pnl.OUTPUT_VARIANCE]})
 
-See `State <State_Examples>` for additional examples of specifying the States of a Mechanism.
+See `Port <State_Examples>` for additional examples of specifying the States of a Mechanism.
 
 .. _Mechanism_Parameter_Specification:
 
@@ -430,7 +430,7 @@ the Mechanism's variable::
     > [array([0, 0]) array([0])]
 
 If both the **default_variable** (or **size**) and **input_ports** arguments are specified, then the number and format
-of their respective items must be the same (see `State <State_Examples>` for additional examples of specifying States).
+of their respective items must be the same (see `Port <State_Examples>` for additional examples of specifying States).
 
 If InputPorts are added using the Mechanism's `add_states <Mechanism_Base.add_states>` method, then its
 `variable <Mechanism_Base.variable>` is extended to accommodate the number of InputPorts added (note that this must
@@ -511,7 +511,7 @@ InputPort's `variable <InputPort.variable>` is not specified, it is assigned the
 owner's `variable <Mechanism_Base.variable>` attribute. The InputPorts are appended to the end of the list in the
 Mechanism's `input_ports <Mechanism_Base.input_ports>` attribute.  Adding in States in this manner does **not**
 replace any existing States, including any default States generated when the Mechanism was constructed (this is
-contrast to States specified in a Mechanism's constructor which **do** `replace any default State(s) of the same type
+contrast to States specified in a Mechanism's constructor which **do** `replace any default Port(s) of the same type
 <Mechanism_Default_State_Suppression_Note>`).
 
 .. _Mechanism_Add_InputPorts_Note:
@@ -701,9 +701,9 @@ the following form:
 
     * *<state name or index>:<sub-dictionary>* -- this is used to specify labels that are specific to individual States
       of the type corresponding to the dictionary;
-        - *key* - either the name of a State of that type, or its index in the list of States of that type (i.e,
+        - *key* - either the name of a Port of that type, or its index in the list of States of that type (i.e,
           `input_ports <Mechanism_Base.input_ports>` or `output_ports <Mechanism_Base.output_ports>`);
-        - *value* - a dictionary containing *label:value* entries to be used for that State, where the label is a string
+        - *value* - a dictionary containing *label:value* entries to be used for that Port, where the label is a string
           and the shape of the value matches the shape of the `InputPort value <InputPort.value>` or `OutputPort
           value <OutputPort.value>` for which it is providing a *label:value* mapping.
 
@@ -870,13 +870,13 @@ The runtime parameters for a Mechanism are specified using a dictionary that con
 is for a parameter of the Mechanism or its  `function <Mechanism_Base.function>`, or for one of the `Mechanism's States
 <Mechanism_States>`. Entries for parameters of the Mechanism or its `function <Mechanism_Base.function>` use the
 standard format for `parameter specification dictionaries <ParameterPort_Specification>`. Entries for the Mechanism's
-States can be used to specify runtime parameters of the corresponding State, its `function <State_Base.function>`, or
-any of the `Projections to that state <State_Projections>`. Each entry for the parameters of a State uses a key
-corresponding to the type of State (*INPUT_PORT_PARAMS*, *OUTPUT_PORT_PARAMS* or *PARAMETER_PORT_PARAMS*), and a
+States can be used to specify runtime parameters of the corresponding Port, its `function <Port_Base.function>`, or
+any of the `Projections to that state <State_Projections>`. Each entry for the parameters of a Port uses a key
+corresponding to the type of Port (*INPUT_PORT_PARAMS*, *OUTPUT_PORT_PARAMS* or *PARAMETER_PORT_PARAMS*), and a
 value that is a sub-dictionary containing a dictionary with the runtime  parameter specifications for all States of that
-type). Within that sub-dictionary, specification of parameters for the State or its `function <State_Base.function>` use
+type). Within that sub-dictionary, specification of parameters for the Port or its `function <Port_Base.function>` use
 the  standard format for a `parameter specification dictionary <ParameterPort_Specification>`.  Parameters for all of
-the `State's Projections <State_Projections>` can be specified in an entry with the key *PROJECTION_PARAMS*, and a
+the `Port's Projections <State_Projections>` can be specified in an entry with the key *PROJECTION_PARAMS*, and a
 sub-dictionary that contains the parameter specifications;  parameters for Projections of a particular type can be
 placed in an entry with a key specifying the type (*MAPPING_PROJECTION_PARAMS*, *LEARNING_PROJECTION_PARAMS*,
 *CONTROL_PROJECTION_PARAMS*, or *GATING_PROJECTION_PARAMS*; and parameters for a specific Projection can be placed in
@@ -890,7 +890,7 @@ COMMENT:
 ?? DO PROJECTION DICTIONARIES PERTAIN TO INCOMING OR OUTGOING PROJECTIONS OR BOTH??
 ?? CAN THE KEY FOR A STATE DICTIONARY REFERENCE A SPECIFIC STATE BY NAME, OR ONLY STATE-TYPE??
 
-State keyword: dict for State's params
+Port keyword: dict for Port's params
     Function or Projection keyword: dict for Funtion or Projection's params
         parameter keyword: vaue of param
 
@@ -898,29 +898,29 @@ State keyword: dict for State's params
         + INPUT_PORT_PARAMS:<dict>
         + PARAMETER_PORT_PARAMS:<dict>
    [TBI + OUTPUT_PORT_PARAMS:<dict>]
-        - each dict will be passed to the corresponding State
-        - params can be any permissible executeParamSpecs for the corresponding State
+        - each dict will be passed to the corresponding Port
+        - params can be any permissible executeParamSpecs for the corresponding Port
         - dicts can contain the following embedded dicts:
             + FUNCTION_PARAMS:<dict>:
-                 will be passed the State's execute method,
+                 will be passed the Port's execute method,
                      overriding its paramInstanceDefaults for that call
             + PROJECTION_PARAMS:<dict>:
-                 entry will be passed to all of the State's Projections, and used by
+                 entry will be passed to all of the Port's Projections, and used by
                  by their execute methods, overriding their paramInstanceDefaults for that call
             + MAPPING_PROJECTION_PARAMS:<dict>:
-                 entry will be passed to all of the State's MappingProjections,
+                 entry will be passed to all of the Port's MappingProjections,
                  along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
             + LEARNING_PROJECTION_PARAMS:<dict>:
-                 entry will be passed to all of the State's LearningProjections,
+                 entry will be passed to all of the Port's LearningProjections,
                  along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
             + CONTROL_PROJECTION_PARAMS:<dict>:
-                 entry will be passed to all of the State's ControlProjections,
+                 entry will be passed to all of the Port's ControlProjections,
                  along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
             + GATING_PROJECTION_PARAMS:<dict>:
-                 entry will be passed to all of the State's GatingProjections,
+                 entry will be passed to all of the Port's GatingProjections,
                  along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
             + <ProjectionName>:<dict>:
-                 entry will be passed to the State's Projection with the key's name,
+                 entry will be passed to the Port's Projection with the key's name,
                  along with any in the PROJECTION_PARAMS and MappingProjection or ControlProjection dicts
 COMMENT
 
@@ -947,7 +947,7 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, function_type, method_type
 from psyneulink.core.components.functions.function import FunctionOutputType
 from psyneulink.core.components.functions.transferfunctions import Linear
-from psyneulink.core.components.shellclasses import Function, Mechanism, Projection, State
+from psyneulink.core.components.shellclasses import Function, Mechanism, Projection, Port
 from psyneulink.core.components.states.inputport import DEFER_VARIABLE_SPEC_TO_MECH_MSG, InputPort
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.states.outputport import OutputPort
@@ -1033,7 +1033,7 @@ class Mechanism_Base(Mechanism):
                 the value of each is passed to corresponding MappingProjections for which the Mechanism is a sender
                 * Notes:
                     by default, a Mechanism has only one OutputPort, assigned to <Mechanism>.outputPort;  however:
-                    if params[OUTPUT_PORTS] is a list (of names) or specification dict (of MechanismOuput State
+                    if params[OUTPUT_PORTS] is a list (of names) or specification dict (of MechanismOuput Port
                     specs), <Mechanism>.output_ports (note plural) is created and contains a list of OutputPorts,
                     the first of which points to <Mechanism>.outputPort (note singular)
                 [TBI * each OutputPort maintains a list of Projections for which it serves as the sender]
@@ -1231,7 +1231,7 @@ class Mechanism_Base(Mechanism):
     COMMENT
 
     states : ContentAddressableList
-        a list of all of the Mechanism's `States <State>`, composed from its `input_ports
+        a list of all of the Mechanism's `States <Port>`, composed from its `input_ports
         <Mechanism_Base.input_ports>`, `parameter_ports <Mechanism_Base.parameter_ports>`, and
         `output_ports <Mechanism_Base.output_ports>` attributes.
 
@@ -1301,10 +1301,10 @@ class Mechanism_Base(Mechanism):
         <LINK>` for details).
 
         .. _stateRegistry : Registry
-               registry containing dicts for each State type (InputPort, OutputPort and ParameterPort) with instance
-               dicts for the instances of each type and an instance count for each State type in the Mechanism.
-               Note: registering instances of State types with the Mechanism (rather than in the StateRegistry)
-                     allows the same name to be used for instances of a State type belonging to different Mechanisms
+               registry containing dicts for each Port type (InputPort, OutputPort and ParameterPort) with instance
+               dicts for the instances of each type and an instance count for each Port type in the Mechanism.
+               Note: registering instances of Port types with the Mechanism (rather than in the StateRegistry)
+                     allows the same name to be used for instances of a Port type belonging to different Mechanisms
                      without adding index suffixes for that name across Mechanisms
                      while still indexing multiple uses of the same base name within a Mechanism.
     """
@@ -1501,7 +1501,7 @@ class Mechanism_Base(Mechanism):
 
         """
 
-        # IMPLEMENT **kwargs (PER State)
+        # IMPLEMENT **kwargs (PER Port)
 
         self._is_finished = False
         self.processes = ReadOnlyOrderedDict() # Note: use _add_process method to add item to processes property
@@ -1515,27 +1515,27 @@ class Mechanism_Base(Mechanism):
                           context=context)
 
         # Create Mechanism's _stateRegistry and state type entries
-        from psyneulink.core.components.states.state import State_Base
+        from psyneulink.core.components.states.state import Port_Base
         self._stateRegistry = {}
 
         # InputPort
         from psyneulink.core.components.states.inputport import InputPort
         register_category(entry=InputPort,
-                          base_class=State_Base,
+                          base_class=Port_Base,
                           registry=self._stateRegistry,
                           context=context)
 
         # ParameterPort
         from psyneulink.core.components.states.parameterport import ParameterPort
         register_category(entry=ParameterPort,
-                          base_class=State_Base,
+                          base_class=Port_Base,
                           registry=self._stateRegistry,
                           context=context)
 
         # OutputPort
         from psyneulink.core.components.states.outputport import OutputPort
         register_category(entry=OutputPort,
-                          base_class=State_Base,
+                          base_class=Port_Base,
                           registry=self._stateRegistry,
                           context=context)
 
@@ -1710,7 +1710,7 @@ class Mechanism_Base(Mechanism):
                         input_port_variable_was_specified = False
                 except KeyError:
                     pass
-            elif isinstance(parsed_input_port_spec, (Projection, Mechanism, State)):
+            elif isinstance(parsed_input_port_spec, (Projection, Mechanism, Port)):
                 if parsed_input_port_spec.initialization_status == ContextFlags.DEFERRED_INIT:
                     args = parsed_input_port_spec._init_args
                     if REFERENCE_VALUE in args and args[REFERENCE_VALUE] is not None:
@@ -2105,7 +2105,7 @@ class Mechanism_Base(Mechanism):
         super()._instantiate_attributes_after_function(context=context)
 
     def _instantiate_input_ports(self, input_ports=None, reference_value=None, context=None):
-        """Call State._instantiate_input_ports to instantiate orderedDict of InputPort(s)
+        """Call Port._instantiate_input_ports to instantiate orderedDict of InputPort(s)
 
         This is a stub, implemented to allow Mechanism subclasses to override _instantiate_input_ports
             or process InputPorts before and/or after call to _instantiate_input_ports
@@ -2117,7 +2117,7 @@ class Mechanism_Base(Mechanism):
                                          context=context)
 
     def _instantiate_parameter_ports(self, function=None, context=None):
-        """Call State._instantiate_parameter_ports to instantiate a ParameterPort for each parameter in user_params
+        """Call Port._instantiate_parameter_ports to instantiate a ParameterPort for each parameter in user_params
 
         This is a stub, implemented to allow Mechanism subclasses to override _instantiate_parameter_ports
             or process InputPorts before and/or after call to _instantiate_parameter_ports
@@ -2127,7 +2127,7 @@ class Mechanism_Base(Mechanism):
         _instantiate_parameter_ports(owner=self, function=function, context=context)
 
     def _instantiate_output_ports(self, context=None):
-        """Call State._instantiate_output_ports to instantiate orderedDict of OutputPort(s)
+        """Call Port._instantiate_output_ports to instantiate orderedDict of OutputPort(s)
 
         This is a stub, implemented to allow Mechanism subclasses to override _instantiate_output_ports
             or process InputPorts before and/or after call to _instantiate_output_ports
@@ -3049,15 +3049,15 @@ class Mechanism_Base(Mechanism):
         # Header of Mechanism cell:
         mech_header = f'<b><i>{Mechanism.__name__}</i></b>:<br/>'
 
-        # Outer State table:
+        # Outer Port table:
         outer_table_spec = '<table border="0" cellborder="0" bgcolor="#FAFAD0">' # NEAR LIGHTGOLDENRODYELLOW
 
-        # Header cell of outer State table:
+        # Header cell of outer Port table:
         input_ports_header     = f'<tr><td colspan="1" valign="middle"><b><i>{InputPort.__name__}s</i></b></td></tr>'
         parameter_ports_header = f'<tr><td rowspan="1" valign="middle"><b><i>{ParameterPort.__name__}s</i></b></td>'
         output_ports_header    = f'<tr><td colspan="1" valign="middle"><b><i>{OutputPort.__name__}s</i></b></td></tr>'
 
-        # Inner State table (i.e., that contains individual states in each cell):
+        # Inner Port table (i.e., that contains individual states in each cell):
         inner_table_spec = '<table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD">'
 
         def mech_cell():
@@ -3239,7 +3239,7 @@ class Mechanism_Base(Mechanism):
             return m
 
     @tc.typecheck
-    def _get_port_name(self, state:State):
+    def _get_port_name(self, state:Port):
         if isinstance(state, InputPort):
             state_type = InputPort.__name__
         elif isinstance(state, ParameterPort):
@@ -3297,7 +3297,7 @@ class Mechanism_Base(Mechanism):
         <OutputPort>` can be added; `ParameterPorts <ParameterPort>` cannot be added to a Mechanism after it has
         been constructed.
 
-        If the `owner <State_Base.owner>` of a State specified in the **states** argument is not the same as the
+        If the `owner <Port_Base.owner>` of a State specified in the **states** argument is not the same as the
         Mechanism to which it is being added an error is generated.    If the name of a specified State is the same
         as an existing one with the same name, an index is appended to its name, and incremented for each State
         subsequently added with the same name (see :ref:`naming conventions <LINK>`).  If a specified State already
@@ -3311,7 +3311,7 @@ class Mechanism_Base(Mechanism):
         Arguments
         ---------
 
-        states : State or List[State]
+        states : Port or List[State]
             one more `InputPorts <InputPort>` or `OutputPorts <OutputPort>` to be added to the Mechanism.
             State specification(s) can be an InputPort or OutputPort object, class reference, class keyword, or
             `State specification dictionary <State_Specification>` (the latter must have a *STATE_TYPE* entry
@@ -3392,7 +3392,7 @@ class Mechanism_Base(Mechanism):
         Arguments
         ---------
 
-        states : State or List[State]
+        states : Port or List[State]
             one more states to be removed from the Mechanism.
             State specification(s) can be an State object or the name of one.
 
@@ -3487,9 +3487,9 @@ class Mechanism_Base(Mechanism):
     # @tc.typecheck
     # def _get_state_value_labels(self, state_type:tc.any(InputPort, OutputPort)):
     def _get_state_value_labels(self, state_type, context=None):
-        """Return list of labels for the value of each State of specified state_type.
-        If the labels_dict has subdicts (one for each State), get label for the value of each State from its subdict.
-        If the labels dict does not have subdicts, then use the same dict for the only (or all) State(s)
+        """Return list of labels for the value of each Port of specified state_type.
+        If the labels_dict has subdicts (one for each Port), get label for the value of each Port from its subdict.
+        If the labels dict does not have subdicts, then use the same dict for the only (or all) Port(s)
         """
 
         if state_type is InputPort:
@@ -3623,7 +3623,7 @@ class Mechanism_Base(Mechanism):
     def states(self):
         """Return list of all of the Mechanism's States"""
         return ContentAddressableList(
-                component_type=State,
+                component_type=Port,
                 list=list(self.input_ports) +
                      list(self.parameter_ports) +
                      list(self.output_ports))

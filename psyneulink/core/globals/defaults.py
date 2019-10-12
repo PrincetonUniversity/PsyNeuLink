@@ -23,7 +23,7 @@ __all__ = [
 
 MPI_IMPLEMENTATION = False
 
-# State values:
+# Port values:
 inputValueSystemDefault = [0]
 outputValueSystemDefault = [0]
 

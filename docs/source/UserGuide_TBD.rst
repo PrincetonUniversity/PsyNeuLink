@@ -43,7 +43,7 @@ Components
 
 
 , as well as two other fundamental types of Components
-(`States <State>` and `Functions <Function>`), that are described in the section below on
+(`States <Port>` and `Functions <Function>`), that are described in the section below on
 `Components <User_Guide_Components>`.  The other primary type of object, `Composition`, has two primary types:
 `Processes <Process>` and `Systems <System>` that allow Compositions of different degrees of size and complexity to
 be created.  These are described in the section below on `Compositions <User_Guide_Components>`.  In each case,

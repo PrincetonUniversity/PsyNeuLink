@@ -655,7 +655,7 @@ class Process(Process_Base):
         same as the `value <OutputPort.value>` of the `primary OutputPort <OutputPort_Primary>` of
         `terminal_mechanism <Process.terminal_mechanism>`.
 
-    output_port : State
+    output_port : Port
         the `primary OutputPort <OutputPort_Primary>` of `terminal_mechanism <Process.terminal_mechanism>`.
 
     output : list
@@ -1447,7 +1447,7 @@ class Process(Process_Base):
 
                 # FIX: PARSE/VALIDATE ALL FORMS OF PROJECTION SPEC (ITEM PART OF TUPLE) HERE:
                 # FIX:                                                          CLASS, OBJECT, DICT, STR, TUPLE??
-                # IMPLEMENT: MOVE State._instantiate_projections_to_state(), _check_projection_receiver()
+                # IMPLEMENT: MOVE Port._instantiate_projections_to_state(), _check_projection_receiver()
                 #            and _parse_projection_keyword() all to Projection_Base.__init__() and call that
                 #           VALIDATION OF PROJECTION OBJECT:
                 #                MAKE SURE IT IS A MappingProjection

@@ -495,12 +495,12 @@ class Parameter(types.SimpleNamespace):
             :Developer Notes: Currently this does not determine what gets a ParameterPort, but in the future it should
 
         modulation_combination_function
-            specifies the function used in State._get_combined_mod_val() to combine values for the parameter if
+            specifies the function used in Port._get_combined_mod_val() to combine values for the parameter if
             it receives more than one ModulatoryProjections;  must be either the keyword *MULTIPLICATIVE*,
             *PRODUCT*, *ADDITIVE*, *SUM*, or a function that accepts an n dimensional array and retursn an n-1
             dimensional array.  If it is None, the an attempt is made to determine it from the an alias for the
             Parameter's name (i.e., if that is MULTIPLICATIVE_PARAM or ADDITIVE_PARAM);  otherwise the default
-            behavior is determined by State._get_combined_mod_val().
+            behavior is determined by Port._get_combined_mod_val().
 
             :default: None
 

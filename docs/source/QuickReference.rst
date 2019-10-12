@@ -84,8 +84,8 @@ responsible.
 `Mechanisms <Mechanism>` are the basic units of processing in a PsyNeuLink model. They have one or more Functions that
 perform their characteristic operations.
 
-`States <State>` represent the input(s) and output(s) of a Mechanism, and the parameters of its Function(s).  States
-have Functions themselves, that determine the value of the State, and that can be used to modulate that value for
+`States <Port>` represent the input(s) and output(s) of a Mechanism, and the parameters of its Function(s).  States
+have Functions themselves, that determine the value of the Port, and that can be used to modulate that value for
 learning, control and/or gating.
 
 `Projections <Projection>` are used to connect Mechanisms, transmit information between them, and to modulate the value
@@ -176,8 +176,8 @@ The four types of Components in PsyNeuLink, Mechanisms, Projections, States and 
             Takes a LearningSignal from a `LearningMechanism` and uses it to modify the matrix of a
             MappingProjection.
 
-* `States <State>`
-   A State is a Component that belongs to a `Mechanism` and is used to represent it input(s), the parameter(s)
+* `States <Port>`
+   A Port is a Component that belongs to a `Mechanism` and is used to represent it input(s), the parameter(s)
    of its function, or its output(s).   There are three types of States, one for each type of representation
    (see `figure <Mechanism_Figure>`), each of which can receive and/or send `PathwayProjections <PathwayProjection>`
    and/or `ModulatoryProjections <ModulatoryProjection>` (see `figure <ModulatorySignal_Anatomy_Figure>`):
@@ -187,23 +187,23 @@ The four types of Components in PsyNeuLink, Mechanisms, Projections, States and 
        Receives one or more afferent PathwayProjections to a Mechanism, combines them using its `function
        <State_Base.function>`, and assigns the result (its `value <State_Base.value>`)as an item of the Mechanism's
        `variable <Mechanism_Base.variable>`.  It can also receive one or more `GatingProjections <GatingProjection>`,
-       that modify the parameter(s) of the State's function, and thereby the State's `value <State_Base.value>`.
+       that modify the parameter(s) of the Port's function, and thereby the Port's `value <State_Base.value>`.
 
    + `ParameterPort`
        Represents a parameter of the Mechanism's `function <Mechanism_Base.function>`.  Takes the assigned value of the
-       parameter as the `variable <State_Base.variable>` for the State's `function <State_Base.function>`, and assigns
+       parameter as the `variable <State_Base.variable>` for the Port's `function <State_Base.function>`, and assigns
        the result as the value of the parameter used by the Mechanism's `function <Mechanism_Base.function>` when the
        Mechanism executes.  It can also receive one or more `ControlProjections <ControlProjection>` that modify
-       parameter(s) of the State's `function <State_Base.function>, and thereby the value of the parameters used by the
+       parameter(s) of the Port's `function <State_Base.function>, and thereby the value of the parameters used by the
        Mechanism's `function <Mechanism_Base.function>`.
 
    + `OutputPort`
        Represents an output of the Mechanism.
        Takes an item of the Mechanism's `value <Mechanism_Base.value>` as the `variable <State_Base.variable>` for the
-       State's `function <State_Base.function>`, assigns the result as the State's `value <OutputPort.value>`, and
+       Port's `function <State_Base.function>`, assigns the result as the Port's `value <OutputPort.value>`, and
        provides that to one or more efferent PathwayProjections.  It can also receive one or more
-       `GatingProjections <GatingProjection>`, that modify parameter(s) of the State's function, and thereby the
-       State's `value <State_Base.value>`.
+       `GatingProjections <GatingProjection>`, that modify parameter(s) of the Port's function, and thereby the
+       Port's `value <State_Base.value>`.
 
 * `Functions <Function>`
    A Function is the most fundamental unit of computation in PsyNeuLink.  Every `Component` has a Function

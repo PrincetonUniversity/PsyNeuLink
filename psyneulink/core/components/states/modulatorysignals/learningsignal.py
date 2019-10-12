@@ -87,8 +87,8 @@ attributes of the LearningSignal, as described below.
 When a LearningSignal is created, it can be assigned one or more `LearningProjections <LearningProjection>`,
 using either the **projections** argument of its constructor, or in an entry of a dictionary assigned to the
 **params** argument with the key *PROJECTIONS*.  These will be assigned to its `efferents
-<LearningSignal.efferents>` attribute.  See `State Projections <State_Projections>` for additional details
-concerning the specification of Projections when creating a State.
+<LearningSignal.efferents>` attribute.  See `Port Projections <State_Projections>` for additional details
+concerning the specification of Projections when creating a Port.
 
 .. note::
    Although a LearningSignal can be assigned more than one `LearningProjection`, all of those Projections will convey
@@ -174,7 +174,7 @@ import typecheck as tc
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.states.outputport import PRIMARY
-from psyneulink.core.components.states.state import State_Base
+from psyneulink.core.components.states.state import Port_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     CONTEXT, LEARNED_PARAM, LEARNING_PROJECTION, LEARNING_SIGNAL, OUTPUT_PORT_PARAMS, \
@@ -217,7 +217,7 @@ class LearningSignal(ModulatorySignal):
 
         Description
         -----------
-            The LearningSignal class is a subtype of the OutputPort type in the State category of Component,
+            The LearningSignal class is a subtype of the OutputPort type in the Port category of Component,
             It is used as the sender for LearningProjections
             Its FUNCTION updates its value:
                 note:  currently, this is the identity function, that simply maps variable to self.value
@@ -271,7 +271,7 @@ class LearningSignal(ModulatorySignal):
         specifies the name of the LearningSignal; see LearningSignal `name <ModulatorySignal.name>` for additional
         details.
 
-    prefs : PreferenceSet or specification dict : default State.classPreferences
+    prefs : PreferenceSet or specification dict : default Port.classPreferences
         specifies the `PreferenceSet` for the LearningSignal; see `prefs <LearningSignal.prefs>` for details.
 
 
@@ -317,7 +317,7 @@ class LearningSignal(ModulatorySignal):
         name (see `name <ModulatorySignal.name>`).
 
         .. note::
-            Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
+            Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that States with
             the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
             Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
             creation.
@@ -348,7 +348,7 @@ class LearningSignal(ModulatorySignal):
     #     PREFERENCE_SET_NAME: 'OutputPortCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
-    paramClassDefaults = State_Base.paramClassDefaults.copy()
+    paramClassDefaults = Port_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         PROJECTION_TYPE: LEARNING_PROJECTION,
         LEARNED_PARAM:None

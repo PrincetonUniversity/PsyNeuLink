@@ -64,7 +64,7 @@ the InputPort is created on its own, its `owner <InputPort.owner>` can specified
 constructor, in which case it is assigned to that Mechanism. If its **owner** argument is not specified, its
 initialization is `deferred <State_Deferred_Initialization>` until
 COMMENT:
-TBI: its `owner <State_Base.owner>` attribute is assigned or
+TBI: its `owner <Port_Base.owner>` attribute is assigned or
 COMMENT
 the InputPort is assigned to a Mechanism using the Mechanism's `add_states <Mechanism_Base.add_states>` method.
 
@@ -89,7 +89,7 @@ Specifying InputPorts when a Mechanism is created
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 InputPorts can be specified for a `Mechanism <Mechanism>` when it is created, in the **input_ports** argument of the
-Mechanism's constructor (see `examples <State_Constructor_Argument_Examples>` in State), or in an *INPUT_PORTS* entry
+Mechanism's constructor (see `examples <State_Constructor_Argument_Examples>` in Port), or in an *INPUT_PORTS* entry
 of a parameter dictionary assigned to the constructor's **params** argument.  The latter takes precedence over the
 former (that is, if an *INPUT_PORTS* entry is included in the parameter dictionary, any specified in the
 **input_ports** argument are ignored).
@@ -131,7 +131,7 @@ Adding InputPorts to a Mechanism after it is created
 
 InputPorts can also be **added** to a Mechanism, either by creating the InputPort on its own, and specifying the
 Mechanism in the InputPort's **owner** argument, or by using the Mechanism's `add_states <Mechanism_Base.add_states>`
-method (see `examples <State_Create_State_Examples>` in State).
+method (see `examples <State_Create_State_Examples>` in Port).
 
     .. _InputPort_Add_State_Note:
 
@@ -153,7 +153,7 @@ Forms of Specification
 ^^^^^^^^^^^^^^^^^^^^^^
 
 InputPorts can be specified in a variety of ways, that fall into three broad categories:  specifying an InputPort
-directly; use of a `State specification dictionary <State_Specification>`; or by specifying one or more Components that
+directly; use of a `Port specification dictionary <State_Specification>`; or by specifying one or more Components that
 should project to the InputPort. Each of these is described below:
 
     .. _InputPort_Direct_Specification:
@@ -187,8 +187,8 @@ should project to the InputPort. Each of these is described below:
     **InputPort Specification Dictionary**
 
     * **InputPort specification dictionary** -- this can be used to specify the attributes of an InputPort, using
-      any of the entries that can be included in a `State specification dictionary <State_Specification>` (see
-      `examples <State_Specification_Dictionary_Examples>` in State).  If the dictionary is used to specify an
+      any of the entries that can be included in a `Port specification dictionary <State_Specification>` (see
+      `examples <State_Specification_Dictionary_Examples>` in Port).  If the dictionary is used to specify an
       InputPort in the constructor for a Mechanism, and it includes a *VARIABLE* and/or *VALUE* or entry, the value
       must be compatible with the item of the owner Mechanism's `variable <Mechanism_Base.variable>` to which the
       InputPort is assigned (see `Mechanism InputPort specification <Mechanism_InputPort_Specification>`).
@@ -198,7 +198,7 @@ should project to the InputPort. Each of these is described below:
       `ModulatoryProjections <ModulatoryProjection>`; however, this may be constrained by or have consequences for the
       InputPort's `variable <InputPort.variable>` (see `InputPort_Compatability_and_Constraints`).
 
-      In addition to the standard entries of a `State specification dictionary <State_Specification>`, the dictionary
+      In addition to the standard entries of a `Port specification dictionary <State_Specification>`, the dictionary
       can also include either or both of the following entries specific to InputPorts:
 
       * *WEIGHT*:<number>
@@ -217,7 +217,7 @@ should project to the InputPort. Each of these is described below:
 
     COMMENT:
     `examples
-      <State_Projections_Examples>` in State)
+      <State_Projections_Examples>` in Port)
     COMMENT
 
     COMMENT:
@@ -225,9 +225,9 @@ should project to the InputPort. Each of these is described below:
     Projections to an InputPort can be specified either as attributes, in the constructor for an
     InputPort (in its **projections** argument or in the *PROJECTIONS* entry of an `InputPort specification dictionary
     <InputPort_Specification_Dictionary>`), or used to specify the InputPort itself (using one of the
-    `InputPort_Forms_of_Specification` described above. See `State Projections <State_Projections>` for additional
+    `InputPort_Forms_of_Specification` described above. See `Port Projections <State_Projections>` for additional
     details concerning the specification of
-    Projections when creating a State.
+    Projections when creating a Port.
     COMMENT
 
     An InputPort can also be specified by specifying one or more States, Mechanisms or Projections that should project
@@ -240,7 +240,7 @@ should project to the InputPort. Each of these is described below:
     Components and the InputPort's `variable <InputPort.variable>`):
 
     * **OutputPort, GatingSignal, Mechanism, or list with any of these** -- creates an InputPort with Projection(s)
-      to it from the specified State(s) or Mechanism(s).  For each Mechanism specified, its `primary OutputPort
+      to it from the specified Port(s) or Mechanism(s).  For each Mechanism specified, its `primary OutputPort
       <OutputPort_Primary>` (or GatingSignal) is used.
     ..
     * **Projection** -- any form of `Projection specification <Projection_Specification>` can be
@@ -253,16 +253,16 @@ should project to the InputPort. Each of these is described below:
 
         .. _InputPort_State_Mechanism_Tuple:
 
-        * **2-item tuple:** *(<State name or list of State names>, <Mechanism>)* -- 1st item must be the name of an
+        * **2-item tuple:** *(<Port name or list of Port names>, <Mechanism>)* -- 1st item must be the name of an
           `OutputPort` or `ModulatorySignal`, or a list of such names, and the 2nd item must be the Mechanism to
           which they all belong.  Projections of the relevant types are created for each of the specified States
-          (see `State 2-item tuple <State_2_Item_Tuple>` for additional details).
+          (see `Port 2-item tuple <State_2_Item_Tuple>` for additional details).
 
-        * **2-item tuple:** *(<value, State specification, or list of State specs>, <Projection specification>)* --
+        * **2-item tuple:** *(<value, Port specification, or list of Port specs>, <Projection specification>)* --
           this is a contracted form of the 4-item tuple described below;
 
-        * **4-item tuple:** *(<value, State spec, or list of State specs>, weight, exponent, Projection specification)*
-          -- this allows the specification of State(s) that should project to the InputPort, together with a
+        * **4-item tuple:** *(<value, Port spec, or list of Port specs>, weight, exponent, Projection specification)*
+          -- this allows the specification of Port(s) that should project to the InputPort, together with a
           specification of the InputPort's `weight <InputPort.weight>` and/or `exponent <InputPort.exponent>`
           attributes of the InputPort, and (optionally) the Projection(s) to it.  This can be used to compactly
           specify a set of States that project the InputPort, while using the 4th item to determine its variable
@@ -270,11 +270,11 @@ should project to the InputPort. Each of these is described below:
           tuple must have at least the following first three items (in the order listed), and can include the fourth:
 
 
-            * **value, State specification, or list of State specifications** -- specifies either the `variable
-              <InputPort.variable>` of the InputPort, or one or more States that should project to it.  The State
-              specification(s) can be a (State name, Mechanism) tuple (see above), and/or include Mechanisms (in which
-              case their `primary OutputPort <OutputPortPrimary>` is used.  All of the State specifications must be
-              consistent with (that is, their `value <State_Base.value>` must be compatible with the `variable
+            * **value, Port specification, or list of Port specifications** -- specifies either the `variable
+              <InputPort.variable>` of the InputPort, or one or more States that should project to it.  The Port
+              specification(s) can be a (Port name, Mechanism) tuple (see above), and/or include Mechanisms (in which
+              case their `primary OutputPort <OutputPortPrimary>` is used.  All of the Port specifications must be
+              consistent with (that is, their `value <Port_Base.value>` must be compatible with the `variable
               <Projection_Base.variable>` of) the Projection specified in the fourth item if that is included;
 
             * **weight** -- must be an integer or a float; multiplies the `value <InputPort.value>` of the InputPort
@@ -287,7 +287,7 @@ should project to the InputPort. Each of these is described below:
               <ObjectiveMechanism_Weights_and_Exponents_Example>`);
 
             * **Projection specification** (optional) -- `specifies a Projection <Projection_Specification>` that
-              must be compatible with the State specification(s) in the 1st item; if there is more than one State
+              must be compatible with the Port specification(s) in the 1st item; if there is more than one Port
               specified, and the Projection specification is used, all of the States
               must be of the same type (i.e.,either OutputPorts or GatingSignals), and the `Projection
               Specification <Projection_Specification>` cannot be an instantiated Projection (since a
@@ -486,7 +486,7 @@ from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, LinearCombination, Reduce
 from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import Buffer
 from psyneulink.core.components.states.outputport import OutputPort
-from psyneulink.core.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
+from psyneulink.core.components.states.state import StateError, Port_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     COMBINE, CONTROL_SIGNAL, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_PORT, INPUT_PORTS, INPUT_PORT_PARAMS, \
@@ -526,7 +526,7 @@ class InputPortError(Exception):
         return repr(self.error_value)
 
 
-class InputPort(State_Base):
+class InputPort(Port_Base):
     """
     InputPort(                                     \
         owner=None,                                \
@@ -542,7 +542,7 @@ class InputPort(State_Base):
         name=None,                                 \
         prefs=None)
 
-    Subclass of `State <State>` that calculates and represents the input to a `Mechanism <Mechanism>` from one or more
+    Subclass of `Port <Port>` that calculates and represents the input to a `Mechanism <Mechanism>` from one or more
     `PathwayProjections <PathwayProjection>`.
 
     Arguments
@@ -606,7 +606,7 @@ class InputPort(State_Base):
     name : str : default see `name <InputPort.name>`
         specifies the name of the InputPort; see InputPort `name <InputPort.name>` for details.
 
-    prefs : PreferenceSet or specification dict : default State.classPreferences
+    prefs : PreferenceSet or specification dict : default Port.classPreferences
         specifies the `PreferenceSet` for the InputPort; see `prefs <InputPort.prefs>` for details.
 
 
@@ -680,7 +680,7 @@ class InputPort(State_Base):
         apply to the InputPorts specified, as well as any that are added to the Mechanism once it is created.
 
         .. note::
-            Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
+            Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that States with
             the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
             Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
             creation.
@@ -698,7 +698,7 @@ class InputPort(State_Base):
     componentType = INPUT_PORT
     paramsType = INPUT_PORT_PARAMS
 
-    stateAttributes = State_Base.stateAttributes | {WEIGHT, EXPONENT}
+    stateAttributes = Port_Base.stateAttributes | {WEIGHT, EXPONENT}
 
     connectsWith = [OUTPUT_PORT,
                     PROCESS_INPUT_PORT,
@@ -724,7 +724,7 @@ class InputPort(State_Base):
     variableEncodingDim = 1
     valueEncodingDim = 1
 
-    class Parameters(State_Base.Parameters):
+    class Parameters(Port_Base.Parameters):
         """
             Attributes
             ----------
@@ -775,7 +775,7 @@ class InputPort(State_Base):
         internal_only = Parameter(False, stateful=False, loggable=False, pnl_internal=True)
         shadow_inputs = Parameter(None, stateful=False, loggable=False, read_only=True, pnl_internal=True)
 
-    paramClassDefaults = State_Base.paramClassDefaults.copy()
+    paramClassDefaults = Port_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
                                MECHANISM: None,     # These are used to specifiy InputPorts by projections to them
                                OUTPUT_PORTS: None  # from the OutputPorts of a particular Mechanism (see docs)
@@ -817,7 +817,7 @@ class InputPort(State_Base):
                                                   shadow_inputs=None,
                                                   params=params)
 
-        # If owner or reference_value has not been assigned, defer init to State._instantiate_projection()
+        # If owner or reference_value has not been assigned, defer init to Port._instantiate_projection()
         # if owner is None or (variable is None and reference_value is None and projections is None):
         if owner is None:
             # Temporarily name InputPort
@@ -930,7 +930,7 @@ class InputPort(State_Base):
                                       format(EXPONENT, self.name, self.owner.name, target_set[EXPONENT]))
 
     def _validate_against_reference_value(self, reference_value):
-        """Validate that State.value is compatible with reference_value
+        """Validate that Port.value is compatible with reference_value
 
         reference_value is the item of the owner Mechanism's variable to which the InputPort is assigned
         """
@@ -954,7 +954,7 @@ class InputPort(State_Base):
             self.function._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
 
     def _instantiate_projections(self, projections, context=None):
-        """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
+        """Instantiate Projections specified in PROJECTIONS entry of params arg of Port's constructor
 
         Call _instantiate_projections_to_state to assign:
             PathwayProjections to .path_afferents
@@ -1022,7 +1022,7 @@ class InputPort(State_Base):
             (state_spec, connections)
             (state_spec, weights, exponents, connections)
 
-        See State._parse_state_specific_spec for additional info.
+        See Port._parse_state_specific_spec for additional info.
 .
         Returns:
              - state_spec:  1st item of tuple if it is a numeric value;  otherwise None
@@ -1043,7 +1043,7 @@ class InputPort(State_Base):
         if isinstance(state_specific_spec, dict):
             # FIX: 10/3/17 - CHECK HERE THAT, IF MECHANISM ENTRY IS USED, A VARIABLE, WEIGHT AND/OR EXPONENT ENTRY
             # FIX:                       IS APPLIED TO ALL THE OutputPorts SPECIFIED IN OUTPUT_PORTS
-            # FIX:                       UNLESS THEY THEMSELVES USE A State specification dict WITH ANY OF THOSE ENTRIES
+            # FIX:                       UNLESS THEY THEMSELVES USE A Port specification dict WITH ANY OF THOSE ENTRIES
             # FIX:           USE ObjectiveMechanism EXAMPLES
             # if MECHANISM in state_specific_spec:
             #     if OUTPUT_PORTS in state_specific_spec
@@ -1067,7 +1067,7 @@ class InputPort(State_Base):
             # 2-item tuple specification
             if len(tuple_spec) == 2:
 
-                # 1st item is a value, so treat as State spec (and return to _parse_state_spec to be parsed)
+                # 1st item is a value, so treat as Port spec (and return to _parse_state_spec to be parsed)
                 #   and treat 2nd item as Projection specification
                 if is_numeric(tuple_spec[0]):
                     state_spec = tuple_spec[0]
@@ -1083,7 +1083,7 @@ class InputPort(State_Base):
                                                 REFERENCE_VALUE, reference_value))
                     projections_spec = tuple_spec[1]
 
-                # Tuple is Projection specification that is used to specify the State,
+                # Tuple is Projection specification that is used to specify the Port,
                 else:
                     # return None in state_spec to suppress further, recursive parsing of it in _parse_state_spec
                     state_spec = None
@@ -1097,7 +1097,7 @@ class InputPort(State_Base):
 
             # 3- or 4-item tuple specification
             elif len(tuple_spec) in {3,4}:
-                # Tuple is projection specification that is used to specify the State,
+                # Tuple is projection specification that is used to specify the Port,
                 #    so return None in state_spec to suppress further, recursive parsing of it in _parse_state_spec
                 state_spec = None
                 # Reduce to 2-item tuple Projection specification
@@ -1174,7 +1174,7 @@ class InputPort(State_Base):
                                 variable.append(variable_item)
                             # If variable HAS been assigned, make sure value is the same for this sender
                             elif np.array(state_dict[VARIABLE]).shape != variable_item.shape:
-                                # If values for senders differ, assign None so that State's default is used
+                                # If values for senders differ, assign None so that Port's default is used
                                 variable = None
                                 # No need to check any more Projections
                                 break
@@ -1331,7 +1331,7 @@ class InputPort(State_Base):
 
         InputPort variable must be embedded in a list so that LinearCombination (its default function)
         returns a variable that is >=2d intact (rather than as arrays to be combined);
-        this is normally done in state._update() (and in State._instantiate-function), but that
+        this is normally done in state._update() (and in Port._instantiate-function), but that
         can't be called by _parse_state_spec since the InputPort itself may not yet have been instantiated.
 
         """
@@ -1346,14 +1346,14 @@ class InputPort(State_Base):
         ):
             variable = [variable]
 
-        # if function is None, use State's default function
+        # if function is None, use Port's default function
         function = function or InputPort.defaults.function
 
-        return State_Base._get_state_function_value(owner=owner, function=function, variable=variable)
+        return Port_Base._get_state_function_value(owner=owner, function=function, variable=variable)
 
 
 def _instantiate_input_ports(owner, input_ports=None, reference_value=None, context=None):
-    """Call State._instantiate_state_list() to instantiate ContentAddressableList of InputPort(s)
+    """Call Port._instantiate_state_list() to instantiate ContentAddressableList of InputPort(s)
 
     Create ContentAddressableList of InputPort(s) specified in paramsCurrent[INPUT_PORTS]
 
@@ -1369,11 +1369,11 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
         - the value of all of the input_ports is stored in a list in input_value
         - if there is only one InputPort, it is assigned the full value
 
-    Note: State._instantiate_state_list()
+    Note: Port._instantiate_state_list()
               parses self.defaults.variable (2D np.array, passed in reference_value)
               into individual 1D arrays, one for each input state
 
-    (See State._instantiate_state_list() for additional details)
+    (See Port._instantiate_state_list() for additional details)
 
     Returns list of instantiated InputPorts
     """

@@ -6,25 +6,25 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-#  *********************************************  State ********************************************************
+#  *********************************************  Port ********************************************************
 
 """
 
 Overview
 --------
 
-A State provides an interface to one or more `Projections <Projection>`, and receives the `value(s) <Projection>`
-provided by them.  The value of a State can be modulated by a `ModulatoryProjection <ModulatoryProjection>`. There are
+A Port provides an interface to one or more `Projections <Projection>`, and receives the `value(s) <Projection>`
+provided by them.  The value of a Port can be modulated by a `ModulatoryProjection <ModulatoryProjection>`. There are
 three primary types of States (InputPorts, ParameterPorts and OutputPorts) as well as one subtype (ModulatorySignal,
 used to send ModulatoryProjections), as summarized in the table below:
 
 .. _State_Types_Table:
 
-.. table:: **State Types and Associated Projection Types**
+.. table:: **Port Types and Associated Projection Types**
    :align: left
 
    +-------------------+--------------------+------------------------+-----------------+-------------------------------+
-   | *State Type*      | *Owner*            |      *Description*     | *Modulated by*  |       *Specification*         |
+   | *Port Type*      | *Owner*            |      *Description*     | *Modulated by*  |       *Specification*         |
    +===================+====================+========================+=================+===============================+
    | `InputPort`      |  `Mechanism        |receives input from     | `GatingSignal`  |`InputPort` constructor;      |
    |                   |  <Mechanism>`      |`MappingProjection`     |                 |`Mechanism <Mechanism>`        |
@@ -44,7 +44,7 @@ used to send ModulatoryProjections), as summarized in the table below:
    +-------------------+--------------------+------------------------+-----------------+-------------------------------+
    |`ModulatorySignal  |`ModulatoryMechanism  |provides value for      |                 |`ModulatoryMechanism             |
    |<ModulatorySignal>`|<ModulatoryMechanism>`|`ModulatoryProjection   |                 |<ModulatoryMechanism>`           |
-   |                   |                    |<ModulatoryProjection>` |                 |constructor; tuple in State    |
+   |                   |                    |<ModulatoryProjection>` |                 |constructor; tuple in Port    |
    |                   |                    |                        |                 |or parameter specification     |
    +-------------------+--------------------+------------------------+-----------------+-------------------------------+
 
@@ -83,11 +83,11 @@ COMMENT
 
 .. _State_Creation:
 
-Creating a State
+Creating a Port
 ----------------
 
 In general, States are created automatically by the objects to which they belong (their `owner <State_Owner>`),
-or by specifying the State in the constructor for its owner.  For example, unless otherwise specified, when a
+or by specifying the Port in the constructor for its owner.  For example, unless otherwise specified, when a
 `Mechanism <Mechanism>` is created it creates a default `InputPort` and `OutputPort` for itself, and whenever any
 Component is created, it automatically creates a `ParameterPort` for each of its `configurable parameters
 <Component_Structural_Attributes>` and those of its `function <Component_Function>`. States are also created in
@@ -96,80 +96,80 @@ a Mechanism (see `Mechanism_State_Specification`); and ParameterPorts are specif
 parameter for any Component or its `function <Component.function>` is specified in the constructor for that Component
 or function.  InputPorts and OutputPorts (but *not* ParameterPorts) can also be created directly using their
 constructors, and then assigned to a Mechanism using the Mechanism's `add_states <Mechanism_Base.add_states>` method;
-however, this should be done with caution as the State must be compatible with other attributes of its owner (such as
+however, this should be done with caution as the Port must be compatible with other attributes of its owner (such as
 its OutputPorts) and its `function <Mechanism_Base.function>` (for example, see `note <Mechanism_Add_InputPorts_Note>`
 regarding InputPorts). Parameter States **cannot** on their own; they are always and only created when the Component
 to which a parameter belongs is created.
 
 COMMENT:
     IMPLEMENTATION NOTE:
-    If the constructor for a State is called programmatically other than on the command line (e.g., within a method)
+    If the constructor for a Port is called programmatically other than on the command line (e.g., within a method)
     the **context** argument must be specified (by convention, as ContextFlags.METHOD); otherwise, it is assumed that
     it is being created on the command line.  This is taken care of when it is created automatically (e.g., as part
     of the construction of a Mechanism or Projection) by the _instantiate_state method that specifies a context
-    when it calls the relevant State constructor methods.
+    when it calls the relevant Port constructor methods.
 COMMENT
 
 .. _State_Specification:
 
-*Specifying a State*
+*Specifying a Port*
 ~~~~~~~~~~~~~~~~~~~~
 
-A State can be specified using any of the following:
+A Port can be specified using any of the following:
 
-    * existing **State** object;
+    * existing **Port** object;
     ..
-    * name of a **State subclass** (`InputPort`, `ParameterPort`, or `OutputPort`) -- creates a default State of the
-      specified type, using a default value for the State that is determined by the context in which it is specified.
+    * name of a **Port subclass** (`InputPort`, `ParameterPort`, or `OutputPort`) -- creates a default Port of the
+      specified type, using a default value for the Port that is determined by the context in which it is specified.
     ..
-    * **value** -- creates a default State using the specified value as its default `value <State_Base.value>`.
+    * **value** -- creates a default Port using the specified value as its default `value <Port_Base.value>`.
 
     .. _State_Specification_Dictionary:
 
-    * **State specification dictionary** -- can use the following: *KEY*:<value> entries, in addition to those
-      specific to the State's type (see documentation for each State type):
+    * **Port specification dictionary** -- can use the following: *KEY*:<value> entries, in addition to those
+      specific to the Port's type (see documentation for each Port type):
 
-      * *STATE_TYPE*:<State type>
-          specifies type of State to create (necessary if it cannot be determined from
+      * *STATE_TYPE*:<Port type>
+          specifies type of Port to create (necessary if it cannot be determined from
           the context of the other entries or in which it is being created).
       ..
       * *NAME*:<str>
-          the string is used as the name of the State.
+          the string is used as the name of the Port.
       ..
       * *VALUE*:<value>
-          the value is used as the default value of the State.
+          the value is used as the default value of the Port.
 
-      A State specification dictionary can also be used to specify one or more `Projections <Projection>' to or from
-      the State, including `ModulatoryProjection(s) <ModulatoryProjection>` used to modify the `value
-      <State_Base.value>` of the State.  The type of Projection(s) created depend on the type of State specified and
+      A Port specification dictionary can also be used to specify one or more `Projections <Projection>' to or from
+      the Port, including `ModulatoryProjection(s) <ModulatoryProjection>` used to modify the `value
+      <Port_Base.value>` of the Port.  The type of Projection(s) created depend on the type of Port specified and
       context of the specification (see `examples <State_Specification_Dictionary_Examples>`).  This can be done using
       any of the following entries, each of which can contain any of the forms used to `specify a Projection
       <Projection_Specification>`:
 
       * *PROJECTIONS*:List[<`projection specification <Projection_Specification>`>,...]
           the list must contain a one or more `Projection specifications <Projection_Specification>` to or from
-          the State, and/or `ModulatorySignals <ModulatorySignal>` from which it should receive projections (see
+          the Port, and/or `ModulatorySignals <ModulatorySignal>` from which it should receive projections (see
           `State_Projections` below).
 
       .. _State_State_Name_Entry:
 
       * *<str>*:List[<`projection specification <Projection_Specification>`>,...]
           this must be the only entry in the dictionary, and the string cannot be a PsyNeuLink
-          keyword;  it is used as the name of the State, and the list must contain one or more `Projection
+          keyword;  it is used as the name of the Port, and the list must contain one or more `Projection
           specifications <Projection_Specification>`.
 
       .. _State_MECHANISM_STATES_Entries:
 
       * *MECHANISM*:Mechanism
           this can be used to specify one or more Projections to or from the specified Mechanism.  If the entry appears
-          without any accompanying State specification entries (see below), the Projection is assumed to be a
+          without any accompanying Port specification entries (see below), the Projection is assumed to be a
           `MappingProjection` to the Mechanism's `primary InputPort <InputPort_Primary>` or from its `primary
           OutputPort <OutputPort_Primary>`, depending upon the type of Mechanism and context of specification.  It
-          can also be accompanied by one or more State specification entries described below, to create one or more
+          can also be accompanied by one or more Port specification entries described below, to create one or more
           Projections to/from those specific States (see `examples <State_State_Name_Entry_Example>`).
       ..
-      * <STATES_KEYWORD>:List[<str or State.name>,...]
-         this must accompany a *MECHANISM* entry (described above), and is used to specify its State(s) by name.
+      * <STATES_KEYWORD>:List[<str or Port.name>,...]
+         this must accompany a *MECHANISM* entry (described above), and is used to specify its Port(s) by name.
          Each entry must use one of the following keywords as its key, and there can be no more than one of each:
             - *INPUT_PORTS*
             - *OUTPUT_PORTS*
@@ -179,52 +179,52 @@ A State can be specified using any of the following:
             - *GATING_SIGNAL*.
          Each entry must contain a list States of the specified type, all of which belong to the Mechanism specified in
          the *MECHANISM* entry;  each item in the list must be the name of one the Mechanism's States, or a
-         `ProjectionTuple <State_ProjectionTuple>` the first item of which is the name of a State. The types of
+         `ProjectionTuple <State_ProjectionTuple>` the first item of which is the name of a Port. The types of
          States that can be specified in this manner depends on the type of the Mechanism and context of the
          specification (see `examples <State_State_Name_Entry_Example>`).
 
-    * **State, Mechanism, or list of these** -- creates a default State with Projection(s) to/from the specified
-      States;  the type of State being created determines the type and directionality of the Projection(s) and,
-      if Mechanism(s) are specified, which of their primary States are used (see State subclasses for specifics).
+    * **Port, Mechanism, or list of these** -- creates a default Port with Projection(s) to/from the specified
+      States;  the type of Port being created determines the type and directionality of the Projection(s) and,
+      if Mechanism(s) are specified, which of their primary States are used (see Port subclasses for specifics).
 
    .. _State_Tuple_Specification:
 
-    * **Tuple specifications** -- these are convenience formats that can be used to compactly specify a State
+    * **Tuple specifications** -- these are convenience formats that can be used to compactly specify a Port
       by specifying other Components with which it should be connected by Projection(s). Different States support
       different forms, but all support the following two forms:
 
       .. _State_2_Item_Tuple:
 
-      * **2-item tuple:** *(<State name or list of State names>, <Mechanism>)* -- 1st item is the name of a State or
+      * **2-item tuple:** *(<Port name or list of Port names>, <Mechanism>)* -- 1st item is the name of a Port or
         list of them, and the 2nd item is the Mechanism to which they belong; a Projection is created to or from each
-        of the States specified.  The type of Projection depends on the type of State being created, and the type of
-        States specified in the tuple  (see `Projection_Table`).  For example, if the State being created is an
+        of the States specified.  The type of Projection depends on the type of Port being created, and the type of
+        States specified in the tuple  (see `Projection_Table`).  For example, if the Port being created is an
         InputPort, and the States specified in the tuple are OutputPorts, then `MappingProjections
         <MappingProjection>` are used; if `ModulatorySignals <ModulatorySignal>` are specified, then the corresponding
-        type of `ModulatoryProjections <ModulatoryProjection>` are created.  See State subclasses for additional
+        type of `ModulatoryProjections <ModulatoryProjection>` are created.  See Port subclasses for additional
         details and compatibility requirements.
       |
       .. _State_ProjectionTuple:
       * `ProjectionTuple <Projection_ProjectionTuple>` -- a 4-item tuple that specifies one or more `Projections
-        <Projection>` to or from other State(s), along with a weight and/or exponent for each.
+        <Projection>` to or from other Port(s), along with a weight and/or exponent for each.
 
 .. _State_Projections:
 
 *Projections*
 ~~~~~~~~~~~~~
 
-When a State is created, it can be assigned one or more `Projections <Projection>`, in either the **projections**
-argument of its constructor, or a *PROJECTIONS* entry of a `State specification dictionary
-<State_Specification_Dictionary>` (or a dictionary assigned to the **params** argument of the State's constructor).
-The following types of Projections can be specified for each type of State:
+When a Port is created, it can be assigned one or more `Projections <Projection>`, in either the **projections**
+argument of its constructor, or a *PROJECTIONS* entry of a `Port specification dictionary
+<State_Specification_Dictionary>` (or a dictionary assigned to the **params** argument of the Port's constructor).
+The following types of Projections can be specified for each type of Port:
 
     .. _State_Projections_Table:
 
-    .. table:: **Specifiable Projections for State Types**
+    .. table:: **Specifiable Projections for Port Types**
         :align: left
 
         +------------------+-------------------------------+-------------------------------------+
-        | *State Type*     || *PROJECTIONS* specification  || *Assigned to Attribute*            |
+        | *Port Type*     || *PROJECTIONS* specification  || *Assigned to Attribute*            |
         +==================+===============================+=====================================+
         |`InputPort`      || `PathwayProjection(s)        || `path_afferents                    |
         |                  |   <PathwayProjection>`        |   <InputPort.path_afferents>`      |
@@ -245,11 +245,11 @@ The following types of Projections can be specified for each type of State:
 
 Projections must be specified in a list.  Each entry must be either a `specification for a projection
 <Projection_Specification>`, or for a `sender <Projection_Base.sender>` or `receiver <Projection_Base.receiver>` of
-one, in which case the appropriate type of Projection is created.  A sender or receiver can be specified as a `State
-<State>` or a `Mechanism <Mechanism>`. If a Mechanism is specified, its primary `InputPort <InputPort_Primary>` or
+one, in which case the appropriate type of Projection is created.  A sender or receiver can be specified as a `Port
+<Port>` or a `Mechanism <Mechanism>`. If a Mechanism is specified, its primary `InputPort <InputPort_Primary>` or
 `OutputPort <OutputPort_Primary>`  is used, as appropriate.  When a sender or receiver is used to specify the
-Projection, the type of Projection created is inferred from the State and the type of sender or receiver specified,
-as illustrated in the `examples <State_Projections_Examples>` below.  Note that the State must be `assigned to an
+Projection, the type of Projection created is inferred from the Port and the type of sender or receiver specified,
+as illustrated in the `examples <State_Projections_Examples>` below.  Note that the Port must be `assigned to an
 owner <State_Creation>` in order to be functional, irrespective of whether any `Projections <Projection>` have been
 assigned to it.
 
@@ -259,10 +259,10 @@ assigned to it.
 *Deferred Initialization*
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If a State is created on its own, and its `owner <State_Owner>` Mechanism is specified, it is assigned to that
+If a Port is created on its own, and its `owner <State_Owner>` Mechanism is specified, it is assigned to that
 Mechanism; if its owner not specified, then its initialization is `deferred <State_Deferred_Initialization>`.
 Its initialization is completed automatically when it is assigned to an owner `Mechanism <Mechanism_Base>` using the
-owner's `add_states <Mechanism_Base.add_states>` method.  If the State is not assigned to an owner, it will not be
+owner's `add_states <Mechanism_Base.add_states>` method.  If the Port is not assigned to an owner, it will not be
 functional (i.e., used during the execution of `Mechanisms <Mechanism_Base_Execution>` and/or `Compositions
 <Composition_Execution>`, irrespective of whether it has any `Projections <Projection>` assigned to it.
 
@@ -277,36 +277,36 @@ Structure
 *Owner*
 ~~~~~~~
 
-Every State has an `owner <State_Base.owner>`.  For `InputPorts <InputPort>` and `OutputPorts <OutputPort>`, the
+Every Port has an `owner <Port_Base.owner>`.  For `InputPorts <InputPort>` and `OutputPorts <OutputPort>`, the
 owner must be a `Mechanism <Mechanism>`.  For `ParameterPorts <ParameterPort>` it can be a Mechanism or a
 `PathwayProjection <PathwayProjection>`. For `ModulatorySignals <ModulatorySignal>`, it must be a `ModulatoryMechanism
-<ModulatoryMechanism>`. When a State is created as part of another Component, its `owner <State_Base.owner>` is
-assigned automatically to that Component.  It is also assigned automatically when the State is assigned to a
+<ModulatoryMechanism>`. When a Port is created as part of another Component, its `owner <Port_Base.owner>` is
+assigned automatically to that Component.  It is also assigned automatically when the Port is assigned to a
 `Mechanism <Mechanism>` using that Mechanism's `add_states <Mechanism_Base.add_states>` method.  Otherwise, it must be
-specified explicitly in the **owner** argument of the constructor for the State (in which case it is immediately
-assigned to the specified Mechanism).  If the **owner** argument is not specified, the State's initialization is
+specified explicitly in the **owner** argument of the constructor for the Port (in which case it is immediately
+assigned to the specified Mechanism).  If the **owner** argument is not specified, the Port's initialization is
 `deferred <State_Deferred_Initialization>` until it has been assigned to an owner using the owner's `add_states
 <Mechanism_Base.add_states>` method.
 
 *Projections*
 ~~~~~~~~~~~~~
 
-Every State has attributes that lists the `Projections <Projection>` it sends and/or receives.  These depend on the
-type of State, listed below (and shown in the `table <State_Projections_Table>`):
+Every Port has attributes that lists the `Projections <Projection>` it sends and/or receives.  These depend on the
+type of Port, listed below (and shown in the `table <State_Projections_Table>`):
 
-.. table::  State Projection Attributes
+.. table::  Port Projection Attributes
    :align: left
 
    ============================================ ============================================================
-   *Attribute*                                  *Projection Type and State(s)*
+   *Attribute*                                  *Projection Type and Port(s)*
    ============================================ ============================================================
-   `path_afferents <State_Base.path_afferents>` `MappingProjections <MappingProjection>` to `InputPort`
-   `mod_afferents <State_Base.mod_afferents>`   `ModulatoryProjections <ModulatoryProjection>` to any State
-   `efferents <State_Base.efferents>`           `MappingProjections <MappingProjection>` from `OutputPort`
+   `path_afferents <Port_Base.path_afferents>` `MappingProjections <MappingProjection>` to `InputPort`
+   `mod_afferents <Port_Base.mod_afferents>`   `ModulatoryProjections <ModulatoryProjection>` to any Port
+   `efferents <Port_Base.efferents>`           `MappingProjections <MappingProjection>` from `OutputPort`
    ============================================ ============================================================
 
-In addition to these attributes, all of the Projections sent and received by a State are listed in its `projections
-<State_Base.projections>` attribute.
+In addition to these attributes, all of the Projections sent and received by a Port are listed in its `projections
+<Port_Base.projections>` attribute.
 
 
 *Variable, Function and Value*
@@ -314,23 +314,23 @@ In addition to these attributes, all of the Projections sent and received by a S
 
 In addition, like all PsyNeuLink Components, it also has the three following core attributes:
 
-    * `variable <State_Base.variable>`:  for an `InputPort` and `ParameterPort`,
+    * `variable <Port_Base.variable>`:  for an `InputPort` and `ParameterPort`,
       the value of this is determined by the value(s) of the Projection(s) that it receives (and that are listed in
-      its `path_afferents <State_Base.path_afferents>` attribute).  For an `OutputPort`, it is the item of the owner
+      its `path_afferents <Port_Base.path_afferents>` attribute).  For an `OutputPort`, it is the item of the owner
       Mechanism's `value <Mechanism_Base.value>` to which the OutputPort is assigned (specified by the OutputPort's
       `index <OutputPort_Index>` attribute.
     ..
-    * `function <State_Base.function>`:  for an `InputPort` this combines the values of the Projections that the
-      State receives (the default is `LinearCombination` that sums the values), under the potential influence of a
+    * `function <Port_Base.function>`:  for an `InputPort` this combines the values of the Projections that the
+      Port receives (the default is `LinearCombination` that sums the values), under the potential influence of a
       `GatingSignal`;  for a `ParameterPort`, it determines the value of the associated parameter, under the potential
       influence of a `ControlSignal` (for a `Mechanism <Mechanism>`) or a `LearningSignal` (for a `MappingProjection`);
       for an OutputPort, it conveys the result  of the Mechanism's function to its `output_values
       <Mechanism_Base.output_values>` attribute, under the potential influence of a `GatingSignal`.  See
       `ModulatorySignals <ModulatorySignal_Structure>` and the `ModulatoryMechanism <ModulatoryMechanism>` associated with
-      each type for a description of how they can be used to modulate the `function <State_Base.function>` of a State.
+      each type for a description of how they can be used to modulate the `function <Port_Base.function>` of a Port.
     ..
-    * `value <State_Base.value>`:  for an `InputPort` this is the combined value of the `PathwayProjections` it
-      receives;  for a `ParameterPort`, this represents the value of the parameter that will be used by the State's
+    * `value <Port_Base.value>`:  for an `InputPort` this is the combined value of the `PathwayProjections` it
+      receives;  for a `ParameterPort`, this represents the value of the parameter that will be used by the Port's
       owner or its `function <Component.function>`; for an `OutputPort`, it is the item of the  owner Mechanism's
       `value <Mechanisms.value>` to which the OutputPort is assigned, possibly modified by its `assign
       <OutputPort_Assign>` attribute and/or a `GatingSignal`, and used as the `value <Projection_Base.value>` of
@@ -341,15 +341,15 @@ In addition, like all PsyNeuLink Components, it also has the three following cor
 *Modulation*
 ~~~~~~~~~~~~
 
-Every type of State has a `mod_afferents <State_Base.mod_afferents>` attribute, that lists the `ModulatoryProjections
+Every type of Port has a `mod_afferents <Port_Base.mod_afferents>` attribute, that lists the `ModulatoryProjections
 <ModulatoryProjection>` it receives.  Each ModulatoryProjection comes from a `ModulatorySignal <ModulatorySignal>`
-that specifies how it should modulate the State's `value <State_Base.value>` when the State is updated (see
+that specifies how it should modulate the Port's `value <Port_Base.value>` when the Port is updated (see
 `ModulatorySignal_Modulation` and `ModulatorySignal_Anatomy_Figure`).  In most cases, a ModulatorySignal uses the
-State's `function <State_Base.function>` to modulate its `value <State_Base.value>`.  The function of every State
+Port's `function <Port_Base.function>` to modulate its `value <Port_Base.value>`.  The function of every Port
 assigns one of its parameters as its *ADDITIVE_PARAM* and another as its *MULTIPLICATIVE_PARAM*. The
 `modulation <ModulatorySignal.modulation>` attribute of a ModulatorySignal determines which of these to modify when the
-State uses it `function <State_Base.function>` to calculate its `value  <State_Base.value>`.  However, the
-ModulatorySignal can also be configured to override the State's `value <State_Base.value>` (i.e., assign it directly),
+Port uses it `function <Port_Base.function>` to calculate its `value  <Port_Base.value>`.  However, the
+ModulatorySignal can also be configured to override the Port's `value <Port_Base.value>` (i.e., assign it directly),
 or to disable modulation, using one of the values of `ModulationParam` for its
 `modulation <ModulatorySignal.modulation>` attribute (see `ModulatorySignal_Modulation` for a more detailed discussion).
 
@@ -360,19 +360,19 @@ Execution
 
 States cannot be executed.  They are updated when the Component to which they belong is executed.  InputPorts and
 ParameterPorts belonging to a Mechanism are updated before the Mechanism's function is called.  OutputPorts are
-updated after the Mechanism's function is called.  When a State is updated, it executes any Projections that project
-to it (listed in its `all_afferents <State_Base.all_afferents>` attribute.  It uses the values it receives from any
+updated after the Mechanism's function is called.  When a Port is updated, it executes any Projections that project
+to it (listed in its `all_afferents <Port_Base.all_afferents>` attribute.  It uses the values it receives from any
 `PathWayProjections` (listed in its `path_afferents` attribute) as the variable for its
-`function <State_Base.function>`. It then executes all of the ModulatoryProjections it receives.  Different
+`function <Port_Base.function>`. It then executes all of the ModulatoryProjections it receives.  Different
 ModulatorySignals may call for different forms of modulation (see `ModulatorySignal_Modulation`).  Accordingly,
 it separately sums the values specified by any ModulatorySignals for the *MULTIPLICATIVE_PARAM* of its
-`function <State_Base.function>`, and similarly for the *ADDITIVE_PARAM*.  It then applies the summed value for each
-to the corresponding parameter of its `function <State_Base.function>`.  If any of the ModulatorySignals specifies
-*OVERRIDE*, then the value of that ModulatorySignal is used as the State's `value <State_Base.value>`. Finally,
-the State calls its `function <State_Base.function>` to determine its `value <State_Base.value>`.
+`function <Port_Base.function>`, and similarly for the *ADDITIVE_PARAM*.  It then applies the summed value for each
+to the corresponding parameter of its `function <Port_Base.function>`.  If any of the ModulatorySignals specifies
+*OVERRIDE*, then the value of that ModulatorySignal is used as the Port's `value <Port_Base.value>`. Finally,
+the Port calls its `function <Port_Base.function>` to determine its `value <Port_Base.value>`.
 
 .. note::
-   The change in the value of a `State <State>` does not occur until the Mechanism to which the State belongs is next
+   The change in the value of a `Port <Port>` does not occur until the Mechanism to which the Port belongs is next
    executed; This conforms to a "lazy evaluation" protocol (see :ref:`Lazy Evaluation <LINK>` for an explanation
    of "lazy" updating).
 
@@ -480,9 +480,9 @@ the type of Mechanism, then that is used (as is the case for both of the OutputP
 
 .. _State_Specification_Dictionary_Examples:
 
-*State specification dictionary*
+*Port specification dictionary*
 
-States can be specified in greater detail using a `State specification dictionary
+States can be specified in greater detail using a `Port specification dictionary
 <State_Specification_Dictionary>`. In the example below, this is used to specify the variable and name of an
 InputPort::
 
@@ -490,8 +490,8 @@ InputPort::
                                                    NAME: 'MY INPUT',
                                                    VARIABLE: [0,0]})
 
-The *STATE_TYPE* entry is included here for completeness, but is not actually needed when the State specification
-dicationary is used in **input_ports** or **output_ports** argument of a Mechanism, since the State's type
+The *STATE_TYPE* entry is included here for completeness, but is not actually needed when the Port specification
+dicationary is used in **input_ports** or **output_ports** argument of a Mechanism, since the Port's type
 is clearly determined by the context of the specification;  however, where that is not clear, then the *STATE_TYPE*
 entry must be included.
 
@@ -499,7 +499,7 @@ entry must be included.
 
 *Projections*
 
-A State specification dictionary can also be used to specify projections to or from the State, also in
+A Port specification dictionary can also be used to specify projections to or from the Port, also in
 a number of different ways.  The most straightforward is to include them in a *PROJECTIONS* entry.  For example, the
 following specifies that the InputPort of ``my_mech`` receive two Projections,  one from ``source_mech_1`` and another
 from ``source_mech_2``, and that its OutputPort send one to ``destination_mech``::
@@ -571,7 +571,7 @@ specifying them in separate itesm of the **control_signals** argument::
     > THRESHOLD RATE CONTROL SIGNAL
     >     MY DDM: (ParameterPort threshold)
 
-Specifying Projections in a State specification dictionary affords flexibility -- for example, naming the State
+Specifying Projections in a Port specification dictionary affords flexibility -- for example, naming the Port
 and/or specifying other attributes.  However, if this is not necessary, the Projections can be used to specify
 States directly.  For example, the following, which is much simpler, produces the same result as the previous
 example (sans the custom name; though as the printout below shows, the default names are usually pretty clear)::
@@ -588,8 +588,8 @@ example (sans the custom name; though as the printout below shows, the default n
 
 *Convenience formats*
 
-There are two convenience formats for specifying States and their Projections in a State specification
-dictionary.  The `first <State_State_Name_Entry>` is to use the name of the State as the key for its entry,
+There are two convenience formats for specifying States and their Projections in a Port specification
+dictionary.  The `first <State_State_Name_Entry>` is to use the name of the Port as the key for its entry,
 and then a list of , as in the following example::
 
     source_mech_1 = pnl.TransferMechanism()
@@ -598,11 +598,11 @@ and then a list of , as in the following example::
     my_mech_C = pnl.TransferMechanism(input_ports=[{'MY INPUT':[source_mech_1, source_mech_2]}],
                                       output_ports=[{'RESULT':[destination_mech]}])
 
-This produces the same result as the first example under `State specification dictionary <State_Projections_Examples>`
+This produces the same result as the first example under `Port specification dictionary <State_Projections_Examples>`
 above, but it is simpler and easier to read.
 
 The second convenience format is used to specify one or more Projections to/from the States of a single Mechanism
-by their name.  It uses the keyword *MECHANISM* to specify the Mechanism, coupled with a State-specific entry to
+by their name.  It uses the keyword *MECHANISM* to specify the Mechanism, coupled with a Port-specific entry to
 specify Projections to its States.  This can be useful when a Mechanism must send Projections to several States
 of another Mechanism, such as a ControlMechanism that sends ControlProjections to several parameters of a
 given Mechanism, as in the following example::
@@ -612,14 +612,14 @@ given Mechanism, as in the following example::
                                                          pnl.PARAMETER_PORTS: [pnl.DRIFT_RATE, pnl.THRESHOLD]}])
 
 This produces the same result as the `earlier example <State_Modulatory_Projections_Examples>` of ControlProjections,
-once again in a simpler and easier to read form.  However, it be used only to specify Projections for a State to or
+once again in a simpler and easier to read form.  However, it be used only to specify Projections for a Port to or
 from the States of a single Mechanism;  Projections involving other Mechanisms must be assigned to other States.
 
 .. _State_Create_State_Examples:
 
 *Create and then assign a state*
 
-Finally, a State can be created directly using its constructor, and then assigned to a Mechanism.
+Finally, a Port can be created directly using its constructor, and then assigned to a Mechanism.
 The following creates an InputPort ``my_input_port`` with a `MappingProjection` to it from the
 `primary OutputPort <OutputPort_Primary>` of ``mech_A`` and assigns it to ``mech_B``::
 
@@ -747,7 +747,7 @@ from psyneulink.core.components.component import \
 from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, LinearCombination
 from psyneulink.core.components.functions.function import Function, get_param_value_for_keyword, is_function_type
 from psyneulink.core.components.functions.transferfunctions import Linear
-from psyneulink.core.components.shellclasses import Mechanism, Projection, State
+from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.keywords import \
     ADDITIVE, ADDITIVE_PARAM, AUTO_ASSIGN_MATRIX, CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, \
@@ -771,7 +771,7 @@ from psyneulink.core.globals.utilities import \
     merge_param_dicts, MODULATION_OVERRIDE, type_match
 
 __all__ = [
-    'State_Base', 'state_keywords', 'state_type_keywords', 'StateError', 'StateRegistry', 'STATE_SPEC'
+    'Port_Base', 'state_keywords', 'state_type_keywords', 'StateError', 'StateRegistry', 'STATE_SPEC'
 ]
 
 state_keywords = component_keywords.copy()
@@ -797,12 +797,12 @@ REMOVE_STATES = 'REMOVE_STATES'
 
 
 def _is_state_class(spec):
-    if inspect.isclass(spec) and issubclass(spec, State):
+    if inspect.isclass(spec) and issubclass(spec, Port):
         return True
     return False
 
 
-# Note:  This is created only for assignment of default projection types for each State subclass (see .__init__.py)
+# Note:  This is created only for assignment of default projection types for each Port subclass (see .__init__.py)
 #        Individual stateRegistries (used for naming) are created for each Mechanism
 StateRegistry = {}
 
@@ -815,9 +815,9 @@ class StateError(Exception):
         return repr(self.error_value)
 
 
-# State factory method:
+# Port factory method:
 # def state(name=NotImplemented, params=NotImplemented, context=None):
-#         """Instantiates default or specified subclass of State
+#         """Instantiates default or specified subclass of Port
 #
 #        If called w/o arguments or 1st argument=NotImplemented, instantiates default subclass (ParameterPort)
 #         If called with a name string:
@@ -842,9 +842,9 @@ class StateError(Exception):
 
 # DOCUMENT:  INSTANTATION CREATES AN ATTIRBUTE ON THE OWNER MECHANISM WITH THE STATE'S NAME + VALUE_SUFFIX
 #            THAT IS UPDATED BY THE STATE'S value setter METHOD (USED BY LOGGING OF MECHANISM ENTRIES)
-class State_Base(State):
+class Port_Base(Port):
     """
-    State_Base(        \
+    Port_Base(        \
     owner,             \
     variable=None,     \
     size=None,         \
@@ -853,10 +853,10 @@ class State_Base(State):
     name=None,         \
     prefs=None)
 
-    Base class for State.
+    Base class for Port.
 
     .. note::
-       State is an abstract class and should NEVER be instantiated by a call to its constructor.
+       Port is an abstract class and should NEVER be instantiated by a call to its constructor.
        It should be instantiated using the constructor for a `subclass <State_Subtypes>`.
 
 
@@ -869,7 +869,7 @@ class State_Base(State):
                     and uses this as variable of function to update the value attribute
                 - output_ports: represent values of output of function
             Value attribute:
-                 - is updated by the execute method (which calls State's function)
+                 - is updated by the execute method (which calls Port's function)
                  - can be used as sender (input) to one or more projections
                  - can be accessed by KVO
             Constraints:
@@ -884,11 +884,11 @@ class State_Base(State):
                         + FUNCTION_PARAMS (optional)
                         + PROJECTION_TYPE - specifies type of projection to use for instantiation of default subclass
                 Standard subclasses and constraints:
-                    InputPort - used as input State for Mechanism;  additional constraint:
+                    InputPort - used as input Port for Mechanism;  additional constraint:
                         - value must be compatible with variable of owner's function method
-                    OutputPort - used as output State for Mechanism;  additional constraint:
+                    OutputPort - used as output Port for Mechanism;  additional constraint:
                         - value must be compatible with the output of the owner's function
-                    MechanismsParameterPort - used as State for Mechanism parameter;  additional constraint:
+                    MechanismsParameterPort - used as Port for Mechanism parameter;  additional constraint:
                         - output of function must be compatible with the parameter's value
 
         Class attributes
@@ -916,20 +916,20 @@ class State_Base(State):
 
         StateRegistry
         -------------
-            Used by .__init__.py to assign default projection types to each State subclass
+            Used by .__init__.py to assign default projection types to each Port subclass
             Note:
             * All States that belong to a given owner are registered in the owner's _stateRegistry,
-                which maintains a dict for each State type that it uses, a count for all instances of that type,
+                which maintains a dict for each Port type that it uses, a count for all instances of that type,
                 and a dictionary of those instances;  NONE of these are registered in the StateRegistry
-                This is so that the same name can be used for instances of a State type by different owners
+                This is so that the same name can be used for instances of a Port type by different owners
                     without adding index suffixes for that name across owners,
                     while still indexing multiple uses of the same base name within an owner
 
         Arguments
         ---------
         - value (value) - establishes type of value attribute and initializes it (default: [0])
-        - owner(Mechanism) - assigns State to Mechanism (default: NotImplemented)
-        - params (dict):  (if absent, default State is implemented)
+        - owner(Mechanism) - assigns Port to Mechanism (default: NotImplemented)
+        - params (dict):  (if absent, default Port is implemented)
             + FUNCTION (method)         |  Implemented in subclasses; used in _update()
             + FUNCTION_PARAMS (dict) |
             + PROJECTIONS:<projection specification or list of ones>
@@ -955,46 +955,46 @@ class State_Base(State):
     ----------
 
     variable : number, list or np.ndarray
-        the State's input, provided as the `variable <State_Base.variable>` to its `function <State_Base.function>`.
+        the Port's input, provided as the `variable <Port_Base.variable>` to its `function <Port_Base.function>`.
 
     owner : Mechanism or Projection
-        object to which the State belongs (see `State_Owner` for additional details).
+        object to which the Port belongs (see `State_Owner` for additional details).
 
     base_value : number, list or np.ndarray
-        value with which the State was initialized.
+        value with which the Port was initialized.
 
     all_afferents : Optional[List[Projection]]
-        list of all Projections received by the State (i.e., for which it is a `receiver <Projection_Base.receiver>`.
+        list of all Projections received by the Port (i.e., for which it is a `receiver <Projection_Base.receiver>`.
 
     path_afferents : Optional[List[Projection]]
-        list all `PathwayProjections <PathwayProjection>` received by the State;
+        list all `PathwayProjections <PathwayProjection>` received by the Port;
         note:  only `InputPorts <InputPort>` have path_afferents;  the list is empty for other types of States.
 
     mod_afferents : Optional[List[GatingProjection]]
-        list of all `ModulatoryProjections <ModulatoryProjection>` received by the State.
+        list of all `ModulatoryProjections <ModulatoryProjection>` received by the Port.
 
     projections : List[Projection]
-        list of all of the `Projections <Projection>` sent or received by the State.
+        list of all of the `Projections <Projection>` sent or received by the Port.
 
     efferents : Optional[List[Projection]]
-        list of outgoing Projections from the State (i.e., for which is a `sender <Projection_Base.sender>`;
+        list of outgoing Projections from the Port (i.e., for which is a `sender <Projection_Base.sender>`;
         note:  only `OutputPorts <OutputPort>`, and members of its `ModulatoryProjection <ModulatoryProjection>`
         subclass (`LearningProjection, ControlProjection and GatingProjection) have efferents;  the list is empty for
         InputPorts and ParameterPorts.
 
     function : TransferFunction : default determined by type
-        used to determine the State's `value <State_Base.value>` from the `value <Projection_Base.value>` of the
+        used to determine the Port's `value <Port_Base.value>` from the `value <Projection_Base.value>` of the
         `Projection(s) <Projection>` it receives;  the parameters that the TransferFunction identifies as *ADDITIVE*
         and *MULTIPLICATIVE* are subject to modulation by a `ModulatorySignal <ModulatorySignal>`.
 
     value : number, list or np.ndarray
-        current value of the State.
+        current value of the Port.
 
     name : str
-        the name of the State. If the State's `initialization has been deferred <State_Deferred_Initialization>`,
+        the name of the Port. If the Port's `initialization has been deferred <State_Deferred_Initialization>`,
         it is assigned a temporary name (indicating its deferred initialization status) until initialization is
-        completed, at which time it is assigned its designated name.  If that is the name of an existing State,
-        it is appended with an indexed suffix, incremented for each State with the same base name (see `Naming`). If
+        completed, at which time it is assigned its designated name.  If that is the name of an existing Port,
+        it is appended with an indexed suffix, incremented for each Port with the same base name (see `Naming`). If
         the name is not  specified in the **name** argument of its constructor, a default name is assigned by the
         subclass (see subclass for details).
 
@@ -1007,11 +1007,11 @@ class State_Base(State):
             creation).
 
     full_name : str
-        the name of the State with its owner if that is assigned: <owner.name>[<self.name>] if owner is not None;
-        otherwise same as `name <State.name>`.
+        the name of the Port with its owner if that is assigned: <owner.name>[<self.name>] if owner is not None;
+        otherwise same as `name <Port.name>`.
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the State; if it is not specified in the **prefs** argument of the constructor,
+        the `PreferenceSet` for the Port; if it is not specified in the **prefs** argument of the constructor,
         a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet <LINK>` for
         details).
 
@@ -1022,13 +1022,13 @@ class State_Base(State):
     suffix = " " + className
     paramsType = None
 
-    class Parameters(State.Parameters):
+    class Parameters(Port.Parameters):
         """
             Attributes
             ----------
 
                 function
-                    see `function <State_Base.function>`
+                    see `function <Port_Base.function>`
 
                     :default value: `Linear`
                     :type: `Function`
@@ -1068,29 +1068,29 @@ class State_Base(State):
                  prefs=None,
                  context=None,
                  **kargs):
-        """Initialize subclass that computes and represents the value of a particular State of a Mechanism
+        """Initialize subclass that computes and represents the value of a particular Port of a Mechanism
 
         This is used by subclasses to implement the InputPort(s), OutputPort(s), and ParameterPort(s) of a Mechanism.
 
         Arguments:
             - owner (Mechanism):
-                 Mechanism with which State is associated (default: NotImplemented)
-                 this argument is required, as can't instantiate a State without an owning Mechanism
-            - variable (value): value of the State:
+                 Mechanism with which Port is associated (default: NotImplemented)
+                 this argument is required, as can't instantiate a Port without an owning Mechanism
+            - variable (value): value of the Port:
                 must be list or tuple of numbers, or a number (in which case it will be converted to a single-item list)
-                must match input and output of State's _update method, and any sending or receiving projections
+                must match input and output of Port's _update method, and any sending or receiving projections
             - size (int or array/list of ints):
                 Sets variable to be array(s) of zeros, if **variable** is not specified as an argument;
                 if **variable** is specified, it takes precedence over the specification of **size**.
             - params (dict):
-                + if absent, implements default State determined by PROJECTION_TYPE param
+                + if absent, implements default Port determined by PROJECTION_TYPE param
                 + if dict, can have the following entries:
                     + PROJECTIONS:<Projection object, Projection class, dict, or list of either or both>
                         if absent, no projections will be created
                         if dict, must contain entries specifying a projection:
                             + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
                             + PROJECTION_PARAMS:<dict> - must be dict of params for PROJECTION_TYPE
-            - name (str): string with name of State (default: name of owner + suffix + instanceIndex)
+            - name (str): string with name of Port (default: name of owner + suffix + instanceIndex)
             - prefs (dict): dictionary containing system preferences (default: Prefs.DEFAULTS)
             - context (str)
             - **kargs (dict): dictionary of arguments using the following keywords for each of the above kargs:
@@ -1100,7 +1100,7 @@ class State_Base(State):
                 + STATE_PREFS = prefs
                 + STATE_CONTEXT = context
                 NOTES:
-                    * these are used for dictionary specification of a State in param declarations
+                    * these are used for dictionary specification of a Port in param declarations
                     * they take precedence over arguments specified directly in the call to __init__()
         """
         if kargs:
@@ -1133,16 +1133,16 @@ class State_Base(State):
             name = self._assign_default_state_name(context=context)
 
 
-        # Register State with StateRegistry of owner (Mechanism to which the State is being assigned)
+        # Register Port with StateRegistry of owner (Mechanism to which the Port is being assigned)
         register_category(entry=self,
-                          base_class=State_Base,
+                          base_class=Port_Base,
                           name=name,
                           registry=owner._stateRegistry,
                           # sub_group_attr='owner',
                           context=context)
 
         # VALIDATE VARIABLE, PARAM_SPECS, AND INSTANTIATE self.function
-        super(State_Base, self).__init__(default_variable=variable,
+        super(Port_Base, self).__init__(default_variable=variable,
                                          size=size,
                                          function=function,
                                          param_defaults=params,
@@ -1169,7 +1169,7 @@ class State_Base(State):
             owner.add_states([self])
 
     def _handle_size(self, size, variable):
-        """Overwrites the parent method in Component.py, because the variable of a State
+        """Overwrites the parent method in Component.py, because the variable of a Port
             is generally 1D, rather than 2D as in the case of Mechanisms
         """
         if size is not NotImplemented:
@@ -1231,7 +1231,7 @@ class State_Base(State):
         Note:  this method (or the class version) is called only if the parameter_validation attribute is True
         """
 
-        variable = super(State, self)._validate_variable(variable, context)
+        variable = super(Port, self)._validate_variable(variable, context)
 
         return variable
 
@@ -1265,7 +1265,7 @@ class State_Base(State):
             # If no projections, ignore (none will be created)
             projections = None
 
-        super(State, self)._validate_params(request_set, target_set, context=context)
+        super(Port, self)._validate_params(request_set, target_set, context=context)
 
         if projections:
             # Validate projection specs in list
@@ -1296,7 +1296,7 @@ class State_Base(State):
         #     * it is removed from the list below, after calling _instantiate_function
         # FIX: UPDATE WITH MODULATION_MODS REMOVE THE FOLLOWING COMMENT:
         #     * no change is made to PARAMETER_MODULATION_FUNCTION here (matrices may be multiplied or added)
-        #         (that is handled by the individual State subclasses (e.g., ADD is enforced for MATRIX ParameterPort)
+        #         (that is handled by the individual Port subclasses (e.g., ADD is enforced for MATRIX ParameterPort)
         if (
             (
                 (inspect.isclass(function) and issubclass(function, LinearCombination))
@@ -1314,7 +1314,7 @@ class State_Base(State):
             self.defaults.variable = self.defaults.variable[0]
 
     # FIX: PROJECTION_REFACTOR
-    #      - MOVE THESE TO Projection, WITH self (State) AS ADDED ARG
+    #      - MOVE THESE TO Projection, WITH self (Port) AS ADDED ARG
     #          BOTH _instantiate_projections_to_state AND _instantiate_projections_from_state
     #          CAN USE self AS connectee STATE, since _parse_connection_specs USES SOCKET TO RESOLVE
     #      - ALTERNATIVE: BREAK STATE FIELD OF ProjectionTuple INTO sender AND receiver FIELDS, THEN COMBINE
@@ -1322,7 +1322,7 @@ class State_Base(State):
     #          MAKING CORRESPONDING ASSIGNMENTS TO send AND receiver FIELDS (WOULD BE CLEARER)
 
     def _instantiate_projections(self, projections, context=None):
-        """Implement any Projection(s) to/from State specified in PROJECTIONS entry of params arg
+        """Implement any Projection(s) to/from Port specified in PROJECTIONS entry of params arg
 
         Must be implemented by subclasss, to handle interpretation of projection specification(s)
         in a class-appropriate manner:
@@ -1343,7 +1343,7 @@ class State_Base(State):
     # FIX: MOVE TO InputPort AND ParameterPort OR...
     # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
     def _instantiate_projections_to_state(self, projections, context=None):
-        """Instantiate projections to a State and assign them to self.path_afferents
+        """Instantiate projections to a Port and assign them to self.path_afferents
 
         Parses specifications in projection_list into ProjectionTuples
 
@@ -1359,7 +1359,7 @@ class State_Base(State):
             Calls _parse_connection_specs() to parse projection_list into a list of ProjectionTuples;
                  _parse_connection_specs, in turn, calls _parse_projection_spec for each spec in projection_list,
                  which returns either a Projection object or Projection specification dictionary for each spec;
-                 that is placed in projection_spec entry of ProjectionTuple (State, weight, exponent, projection_spec).
+                 that is placed in projection_spec entry of ProjectionTuple (Port, weight, exponent, projection_spec).
             When the Projection is instantiated, it assigns itself to
                its receiver's .path_afferents attribute (in Projection_Base._instantiate_receiver) and
                its sender's .efferents attribute (in Projection_Base._instantiate_sender);
@@ -1393,7 +1393,7 @@ class State_Base(State):
         # - assign it to self.path_afferents or .mod_afferents
         for connection in projection_tuples:
 
-            # Get sender State, weight, exponent and projection for each projection specification
+            # Get sender Port, weight, exponent and projection for each projection specification
             #    note: weight and exponent for connection have been assigned to Projection in _parse_connection_specs
             state, weight, exponent, projection_spec = connection
 
@@ -1434,23 +1434,23 @@ class State_Base(State):
 
                 # parse/validate sender
                 if proj_sender:
-                    # If the Projection already has State as its sender,
+                    # If the Projection already has Port as its sender,
                     #    it must be the same as the one specified in the connection spec
-                    if isinstance(proj_sender, State) and proj_sender != state:
+                    if isinstance(proj_sender, Port) and proj_sender != state:
                         raise StateError("Projection assigned to {} of {} from {} already has a sender ({})".
                                          format(self.name, self.owner.name, state.name, proj_sender.name))
                     # If the Projection has a Mechanism specified as its sender:
-                    elif isinstance(state, State):
-                        #    Connection spec (state) is specified as a State,
-                        #    so validate that State belongs to Mechanism and is of the correct type
+                    elif isinstance(state, Port):
+                        #    Connection spec (state) is specified as a Port,
+                        #    so validate that Port belongs to Mechanism and is of the correct type
                         sender = _get_state_for_socket(owner=self.owner,
                                                        mech=proj_sender,
                                                        state_spec=state,
                                                        state_types=state.__class__,
                                                        projection_socket=SENDER)
-                    elif isinstance(proj_sender, Mechanism) and inspect.isclass(state) and issubclass(state, State):
-                        #    Connection spec (state) is specified as State type
-                        #    so try to get that State type for the Mechanism
+                    elif isinstance(proj_sender, Mechanism) and inspect.isclass(state) and issubclass(state, Port):
+                        #    Connection spec (state) is specified as Port type
+                        #    so try to get that Port type for the Mechanism
                         sender = _get_state_for_socket(owner=self.owner,
                                                        connectee_state_type=self.__class__,
                                                        state_spec=proj_sender,
@@ -1466,16 +1466,16 @@ class State_Base(State):
                 projection.receiver.afferents_info[projection] = ConnectionInfo()
 
                 # Construct and assign name
-                if isinstance(sender, State):
+                if isinstance(sender, Port):
                     if sender.initialization_status == ContextFlags.DEFERRED_INIT:
                         sender_name = sender._init_args[NAME]
                     else:
                         sender_name = sender.name
                     sender_name = sender_name or sender.__class__.__name__
-                elif inspect.isclass(sender) and issubclass(sender, State):
+                elif inspect.isclass(sender) and issubclass(sender, Port):
                     sender_name = sender.__name__
                 else:
-                    raise StateError("SENDER of {} to {} of {} is neither a State or State class".
+                    raise StateError("SENDER of {} to {} of {} is neither a Port or Port class".
                                      format(projection_type.__name__, self.name, self.owner.name))
                 projection._assign_default_projection_name(state=self,
                                                            sender_name=sender_name,
@@ -1483,7 +1483,7 @@ class State_Base(State):
 
                 # If sender has been instantiated, try to complete initialization
                 # If not, assume it will be handled later (by Mechanism or Composition)
-                if isinstance(sender, State) and sender.initialization_status == ContextFlags.INITIALIZED:
+                if isinstance(sender, Port) and sender.initialization_status == ContextFlags.INITIALIZED:
                     projection._deferred_init(context=context)
 
 
@@ -1499,12 +1499,12 @@ class State_Base(State):
                 # Validate value:
                 #    - check that output of projection's function (projection_spec.value) is compatible with
                 #        self.variable;  if it is not, raise exception:
-                #        the buck stops here; can't modify projection's function to accommodate the State,
+                #        the buck stops here; can't modify projection's function to accommodate the Port,
                 #        or there would be an unmanageable regress of reassigning projections,
                 #        requiring reassignment or modification of sender OutputPorts, etc.
 
                 # PathwayProjection:
-                #    - check that projection's value is compatible with the State's variable
+                #    - check that projection's value is compatible with the Port's variable
                 if isinstance(projection, PathwayProjection_Base):
                     if not iscompatible(projection.defaults.value, self.defaults.variable[0]):
                     # if len(projection.value) != self.defaults.variable.shape[-1]:
@@ -1579,7 +1579,7 @@ class State_Base(State):
     # FIX: MOVE TO OutputPort or...
     # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
     def _instantiate_projection_from_state(self, projection_spec, receiver=None, feedback=False, context=None):
-        """Instantiate outgoing projection from a State and assign it to self.efferents
+        """Instantiate outgoing projection from a Port and assign it to self.efferents
 
         Instantiate Projections specified in projection_list and, for each:
             - insure its self.value is compatible with the projection's function variable
@@ -1591,12 +1591,12 @@ class State_Base(State):
             # Calls _parse_connection_specs() to parse projection_list into a list of ProjectionTuples;
             #    _parse_connection_specs, in turn, calls _parse_projection_spec for each spec in projection_list,
             #    which returns either a Projection object or Projection specification dictionary for each spec;
-            #    that is placed in projection_spec entry of ProjectionTuple (State, weight, exponent, projection_spec).
+            #    that is placed in projection_spec entry of ProjectionTuple (Port, weight, exponent, projection_spec).
 
             Calls _parse_connection_specs() to parse projection into a ProjectionTuple;
                _parse_connection_specs, in turn, calls _parse_projection_spec for the projection_spec,
                which returns either a Projection object or Projection specification dictionary for the spec;
-               that is placed in projection_spec entry of ProjectionTuple (State, weight, exponent, projection_spec).
+               that is placed in projection_spec entry of ProjectionTuple (Port, weight, exponent, projection_spec).
 
             When the Projection is instantiated, it assigns itself to
                its self.path_afferents or .mod_afferents attribute (in Projection_Base._instantiate_receiver) and
@@ -1649,7 +1649,7 @@ class State_Base(State):
 
             # VALIDATE CONNECTION AND RECEIVER SPECS
 
-            # Validate that State to be connected to specified in receiver is same as any one specified in connection
+            # Validate that Port to be connected to specified in receiver is same as any one specified in connection
             def _get_receiver_state(spec):
                 """Get state specification from ProjectionTuple, which itself may be a ProjectionTuple"""
                 if isinstance(spec, (tuple, ProjectionTuple)):
@@ -1666,17 +1666,17 @@ class State_Base(State):
             receiver_state = _get_receiver_state(receiver)
             connection_receiver_state = _get_receiver_state(connection)
             if receiver_state != connection_receiver_state:
-                raise StateError("PROGRAM ERROR: State specified as receiver ({}) should "
+                raise StateError("PROGRAM ERROR: Port specified as receiver ({}) should "
                                  "be the same as the one specified in the connection {}.".
                                  format(receiver_state, connection_receiver_state))
 
             if (not isinstance(connection, ProjectionTuple)
                 and receiver
-                and not isinstance(receiver, (State, Mechanism))
-                and not (inspect.isclass(receiver) and issubclass(receiver, (State, Mechanism)))):
+                and not isinstance(receiver, (Port, Mechanism))
+                and not (inspect.isclass(receiver) and issubclass(receiver, (Port, Mechanism)))):
                 raise StateError("Receiver ({}) of {} from {} must be a {}, {}, a class of one, or a {}".
                                  format(receiver, projection_spec, self.name,
-                                        State.__name__, Mechanism.__name__, ProjectionTuple.__name__))
+                                        Port.__name__, Mechanism.__name__, ProjectionTuple.__name__))
 
             if isinstance(receiver, Mechanism):
                 from psyneulink.core.components.states.inputport import InputPort
@@ -1702,7 +1702,7 @@ class State_Base(State):
 
             # GET Projection --------------------------------------------------------
 
-            # Get sender State, weight, exponent and projection for each projection specification
+            # Get sender Port, weight, exponent and projection for each projection specification
             #    note: weight and exponent for connection have been assigned to Projection in _parse_connection_specs
             connection_receiver, weight, exponent, projection_spec = connection
 
@@ -1744,7 +1744,7 @@ class State_Base(State):
             else:
                 rcvr_str = ""
                 if receiver:
-                    if isinstance(receiver, State):
+                    if isinstance(receiver, Port):
                         rcvr_str = " to {}".format(receiver.name)
                     else:
                         rcvr_str = " to {}".format(receiver.__name__)
@@ -1765,7 +1765,7 @@ class State_Base(State):
             # Deferred init
             if projection.initialization_status == ContextFlags.DEFERRED_INIT:
                 projection._init_args[SENDER] = self
-                if isinstance(receiver, State) and receiver.initialization_status == ContextFlags.INITIALIZED:
+                if isinstance(receiver, Port) and receiver.initialization_status == ContextFlags.INITIALIZED:
                     projection._deferred_init(context=context)
 
             # VALIDATE (if initialized or being initialized)
@@ -1774,10 +1774,10 @@ class State_Base(State):
 
                 # If still being initialized, then assign sender and receiver as necessary
                 if projection.initialization_status == ContextFlags.INITIALIZING:
-                    if not isinstance(projection.sender, State):
+                    if not isinstance(projection.sender, Port):
                         projection.sender = self
 
-                    if not isinstance(projection.receiver, State):
+                    if not isinstance(projection.receiver, Port):
                         projection.receiver = receiver_state
 
                     projection._assign_default_projection_name(
@@ -1793,13 +1793,13 @@ class State_Base(State):
                     #    - check that input to Projection is compatible with self.value
                     if not iscompatible(self.defaults.value, projection.defaults.variable):
                         raise StateError("Input to {} ({}) is not compatible with the value ({}) of "
-                                         "the State from which it is supposed to project ({})".
+                                         "the Port from which it is supposed to project ({})".
                                          format(projection.name, projection.defaults.variable, self.defaults.value, self.name))
 
                     # Validate value:
                     #    - check that output of projection's function (projection_spec.value) is compatible with
-                    #        variable of the State to which it projects;  if it is not, raise exception:
-                    #        the buck stops here; can't modify projection's function to accommodate the State,
+                    #        variable of the Port to which it projects;  if it is not, raise exception:
+                    #        the buck stops here; can't modify projection's function to accommodate the Port,
                     #        or there would be an unmanageable regress of reassigning projections,
                     #        requiring reassignment or modification of sender OutputPorts, etc.
 
@@ -1808,7 +1808,7 @@ class State_Base(State):
                     if isinstance(projection, PathwayProjection_Base):
                         if not iscompatible(projection.value, receiver.socket_template):
                             raise StateError("Output of {} ({}) is not compatible with the variable ({}) of "
-                                             "the State to which it is supposed to project ({}).".
+                                             "the Port to which it is supposed to project ({}).".
                                              format(projection.name, projection.value,
                                                     receiver.defaults.variable, receiver.name, ))
 
@@ -1846,21 +1846,21 @@ class State_Base(State):
                          format(self.__class__.__name__))
 
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
-        """Parse parameters in State specification tuple specific to each subclass
+        """Parse parameters in Port specification tuple specific to each subclass
 
         Called by _parse_state_spec()
-        state_dict contains standard args for State constructor passed to _parse_state_spec
+        state_dict contains standard args for Port constructor passed to _parse_state_spec
         state_specific_spec is either a:
-            - tuple containing a specification for the State and/or Projections to/from it
+            - tuple containing a specification for the Port and/or Projections to/from it
             - a dict containing state-specific parameters to be processed
 
          Returns two values:
-         - state_spec:  specification for the State;
+         - state_spec:  specification for the Port;
                           - can be None (this is usually the case when state_specific_spec
                             is a tuple specifying a Projection that will be used to specify the state)
                           - if a value is returned, that is used by _parse_state_spec in a recursive call to
-                            parse the specified value as the State specification
-         - params: state-specific parameters that will be included in the PARAMS entry of the State specification dict
+                            parse the specified value as the Port specification
+         - params: state-specific parameters that will be included in the PARAMS entry of the Port specification dict
          """
         raise StateError("PROGRAM ERROR: {} does not implement _parse_state_specific_specs method".
                          format(self.__class__.__name__))
@@ -1875,9 +1875,9 @@ class State_Base(State):
         """
         # SET UP ------------------------------------------------------------------------------------------------
 
-        # Get State-specific param_specs
+        # Get Port-specific param_specs
         try:
-            # Get State params
+            # Get Port params
             self.stateParams = params[self.paramsType]
         except (KeyError, TypeError):
             self.stateParams = {}
@@ -2314,10 +2314,10 @@ class State_Base(State):
 
     @staticmethod
     def _get_state_function_value(owner, function, variable):
-        """Execute the function of a State and return its value
+        """Execute the function of a Port and return its value
         # FIX: CONSIDER INTEGRATING THIS INTO _EXECUTE FOR STATE?
 
-        This is a stub, that a State subclass can override to treat its function in a State-specific manner.
+        This is a stub, that a Port subclass can override to treat its function in a Port-specific manner.
         Used primarily during validation, when the function may not have been fully instantiated yet
         (e.g., InputPort must sometimes embed its variable in a list-- see InputPort._get_state_function_value).
         """
@@ -2342,38 +2342,38 @@ class State_Base(State):
 
 
 def _instantiate_state_list(owner,
-                            state_list,              # list of State specs, (state_spec, params) tuples, or None
+                            state_list,              # list of Port specs, (state_spec, params) tuples, or None
                             state_types,             # StateType subclass
-                            state_param_identifier,  # used to specify state_type State(s) in params[]
-                            reference_value,         # value(s) used as default for State and to check compatibility
+                            state_param_identifier,  # used to specify state_type Port(s) in params[]
+                            reference_value,         # value(s) used as default for Port and to check compatibility
                             reference_value_name,    # name of reference_value type (e.g. variable, output...)
                             context=None):
     """Instantiate and return a ContentAddressableList of States specified in state_list
 
     Arguments:
-    - state_type (class): State class to be instantiated
-    - state_list (list): List of State specifications (generally from owner.paramsCurrent[kw<State>]),
+    - state_type (class): Port class to be instantiated
+    - state_list (list): List of Port specifications (generally from owner.paramsCurrent[kw<Port>]),
                              each item of which must be a:
                                  string (used as name)
                                  number (used as constraint value)
                                  dict (key=name, value=reference_value or param dict)
-                         if None, instantiate a single default State using reference_value as state_spec
+                         if None, instantiate a single default Port using reference_value as state_spec
     - state_param_identifier (str): used to identify set of States in params;  must be one of:
         - INPUT_PORT
         - OUTPUT_PORT
         (note: this is not a list, even if state_types is, since it is about the attribute to which the
                states will be assigned)
     - reference_value (2D np.array): set of 1D np.ndarrays used as default values and
-        for compatibility testing in instantiation of State(s):
+        for compatibility testing in instantiation of Port(s):
         - INPUT_PORT: self.defaults.variable
         - OUTPUT_PORT: self.value
         ?? ** Note:
         * this is ignored if param turns out to be a dict (entry value used instead)
-    - reference_value_name (str):  passed to State._instantiate_state(), used in error messages
+    - reference_value_name (str):  passed to Port._instantiate_state(), used in error messages
     - context (str)
 
     If state_list is None:
-        - instantiate a default State using reference_value,
+        - instantiate a default Port using reference_value,
         - place as the single entry of the list returned.
     Otherwise, if state_list is:
         - a single value:
@@ -2381,15 +2381,15 @@ def _instantiate_state_list(owner,
         - a list:
             instantiate each item (if necessary) and place in a ContentAddressableList
     In each case, generate a ContentAddressableList with one or more entries, assigning:
-        # the key for each entry the name of the State if provided,
+        # the key for each entry the name of the Port if provided,
         #     otherwise, use MECHANISM<state_type>States-n (incrementing n for each additional entry)
-        # the State value for each entry to the corresponding item of the Mechanism's state_type State's value
+        # the Port value for each entry to the corresponding item of the Mechanism's state_type Port's value
         # the dict to both self.<state_type>States and paramsCurrent[MECHANISM<state_type>States]
-        # self.<state_type>State to self.<state_type>States[0] (the first entry of the dict)
+        # self.<state_type>Port to self.<state_type>States[0] (the first entry of the dict)
     Notes:
-        * if there is only one State, but the value of the Mechanism's state_type has more than one item:
-            assign it to the sole State, which is assumed to have a multi-item value
-        * if there is more than one State:
+        * if there is only one Port, but the value of the Mechanism's state_type has more than one item:
+            assign it to the sole Port, which is assumed to have a multi-item value
+        * if there is more than one Port:
             the number of States must match length of Mechanisms state_type value or an exception is raised
     """
 
@@ -2416,7 +2416,7 @@ def _instantiate_state_list(owner,
     # VALIDATE THAT NUMBER OF STATES IS COMPATIBLE WITH NUMBER OF ITEMS IN reference_values
 
     num_states = len(state_list)
-    # Check that reference_value is an indexable object, the items of which are the constraints for each State
+    # Check that reference_value is an indexable object, the items of which are the constraints for each Port
     # Notes
     # * generally, this will be a list or an np.ndarray (either >= 2D np.array or with a dtype=object)
     # * for OutputPorts, this should correspond to its value
@@ -2438,7 +2438,7 @@ def _instantiate_state_list(owner,
 
     # INSTANTIATE EACH STATE
 
-    states = ContentAddressableList(component_type=State_Base,
+    states = ContentAddressableList(component_type=Port_Base,
                                     name=owner.name+' ContentAddressableList of ' + state_param_identifier)
     # For each state, pass state_spec and the corresponding item of reference_value to _instantiate_state
 
@@ -2469,32 +2469,32 @@ def _instantiate_state_list(owner,
 
 
 @tc.typecheck
-def _instantiate_state(state_type:_is_state_class,           # State's type
-                       owner:tc.any(Mechanism, Projection),  # State's owner
-                       reference_value,                      # constraint for State's value and default for variable
+def _instantiate_state(state_type:_is_state_class,           # Port's type
+                       owner:tc.any(Mechanism, Projection),  # Port's owner
+                       reference_value,                      # constraint for Port's value and default for variable
                        name:tc.optional(str)=None,           # state's name if specified
                        variable=None,                        # used as default value for state if specified
                        params=None,                          # state-specific params
                        prefs=None,
                        context=None,
                        **state_spec):                        # captures *state_spec* arg and any other non-standard ones
-    """Instantiate a State of specified type, with a value that is compatible with reference_value
+    """Instantiate a Port of specified type, with a value that is compatible with reference_value
 
-    This is the interface between the various ways in which a state can be specified and the State's constructor
+    This is the interface between the various ways in which a state can be specified and the Port's constructor
         (see list below, and `State_Specification` in docstring above).
     It calls _parse_state_spec to:
-        create a State specification dictionary (the canonical form) that can be passed to the State's constructor;
-        place any State subclass-specific params in the params entry;
+        create a Port specification dictionary (the canonical form) that can be passed to the Port's constructor;
+        place any Port subclass-specific params in the params entry;
         call _parse_state_specific_specs to parse and validate the values of those params
-    It checks that the State's value is compatible with the reference value and/or any projection specifications
+    It checks that the Port's value is compatible with the reference value and/or any projection specifications
 
     # Constraint value must be a number or a list or tuple of numbers
     # (since it is used as the variable for instantiating the requested state)
 
     If state_spec is a:
-    + State class:
+    + Port class:
         implement default using reference_value
-    + State object:
+    + Port object:
         check compatibility of value with reference_value
         check owner is owner; if not, raise exception
     + 2-item tuple:
@@ -2506,10 +2506,10 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
     + Projection class (or keyword string constant for one):
         assign reference_value to value
         assign projection class spec to STATE_PARAMS{PROJECTIONS:<projection>}
-    + specification dict for State
+    + specification dict for Port
         check compatibility of STATE_VALUE with reference_value
 
-    Returns a State or None
+    Returns a Port or None
     """
 
     # Parse reference value to get actual value (in case it is, itself, a specification dict)
@@ -2533,28 +2533,28 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
                                           context=context,
                                           **state_spec)
 
-    # STATE SPECIFICATION IS A State OBJECT ***************************************
+    # STATE SPECIFICATION IS A Port OBJECT ***************************************
     # Validate and return
 
     # - check that its value attribute matches the reference_value
     # - check that it doesn't already belong to another owner
-    # - if either fails, assign default State
+    # - if either fails, assign default Port
 
-    if isinstance(parsed_state_spec, State):
+    if isinstance(parsed_state_spec, Port):
 
         state = parsed_state_spec
 
-        # State initialization was deferred (owner or reference_value was missing), so
+        # Port initialization was deferred (owner or reference_value was missing), so
         #    assign owner, variable, and/or reference_value if they were not already specified
         if state.initialization_status == ContextFlags.DEFERRED_INIT:
             if not state._init_args[OWNER]:
                 state._init_args[OWNER] = owner
-            # If variable was not specified by user or State's constructor:
+            # If variable was not specified by user or Port's constructor:
             if not VARIABLE in state._init_args or state._init_args[VARIABLE] is None:
                 # If call to _instantiate_state specified variable, use that
                 if variable is not None:
                     state._init_args[VARIABLE] = variable
-                # Otherwise, use State's owner's default variable as default
+                # Otherwise, use Port's owner's default variable as default
                 else:
                     state._init_args[VARIABLE] = owner.defaults.variable[0]
             if not hasattr(state, REFERENCE_VALUE):
@@ -2567,7 +2567,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
         # # FIX: 10/3/17 - CHECK THE FOLLOWING BY CALLING STATE-SPECIFIC METHOD?
         # # FIX: DO THIS IN _parse_connection_specs?
-        # # *reference_value* arg should generally be a constraint for the value of the State;  however,
+        # # *reference_value* arg should generally be a constraint for the value of the Port;  however,
         # #     if state_spec is a Projection, and method is being called from:
         # #         InputPort, reference_value should be the projection's value;
         # #         ParameterPort, reference_value should be the projection's value;
@@ -2579,20 +2579,20 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
         # # FIX: ----------------------------------------------------------
 
         # FIX: THIS SHOULD ONLY APPLY TO InputPort AND ParameterPort; WHAT ABOUT OutputPort?
-        # State's assigned value is incompatible with its reference_value (presumably its owner Mechanism's variable)
+        # Port's assigned value is incompatible with its reference_value (presumably its owner Mechanism's variable)
         reference_value = reference_value if reference_value is not None else state.reference_value
         if not iscompatible(state.value, reference_value):
             raise StateError("{}'s value attribute ({}) is incompatible with the {} ({}) of its owner ({})".
                              format(state.name, state.value, REFERENCE_VALUE, reference_value, owner.name))
 
-        # State has already been assigned to an owner
+        # Port has already been assigned to an owner
         if state.owner is not None and not state.owner is owner:
-            raise StateError("State {} does not belong to the owner for which it is specified ({})".
+            raise StateError("Port {} does not belong to the owner for which it is specified ({})".
                              format(state.name, owner.name))
         return state
 
-    # STATE SPECIFICATION IS A State specification dictionary ***************************************
-    #    so, call constructor to instantiate State
+    # STATE SPECIFICATION IS A Port specification dictionary ***************************************
+    #    so, call constructor to instantiate Port
 
     state_spec_dict = parsed_state_spec
 
@@ -2619,12 +2619,12 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
     if state_spec_dict[PARAMS] and REFERENCE_VALUE_NAME in state_spec_dict[PARAMS]:
         del state_spec_dict[PARAMS][REFERENCE_VALUE_NAME]
 
-    # Implement default State
+    # Implement default Port
     state = state_type(**state_spec_dict, context=context)
 
 # FIX LOG: ADD NAME TO LIST OF MECHANISM'S VALUE ATTRIBUTES FOR USE BY LOGGING ENTRIES
     # This is done here to register name with Mechanism's stateValues[] list
-    # It must be consistent with value setter method in State
+    # It must be consistent with value setter method in Port
 # FIX LOG: MOVE THIS TO MECHANISM STATE __init__ (WHERE IT CAN BE KEPT CONSISTENT WITH setter METHOD??
 #      OR MAYBE JUST REGISTER THE NAME, WITHOUT SETTING THE
 # FIX: 2/17/17:  COMMENTED THIS OUT SINCE IT CREATES AN ATTRIBUTE ON OWNER THAT IS NAMED <state.name.value>
@@ -2637,25 +2637,25 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
 
 def _parse_state_type(owner, state_spec):
-    """Determine State type for state_spec and return type
+    """Determine Port type for state_spec and return type
 
-    Determine type from context and/or type of state_spec if the latter is not a `State <State>` or `Mechanism
+    Determine type from context and/or type of state_spec if the latter is not a `Port <Port>` or `Mechanism
     <Mechanism>`.
     """
 
-    # State class reference
-    if isinstance(state_spec, State):
+    # Port class reference
+    if isinstance(state_spec, Port):
         return type(state_spec)
 
-    # keyword for a State or name of a standard_output_port or of State itself
+    # keyword for a Port or name of a standard_output_port or of Port itself
     if isinstance(state_spec, str):
 
-        # State keyword
+        # Port keyword
         if state_spec in state_type_keywords:
             import sys
             return getattr(sys.modules['PsyNeuLink.Components.States.'+state_spec], state_spec)
 
-        # Try as name of State
+        # Try as name of Port
         for state_attr in [INPUT_PORTS, PARAMETER_PORTS, OUTPUT_PORTS]:
             state_list = getattr(owner, state_attr)
             try:
@@ -2676,16 +2676,16 @@ def _parse_state_type(owner, state_spec):
                 from psyneulink.core.components.States.OutputPort import OutputPort
                 return OutputPort
 
-    # State specification dict
+    # Port specification dict
     if isinstance(state_spec, dict):
         if STATE_TYPE in state_spec:
-            if not inspect.isclass(state_spec[STATE_TYPE]) and issubclass(state_spec[STATE_TYPE], State):
+            if not inspect.isclass(state_spec[STATE_TYPE]) and issubclass(state_spec[STATE_TYPE], Port):
                 raise StateError("STATE entry of state specification for {} ({})"
-                                 "is not a State or type of State".
+                                 "is not a Port or type of Port".
                                  format(owner.name, state_spec[STATE]))
             return state_spec[STATE_TYPE]
 
-    raise StateError("{} is not a legal State specification for {}".format(state_spec, owner.name))
+    raise StateError("{} is not a legal Port specification for {}".format(state_spec, owner.name))
 
 
 STATE_SPEC_INDEX = 0
@@ -2705,35 +2705,35 @@ def _parse_state_spec(state_type=None,
                       prefs=None,
                       context=None,
                       **state_spec):
-    """Parse State specification and return either State object or State specification dictionary
+    """Parse Port specification and return either Port object or Port specification dictionary
 
-    If state_spec is or resolves to a State object, returns State object.
-    Otherwise, return State specification dictionary using any arguments provided as defaults
+    If state_spec is or resolves to a Port object, returns Port object.
+    Otherwise, return Port specification dictionary using any arguments provided as defaults
     Warn if variable is assigned the default value, and verbosePref is set on owner.
-    *value* arg should generally be a constraint for the value of the State;  however,
+    *value* arg should generally be a constraint for the value of the Port;  however,
         if state_spec is a Projection, and method is being called from:
             InputPort, value should be the projection's value;
             ParameterPort, value should be the projection's value;
             OutputPort, value should be the projection's variable
 
-    If a State specification dictionary is specified in the *state_specs* argument,
+    If a Port specification dictionary is specified in the *state_specs* argument,
        its entries are moved to standard_args, replacing any that are there, and they are deleted from state_specs;
        any remaining entries are passed to _parse_state_specific_specs and placed in params.
-    This gives precedence to values of standard args specified in a State specification dictionary
+    This gives precedence to values of standard args specified in a Port specification dictionary
        (e.g., by the user) over any explicitly specified in the call to _instantiate_state.
-    The standard arguments (from standard_args and/or a State specification dictonary in state_specs)
-        are placed assigned to state_dict, as defaults for the State specification dictionary returned by this method.
-    Any item in *state_specs* OTHER THAN a State specification dictionary is placed in state_spec_arg
+    The standard arguments (from standard_args and/or a Port specification dictonary in state_specs)
+        are placed assigned to state_dict, as defaults for the Port specification dictionary returned by this method.
+    Any item in *state_specs* OTHER THAN a Port specification dictionary is placed in state_spec_arg
        is parsed and/or validated by this method.
     Values in standard_args (i.e., specified in the call to _instantiate_state) are used to validate a state specified
        in state_spec_arg;
-       - if the State is an existing one, the standard_arg values are assigned to it;
-       - if state_spec_arg specifies a new State, the values in standard_args are used as defaults;  any specified
+       - if the Port is an existing one, the standard_arg values are assigned to it;
+       - if state_spec_arg specifies a new Port, the values in standard_args are used as defaults;  any specified
           in the state_spec_arg specification are used
     Any arguments to _instantiate_states that are not standard arguments (in standard_args) or a state_specs_arg
        generate a warning and are ignored.
 
-    Return either State object or State specification dictionary
+    Return either Port object or Port specification dictionary
     """
     from psyneulink.core.components.projections.projection \
         import _is_projection_spec, _parse_projection_spec, _parse_connection_specs, ProjectionTuple
@@ -2752,11 +2752,11 @@ def _parse_state_spec(state_type=None,
     # If there is a state_specs arg passed from _instantiate_state:
     if STATE_SPEC_ARG in state_spec:
 
-        # If it is a State specification dictionary
+        # If it is a Port specification dictionary
         if isinstance(state_spec[STATE_SPEC_ARG], dict):
 
-            # If the State specification is a Projection that has a sender already assigned,
-            #    then return that State with the Projection assigned to it
+            # If the Port specification is a Projection that has a sender already assigned,
+            #    then return that Port with the Projection assigned to it
             #    (this occurs, for example, if an instantiated ControlSignal is used to specify a parameter
             try:
                 assert len(state_spec[STATE_SPEC_ARG][PROJECTIONS])==1
@@ -2770,14 +2770,14 @@ def _parse_state_spec(state_type=None,
             except:
                 pass
 
-            # Use the value of any standard args specified in the State specification dictionary
+            # Use the value of any standard args specified in the Port specification dictionary
             #    to replace those explicitly specified in the call to _instantiate_state (i.e., passed in standard_args)
             #    (use copy so that items in state_spec dict are not deleted when called from _validate_params)
             state_specific_args = state_spec[STATE_SPEC_ARG].copy()
             standard_args.update({key: state_specific_args[key]
                                   for key in state_specific_args
                                   if key in standard_args and state_specific_args[key] is not None})
-            # Delete them from the State specification dictionary, leaving only state-specific items there
+            # Delete them from the Port specification dictionary, leaving only state-specific items there
             for key in standard_args:
                 state_specific_args.pop(key, None)
 
@@ -2795,7 +2795,7 @@ def _parse_state_spec(state_type=None,
         else:
             state_specification = state_spec[STATE_SPEC_ARG]
 
-        # Delete the State specification dictionary from state_spec
+        # Delete the Port specification dictionary from state_spec
         del state_spec[STATE_SPEC_ARG]
 
     if REFERENCE_VALUE_NAME in state_spec:
@@ -2815,22 +2815,22 @@ def _parse_state_spec(state_type=None,
     variable = state_dict[VARIABLE]
     params = state_specific_args
 
-    # Validate that state_type is a State class
+    # Validate that state_type is a Port class
     if isinstance(state_type, str):
         try:
             state_type = StateRegistry[state_type].subclass
         except KeyError:
             raise StateError("{} specified as a string (\'{}\') must be the name of a sublcass of {}".
-                             format(STATE_TYPE, state_type,State.__name__))
+                             format(STATE_TYPE, state_type, Port.__name__))
         state_dict[STATE_TYPE] = state_type
-    elif not inspect.isclass(state_type) or not issubclass(state_type, State):
+    elif not inspect.isclass(state_type) or not issubclass(state_type, Port):
         raise StateError("\'state_type\' arg ({}) must be a sublcass of {}".format(state_type,
-                                                                                   State.__name__))
+                                                                                   Port.__name__))
     state_type_name = state_type.__name__
 
     # EXISTING STATES
 
-    # Determine whether specified State is one to be instantiated or to be connected with,
+    # Determine whether specified Port is one to be instantiated or to be connected with,
     #    and validate that it is consistent with any standard_args specified in call to _instantiate_state
 
     # function; try to resolve to a value
@@ -2856,29 +2856,29 @@ def _parse_state_spec(state_type=None,
                     state_specification, = specs
                 except ValueError:
                     assert False, \
-                        f"PROGRAM ERROR:  More than one {State.__name__} type found ({specs})" \
+                        f"PROGRAM ERROR:  More than one {Port.__name__} type found ({specs})" \
                             f"that can be specificied as a modulatory {Projection.__name__} to {state_type}"
 
         projection = state_type
 
-    # State or Mechanism object specification:
-    if isinstance(state_specification, (Mechanism, State)):
+    # Port or Mechanism object specification:
+    if isinstance(state_specification, (Mechanism, Port)):
 
         projection = None
 
         # Mechanism object:
         if isinstance(state_specification, Mechanism):
             mech = state_specification
-            # Instantiating State of specified Mechanism, so get primary State of state_type
+            # Instantiating Port of specified Mechanism, so get primary Port of state_type
             if mech is owner:
                 state_specification = state_type._get_primary_state(state_type, mech)
-            # mech used to specify State to be connected with:
+            # mech used to specify Port to be connected with:
             else:
                 state_specification = mech
                 projection = state_type
 
         if state_specification.__class__ == state_type:
-            # Make sure that the specified State belongs to the Mechanism passed in the owner arg
+            # Make sure that the specified Port belongs to the Mechanism passed in the owner arg
             if state_specification.initialization_status == ContextFlags.DEFERRED_INIT:
                 state_owner = state_specification._init_args[OWNER]
             else:
@@ -2895,11 +2895,11 @@ def _parse_state_spec(state_type=None,
                     assert True
                 except AttributeError:
                     raise StateError("Attempt to assign a {} ({}) to {} that belongs to another {} ({})".
-                                     format(State.__name__, state_specification.name, owner.name,
+                                     format(Port.__name__, state_specification.name, owner.name,
                                             Mechanism.__name__, state_owner.name))
             return state_specification
 
-        # Specication is a State with which connectee can connect, so assume it is a Projection specification
+        # Specication is a Port with which connectee can connect, so assume it is a Projection specification
         elif state_specification.__class__.__name__ in state_type.connectsWith + state_type.modulators:
             projection = state_type
 
@@ -2956,10 +2956,10 @@ def _parse_state_spec(state_type=None,
             projection_value = _get_projection_value_shape(sender, matrix)
 
         reference_value = state_dict[REFERENCE_VALUE]
-        # If State's reference_value is not specified, but Projection's value is, use projection_spec's value
+        # If Port's reference_value is not specified, but Projection's value is, use projection_spec's value
         if reference_value is None and projection_value is not None:
             state_dict[REFERENCE_VALUE] = projection_value
-        # If State's reference_value has been specified, check for compatibility with projection_spec's value
+        # If Port's reference_value has been specified, check for compatibility with projection_spec's value
         elif (reference_value is not None and projection_value is not None
             and not iscompatible(reference_value, projection_value)):
             raise StateError("{} of {} ({}) is not compatible with {} of {} ({}) for {}".
@@ -2999,7 +2999,7 @@ def _parse_state_spec(state_type=None,
     #      FOR ParameterPort: default (base) parameter value
     #      FOR OutputPort: index
     #      FOR ModulatorySignal: default value of ModulatorySignal (e.g, allocation or gating policy)
-    # value, so use as variable of State
+    # value, so use as variable of Port
     elif is_value_spec(state_specification):
         state_dict[REFERENCE_VALUE] = np.atleast_1d(state_specification)
 
@@ -3019,11 +3019,11 @@ def _parse_state_spec(state_type=None,
                                               exponent=None,
                                               projection=state_type)
 
-        # State specification is a tuple
+        # Port specification is a tuple
         elif isinstance(state_specification, tuple):
 
-            # 1st item of tuple is a tuple (presumably a (State name, Mechanism) tuple),
-            #    so parse to get specified State (any projection spec should be included as 4th item of outer tuple)
+            # 1st item of tuple is a tuple (presumably a (Port name, Mechanism) tuple),
+            #    so parse to get specified Port (any projection spec should be included as 4th item of outer tuple)
             if isinstance(state_specification[0],tuple):
                 proj_spec = _parse_connection_specs(connectee_state_type=state_type,
                                                     owner=owner,
@@ -3033,7 +3033,7 @@ def _parse_state_spec(state_type=None,
             # Reassign tuple for handling by _parse_state_specific_specs
             state_specific_specs = state_specification
 
-        # Otherwise, just pass params to State subclass
+        # Otherwise, just pass params to Port subclass
         else:
             state_specific_specs = params
 
@@ -3042,7 +3042,7 @@ def _parse_state_spec(state_type=None,
                                                                          owner=owner,
                                                                          state_dict=state_dict,
                                                                          state_specific_spec = state_specific_specs)
-            # State subclass returned a state_spec, so call _parse_state_spec to parse it
+            # Port subclass returned a state_spec, so call _parse_state_spec to parse it
             if state_spec is not None:
                 state_dict = _parse_state_spec(context=context, state_spec=state_spec, **standard_args)
 
@@ -3053,7 +3053,7 @@ def _parse_state_spec(state_type=None,
                 params[PROJECTIONS].append(state_dict[PROJECTIONS])
 
             # MECHANISM entry specifies Mechanism; <STATES> entry has names of its States
-            #           MECHANISM: <Mechanism>, <STATES>:[<State.name>, ...]}
+            #           MECHANISM: <Mechanism>, <STATES>:[<Port.name>, ...]}
             if MECHANISM in state_specific_args:
 
                 if not PROJECTIONS in params:
@@ -3080,7 +3080,7 @@ def _parse_state_spec(state_type=None,
                         state_specs = state_specific_args[STATES]
                         state_specs = state_specs if isinstance(state_specs, list) else [state_specs]
                         for state_spec in state_specs:
-                            # If State is a tuple, get its first item as state
+                            # If Port is a tuple, get its first item as state
                             state = state_spec[0] if isinstance(state_spec, tuple) else state_spec
                             try:
                                 state_attr = getattr(mech, STATES)
@@ -3098,10 +3098,10 @@ def _parse_state_spec(state_type=None,
                             if isinstance(state_spec, tuple):
                                 state = (state,) + state_spec[1:]
                             params[PROJECTIONS].append(state)
-                        # Delete <STATES> entry as it is not a parameter of a State
+                        # Delete <STATES> entry as it is not a parameter of a Port
                         del state_specific_args[STATES]
 
-                # Delete MECHANISM entry as it is not a parameter of a State
+                # Delete MECHANISM entry as it is not a parameter of a Port
                 del state_specific_args[MECHANISM]
 
             # FIX: 11/4/17 - MAY STILL NEED WORK:
@@ -3121,7 +3121,7 @@ def _parse_state_spec(state_type=None,
                     raise StateError("There is more than one entry of the {} "
                                      "specification dictionary for {} ({}) "
                                      "that is not a keyword; there should be "
-                                     "only one (used to name the State, with a "
+                                     "only one (used to name the Port, with a "
                                      "list of Projection specifications".
                                      format(state_type.__name__,
                                             owner.name,
@@ -3133,7 +3133,7 @@ def _parse_state_spec(state_type=None,
 
             if PROJECTIONS in params and params[PROJECTIONS] is not None:
                 #       (E.G., WEIGHTS AND EXPONENTS FOR InputPort AND INDEX FOR OutputPort)
-                # Get and parse projection specifications for the State
+                # Get and parse projection specifications for the Port
                 params[PROJECTIONS] = _parse_connection_specs(state_type, owner, params[PROJECTIONS])
 
             # Update state_dict[PARAMS] with params
@@ -3158,7 +3158,7 @@ def _parse_state_spec(state_type=None,
         else:
             state_dict[VARIABLE] = state_dict[REFERENCE_VALUE]
 
-    # get the State's value from the spec function if it exists,
+    # get the Port's value from the spec function if it exists,
     # otherwise we can assume there is a default function that does not
     # affect the shape, so it matches variable
     # FIX: JDC 2/21/18 PROBLEM IS THAT, IF IT IS AN InputPort, THEN EITHER _update MUST BE CALLED
@@ -3190,7 +3190,7 @@ def _parse_state_spec(state_type=None,
     # Assign value based on variable if not specified
     if state_dict[VALUE] is None:
         state_dict[VALUE] = spec_function_value
-    # Otherwise, make sure value returned by spec function is same as one specified for State's value
+    # Otherwise, make sure value returned by spec function is same as one specified for Port's value
     # else:
     #     if not np.asarray(state_dict[VALUE]).shape == np.asarray(spec_function_value).shape:
     #         state_name = state_dict[NAME] or 'unnamed'
@@ -3200,7 +3200,7 @@ def _parse_state_spec(state_type=None,
     #                                 state_dict[OWNER].name, spec_function_value, spec_function))
 
     if state_dict[REFERENCE_VALUE] is not None and not iscompatible(state_dict[VALUE], state_dict[REFERENCE_VALUE]):
-        raise StateError("State value ({}) does not match reference_value ({}) for {} of {})".
+        raise StateError("Port value ({}) does not match reference_value ({}) for {} of {})".
                          format(state_dict[VALUE], state_dict[REFERENCE_VALUE], state_type.__name__, owner.name))
 
     return state_dict
@@ -3217,20 +3217,20 @@ def _get_state_for_socket(owner,
                           mech_state_attribute:tc.optional(tc.any(str, list))=None,
                           projection_socket:tc.optional(tc.any(str, set))=None):
     """Take some combination of Mechanism, state name (string), Projection, and projection_socket, and return
-    specified State(s)
+    specified Port(s)
 
     If state_spec is:
-        State name (str), then *mech* and *mech_state_attribute* args must be specified
-        Mechanism, then *state_type* must be specified; primary State is returned
+        Port name (str), then *mech* and *mech_state_attribute* args must be specified
+        Mechanism, then *state_type* must be specified; primary Port is returned
         Projection, *projection_socket* arg must be specified;
                     Projection must be instantiated or in deferred_init, with projection_socket attribute assigned
 
     IMPLEMENTATION NOTES:
-    Currently does not support State specification dict (referenced State must be instantiated)
+    Currently does not support Port specification dict (referenced Port must be instantiated)
     Currently does not support Projection specification using class or Projection specification dict
         (Projection must be instantiated, or in deferred_init status with projection_socket assigned)
 
-    Returns a State if it can be resolved, or list of allowed State types if not.
+    Returns a Port if it can be resolved, or list of allowed Port types if not.
     """
     from psyneulink.core.components.projections.projection import \
         _is_projection_spec, _validate_connection_request, _parse_projection_spec
@@ -3249,17 +3249,17 @@ def _get_state_for_socket(owner,
 
     state_type_names = ", ".join([s.__name__ for s in state_types])
 
-    # Return State itself if it is an instantiated State
-    if isinstance(state_spec, State):
+    # Return Port itself if it is an instantiated Port
+    if isinstance(state_spec, Port):
         return state_spec
 
     # Return state_type (Class) if state_spec is:
-    #    - an allowable State type for the projection_socket
+    #    - an allowable Port type for the projection_socket
     #    - a projection keyword (e.g., 'LEARNING' or 'CONTROL', and it is consistent with projection_socket
-    # Otherwise, return list of allowable State types for projection_socket (if state_spec is a Projection type)
+    # Otherwise, return list of allowable Port types for projection_socket (if state_spec is a Projection type)
     if _is_projection_spec(state_spec):
 
-        # These specifications require that a particular State be specified to assign its default Projection type
+        # These specifications require that a particular Port be specified to assign its default Projection type
         if ((is_matrix(state_spec) or (isinstance(state_spec, dict) and not PROJECTION_TYPE in state_spec))):
             for st in state_types:
                 try:
@@ -3277,14 +3277,14 @@ def _get_state_for_socket(owner,
             else:
                 proj_type = proj_spec[PROJECTION_TYPE]
 
-        # Get State type if it is appropriate for the specified socket of the
+        # Get Port type if it is appropriate for the specified socket of the
         #  Projection's type
         s = next((s for s in state_types if
                   s.__name__ in getattr(proj_type.sockets, projection_socket)),
                  None)
         if s:
             try:
-                # Return State associated with projection_socket if proj_spec is an actual Projection
+                # Return Port associated with projection_socket if proj_spec is an actual Projection
                 state = getattr(proj_spec, projection_socket)
                 return state
             except AttributeError:
@@ -3292,7 +3292,7 @@ def _get_state_for_socket(owner,
                 return s
 
         # FIX: 10/3/17 - ??IS THE FOLLOWING NECESSARY?  ??HOW IS IT DIFFERENT FROM ABOVE?
-        # Otherwise, get State types that are allowable for that projection_socket
+        # Otherwise, get Port types that are allowable for that projection_socket
         elif inspect.isclass(proj_type) and issubclass(proj_type, Projection):
             projection_socket_state_names = getattr(proj_type.sockets, projection_socket)
             projection_socket_state_types = [StateRegistry[name].subclass for name in projection_socket_state_names]
@@ -3306,9 +3306,9 @@ def _get_state_for_socket(owner,
 
         if mech is None:
             raise StateError("PROGRAM ERROR: A {} must be specified to specify its {} ({}) by name".
-                             format(Mechanism.__name__, State.__name__, state_spec))
+                             format(Mechanism.__name__, Port.__name__, state_spec))
         if mech_state_attribute is None:
-            raise StateError("PROGRAM ERROR: The attribute of {} that holds the requested State ({}) must be specified".
+            raise StateError("PROGRAM ERROR: The attribute of {} that holds the requested Port ({}) must be specified".
                              format(mech.name, state_spec))
         for attr in mech_state_attribute:
             try:
@@ -3328,18 +3328,18 @@ def _get_state_for_socket(owner,
                 attr_name = mech_state_attribute[0] + " attribute"
             else:
                 attr_name = " or ".join(f"{repr(attr)}" for (attr) in mech_state_attribute) + " attributes"
-            raise StateError(f"{mech.name} does not have a {State.__name__} named \'{state_spec}\' in its {attr_name}.")
+            raise StateError(f"{mech.name} does not have a {Port.__name__} named \'{state_spec}\' in its {attr_name}.")
 
-    # Get primary State of specified type
+    # Get primary Port of specified type
     elif isinstance(state_spec, Mechanism):
 
         if state_type is None:
-            raise StateError("PROGRAM ERROR: The type of State requested for {} must be specified "
-                             "to get its primary State".format(state_spec.name))
+            raise StateError("PROGRAM ERROR: The type of Port requested for {} must be specified "
+                             "to get its primary Port".format(state_spec.name))
         try:
             state = state_type._get_primary_state(state_type, state_spec)
-            # Primary State for Mechanism specified in state_spec is not compatible
-            # with owner's State for which a connection is being specified
+            # Primary Port for Mechanism specified in state_spec is not compatible
+            # with owner's Port for which a connection is being specified
             if not state.__class__.__name__ in connectee_state_type.connectsWith:
                 from psyneulink.core.components.projections.projection import ProjectionError
                 raise ProjectionError(f"Primary {state_type.__name__} of {state_spec.name} ({state.name}) cannot be "
@@ -3401,12 +3401,12 @@ def _is_legal_state_spec_tuple(owner, state_spec, state_type_name=None):
         raise StateError("Tuple provided as state_spec for {} of {} ({}) must have exactly two items".
                          format(state_type_name, owner.name, state_spec))
     if not (_is_projection_spec(state_spec[1]) or
-                # IMPLEMENTATION NOTE: Mechanism or State allowed as 2nd item of tuple or
+                # IMPLEMENTATION NOTE: Mechanism or Port allowed as 2nd item of tuple or
                 #                      string (parameter name) as 1st and Mechanism as 2nd
                 #                      to accommodate specification of param for ControlSignal
-                isinstance(state_spec[1], (Mechanism, State))
+                isinstance(state_spec[1], (Mechanism, Port))
                            or (isinstance(state_spec[0], Mechanism) and
                                        state_spec[1] in state_spec[0]._parameter_ports)):
         raise StateError("2nd item of tuple in state_spec for {} of {} ({}) must be a specification "
-                         "for a Mechanism, State, or Projection".
+                         "for a Mechanism, Port, or Projection".
                          format(state_type_name, owner.__class__.__name__, state_spec[1]))

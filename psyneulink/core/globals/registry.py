@@ -114,10 +114,10 @@ def register_category(entry,
     COMMENT
     """
 
-    # IMPLEMENTATION NOTE:  Move to State when that is implemented as ABC
+    # IMPLEMENTATION NOTE:  Move to Port when that is implemented as ABC
     import inspect
-    from psyneulink.core.components.states.state import State, State_Base
-    if inspect.isclass(entry) and issubclass(entry, State) and not entry == State_Base:
+    from psyneulink.core.components.states.state import Port, Port_Base
+    if inspect.isclass(entry) and issubclass(entry, Port) and not entry == Port_Base:
         try:
            entry.stateAttributes
         except AttributeError:

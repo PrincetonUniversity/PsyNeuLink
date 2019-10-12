@@ -84,7 +84,7 @@ to access its `entries <Log.entries>`:
 
 Although every Component is assigned its own Log, that records the `value <Component.value>` of that Component,
 the Logs for `Mechanisms <Mechanism>` and `MappingProjections <MappingProjection>` also  provide access to and control
-the Logs of their `States <State>`.  Specifically the Logs of these Components contain the following information:
+the Logs of their `States <Port>`.  Specifically the Logs of these Components contain the following information:
 
 * **Mechanisms**
 
@@ -329,7 +329,7 @@ Entry values are added by the setter method for the attribute being logged.
 
 The following entries are automatically included in the `loggable_items` of a `Mechanism` object:
     - the `value <Mechanism_Base.value>` of the Mechanism;
-    - the value attribute of every State for which the Mechanism is an owner
+    - the value attribute of every Port for which the Mechanism is an owner
     - value of every projection that sends to those States]
     - the system variables defined in SystemLogEntries (see declaration above)
     - any variables listed in the params[LOG_ENTRIES] of a Mechanism
@@ -604,7 +604,7 @@ class Log:
             - the context of the assignment is above the ContextFlags specified in the logPref setting of the owner object
         Entry values are added by the setter method for the attribute being logged
         The following entries are automatically included in self.entries for a Mechanism object:
-            - the value attribute of every State for which the Mechanism is an owner
+            - the value attribute of every Port for which the Mechanism is an owner
             [TBI: - value of every projection that sends to those States]
             - the system variables defined in SystemLogEntries (see declaration above)
             - any variables listed in the params[LOG_ENTRIES] of a Mechanism
@@ -690,7 +690,7 @@ class Log:
 
         Each item of the entries list should be a string designating a Component to be logged;
         Initialize self.entries dict, each entry of which has a:
-            - key corresponding to a State of the Component to which the Log belongs
+            - key corresponding to a Port of the Component to which the Log belongs
             - value that is a list of sequentially logged LogEntry items
         """
 

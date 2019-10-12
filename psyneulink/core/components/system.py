@@ -1693,7 +1693,7 @@ class System(System_Base):
                 stimulus_input_port = SystemInputPort(owner=self,
                                                         variable=origin_mech.input_ports[j].socket_template,
                                                         prefs=self.prefs,
-                                                        name="System Input State to Mechansism {}, Input State {}".
+                                                        name="System Input Port to Mechansism {}, Input Port {}".
                                                         format(origin_mech.name,j),
                                                         context=context)
                 self.stimulusInputPorts.append(stimulus_input_port)
@@ -1703,7 +1703,7 @@ class System(System_Base):
                 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
                 proj = MappingProjection(sender=stimulus_input_port,
                                   receiver=origin_mech.input_ports[j],
-                                  name=self.name+' Input Projection to '+origin_mech.name+' Input State '+str(j))
+                                  name=self.name+' Input Projection to '+origin_mech.name+' Input Port '+str(j))
                 proj._activate_for_compositions(self)
 
 
@@ -2311,7 +2311,7 @@ class System(System_Base):
                     # spec is an OutputPort, so use it
                     if isinstance(spec, OutputPort):
                         output_ports = [spec]
-                    # spec is Mechanism, so use the State's owner, and get the relevant OutputPort(s)
+                    # spec is Mechanism, so use the Port's owner, and get the relevant OutputPort(s)
                     elif isinstance(spec, Mechanism):
                         if (MONITOR_FOR_CONTROL in spec.params
                             and spec.params[MONITOR_FOR_CONTROL] is MonitoredOutputPortsOption.ALL_OUTPUT_PORTS):
@@ -3883,15 +3883,15 @@ class System(System_Base):
               <Component.value>` or `function <Component.function>` of the Mechanism or its States.
 
             * *VALUES* -- shows the `value <Mechanism_Base.value>` of the Mechanism and the `value
-              <State_Base.value>` of each of its States.
+              <Port_Base.value>` of each of its States.
 
             * *LABELS* -- shows the `value <Mechanism_Base.value>` of the Mechanism and the `value
-              <State_Base.value>` of each of its States, using any labels for the values of InputPorts and
+              <Port_Base.value>` of each of its States, using any labels for the values of InputPorts and
               OutputPorts specified in the Mechanism's `input_labels_dict <Mechanism.input_labels_dict>` and
               `output_labels_dict <Mechanism.output_labels_dict>`, respectively.
 
             * *FUNCTIONS* -- shows the `function <Mechanism_Base.function>` of the Mechanism and the `function
-              <State_Base.function>` of its InputPorts and OutputPorts.
+              <Port_Base.function>` of its InputPorts and OutputPorts.
 
             * *ROLES* -- shows the `role <System_Mechanisms>` of the Mechanism in the System in square brackets
               (but not any of the other information;  use *ALL* to show ROLES with other information).
@@ -3905,7 +3905,7 @@ class System(System_Base):
         COMMENT:
             and, optionally, the `function <Component.function>` and `value <Component.value>` of each (these
             can be specified using the **show_functions** and **show_values** arguments.  If this option is
-            specified, Projections are connected to and from the State that is the `sender <Projection_Base.sender>`
+            specified, Projections are connected to and from the Port that is the `sender <Projection_Base.sender>`
             or `receiver <Projection_Base.receiver>` of each.
         COMMENT
 

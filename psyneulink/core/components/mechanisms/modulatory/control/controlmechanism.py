@@ -32,7 +32,7 @@ Overview
 --------
 
 A ControlMechanism is a `ModulatoryMechanism` that `modulates the value(s) <ModulatorySignal_Modulation>` of one or
-more `States <State>` of other Mechanisms in the `Composition` to which it belongs. In general, a ControlMechanism is
+more `States <Port>` of other Mechanisms in the `Composition` to which it belongs. In general, a ControlMechanism is
 used to modulate the `ParameterPort(s) <ParameterPort>` of one or more Mechanisms, that determine the value(s) of
 the parameter(s) of the `function(s) <Mechanism_Base.function>` of those Mechanism(s). However, a ControlMechanism
 can also be used to modulate the function of `InputPorts <InputPort>` and/or `OutputPort <OutputPorts>`,
@@ -463,7 +463,7 @@ ControlSignal uses that value to calculate its `intensity <ControlSignal.intensi
 used in the subsequent `TRIAL` of execution.
 
 .. note::
-   `States <State>` that receive a `ControlProjection` does not update its value until its owner Mechanism
+   `States <Port>` that receive a `ControlProjection` does not update its value until its owner Mechanism
    executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a
    ControlMechanism has executed, a parameter that it controls will not assume its new value until the Mechanism
    to which it belongs has executed.
@@ -570,7 +570,7 @@ from psyneulink.core.components.functions.combinationfunctions import LinearComb
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.core.components.shellclasses import Composition_Base, System_Base
-from psyneulink.core.components.states.state import State, _parse_state_spec
+from psyneulink.core.components.states.state import Port, _parse_state_spec
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.states.inputport import InputPort
 from psyneulink.core.components.states.outputport import OutputPort
@@ -1247,7 +1247,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                 f"Mechanism class ({spec.__name__}) specified in '{MONITOR_FOR_CONTROL}' arg "
                                 f"of {self.name}; it must be an instantiated {Mechanism.__name__} or "
                                 f"{OutputPort.__name__} of one.")
-                    elif isinstance(spec, State):
+                    elif isinstance(spec, Port):
                         raise ControlMechanismError(
                                 f"{spec.__class__.__name__} specified in '{MONITOR_FOR_CONTROL}' arg of {self.name} "
                                 f"({spec.name} of {spec.owner.name}); "
@@ -1477,11 +1477,11 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
     def _register_control_signal_type(self, context=None):
         from psyneulink.core.globals.registry import register_category
-        from psyneulink.core.components.states.state import State_Base
+        from psyneulink.core.components.states.state import Port_Base
 
         # Create registry for ControlSignals (to manage names)
         register_category(entry=ControlSignal,
-                          base_class=State_Base,
+                          base_class=Port_Base,
                           registry=self._stateRegistry,
                           context=context)
 
@@ -1669,7 +1669,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             - `Mechanism`;
             - `OutputPort`;
             - `tuple specification <InputPort_Tuple_Specification>`;
-            - `State specification dictionary <InputPort_Specification_Dictionary>`;
+            - `Port specification dictionary <InputPort_Specification_Dictionary>`;
             - list with any of the above.
         If any item is a Mechanism, its `primary OutputPort <OutputPort_Primary>` is used.
         OutputPorts must belong to Mechanisms in the same `System` as the ControlMechanism.

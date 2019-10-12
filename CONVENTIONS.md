@@ -26,7 +26,7 @@ Made up of two types of classes:
         - **LearningProjection**
         - **ControlProjection**
         - **GatingProjection**
-- *State*
+- *Port*
     - **InputPort**
     - **ParameterPort**
     - **OutputPort**

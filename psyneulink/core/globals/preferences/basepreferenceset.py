@@ -142,14 +142,14 @@ class BasePreferenceSet(PreferenceSet):
             - SYSTEM: System level default settings (Function.classPreferences)
             - CATEGORY: category-level default settings:
                 Mechanism.classPreferences
-                State.classPreferences
+                Port.classPreferences
                 Projection.classPreferences
                 Function.classPreferences
             - TYPE: type-level default settings (if one exists for the category, else category-level settings are used):
                 MechanismTypes:
                     ControlMechanism.classPreferences
                     ProcessingMechanism.classPreferences
-                State types:
+                Port types:
                     InputPort.classPreferences
                     ParameterPort.classPreferences
                     OutputPort.classPreferences

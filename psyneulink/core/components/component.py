@@ -38,13 +38,13 @@ and `Informational Attributes` below).
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If information necessary to complete initialization is not specified in the constructor (e.g, the **owner** for a
-`State <State_Base.owner>`, or the **sender** or **receiver** for a `Projection <Projection_Structure>`), then its
-full initialization is deferred until its the information is available (e.g., the `State <State>` is assigned to a
+`Port <Port_Base.owner>`, or the **sender** or **receiver** for a `Projection <Projection_Structure>`), then its
+full initialization is deferred until its the information is available (e.g., the `Port <Port>` is assigned to a
 `Mechanism <Mechanism>`, or a `Projection <Projection>` is assigned its `sender <Projection_Base.sender>` and `receiver
 <Projection_Base.receiver>`).  This allows Components to be created before all of the information they require is
 available (e.g., at the beginning of a script). However, for the Component to be operational, its initialization must
 be completed by a call to it `deferred_init` method.  This is usually done automatically when the Component is
-assigned to another Component to which it belongs (e.g., assigning a State to a Mechanism) or to a Composition (e.g.,
+assigned to another Component to which it belongs (e.g., assigning a Port to a Mechanism) or to a Composition (e.g.,
 a Projection to the `pathway <Process.pahtway>`) of a `Process`), as appropriate.
 
 .. _Component_Structure:
@@ -702,7 +702,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
          - class and instance variable defaults
          - class and instance param defaults
         The Components's execute method (<subclass>.execute is the Component's primary method
-            (e.g., it is the one called when Process, Mechanism, State and Projections objects are updated);
+            (e.g., it is the one called when Process, Mechanism, Port and Projections objects are updated);
             the following attributes for or associated with the method are defined for every Component object:
                 + execute (method) - the execute method itself
                 + value (value) - the output of the execute method
@@ -959,7 +959,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     exclude_from_parameter_ports = [INPUT_PORTS, OUTPUT_PORTS]
 
-    # IMPLEMENTATION NOTE: This is needed so that the State class can be used with ContentAddressableList,
+    # IMPLEMENTATION NOTE: This is needed so that the Port class can be used with ContentAddressableList,
     #                      which requires that the attribute used for addressing is on the class;
     #                      it is also declared as a property, so that any assignments are validated to be strings,
     #                      insuring that assignment by one instance will not affect the value of others.
@@ -1307,13 +1307,13 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     # IMPLEMENTATION NOTE: (7/7/17 CW) Due to System and Process being initialized with size at the moment (which will
     # be removed later), I’m keeping _handle_size in Component.py. I’ll move the bulk of the function to Mechanism
-    # through an override, when Composition is done. For now, only State.py overwrites _handle_size().
+    # through an override, when Composition is done. For now, only Port.py overwrites _handle_size().
     def _handle_size(self, size, variable):
         """If variable is None, _handle_size tries to infer variable based on the **size** argument to the
-            __init__() function. This method is overwritten in subclasses like Mechanism and State.
+            __init__() function. This method is overwritten in subclasses like Mechanism and Port.
             If self is a Mechanism, it converts variable to a 2D array, (for a Mechanism, variable[i] represents
-            the input from the i-th input state). If self is a State, variable is a 1D array and size is a length-1 1D
-            array. It performs some validations on size and variable as well. This function is overridden in State.py.
+            the input from the i-th input state). If self is a Port, variable is a 1D array and size is a length-1 1D
+            array. It performs some validations on size and variable as well. This function is overridden in Port.py.
             If size is NotImplemented (usually in the case of Projections/Functions), then this function passes without
             doing anything. Be aware that if size is NotImplemented, then variable is never cast to a particular shape.
         """
@@ -3330,7 +3330,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     @property
     def _dict_summary(self):
         from psyneulink.core.compositions.composition import Composition
-        from psyneulink.core.components.states.state import State
+        from psyneulink.core.components.states.state import Port
         from psyneulink.core.components.states.outputport import OutputPort
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 
@@ -3347,7 +3347,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 }
             elif isinstance(value, Composition):
                 value = value.name
-            elif isinstance(value, State):
+            elif isinstance(value, Port):
                 if isinstance(value, OutputPort):
                     state_port_name = MODEL_SPEC_ID_OUTPUT_PORTS
                 else:

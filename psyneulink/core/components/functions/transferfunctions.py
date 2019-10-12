@@ -2608,7 +2608,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
             - a matrix keyword specification generates a matrix based on the sender and receiver shapes
 
-        When LinearMatrix is instantiated on its own, or as the function of `Mechanism` or `State`:
+        When LinearMatrix is instantiated on its own, or as the function of `Mechanism` or `Port`:
 
             - the matrix specification must be compatible with the function's own `variable <LinearMatrix.variable>`
 
@@ -3433,7 +3433,7 @@ class TransferWithCosts(TransferFunction):
 
     The `multiplicative_param <Function_Modulatory_Params>` and `additive_param <Function_Modulatory_Params>` of each
     cost function is assigned as a parameter of the TransferWIthCost `Function`.  This makes them accessible for
-    `modulation <ModulatorySignal_Modulation>` when the Function is assigned to a `State` (e.g., as the default
+    `modulation <ModulatorySignal_Modulation>` when the Function is assigned to a `Port` (e.g., as the default
     `function <ControlSignal.function>` of a `ControlSignal`), or a `Mechanism`.
 
     For example, the following scripts shows how modulate the `intensity_cost_function

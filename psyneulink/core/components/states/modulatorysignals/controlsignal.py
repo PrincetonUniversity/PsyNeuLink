@@ -95,8 +95,8 @@ that are described below.
 When a ControlSignal is created, it can be assigned one or more `ControlProjections <ControlProjection>`, using either
 the **projections** argument of its constructor, or in an entry of a dictionary assigned to the **params** argument
 with the key *PROJECTIONS*.  These will be assigned to its `efferents  <ControlSignal.efferents>` attribute.  See
-`State Projections <State_Projections>` for additional details concerning the specification of Projections when
-creating a State.
+`Port Projections <State_Projections>` for additional details concerning the specification of Projections when
+creating a Port.
 
 .. note::
    Although a ControlSignal can be assigned more than one `ControlProjection`, all of those Projections will receive
@@ -111,9 +111,9 @@ creating a State.
 ~~~~~~~~~~~~
 
 A ControlSignal has a `modulation <GatingSignal.modulation>` attribute that determines how its ControlSignal's
-`value <ControlSignal.value>` is used by the States to which it projects to modify their `value <State_Base.value>` \\s
+`value <ControlSignal.value>` is used by the States to which it projects to modify their `value <Port_Base.value>` \\s
 (see `ModulatorySignal_Modulation` for an explanation of how the `modulation <ControlSignal.modulation>`  attribute is
-specified and used to modulate the `value <State_Base.value>` of a State). The `modulation <ControlSignal.modulation>`
+specified and used to modulate the `value <Port_Base.value>` of a Port). The `modulation <ControlSignal.modulation>`
 attribute can be specified in the **modulation** argument of the constructor for a ControlSignal, or in a specification
 dictionary as described `above <ControlSignal_Specification>`. The value must be a value of `ModulationParam`;  if it
 is not specified, its default is the value of the `modulation <ControlMechanism.modulation>` attribute of the
@@ -209,7 +209,7 @@ that `TRIAL`.  The `intensity` is used by the ControlSignal's `ControlProjection
 Recall that the ParameterPort value is referenced anywhere that the controlled parameter is used in computation, and
 that it does not update until the component to which the ParameterPort belongs executes. If the distinction between the
 base value stored in the parameter attribute (i.e. MyTransferMech.function.gain) and the value of the
-ParameterPort is unfamiliar, see `Parameter State documentation <ParameterPort>` for more details, or see
+ParameterPort is unfamiliar, see `Parameter Port documentation <ParameterPort>` for more details, or see
 `ModulatorySignal_Modulation` for a detailed description of how modulation operates.
 
 The ControlSignal's `intensity` is also used  by its `cost functions <ControlSignal_Costs>` to compute its `cost`
@@ -318,7 +318,7 @@ from psyneulink.core.components.functions.statefulfunctions.integratorfunctions 
 from psyneulink.core.components.functions.transferfunctions import Exponential, Linear, CostFunctions
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.states.outputport import SEQUENTIAL, _output_port_variable_getter
-from psyneulink.core.components.states.state import State_Base
+from psyneulink.core.components.states.state import Port_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
@@ -421,7 +421,7 @@ class ControlSignal(ModulatorySignal):
 
         Description
         -----------
-            The ControlSignal class is a subtype of the OutputPort type in the State category of Component,
+            The ControlSignal class is a subtype of the OutputPort type in the Port category of Component,
             It is used as the sender for ControlProjections
             Its FUNCTION updates its value:
                 note:  currently, this is the identity function, that simply maps variable to self.value
@@ -502,7 +502,7 @@ class ControlSignal(ModulatorySignal):
         specifies the name of the ControlSignal; see ControlSignal `name <ModulatorySignal.name>` for additional
         details.
 
-    prefs : PreferenceSet or specification dict : default State.classPreferences
+    prefs : PreferenceSet or specification dict : default Port.classPreferences
         specifies the `PreferenceSet` for the ControlSignal; see `prefs <ControlSignal.prefs>` for details.
 
 
@@ -609,7 +609,7 @@ class ControlSignal(ModulatorySignal):
         is assigned (see `name <ModulatorySignal.name>`).
 
         .. note::
-            Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
+            Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that States with
             the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
             Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
             creation.
@@ -768,7 +768,7 @@ class ControlSignal(ModulatorySignal):
     #     PREFERENCE_SET_NAME: 'OutputPortCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
-    paramClassDefaults = State_Base.paramClassDefaults.copy()
+    paramClassDefaults = Port_Base.paramClassDefaults.copy()
     # paramClassDefaults = OutputPort.paramClassDefaults.copy()
     paramClassDefaults.update({
         PROJECTION_TYPE: CONTROL_PROJECTION,

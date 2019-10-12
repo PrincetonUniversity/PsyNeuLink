@@ -80,7 +80,7 @@ class UserDefinedFunction(Function_Base):
       It can include either or both of the following two entries:
          *MULTIPLICATIVE_PARAM*: <parameter name>\n
          *ADDITIVE_PARAM*: <parameter name>
-      These are used only when the UDF is assigned as the `function <State_Base.function>` of an InputPort or
+      These are used only when the UDF is assigned as the `function <Port_Base.function>` of an InputPort or
       OutputPort that receives one more more `GatingProjections <GatingProjection>`.
 
       COMMENT:
@@ -228,9 +228,9 @@ class UserDefinedFunction(Function_Base):
 
     .. _UDF_Assign_to_State_Examples:
 
-    **Assigning of a custom function to a State**
+    **Assigning of a custom function to a Port**
 
-    A custom function can also be assigned as the `function <State_Base.function>` of an `InputPort` or `OutputPort`.
+    A custom function can also be assigned as the `function <Port_Base.function>` of an `InputPort` or `OutputPort`.
     For example, the following assigns ``my_sinusoidal_fct`` to the `function <OutputPort.function>` of an OutputPort
     of ``my_mech``, rather the Mechanism's `function <Mechanism_Base.function>`::
 

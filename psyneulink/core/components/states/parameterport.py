@@ -360,7 +360,7 @@ from psyneulink.core.components.component import Component, function_type, metho
 from psyneulink.core.components.functions.function import get_param_value_for_keyword
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
-from psyneulink.core.components.states.state import StateError, State_Base, _instantiate_state, state_type_keywords
+from psyneulink.core.components.states.state import StateError, Port_Base, _instantiate_state, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     CONTEXT, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, FUNCTION, FUNCTION_PARAMS, \
@@ -386,7 +386,7 @@ class ParameterPortError(Exception):
         return repr(self.error_value)
 
 
-class ParameterPort(State_Base):
+class ParameterPort(Port_Base):
     """
     ParameterPort(                                              \
     owner,                                                       \
@@ -399,7 +399,7 @@ class ParameterPort(State_Base):
     name=None,                                                   \
     prefs=None)
 
-    Subclass of `State <State>` that represents and possibly modifies the parameter of
+    Subclass of `Port <Port>` that represents and possibly modifies the parameter of
     a `Mechanism <Mechanism>`, `Projection <Projection>`, or its `Function`.
 
 
@@ -407,7 +407,7 @@ class ParameterPort(State_Base):
 
         Description
         -----------
-            The ParameterPort class is a componentType in the State category of Function,
+            The ParameterPort class is a componentType in the Port category of Function,
             Its FUNCTION executes the Projections that it receives and updates the ParameterPort's value
 
         Class attributes
@@ -468,7 +468,7 @@ class ParameterPort(State_Base):
     name : str : default see `name <ParameterPort.name>`
         specifies the name of the ParameterPort; see ParameterPort `name <ParameterPort.name>` for details.
 
-    prefs : PreferenceSet or specification dict : default State.classPreferences
+    prefs : PreferenceSet or specification dict : default Port.classPreferences
         specifies the `PreferenceSet` for the ParameterPort; see `prefs <ParameterPort.prefs>` for details.
 
     COMMENT
@@ -511,7 +511,7 @@ class ParameterPort(State_Base):
         ParameterPort corresponds.
 
         .. note::
-            Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
+            Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that States with
             the same name are permitted in different Mechanisms.
 
     prefs : PreferenceSet or specification dict
@@ -525,7 +525,7 @@ class ParameterPort(State_Base):
     componentType = PARAMETER_PORT
     paramsType = PARAMETER_PORT_PARAMS
 
-    stateAttributes = State_Base.stateAttributes
+    stateAttributes = Port_Base.stateAttributes
 
     connectsWith = [CONTROL_SIGNAL, LEARNING_SIGNAL]
     connectsWithAttribute = [CONTROL_SIGNALS, LEARNING_SIGNALS]
@@ -540,7 +540,7 @@ class ParameterPort(State_Base):
     #     PREFERENCE_SET_NAME: 'ParameterPortCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
-    paramClassDefaults = State_Base.paramClassDefaults.copy()
+    paramClassDefaults = Port_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: CONTROL_PROJECTION})
     #endregion
 
@@ -604,7 +604,7 @@ class ParameterPort(State_Base):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
     def _validate_against_reference_value(self, reference_value):
-        """Validate that value of the State is compatible with the reference_value
+        """Validate that value of the Port is compatible with the reference_value
 
         reference_value is the value of the parameter to which the ParameterPort is assigned
         """
@@ -616,7 +616,7 @@ class ParameterPort(State_Base):
                                       format(name, self.componentName, self.owner.name, self.defaults.value, reference_value))
 
     def _instantiate_projections(self, projections, context=None):
-        """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
+        """Instantiate Projections specified in PROJECTIONS entry of params arg of Port's constructor
 
         Disallow any PathwayProjections
         Call _instantiate_projections_to_state to assign ModulatoryProjections to .mod_afferents
@@ -689,7 +689,7 @@ class ParameterPort(State_Base):
             # 2-item tuple specification
             if len(tuple_spec) == 2:
 
-                # 1st item is a value, so treat as State spec (and return to _parse_state_spec to be parsed)
+                # 1st item is a value, so treat as Port spec (and return to _parse_state_spec to be parsed)
                 #   and treat 2nd item as Projection specification
                 if is_numeric(tuple_spec[0]):
                     state_spec = tuple_spec[0]
@@ -708,7 +708,7 @@ class ParameterPort(State_Base):
                 elif _is_projection_spec(tuple_spec[0], include_matrix_spec=True):
                     state_spec, projections_spec = tuple_spec
 
-                # Tuple is Projection specification that is used to specify the State,
+                # Tuple is Projection specification that is used to specify the Port,
                 else:
                     # return None in state_spec to suppress further, recursive parsing of it in _parse_state_spec
                     state_spec = None
@@ -722,7 +722,7 @@ class ParameterPort(State_Base):
 
             # 3- or 4-item tuple specification
             elif len(tuple_spec) in {3,4}:
-                # Tuple is projection specification that is used to specify the State,
+                # Tuple is projection specification that is used to specify the Port,
                 #    so return None in state_spec to suppress further, recursive parsing of it in _parse_state_spec
                 state_spec = None
                 # Reduce to 2-item tuple Projection specification
@@ -754,7 +754,7 @@ class ParameterPort(State_Base):
 
                             # defaults.value?
                             mod_signal_value = projection_spec.state.value \
-                                if isinstance(projection_spec.state, State_Base) else None
+                                if isinstance(projection_spec.state, Port_Base) else None
 
                             mod_projection = projection_spec.projection
                             if isinstance(mod_projection, dict):
@@ -787,12 +787,12 @@ class ParameterPort(State_Base):
                             # FIX: 11/25/17 THIS IS A MESS:  CHECK WHAT IT'S ACTUALLY DOING
                             # If ModulatoryProjection's value is not specified, try to assign one
                             if mod_proj_value is None:
-                                # If not specified for State, assign that
+                                # If not specified for Port, assign that
                                 if VALUE not in state_dict or state_dict[VALUE] is None:
                                     state_dict[VALUE] = mod_signal_value
                                 # If value has been assigned, make sure value is the same for ModulatorySignal
                                 elif state_dict[VALUE] != mod_signal_value:
-                                    # If the values differ, assign None so that State's default is used
+                                    # If the values differ, assign None so that Port's default is used
                                     state_dict[VALUE] = None
                                     # No need to check any more ModulatoryProjections
                                     break

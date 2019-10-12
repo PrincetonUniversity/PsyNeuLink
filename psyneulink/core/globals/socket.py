@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 class ConnectionInfo(types.SimpleNamespace):
     """
-        Stores info about a *connection*, or the joining of a Projection to a State
+        Stores info about a *connection*, or the joining of a Projection to a Port
 
         **compositions** : the `Composition`\\ s which the connection is associated with
         **active_context** : the `ContextFlags` under which the connection is active

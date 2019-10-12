@@ -342,7 +342,7 @@ class ControlProjection(ModulatoryProjection_Base):
                                                   control_signal_params=control_signal_params,
                                                   params=params)
 
-        # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
+        # If receiver has not been assigned, defer init to Port.instantiate_projection_to_state()
         if (sender is None or sender.initialization_status == ContextFlags.DEFERRED_INIT or
                 inspect.isclass(receiver) or receiver is None or
                     receiver.initialization_status == ContextFlags.DEFERRED_INIT):
@@ -404,7 +404,7 @@ class ControlProjection(ModulatoryProjection_Base):
 
     def _instantiate_receiver(self, context=None):
         # FIX: THIS NEEDS TO BE PUT BEFORE _instantiate_function SINCE THAT USES self.receiver
-        """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
+        """Handle situation in which self.receiver was specified as a Mechanism (rather than Port)
 
         Overrides Projection._instantiate_receiver, to require that if the receiver is specified as a Mechanism, then:
             the receiver Mechanism must have one and only one ParameterPort;
@@ -414,7 +414,7 @@ class ControlProjection(ModulatoryProjection_Base):
         """
         if isinstance(self.receiver, Mechanism):
             # If there is just one param of ParameterPort type in the receiver Mechanism
-            # then assign it as actual receiver (which must be a State);  otherwise, raise exception
+            # then assign it as actual receiver (which must be a Port);  otherwise, raise exception
             from psyneulink.core.components.states.parameterport import ParameterPort
             if len(dict((param_name, state) for param_name, state in self.receiver.paramsCurrent.items()
                     if isinstance(state, ParameterPort))) == 1:

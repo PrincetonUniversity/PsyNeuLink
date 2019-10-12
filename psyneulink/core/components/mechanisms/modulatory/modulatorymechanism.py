@@ -25,12 +25,12 @@ this need not be the case.
 There are two primary types of ModulatoryMechanism:
 
 * `ControlMechanism`
-    modulates the `value <State_Base.value>` of a `State` of a `Mechanism`.  Takes an evaluative signal (generally
+    modulates the `value <Port_Base.value>` of a `Port` of a `Mechanism`.  Takes an evaluative signal (generally
     received from an `ObjectiveMechanism`) and generates a `control_allocation
     <ControlMechanism.control_allocation>`, each item of which is assigned to one of its `ControlSignals
     <ControlSignal>`;  each of those generates a `control_signal <ControlSignal.control_signal>` that is used by its
-    `ControlProjection(s) <ControlProjection>` to modulate the parameter of a `function <State_Base.function>` (and
-    thereby the `value <State_Base.value>`) of a `State`.  ControlSignals have `costs <ControlSignal_Costs>`,
+    `ControlProjection(s) <ControlProjection>` to modulate the parameter of a `function <Port_Base.function>` (and
+    thereby the `value <Port_Base.value>`) of a `Port`.  ControlSignals have `costs <ControlSignal_Costs>`,
     and a ControlMechanism has a `costs <ControlMechanism.costs>` and a `net_outcome <ControlMechanism.net_outcome>`
     that is computed based on the `costs <ControlSignal.costs>` of its ControlSignals. A ControlMechanism can be
     assigned only the `ControlSignal` class of `ModulatorySignal`, but can be also be assigned other generic
@@ -45,7 +45,7 @@ COMMENT:
     `gating_allocation <GatingMechanism.gating_allocation>`, each item of which is assigned to one of its
     `GatingSignals <ControlSignal>`;  each of those generates a `gating_signal <ControlSignal.control_signal>`
     that is used by its `GatingProjection(s) <ControlProjection>` to modulate the parameter of a `function
-    <State_Base.function>` (and thereby the `value <State_Base.value>`) of an `InputPort` or `OutputPort`.
+    <Port_Base.function>` (and thereby the `value <Port_Base.value>`) of an `InputPort` or `OutputPort`.
     A GatingMechanism can be assigned only the `GatingSignal` class of `ModulatorySignal`, but can be also be assigned
     other generic `OutputPorts <OutputPort>`.
 COMMENT.
@@ -153,7 +153,7 @@ class ModulatoryMechanism_Base(Mechanism_Base):
 
     modulation : ModulationParam
         determines how the output of the ModulatoryMechanism's `ModulatorySignal(s) <ModulatorySignal>` are used to
-        modulate the value of the State(s) to which their `ModulatoryProjection(s) <ModulatoryProjection>` project.
+        modulate the value of the Port(s) to which their `ModulatoryProjection(s) <ModulatoryProjection>` project.
    """
 
     componentType = ADAPTIVE_MECHANISM

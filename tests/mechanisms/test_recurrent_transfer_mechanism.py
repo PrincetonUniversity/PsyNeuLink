@@ -1102,7 +1102,7 @@ class TestRecurrentInputPort:
         s2.run(inputs=[[1, 3, 2]])
         np.testing.assert_allclose(R2.parameters.value.get(s2), [[14., 12., 13.]])
         assert len(R2.input_ports) == 2
-        assert "Recurrent Input State" not in R2.input_port.name  # make sure recurrent input state isn't primary
+        assert "Recurrent Input Port" not in R2.input_port.name  # make sure recurrent input state isn't primary
 
 
 class TestCustomCombinationFunction:

@@ -1186,11 +1186,11 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
         from psyneulink.core.globals.registry import register_category
         from psyneulink.core.components.states.modulatorysignals.learningsignal import LearningSignal
-        from psyneulink.core.components.states.state import State_Base, _instantiate_state
+        from psyneulink.core.components.states.state import Port_Base, _instantiate_state
 
         # Create registry for LearningSignals (to manage names)
         register_category(entry=LearningSignal,
-                          base_class=State_Base,
+                          base_class=Port_Base,
                           registry=self._stateRegistry,
                           context=context)
 
@@ -1220,8 +1220,8 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
             params = {LEARNED_PARAM: MATRIX}
 
-            # Parses learning_signal specifications (in call to State._parse_state_spec)
-            #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
+            # Parses learning_signal specifications (in call to Port._parse_state_spec)
+            #    and any embedded Projection specifications (in call to <Port>._instantiate_projections)
             learning_signal = _instantiate_state(state_type=LearningSignal,
                                                  owner=self,
                                                  variable=(OWNER_VALUE,0),

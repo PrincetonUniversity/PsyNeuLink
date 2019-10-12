@@ -247,8 +247,8 @@ class DefaultControlMechanism(ControlMechanism):
         if self.input_ports:
             self._input_ports[input_port.name] = input_port
         else:
-            from psyneulink.core.components.states.state import State_Base
-            self._input_ports = ContentAddressableList(component_type=State_Base,
+            from psyneulink.core.components.states.state import Port_Base
+            self._input_ports = ContentAddressableList(component_type=Port_Base,
                                                         list=[input_port],
                                                         name=self.name+'.input_ports')
 

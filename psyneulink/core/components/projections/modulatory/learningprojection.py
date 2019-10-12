@@ -533,7 +533,7 @@ class LearningProjection(ModulatoryProjection_Base):
                                                   exponent=exponent,
                                                   params=params)
 
-        # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
+        # If receiver has not been assigned, defer init to Port.instantiate_projection_to_state()
         if sender is None or receiver is None:
             # Flag for deferred initialization
             self.initialization_status = ContextFlags.DEFERRED_INIT

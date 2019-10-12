@@ -1246,7 +1246,7 @@ class ContentAddressableList(UserList):
             return self.data.index(key)
         else:
             raise UtilitiesError("{} is not a legal key for {} (must be "
-                                 "number, string or State)".format(key,
+                                 "number, string or Port)".format(key,
                                                                    self.key))
 
     def __delitem__(self, key):
