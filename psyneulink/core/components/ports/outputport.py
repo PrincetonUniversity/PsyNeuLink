@@ -51,7 +51,7 @@ initialization is `deferred <Port_Deferred_Initialization>` until
 COMMENT:
 TBI: its `owner <Port_Base.owner>` attribute is assigned or
 COMMENT
-the OutputPort is assigned to a Mechanism using the Mechanism's `add_states <Mechanism_Base.add_states>` method.
+the OutputPort is assigned to a Mechanism using the Mechanism's `add_ports <Mechanism_Base.add_ports>` method.
 
 .. _OutputPort_Primary:
 
@@ -94,7 +94,7 @@ former (that is, if an *OUTPUT_PORTS* entry is included in the parameter diction
 Adding OutputPorts to a Mechanism after it is created
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-OutputPorts can also be added to a Mechanism, using the Mechanism's `add_states <Mechanism_Base.add_methods>` method.
+OutputPorts can also be added to a Mechanism, using the Mechanism's `add_ports <Mechanism_Base.add_methods>` method.
 Unlike specification in the constructor, this **does not** replace any OutputPorts already assigned to the Mechanism.
 Doing so appends them to the list of OutputPorts in the Mechanism's `output_ports <Mechanism_Base.output_ports>`
 attribute, and their values are appended to its `output_values <Mechanism_Base.output_values>` attribute.  If the name
@@ -489,7 +489,7 @@ or::
     ...                    output_ports=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
     ...                                   pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD])
 
-    >>> my_mech2.add_states(another_decision_entropy_output_port) # doctest: +SKIP
+    >>> my_mech2.add_ports(another_decision_entropy_output_port) # doctest: +SKIP
 
 Note that another new OutputPort had to be used for the second example, as trying to
 add the first one created for ``my_mech`` to ``my_mech2`` would have produced an error (since a Port already
@@ -1514,7 +1514,7 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
                                          reference_value_name="output",
                                          context=context)
 
-    # Call from Mechanism.add_states, so add to rather than assign output_ports (i.e., don't replace)
+    # Call from Mechanism.add_ports, so add to rather than assign output_ports (i.e., don't replace)
     if context.source & (ContextFlags.COMMAND_LINE | ContextFlags.METHOD):
         owner.output_ports.extend(state_list)
     else:

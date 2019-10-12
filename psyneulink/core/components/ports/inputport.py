@@ -66,7 +66,7 @@ initialization is `deferred <Port_Deferred_Initialization>` until
 COMMENT:
 TBI: its `owner <Port_Base.owner>` attribute is assigned or
 COMMENT
-the InputPort is assigned to a Mechanism using the Mechanism's `add_states <Mechanism_Base.add_states>` method.
+the InputPort is assigned to a Mechanism using the Mechanism's `add_ports <Mechanism_Base.add_ports>` method.
 
 .. _InputPort_Primary:
 
@@ -130,7 +130,7 @@ Adding InputPorts to a Mechanism after it is created
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 InputPorts can also be **added** to a Mechanism, either by creating the InputPort on its own, and specifying the
-Mechanism in the InputPort's **owner** argument, or by using the Mechanism's `add_states <Mechanism_Base.add_states>`
+Mechanism in the InputPort's **owner** argument, or by using the Mechanism's `add_ports <Mechanism_Base.add_ports>`
 method (see `examples <State_Create_Port_Examples>` in Port).
 
     .. _InputPort_Add_Port_Note:
@@ -1396,7 +1396,7 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
                                          reference_value_name=VALUE,
                                          context=context)
 
-    # Call from Mechanism.add_states, so add to rather than assign input_ports (i.e., don't replace)
+    # Call from Mechanism.add_ports, so add to rather than assign input_ports (i.e., don't replace)
     if context.source & (ContextFlags.METHOD | ContextFlags.COMMAND_LINE):
         owner.input_ports.extend(state_list)
     else:

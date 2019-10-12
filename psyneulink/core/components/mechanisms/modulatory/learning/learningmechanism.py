@@ -1251,10 +1251,10 @@ class LearningMechanism(ModulatoryMechanism_Base):
         self._error_signal_input_ports = self.error_signal_input_ports
 
     @handle_external_context()
-    def add_states(self, error_sources, context=None):
+    def add_ports(self, error_sources, context=None):
         """Add error_source and error_matrix for each InputPort added"""
 
-        states = super().add_states(states=error_sources)
+        states = super().add_ports(states=error_sources)
         instantiated_input_ports = []
         for input_port in states[INPUT_PORTS]:
             error_source = input_port.path_afferents[0].sender.owner

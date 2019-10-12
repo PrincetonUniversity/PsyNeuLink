@@ -29,7 +29,7 @@ used to send ModulatoryProjections), as summarized in the table below:
    | `InputPort`       |  `Mechanism          |receives input from    | `GatingSignal`  |`InputPort` constructor;      |
    |                   |  <Mechanism>`        |`MappingProjection`    |                 |`Mechanism <Mechanism>`       |
    |                   |                      |                       |                 |constructor or its            |
-   |                   |                      |                       |                 |`add_states` method           |
+   |                   |                      |                       |                 |`add_ports` method           |
    +-------------------+----------------------+-----------------------+-----------------+------------------------------+
    |`ParameterPort`    |  `Mechanism          |represents parameter   | `LearningSignal`|Implicitly whenever a         |
    |                   |  <Mechanism>` or     |value for a `Component | and/or          |parameter value is            |
@@ -40,7 +40,7 @@ used to send ModulatoryProjections), as summarized in the table below:
    | `OutputPort`      |  `Mechanism          |provides output to     | `GatingSignal`  |`OutputPort` constructor;     |
    |                   |  <Mechanism>`        |`MappingProjection`    |                 |`Mechanism <Mechanism>`       |
    |                   |                      |                       |                 |constructor or its            |
-   |                   |                      |                       |                 |`add_states` method           |
+   |                   |                      |                       |                 |`add_ports` method           |
    +-------------------+----------------------+-----------------------+-----------------+------------------------------+
    |`ModulatorySignal  |`ModulatoryMechanism  |provides value for     |                 |`ModulatoryMechanism          |
    |<ModulatorySignal>`|<ModulatoryMechanism>`|`ModulatoryProjection  |                 |<ModulatoryMechanism>`        |
@@ -95,7 +95,7 @@ response to explicit specifications.  For example, InputPorts and OutputPorts ca
 a Mechanism (see `Mechanism_Port_specification`); and ParameterPorts are specified in effect when the value of a
 parameter for any Component or its `function <Component.function>` is specified in the constructor for that Component
 or function.  InputPorts and OutputPorts (but *not* ParameterPorts) can also be created directly using their
-constructors, and then assigned to a Mechanism using the Mechanism's `add_states <Mechanism_Base.add_states>` method;
+constructors, and then assigned to a Mechanism using the Mechanism's `add_ports <Mechanism_Base.add_ports>` method;
 however, this should be done with caution as the Port must be compatible with other attributes of its owner (such as
 its OutputPorts) and its `function <Mechanism_Base.function>` (for example, see `note <Mechanism_Add_InputPorts_Note>`
 regarding InputPorts). Parameter States **cannot** on their own; they are always and only created when the Component
@@ -262,7 +262,7 @@ assigned to it.
 If a Port is created on its own, and its `owner <State_Owner>` Mechanism is specified, it is assigned to that
 Mechanism; if its owner not specified, then its initialization is `deferred <Port_Deferred_Initialization>`.
 Its initialization is completed automatically when it is assigned to an owner `Mechanism <Mechanism_Base>` using the
-owner's `add_states <Mechanism_Base.add_states>` method.  If the Port is not assigned to an owner, it will not be
+owner's `add_ports <Mechanism_Base.add_ports>` method.  If the Port is not assigned to an owner, it will not be
 functional (i.e., used during the execution of `Mechanisms <Mechanism_Base_Execution>` and/or `Compositions
 <Composition_Execution>`, irrespective of whether it has any `Projections <Projection>` assigned to it.
 
@@ -282,11 +282,11 @@ owner must be a `Mechanism <Mechanism>`.  For `ParameterPorts <ParameterPort>` i
 `PathwayProjection <PathwayProjection>`. For `ModulatorySignals <ModulatorySignal>`, it must be a `ModulatoryMechanism
 <ModulatoryMechanism>`. When a Port is created as part of another Component, its `owner <Port_Base.owner>` is
 assigned automatically to that Component.  It is also assigned automatically when the Port is assigned to a
-`Mechanism <Mechanism>` using that Mechanism's `add_states <Mechanism_Base.add_states>` method.  Otherwise, it must be
+`Mechanism <Mechanism>` using that Mechanism's `add_ports <Mechanism_Base.add_ports>` method.  Otherwise, it must be
 specified explicitly in the **owner** argument of the constructor for the Port (in which case it is immediately
 assigned to the specified Mechanism).  If the **owner** argument is not specified, the Port's initialization is
-`deferred <Port_Deferred_Initialization>` until it has been assigned to an owner using the owner's `add_states
-<Mechanism_Base.add_states>` method.
+`deferred <Port_Deferred_Initialization>` until it has been assigned to an owner using the owner's `add_ports
+<Mechanism_Base.add_ports>` method.
 
 *Projections*
 ~~~~~~~~~~~~~
@@ -633,13 +633,13 @@ The following creates an InputPort ``my_input_port`` with a `MappingProjection` 
     > [(InputPort MY INPUT STATE)]
 
 The InputPort ``my_input_port`` could also have been assigned to ``mech_B`` in one of two other ways:
-by explicity adding it using ``mech_B``\\'s `add_states <Mechanism_Base.add_states>` method::
+by explicity adding it using ``mech_B``\\'s `add_ports <Mechanism_Base.add_ports>` method::
 
     mech_A = pnl.TransferMechanism()
     my_input_port = pnl.InputPort(name='MY INPUT STATE',
                                     projections=[mech_A])
     mech_B = pnl.TransferMechanism()
-    mech_B.add_states([my_input_port])
+    mech_B.add_ports([my_input_port])
 
 or by constructing it after ``mech_B`` and assigning ``mech_B`` as its owner::
 
@@ -1168,7 +1168,7 @@ class Port_Base(Port):
         self.projections = self.path_afferents + self.mod_afferents + self.efferents
 
         if context.source == ContextFlags.COMMAND_LINE:
-            owner.add_states([self])
+            owner.add_ports([self])
 
     def _handle_size(self, size, variable):
         """Overwrites the parent method in Component.py, because the variable of a Port

@@ -651,11 +651,11 @@ class TestInputPortSpec:
     # ------------------------------------------------------------------------------------------------
     # TEST 27
 
-    def test_add_input_port_with_projection_using_add_states(self):
+    def test_add_input_port_with_projection_using_add_ports(self):
         T1 = TransferMechanism()
         I = InputPort(projections=[T1])
         T2 = TransferMechanism()
-        T2.add_states([I])
+        T2.add_ports([I])
         assert T2.input_ports[1].path_afferents[0].sender.owner is T1
 
     # ------------------------------------------------------------------------------------------------

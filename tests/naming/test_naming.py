@@ -136,7 +136,7 @@ class TestNaming:
         I1 = pnl.InputPort(owner=T2)
         I2 = pnl.InputPort(projections=[T1])
         assert I2.name == 'Deferred Init InputPort'
-        T2.add_states([I2])
+        T2.add_ports([I2])
         assert I1.name == 'InputPort-1'
         assert I2.name == 'InputPort-2'
         assert T2.input_ports[0].path_afferents[0].name == \
@@ -154,7 +154,7 @@ class TestNaming:
         O = pnl.OutputPort(owner=T1)
         assert T1.output_ports[2].name == 'OutputPort-1'
         O2 = pnl.OutputPort()
-        T1.add_states([O2])
+        T1.add_ports([O2])
         assert T1.output_ports[3].name == 'OutputPort-2'
 
     # ------------------------------------------------------------------------------------------------

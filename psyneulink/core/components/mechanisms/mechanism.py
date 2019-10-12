@@ -133,7 +133,7 @@ below, and `Port_Examples`).  They can also be specified in a `parameter specifi
 specifying the **input_ports** and **output_ports** arguments directly is simpler and more convenient,
 the dictionary format allows parameter sets to be created elsewhere and/or re-used.  The value of each entry can be
 any of the allowable forms for `specifying a state <Port_specification>`. InputPorts and OutputPorts can also be
-added to an existing Mechanism using its `add_states <Mechanism_Base.add_states>` method, although this is generally
+added to an existing Mechanism using its `add_ports <Mechanism_Base.add_ports>` method, although this is generally
 not needed and can have consequences that must be considered (e.g., see `note <Mechanism_Add_InputPorts_Note>`),
 and therefore is not recommended.
 
@@ -149,7 +149,7 @@ and therefore is not recommended.
        **input_ports** argument.
 
        This behavior differs from adding a Port once the Mechanism is created.  States added to Mechanism using the
-       Mechanism's `add_states <Mechanism_Base.add_states>` method, or by assigning the Mechanism in the **owner**
+       Mechanism's `add_ports <Mechanism_Base.add_ports>` method, or by assigning the Mechanism in the **owner**
        argument of the Port's constructor, are added to the Mechanism without replacing any of its existing States,
        including any default States that may have been generated when the Mechanism was created (see `examples
        <State_Create_Port_Examples>` in Port).
@@ -357,7 +357,7 @@ Mechanism's `value <Mechanism_Base.value>` attribute which is  also at least a 2
 Every Mechanism has one or more of each of three types of States:  `InputPort(s) <InputPort>`,
 `ParameterPort(s) <ParameterPort>`, `and OutputPort(s) <OutputPort>`.  Generally, these are created automatically
 when the Mechanism is created.  InputPorts and OutputPorts (but not ParameterPorts) can also be specified explicitly
-for a Mechanism, or added to an existing Mechanism using its `add_states <Mechanism_Base.add_states>` method, as
+for a Mechanism, or added to an existing Mechanism using its `add_ports <Mechanism_Base.add_ports>` method, as
 described `above <Mechanism_Port_specification>`).
 
 .. _Mechanism_Figure:
@@ -432,13 +432,13 @@ the Mechanism's variable::
 If both the **default_variable** (or **size**) and **input_ports** arguments are specified, then the number and format
 of their respective items must be the same (see `Port <Port_Examples>` for additional examples of specifying States).
 
-If InputPorts are added using the Mechanism's `add_states <Mechanism_Base.add_states>` method, then its
+If InputPorts are added using the Mechanism's `add_ports <Mechanism_Base.add_ports>` method, then its
 `variable <Mechanism_Base.variable>` is extended to accommodate the number of InputPorts added (note that this must
 be coordinated with the Mechanism's `function <Mechanism_Base.function>`, which takes the Mechanism's `variable
 <Mechanism_Base.variable>` as its input (see `note <Mechanism_Add_InputPorts_Note>`).
 
 The order in which `InputPorts are specified <Mechanism_InputPort_Specification>` in the Mechanism's constructor,
-and/or `added <Mechanism_Add_InputPorts>` using its `add_states <Mechanism_Base.add_states>` method,  determines the
+and/or `added <Mechanism_Add_InputPorts>` using its `add_ports <Mechanism_Base.add_ports>` method,  determines the
 order of the items to which they are assigned assigned in he Mechanism's `variable  <Mechanism_Base.variable>`,
 and are listed in its `input_ports <Mechanism_Base.input_ports>` and `input_values <Mechanism_Base.input_values>`
 attribute.  Note that a Mechanism's `input_values <Mechanism_Base.input_values>` attribute has the same information as
@@ -504,7 +504,7 @@ COMMENT
 
 **Adding InputPorts**
 
-InputPorts can be added to a Mechanism using its `add_states <Mechanism_Base.add_states>` method;  this extends its
+InputPorts can be added to a Mechanism using its `add_ports <Mechanism_Base.add_ports>` method;  this extends its
 `variable <Mechanism_Base.variable>` by a number of items equal to the number of InputPorts added, and each new item
 is assigned a format compatible with the `value <InputPort.value>` of the corresponding InputPort added;  if the
 InputPort's `variable <InputPort.variable>` is not specified, it is assigned the default format for an item of the
@@ -517,11 +517,11 @@ contrast to States specified in a Mechanism's constructor which **do** `replace 
 .. _Mechanism_Add_InputPorts_Note:
 
 .. note::
-    Adding InputPorts to a Mechanism using its `add_states <Mechanism_Base.add_states>` method may introduce an
+    Adding InputPorts to a Mechanism using its `add_ports <Mechanism_Base.add_ports>` method may introduce an
     incompatibility with the Mechanism's `function <Mechanism_Base.function>`, which takes the Mechanism's `variable
     <Mechanism_Base.variable>` as its input; such an incompatibility will generate an error.  It may also influence
     the number of OutputPorts created for the Mechanism. It is the user's responsibility to ensure that the
-    assignment of InputPorts to a Mechanism using the `add_states <Mechanism_Base.add_states>` is coordinated with
+    assignment of InputPorts to a Mechanism using the `add_ports <Mechanism_Base.add_ports>` is coordinated with
     the specification of its `function <Mechanism_Base.function>`, so that the total number of InputPorts (listed
     in the Mechanism's `input_ports <Mechanism_Base.input_ports>` attribute matches the number of items expected
     for the input to the function specified in the Mechanism's `function <Mechanism_Base.function>` attribute
@@ -3289,9 +3289,9 @@ class Mechanism_Base(Mechanism):
         plt.show()
 
     @tc.typecheck
-    def add_states(self, states):
+    def add_ports(self, states):
         """
-        add_states(ports)
+        add_ports(ports)
 
         Add one or more `States <State>` to the Mechanism.  Only `InputPorts <InputPort>` and `OutputPorts
         <OutputPort>` can be added; `ParameterPorts <ParameterPort>` cannot be added to a Mechanism after it has

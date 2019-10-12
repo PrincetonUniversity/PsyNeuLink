@@ -71,7 +71,7 @@ COMMENT:
         Among other things, this is used to determine the source of call of a constructor (until someone
             proposes/implements a better method!).  This is used in several ways, for example:
             a) to determine whether an InputPort or OutputPort is being added as part of the construction process
-              (e.g., for LearningMechanism) or by the user from the command line (see Mechanism.add_states)
+              (e.g., for LearningMechanism) or by the user from the command line (see Mechanism.add_ports)
 
 COMMENT
 

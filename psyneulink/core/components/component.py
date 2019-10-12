@@ -195,7 +195,7 @@ A Component defines its `parameters <Parameters>` in its *parameters* attribute,
   as can its full list of entries (e.g., ``my_component.user_params``).  However, because it is read-only,
   it cannot be used to make assignments.  Rather, changes to the value of a parameter must be made by assigning a
   value to the attribute for that parameter directly (e.g., ``my_component.my_parameter``), but using a dedicated
-  method if one exists (e.g., `Mechanism_Base.add_states`), or by using the Component's `assign_params
+  method if one exists (e.g., `Mechanism_Base.add_ports`), or by using the Component's `assign_params
   <Component.assign_params>` method.
 
   All of the parameters listed in the *user_params* dictionary can be modified by the user (as described above).  Some

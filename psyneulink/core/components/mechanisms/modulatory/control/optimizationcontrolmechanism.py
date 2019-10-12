@@ -1253,7 +1253,7 @@ class OptimizationControlMechanism(ControlMechanism):
         if features:
             features = self._parse_feature_specs(features=features,
                                                  context=Context(source=ContextFlags.COMMAND_LINE))
-        self.add_states(InputPort, features)
+        self.add_ports(InputPort, features)
 
     @tc.typecheck
     def _parse_feature_specs(self, input_ports, feature_function, context=None):

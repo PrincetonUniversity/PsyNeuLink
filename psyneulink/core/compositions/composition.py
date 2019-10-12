@@ -3667,7 +3667,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # Create_backprop... should pass error_function (handled by kwargs below)
     # Check for existence of Learning mechanism (or do this in creation method?);  if one exists, compare its
     #    ERROR_SIGNAL input_ports with error_sources and update/add any needed, as well as corresponding
-    #    error_matrices (from their learned_projections) -- do so using LearningMechanism's add_states method);
+    #    error_matrices (from their learned_projections) -- do so using LearningMechanism's add_ports method);
     #    create projections from each
     # Move creation of LearningProjections and learning-related projections (MappingProjections) here
     # ?Do add_nodes and add_projections here or in Learning-type-specific creation methods
@@ -3789,7 +3789,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                               receiver=learning_mechanism.input_ports[ACTIVATION_INPUT_INDEX])
         act_out_projection = MappingProjection(sender=output_source.output_ports[0],
                                                receiver=learning_mechanism.input_ports[ACTIVATION_OUTPUT_INDEX])
-        # FIX CROSS_PATHWAYS 7/28/19 [JDC]: THIS MAY NEED TO USE ADD_STATES (SINCE ONE MAY EXIST; CONSTRUCT TEST FOR IT)
+        # FIX CROSS_PATHWAYS 7/28/19 [JDC]: THIS MAY NEED TO USE add_ports (SINCE ONE MAY EXIST; CONSTRUCT TEST FOR IT)
         error_signal_projection = MappingProjection(sender=comparator.output_ports[OUTCOME],
                                                     receiver=learning_mechanism.input_ports[ERROR_SIGNAL_INDEX])
         return [target_projection, sample_projection, error_signal_projection, act_out_projection, act_in_projection]
@@ -4165,7 +4165,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #       their correspondence with error_matrices
         #     - check if any ERROR_SIGNAL input_ports are empty (vacated by terminal sequence elements deleted in
         #       add_projection)
-        #     - call add_states method on LearningMechanism to add new ERROR_SIGNAL input_port to its input_ports
+        #     - call add_ports method on LearningMechanism to add new ERROR_SIGNAL input_port to its input_ports
         #       and error_matrix to its self.error_matrices attribute
         #     - add new error_signal projection
         """Add any LearningMechanisms associated with efferent projection from receiver_activity_mech"""
@@ -4196,7 +4196,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     error_signal_input_port = next((e for e in learning_mech.error_signal_input_ports
                                                      if not e.path_afferents), None)
                     if error_signal_input_port is None:
-                        error_signal_input_port = learning_mech.add_states(
+                        error_signal_input_port = learning_mech.add_ports(
                                                             InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
                                                                       name=ERROR_SIGNAL,
                                                                       context=Context(source=ContextFlags.METHOD)),
@@ -4236,7 +4236,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 error_signal_input_port = next((e for e in learning_mech.error_signal_input_ports
                                                  if not e.path_afferents), None)
                 if error_signal_input_port is None:
-                    error_signal_input_port = learning_mech.add_states(
+                    error_signal_input_port = learning_mech.add_ports(
                                                         InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
                                                                   name=ERROR_SIGNAL,
                                                                   context=Context(source=ContextFlags.METHOD)),
@@ -4251,7 +4251,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #       their correspondence with error_matrices
         #     - check if any ERROR_SIGNAL input_ports are empty (vacated by terminal sequence elements deleted in
         #       add_projection)
-        #     - call add_states method on LearningMechanism to add new ERROR_SIGNAL input_port to its input_ports
+        #     - call add_ports method on LearningMechanism to add new ERROR_SIGNAL input_port to its input_ports
         #       and error_matrix to its self.error_matrices attribute
         #     - add new error_signal projection
 
@@ -4267,7 +4267,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         if (isinstance(lp, LearningProjection)
                                             and error_source not in lp.sender.owner.error_sources)]:
                 dependent_learning_mech = learning_projection.sender.owner
-                error_signal_input_port = dependent_learning_mech.add_states(
+                error_signal_input_port = dependent_learning_mech.add_ports(
                                                     InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
                                                               name=ERROR_SIGNAL,
                                                               context=Context(source=ContextFlags.METHOD)),

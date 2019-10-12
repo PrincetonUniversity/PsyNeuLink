@@ -778,10 +778,10 @@ def _assign_error_signal_projections(processing_mech:Mechanism,
         for eff_lm in efferent_learning_mechs:
             # Make sure Projection doesn't already exist
             if not any(proj.sender.owner == eff_lm for proj in aff_lm.afferents if ERROR_SIGNAL in proj.receiver.name):
-                # aff_lm.add_states(InputPort(variable=eff_lm.output_ports[ERROR_SIGNAL].value,
+                # aff_lm.add_ports(InputPort(variable=eff_lm.output_ports[ERROR_SIGNAL].value,
                 #                              projections=eff_lm.output_ports[ERROR_SIGNAL],
                 #                              name=ERROR_SIGNAL))
-                aff_lm.add_states(InputPort(projections=eff_lm.output_ports[ERROR_SIGNAL],
+                aff_lm.add_ports(InputPort(projections=eff_lm.output_ports[ERROR_SIGNAL],
                                             name=ERROR_SIGNAL,
                                             context=Context(source=ContextFlags.METHOD)),
                                   context=Context(source=ContextFlags.METHOD))
