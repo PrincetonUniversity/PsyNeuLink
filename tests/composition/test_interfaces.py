@@ -793,7 +793,7 @@ class TestSimplifedNestedCompositionSyntax:
         outer1 = Composition(name="outer1")
         outer1.add_nodes([inner1, inner2])
 
-        # Spec 1: add projection *node in* inner1 --> inner 2 (implies first input state -- corresponding to A2)
+        # Spec 1: add projection *node in* inner1 --> inner 2 (implies first InputPort -- corresponding to A2)
         outer1.add_projection(sender=B1, receiver=inner2)
         # Spec 2:  add projection *node in* inner1 --> *node in* inner2
         outer1.add_projection(sender=B1, receiver=B2)

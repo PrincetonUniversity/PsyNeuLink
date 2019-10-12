@@ -936,7 +936,7 @@ class Projection_Base(Projection):
             # FYI (7/18/17 CW) : in addition to the params and attribute being set, the state's variable is ALSO being
             # set by the statement below. For example, if port_Name is 'matrix', the statement below sets
             # params['matrix'] to state.value, calls setattr(state.owner, 'matrix', state.value), which sets the
-            # 'matrix' parameter state's variable to ALSO be equal to state.value! If this is unintended, please change.
+            # 'matrix' ParameterPort's variable to ALSO be equal to state.value! If this is unintended, please change.
             value = state.parameters.value._get(context)
             getattr(self.parameters, port_Name)._set(value, context)
             # manual setting of previous value to matrix value (happens in above param['matrix'] setting

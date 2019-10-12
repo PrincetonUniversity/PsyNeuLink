@@ -88,7 +88,7 @@ decision_process = pnl.Process(default_variable=[0, 0],
                                         action_selection],
                                learning=pnl.LearningProjection(learning_function=psyneulink.core.components.functions
                                    .learningfunctions.Reinforcement(
-                                   learning_rate=0.03)), # if learning rate set to .3 output state values annealing to [0., 0.]
+                                   learning_rate=0.03)), # if learning rate set to .3 OutputPort values annealing to [0., 0.]
                                # which leads to error in reward function
                                target=0
                                )

@@ -997,7 +997,7 @@ class System(System_Base):
 
     def _validate_variable(self, variable, context=None):
         """Convert variable to 2D np.array: \
-        one 1D value for each input state
+        one 1D value for each InputPort
         """
         super(System, self)._validate_variable(variable, context)
 
@@ -1642,9 +1642,9 @@ class System(System_Base):
             self.defaults.variable.append(orig_mech_input)
         self.defaults.variable = convert_to_np_array(self.defaults.variable, 2)
         # should add Utility to allow conversion to 3D array
-        # An example: when input state values are vectors, then self.defaults.variable is a 3D array because
-        # an origin mechanism could have multiple input ports if there is a recurrent input state. However,
-        # if input state values are all non-vector objects, such as strings, then self.defaults.variable
+        # An example: when InputPort values are vectors, then self.defaults.variable is a 3D array because
+        # an origin mechanism could have multiple input ports if there is a recurrent InputPort. However,
+        # if InputPort values are all non-vector objects, such as strings, then self.defaults.variable
         # would be a 2D array. so we should convert that to a 3D array
 
         # Instantiate StimulusInputPorts
@@ -2024,7 +2024,7 @@ class System(System_Base):
         if isinstance(self.targets, dict):
             for target_mech in self.target_mechanisms:
 
-                # Skip if TARGET input state already has a projection from a SystemInputPort in current system
+                # Skip if TARGET InputPort already has a projection from a SystemInputPort in current system
                 if any(self is projection.sender.owner for projection in target_mech.input_ports[TARGET].path_afferents):
                     continue
 
@@ -2477,7 +2477,7 @@ class System(System_Base):
                     option_spec = None
 
 
-            # ASSIGN SPECIFIED OUTPUT STATES FOR MECHANISM TO monitored_output_ports
+            # ASSIGN SPECIFIED OUTPUTPORTS FOR MECHANISM TO monitored_output_ports
 
             for output_port in mech.output_ports:
 
@@ -2768,7 +2768,7 @@ class System(System_Base):
                             system_input_port.parameters.value._set(input[j], context)
                     else:
                         logger.warning("Failed to find expected SystemInputPort "
-                                       "for {} at input state number ({}), ({})".
+                                       "for {} at InputPort number ({}), ({})".
                               format(origin_mech.name, j+1, origin_mech.input_ports[j]))
                         # raise SystemError("Failed to find expected SystemInputPort for {}".format(origin_mech.name))
 

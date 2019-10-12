@@ -332,9 +332,9 @@ class MappingProjection(PathwayProjection_Base):
                 to the InputPort.value of a receiver.
 
             IMPLEMENTATION NOTE:
-                AUGMENT SO THAT SENDER CAN BE A Mechanism WITH MULTIPLE OUTPUT STATES, IN WHICH CASE:
-                    RECEIVER MUST EITHER BE A MECHANISM WITH SAME NUMBER OF INPUT STATES AS SENDER HAS OutputPortS
-                        (FOR WHICH SENDER OutputPort IS MAPPED TO THE CORRESPONDING RECEIVER INPUT STATE
+                AUGMENT SO THAT SENDER CAN BE A Mechanism WITH MULTIPLE OUTPUTPORTS, IN WHICH CASE:
+                    RECEIVER MUST EITHER BE A MECHANISM WITH SAME NUMBER OF INPUTPORS AS SENDER HAS OutputPortS
+                        (FOR WHICH SENDER OutputPort IS MAPPED TO THE CORRESPONDING RECEIVER INPUTPORT
                             USING THE SAME MAPPING_PROJECTION MATRIX, OR AN ARRAY OF THEM)
                     OR BOTH MUST BE 1D ARRAYS (I.E., SINGLE VECTOR)
                     SHOULD BE CHECKED IN OVERRIDE OF _validate_variable
@@ -627,7 +627,7 @@ class MappingProjection(PathwayProjection_Base):
             else:
                 self._matrix_spec = FULL_CONNECTIVITY_MATRIX
 
-        # Length of the output of the Projection doesn't match the length of the receiving input state
+        # Length of the output of the Projection doesn't match the length of the receiving InputPort
         #    so consider reshaping the matrix
         if mapping_output_len != receiver_len:
 
@@ -734,7 +734,7 @@ class MappingProjection(PathwayProjection_Base):
     def logPref(self):
         return self.prefs.logPref
 
-    # Always assign matrix Parameter state the same logPref as the MappingProjection
+    # Always assign matrix ParameterPort the same logPref as the MappingProjection
     @logPref.setter
     def logPref(self, setting):
         self.prefs.logPref = setting

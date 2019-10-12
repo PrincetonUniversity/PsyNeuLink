@@ -3997,7 +3997,7 @@ class TestCompositionInterface:
         comp.add_projection(MappingProjection(sender=D, receiver=E), D, E)
         inputs_dict = {
             A: [[5.]],
-            # two trials of one input state each
+            # two trials of one InputPort each
             #        TRIAL 1     TRIAL 2
             # A : [ [ [0,0] ] , [ [0, 0] ]  ]
 
@@ -4052,7 +4052,7 @@ class TestCompositionInterface:
         inputs_dict2 = {
             A: [[2.]],
             B: [[5.]],
-            # two trials of one input state each
+            # two trials of one InputPort each
             #        TRIAL 1     TRIAL 2
             # A : [ [ [0,0] ] , [ [0, 0] ]  ]
 
@@ -4250,7 +4250,7 @@ class TestCompositionInterface:
         comp.run(inputs={A: [1.0]})
 
         for terminal_state in comp.output_CIM_ports:
-            # all CIM output state keys in the CIM --> Terminal mapping dict are on the actual output CIM
+            # all CIM OutputPort keys in the CIM --> Terminal mapping dict are on the actual output CIM
             assert (comp.output_CIM_ports[terminal_state][0] in comp.output_CIM.input_ports) and \
                    (comp.output_CIM_ports[terminal_state][1] in comp.output_CIM.output_ports)
 
@@ -4287,7 +4287,7 @@ class TestCompositionInterface:
         comp.run(inputs={A: [1.0]})
 
         for terminal_state in comp.output_CIM_ports:
-            # all CIM output state keys in the CIM --> Terminal mapping dict are on the actual output CIM
+            # all CIM OutputPort keys in the CIM --> Terminal mapping dict are on the actual output CIM
             assert (comp.output_CIM_ports[terminal_state][0] in comp.output_CIM.input_ports) and \
                    (comp.output_CIM_ports[terminal_state][1] in comp.output_CIM.output_ports)
 

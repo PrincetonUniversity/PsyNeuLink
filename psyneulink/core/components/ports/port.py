@@ -626,17 +626,17 @@ The following creates an InputPort ``my_input_port`` with a `MappingProjection` 
 `primary OutputPort <OutputPort_Primary>` of ``mech_A`` and assigns it to ``mech_B``::
 
     mech_A = pnl.TransferMechanism()
-    my_input_port = pnl.InputPort(name='MY INPUT STATE',
+    my_input_port = pnl.InputPort(name='MY INPUTPORT',
                                     projections=[mech_A])
     mech_B = pnl.TransferMechanism(input_ports=[my_input_port])
     print(mech_B.input_ports)
-    > [(InputPort MY INPUT STATE)]
+    > [(InputPort MY INPUTPORT)]
 
 The InputPort ``my_input_port`` could also have been assigned to ``mech_B`` in one of two other ways:
 by explicity adding it using ``mech_B``\\'s `add_ports <Mechanism_Base.add_ports>` method::
 
     mech_A = pnl.TransferMechanism()
-    my_input_port = pnl.InputPort(name='MY INPUT STATE',
+    my_input_port = pnl.InputPort(name='MY INPUTPORT',
                                     projections=[mech_A])
     mech_B = pnl.TransferMechanism()
     mech_B.add_ports([my_input_port])
@@ -645,7 +645,7 @@ or by constructing it after ``mech_B`` and assigning ``mech_B`` as its owner::
 
     mech_A = pnl.TransferMechanism()
     mech_B = pnl.TransferMechanism()
-    my_input_port = pnl.InputPort(name='MY INPUT STATE',
+    my_input_port = pnl.InputPort(name='MY INPUTPORT',
                                     owner=mech_B,
                                     projections=[mech_A])
 
@@ -653,8 +653,8 @@ Note that, in both cases, adding the InputPort to ``mech_B`` does not replace it
 when it was created, as shown by printing the `input_ports <Mechanism_Base.input_ports>` for ``mech_B``::
 
     print(mech_B.input_ports)
-    > [(InputPort InputPort-0), (InputPort MY INPUT STATE)]
-    > [(InputPort InputPort-0), (InputPort MY INPUT STATE)]
+    > [(InputPort InputPort-0), (InputPort MY INPUTPORT)]
+    > [(InputPort InputPort-0), (InputPort MY INPUTPORT)]
 
 As a consequence, ``my_input_port`` is  **not** the `primary InputPort <InputPort_Primary>` for ``mech_B`` (i.e.,
 input_ports[0]), but rather its second InputPort (input_ports[1]). This is differs from specifying the InputPort
@@ -1538,7 +1538,7 @@ class Port_Base(Port):
                 projs.append(projection)
                 new_projections.append(projection)
                 if len(projs) > 1:
-                    # KDM 5/16/18: Why are we casting this to 2d? I expect this to make the input state variable
+                    # KDM 5/16/18: Why are we casting this to 2d? I expect this to make the InputPort variable
                     # 2d, so its owner's 3d, but that does not appear to be happening.
                     # Removing this cast can cause an AutoAssignMatrix to interpret the entire InputPort's variable
                     # as its target - ex: two incoming projections -> [0, 0]; third sees socket_width of len 2, so
@@ -1965,7 +1965,7 @@ class Port_Base(Port):
                 and projection.function._is_identity(context)
                 # has no parameter ports with afferents (these can modulate parameters and make it non-identity)
                 and len(list(itertools.chain.from_iterable([p.all_afferents for p in projection.parameter_ports]))) == 0
-                # matrix parameter state may be a non identity Accumulator integrator
+                # matrix ParameterPort may be a non identity Accumulator integrator
                 and all(pstate.function._is_identity(context) for pstate in projection.parameter_ports)
             ):
                 projection_variable = projection.sender.parameters.value._get(context)

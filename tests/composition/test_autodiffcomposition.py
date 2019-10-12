@@ -730,7 +730,7 @@ class TestTrainingCorrectness:
         for i in range(len(result[0])): # go over trial outputs in the single results entry
             for j in range(len(result[0][i])): # go over outputs for each output layer
 
-                # get target for terminal node whose output state corresponds to current output
+                # get target for terminal node whose OutputPort corresponds to current output
                 correct_value = None
                 curr_CIM_input_port = sem_net.output_CIM.input_ports[j]
                 for output_port in sem_net.output_CIM_ports.keys():

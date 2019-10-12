@@ -1891,7 +1891,7 @@ class Mechanism_Base(Mechanism):
 
         params = target_set
 
-        # VALIDATE INPUT STATE(S)
+        # VALIDATE InputPort(S)
 
         # INPUT_PORTS is specified, so validate:
         if INPUT_PORTS in params and params[INPUT_PORTS] is not None:
@@ -1940,7 +1940,7 @@ class Mechanism_Base(Mechanism):
                                      self.__class__.__name__,
                                      self.defaults.value))
 
-        # VALIDATE OUTPUT STATE(S)
+        # VALIDATE OUTPUTPORT(S)
 
         # OUTPUT_PORTS is specified, so validate:
         if OUTPUT_PORTS in params and params[OUTPUT_PORTS] is not None:
@@ -2368,7 +2368,7 @@ class Mechanism_Base(Mechanism):
                 return np.atleast_2d(return_value)
 
         # FIX: ??MAKE CONDITIONAL ON self.prefs.paramValidationPref??
-        # VALIDATE INPUT STATE(S) AND RUNTIME PARAMS
+        # VALIDATE InputPort(S) AND RUNTIME PARAMS
         self._check_args(
             params=runtime_params,
             target_set=runtime_params,
@@ -2377,7 +2377,7 @@ class Mechanism_Base(Mechanism):
 
         self._update_previous_value(context)
 
-        # UPDATE VARIABLE and INPUT STATE(S)
+        # UPDATE VARIABLE and InputPort(S)
 
         # Executing or simulating Process, System or Composition, so get input by updating input_ports
 
@@ -2398,7 +2398,7 @@ class Mechanism_Base(Mechanism):
 
         self.parameters.variable._set(variable, context=context)
 
-        # UPDATE PARAMETER STATE(S)
+        # UPDATE PARAMETERPORT(S)
         self._update_parameter_ports(context=context, runtime_params=runtime_params)
 
         # EXECUTE MECHNISM BY CALLING SUBCLASS _execute method AND ASSIGN RESULT TO self.value
@@ -2435,7 +2435,7 @@ class Mechanism_Base(Mechanism):
 
         self.parameters.value._set(value, context=context)
 
-        # UPDATE OUTPUT STATE(S)
+        # UPDATE OUTPUTPORT(S)
         self._update_output_ports(context=context, runtime_params=runtime_params)
 
         # REPORT EXECUTION
@@ -2645,7 +2645,7 @@ class Mechanism_Base(Mechanism):
     def _get_input_struct_type(self, ctx):
         input_type_list = []
         for state in self.input_ports:
-            # Extract the non-modulation portion of input state input struct
+            # Extract the non-modulation portion of InputPort input struct
             input_type_list.append(ctx.get_input_struct_type(state).elements[0])
         mod_input_type_list = []
         for proj in self.mod_afferents:
@@ -2733,7 +2733,7 @@ class Mechanism_Base(Mechanism):
     def _gen_llvm_input_ports(self, ctx, builder,
                                mech_params, mech_state, mech_input):
         # Allocate temporary storage. We rely on the fact that series
-        # of input state results should match the main function input.
+        # of InputPort results should match the main function input.
         is_output_list = []
         for state in self.input_ports:
             is_function = ctx.get_llvm_function(state)
@@ -2800,7 +2800,7 @@ class Mechanism_Base(Mechanism):
                 return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(os_in_spec[0][1])])
             else:
                 #TODO: support more spec options
-                assert False, "Unsupported output state spec: {} ({})".format(os_in_spec, value.type)
+                assert False, "Unsupported OutputPort spec: {} ({})".format(os_in_spec, value.type)
 
     def _gen_llvm_output_ports(self, ctx, builder, value,
                                 mech_params, mech_state, mech_in, mech_out):

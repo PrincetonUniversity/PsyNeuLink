@@ -660,7 +660,7 @@ class TestRecurrentTransferMechanismInProcess:
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
 
     def test_recurrent_mech_transfer_mech_process_three_runs(self):
-        # this test ASSUMES that the parameter state for auto and hetero is updated one run-cycle AFTER they are set by
+        # this test ASSUMES that the ParameterPort for auto and hetero is updated one run-cycle AFTER they are set by
         # lines by `R.auto = 0`. If this (potentially buggy) behavior is changed, then change these values
         R = RecurrentTransferMechanism(
             size=4,
@@ -747,7 +747,7 @@ class TestRecurrentTransferMechanismInSystem:
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
 
     def test_recurrent_mech_transfer_mech_system_three_runs(self):
-        # this test ASSUMES that the parameter state for auto and hetero is updated one run-cycle AFTER they are set by
+        # this test ASSUMES that the ParameterPort for auto and hetero is updated one run-cycle AFTER they are set by
         # lines by `R.auto = 0`. If this (potentially buggy) behavior is changed, then change these values
         R = RecurrentTransferMechanism(
             size=4,
@@ -1102,7 +1102,7 @@ class TestRecurrentInputPort:
         s2.run(inputs=[[1, 3, 2]])
         np.testing.assert_allclose(R2.parameters.value.get(s2), [[14., 12., 13.]])
         assert len(R2.input_ports) == 2
-        assert "Recurrent Input Port" not in R2.input_port.name  # make sure recurrent input state isn't primary
+        assert "Recurrent Input Port" not in R2.input_port.name  # make sure recurrent InputPort isn't primary
 
 
 class TestCustomCombinationFunction:

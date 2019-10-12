@@ -1736,7 +1736,7 @@ class Process(Process_Base):
         :return:
         """
 
-        # FIX: LENGTH OF EACH PROCESS INPUT STATE SHOUD BE MATCHED TO LENGTH OF INPUT STATE FOR CORRESPONDING ORIGIN MECHANISM
+        # FIX: LENGTH OF EACH PROCESS INPUTPORT SHOUD BE MATCHED TO LENGTH OF INPUTPORT FOR CORRESPONDING ORIGIN MECHANISM
 
         process_input = self.defaults.variable
 
@@ -1756,7 +1756,7 @@ class Process(Process_Base):
                                                                             num_mechanism_input_ports,
                                                                             mechanism.name))
 
-        # Create input state for each item of Process input, and assign to list
+        # Create InputPort for each item of Process input, and assign to list
         for i in range(num_process_inputs):
             process_input_port = ProcessInputPort(owner=self,
                                                     variable=process_input[i],
@@ -1776,7 +1776,7 @@ class Process(Process_Base):
                     raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "
                                        "variable for corresponding inputPort of {3} (format: {4})".
                                        format(i, process_input[i], self.name, mechanism.name, input_port_variable))
-                # Create MappingProjection from Process input state to corresponding mechanism.input_port
+                # Create MappingProjection from Process InputPort to corresponding mechanism.input_port
                 proj = MappingProjection(sender=self.process_input_ports[i],
                                          receiver=mechanism.input_ports[i],
                                          name=self.name+'_Input Projection')
@@ -1787,7 +1787,7 @@ class Process(Process_Base):
 
         # If the number of Process inputs and mechanism.input_ports is unequal, but only a single of one or the other:
         # - if there is a single Process input value and multiple mechanism.input_ports,
-        #     instantiate a single Process input state with projections to each of the mechanism.input_ports
+        #     instantiate a single Process InputPort with projections to each of the mechanism.input_ports
         # - if there are multiple Process input values and a single mechanism.input_port,
         #     instantiate multiple Process input ports each with a Projection to the single mechanism.input_port
         else:

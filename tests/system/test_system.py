@@ -174,7 +174,7 @@ class TestInputSpecsDocumentationExamples:
         assert np.allclose(check_inputs, expected_inputs)
 
     def test_example_3(self):
-        # Origin mechanism has only one input state
+        # Origin mechanism has only one InputPort
         # COMPLETE specification
 
         import psyneulink as pnl
@@ -200,8 +200,8 @@ class TestInputSpecsDocumentationExamples:
 
 
     def test_example_4(self):
-        #  Origin mechanism has only one input state
-        # SHORTCUT: drop the outer list on each input because 'a' only has one input state
+        #  Origin mechanism has only one InputPort
+        # SHORTCUT: drop the outer list on each input because 'a' only has one InputPort
 
         import psyneulink as pnl
 
@@ -225,7 +225,7 @@ class TestInputSpecsDocumentationExamples:
         assert np.allclose(check_inputs, [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.2]]])
 
     def test_example_5(self):
-        #  Origin mechanism has only one input state
+        #  Origin mechanism has only one InputPort
         # SHORTCUT: drop the remaining list on each input because 'a' only has one element
 
         import psyneulink as pnl

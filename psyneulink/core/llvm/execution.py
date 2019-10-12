@@ -382,7 +382,7 @@ class CompExecution(CUDAExecution):
         # All execute functions expect inputs to be 3rd param.
         c_input = self._bin_func.byref_arg_types[2]
 
-        # Read provided input data and separate each input state
+        # Read provided input data and separate each InputPort
         if len(self._execution_ids) > 1:
             assert len(self._execution_ids) == len(inputs)
             c_input = c_input * len(self._execution_ids)

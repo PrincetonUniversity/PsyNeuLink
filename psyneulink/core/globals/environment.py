@@ -224,7 +224,7 @@ items in the list of inputs will be used on trial 5 and trial 6, respectively.
 For convenience, condensed versions of the input specification described above are also accepted in the following
 situations:
 
-* **Case 1: Origin mechanism has only one input state**
+* **Case 1: Origin mechanism has only one InputPort**
 +--------------------------+-------+------+------+------+------+
 | Trial #                  |0      |1     |2     |3     |4     |
 +--------------------------+-------+------+------+------+------+
@@ -249,7 +249,7 @@ Complete input specification:
         s.run(inputs=input_dictionary)
 ..
 
-Shorthand - drop the outer list on each input because **Mechanism a** only has one input state:
+Shorthand - drop the outer list on each input because **Mechanism a** only has one InputPort:
 
 ::
 
@@ -258,7 +258,7 @@ Shorthand - drop the outer list on each input because **Mechanism a** only has o
         s.run(inputs=input_dictionary)
 ..
 
-Shorthand - drop the remaining list on each input because **Mechanism a**'s one input state's value is length 1:
+Shorthand - drop the remaining list on each input because **Mechanism a**'s one InputPort's value is length 1:
 
 ::
 
@@ -480,7 +480,7 @@ The TARGET and SAMPLE values for a particular `TARGET` Mechanism must have the s
 The standard format for specifying targets is a Python dictionary where the keys are the last mechanism of each learning
 sequence, and the values are lists in which the i-th element represents the target value for that learning sequence on
 trial i. There must be the same number of keys in the target specification dictionary as there are `TARGET` Mechanisms
-in the system. Each target value must be compatible with the shape of the `TARGET` mechanism's TARGET `input state
+in the system. Each target value must be compatible with the shape of the `TARGET` mechanism's TARGET `InputPort
 <ComparatorMechanism.input_ports>`. This means that for a given key (which is always the last mechanism of the
 learning sequence) in the target specification dictionary, the value is usually a list of 1d lists/arrays.
 
@@ -533,7 +533,7 @@ list will be cycled until the number of `TRIAL` \\s specified is completed.
 
 Alternatively, the value for a given key (last mechanism in the learning sequence) in the target specification
 dictionary may be a function. The output of that function must be compatible with the shape of the `TARGET` mechanism's
-TARGET `input state <ComparatorMechanism.input_ports>`. The function will be executed at the start of the learning
+TARGET `InputPort <ComparatorMechanism.input_ports>`. The function will be executed at the start of the learning
 portion of each trial. This format allows targets to be constructed programmatically, in response
 to computations made during the run.
 
@@ -1059,7 +1059,7 @@ def _adjust_stimulus_dict(obj, stimuli):
                     # for "functionality" but rather a hack for user clarity
                     if "KWTA" in str(type(mech)):
                         err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros (or other" \
-                                            " values) to represent the outside stimulus for the inhibition input state"
+                                            " values) to represent the outside stimulus for the inhibition InputPort"
                     raise RunError(err_msg)
                 elif check_spec_type == "homogeneous":
                     # np.atleast_2d will catch any single-input ports specified without an outer list
@@ -1110,7 +1110,7 @@ def _adjust_target_dict(component, target_dict):
 
         # (1) Replace any user provided convenience notations with values that match the following specs:
         # a - all dictionary values are lists containing a target value on each trial (even if only one trial)
-        # b - each input value is at least a 1d array that matches the variable of the TARGET input state
+        # b - each input value is at least a 1d array that matches the variable of the TARGET InputPort
 
         # (2) Verify that all mechanism values provide the same number of inputs (check length of each dictionary value)
 
@@ -1135,7 +1135,7 @@ def _adjust_target_dict(component, target_dict):
                                    "conflicts with at least one other mechanism's target specification."
                                    .format(component.name, mech.name))
 
-            # iterate over list and check that each candidate target is compatible with corresponding TARGET input state
+            # iterate over list and check that each candidate target is compatible with corresponding TARGET InputPort
             elif isinstance(target_list, (list, np.ndarray)):
                 adjusted_targets[mech] = []
                 for target_value in target_list:
@@ -1143,7 +1143,7 @@ def _adjust_target_dict(component, target_dict):
                         adjusted_targets[mech].append(np.atleast_1d(target_value))
                     else:
                         raise RunError("Target specification ({}) for {} is not valid. The shape of {} is not compatible "
-                                       "with the TARGET input state of the corresponding ComparatorMechanism ({})"
+                                       "with the TARGET InputPort of the corresponding ComparatorMechanism ({})"
                                        .format(target_list, mech.name, target_value,
                                                mech.output_port.efferents[0].receiver.owner.name))
                 current_num_targets = len(adjusted_targets[mech])
@@ -1190,20 +1190,20 @@ def _parse_input_labels(obj, stimuli, mechanisms_to_parse):
 
         if subdicts:    # If there are subdicts, validate
             # if len(mech.input_labels_dict) != len(mech.input_ports):
-            #     raise RunError("If input labels are specified at the level of input ports, then one input state label "
-            #                    "sub-dictionary must be provided for each input state. {} has {} input state label "
+            #     raise RunError("If input labels are specified at the level of input ports, then one InputPort label "
+            #                    "sub-dictionary must be provided for each InputPort. {} has {} InputPort label "
             #                    "sub-dictionaries, but {} input ports.".format(mech.name,
             #                                                                    len(mech.input_labels_dict),
             #                                                                    len(mech.input_ports)))
             for k in mech.input_labels_dict:
                 value = mech.input_labels_dict[k]
                 if not isinstance(value, dict):
-                    raise RunError("A sub-dictionary  of label:value pairs was not specified for the input state {} of "
+                    raise RunError("A sub-dictionary  of label:value pairs was not specified for the InputPort {} of "
                                    "{}. If input labels are specified at the level of InputPorts, then a sub-dictionary"
                                    " must be provided for each InputPort in the input labels dictionary"
                                    .format(k, mech.name))
 
-            # If there is only one subdict, then we already know that we are in the correct input state
+            # If there is only one subdict, then we already know that we are in the correct InputPort
             num_input_labels = len(mech.input_labels_dict)
             if num_input_labels == 1:
                 # there is only one key, but we don't know what it is
@@ -1212,7 +1212,7 @@ def _parse_input_labels(obj, stimuli, mechanisms_to_parse):
                         # if the whole input spec is a string, look up its value
                         if isinstance(inputs[i], str):
                             inputs[i] = mech.input_labels_dict[k][inputs[i]]
-                        # otherwise, index into [0] because we know that this label is for the primary input state
+                        # otherwise, index into [0] because we know that this label is for the primary InputPort
                         elif isinstance(inputs[i][0], str):
                             inputs[i][0] = mech.input_labels_dict[k][inputs[i][0]]
 
@@ -1314,7 +1314,7 @@ def _validate_target_function(target_function, target_mechanism, sample_mechanis
     generated_targets = np.atleast_1d(target_function())
     expected_shape = target_mechanism.input_ports[TARGET].socket_template
     if np.shape(generated_targets) != np.shape(expected_shape):
-            raise RunError("Target values generated by target function ({}) are not compatible with TARGET input state "
+            raise RunError("Target values generated by target function ({}) are not compatible with TARGET InputPort "
                            "of {} ({}). See {} entry in target specification dictionary. "
                            .format(generated_targets, target_mechanism.name, expected_shape, sample_mechanism.name))
 

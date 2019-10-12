@@ -1198,10 +1198,10 @@ class AutodiffComposition(Composition):
                                                "Autodiff Compositions can only be Linear, Logistic, or ReLU."
                                                .format(node.component.function, node.component, self.name))
 
-            # raise error if a node has more than one input state
+            # raise error if a node has more than one InputPort
             if len(node.component.input_ports) > 1:
-                raise AutodiffCompositionError("Mechanism {0} of {1} has more than one input state. Autodiff "
-                                               "Compositions only allow mechanisms to have one input state. The "
+                raise AutodiffCompositionError("Mechanism {0} of {1} has more than one InputPort. Autodiff "
+                                               "Compositions only allow mechanisms to have one InputPort. The "
                                                "dimensionality of this state's value will become the dimensionality of "
                                                "the tensor representing the state's mechanism in the underlying "
                                                "Pytorch model."

@@ -593,7 +593,7 @@ class LearningProjection(ModulatoryProjection_Base):
                     receiver = self.receiver = receiver._parameter_ports[MATRIX]
                 except KeyError:
                     raise LearningProjectionError("The MappingProjection {} specified as the receiver for {} "
-                                                  "has no MATRIX parameter state".format(receiver.name, self.name))
+                                                  "has no MATRIX ParameterPort".format(receiver.name, self.name))
             if not any(s in {ParameterPort, MappingProjection} for s in {receiver, type(receiver)}):
                 raise LearningProjectionError("The receiver arg for {} must be a MappingProjection "
                                               "or the MATRIX parameterPort of one."

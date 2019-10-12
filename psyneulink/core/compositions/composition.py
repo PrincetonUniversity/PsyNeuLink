@@ -307,7 +307,7 @@ values from trials 0 and 1 are used again on trials 5 and 6, respectively.
 For convenience, condensed versions of the input specification described above are also accepted in the following
 situations:
 
-* **Case 1: INPUT Node has only one input state**
+* **Case 1: INPUT Node has only one InputPort**
 +--------------------------+-------+------+------+------+------+
 | Trial #                  |0      |1     |2     |3     |4     |
 +--------------------------+-------+------+------+------+------+
@@ -331,13 +331,13 @@ Complete input specification:
 
         >>> comp.run(inputs=input_dictionary)
 
-Shorthand - drop the outer list on each input because **Mechanism a** only has one input state:
+Shorthand - drop the outer list on each input because **Mechanism a** only has one InputPort:
 
         >>> input_dictionary = {a: [[1.0], [2.0], [3.0], [4.0], [5.0]]}
 
         >>> comp.run(inputs=input_dictionary)
 
-Shorthand - drop the remaining list on each input because **Mechanism a**'s one input state's value is length 1:
+Shorthand - drop the remaining list on each input because **Mechanism a**'s one InputPort's value is length 1:
 
         >>> input_dictionary = {a: [1.0, 2.0, 3.0, 4.0, 5.0]}
 
@@ -2348,7 +2348,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # add it to our set of current input ports
                 current_input_node_input_ports.add(input_port)
 
-                # if there is not a corresponding CIM output state, add one
+                # if there is not a corresponding CIM OutputPort, add one
                 if input_port not in set(self.input_CIM_ports.keys()):
                     interface_input_port = InputPort(owner=self.input_CIM,
                                                       variable=input_port.defaults.value,
@@ -2403,11 +2403,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     if shadow_projection.sender == self.input_CIM_ports[input_port][1]:
                                         shadow_input_port.path_afferents.remove(shadow_projection)
 
-            # remove the CIM input and output ports associated with this INPUT node input state
+            # remove the CIM input and output ports associated with this INPUT node InputPort
             self.input_CIM.input_ports.remove(self.input_CIM_ports[input_port][0])
             self.input_CIM.output_ports.remove(self.input_CIM_ports[input_port][1])
 
-            # and from the dictionary of CIM output state/input state pairs
+            # and from the dictionary of CIM OutputPort/InputPort pairs
             del self.input_CIM_ports[input_port]
 
         # OUTPUT CIMS
@@ -2416,7 +2416,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in self.get_nodes_by_role(NodeRole.OUTPUT):
             for output_port in node.output_ports:
                 current_output_node_output_ports.add(output_port)
-                # if there is not a corresponding CIM output state, add one
+                # if there is not a corresponding CIM OutputPort, add one
                 if output_port not in set(self.output_CIM_ports.keys()):
 
                     interface_input_port = InputPort(owner=self.output_CIM,
@@ -2449,7 +2449,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         previous_output_node_output_ports = set(self.output_CIM_ports.keys())
         for output_port in previous_output_node_output_ports.difference(current_output_node_output_ports):
-            # remove the CIM input and output ports associated with this Terminal Node output state
+            # remove the CIM input and output ports associated with this Terminal Node OutputPort
             self.output_CIM.remove_states(self.output_CIM_ports[output_port][0])
             self.output_CIM.remove_states(self.output_CIM_ports[output_port][1])
             del self.output_CIM_ports[output_port]
@@ -7199,7 +7199,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         # for "functionality" but rather a hack for user clarity
                         if "KWTA" in str(type(node)):
                             err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros (or other values)" \
-                                                " to represent the outside stimulus for the inhibition input state, and " \
+                                                " to represent the outside stimulus for the inhibition InputPort, and " \
                                                 "for systems, put your inputs"
                         raise RunError(err_msg)
                     elif check_spec_type == "homogeneous":

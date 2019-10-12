@@ -72,7 +72,7 @@ color_feature_layer = pnl.RecurrentTransferMechanism(
     integrator_mode=True,       # Set IntegratorFunction mode to True
     integration_rate=Lambda,    # smoothing factor ==  integration rate
     hetero=inhibition,          # Inhibition among units within a layer
-    output_ports=[{                          # Create new output state by applying
+    output_ports=[{                          # Create new OutputPort by applying
         pnl.NAME: 'SPECIAL_LOGISTIC',         # the "my_special_Logistic" function
         pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
         pnl.FUNCTION: my_special_Logistic
@@ -86,7 +86,7 @@ word_feature_layer = pnl.RecurrentTransferMechanism(
     integrator_mode=True,   # Set IntegratorFunction mode to True
     integration_rate=Lambda,  # smoothing factor ==  integration rate
     hetero=inhibition,      # Inhibition among units within a layer
-    output_ports=[{              # Create new output state by applying
+    output_ports=[{              # Create new OutputPort by applying
         pnl.NAME: 'SPECIAL_LOGISTIC',        # the "my_special_Logistic" function
         pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
         pnl.FUNCTION: my_special_Logistic
@@ -101,7 +101,7 @@ response_layer = pnl.RecurrentTransferMechanism(
     integrator_mode=True,           # Set IntegratorFunction mode to True
     integration_rate=Lambda,        # smoothing factor ==  integration rate
     hetero=inhibition,              # Inhibition among units within a layer
-    output_ports=[{           # Create new output state by applying
+    output_ports=[{           # Create new OutputPort by applying
         pnl.NAME: 'SPECIAL_LOGISTIC',        # the "my_special_Logistic" function
         pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
         pnl.FUNCTION: my_special_Logistic
@@ -109,7 +109,7 @@ response_layer = pnl.RecurrentTransferMechanism(
     name='RESPONSE_LAYER'
 )
 
-# The task_demand_layer is set up as the color_feature_layer but with a different python function on it's output state
+# The task_demand_layer is set up as the color_feature_layer but with a different python function on it's OutputPort
 # and a differnet inhibition weight on the hetero
 task_demand_layer = pnl.RecurrentTransferMechanism(
     size=2,                      # Define unit size
@@ -117,7 +117,7 @@ task_demand_layer = pnl.RecurrentTransferMechanism(
     integrator_mode=True,   # Set IntegratorFunction mode to True
     integration_rate=Lambda,  # smoothing factor ==  integration rate
     hetero=inhibition_task,  # Inhibition among units within a layer
-    output_ports=[               # Create new output state by applying
+    output_ports=[               # Create new OutputPort by applying
         {
             pnl.NAME: 'SPECIAL_LOGISTIC',        # the "my_conflict_function" function
             pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
@@ -199,7 +199,7 @@ task_input_weights = pnl.MappingProjection(
 
 # to send a control signal from the task demand layer to the response layer,
 # set matrix to -1 to reduce response layer activation
-# specify the sender of the projection which is the second output state the task demand layer
+# specify the sender of the projection which is the second OutputPort the task demand layer
 # specify the receiver of the projection
 task_conflict_to_response_weights = pnl.MappingProjection(
     matrix=np.array([[-1.0, -1.0]]),

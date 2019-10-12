@@ -1231,7 +1231,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         def _get_values(p):
             param = p.get(context)
             try:
-                # Existence of parameter state changes the shape to array
+                # Existence of ParameterPort changes the shape to array
                 # the base value should remain the same though
                 if p.name in self.owner.parameter_ports:
                     param = [param]
@@ -1312,7 +1312,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         """If variable is None, _handle_size tries to infer variable based on the **size** argument to the
             __init__() function. This method is overwritten in subclasses like Mechanism and Port.
             If self is a Mechanism, it converts variable to a 2D array, (for a Mechanism, variable[i] represents
-            the input from the i-th input state). If self is a Port, variable is a 1D array and size is a length-1 1D
+            the input from the i-th InputPort). If self is a Port, variable is a 1D array and size is a length-1 1D
             array. It performs some validations on size and variable as well. This function is overridden in Port.py.
             If size is NotImplemented (usually in the case of Projections/Functions), then this function passes without
             doing anything. Be aware that if size is NotImplemented, then variable is never cast to a particular shape.
@@ -2935,7 +2935,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     except KeyError:
                         pass
 
-                # matrix is determined from parameter state based on string value in function_params
+                # matrix is determined from ParameterPort based on string value in function_params
                 # update it here if needed
                 if MATRIX in kwargs_to_instantiate:
                     try:

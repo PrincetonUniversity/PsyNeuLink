@@ -1371,7 +1371,7 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
 
     Note: Port._instantiate_port_list()
               parses self.defaults.variable (2D np.array, passed in reference_value)
-              into individual 1D arrays, one for each input state
+              into individual 1D arrays, one for each InputPort
 
     (See Port._instantiate_port_list() for additional details)
 

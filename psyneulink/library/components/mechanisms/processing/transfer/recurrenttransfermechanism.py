@@ -469,8 +469,8 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     has_recurrent_input_port : boolean : default False
         specifies whether the mechanism's `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`
-        points to a separate input state. By default, if False, the recurrent_projection points to its `primary
-        InputPort <InputPort_Primary>`. If True, the recurrent_projection points to a separate input state, and
+        points to a separate InputPort. By default, if False, the recurrent_projection points to its `primary
+        InputPort <InputPort_Primary>`. If True, the recurrent_projection points to a separate InputPort, and
         the values of all input ports are combined using `LinearCombination <function.LinearCombination>` *before*
         being passed to the RecurrentTransferMechanism's `function <RecurrentTransferMechanism.function>`.
 
@@ -590,8 +590,8 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     has_recurrent_input_port : boolean
         specifies whether the mechanism's `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`
-        points to a separate input state. If False, the recurrent_projection points to its `primary
-        InputPort <InputPort_Primary>`. If True, the recurrent_projection points to a separate input state, and
+        points to a separate InputPort. If False, the recurrent_projection points to its `primary
+        InputPort <InputPort_Primary>`. If True, the recurrent_projection points to a separate InputPort, and
         the values of all input ports are combined using `LinearCombination <function.LinearCombination>` *before*
         being passed to the RecurrentTransferMechanism's `function <RecurrentTransferMechanism.function>`.
 
@@ -1553,7 +1553,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         # connect only to the first one?
         assert len(self.input_ports) == 1
         for state in self.input_ports:
-            # Extract the non-modulation portion of input state input struct
+            # Extract the non-modulation portion of InputPort input struct
             s_type = ctx.get_input_struct_type(state).elements[0]
             if isinstance(s_type, pnlvm.ir.ArrayType):
                 # Subtract one incoming mapping projections.
@@ -1591,7 +1591,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         transfer_init = super()._get_state_initializer(context)
         projection_init = self.recurrent_projection._get_state_initializer(context)
 
-        # Initialize to output state defaults. That is what the recurrent
+        # Initialize to OutputPort defaults. That is what the recurrent
         # projection finds.
         retval_init = (tuple(os.defaults.value) if not np.isscalar(os.defaults.value) else os.defaults.value for os in self.output_ports)
         return tuple((transfer_init, projection_init, tuple(retval_init)))

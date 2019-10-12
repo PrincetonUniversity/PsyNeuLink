@@ -219,7 +219,7 @@ def x():
     # print("my system controller: ", mySystem.controller.control_signals.values)
     # print("my system controller SLOPE: ", mySystem.controller.control_signals.values)
     #
-    # print("input state bla bla:", Target_Rep.input_ports[0].function.exponents)
+    # print("InputPort bla bla:", Target_Rep.input_ports[0].function.exponents)
     # print("============== ")
     # print("my system  stuff: ", mySystem.controller.control_signals.values)
     #

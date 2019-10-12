@@ -1171,7 +1171,7 @@ class LearningComponents(object):
         def _get_error_signal_mech():
             if not self.error_matrix:
                 return None
-            # search the projections to the error_matrix parameter state for a LearningProjection
+            # search the projections to the error_matrix ParameterPort for a LearningProjection
             learning_proj = next((proj for proj in self.error_matrix.mod_afferents
                                  if isinstance(proj, LearningProjection)), None)
             # if there are none, the error_matrix might be for an error_projection to an ObjectiveMechanism

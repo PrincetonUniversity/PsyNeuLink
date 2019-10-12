@@ -323,7 +323,7 @@ In the examples above, `reinitialize <AdaptiveIntegrator.reinitialize>` was appl
 integrator function.
 The key difference between the `integrator_function's reinitialize <AdaptiveIntegrator.reinitialize>` and the
 `TransferMechanism's reinitialize <TransferMechanism.reinitialize>` is that the latter will also execute the mechanism's
-function and update its output ports. This is useful if the mechanism's value or any of its output state values will
+function and update its output ports. This is useful if the mechanism's value or any of its OutputPort values will
 be used or checked *before* the mechanism's next execution. (This may be true if, for example, the mechanism is
 `recurrent <RecurrentTransferMechanism>`, the mechanism is responsible for `modulating <ModulatorySignal_Modulation`
 other components, or if a `Scheduler` condition depends on the mechanism's activity.)

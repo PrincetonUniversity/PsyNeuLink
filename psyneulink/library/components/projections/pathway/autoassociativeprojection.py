@@ -64,7 +64,7 @@ Execution
 
 An AutoAssociativeProjection uses its `matrix <AutoAssociativeProjection.matrix>` parameter to transform the value of
 its `sender <AutoAssociativeProjection.sender>`, and provide the result as input for its
-`receiver <AutoAssociativeProjection.receiver>`, the primary input state of the RecurrentTransferMechanism.
+`receiver <AutoAssociativeProjection.receiver>`, the primary InputPort of the RecurrentTransferMechanism.
 
 .. note::
      During execution the AutoAssociativeProjection updates its `matrix <AutoAssociativeProjection.matrix> parameter
@@ -349,7 +349,7 @@ class AutoAssociativeProjection(MappingProjection):
     # END OF COMMENTED OUT BY KAM 1/9/2018
 
     # NOTE 7/25/17 CW: Originally, this override was written because if the user set the 'auto' parameter on the
-        # recurrent mechanism, the parameter state wouldn't update until after the mechanism executed: since the system
+        # recurrent mechanism, the ParameterPort wouldn't update until after the mechanism executed: since the system
         # first runs the projection, then runs the mechanism, the projection initially uses the 'old' value. However,
         # this is commented out because this may in fact be the desired behavior.
         # Two possible solutions: allow control to be done on projections, or build a more general way to allow

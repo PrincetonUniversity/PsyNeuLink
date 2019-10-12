@@ -1843,7 +1843,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 dependent_projections.add(eff)
 
         # FIX: 9/15/19 - HOW IS THIS DIFFERENT THAN objective_mechanism's AFFERENTS ABOVE?
-        # assign any deferred init objective mech monitored output state projections to this system
+        # assign any deferred init objective mech monitored OutputPort projections to this system
         if self.objective_mechanism:
             for output_port in self.objective_mechanism.monitored_output_ports:
                 for eff in output_port.efferents:

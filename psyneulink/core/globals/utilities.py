@@ -925,7 +925,7 @@ def convert_to_np_array(value, dimension):
     if dimension is 1:
         # KAM 6/28/18: added for cases when even np does not recognize the shape/dtype
         # Needed this specifically for the following shape: variable = [[0.0], [0.0], np.array([[0.0, 0.0]])]
-        # Which is due to a custom output state variable that includes an owner value, owner param, and owner input
+        # Which is due to a custom OutputPort variable that includes an owner value, owner param, and owner input
         # state variable. FIX: This branch of code may erroneously catch other shapes that could be handled by np
 
         try:

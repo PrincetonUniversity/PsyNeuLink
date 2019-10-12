@@ -2001,7 +2001,7 @@ class TestOutputPorts:
         I = InputPort(owner=T,
                       variable=[4.0],
                       reference_value=[4.0],
-                      name="extra input state")
+                      name="extra InputPort")
         T.add_ports([I])
         print("Number of input ports: ", len(T.input_ports))
         print(T.input_ports, "\n\n")

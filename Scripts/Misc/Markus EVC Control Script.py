@@ -138,7 +138,7 @@ mySystem.show()
 mySystem.show_graph(show_control=pnl.ALL, show_mechanism_structure=True)# show_control=True,show_dimensions=True)
 
 
-#log input state of mySystem
+#log InputPort of mySystem
 mySystem.controller.loggable_items
 mySystem.controller.set_log_conditions('InputPort-0')
 mySystem.controller.set_log_conditions('value')
@@ -223,9 +223,9 @@ mySystem.run(num_trials=nTrials,inputs=stim_list_dict)
 # Target_Rep.log.print_entries()
 # Decision.log.print_entries()
 
-# print('output state of objective mechanism', mySystem.controller.objective_mechanism.output_ports.values)
+# print('OutputPort of objective mechanism', mySystem.controller.objective_mechanism.output_ports.values)
 #
-# print('input state of EVC Control mechanism', mySystem.controller.input_port.value)
+# print('InputPort of EVC Control mechanism', mySystem.controller.input_port.value)
 #
 # print('mapping projection from objective mechanism to EVC Control mechanism',mySystem.controller.projections[0].matrix)
 

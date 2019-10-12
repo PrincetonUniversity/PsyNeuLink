@@ -35,13 +35,13 @@ or Projection to which it belongs (i.e. MyTransferMech.mod_gain would return the
 of the MyTransferMech mechanism.)
 
 .. note::
-    Either of these options for looking up the value of the ParameterPort will return the parameter state value that
+    Either of these options for looking up the value of the ParameterPort will return the ParameterPort value that
     was used during the most recent execution. This means that if the value of MyTransferMech.function.gain (the
     base value) is updated after execution #1, the base value will change immediately, but the ParameterPort value (and
     MyTransferMech.mod_gain) will not be computed again until execution #2.
 
     As a result, if either MyTransferMech.mod_gain or MyTransferMech.parameter_ports["gain"].value is viewed in between
-    execution #1 and execution #2, it will return the gain parameter state value that was used during execution 1.
+    execution #1 and execution #2, it will return the gain ParameterPort value that was used during execution 1.
 
 .. _ParameterPort_Creation:
 

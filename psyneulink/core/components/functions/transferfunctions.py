@@ -501,7 +501,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
                 else:
                     raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
             # KAM 6/28/18: If the variable does not have a "dtype" attr but made it to this line, then it must be of a
-            # type that even np does not recognize -- typically a custom output state variable with items of different
+            # type that even np does not recognize -- typically a custom OutputPort variable with items of different
             # shapes (e.g. variable = [[0.0], [0.0], array([[0.0, 0.0]])] )
             elif isinstance(variable, list):
                 result = []
