@@ -512,7 +512,7 @@ GATING_MECHANISM = 'GatingMechanism'
 AUTOASSOCIATIVE_LEARNING_MECHANISM = 'AutoAssociativeLearningMechanism'
 KOHONEN_LEARNING_MECHANISM = 'KohonenLearningMechanism'
 
-# States:
+# Ports:
 INPUT_PORT = "InputPort"
 PROCESS_INPUT_PORT = "ProcessInputPort"
 SYSTEM_INPUT_PORT = "SystemInputPort"

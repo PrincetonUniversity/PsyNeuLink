@@ -352,7 +352,7 @@ class AGTControlMechanism(ControlMechanism):
             if isinstance(target_set[MONITORED_OUTPUT_PORTS], MonitoredOutputPortsOption):
                 # Put in a list (standard format for processing by _parse_monitored_output_ports_list)
                 target_set[MONITORED_OUTPUT_PORTS] = [target_set[MONITORED_OUTPUT_PORTS]]
-            # It is NOT a MonitoredOutputPortsOption specification, so assume it is a list of Mechanisms or States
+            # It is NOT a MonitoredOutputPortsOption specification, so assume it is a list of Mechanisms or Ports
             else:
                 # Validate each item of MONITORED_OUTPUT_PORTS
                 for item in target_set[MONITORED_OUTPUT_PORTS]:

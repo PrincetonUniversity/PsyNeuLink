@@ -105,7 +105,7 @@ creating a Port.
 ~~~~~~~~~~~~
 
 Each GatingSignal has a `modulation <GatingSignal.modulation>` attribute that determines how the GatingSignal's
-`value <GatingSignal.value>` (i.e., its `gating_signal <GatingSignal.gating_signal>`) is used by the States to which it
+`value <GatingSignal.value>` (i.e., its `gating_signal <GatingSignal.gating_signal>`) is used by the Ports to which it
 projects to modify their `value <Port_Base.value>` \\s (see `ModulatorySignal_Modulation` for an explanation of how the
 `modulation <GatingSignal.modulation>` attribute is specified and used to modulate the `value <Port_Base.value>` of a
 Port). The `modulation <GatingSignal.modulation>` attribute can be specified in the **modulation** argument of the
@@ -126,7 +126,7 @@ A GatingSignal cannot be executed directly.  It is executed whenever the `Gating
 executed.  When this occurs, the GatingMechanism provides the GatingSignal with one of the values from its
 `gating_allocation <GatingMechanism.gating_signal>`, that is used by its `function <GatingSignal.function>` to generate its
 the value of its `gating_signal <GatingSignal.gating_signal>`.  That, in turn, is used by its `GatingProjection(s)
-<GatingProjection>` to modulate the `value <Port_Base.value>` of the States to which they project. How the modulation
+<GatingProjection>` to modulate the `value <Port_Base.value>` of the Ports to which they project. How the modulation
 is executed is determined by the GatingSignal's `modulation <GatingSignal.modulation>` attribute
 (see `above <GatingSigna_Modulation>`, and `ModulatorySignal_Modulation` for a more detailed explanation of how
 modulation operates).
@@ -198,7 +198,7 @@ Mechanism::
     ...                                                                              my_output_layer]}])
 
 Here, two GatingSignals are specified as `specification dictionaries <GatingSignal_Specification>`, each of which
-contains an entry for the name of the GatingSignal, and a *PROJECTIONS* entry that specifies the States to which the
+contains an entry for the name of the GatingSignal, and a *PROJECTIONS* entry that specifies the Ports to which the
 GatingSignal should project (i.e., the ones to be gated).  Once again, the specifications exploit the fact that the
 default is to gate the `primary InputPort <InputPort_Primary>` of a Mechanism, so those are what are referenced. The
 first dict also contains a  *MODULATION* entry that specifies the value of the `modulation <GatingSignal.modulation>`
@@ -393,9 +393,9 @@ class GatingSignal(ControlSignal):
         is assigned (see `name <ModulatorySignal.name>`).
 
         .. note::
-            Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that States with
+            Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that Ports with
             the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
-            Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
+            Mechanism: Ports within a Mechanism with the same base name are appended an index in the order of their
             creation.
 
     prefs : PreferenceSet or specification dict

@@ -193,7 +193,7 @@ should project to the InputPort. Each of these is described below:
       must be compatible with the item of the owner Mechanism's `variable <Mechanism_Base.variable>` to which the
       InputPort is assigned (see `Mechanism InputPort specification <Mechanism_InputPort_Specification>`).
 
-      The *PROJECTIONS* entry can include specifications for one or more States, Mechanisms and/or Projections that
+      The *PROJECTIONS* entry can include specifications for one or more Ports, Mechanisms and/or Projections that
       should project to the InputPort (including both `MappingProjections <MappingProjection>` and/or
       `ModulatoryProjections <ModulatoryProjection>`; however, this may be constrained by or have consequences for the
       InputPort's `variable <InputPort.variable>` (see `InputPort_Compatability_and_Constraints`).
@@ -230,7 +230,7 @@ should project to the InputPort. Each of these is described below:
     Projections when creating a Port.
     COMMENT
 
-    An InputPort can also be specified by specifying one or more States, Mechanisms or Projections that should project
+    An InputPort can also be specified by specifying one or more Ports, Mechanisms or Projections that should project
     to it, as described below.  Specifying an InputPort in this way creates both the InputPort and any of the
     specified or implied Projection(s) to it (if they don't already exist). `MappingProjections <MappingProjection>`
     are assigned to the InputPort's `path_afferents <InputPort.path_afferents>` attribute, and `GatingProjections
@@ -255,7 +255,7 @@ should project to the InputPort. Each of these is described below:
 
         * **2-item tuple:** *(<Port name or list of Port names>, <Mechanism>)* -- 1st item must be the name of an
           `OutputPort` or `ModulatorySignal`, or a list of such names, and the 2nd item must be the Mechanism to
-          which they all belong.  Projections of the relevant types are created for each of the specified States
+          which they all belong.  Projections of the relevant types are created for each of the specified Ports
           (see `Port 2-item tuple <State_2_Item_Tuple>` for additional details).
 
         * **2-item tuple:** *(<value, Port specification, or list of Port specs>, <Projection specification>)* --
@@ -265,13 +265,13 @@ should project to the InputPort. Each of these is described below:
           -- this allows the specification of Port(s) that should project to the InputPort, together with a
           specification of the InputPort's `weight <InputPort.weight>` and/or `exponent <InputPort.exponent>`
           attributes of the InputPort, and (optionally) the Projection(s) to it.  This can be used to compactly
-          specify a set of States that project the InputPort, while using the 4th item to determine its variable
+          specify a set of Ports that project the InputPort, while using the 4th item to determine its variable
           (e.g., using the matrix of the Projection specification) and/or attributes of the Projection(s) to it. Each
           tuple must have at least the following first three items (in the order listed), and can include the fourth:
 
 
             * **value, Port specification, or list of Port specifications** -- specifies either the `variable
-              <InputPort.variable>` of the InputPort, or one or more States that should project to it.  The Port
+              <InputPort.variable>` of the InputPort, or one or more Ports that should project to it.  The Port
               specification(s) can be a (Port name, Mechanism) tuple (see above), and/or include Mechanisms (in which
               case their `primary OutputPort <OutputPortPrimary>` is used.  All of the Port specifications must be
               consistent with (that is, their `value <Port_Base.value>` must be compatible with the `variable
@@ -288,7 +288,7 @@ should project to the InputPort. Each of these is described below:
 
             * **Projection specification** (optional) -- `specifies a Projection <Projection_Specification>` that
               must be compatible with the Port specification(s) in the 1st item; if there is more than one Port
-              specified, and the Projection specification is used, all of the States
+              specified, and the Projection specification is used, all of the Ports
               must be of the same type (i.e.,either OutputPorts or GatingSignals), and the `Projection
               Specification <Projection_Specification>` cannot be an instantiated Projection (since a
               Projection cannot be assigned more than one `sender <Projection_Base.sender>`).
@@ -448,7 +448,7 @@ to, and that can be used to customize the InputPort:
 .. _InputPort_Weights_And_Exponents:
 
 * `weight <InputPort.weight>` and `exponent <InputPort.exponent>` -- these can be used by the Mechanism to which the
-  InputPort belongs when that combines the `value <InputPort.value>`\\s of its States (e.g., an ObjectiveMechanism
+  InputPort belongs when that combines the `value <InputPort.value>`\\s of its Ports (e.g., an ObjectiveMechanism
   uses the weights and exponents assigned to its InputPorts to determine how the values it monitors are combined by
   its `function <ObjectiveMechanism>`).  The value of each must be an integer or float, and the default is 1 for both.
 
@@ -680,9 +680,9 @@ class InputPort(Port_Base):
         apply to the InputPorts specified, as well as any that are added to the Mechanism once it is created.
 
         .. note::
-            Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that States with
+            Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that Ports with
             the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
-            Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
+            Mechanism: Ports within a Mechanism with the same base name are appended an index in the order of their
             creation.
 
     prefs : PreferenceSet or specification dict

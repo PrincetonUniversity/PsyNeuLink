@@ -111,7 +111,7 @@ creating a Port.
 ~~~~~~~~~~~~
 
 A ControlSignal has a `modulation <GatingSignal.modulation>` attribute that determines how its ControlSignal's
-`value <ControlSignal.value>` is used by the States to which it projects to modify their `value <Port_Base.value>` \\s
+`value <ControlSignal.value>` is used by the Ports to which it projects to modify their `value <Port_Base.value>` \\s
 (see `ModulatorySignal_Modulation` for an explanation of how the `modulation <ControlSignal.modulation>`  attribute is
 specified and used to modulate the `value <Port_Base.value>` of a Port). The `modulation <ControlSignal.modulation>`
 attribute can be specified in the **modulation** argument of the constructor for a ControlSignal, or in a specification
@@ -609,9 +609,9 @@ class ControlSignal(ModulatorySignal):
         is assigned (see `name <ModulatorySignal.name>`).
 
         .. note::
-            Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that States with
+            Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that Ports with
             the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
-            Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
+            Mechanism: Ports within a Mechanism with the same base name are appended an index in the order of their
             creation.
 
     prefs : PreferenceSet or specification dict

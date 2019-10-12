@@ -202,13 +202,13 @@ class TestNaming:
         assert G1.gating_signals[0].name == 'T3[InputPort-0] GatingSignal'
         assert G1.gating_signals[0].efferents[0].name == 'GatingProjection for T3[InputPort-0]'
 
-        # GatingSignal with two GatingProjections to two States of same Mechanism
+        # GatingSignal with two GatingProjections to two Ports of same Mechanism
         G2 = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS:[T4.input_ports[0], T4.input_ports[1]]}])
         assert G2.gating_signals[0].name == 'T4[First Port, Second Port] GatingSignal'
         assert G2.gating_signals[0].efferents[0].name == 'GatingProjection for T4[First Port]'
         assert G2.gating_signals[0].efferents[1].name == 'GatingProjection for T4[Second Port]'
 
-        # GatingSignal with two GatingProjections to two States of different Mechanisms
+        # GatingSignal with two GatingProjections to two Ports of different Mechanisms
         G3 = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS:[T3, T4]}])
         assert G3.gating_signals[0].name == 'GatingSignal-0 divergent GatingSignal'
         assert G3.gating_signals[0].efferents[0].name == 'GatingProjection for T3[InputPort-0]'

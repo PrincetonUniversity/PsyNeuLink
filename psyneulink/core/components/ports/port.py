@@ -15,7 +15,7 @@ Overview
 
 A Port provides an interface to one or more `Projections <Projection>`, and receives the `value(s) <Projection>`
 provided by them.  The value of a Port can be modulated by a `ModulatoryProjection <ModulatoryProjection>`. There are
-three primary types of States (InputPorts, ParameterPorts and OutputPorts) as well as one subtype (ModulatorySignal,
+three primary types of Ports (InputPorts, ParameterPorts and OutputPorts) as well as one subtype (ModulatorySignal,
 used to send ModulatoryProjections), as summarized in the table below:
 
 .. _Port_types_Table:
@@ -69,7 +69,7 @@ COMMENT:
 
 * `ModulatorySignal <ModulatorySignal>`:
     a subclass of `OutputPort` used by `ModulatoryMechanisms <ModulatoryMechanism>` to modulate the value of the primary
-    types of States listed above.  There are three types of ModulatorySignals:
+    types of Ports listed above.  There are three types of ModulatorySignals:
 
     * `LearningSignal`, used by a `LearningMechanism` to modulate the *MATRIX* ParameterPort of a `MappingProjection`;
     * `ControlSignal`, used by a `ControlMechanism <ControlMechanism>` to modulate the `ParameterPort` of a `Mechanism
@@ -86,11 +86,11 @@ COMMENT
 Creating a Port
 ----------------
 
-In general, States are created automatically by the objects to which they belong (their `owner <State_Owner>`),
+In general, Ports are created automatically by the objects to which they belong (their `owner <State_Owner>`),
 or by specifying the Port in the constructor for its owner.  For example, unless otherwise specified, when a
 `Mechanism <Mechanism>` is created it creates a default `InputPort` and `OutputPort` for itself, and whenever any
 Component is created, it automatically creates a `ParameterPort` for each of its `configurable parameters
-<Component_Structural_Attributes>` and those of its `function <Component_Function>`. States are also created in
+<Component_Structural_Attributes>` and those of its `function <Component_Function>`. Ports are also created in
 response to explicit specifications.  For example, InputPorts and OutputPorts can be specified in the constructor for
 a Mechanism (see `Mechanism_Port_specification`); and ParameterPorts are specified in effect when the value of a
 parameter for any Component or its `function <Component.function>` is specified in the constructor for that Component
@@ -98,7 +98,7 @@ or function.  InputPorts and OutputPorts (but *not* ParameterPorts) can also be 
 constructors, and then assigned to a Mechanism using the Mechanism's `add_ports <Mechanism_Base.add_ports>` method;
 however, this should be done with caution as the Port must be compatible with other attributes of its owner (such as
 its OutputPorts) and its `function <Mechanism_Base.function>` (for example, see `note <Mechanism_Add_InputPorts_Note>`
-regarding InputPorts). Parameter States **cannot** on their own; they are always and only created when the Component
+regarding InputPorts). Parameter Ports **cannot** on their own; they are always and only created when the Component
 to which a parameter belongs is created.
 
 COMMENT:
@@ -166,7 +166,7 @@ A Port can be specified using any of the following:
           `MappingProjection` to the Mechanism's `primary InputPort <InputPort_Primary>` or from its `primary
           OutputPort <OutputPort_Primary>`, depending upon the type of Mechanism and context of specification.  It
           can also be accompanied by one or more Port specification entries described below, to create one or more
-          Projections to/from those specific States (see `examples <State_Port_Name_Entry_Example>`).
+          Projections to/from those specific Ports (see `examples <State_Port_Name_Entry_Example>`).
       ..
       * <STATES_KEYWORD>:List[<str or Port.name>,...]
          this must accompany a *MECHANISM* entry (described above), and is used to specify its Port(s) by name.
@@ -177,29 +177,29 @@ A Port can be specified using any of the following:
             - *LEARNING_SIGNAL*
             - *CONTROL_SIGNAL*
             - *GATING_SIGNAL*.
-         Each entry must contain a list States of the specified type, all of which belong to the Mechanism specified in
-         the *MECHANISM* entry;  each item in the list must be the name of one the Mechanism's States, or a
+         Each entry must contain a list Ports of the specified type, all of which belong to the Mechanism specified in
+         the *MECHANISM* entry;  each item in the list must be the name of one the Mechanism's Ports, or a
          `ProjectionTuple <Port_ProjectionTuple>` the first item of which is the name of a Port. The types of
-         States that can be specified in this manner depends on the type of the Mechanism and context of the
+         Ports that can be specified in this manner depends on the type of the Mechanism and context of the
          specification (see `examples <State_Port_Name_Entry_Example>`).
 
     * **Port, Mechanism, or list of these** -- creates a default Port with Projection(s) to/from the specified
-      States;  the type of Port being created determines the type and directionality of the Projection(s) and,
-      if Mechanism(s) are specified, which of their primary States are used (see Port subclasses for specifics).
+      Ports;  the type of Port being created determines the type and directionality of the Projection(s) and,
+      if Mechanism(s) are specified, which of their primary Ports are used (see Port subclasses for specifics).
 
    .. _Port_Tuple_Specification:
 
     * **Tuple specifications** -- these are convenience formats that can be used to compactly specify a Port
-      by specifying other Components with which it should be connected by Projection(s). Different States support
+      by specifying other Components with which it should be connected by Projection(s). Different Ports support
       different forms, but all support the following two forms:
 
       .. _Port_2_Item_Tuple:
 
       * **2-item tuple:** *(<Port name or list of Port names>, <Mechanism>)* -- 1st item is the name of a Port or
         list of them, and the 2nd item is the Mechanism to which they belong; a Projection is created to or from each
-        of the States specified.  The type of Projection depends on the type of Port being created, and the type of
-        States specified in the tuple  (see `Projection_Table`).  For example, if the Port being created is an
-        InputPort, and the States specified in the tuple are OutputPorts, then `MappingProjections
+        of the Ports specified.  The type of Projection depends on the type of Port being created, and the type of
+        Ports specified in the tuple  (see `Projection_Table`).  For example, if the Port being created is an
+        InputPort, and the Ports specified in the tuple are OutputPorts, then `MappingProjections
         <MappingProjection>` are used; if `ModulatorySignals <ModulatorySignal>` are specified, then the corresponding
         type of `ModulatoryProjections <ModulatoryProjection>` are created.  See Port subclasses for additional
         details and compatibility requirements.
@@ -359,7 +359,7 @@ or to disable modulation, using one of the values of `ModulationParam` for its `
 Execution
 ---------
 
-States cannot be executed.  They are updated when the Component to which they belong is executed.  InputPorts and
+Ports cannot be executed.  They are updated when the Component to which they belong is executed.  InputPorts and
 ParameterPorts belonging to a Mechanism are updated before the Mechanism's function is called.  OutputPorts are
 updated after the Mechanism's function is called.  When a Port is updated, it executes any Projections that project
 to it (listed in its `all_afferents <Port_Base.all_afferents>` attribute.  It uses the values it receives from any
@@ -384,7 +384,7 @@ Examples
 
 .. _Port_Constructor_Examples:
 
-Usually, States are created automatically by the Mechanism to which they belong.  For example, creating a
+Usually, Ports are created automatically by the Mechanism to which they belong.  For example, creating a
 TransferMechanism::
 
     my_mech = pnl.TransferMechanism()
@@ -404,7 +404,7 @@ automatically creates an InputPort, ParameterPorts for its parameters, including
 
 *Using the* **input_ports** *argument of a Mechanism constructor.*
 
-When States are specified explicitly, it is usually in an argument of the constructor for the Mechanism to which they
+When Ports are specified explicitly, it is usually in an argument of the constructor for the Mechanism to which they
 belong.  For example, the following specifies that ``my_mech`` should have an InputPort named 'MY INPUT`::
 
     my_mech = pnl.TransferMechanism(input_ports=['MY INPUT'])
@@ -413,8 +413,8 @@ belong.  For example, the following specifies that ``my_mech`` should have an In
 
 The InputPort was specified by a string (for its name) in the **input_ports** argument.  It can also be specified in
 a variety of other ways, as described `above <Port_specification>` and illustrated in the examples below.
-Note that when one or more States is specified in the argument of a Mechanism's constructor, it replaces any defaults
-States created by the Mechanism when none are specified (see `note <Mechanism_Default_Port_Suppression_Note>`.
+Note that when one or more Ports is specified in the argument of a Mechanism's constructor, it replaces any defaults
+Ports created by the Mechanism when none are specified (see `note <Mechanism_Default_Port_Suppression_Note>`.
 
 .. _port_value_Spec_Example:
 
@@ -483,7 +483,7 @@ the type of Mechanism, then that is used (as is the case for both of the OutputP
 
 *Port specification dictionary*
 
-States can be specified in greater detail using a `Port specification dictionary
+Ports can be specified in greater detail using a `Port specification dictionary
 <Port_specification_Dictionary>`. In the example below, this is used to specify the variable and name of an
 InputPort::
 
@@ -539,7 +539,7 @@ specifies that the InputPort of ``my_mech`` should receive a `GatingProjection` 
 
 .. _Port_Modulatory_Projections_Examples:
 
-Conversely, ModulatoryProjections can also be specified from a Mechanism to one or more States that it modulates.  In
+Conversely, ModulatoryProjections can also be specified from a Mechanism to one or more Ports that it modulates.  In
 the following example, a `ControlMechanism` is created that sends `ControlProjections <ControlProjection>` to the
 `drift_rate <DriftDiffusionAnalytical.drift_rate>` and `threshold <DriftDiffusionAnalytical.threshold>`
 ParameterPorts of a `DDM` Mechanism::
@@ -575,7 +575,7 @@ specifying them in separate itesm of the **control_signals** argument::
 
 Specifying Projections in a Port specification dictionary affords flexibility -- for example, naming the Port
 and/or specifying other attributes.  However, if this is not necessary, the Projections can be used to specify
-States directly.  For example, the following, which is much simpler, produces the same result as the previous
+Ports directly.  For example, the following, which is much simpler, produces the same result as the previous
 example (sans the custom name; though as the printout below shows, the default names are usually pretty clear)::
 
     my_ctl_mech = pnl.ControlMechanism(control_signals=[my_mech.parameter_ports[pnl.DRIFT_RATE],
@@ -590,7 +590,7 @@ example (sans the custom name; though as the printout below shows, the default n
 
 *Convenience formats*
 
-There are two convenience formats for specifying States and their Projections in a Port specification
+There are two convenience formats for specifying Ports and their Projections in a Port specification
 dictionary.  The `first <State_Port_Name_Entry>` is to use the name of the Port as the key for its entry,
 and then a list of , as in the following example::
 
@@ -603,9 +603,9 @@ and then a list of , as in the following example::
 This produces the same result as the first example under `Port specification dictionary <Port_Projections_Examples>`
 above, but it is simpler and easier to read.
 
-The second convenience format is used to specify one or more Projections to/from the States of a single Mechanism
+The second convenience format is used to specify one or more Projections to/from the Ports of a single Mechanism
 by their name.  It uses the keyword *MECHANISM* to specify the Mechanism, coupled with a Port-specific entry to
-specify Projections to its States.  This can be useful when a Mechanism must send Projections to several States
+specify Projections to its Ports.  This can be useful when a Mechanism must send Projections to several Ports
 of another Mechanism, such as a ControlMechanism that sends ControlProjections to several parameters of a
 given Mechanism, as in the following example::
 
@@ -615,7 +615,7 @@ given Mechanism, as in the following example::
 
 This produces the same result as the `earlier example <State_Modulatory_Projections_Examples>` of ControlProjections,
 once again in a simpler and easier to read form.  However, it be used only to specify Projections for a Port to or
-from the States of a single Mechanism;  Projections involving other Mechanisms must be assigned to other States.
+from the Ports of a single Mechanism;  Projections involving other Mechanisms must be assigned to other Ports.
 
 .. _Port_Create_Port_Examples:
 
@@ -903,7 +903,7 @@ class Port_Base(Port):
             + class_defaults.variable (value): [0]
             + requiredParamClassDefaultTypes = {FUNCTION_PARAMS : [dict],    # Subclass function params
                                                PROJECTION_TYPE: [str, Projection]})   # Default projection type
-            + paramClassDefaults (dict): {PROJECTIONS: []}             # Projections to States
+            + paramClassDefaults (dict): {PROJECTIONS: []}             # Projections to Ports
             + owner (Mechansim)
             + FUNCTION (Function class or object, or method)
 
@@ -920,7 +920,7 @@ class Port_Base(Port):
         -------------
             Used by .__init__.py to assign default projection types to each Port subclass
             Note:
-            * All States that belong to a given owner are registered in the owner's _stateRegistry,
+            * All Ports that belong to a given owner are registered in the owner's _stateRegistry,
                 which maintains a dict for each Port type that it uses, a count for all instances of that type,
                 and a dictionary of those instances;  NONE of these are registered in the StateRegistry
                 This is so that the same name can be used for instances of a Port type by different owners
@@ -970,7 +970,7 @@ class Port_Base(Port):
 
     path_afferents : Optional[List[Projection]]
         list all `PathwayProjections <PathwayProjection>` received by the Port;
-        note:  only `InputPorts <InputPort>` have path_afferents;  the list is empty for other types of States.
+        note:  only `InputPorts <InputPort>` have path_afferents;  the list is empty for other types of Ports.
 
     mod_afferents : Optional[List[GatingProjection]]
         list of all `ModulatoryProjections <ModulatoryProjection>` received by the Port.
@@ -1003,9 +1003,9 @@ class Port_Base(Port):
         .. _Port_Naming_Note:
 
         .. note::
-            Unlike other PsyNeuLink Components, States names are "scoped" within a Mechanism, meaning that States with
+            Unlike other PsyNeuLink Components, Ports names are "scoped" within a Mechanism, meaning that Ports with
             the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
-            Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
+            Mechanism: Ports within a Mechanism with the same base name are appended an index in the order of their
             creation).
 
     full_name : str
@@ -1185,7 +1185,7 @@ class Port_Base(Port):
                     int_x = int(x)
                 except:
                     raise PortError(
-                        "Failed to convert size argument ({}) for {} {} to an integer. For States, size "
+                        "Failed to convert size argument ({}) for {} {} to an integer. For Ports, size "
                         "should be a number, which is an integer or can be converted to integer.".
                         format(x, type(self), self.name))
                 if int_x != x:
@@ -2350,7 +2350,7 @@ def _instantiate_port_list(owner,
                             reference_value,         # value(s) used as default for Port and to check compatibility
                             reference_value_name,    # name of reference_value type (e.g. variable, output...)
                             context=None):
-    """Instantiate and return a ContentAddressableList of States specified in state_list
+    """Instantiate and return a ContentAddressableList of Ports specified in state_list
 
     Arguments:
     - port_type (class): Port class to be instantiated
@@ -2360,7 +2360,7 @@ def _instantiate_port_list(owner,
                                  number (used as constraint value)
                                  dict (key=name, value=reference_value or param dict)
                          if None, instantiate a single default Port using reference_value as port_spec
-    - port_Param_identifier (str): used to identify set of States in params;  must be one of:
+    - port_Param_identifier (str): used to identify set of Ports in params;  must be one of:
         - INPUT_PORT
         - OUTPUT_PORT
         (note: this is not a list, even if port_types is, since it is about the attribute to which the
@@ -2384,18 +2384,18 @@ def _instantiate_port_list(owner,
             instantiate each item (if necessary) and place in a ContentAddressableList
     In each case, generate a ContentAddressableList with one or more entries, assigning:
         # the key for each entry the name of the Port if provided,
-        #     otherwise, use MECHANISM<port_type>States-n (incrementing n for each additional entry)
+        #     otherwise, use MECHANISM<port_type>Ports-n (incrementing n for each additional entry)
         # the Port value for each entry to the corresponding item of the Mechanism's port_type Port's value
-        # the dict to both self.<port_type>States and paramsCurrent[MECHANISM<port_type>States]
-        # self.<port_type>Port to self.<port_type>States[0] (the first entry of the dict)
+        # the dict to both self.<port_type>Ports and paramsCurrent[MECHANISM<port_type>Ports]
+        # self.<port_type>Port to self.<port_type>Ports[0] (the first entry of the dict)
     Notes:
         * if there is only one Port, but the value of the Mechanism's port_type has more than one item:
             assign it to the sole Port, which is assumed to have a multi-item value
         * if there is more than one Port:
-            the number of States must match length of Mechanisms port_type value or an exception is raised
+            the number of Ports must match length of Mechanisms port_type value or an exception is raised
     """
 
-    # If no States were passed in, instantiate a default port_type using reference_value
+    # If no Ports were passed in, instantiate a default port_type using reference_value
     if not state_list:
         # assign reference_value as single item in a list, to be used as port_spec below
         state_list = reference_value
@@ -2406,7 +2406,7 @@ def _instantiate_port_list(owner,
                   f"default will be created using {reference_value_name} "
                   f"of function ({reference_value}) as its value.")
 
-    # States should be either in a list, or possibly an np.array (from reference_value assignment above):
+    # Ports should be either in a list, or possibly an np.array (from reference_value assignment above):
     # KAM 6/21/18 modified to include tuple as an option for state_list
     if not isinstance(state_list, (ContentAddressableList, list, np.ndarray, tuple)):
         # This shouldn't happen, as items of state_list should be validated to be one of the above in _validate_params
@@ -2428,7 +2428,7 @@ def _instantiate_port_list(owner,
     except:
         raise PortError(f"PROGRAM ERROR: reference_value ({reference_value}) for {reference_value_name} of "
                          f"{[s.__name__ for s in port_types]} must be an indexable object (e.g., list or np.ndarray).")
-    # If number of States does not equal the number of items in reference_value, raise exception
+    # If number of Ports does not equal the number of items in reference_value, raise exception
     if num_states != num_constraint_items:
         if num_states > num_constraint_items:
             comparison_string = 'more'
@@ -2655,7 +2655,7 @@ def _parse_port_type(owner, port_spec):
         # Port keyword
         if port_spec in port_type_keywords:
             import sys
-            return getattr(sys.modules['PsyNeuLink.Components.States.'+port_spec], port_spec)
+            return getattr(sys.modules['PsyNeuLink.Components.Ports.'+port_spec], port_spec)
 
         # Try as name of Port
         for state_attr in [INPUT_PORTS, PARAMETER_PORTS, OUTPUT_PORTS]:
@@ -2673,9 +2673,9 @@ def _parse_port_type(owner, port_spec):
             # if item is not None:
             #     # assign dict to owner's output_port list
             #     return owner.standard_output_ports.get_dict(port_spec)
-            # from psyneulink.core.Components.States.OutputPort import StandardOutputPorts
+            # from psyneulink.core.Components.Ports.OutputPort import StandardOutputPorts
             if owner.standard_output_ports.get_port_dict(port_spec):
-                from psyneulink.core.components.States.OutputPort import OutputPort
+                from psyneulink.core.components.Ports.OutputPort import OutputPort
                 return OutputPort
 
     # Port specification dict
@@ -3054,7 +3054,7 @@ def _parse_port_spec(port_type=None,
                     port_dict[PROJECTIONS] = [port_dict[PROJECTIONS]]
                 params[PROJECTIONS].append(port_dict[PROJECTIONS])
 
-            # MECHANISM entry specifies Mechanism; <STATES> entry has names of its States
+            # MECHANISM entry specifies Mechanism; <STATES> entry has names of its Ports
             #           MECHANISM: <Mechanism>, <STATES>:[<Port.name>, ...]}
             if MECHANISM in port_specific_args:
 
@@ -3075,7 +3075,7 @@ def _parse_port_spec(port_type=None,
                                                        owner.name,
                                                        Mechanism.__name__))
 
-                # For States with which the one being specified can connect:
+                # For Ports with which the one being specified can connect:
                 for STATES in port_type.connectsWithAttribute:
 
                     if STATES in port_specific_args:

@@ -3788,8 +3788,8 @@ class System(System_Base):
         Displays a graph showing the structure of the System (based on the `System's graph <System.graph>`).
         By default, only the primary processing Components are shown, and Mechanisms are displayed as simple nodes.
         However, the **show_mechanism_structure** argument can be used to display more detailed information about
-        each Mechanism, including its States and, optionally, the `function <Component.function>` and `value
-        <Component.value>` of the Mechanism and each of its States (using the **show_functions** and **show_values**
+        each Mechanism, including its Ports and, optionally, the `function <Component.function>` and `value
+        <Component.value>` of the Mechanism and each of its Ports (using the **show_functions** and **show_values**
         arguments, respectively).  The **show_dimension** argument can be used to display the dimensions of each
         Mechanism and Projection.  The **show_processes** argument arranges Mechanisms and Projections into the
         Processes to which they belong. The **show_learning** and **show_control** arguments can be used to
@@ -3797,7 +3797,7 @@ class System(System_Base):
         System's `controller <System_Control>`.
 
         `Mechanisms <Mechanism>` are always displayed as nodes.  If **show_mechanism_structure** is `True`,
-        Mechanism nodes are subdivided into sections for its States with information about each determined by the
+        Mechanism nodes are subdivided into sections for its Ports with information about each determined by the
         **show_values** and **show_functions** specifications.  Otherwise, Mechanism nodes are simple ovals.
         `ORIGIN` and  `TERMINAL` Mechanisms of the System are displayed with thicker borders in a colors specified
         for each. `Projections <Projection>` are displayed as labelled arrows, unless **show_learning** is specified,
@@ -3877,16 +3877,16 @@ class System(System_Base):
 
         show_mechanism_structure : bool, VALUES, FUNCTIONS or ALL : default False
             specifies whether or not to show a detailed representation of each `Mechanism` in the graph, including its
-            `States`;  can have the following settings:
+            `Ports`;  can have the following settings:
 
-            * `True` -- shows States of Mechanism, but not information about the `value
-              <Component.value>` or `function <Component.function>` of the Mechanism or its States.
+            * `True` -- shows Ports of Mechanism, but not information about the `value
+              <Component.value>` or `function <Component.function>` of the Mechanism or its Ports.
 
             * *VALUES* -- shows the `value <Mechanism_Base.value>` of the Mechanism and the `value
-              <Port_Base.value>` of each of its States.
+              <Port_Base.value>` of each of its Ports.
 
             * *LABELS* -- shows the `value <Mechanism_Base.value>` of the Mechanism and the `value
-              <Port_Base.value>` of each of its States, using any labels for the values of InputPorts and
+              <Port_Base.value>` of each of its Ports, using any labels for the values of InputPorts and
               OutputPorts specified in the Mechanism's `input_labels_dict <Mechanism.input_labels_dict>` and
               `output_labels_dict <Mechanism.output_labels_dict>`, respectively.
 
@@ -3897,7 +3897,7 @@ class System(System_Base):
               (but not any of the other information;  use *ALL* to show ROLES with other information).
 
             * *ALL* -- shows both `value <Component.value>` and `function <Component.function>` of the Mechanism and
-              its States (using labels for the values, if specified;  see above).
+              its Ports (using labels for the values, if specified;  see above).
 
             Any combination of the settings above can also be specified in a list that is assigned to
             show_mechanism_structure
@@ -3915,12 +3915,12 @@ class System(System_Base):
 
         COMMENT:
         show_functions : bool : default False
-            specifies whether or not to show `function <Component.function>` of Mechanisms and their States in the
+            specifies whether or not to show `function <Component.function>` of Mechanisms and their Ports in the
             graph (enclosed by parentheses);  this requires **show_mechanism_structure** to be specified as `True`
             to take effect.
 
         show_values : bool : default False
-            specifies whether or not to show `value <Component.value>` of Mechanisms and their States in the graph
+            specifies whether or not to show `value <Component.value>` of Mechanisms and their Ports in the graph
             (prefixed by "=");  this requires **show_mechanism_structure** to be specified as `True` to take effect.
         COMMENT
 

@@ -17,7 +17,7 @@ Overview
 A ModulatoryProjection is a subclass of `Projection <Projection>` that takes the value of a
 `ModulatorySignal <ModulatorySignal>` belonging to a `ModulatoryMechanism <ModulatoryMechanism>`, and uses that to
 modulate the function of the `Port <Port>` to which it projects.  There are three types of ModulatoryProjections,
-that modulate different types of Components and their States:
+that modulate different types of Components and their Ports:
 
 * `LearningProjection`
     takes the `value <LearningSignal.value>` of a `LearningSignal` belonging to a `LearningMechanism`,
@@ -42,7 +42,7 @@ Creating a ModulatoryProjection
 
 A ModulatoryProjection is a base class, and cannot be instantiated directly.  However, the three types of
 ModulatoryProjections listed above can be created directly, by calling the constructor for the desired type.
-More commonly, however, ModulatoryProjections are either specified in the context of the States to or from
+More commonly, however, ModulatoryProjections are either specified in the context of the Ports to or from
 which they project (`Port_Projections` in Port, and `Projection_Specification`), or are `created automatically
 <Projection_Automatic_Creation>`, the details of which are described in the documentation for each type of
 ModulatoryProjection.

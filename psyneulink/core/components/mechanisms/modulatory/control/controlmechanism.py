@@ -32,7 +32,7 @@ Overview
 --------
 
 A ControlMechanism is a `ModulatoryMechanism` that `modulates the value(s) <ModulatorySignal_Modulation>` of one or
-more `States <Port>` of other Mechanisms in the `Composition` to which it belongs. In general, a ControlMechanism is
+more `Ports <Port>` of other Mechanisms in the `Composition` to which it belongs. In general, a ControlMechanism is
 used to modulate the `ParameterPort(s) <ParameterPort>` of one or more Mechanisms, that determine the value(s) of
 the parameter(s) of the `function(s) <Mechanism_Base.function>` of those Mechanism(s). However, a ControlMechanism
 can also be used to modulate the function of `InputPorts <InputPort>` and/or `OutputPort <OutputPorts>`,
@@ -80,7 +80,7 @@ Creating a ControlMechanism
 ---------------------------
 
 A ControlMechanism is created by calling its constructor.  When a ControlMechanism is created, the OutputPorts it
-monitors and the States it modulates can be specified in the **montior_for_control** and **objective_mechanism**
+monitors and the Ports it modulates can be specified in the **montior_for_control** and **objective_mechanism**
 arguments of its constructor, respectively.  Each can be specified in several ways, as described below. If neither of
 those arguments is specified, then only the ControlMechanism is constructed, and its inputs and the parameters it
 modulates must be specified in some other way.
@@ -463,7 +463,7 @@ ControlSignal uses that value to calculate its `intensity <ControlSignal.intensi
 used in the subsequent `TRIAL` of execution.
 
 .. note::
-   `States <Port>` that receive a `ControlProjection` does not update its value until its owner Mechanism
+   `Ports <Port>` that receive a `ControlProjection` does not update its value until its owner Mechanism
    executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a
    ControlMechanism has executed, a parameter that it controls will not assume its new value until the Mechanism
    to which it belongs has executed.
@@ -740,10 +740,10 @@ class ControlMechanism(ModulatoryMechanism_Base):
                        ControlSignals (alogn with any specified in the **control_signals** argument of the System's
                        constructor) to the **control_signals** argument of the ControlMechanism's constructor
 
-            OBJECTIVE_MECHANISM param determines which States will be monitored.
+            OBJECTIVE_MECHANISM param determines which Ports will be monitored.
                 specifies the OutputPorts of the terminal Mechanisms in the System to be monitored by ControlMechanism
                 this specification overrides any in System.params[], but can be overridden by Mechanism.params[]
-                ?? if MonitoredOutputPorts appears alone, it will be used to determine how States are assigned from
+                ?? if MonitoredOutputPorts appears alone, it will be used to determine how Ports are assigned from
                     System.execution_graph by default
                 if MonitoredOutputPortsOption is used, it applies to any Mechanisms specified in the list for which
                     no OutputPorts are listed; it is overridden for any Mechanism for which OutputPorts are
@@ -1210,7 +1210,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         If System is specified, validate it
         Check that all items in monitor_for_control are Mechanisms or OutputPorts for Mechanisms in self.system
         Check that all items in CONTROL_SIGNALS are parameters or ParameterPorts for Mechanisms in self.system
-        Check that all items in GATING_SIGNALS are States for Mechanisms in self.system
+        Check that all items in GATING_SIGNALS are Ports for Mechanisms in self.system
         """
         from psyneulink.core.components.system import MonitoredOutputPortTuple
         from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -1650,7 +1650,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         try:
             if self.gating_signals:
-                print ("\n\tGating the following States:".format(self.name))
+                print ("\n\tGating the following Ports:".format(self.name))
                 # Sort for consistency of output:
                 port_Names_sorted = sorted(self.gating_signals.names)
                 for port_Name in port_Names_sorted:

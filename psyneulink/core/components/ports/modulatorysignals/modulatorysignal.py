@@ -31,11 +31,11 @@ Overview
 --------
 
 A ModulatorySignal is a subclas of `OutputPort` that belongs to a `ModulatoryMechanism <ModulatoryMechanism>`, and is
-used to `modulate <ModulatorySignal_Modulation>` the `value <Port_Base.value>` of one or more `States <Port>` by way
+used to `modulate <ModulatorySignal_Modulation>` the `value <Port_Base.value>` of one or more `Ports <Port>` by way
 of one or more `ModulatoryProjctions <ModulatoryProjection>`. A ModulatorySignal modulates the value of a Port by
 modifying a  parameter of thatState's `function <Port_Base.function>`.  There are three types of ModulatorySignals,
 each of which is  associated wth a particular type of `ModulatoryMechanism <ModulatoryMechanism>` and `ModulatoryProjection
-<ModulatoryProjection>`, and modifies the value of different types of States, as summarized `below:
+<ModulatoryProjection>`, and modifies the value of different types of Ports, as summarized `below:
 
 * `ControlSignal`
     takes the `allocation <ControlSignal.allocation>` assigned to it by the `function <ControlMechanism.function>`
@@ -166,13 +166,13 @@ ModulatorySignals used and the type of Port modulated:
     the `matrix <MappingProjection.matrix>` parameter of a MappingProjection's `function  <MappingProjection.function>`
     which, in turn, determines how it computes the MappingProjection's `value <MappingProjection.value>`.
 
-The following table summarizes the three uses of modulation, the ModulatorySignals for each, and the States they
+The following table summarizes the three uses of modulation, the ModulatorySignals for each, and the Ports they
 modulate. The mechanics of modulation are described in greater detail in `ModulatorySignal_Implementation`,
 and shown in the `figure below <ModulatorySignal_Anatomy_Figure>`.
 
 .. _ModulatorySignal_Table:
 
-.. table:: **ModulatorySignals and States they Modulate**
+.. table:: **ModulatorySignals and Ports they Modulate**
   :align: left
 
   +------------------------------------+------------------------+------------------------------+----------------------------------------+----------------------------+
@@ -208,7 +208,7 @@ detail under `ModulatorySignal_Implementation`.
    :alt: Modulation
    :scale: 150 %
 
-   **Three types of Modulatory Components and the States they modulate**. The default `type of modulation
+   **Three types of Modulatory Components and the Ports they modulate**. The default `type of modulation
    <ModulatorySignal_Types>` for each type of ModulatorySignal, and the default Function and modulated parameter of
    its recipient Port are listed in the `table <ModulatorySignal_Table>` above. Note that the `ControlMechanism`
    and `ControlSignal <ControlSignal>` are shown in the figure modulating the `ParameterPort` of a Mechanism;
@@ -231,14 +231,14 @@ commonly used types of modulation, and allow two other types:
 
   * *MULTPLICATIVE_PARAM* - assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the parameter of
     the Port's `function <Port_Base.function>` specified as its `multiplicative_param <Function_Modulatory_Params>`.
-    For example, if the Port's `function <Port_Base.function>` is `Linear` (the default for most States), then
+    For example, if the Port's `function <Port_Base.function>` is `Linear` (the default for most Ports), then
     the ModulatorySignal's `value <ModulatorySignal.value>` is assigned to the function's `slope <Linear.slope>`
     parameter (it's multiplicative_param), thus multiplying the Port's `variable <Port_Base.variable>` by that
     amount each time the Port is executed, and assigning the result as the Port's `value <Port_Base.value>`.
 
   * *ADDITIVE_PARAM* - assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the parameter of the
     Port's `function <Port_Base.function>` specified as its `additive_param <Function_Modulatory_Params>`. For
-    example, if the Port's `function <Port_Base.function>` is `Linear` (the default for most States), then the
+    example, if the Port's `function <Port_Base.function>` is `Linear` (the default for most Ports), then the
     ModulatorySignal's `value <ModulatorySignal.value>` is assigned to the function's `intercept <Linear.intercept>`
     parameter (it's additive_param), thus adding that value to the Port's `variable <Port_Base.variable>` each
     time the Port is executed, and assigning the result as the Port's `value <Port_Base.value>`.
@@ -303,7 +303,7 @@ Though this implementaton of modulation is indirect, it provides a standard for 
 considerable flexibility in the modulatory regulation of Components within a `Composition` (see
 `ModulatorySignal_Types` below).
 
-The types of States modulated by each type of ModulatorySignal are summarized in `ModulatorySignal_Uses`,
+The types of Ports modulated by each type of ModulatorySignal are summarized in `ModulatorySignal_Uses`,
 and the accompanying `table <ModulatorySignal_Table>` and `figure <ModulatorySignal_Anatomy_Figure>`.
 
 .. _ModulatorySignal_Multiple:
@@ -454,7 +454,7 @@ class ModulatorySignal(OutputPort):
         prefs=None)
 
     Subclass of `OutputPort` used by a `ModulatoryMechanism <ModulatoryMechanism>` to modulate the value
-    of one more `States <Port>`.
+    of one more `Ports <Port>`.
 
     .. note::
        ModulatorySignal is an abstract class and should NEVER be instantiated by a call to its constructor.
@@ -559,19 +559,19 @@ class ModulatorySignal(OutputPort):
           "<target Mechanism name> <target Port name> <ModulatorySignal type name>"
           (for example, ``'Decision[drift_rate] ControlSignal'``, or ``'Input Layer[InputPort-0] GatingSignal'``);
 
-        * multiple ModulatoryProjections, all to States of the same Mechanism -- the following template is used:
+        * multiple ModulatoryProjections, all to Ports of the same Mechanism -- the following template is used:
           "<target Mechanism name> (<target Port name>,...) <ModulatorySignal type name>"
           (for example, ``Decision (drift_rate, threshold) ControlSignal``, or
           ``'Input Layer[InputPort-0, InputPort-1] GatingSignal'``);
 
-        * multiple ModulatoryProjections to States of different Mechanisms -- the following template is used:
+        * multiple ModulatoryProjections to Ports of different Mechanisms -- the following template is used:
           "<owner Mechanism's name> divergent <ModulatorySignal type name>"
           (for example, ``'ControlMechanism divergent ControlSignal'`` or ``'GatingMechanism divergent GatingSignal'``).
 
         .. note::
-            Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that States with
+            Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that Ports with
             the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
-            Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
+            Mechanism: Ports within a Mechanism with the same base name are appended an index in the order of their
             creation.
 
     prefs : PreferenceSet or specification dict

@@ -731,7 +731,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     def add_to_monitor(self, monitor_specs, context=None):
         """Instantiate `OutputPorts <OutputPort>` to be monitored by the ObjectiveMechanism.
 
-        Used by other Components to add a `Port` or list of States to be monitored by the ObjectiveMechanism.
+        Used by other Components to add a `Port` or list of Ports to be monitored by the ObjectiveMechanism.
         The **monitor_spec** can be any of the following:
         - MonitoredOutputPortTuple
         - `Mechanism`;

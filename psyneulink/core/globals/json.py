@@ -103,7 +103,7 @@ relevant.
     }
 
 
-**Mechanisms**, **Projections**, and **States** each have:
+**Mechanisms**, **Projections**, and **Ports** each have:
 
 * ``functions`` : a list of primary `Function` JSON objects. In \
 PsyNeuLink, only one primary function is allowed.
@@ -149,7 +149,7 @@ connects
 * ``receiver_port`` : the name of the port on the ``receiver`` to \
 which it connects
 
-**States** have:
+**Ports** have:
 
 * ``dtype`` : the type of accepted input/output for the Port. This \
 corresponds to `numpy.dtype <https://docs.scipy.org/doc/numpy/ \

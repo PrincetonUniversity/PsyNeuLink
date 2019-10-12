@@ -1053,7 +1053,7 @@ method.  The figure below shows several examples.
    Composition and its associated `ObjectiveMechanism` using the **show_controller** option (controller-related
    Components are displayed in blue by default).  **Panel C** adds the Composition's `CompositionInterfaceMechanisms
    <CompositionInterfaceMechanism>` using the **show_cim** option. **Panel D** shows a detailed view of the Mechanisms
-   using the **show_node_structure** option, that includes their `States <Port>` and their `roles <NodeRole>` in the
+   using the **show_node_structure** option, that includes their `Ports <Port>` and their `roles <NodeRole>` in the
    Composition. **Panel E** show an even more detailed view using **show_node_structure** as well as **show_cim**.
 
 If a Composition has one ore more Compositions nested as Nodes within it, then these can be shown using the
@@ -2311,7 +2311,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             - if the Node has any shadows, create the appropriate projections as needed.
 
-            - delete all of the above for any node States which were previously, but are no longer, classified as
+            - delete all of the above for any node Ports which were previously, but are no longer, classified as
               INPUT/OUTPUT
 
             - if composition has a controller, remove default InputPort and OutputPort of all nested compositions'
@@ -2658,8 +2658,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         COMMENT:
         IMPLEMENTATION NOTE:
-            Duplicates are determined by the **States** to which they project, not the Mechanisms (to allow
-            multiple Projections to exist between the same pair of Mechanisms using different States).
+            Duplicates are determined by the **Ports** to which they project, not the Mechanisms (to allow
+            multiple Projections to exist between the same pair of Mechanisms using different Ports).
             -
             If an already instantiated Projection is passed to add_projection and is a duplicate of an existing one,
             it is detected and suppresed, with a warning, in Port._instantiate_projections_to_state.
@@ -3061,7 +3061,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._add_node_role(node, NodeRole.INTERNAL)
 
     def _check_for_projection_assignments(self, context=None):
-        """Check that all Projections and States with require_projection_in_composition attribute are configured.
+        """Check that all Projections and Ports with require_projection_in_composition attribute are configured.
 
         Validate that all InputPorts with require_projection_in_composition == True have an afferent Projection.
         Validate that all OuputStates with require_projection_in_composition == True have an efferent Projection.
@@ -4606,17 +4606,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         show_node_structure : bool, VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS, STATE_FUNCTION_PARAMS, ROLES, \
         or ALL : default False
-            show a detailed representation of each `Mechanism` in the graph, including its `States <Port>`;  can
+            show a detailed representation of each `Mechanism` in the graph, including its `Ports <Port>`;  can
             have any of the following settings alone or in a list:
 
-            * `True` -- show States of Mechanism, but not information about the `value
-              <Component.value>` or `function <Component.function>` of the Mechanism or its States.
+            * `True` -- show Ports of Mechanism, but not information about the `value
+              <Component.value>` or `function <Component.function>` of the Mechanism or its Ports.
 
             * *VALUES* -- show the `value <Mechanism_Base.value>` of the Mechanism and the `value
-              <Port_Base.value>` of each of its States.
+              <Port_Base.value>` of each of its Ports.
 
             * *LABELS* -- show the `value <Mechanism_Base.value>` of the Mechanism and the `value
-              <Port_Base.value>` of each of its States, using any labels for the values of InputPorts and
+              <Port_Base.value>` of each of its Ports, using any labels for the values of InputPorts and
               OutputPorts specified in the Mechanism's `input_labels_dict <Mechanism.input_labels_dict>` and
               `output_labels_dict <Mechanism.output_labels_dict>`, respectively.
 
@@ -4633,7 +4633,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               (but not any of the other information;  use *ALL* to show ROLES with other information).
 
             * *ALL* -- shows the role, `function <Component.function>`, and `value <Component.value>` of the
-              Mechanisms in the `Composition` and their `States <Port>` (using labels for
+              Mechanisms in the `Composition` and their `Ports <Port>` (using labels for
               the values, if specified -- see above), including parameters for all functions.
 
         show_nested : bool | dict : default ALL
@@ -5691,17 +5691,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         ---------
 
         show_functions : bool : default False
-            show the `function <Component.function>` of the Mechanism and each of its States.
+            show the `function <Component.function>` of the Mechanism and each of its Ports.
 
         show_mech_function_params : bool : default False
             show the parameters of the Mechanism's `function <Component.function>` if **show_functions** is True.
 
         show_port_function_params : bool : default False
-            show parameters for the `function <Component.function>` of the Mechanism's States if **show_functions** is
+            show parameters for the `function <Component.function>` of the Mechanism's Ports if **show_functions** is
             True).
 
         show_values : bool : default False
-            show the `value <Component.value>` of the Mechanism and each of its States (prefixed by "=").
+            show the `value <Component.value>` of the Mechanism and each of its Ports (prefixed by "=").
 
         use_labels : bool : default False
             use labels for values if **show_values** is `True`; labels must be specified in the `input_labels_dict

@@ -511,7 +511,7 @@ class ParameterPort(Port_Base):
         ParameterPort corresponds.
 
         .. note::
-            Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that States with
+            Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that Ports with
             the same name are permitted in different Mechanisms.
 
     prefs : PreferenceSet or specification dict

@@ -59,9 +59,9 @@ COMMENT
 A GatingMechanism is used to modulate the value of an `InputPort` or `OutputPort`. An InputPort or OutputPort can
 be specified for gating by assigning it a `GatingProjection` or `GatingSignal` anywhere that the Projections to a Port
 or its `ModulatorySignals can be specified <State_Creation>`.  A `Mechanism <Mechanism>` can also be specified for
-gating, in which case the `primary InputPort <InputPort_Primary>` of the specified Mechanism is used.  States
+gating, in which case the `primary InputPort <InputPort_Primary>` of the specified Mechanism is used.  Ports
 (and/or Mechanisms) can also be specified in the  **gate** argument of the constructor for a GatingMechanism. The
-**gate** argument must be a list, each item of which must refer to one or more States (or the Mechanism(s) to which
+**gate** argument must be a list, each item of which must refer to one or more Ports (or the Mechanism(s) to which
 they belong) to be gated by that GatingSignal.  The specification for each item in the list can use any of the forms
 used to `specify a GatingSignal <GatingSignal_Specification>`.
 
@@ -85,7 +85,7 @@ Modulation
 ^^^^^^^^^^
 
 Each GatingMechanism has a `modulation <GatingSignal.modulation>` attribute, that provides a default for the way
-in which its GatingSignals modulate the value of the States they gate (see `modulation <ModulatorySignal_Modulation>` 
+in which its GatingSignals modulate the value of the Ports they gate (see `modulation <ModulatorySignal_Modulation>` 
 for an explanation of how this attribute is specified and used to modulate the value of a Port).  Each GatingSignal
 uses this value, unless its value is `individually specified <GatingSignal_Modulation>`.
 
@@ -117,7 +117,7 @@ A GatingMechanism's `function <GatingMechanism.function>` is determined and oper
 
 The OutputPorts of a GatingMechanism are `GatingSignals <GatingSignal>` (listed in its `gating_signals
 <GatingMechanism.gating_signals>` attribute). It  has a `GatingSignal` for each `InputPort` and/or `OutputPort`
-specified in the **gate** argument of its constructor, that sends a `GatingProjection` to those States.
+specified in the **gate** argument of its constructor, that sends a `GatingProjection` to those Ports.
 The GatingSignals are listed in the `gating_signals <GatingMechanism.gating_signals>` attribute;  since they are a 
 type of `OutputPort`, they are also listed in the GatingMechanism's `output_ports <GatingMechanism.output_ports>`
 attribute. The InputPorts and/or OutputPorts modulated by a GatingMechanism's GatingSignals can be displayed using 
@@ -261,7 +261,7 @@ class GatingMechanism(ControlMechanism):
         prefs=None)
 
     Subclass of `ModulatoryMechanism <ModulatoryMechanism>` that gates (modulates) the value(s)
-    of one or more `States <Port>`.
+    of one or more `Ports <Port>`.
 
     COMMENT:
         Description:

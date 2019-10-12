@@ -259,7 +259,7 @@ which it should project. Each of these is described below:
 
         * **2-item tuple:** *(<Port name or list of Port names>, <Mechanism>)* -- 1st item must be the name of an
           `InputPort` or `ModulatorySignal`, or a list of such names, and the 2nd item must be the Mechanism to
-          which they all belong.  Projections of the relevant types are created for each of the specified States
+          which they all belong.  Projections of the relevant types are created for each of the specified Ports
           (see `Port 2-item tuple <State_2_Item_Tuple>` for additional details).
 
         * **2-item tuple:** *(<Port, Mechanism, or list of them>, <Projection specification>)* -- this is a contracted
@@ -273,7 +273,7 @@ which it should project. Each of these is described below:
           order listed), and can include the third:
 
             * **value, Port specification, or list of Port specifications** -- specifies either the `variable
-              <InputPort.variable>` of the InputPort, or one or more States that should project to it.  The Port
+              <InputPort.variable>` of the InputPort, or one or more Ports that should project to it.  The Port
               specification(s) can be a (Port name, Mechanism) tuple (see above), and/or include Mechanisms, in which
               case their `primary InputPort <InputPortPrimary>` is used.  All of the Port specifications must be
               consistent with (that is, their `value <Port_Base.value>` must be compatible with the `variable
@@ -284,7 +284,7 @@ which it should project. Each of these is described below:
 
             * **Projection specification** (optional) -- `specifies a Projection <Projection_Specification>` that
               must be compatible with the Port specification(s) in the 1st item; if there is more than one
-              Port specified, and the Projection specification is used, all of the States
+              Port specified, and the Projection specification is used, all of the Ports
               must be of the same type (i.e.,either InputPorts or GatingSignals), and the `Projection
               Specification <Projection_Specification>` cannot be an instantiated Projection (since a
               Projection cannot be assigned more than one `receiver <Projection_Base.receiver>`).
@@ -931,9 +931,9 @@ class OutputPort(Port_Base):
         OutputPorts specified, as well as any that are added to the Mechanism once it is created.
 
         .. note::
-            Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that States with
+            Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that Ports with
             the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
-            Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
+            Mechanism: Ports within a Mechanism with the same base name are appended an index in the order of their
             creation.
 
     prefs : PreferenceSet or specification dict
@@ -1090,7 +1090,7 @@ class OutputPort(Port_Base):
         Call _instantiate_projections_to_state to assign ModulatoryProjections to .mod_afferents
 
         Assume all remaining specifications in projections are for outgoing MappingProjections;
-            these should be either Mechanisms, States or MappingProjections to one of those
+            these should be either Mechanisms, Ports or MappingProjections to one of those
         Call _instantiate_projections_from_state to assign MappingProjections to .efferents
 
         Store result of function as self.function_value

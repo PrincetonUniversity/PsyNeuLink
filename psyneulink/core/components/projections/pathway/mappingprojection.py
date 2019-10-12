@@ -499,7 +499,7 @@ class MappingProjection(PathwayProjection_Base):
 
     @property
     def _loggable_items(self):
-        # States and afferent Projections are loggable for a Mechanism
+        # Ports and afferent Projections are loggable for a Mechanism
         #     - this allows the value of InputPorts and OutputPorts to be logged
         #     - for MappingProjections, this logs the value of the Projection's matrix parameter
         #     - for ModulatoryProjections, this logs the value of the Projection

@@ -84,7 +84,7 @@ to access its `entries <Log.entries>`:
 
 Although every Component is assigned its own Log, that records the `value <Component.value>` of that Component,
 the Logs for `Mechanisms <Mechanism>` and `MappingProjections <MappingProjection>` also  provide access to and control
-the Logs of their `States <Port>`.  Specifically the Logs of these Components contain the following information:
+the Logs of their `Ports <Port>`.  Specifically the Logs of these Components contain the following information:
 
 * **Mechanisms**
 
@@ -330,7 +330,7 @@ Entry values are added by the setter method for the attribute being logged.
 The following entries are automatically included in the `loggable_items` of a `Mechanism` object:
     - the `value <Mechanism_Base.value>` of the Mechanism;
     - the value attribute of every Port for which the Mechanism is an owner
-    - value of every projection that sends to those States]
+    - value of every projection that sends to those Ports]
     - the system variables defined in SystemLogEntries (see declaration above)
     - any variables listed in the params[LOG_ENTRIES] of a Mechanism
 
@@ -605,7 +605,7 @@ class Log:
         Entry values are added by the setter method for the attribute being logged
         The following entries are automatically included in self.entries for a Mechanism object:
             - the value attribute of every Port for which the Mechanism is an owner
-            [TBI: - value of every projection that sends to those States]
+            [TBI: - value of every projection that sends to those Ports]
             - the system variables defined in SystemLogEntries (see declaration above)
             - any variables listed in the params[LOG_ENTRIES] of a Mechanism
         The ContextFlags class (see declaration above) defines five levels of logging:
@@ -1688,7 +1688,7 @@ class Log:
     def loggable_components(self):
         """Return a list of owner's Components that are loggable
 
-        The loggable items of a Component are the Components (typically States) specified in the _logagble_items
+        The loggable items of a Component are the Components (typically Ports) specified in the _logagble_items
         property of its class, and its own `value <Component.value>` attribute.
         """
         from psyneulink.core.components.component import Component

@@ -27,7 +27,7 @@ Overview
 
 Projections allow information to be passed between `Mechanisms <Mechanism>`.  A Projection takes its input from
 its `sender <Projection_Base.sender>` and transmits that information to its `receiver <Projection_Base.receiver>`.  The
-`sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>` of a Projection are always `States <Port>`:
+`sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>` of a Projection are always `Ports <Port>`:
 the `sender <Projection_Base.sender>` is always the `OutputPort` of a `Mechanism <Mechanism>`; the `receiver
 <Projection_Base.receiver>` depends upon the type of Projection.  There are two broad categories of Projections,
 each of which has subtypes that differ in the type of information they transmit, how they do this, and the type of
@@ -52,7 +52,7 @@ each of which has subtypes that differ in the type of information they transmit,
     that are used to specify how to modify the `value <Port_Base.value>` of the `Port <Port>` to which a
     ModulatoryProjection projects. There are three types of ModulatoryProjections, corresponding to the three types
     of ModulatoryMechanisms (and corresponding ModulatorySignals; see `figure <ModulatorySignal_Anatomy_Figure>`),
-    that project to different types of `States <Port>`:
+    that project to different types of `Ports <Port>`:
 
   * `LearningProjection`
       takes the `value <LearningSignal.value>` of a `LearningSignal` of a `LearningMechanism`, and transmits
@@ -250,7 +250,7 @@ Structure
 
 In addition to its `function <Projection_Base.function>`, a Projection has two primary attributes: a `sender
 <Projection_Base.sender>` and `receiver <Projection_Base.receiver>`.  The types of `Port(s) <Port>` that can be
-assigned to these, and the attributes of those States to which Projections of each type are assigned, are
+assigned to these, and the attributes of those Ports to which Projections of each type are assigned, are
 summarized in the following table, and described in greater detail in the subsections below.  In addition to the
 Port attributes to which different types of Projections are assigned (shown in the table), all of the Projections
 of a Port are listed in its `projections <Port_Base.projections>` attribute.
@@ -1284,7 +1284,7 @@ def _parse_projection_keyword(projection_spec:str):
 def _parse_connection_specs(connectee_port_type,
                             owner,
                             connections):
-    """Parse specification(s) for States to/from which the connectee_port_type should be connected
+    """Parse specification(s) for Ports to/from which the connectee_port_type should be connected
 
     TERMINOLOGY NOTE:
         "CONNECTION" is used instead of "PROJECTION" because:
@@ -1335,10 +1335,10 @@ def _parse_connection_specs(connectee_port_type,
                                                    values in the entries of the outer dict (below) are assigned;
                                                    note:  the dictionary can have multiple Mechanism entries
                                                           (which permits the same defaults to be assigned to all the
-                                                          States for all of the Mechanisms)
+                                                          Ports for all of the Mechanisms)
                                                           or they can be assigned each to their own dictionary
                                                           (which permits different defaults to be assigned to the
-                                                          States for each Mechanism);
+                                                          Ports for each Mechanism);
             *WEIGHT*:<int> - optional; specifies weight given to projection by receiving InputPort
             *EXPONENT:<int> - optional; specifies weight given to projection by receiving InputPort
             *PROJECTION*:<projection_spec> - optional; specifies projection (instantiated or matrix) for connection
@@ -1444,7 +1444,7 @@ def _parse_connection_specs(connectee_port_type,
             projection_tuple = (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
             connect_with_states.extend(_parse_connection_specs(connectee_port_type, owner, projection_tuple))
 
-        # Dict of one or more Mechanism specifications, used to specify individual States of (each) Mechanism;
+        # Dict of one or more Mechanism specifications, used to specify individual Ports of (each) Mechanism;
         #   convert all entries to tuples and call _parse_connection_specs recursively to generate ProjectionTuples;
         #   main purpose of this is to resolve any str references to name of state (using context of owner Mechanism)
         elif isinstance(connection, dict):
@@ -1457,8 +1457,8 @@ def _parse_connection_specs(connectee_port_type,
                                         connectee_port_type.__name__, owner.name))
 
             # Add default WEIGHT, EXPONENT, and/or PROJECTION specification for any that are not aleady in the dict
-            #    (used as the default values for all the States of all Mechanisms specified for this dict;
-            #    can use different dicts to implement different sets of defaults for the States of diff Mechanisms)
+            #    (used as the default values for all the Ports of all Mechanisms specified for this dict;
+            #    can use different dicts to implement different sets of defaults for the Ports of diff Mechanisms)
             if not WEIGHT in connection:
                 connection[WEIGHT] = DEFAULT_WEIGHT
             if not EXPONENT in connection:
@@ -1581,7 +1581,7 @@ def _parse_connection_specs(connectee_port_type,
 
             elif _is_projection_spec(last_item):
 
-                # If specification is a list of States and/or Mechanisms, get Projection spec for each
+                # If specification is a list of Ports and/or Mechanisms, get Projection spec for each
                 if isinstance(first_item, list):
                      # Call _parse_connection_spec for each Port or Mechanism, to generate a conection spec for each
                     for connect_with_spec in first_item:
