@@ -37,7 +37,7 @@ install:
 
   # pytorch does not distribute windows packages over pypi.
   # Install it directly, or remove from requirements if not available (win32).
-  - if "%ARCH%" == "" (findstr /V torch < dev_requirements.txt > tmp_req && move /Y tmp_req dev_requirements.txt) else (pip install --user torch -f https://download.pytorch.org/whl/cpu/torch_stable.html)
+  - if "%ARCH%" == "" (findstr /V torch < requirements.txt > tmp_req && move /Y tmp_req requirements.txt) else (pip install --user torch -f https://download.pytorch.org/whl/cpu/torch_stable.html)
 
   - pip install --user -e .[dev]
 

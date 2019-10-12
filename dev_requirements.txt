@@ -1,3 +1,4 @@
+-r requirements.txt
 pytest
 pytest-benchmark
 pytest-codestyle
@@ -9,10 +10,5 @@ pytest-xdist
 jupyter
 sphinx
 sphinx_rtd_theme
-matplotlib
 ipykernel
-graphviz
-pillow
-torch
 ipython
-autograd
