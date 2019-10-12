@@ -1192,10 +1192,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     def _get_state_ids(self):
         return [sp.name for sp in self._get_compilation_state()]
 
-    def _get_state_values(self, context=None):
-        def _state_values(x):
-            return x._get_state_values(context) if isinstance(x, Component) else x
-        return tuple(map(_state_values, (sp.get(context) for sp in self._get_compilation_state())))
+    def _get_port_values(self, context=None):
+        def _port_values(x):
+            return x._get_port_values(context) if isinstance(x, Component) else x
+        return tuple(map(_port_values, (sp.get(context) for sp in self._get_compilation_state())))
 
     def _get_state_initializer(self, context):
         def _convert(x):
@@ -1204,7 +1204,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 return x.get_state()[1:]
             else:
                 return x
-        lists = (_convert(s) for s in self._get_state_values(context))
+        lists = (_convert(s) for s in self._get_port_values(context))
         return pnlvm._tupleize(lists)
 
     def _get_compilation_params(self, context=None):
@@ -1836,17 +1836,17 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         getattr(self.parameters, param)._set(val, context)
         if hasattr(self, "parameter_ports"):
             if param in self.parameter_ports:
-                new_state_value = self.parameter_ports[param].execute(
+                new_port_value = self.parameter_ports[param].execute(
                     context=Context(execution_phase=ContextFlags.EXECUTING, execution_id=context.execution_id)
                 )
-                self.parameter_ports[param].parameters.value._set(new_state_value, context)
+                self.parameter_ports[param].parameters.value._set(new_port_value, context)
         elif hasattr(self, "owner"):
             if hasattr(self.owner, "parameter_ports"):
                 if param in self.owner.parameter_ports:
-                    new_state_value = self.owner.parameter_ports[param].execute(
+                    new_port_value = self.owner.parameter_ports[param].execute(
                         context=Context(execution_phase=ContextFlags.EXECUTING, execution_id=context.execution_id)
                     )
-                    self.owner.parameter_ports[param].parameters.value._set(new_state_value, context)
+                    self.owner.parameter_ports[param].parameters.value._set(new_port_value, context)
 
     def _check_args(self, variable=None, params=None, context=None, target_set=None):
         """validate variable and params, instantiate variable (if necessary) and assign any runtime params.

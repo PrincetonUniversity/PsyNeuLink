@@ -870,7 +870,7 @@ class DDM(ProcessingMechanism):
                  VARIABLE: np.array([[0.0, 0.0]]),
                  FUNCTION: Reduce(weights=[1,-1])}
             ]
-            self.standard_output_ports.add_state_dicts([
+            self.standard_output_ports.add_port_dicts([
                 # Provides a 1d 2-item array with:
                 #    decision variable in position corresponding to threshold crossed, and 0 in the other position
                 {NAME: DECISION_VARIABLE_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1

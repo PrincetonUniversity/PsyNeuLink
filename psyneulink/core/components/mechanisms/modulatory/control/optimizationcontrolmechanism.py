@@ -402,7 +402,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.states.inputport import InputPort, _parse_shadow_inputs
 from psyneulink.core.components.states.outputport import OutputPort
-from psyneulink.core.components.states.state import _parse_state_spec
+from psyneulink.core.components.states.state import _parse_port_spec
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
@@ -862,12 +862,12 @@ class OptimizationControlMechanism(ControlMechanism):
         # "Outcome"
         outcome_input_port = self.input_port
         outcome_input_port._update(context=context, params=runtime_params)
-        state_values = [np.atleast_2d(outcome_input_port.parameters.value._get(context))]
+        port_values = [np.atleast_2d(outcome_input_port.parameters.value._get(context))]
         for i in range(1, len(self.input_ports)):
             state = self.input_ports[i]
             state._update(context=context, params=runtime_params)
-            state_values.append(state.parameters.value._get(context))
-        return np.array(state_values)
+            port_values.append(state.parameters.value._get(context))
+        return np.array(port_values)
 
     def _execute(self, variable=None, context=None, runtime_params=None):
         """Find control_allocation that optimizes result of `agent_rep.evaluate`  ."""
@@ -1270,7 +1270,7 @@ class OptimizationControlMechanism(ControlMechanism):
             input_ports = [input_ports]
 
         for spec in input_ports:
-            spec = _parse_state_spec(owner=self, state_type=InputPort, state_spec=spec)    # returns InputPort dict
+            spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)    # returns InputPort dict
             spec[PARAMS][INTERNAL_ONLY] = True
             if feature_function:
                 if isinstance(feature_function, Function):

@@ -696,7 +696,7 @@ class EVCControlMechanism(ControlMechanism):
     EVC_max : 1d np.array with single value
         the maximum `EVC <EVCControlMechanism_EVC>` value over all allocation policies in `control_signal_search_space`.
 
-    EVC_max_state_values : 2d np.array
+    EVC_max_port_values : 2d np.array
         an array of the values for the OutputPorts in `monitored_output_ports` using the `control_allocation` that
         generated `EVC_max`.
 
@@ -771,8 +771,8 @@ class EVCControlMechanism(ControlMechanism):
                     :type:
                     :read only: True
 
-                EVC_max_state_values
-                    see `EVC_max_state_values <EVCControlMechanism.EVC_max_state_values>`
+                EVC_max_port_values
+                    see `EVC_max_port_values <EVCControlMechanism.EVC_max_port_values>`
 
                     :default value: None
                     :type:
@@ -854,7 +854,7 @@ class EVCControlMechanism(ControlMechanism):
         EVC_max = Parameter(None, read_only=True)
         EVC_values = Parameter([], read_only=True)
         EVC_policies = Parameter([], read_only=True)
-        EVC_max_state_values = Parameter(None, read_only=True)
+        EVC_max_port_values = Parameter(None, read_only=True)
         EVC_max_policy = Parameter(None, read_only=True)
         control_signal_search_space = Parameter(None, read_only=True)
         predicted_input = Parameter(None, read_only=True)
@@ -1016,12 +1016,12 @@ class EVCControlMechanism(ControlMechanism):
                            repr(ORIGIN_MECHANISMS), len(system.orign_mechanisms), self.system.name))
 
         for origin_mech, pm_spec in zip(system.origin_mechanisms.mechanisms, prediction_mech_specs):
-            state_names = []
+            port_Names = []
             variable = []
-            for state_name in origin_mech.input_ports.names:
-                state_names.append(state_name)
-                # variable.append(origin_mech.input_ports[state_name].defaults.variable)
-                variable.append(origin_mech.input_ports[state_name].value)
+            for port_Name in origin_mech.input_ports.names:
+                port_Names.append(port_Name)
+                # variable.append(origin_mech.input_ports[port_Name].defaults.variable)
+                variable.append(origin_mech.input_ports[port_Name].value)
 
             # Instantiate PredictionMechanism
             if isinstance(pm_spec, Mechanism):
@@ -1032,7 +1032,7 @@ class EVCControlMechanism(ControlMechanism):
                 prediction_mechanism = mech_class(
                         name=origin_mech.name + " " + PREDICTION_MECHANISM,
                         default_variable=variable,
-                        input_ports=state_names,
+                        input_ports=port_Names,
                         # params = mech_params
                         **mech_params,
                         context=context

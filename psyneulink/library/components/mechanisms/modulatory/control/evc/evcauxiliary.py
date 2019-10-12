@@ -365,7 +365,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         # Evaluate all combinations of control_signals (policies)
         sample = 0
-        EVC_max_state_values = variable.copy()
+        EVC_max_port_values = variable.copy()
 
         EVC_max_policy = control_signal_search_space[0] * 0.0
 
@@ -411,8 +411,8 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
             result = None
             EVC_max = float('-Infinity')
             EVC_max_policy = np.zeros_like(control_signal_search_space[0])
-            EVC_max_state_values = np.zeros_like(controller.get_input_values(context))
-            max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
+            EVC_max_port_values = np.zeros_like(controller.get_input_values(context))
+            max_value_state_policy_tuple = (EVC_max, EVC_max_port_values, EVC_max_policy)
             # FIX:  INITIALIZE TO FULL LENGTH AND ASSIGN DEFAULT VALUES (MORE EFFICIENT):
             EVC_values = np.array([])
             EVC_policies = np.array([[]])
@@ -448,17 +448,17 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                         EVC_policies = np.append(EVC_policies, np.atleast_2d(allocation_vector), axis=0)
 
                 # If EVC is greater than the previous value:
-                # - store the current set of monitored state value in EVC_max_state_values
+                # - store the current set of monitored state value in EVC_max_port_values
                 # - store the current set of control_signals in EVC_max_policy
                 # if EVC_max > EVC:
                 # FIX: PUT ERROR HERE IF EVC AND/OR EVC_MAX ARE EMPTY (E.G., WHEN EXECUTION_ID IS WRONG)
                 if EVC == EVC_max:
                     # Keep track of state values and allocation policy associated with EVC max
-                    # EVC_max_state_values = controller.input_value.copy()
+                    # EVC_max_port_values = controller.input_value.copy()
                     # EVC_max_policy = allocation_vector.copy()
-                    EVC_max_state_values = controller.get_input_values(context)
+                    EVC_max_port_values = controller.get_input_values(context)
                     EVC_max_policy = allocation_vector
-                    max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
+                    max_value_state_policy_tuple = (EVC_max, EVC_max_port_values, EVC_max_policy)
 
             #endregion
 
@@ -471,7 +471,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                 max_of_max_tuples = max(max_tuples, key=lambda max_tuple: max_tuple[0])
                 # get EVC_max, state values and allocation policy associated with "max of maxes"
                 EVC_max = max_of_max_tuples[0]
-                EVC_max_state_values = max_of_max_tuples[1]
+                EVC_max_port_values = max_of_max_tuples[1]
                 EVC_max_policy = max_of_max_tuples[2]
 
                 if controller.save_all_values_and_policies:
@@ -479,14 +479,14 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                     EVC_policies = np.concatenate(Comm.allgather(EVC_policies), axis=0)
 
             controller.parameters.EVC_max._set(EVC_max, context)
-            controller.parameters.EVC_max_state_values._set(EVC_max_state_values, context)
+            controller.parameters.EVC_max_port_values._set(EVC_max_port_values, context)
             controller.parameters.EVC_max_policy._set(EVC_max_policy, context)
             if controller.save_all_values_and_policies:
                 controller.parameters.EVC_values._set(EVC_values, context)
                 controller.parameters.EVC_policies._set(EVC_policies, context)
             # # TEST PRINT:
             # import re
-            # print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_state_values: {}\n\t\tEVC_max_policy: {}".
+            # print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_port_values: {}\n\t\tEVC_max_policy: {}".
             #       format(re.sub('[\[,\],\n]','',str(max_value_state_policy_tuple[0])),
             #              re.sub('[\[,\],\n]','',str(max_value_state_policy_tuple[1])),
             #              re.sub('[\[,\],\n]','',str(max_value_state_policy_tuple[2]))),
@@ -506,7 +506,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         #region ASSIGN CONTROL SIGNAL VALUES
 
         # Assign allocations to control_signals for optimal allocation policy:
-        EVC_maxStateValue = iter(EVC_max_state_values)
+        EVC_maxStateValue = iter(EVC_max_port_values)
 
         # Assign max values for optimal allocation policy to controller.input_ports (for reference only)
         for i in range(len(controller.input_ports)):

@@ -987,8 +987,8 @@ class LearningComponents(object):
                 return None
             # If MONITOR_FOR_LEARNING specifies an outputPort, use that
             try:
-                sample_state_name = self.activation_output_mech.paramsCurrent[MONITOR_FOR_LEARNING]
-                self.activation_mech_output = self.activation_output_mech.output_ports[sample_state_name]
+                sample_port_Name = self.activation_output_mech.paramsCurrent[MONITOR_FOR_LEARNING]
+                self.activation_mech_output = self.activation_output_mech.output_ports[sample_port_Name]
                 if not isinstance(self.activation_mech_output, OutputPort):
                     raise LearningAuxiliaryError("The specification of the MONITOR_FOR_LEARNING parameter ({}) "
                                                   "for {} is not an outputPort".

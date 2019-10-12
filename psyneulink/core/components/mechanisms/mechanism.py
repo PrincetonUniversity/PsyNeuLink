@@ -114,7 +114,7 @@ mentioned above, or using one of the following:
     specified <Process_Learning_Sequence>` for a Process; and an `ObjectiveMechanism` and `ControlMechanism
     <ControlMechanism>` are created when the `controller <System.controller>` is specified for a `System`.
 
-.. _Mechanism_State_Specification:
+.. _Mechanism_Port_specification:
 
 *Specifying States*
 ~~~~~~~~~~~~~~~~~~~
@@ -127,12 +127,12 @@ It also creates any InputPorts and OutputPorts required for the Projections it h
 OutputPorts, and corresponding Projections (including those from `ModulatorySignals <ModulatorySignal>`) can also be
 specified explicitly in the **input_ports** and **output_ports** arguments of the Mechanism's constructor (see
 `Mechanism_InputPorts` and `Mechanism_OutputPorts`, respectively, as well as the `first example <Mechanism_Example_1>`
-below, and `State_Examples`).  They can also be specified in a `parameter specification dictionary
+below, and `Port_Examples`).  They can also be specified in a `parameter specification dictionary
 <ParameterPort_Specification>` assigned to the Mechanism's **params** argument, using entries with the keys
 *INPUT_PORTS* and *OUTPUT_PORTS*, respectively (see `second example <Mechanism_Example_2>` below).  While
 specifying the **input_ports** and **output_ports** arguments directly is simpler and more convenient,
 the dictionary format allows parameter sets to be created elsewhere and/or re-used.  The value of each entry can be
-any of the allowable forms for `specifying a state <State_Specification>`. InputPorts and OutputPorts can also be
+any of the allowable forms for `specifying a state <Port_specification>`. InputPorts and OutputPorts can also be
 added to an existing Mechanism using its `add_states <Mechanism_Base.add_states>` method, although this is generally
 not needed and can have consequences that must be considered (e.g., see `note <Mechanism_Add_InputPorts_Note>`),
 and therefore is not recommended.
@@ -152,7 +152,7 @@ and therefore is not recommended.
        Mechanism's `add_states <Mechanism_Base.add_states>` method, or by assigning the Mechanism in the **owner**
        argument of the Port's constructor, are added to the Mechanism without replacing any of its existing States,
        including any default States that may have been generated when the Mechanism was created (see `examples
-       <State_Create_State_Examples>` in Port).
+       <State_Create_Port_Examples>` in Port).
 
 
 Examples
@@ -175,7 +175,7 @@ This shows how the same Mechanism can be specified using a dictionary assigned t
      >>> my_mech = pnl.TransferMechanism(params={pnl.INPUT_PORTS: ['MY_INPUT'],
      ...                                         pnl.OUTPUT_PORTS: [pnl.RESULT, pnl.OUTPUT_MEAN, pnl.OUTPUT_VARIANCE]})
 
-See `Port <State_Examples>` for additional examples of specifying the States of a Mechanism.
+See `Port <Port_Examples>` for additional examples of specifying the States of a Mechanism.
 
 .. _Mechanism_Parameter_Specification:
 
@@ -358,7 +358,7 @@ Every Mechanism has one or more of each of three types of States:  `InputPort(s)
 `ParameterPort(s) <ParameterPort>`, `and OutputPort(s) <OutputPort>`.  Generally, these are created automatically
 when the Mechanism is created.  InputPorts and OutputPorts (but not ParameterPorts) can also be specified explicitly
 for a Mechanism, or added to an existing Mechanism using its `add_states <Mechanism_Base.add_states>` method, as
-described `above <Mechanism_State_Specification>`).
+described `above <Mechanism_Port_specification>`).
 
 .. _Mechanism_Figure:
 
@@ -430,7 +430,7 @@ the Mechanism's variable::
     > [array([0, 0]) array([0])]
 
 If both the **default_variable** (or **size**) and **input_ports** arguments are specified, then the number and format
-of their respective items must be the same (see `Port <State_Examples>` for additional examples of specifying States).
+of their respective items must be the same (see `Port <Port_Examples>` for additional examples of specifying States).
 
 If InputPorts are added using the Mechanism's `add_states <Mechanism_Base.add_states>` method, then its
 `variable <Mechanism_Base.variable>` is extended to accommodate the number of InputPorts added (note that this must
@@ -871,12 +871,12 @@ is for a parameter of the Mechanism or its  `function <Mechanism_Base.function>`
 <Mechanism_States>`. Entries for parameters of the Mechanism or its `function <Mechanism_Base.function>` use the
 standard format for `parameter specification dictionaries <ParameterPort_Specification>`. Entries for the Mechanism's
 States can be used to specify runtime parameters of the corresponding Port, its `function <Port_Base.function>`, or
-any of the `Projections to that state <State_Projections>`. Each entry for the parameters of a Port uses a key
+any of the `Projections to that state <Port_Projections>`. Each entry for the parameters of a Port uses a key
 corresponding to the type of Port (*INPUT_PORT_PARAMS*, *OUTPUT_PORT_PARAMS* or *PARAMETER_PORT_PARAMS*), and a
 value that is a sub-dictionary containing a dictionary with the runtime  parameter specifications for all States of that
 type). Within that sub-dictionary, specification of parameters for the Port or its `function <Port_Base.function>` use
 the  standard format for a `parameter specification dictionary <ParameterPort_Specification>`.  Parameters for all of
-the `Port's Projections <State_Projections>` can be specified in an entry with the key *PROJECTION_PARAMS*, and a
+the `Port's Projections <Port_Projections>` can be specified in an entry with the key *PROJECTION_PARAMS*, and a
 sub-dictionary that contains the parameter specifications;  parameters for Projections of a particular type can be
 placed in an entry with a key specifying the type (*MAPPING_PROJECTION_PARAMS*, *LEARNING_PROJECTION_PARAMS*,
 *CONTROL_PROJECTION_PARAMS*, or *GATING_PROJECTION_PARAMS*; and parameters for a specific Projection can be placed in
@@ -952,7 +952,7 @@ from psyneulink.core.components.states.inputport import DEFER_VARIABLE_SPEC_TO_M
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.states.outputport import OutputPort
 from psyneulink.core.components.states.parameterport import ParameterPort
-from psyneulink.core.components.states.state import REMOVE_STATES, STATE_SPEC, _parse_state_spec
+from psyneulink.core.components.states.state import REMOVE_STATES, PORT_SPEC, _parse_port_spec
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, EXECUTION_PHASE, FUNCTION, FUNCTION_PARAMS, \
@@ -1450,7 +1450,7 @@ class Mechanism_Base(Mechanism):
                             # if state is assigned to an object,
                             # use a reference instead of name/value
                             state[0].owner
-                            spec = {STATE_SPEC: state[0]}
+                            spec = {PORT_SPEC: state[0]}
                         except AttributeError:
                             spec = {
                                 NAME: state[0].name,
@@ -1689,9 +1689,9 @@ class Mechanism_Base(Mechanism):
 
 
             try:
-                parsed_input_port_spec = _parse_state_spec(owner=self,
-                                                            state_type=InputPort,
-                                                            state_spec=s,
+                parsed_input_port_spec = _parse_port_spec(owner=self,
+                                                            port_type=InputPort,
+                                                            port_spec=s,
                                                             )
             except AttributeError as e:
                 if DEFER_VARIABLE_SPEC_TO_MECH_MSG in e.args[0]:
@@ -1729,7 +1729,7 @@ class Mechanism_Base(Mechanism):
 
             if mech_variable_item is None:
                 mech_variable_item = InputPort.defaults.variable
-            elif input_port_variable_was_specified is None and not InputPort._state_spec_allows_override_variable(s):
+            elif input_port_variable_was_specified is None and not InputPort._port_spec_allows_override_variable(s):
                 input_port_variable_was_specified = True
 
             default_variable_from_input_ports.append(mech_variable_item)
@@ -1882,7 +1882,7 @@ class Mechanism_Base(Mechanism):
                                    (as PROJECTION_TYPE and PROJECTION_SENDER are currently handled)
         """
 
-        from psyneulink.core.components.states.state import _parse_state_spec
+        from psyneulink.core.components.states.state import _parse_port_spec
         from psyneulink.core.components.states.inputport import InputPort
 
         # Perform first-pass validation in Function.__init__():
@@ -1896,8 +1896,8 @@ class Mechanism_Base(Mechanism):
         # INPUT_PORTS is specified, so validate:
         if INPUT_PORTS in params and params[INPUT_PORTS] is not None:
             try:
-                for state_spec in params[INPUT_PORTS]:
-                    _parse_state_spec(owner=self, state_type=InputPort, state_spec=state_spec)
+                for port_spec in params[INPUT_PORTS]:
+                    _parse_port_spec(owner=self, port_type=InputPort, port_spec=port_spec)
             except AttributeError as e:
                 if DEFER_VARIABLE_SPEC_TO_MECH_MSG in e.args[0]:
                     pass
@@ -1986,13 +1986,13 @@ class Mechanism_Base(Mechanism):
                 if not isinstance(value,(list, np.ndarray)):
                     raise MechanismError("The value of {} ({}) in the {} for {} must be a list or array".
                                          format(label, value, type, self.name))
-        def validate_subdict_key(state_type, key, dict_type):
+        def validate_subdict_key(port_type, key, dict_type):
             # IMPLEMENTATION NOTE:
             #    can't yet validate that string is a legit InputPort name or that index is within
-            #    bounds of the number of InputPorts;  that is done in _get_state_value_labels()
+            #    bounds of the number of InputPorts;  that is done in _get_port_value_labels()
             if not isinstance(key, (int, str)):
                 raise MechanismError("Key ({}) for {} of {} must the name of an {} or the index for one".
-                                     format(key, dict_type, self.name, state_type.__name__))
+                                     format(key, dict_type, self.name, port_type.__name__))
 
         if INPUT_LABELS_DICT in params and params[INPUT_LABELS_DICT]:
             labels_dict = params[INPUT_LABELS_DICT]
@@ -2654,7 +2654,7 @@ class Mechanism_Base(Mechanism):
             input_type_list.append(pnlvm.ir.LiteralStructType(mod_input_type_list))
         return pnlvm.ir.LiteralStructType(input_type_list)
 
-    def _get_state_param_initializer(self, context):
+    def _get_port_Param_initializer(self, context):
         gen = (s._get_param_initializer(context) for s in self.states)
         return tuple(gen)
 
@@ -2662,9 +2662,9 @@ class Mechanism_Base(Mechanism):
         return self.function._get_param_initializer(context)
 
     def _get_param_initializer(self, context):
-        state_param_init = self._get_state_param_initializer(context)
+        port_Param_init = self._get_port_Param_initializer(context)
         function_param_init = self._get_function_param_initializer(context)
-        param_init_list = [state_param_init, function_param_init]
+        param_init_list = [port_Param_init, function_param_init]
 
         mech_params_init = self._get_mech_params_init()
         if mech_params_init is not None:
@@ -3122,7 +3122,7 @@ class Mechanism_Base(Mechanism):
 
         @tc.typecheck
         def state_table(state_list:ContentAddressableList,
-                        state_type:tc.enum(InputPort, ParameterPort, OutputPort)):
+                        port_type:tc.enum(InputPort, ParameterPort, OutputPort)):
             """Return html with table for each state in state_list, including functions and/or values as specified
 
             Each table has a header cell and and inner table with cells for each state in the list
@@ -3156,7 +3156,7 @@ class Mechanism_Base(Mechanism):
 
 
             # InputPorts
-            if state_type is InputPort:
+            if port_type is InputPort:
                 if show_headers:
                     states_header = input_ports_header
                 else:
@@ -3167,7 +3167,7 @@ class Mechanism_Base(Mechanism):
                 table += '</tr></table></td></tr></table></td>'
 
             # ParameterPorts
-            elif state_type is ParameterPort:
+            elif port_type is ParameterPort:
                 if show_headers:
                     states_header = parameter_ports_header
                 else:
@@ -3178,7 +3178,7 @@ class Mechanism_Base(Mechanism):
                 table += '</table></td></tr></table></td>'
 
             # OutputPorts
-            elif state_type is OutputPort:
+            elif port_type is OutputPort:
                 if show_headers:
                     states_header = output_ports_header
                 else:
@@ -3241,15 +3241,15 @@ class Mechanism_Base(Mechanism):
     @tc.typecheck
     def _get_port_name(self, state:Port):
         if isinstance(state, InputPort):
-            state_type = InputPort.__name__
+            port_type = InputPort.__name__
         elif isinstance(state, ParameterPort):
-            state_type = ParameterPort.__name__
+            port_type = ParameterPort.__name__
         elif isinstance(state, OutputPort):
-            state_type = OutputPort.__name__
+            port_type = OutputPort.__name__
         else:
             assert False, f'Mechanism._get_port_name() must be called with an ' \
                 f'{InputPort.__name__}, {ParameterPort.__name__} or {OutputPort.__name__}'
-        return state_type + '-' + state.name
+        return port_type + '-' + state.name
 
     def plot(self, x_range=None):
         """Generate a plot of the Mechanism's `function <Mechanism_Base.function>` using the specified parameter values
@@ -3314,7 +3314,7 @@ class Mechanism_Base(Mechanism):
         states : Port or List[State]
             one more `InputPorts <InputPort>` or `OutputPorts <OutputPort>` to be added to the Mechanism.
             State specification(s) can be an InputPort or OutputPort object, class reference, class keyword, or
-            `State specification dictionary <State_Specification>` (the latter must have a *STATE_TYPE* entry
+            `State specification dictionary <Port_specification>` (the latter must have a *PORT_TYPE* entry
             specifying the class or keyword for InputPort or OutputPort).
 
         Returns a dictionary with two entries, containing the list of InputPorts and OutputPorts added.
@@ -3323,7 +3323,7 @@ class Mechanism_Base(Mechanism):
         Dictionary with entries containing InputPorts and/or OutputPorts added
 
         """
-        from psyneulink.core.components.states.state import _parse_state_type
+        from psyneulink.core.components.states.state import _parse_port_type
         from psyneulink.core.components.states.inputport import InputPort, _instantiate_input_ports
         from psyneulink.core.components.states.outputport import OutputPort, _instantiate_output_ports
 
@@ -3339,14 +3339,14 @@ class Mechanism_Base(Mechanism):
         instantiated_output_ports = None
 
         for state in states:
-            # FIX: 11/9/17: REFACTOR USING _parse_state_spec
-            state_type = _parse_state_type(self, state)
-            if (isinstance(state_type, InputPort) or
-                    (inspect.isclass(state_type) and issubclass(state_type, InputPort))):
+            # FIX: 11/9/17: REFACTOR USING _parse_port_spec
+            port_type = _parse_port_type(self, state)
+            if (isinstance(port_type, InputPort) or
+                    (inspect.isclass(port_type) and issubclass(port_type, InputPort))):
                 input_ports.append(state)
 
-            elif (isinstance(state_type, OutputPort) or
-                  (inspect.isclass(state_type) and issubclass(state_type, OutputPort))):
+            elif (isinstance(port_type, OutputPort) or
+                  (inspect.isclass(port_type) and issubclass(port_type, OutputPort))):
                 output_ports.append(state)
 
         if input_ports:
@@ -3364,7 +3364,7 @@ class Mechanism_Base(Mechanism):
                                                                   context=context)
             for state in instantiated_input_ports:
                 if state.name is state.componentName or state.componentName + '-' in state.name:
-                        state._assign_default_state_name(context=context)
+                        state._assign_default_port_Name(context=context)
             # self._instantiate_function(function=self.function)
         if output_ports:
             instantiated_output_ports = _instantiate_output_ports(self, output_ports, context=context)
@@ -3404,19 +3404,19 @@ class Mechanism_Base(Mechanism):
         if not isinstance(states, (list, ContentAddressableList)):
             states = [states]
 
-        def delete_state_projections(proj_list):
+        def delete_port_Projections(proj_list):
             for proj in proj_list:
                 type(proj)._delete_projection(proj)
 
         for state in states:
 
-            delete_state_projections(state.mod_afferents)
+            delete_port_Projections(state.mod_afferents)
 
             if state in self.input_ports:
                 if isinstance(state, str):
                     state = self.input_ports[state]
                 index = self.input_ports.index(state)
-                delete_state_projections(state.path_afferents)
+                delete_port_Projections(state.path_afferents)
                 del self.input_ports[index]
                 # If state is subclass of OutputPort:
                 #    check if regsistry has category for that class, and if so, use that
@@ -3446,7 +3446,7 @@ class Mechanism_Base(Mechanism):
                     index = self.output_ports.index(state)
                 else:
                     index = self.output_ports.index(self.output_ports[state])
-                delete_state_projections(state.efferents)
+                delete_port_Projections(state.efferents)
                 del self.output_values[index]
                 del self.output_ports[state]
                 # If state is subclass of OutputPort:
@@ -3485,17 +3485,17 @@ class Mechanism_Base(Mechanism):
         raise MechanismError("{} is not an InputPort of {}.".format(state.name, self.name))
 
     # @tc.typecheck
-    # def _get_state_value_labels(self, state_type:tc.any(InputPort, OutputPort)):
-    def _get_state_value_labels(self, state_type, context=None):
-        """Return list of labels for the value of each Port of specified state_type.
+    # def _get_port_value_labels(self, port_type:tc.any(InputPort, OutputPort)):
+    def _get_port_value_labels(self, port_type, context=None):
+        """Return list of labels for the value of each Port of specified port_type.
         If the labels_dict has subdicts (one for each Port), get label for the value of each Port from its subdict.
         If the labels dict does not have subdicts, then use the same dict for the only (or all) Port(s)
         """
 
-        if state_type is InputPort:
+        if port_type is InputPort:
             states = self.input_ports
 
-        elif state_type is OutputPort:
+        elif port_type is OutputPort:
             states = self.output_ports
 
         labels = []
@@ -3579,7 +3579,7 @@ class Mechanism_Base(Mechanism):
 
     def get_input_labels(self, context=None):
         if self.input_labels_dict:
-            return self._get_state_value_labels(InputPort, context)
+            return self._get_port_value_labels(InputPort, context)
         else:
             return self.get_input_values(context)
 
@@ -3615,7 +3615,7 @@ class Mechanism_Base(Mechanism):
 
     def get_output_labels(self, context=None):
         if self.output_labels_dict:
-            return self._get_state_value_labels(OutputPort, context)
+            return self._get_port_value_labels(OutputPort, context)
         else:
             return self.get_output_values(context)
 

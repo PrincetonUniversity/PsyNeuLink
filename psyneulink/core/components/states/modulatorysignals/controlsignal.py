@@ -44,7 +44,7 @@ must be met for it to function properly.
 When a ControlSignal is specified in the **control_signals** argument of the constructor for a `ControlMechanism
 <ControlMechanism>`, the parameter(s) to be controlled must be specified.  If other attributes of the ControlSignal
 need to be specified (e.g., one or more of its `cost functions <ControlSignal_Costs>`), then the Constructor for the
-ControlSignal can be used or a `state specification dictionary <State_Specification>`, in which the parameter(s) to be
+ControlSignal can be used or a `state specification dictionary <Port_specification>`, in which the parameter(s) to be
 controlled in the **projections** argument or *PROJECTIONS* entry, respectively, using any of the forms below.
 For convenience, the parameters can also be specified on their own in the **control_signals** argument of the
 ControlMechanism's constructor, in which case a default ControlSignal will be created for each.  In all cases, any
@@ -58,7 +58,7 @@ of the following can be use to specify the parameter(s) to be controlled:
     specification of any `parameters <ControlSignal_Structure>` for the ControlSignal.
 
   * **specification dictionary** -- this is an abbreviated form of `state specification dictionary
-    <State_Specification>`, in which the parameter(s) to be controlled can be specified in either of the two
+    <Port_specification>`, in which the parameter(s) to be controlled can be specified in either of the two
     following ways:
 
     * for controlling a single parameter, the dictionary can have the following two entries:
@@ -95,7 +95,7 @@ that are described below.
 When a ControlSignal is created, it can be assigned one or more `ControlProjections <ControlProjection>`, using either
 the **projections** argument of its constructor, or in an entry of a dictionary assigned to the **params** argument
 with the key *PROJECTIONS*.  These will be assigned to its `efferents  <ControlSignal.efferents>` attribute.  See
-`Port Projections <State_Projections>` for additional details concerning the specification of Projections when
+`Port Projections <Port_Projections>` for additional details concerning the specification of Projections when
 creating a Port.
 
 .. note::
@@ -993,7 +993,7 @@ class ControlSignal(ModulatorySignal):
         for cost_function_name in costFunctionNames:
             self.paramsCurrent[cost_function_name.replace('fct','function')] = getattr(self.function,cost_function_name)
 
-    def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
+    def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
         """Get ControlSignal specified for a parameter or in a 'control_signals' argument
 
         Tuple specification can be:
@@ -1007,27 +1007,27 @@ class ControlSignal(ModulatorySignal):
         from psyneulink.core.globals.keywords import PROJECTIONS
 
         params_dict = {}
-        state_spec = state_specific_spec
+        port_spec = port_specific_spec
 
-        if isinstance(state_specific_spec, dict):
-            return None, state_specific_spec
+        if isinstance(port_specific_spec, dict):
+            return None, port_specific_spec
 
-        elif isinstance(state_specific_spec, tuple):
+        elif isinstance(port_specific_spec, tuple):
 
-            state_spec = None
-            params_dict[PROJECTIONS] = _parse_connection_specs(connectee_state_type=self,
+            port_spec = None
+            params_dict[PROJECTIONS] = _parse_connection_specs(connectee_port_type=self,
                                                                owner=owner,
-                                                               connections=state_specific_spec)
-        elif state_specific_spec is not None:
+                                                               connections=port_specific_spec)
+        elif port_specific_spec is not None:
             raise ControlSignalError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
-                                  format(self.__class__.__name__, state_specific_spec))
+                                  format(self.__class__.__name__, port_specific_spec))
 
         if params_dict[PROJECTIONS] is None:
             raise ControlSignalError("PROGRAM ERROR: No entry found in {} params dict for {} "
                                      "with specification of parameter's Mechanism or ControlProjection(s) to it".
                                         format(CONTROL_SIGNAL, owner.name))
 
-        return state_spec, params_dict
+        return port_spec, params_dict
 
     def _update(self, context=None, params=None):
         """Update value (intensity) and costs

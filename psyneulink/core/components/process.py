@@ -468,7 +468,7 @@ from psyneulink.core.components.projections.projection import _add_projection_to
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Projection, System_Base
 from psyneulink.core.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.core.components.states.parameterport import ParameterPort
-from psyneulink.core.components.states.state import _instantiate_state, _instantiate_state_list
+from psyneulink.core.components.states.state import _instantiate_state, _instantiate_port_list
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, ENABLED, FUNCTION, FUNCTION_PARAMS, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, \
@@ -1248,11 +1248,11 @@ class Process(Process_Base):
                         # preceding_item doesn't have a _parameter_ports attrib, so assign one with self.learning
                         except AttributeError:
                             # Instantiate _parameter_ports Ordered dict with ParameterPort and self.learning
-                            preceding_item._parameter_ports = _instantiate_state_list(
+                            preceding_item._parameter_ports = _instantiate_port_list(
                                     owner=preceding_item,
                                     state_list=[(MATRIX, self.learning)],
-                                    state_types=ParameterPort,
-                                    state_param_identifier=PARAMETER_PORT,
+                                    port_types=ParameterPort,
+                                    port_Param_identifier=PARAMETER_PORT,
                                     reference_value=self.learning,
                                     reference_value_name=LEARNING_PROJECTION,
                                     context=context
@@ -1263,10 +1263,10 @@ class Process(Process_Base):
                             # Instantiate ParameterPort for MATRIX
                             preceding_item._parameter_ports[MATRIX] = _instantiate_state(
                                 owner=preceding_item,
-                                state_type=ParameterPort,
+                                port_type=ParameterPort,
                                 name=MATRIX,
                                 # # FIX: NOT SURE IF THIS IS CORRECT:
-                                # state_spec=PARAMETER_PORT,
+                                # port_spec=PARAMETER_PORT,
                                 reference_value=self.learning,
                                 reference_value_name=LEARNING_PROJECTION,
                                 params=self.learning,
@@ -1309,11 +1309,11 @@ class Process(Process_Base):
                             # Projection doesn't have a _parameter_ports attrib, so assign one with self.learning
                             except AttributeError:
                                 # Instantiate _parameter_ports Ordered dict with ParameterPort for self.learning
-                                projection._parameter_ports = _instantiate_state_list(
+                                projection._parameter_ports = _instantiate_port_list(
                                     owner=preceding_item,
                                     state_list=[(MATRIX, self.learning)],
-                                    state_types=ParameterPort,
-                                    state_param_identifier=PARAMETER_PORT,
+                                    port_types=ParameterPort,
+                                    port_Param_identifier=PARAMETER_PORT,
                                     reference_value=self.learning,
                                     reference_value_name=LEARNING_PROJECTION,
                                     context=context
@@ -1325,9 +1325,9 @@ class Process(Process_Base):
                                 # Instantiate ParameterPort for MATRIX
                                 projection._parameter_ports[MATRIX] = _instantiate_state(
                                     owner=preceding_item,
-                                    state_type=ParameterPort,
+                                    port_type=ParameterPort,
                                     name=MATRIX,
-                                    # state_spec=PARAMETER_PORT,
+                                    # port_spec=PARAMETER_PORT,
                                     reference_value=self.learning,
                                     reference_value_name=LEARNING_PROJECTION,
                                     params=self.learning,

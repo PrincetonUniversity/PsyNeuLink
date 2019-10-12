@@ -101,8 +101,8 @@ __all__ = [
     'SAMPLE', 'SAVE_ALL_VALUES_AND_POLICIES', 'SCALAR', 'SCALE', 'SCHEDULER', 'SELF', 'SENDER',
     'SEPARATOR_BAR', 'SIMPLE', 'SIMPLE_INTEGRATOR_FUNCTION', 'SINGLETON', 'SIZE', 'SLOPE', 'SOFT_CLAMP',
     'SOFTMAX_FUNCTION', 'SOURCE', 'STABILITY_FUNCTION', 'STANDARD_ARGS', 'STANDARD_DEVIATION', 'STANDARD_OUTPUT_PORTS',
-    'STATE', 'STATE_COMPONENT_CATEGORY', 'STATE_CONTEXT', 'STATE_NAME', 'STATE_PARAMS', 'STATE_PREFS', 'STATE_TYPE',
-    'STATE_VALUE', 'STATES', 'SUBTRACTION', 'SUM',
+    'STATE', 'STATE_COMPONENT_CATEGORY', 'STATE_CONTEXT', 'Port_Name', 'Port_ParamS', 'STATE_PREFS', 'PORT_TYPE',
+    'port_value', 'STATES', 'SUBTRACTION', 'SUM',
     'SYSTEM', 'SYSTEM_COMPONENT_CATEGORY', 'SYSTEM_DEFAULT_CONTROLLER', 'SYSTEM_INIT',
     'TARGET', 'TARGET_MECHANISM', 'TARGET_LABELS_DICT', 'TERMINAL', 'THRESHOLD', 'TIME', 'TIME_STEP_SIZE',
     'TIME_STEPS_DIM', 'TRAINING_SET', 'TRANSFER_FUNCTION_TYPE', 'TRANSFER_MECHANISM', 'TRANSFER_WITH_COSTS_FUNCTION',
@@ -764,8 +764,8 @@ K_VALUE = 'k_value'
 THRESHOLD = 'threshold'
 RATIO = 'ratio'
 
-STATE_VALUE = "Port value"   # Used in Port specification dict                                                #  to specify Port value
-STATE_PARAMS = "Port params" # Used in Port specification dict
+port_value = "Port value"   # Used in Port specification dict                                                #  to specify Port value
+Port_ParamS = "Port params" # Used in Port specification dict
 
 #endregion
 
@@ -825,13 +825,13 @@ MODULATED_PARAMETER_PREFIX = 'mod_'
 #region ----------------------------------------------    STATES  ------------------------------------------------------
 
 STATE = "Port"
-STATE_TYPE = "state_type"
+PORT_TYPE = "port_type"
 # These are used as keys in Port specification dictionaries
 STATES = "STATES"
 MODULATES = "modulates"
 PROJECTIONS = "projections"  # Used to specify projection list to Port DEPRECATED;  REPLACED BY CONNECTIONS
 CONNECTIONS = 'CONNECTIONS'
-STATE_NAME = "StateName"
+Port_Name = "StateName"
 STATE_PREFS = "StatePrefs"
 STATE_CONTEXT = "StateContext"
 ADD_INPUT_PORT = 'AddNewInputPort'     # Used by Mechanism._add_projection_to()

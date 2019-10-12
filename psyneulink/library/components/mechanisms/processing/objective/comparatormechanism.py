@@ -45,7 +45,7 @@ the length specified for an InputPort can differ from its corresponding OutputPo
 MappingProjection created uses a `FULL_CONNECTIVITY` matrix.  Thus, OutputPorts of differing lengths can be mapped
 to the sample and target InputPorts of a ComparatorMechanism (see the `example <ComparatorMechanism_Example>` below),
 so long as the latter are of the same length.  If a projection other than a `FULL_CONNECTIVITY` matrix is needed, this
-can be specified using the *PROJECTION* entry of a `Port specification dictionary <State_Specification>` for the
+can be specified using the *PROJECTION* entry of a `Port specification dictionary <Port_specification>` for the
 InputPort in the **input_ports** argument.
 
 .. _ComparatorMechanism_Structure:
@@ -137,7 +137,7 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.states.inputport import InputPort
 from psyneulink.core.components.states.outputport import OutputPort, PRIMARY, StandardOutputPorts
-from psyneulink.core.components.states.state import _parse_state_spec
+from psyneulink.core.components.states.state import _parse_port_spec
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.keywords import COMPARATOR_MECHANISM, FUNCTION, INPUT_PORTS, NAME, OUTCOME, SAMPLE, TARGET, VARIABLE, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
@@ -427,14 +427,14 @@ class ComparatorMechanism(ObjectiveMechanism):
             # Validate that input_ports are specified as dicts
             if not all(isinstance(input_port,dict) for input_port in input_ports):
                 raise ComparatorMechanismError("PROGRAM ERROR: all items in input_port args must be converted to dicts"
-                                               " by calling Port._parse_state_spec() before calling super().__init__")
+                                               " by calling Port._parse_port_spec() before calling super().__init__")
 
             # Validate length of variable for sample = target
             if VARIABLE in input_ports[0]:
                 # input_ports arg specified in standard state specification dict format
                 lengths = [len(input_port[VARIABLE]) for input_port in input_ports]
             else:
-                # input_ports arg specified in {<STATE_NAME>:<STATE SPECIFICATION DICT>} format
+                # input_ports arg specified in {<Port_Name>:<STATE SPECIFICATION DICT>} format
                 lengths = [len(list(input_port_dict.values())[0][VARIABLE]) for input_port_dict in input_ports]
 
             if lengths[0] != lengths[1]:
@@ -488,14 +488,14 @@ class ComparatorMechanism(ObjectiveMechanism):
         # DO SAME FOR InputPorts argument, USE TO OVERWRITE ANY SPECIFICATIONS IN sample AND target DICTS
         # TRY tuple format AS WAY OF PROVIDED CONSOLIDATED variable AND OutputPort specifications
 
-        sample_dict = _parse_state_spec(owner=self,
-                                        state_type=InputPort,
-                                        state_spec=sample,
+        sample_dict = _parse_port_spec(owner=self,
+                                        port_type=InputPort,
+                                        port_spec=sample,
                                         name=SAMPLE)
 
-        target_dict = _parse_state_spec(owner=self,
-                                        state_type=InputPort,
-                                        state_spec=target,
+        target_dict = _parse_port_spec(owner=self,
+                                        port_type=InputPort,
+                                        port_spec=target,
                                         name=TARGET)
 
         # If either the default_variable arg or the input_ports arg is provided:
@@ -519,15 +519,15 @@ class ComparatorMechanism(ObjectiveMechanism):
                                                "exactly two items (not {})".
                                                format(ComparatorMechanism.__name__, len(input_ports)))
 
-            sample_input_port_dict = _parse_state_spec(owner=self,
-                                                        state_type=InputPort,
-                                                        state_spec=input_ports[0],
+            sample_input_port_dict = _parse_port_spec(owner=self,
+                                                        port_type=InputPort,
+                                                        port_spec=input_ports[0],
                                                         name=SAMPLE,
                                                         value=None)
 
-            target_input_port_dict = _parse_state_spec(owner=self,
-                                                        state_type=InputPort,
-                                                        state_spec=input_ports[1],
+            target_input_port_dict = _parse_port_spec(owner=self,
+                                                        port_type=InputPort,
+                                                        port_spec=input_ports[1],
                                                         name=TARGET,
                                                         value=None)
 

@@ -447,7 +447,7 @@ from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism i
 from psyneulink.core.components.mechanisms.modulatory.learning.learningauxiliary import _assign_error_signal_projections, _get_learning_mechanisms
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism, LearningTiming
 from psyneulink.core.components.mechanisms.mechanism import MechanismList
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import DEFAULT_MONITORED_STATE_EXPONENT, DEFAULT_MONITORED_STATE_MATRIX, DEFAULT_MONITORED_STATE_WEIGHT, ObjectiveMechanism
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import DEFAULT_MONITORED_PORT_EXPONENT, DEFAULT_MONITORED_PORT_MATRIX, DEFAULT_MONITORED_PORT_WEIGHT, ObjectiveMechanism
 from psyneulink.core.components.process import Process, ProcessInputPort, ProcessList, ProcessTuple
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import Projection
@@ -2283,9 +2283,9 @@ class System(System_Base):
             # Note:  assign parsed spec(s) to a list, as there may be more than one (that will be added to all_specs)
             monitored_output_port_tuples = []
 
-            weight=DEFAULT_MONITORED_STATE_WEIGHT
-            exponent=DEFAULT_MONITORED_STATE_EXPONENT
-            matrix=DEFAULT_MONITORED_STATE_MATRIX
+            weight=DEFAULT_MONITORED_PORT_WEIGHT
+            exponent=DEFAULT_MONITORED_PORT_EXPONENT
+            matrix=DEFAULT_MONITORED_PORT_MATRIX
 
             # spec is a tuple
             # - put OutputPort(s) in spec

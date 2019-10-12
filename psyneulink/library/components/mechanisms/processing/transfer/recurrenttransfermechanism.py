@@ -1176,7 +1176,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         if AUTO not in param_keys and HETERO in param_keys:
             d = np.diagonal(matrix).copy()
             state = _instantiate_state(owner=self,
-                                       state_type=ParameterPort,
+                                       port_type=ParameterPort,
                                        name=AUTO,
                                        reference_value=d,
                                        reference_value_name=AUTO,
@@ -1195,7 +1195,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             np.fill_diagonal(m, 0.0)
             self._hetero = m
             state = _instantiate_state(owner=self,
-                                       state_type=ParameterPort,
+                                       port_type=ParameterPort,
                                        name=HETERO,
                                        reference_value=m,
                                        reference_value_name=HETERO,

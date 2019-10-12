@@ -462,20 +462,20 @@ class AGTControlMechanism(ControlMechanism):
             for state in self.objective_mechanism.input_ports:
                 for projection in state.path_afferents:
                     monitored_state = projection.sender
-                    monitored_state_mech = projection.sender.owner
+                    monitored_port_Mech = projection.sender.owner
                     monitored_state_index = self.monitored_output_ports.index(monitored_state)
 
                     weight = self.monitored_output_ports_weights_and_exponents[monitored_state_index][0]
                     exponent = self.monitored_output_ports_weights_and_exponents[monitored_state_index][1]
 
                     print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
-                           format(monitored_state_mech.name, monitored_state.name, weight, exponent))
+                           format(monitored_port_Mech.name, monitored_state.name, weight, exponent))
 
         print ("\n\tModulating the following parameters:".format(self.name))
         # Sort for consistency of output:
-        state_names_sorted = sorted(self.output_ports.names)
-        for state_name in state_names_sorted:
-            for projection in self.output_ports[state_name].efferents:
+        port_Names_sorted = sorted(self.output_ports.names)
+        for port_Name in port_Names_sorted:
+            for projection in self.output_ports[port_Name].efferents:
                 print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
 
         print ("\n---------------------------------------------------------")

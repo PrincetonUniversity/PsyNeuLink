@@ -230,25 +230,25 @@ register_category(entry=GatingProjection,
 # (this is necessary, as the classes reference each other, thus producing import loops)
 
 # Assign default Projection type for Port subclasses
-for state_type in StateRegistry:
-    state_params =StateRegistry[state_type].subclass.paramClassDefaults
+for port_type in StateRegistry:
+    port_Params =StateRegistry[port_type].subclass.paramClassDefaults
     try:
         # Use string specified in Port's PROJECTION_TYPE param to get
         # class reference for projection type from ProjectionRegistry
-        state_params[PROJECTION_TYPE] = ProjectionRegistry[state_params[PROJECTION_TYPE]].subclass
+        port_Params[PROJECTION_TYPE] = ProjectionRegistry[port_Params[PROJECTION_TYPE]].subclass
     except AttributeError:
-        raise InitError("paramClassDefaults[PROJECTION_TYPE] not defined for {0}".format(state_type))
+        raise InitError("paramClassDefaults[PROJECTION_TYPE] not defined for {0}".format(port_type))
     except (KeyError, NameError):
-        # Check if state_params[PROJECTION_TYPE] has already been assigned to a class and, if so, use it
-        if inspect.isclass(state_params[PROJECTION_TYPE]):
-            state_params[PROJECTION_TYPE] = state_params[PROJECTION_TYPE]
+        # Check if port_Params[PROJECTION_TYPE] has already been assigned to a class and, if so, use it
+        if inspect.isclass(port_Params[PROJECTION_TYPE]):
+            port_Params[PROJECTION_TYPE] = port_Params[PROJECTION_TYPE]
         else:
-            raise InitError("{0} not found in ProjectionRegistry".format(state_params[PROJECTION_TYPE]))
+            raise InitError("{0} not found in ProjectionRegistry".format(port_Params[PROJECTION_TYPE]))
     else:
-        if not (inspect.isclass(state_params[PROJECTION_TYPE]) and
-                     issubclass(state_params[PROJECTION_TYPE], Projection_Base)):
+        if not (inspect.isclass(port_Params[PROJECTION_TYPE]) and
+                     issubclass(port_Params[PROJECTION_TYPE], Projection_Base)):
             raise InitError("paramClassDefaults[PROJECTION_TYPE] ({0}) for {1} must be a type of Projection".
-                            format(state_params[PROJECTION_TYPE].__name__, state_type))
+                            format(port_Params[PROJECTION_TYPE].__name__, port_type))
 
 
 # Validate / assign default sender for each Projection subclass (must be a Mechanism, Port or instance of one)

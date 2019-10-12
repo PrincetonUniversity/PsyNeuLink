@@ -226,7 +226,7 @@ class UserDefinedFunction(Function_Base):
         array([[2.88079708, 2.98201379, 2.99752738]])
 
 
-    .. _UDF_Assign_to_State_Examples:
+    .. _UDF_Assign_to_Port_Examples:
 
     **Assigning of a custom function to a Port**
 

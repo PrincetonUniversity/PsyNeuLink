@@ -5784,7 +5784,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         from psyneulink.core.globals.utilities import ContentAddressableList
         def states_string(state_list: ContentAddressableList,
-                          state_type,
+                          port_type,
                           include_function: bool = False,
                           include_value: bool = False,
                           use_label: bool = False):
@@ -5802,7 +5802,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         value = r'\n={}'.format(state.label)
                     else:
                         value = r'\n={}'.format(state.value)
-                states += r'<{0}-{1}> {1}{2}{3}'.format(state_type.__name__,
+                states += r'<{0}-{1}> {1}{2}{3}'.format(port_type.__name__,
                                                         state.name,
                                                         function,
                                                         value)

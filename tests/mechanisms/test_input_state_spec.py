@@ -123,7 +123,7 @@ class TestInputPortSpec:
     # TEST 2d
     # Mismatch between dimensionality of InputPort variable owner Mechanism's variable
 
-    # FIX: This needs to be handled better in Port._parse_state_spec (~Line 3018):
+    # FIX: This needs to be handled better in Port._parse_port_spec (~Line 3018):
     #      seems to be adding the two axis2 values
     def test_mismatch_dim_input_ports_with_default_variable_error(self):
 
@@ -693,7 +693,7 @@ class TestInputPortSpec:
     # ------------------------------------------------------------------------------------------------
     # TEST 31
 
-    def test_multiple_states_specified_using_state_name_format_error(self):
+    def test_multiple_states_specified_using_port_Name_format_error(self):
         with pytest.raises(StateError) as error_text:
             # Don't bother to specify anything as the value for each entry in the dict, since doesn't get there
             TransferMechanism(input_ports=[{'MY STATE A':{},
@@ -716,7 +716,7 @@ class TestInputPortSpec:
     # ------------------------------------------------------------------------------------------------
     # TEST 33
 
-    def test_2_item_tuple_with_state_name_list_and_mechanism(self):
+    def test_2_item_tuple_with_port_Name_list_and_mechanism(self):
 
         # T1 has OutputPorts of with same lengths,
         #    so T2 should use that length for its InputPort variable (since it is not otherwise specified)

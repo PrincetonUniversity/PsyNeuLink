@@ -570,7 +570,7 @@ from psyneulink.core.components.functions.combinationfunctions import LinearComb
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.core.components.shellclasses import Composition_Base, System_Base
-from psyneulink.core.components.states.state import Port, _parse_state_spec
+from psyneulink.core.components.states.state import Port, _parse_port_spec
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.states.inputport import InputPort
 from psyneulink.core.components.states.outputport import OutputPort
@@ -581,7 +581,7 @@ from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, \
     EID_SIMULATION, GATING_SIGNAL, INIT_EXECUTE_METHOD_ONLY, \
     MODULATORY_SIGNALS, MONITOR_FOR_CONTROL, MONITOR_FOR_MODULATION, MULTIPLICATIVE, \
-    OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, STATE_TYPE, SYSTEM, \
+    OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, PORT_TYPE, SYSTEM, \
     MECHANISM, MULTIPLICATIVE, NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -1220,7 +1220,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                                        target_set=target_set,
                                                        context=context)
 
-        def validate_monitored_state_spec(spec_list):
+        def validate_monitored_port_spec(spec_list):
             for spec in spec_list:
                 if isinstance(spec, MonitoredOutputPortTuple):
                     spec = spec.output_port
@@ -1229,15 +1229,15 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 elif isinstance(spec, dict):
                     # If it is a dict, parse to validate that it is an InputPort specification dict
                     #    (for InputPort of ObjectiveMechanism to be assigned to the monitored_output_port)
-                    spec = _parse_state_spec(owner=self,
-                                             state_type=InputPort,
-                                             state_spec=spec,
+                    spec = _parse_port_spec(owner=self,
+                                             port_type=InputPort,
+                                             port_spec=spec,
                                              context=context)
                     # Get the OutputPort, to validate that it is in the ControlMechanism's Composition (below);
                     #    presumes that the monitored_output_port is the first in the list of projection_specs
                     #    in the InputPort state specification dictionary returned from the parse,
                     #    and that it is specified as a projection_spec (parsed into that in the call
-                    #    to _parse_connection_specs by _parse_state_spec)
+                    #    to _parse_connection_specs by _parse_port_spec)
 
                     spec = spec[PROJECTIONS][0][0]
 
@@ -1274,7 +1274,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             spec = target_set[MONITOR_FOR_CONTROL]
             if not isinstance(spec, (list, ContentAddressableList)):
                 spec = [spec]
-            validate_monitored_state_spec(spec)
+            validate_monitored_port_spec(spec)
 
         if OBJECTIVE_MECHANISM in target_set and \
                 target_set[OBJECTIVE_MECHANISM] is not None and\
@@ -1302,7 +1302,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                                     " it is in a list with other items ({})".
                                                     format(OBJECTIVE_MECHANISM, self.name, obj_mech_spec_list))
                 else:
-                    validate_monitored_state_spec(obj_mech_spec_list)
+                    validate_monitored_port_spec(obj_mech_spec_list)
 
             if not isinstance(target_set[OBJECTIVE_MECHANISM], (ObjectiveMechanism, list, bool)):
                 raise ControlMechanismError("Specification of {} arg for {} ({}) must be an {}"
@@ -1318,16 +1318,16 @@ class ControlMechanism(ModulatoryMechanism_Base):
             # # MODIFIED 9/26/19 OLD:
             # from psyneulink.core.components.projections.projection import ProjectionError
             # for ctl_spec in control:
-            #     # _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=control_signal)
+            #     # _parse_port_spec(port_type=ControlSignal, owner=self, port_spec=control_signal)
             #     try:
-            #         _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=ctl_spec)
+            #         _parse_port_spec(port_type=ControlSignal, owner=self, port_spec=ctl_spec)
             #     except ProjectionError:
-            #         _parse_state_spec(state_type=GatingSignal, owner=self, state_spec=ctl_spec)
+            #         _parse_port_spec(port_type=GatingSignal, owner=self, port_spec=ctl_spec)
             # MODIFIED 9/26/19 NEW:
             for ctl_spec in control:
-                ctl_spec = _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=ctl_spec)
+                ctl_spec = _parse_port_spec(port_type=ControlSignal, owner=self, port_spec=ctl_spec)
                 if not (isinstance(ctl_spec, ControlSignal)
-                        or (isinstance(ctl_spec, dict) and ctl_spec[STATE_TYPE]==ControlSignal.__name__)):
+                        or (isinstance(ctl_spec, dict) and ctl_spec[PORT_TYPE]==ControlSignal.__name__)):
                     raise ControlMechanismError(f"Invalid specification for '{CONTROL}' argument of {self.name}:"
                                                 f"({ctl_spec})")
             # MODIFIED 9/26/19 END
@@ -1456,7 +1456,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
     # ---------------------------------------------------
     # FIX 5/23/17: PROJECTIONS AND PARAMS SHOULD BE PASSED BY ASSIGNING TO STATE SPECIFICATION DICT
-    # FIX          UPDATE parse_state_spec TO ACCOMODATE (param, ControlSignal) TUPLE
+    # FIX          UPDATE parse_port_spec TO ACCOMODATE (param, ControlSignal) TUPLE
     # FIX          TRACK DOWN WHERE PARAMS ARE BEING HANDED OFF TO ControlProjection
     # FIX                   AND MAKE SURE THEY ARE NOW ADDED TO ControlSignal SPECIFICATION DICT
     # ---------------------------------------------------
@@ -1569,13 +1569,13 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         allocation_parameter_default = self.parameters.control_allocation.default_value
 
-        control_signal = _instantiate_state(state_type=ControlSignal,
+        control_signal = _instantiate_state(port_type=ControlSignal,
                                                owner=self,
                                                variable=self.default_allocation           # User specified value
                                                         or allocation_parameter_default,  # Parameter default
                                                reference_value=allocation_parameter_default,
                                                modulation=self.modulation,
-                                               state_spec=control_signal_spec,
+                                               port_spec=control_signal_spec,
                                                context=context)
         if not type(control_signal) in convert_to_list(self.outputPortTypes):
             raise ProjectionError(f'{type(control_signal)} inappropriate for {self.name}')
@@ -1627,7 +1627,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         for state in self.objective_mechanism.input_ports:
             for projection in state.path_afferents:
                 monitored_state = projection.sender
-                monitored_state_mech = projection.sender.owner
+                monitored_port_Mech = projection.sender.owner
                 # ContentAddressableList
                 monitored_state_index = self.monitored_output_ports.index(monitored_state)
 
@@ -1635,15 +1635,15 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 exponent = self.monitored_output_ports_weights_and_exponents[monitored_state_index][1]
 
                 print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
-                       format(monitored_state_mech.name, monitored_state.name, weight, exponent))
+                       format(monitored_port_Mech.name, monitored_state.name, weight, exponent))
 
         try:
             if self.control_signals:
                 print ("\n\tControlling the following Mechanism parameters:".format(self.name))
                 # Sort for consistency of output:
-                state_names_sorted = sorted(self.control_signals.names)
-                for state_name in state_names_sorted:
-                    for projection in self.control_signals[state_name].efferents:
+                port_Names_sorted = sorted(self.control_signals.names)
+                for port_Name in port_Names_sorted:
+                    for projection in self.control_signals[port_Name].efferents:
                         print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
         except:
             pass
@@ -1652,9 +1652,9 @@ class ControlMechanism(ModulatoryMechanism_Base):
             if self.gating_signals:
                 print ("\n\tGating the following States:".format(self.name))
                 # Sort for consistency of output:
-                state_names_sorted = sorted(self.gating_signals.names)
-                for state_name in state_names_sorted:
-                    for projection in self.gating_signals[state_name].efferents:
+                port_Names_sorted = sorted(self.gating_signals.names)
+                for port_Name in port_Names_sorted:
+                    for projection in self.gating_signals[port_Name].efferents:
                         print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
         except:
             pass

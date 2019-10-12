@@ -118,7 +118,7 @@ The section on `Modulation` below provides a comparison of ModulatorySignal `sub
 A ModulatorySignal can be assigned one or more `ModulatoryProjections <ModulatoryProjection>`,
 using either the **projections** argument of its constructor, or in an entry of a dictionary assigned to the
 **params** argument with the key *PROJECTIONS*.  These are assigned to its `efferents  <ModulatorySignal.efferents>`
-attribute.  See `Port Projections <State_Projections>` for additional details concerning the specification of
+attribute.  See `Port Projections <Port_Projections>` for additional details concerning the specification of
 Projections when creating a Port.
 
 Although a ModulatorySignal can be assigned more than one `ModulatoryProjection <ModulatoryProjection>`,
@@ -139,7 +139,7 @@ A ModulatorySignal modulates the value of a `Port <Port>` either by modifying a 
 directly.  The `type of modulation <ModulatorySignal_Types>` is determined by the ModulatorySignal's
 `modulation <ModulatorySignal.modulation>` attribute, which can be specified in the **modulation** argument of its
 ModulatorySignal's constructor, or in a *MODULATION* entry of a `Port specification dictionary
-<State_Specification>` used to create the ModulatorySignal (see `Type of Modualtion <ModulatorySignal_Types>` and
+<Port_specification>` used to create the ModulatorySignal (see `Type of Modualtion <ModulatorySignal_Types>` and
 `figure <ModulatorySignal_Detail_Figure>` below for details). If the type of `modulation <ModulatorySignal.modulation>`
 is not specified when a ModulatorySignal is created, it is assigned the value of the `modulation
 <ModulatoryMechanism_Base.modulation>` attribute for the `ModulatoryMechanism <ModulatoryMechanism>` to which it belongs.
@@ -546,7 +546,7 @@ class ModulatorySignal(OutputPort):
 
     name : str
         the name of the ModulatorySignal. If the ModulatorySignal's `initialization has been deferred
-        <State_Deferred_Initialization>`, it is assigned a temporary name (indicating its deferred initialization
+        <Port_Deferred_Initialization>`, it is assigned a temporary name (indicating its deferred initialization
         status) until initialization is completed, at which time it is assigned its designated name.  If that is the
         name of an existing ModulatorySignal, it is appended with an indexed suffix, incremented for each Port with
         the same base name (see `Naming`). If the name is not  specified in the **name** argument of its constructor,
@@ -659,7 +659,7 @@ class ModulatorySignal(OutputPort):
                          **kwargs)
 
         if self.initialization_status == ContextFlags.INITIALIZED:
-            self._assign_default_state_name()
+            self._assign_default_port_Name()
 
     def _instantiate_attributes_after_function(self, context=None):
         # If owner is specified but modulation has not been specified, assign to owner's value
@@ -690,7 +690,7 @@ class ModulatorySignal(OutputPort):
             if projection:
                 projection._assign_default_projection_name(state=self)
 
-    def _assign_default_state_name(self, context=None):
+    def _assign_default_port_Name(self, context=None):
 
         # If the name is not a default name for the class,
         #    or the ModulatorySignal has no projections (which are used to name it)

@@ -105,9 +105,9 @@ Two types of Components are the basic building blocks of PsyNeuLink models, Mech
             MappingProjection.
 
 
-* `States <Port>`
+* `Ports <Port>`
    A Port is an object that belongs to a Mechanism, and that it is used to represent it input(s), parameter(s)
-   of its function, or its output(s).   There are three types of States, one for each type of representation,
+   of its function, or its output(s).   There are three types of Ports, one for each type of representation,
    each of which can receive and/or send a combination of PathwayProjections and/or ModulatoryProjections
    (see `ModulatorySignal_Anatomy_Figure`):
 

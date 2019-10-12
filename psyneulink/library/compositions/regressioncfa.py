@@ -46,7 +46,7 @@ from itertools import product
 
 from psyneulink.core.components.functions.learningfunctions import BayesGLM
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.core.components.states.state import _parse_state_spec
+from psyneulink.core.components.states.state import _parse_port_spec
 from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
 from psyneulink.core.globals.keywords import ALL, CONTROL_SIGNALS, DEFAULT_VARIABLE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
@@ -435,8 +435,8 @@ class RegressionCFA(CompositionFunctionApproximator):
                         assert False, "PROGRAM ERROR: unrecognized specification for {} arg of {}: {}".\
                                                       format(repr(CONTROL_SIGNALS), self.name, c)
                 else:
-                    state_spec_dict = _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=c)
-                    v = state_spec_dict[VARIABLE]
+                    port_spec_dict = _parse_port_spec(port_type=ControlSignal, owner=self, port_spec=c)
+                    v = port_spec_dict[VARIABLE]
                     v = v or ControlSignal.defaults.variable
                 control_allocation.append(v)
             # Get primary function and compute_costs function for each ControlSignal (called in compute_terms)

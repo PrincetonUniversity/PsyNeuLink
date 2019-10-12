@@ -236,7 +236,7 @@ class DefaultControlMechanism(ControlMechanism):
         from psyneulink.core.components.states.state import _instantiate_state
         from psyneulink.core.components.states.inputport import InputPort
         input_port = _instantiate_state(owner=self,
-                                         state_type=InputPort,
+                                         port_type=InputPort,
                                          name=input_port_name,
                                          reference_value=np.array(self.defaults.variable[variable_item_index]),
                                          reference_value_name='Default control allocation',

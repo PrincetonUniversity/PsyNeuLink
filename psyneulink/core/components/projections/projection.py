@@ -183,11 +183,11 @@ Projection in context:
 
   .. _Projection_ProjectionTuple:
 
-  * **ProjectionTuple** -- a 4-item tuple used in the context of a `Port specification <State_Specification>` to
+  * **ProjectionTuple** -- a 4-item tuple used in the context of a `Port specification <Port_specification>` to
     create a Projection between it and another `Port <Port>`. It must have at least the first three of the following
     items in order, and can include the fourth optional item:
 
-     * **Port specification** -- specifies the `Port <State_Specification>` to connect with (**not** the one being
+     * **Port specification** -- specifies the `Port <Port_specification>` to connect with (**not** the one being
        connected; that is determined from context)
 
      * **weight** -- must be a value specifying the `weight <Projection_Base.weight>` of the Projection;  it can be
@@ -212,7 +212,7 @@ Projection in context:
     Projection specification (used to infer the Port to be connected with).  If the Projection specification is
     `None` or absent, the Port specification cannot be `None` (as it is then used to infer the type of Projection).
     If weight and/or exponent is `None`, it is ignored.  If both the Port and Projection are specified, they must
-    be compatible  (see `examples <State_Projections_Examples>` in Port).
+    be compatible  (see `examples <Port_Projections_Examples>` in Port).
 
 
 .. _Projection_Automatic_Creation:
@@ -928,19 +928,19 @@ class Projection_Base(Projection):
 
     def _update_parameter_ports(self, context=None, runtime_params=None):
         for state in self._parameter_ports:
-            state_name = state.name
+            port_Name = state.name
             state._update(context=context, params=runtime_params)
 
             # Assign version of ParameterPort.value matched to type of template
             #    to runtime param or paramsCurrent (per above)
             # FYI (7/18/17 CW) : in addition to the params and attribute being set, the state's variable is ALSO being
-            # set by the statement below. For example, if state_name is 'matrix', the statement below sets
+            # set by the statement below. For example, if port_Name is 'matrix', the statement below sets
             # params['matrix'] to state.value, calls setattr(state.owner, 'matrix', state.value), which sets the
             # 'matrix' parameter state's variable to ALSO be equal to state.value! If this is unintended, please change.
             value = state.parameters.value._get(context)
-            getattr(self.parameters, state_name)._set(value, context)
+            getattr(self.parameters, port_Name)._set(value, context)
             # manual setting of previous value to matrix value (happens in above param['matrix'] setting
-            if state_name == MATRIX:
+            if port_Name == MATRIX:
                 state.function.parameters.previous_value._set(value, context)
 
     def add_to(self, receiver, state, context=None):
@@ -1173,7 +1173,7 @@ def _is_projection_subclass(spec, keyword):
 
 def _parse_projection_spec(projection_spec,
                            owner = None,       # Used only for error message
-                           state_type = None,  # Used only for default assignment
+                           port_type = None,  # Used only for default assignment
                            # socket=None,
                            **kwargs):
     """Return either Projection object or Projection specification dict for projection_spec
@@ -1186,7 +1186,7 @@ def _parse_projection_spec(projection_spec,
 
     bad_arg = next((key for key in kwargs if not key in PROJECTION_ARGS), None)
     if bad_arg:
-        raise ProjectionError("Illegal argument in call to _parse_state_spec: {}".format(bad_arg))
+        raise ProjectionError("Illegal argument in call to _parse_port_spec: {}".format(bad_arg))
 
     from collections import defaultdict
     proj_spec_dict = defaultdict(lambda :None)
@@ -1226,7 +1226,7 @@ def _parse_projection_spec(projection_spec,
     elif (isinstance(projection_spec, Port)
           or (isinstance(projection_spec, type) and issubclass(projection_spec, Port))):
         proj_spec_dict[PROJECTION_TYPE] = projection_spec.paramClassDefaults[PROJECTION_TYPE]
-        state_type = projection_spec.__class__
+        port_type = projection_spec.__class__
 
     # Mechanism object or class
     elif (isinstance(projection_spec, Mechanism)
@@ -1248,7 +1248,7 @@ def _parse_projection_spec(projection_spec,
     # None
     if not proj_spec_dict[PROJECTION_TYPE]:
         # Assign default type
-        proj_spec_dict[PROJECTION_TYPE] = state_type.paramClassDefaults[PROJECTION_TYPE]
+        proj_spec_dict[PROJECTION_TYPE] = port_type.paramClassDefaults[PROJECTION_TYPE]
 
         # prefs is not always created when this is called, so check
         try:
@@ -1261,7 +1261,7 @@ def _parse_projection_spec(projection_spec,
             warnings.warn("Unrecognized specification ({}) for a Projection for {} of {}; "
                           "default {} has been assigned".
                           format(projection_spec,
-                                 state_type.__class__.__name__,
+                                 port_type.__class__.__name__,
                                  owner.name,
                                  proj_spec_dict[PROJECTION_TYPE]))
     return proj_spec_dict
@@ -1281,27 +1281,27 @@ def _parse_projection_keyword(projection_spec:str):
         return projection_type
 
 
-def _parse_connection_specs(connectee_state_type,
+def _parse_connection_specs(connectee_port_type,
                             owner,
                             connections):
-    """Parse specification(s) for States to/from which the connectee_state_type should be connected
+    """Parse specification(s) for States to/from which the connectee_port_type should be connected
 
     TERMINOLOGY NOTE:
         "CONNECTION" is used instead of "PROJECTION" because:
             - the method abstracts over type and direction of Projection, so it is ambiguous whether
-                the projection involved is to or from connectee_state_type; however, can always say it "connects with"
+                the projection involved is to or from connectee_port_type; however, can always say it "connects with"
             - specification is not always (in fact, usually is not) in the form of a Projection; usually it is a
-                Mechanism or Port to/from which the connectee_state_type should send/receive the Projection
+                Mechanism or Port to/from which the connectee_port_type should send/receive the Projection
 
     Connection attributes declared for each type (subclass) of Port that are used here:
         connectsWith : Port
-           - specifies the type (subclass) of Port with which the connectee_state_type should be connected
+           - specifies the type (subclass) of Port with which the connectee_port_type should be connected
         connectsWithAttribute : str
            - specifies the name of the attribute of the Mechanism that holds the states of the connectsWith's type
         projectionSocket : [SENDER or RECEIVER]
            - specifies for this method whether to use a Projection's sender or receiver for the connection
         modulators : ModulatorySignal
-           -  class of ModulatorySignal that can send ModulatoryProjection to the connectee_state_type
+           -  class of ModulatorySignal that can send ModulatoryProjection to the connectee_port_type
 
     This method deals with connection specifications that are made in one of the following places/ways:
         - *PROJECTIONS* entry of a Port specification dict;
@@ -1314,21 +1314,21 @@ def _parse_connection_specs(connectee_state_type,
         * Port specifications are assumed to be for connect_with Port,
             and checked for compatibilty of assignment (using projection_socket)
         * keyword specifications are resolved to corresponding Projection class
-        * Class assignments are checked for compatiblity with connectee_state_type and connect_with Port
+        * Class assignments are checked for compatiblity with connectee_port_type and connect_with Port
 
     Each connection specification can, itself, be one of the following:
         * Port object or class;
         * Mechanism object or class - primary Port is used, if applicable, otherwise an exception is generated;
         * dict - must have the first and can have any of the additional entries below:
-            *STATE*:<state_spec> - required; must resolve to an instantiated state;  can use any of the following:
+            *STATE*:<port_spec> - required; must resolve to an instantiated state;  can use any of the following:
                                        Port - the Port is used;
                                        Mechanism - primary Port will be used if appropriate,
                                                    otherwise generates an exception;
-                                       {Mechanism:state_spec or [state_spec<, state_spec...>]} -
-                                                   each state_spec must be for an instantiated Port of the Mechanism,
+                                       {Mechanism:port_spec or [port_spec<, port_spec...>]} -
+                                                   each port_spec must be for an instantiated Port of the Mechanism,
                                                    referenced by its name or in a CONNECTION specification that uses
                                                    its name (or, for completeness, the Port itself);
-                                                   _parse_connections() is called recursively for each state_spec
+                                                   _parse_connections() is called recursively for each port_spec
                                                    (first replacing the name with the actual state);
                                                    and returns a list of ProjectionTuples; any weights, exponents,
                                                    or projections assigned in those tuples are left;  otherwise, any
@@ -1344,8 +1344,8 @@ def _parse_connection_specs(connectee_state_type,
             *PROJECTION*:<projection_spec> - optional; specifies projection (instantiated or matrix) for connection
                                              default is PROJECTION_TYPE specified for STATE
         * tuple or list of tuples: (specification requirements same as for dict above);  each must be:
-            (state_spec, projection_spec) or
-            (state_spec, weight, exponent, projection_spec)
+            (port_spec, projection_spec) or
+            (port_spec, weight, exponent, projection_spec)
 
     Returns list of ProjectionTuples, each of which specifies:
         - the state to be connected with
@@ -1363,15 +1363,15 @@ def _parse_connection_specs(connectee_state_type,
     from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import _is_control_spec
     from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import _is_gating_spec
 
-    if not inspect.isclass(connectee_state_type):
-        raise ProjectionError("Called for {} with \'connectee_state_type\' arg ({}) that is not a class".
-                         format(owner.name, connectee_state_type))
+    if not inspect.isclass(connectee_port_type):
+        raise ProjectionError("Called for {} with \'connectee_port_type\' arg ({}) that is not a class".
+                         format(owner.name, connectee_port_type))
 
     # Get connection attributes for connectee
-    connects_with = [StateRegistry[name].subclass for name in connectee_state_type.connectsWith]
-    connect_with_attr = connectee_state_type.connectsWithAttribute
-    projection_socket = connectee_state_type.projectionSocket
-    modulators = [StateRegistry[name].subclass for name in connectee_state_type.modulators]
+    connects_with = [StateRegistry[name].subclass for name in connectee_port_type.connectsWith]
+    connect_with_attr = connectee_port_type.connectsWithAttribute
+    projection_socket = connectee_port_type.projectionSocket
+    modulators = [StateRegistry[name].subclass for name in connectee_port_type.modulators]
 
     DEFAULT_WEIGHT = None
     DEFAULT_EXPONENT = None
@@ -1382,11 +1382,11 @@ def _parse_connection_specs(connectee_state_type,
         # if owner.verbosePref:
         #     warnings.warn("Connection specification for {} of {} was a set ({});"
         #                   "it was converted to a list, but the order of {} assignments is not "
-        #                   "predictable".format(connectee_state_type, owner.name,
+        #                   "predictable".format(connectee_port_type, owner.name,
         #                                        connections, Projection.__name__))
         # connections = list(connections)
         raise ProjectionError("Connection specification for {} of {} is a set ({}); it should be a list.".
-                              format(connectee_state_type.__name__, owner.name, connections, Projection.__name__))
+                              format(connectee_port_type.__name__, owner.name, connections, Projection.__name__))
 
     elif not isinstance(connections, list):
         connections = [connections]
@@ -1406,9 +1406,9 @@ def _parse_connection_specs(connectee_state_type,
             # # (so it is recognized by _is_projection_spec below (Mechanisms are not for secondary reasons)
             # if isinstance(connection, type) and issubclass(connection, ModulatoryMechanism_Base):
             #     connection = connection.outputPortTypes
-            if ((isinstance(connectee_state_type, (InputPort, OutputPort, ParameterPort))
-                 or isinstance(connectee_state_type, type)
-                and issubclass(connectee_state_type, (InputPort, OutputPort, ParameterPort)))
+            if ((isinstance(connectee_port_type, (InputPort, OutputPort, ParameterPort))
+                 or isinstance(connectee_port_type, type)
+                and issubclass(connectee_port_type, (InputPort, OutputPort, ParameterPort)))
                 and _is_modulatory_spec(connection)):
                 # Convert ModulatoryMechanism spec to corresponding ModulatorySignal spec
                 if isinstance(connection, type) and issubclass(connection, ModulatoryMechanism_Base):
@@ -1418,11 +1418,11 @@ def _parse_connection_specs(connectee_state_type,
                     if not isinstance(output_port_types, list):
                         output_port_types = [output_port_types]
                     output_port_type = [o for o in output_port_types if o.__name__ in
-                                          connectee_state_type.connectsWith]
+                                          connectee_port_type.connectsWith]
                     assert len(output_port_type)==1, \
                         f"PROGRAM ERROR:  More than one {OutputPort.__name__} type found for {connection}  " \
                             f"({output_port_types}) that can be assigned a modulatory {Projection.__name__} " \
-                            f"to {connectee_state_type.__name__} of {owner.name}"
+                            f"to {connectee_port_type.__name__} of {owner.name}"
                     connection = output_port_type[0]
                 elif isinstance(connection, ModulatoryMechanism_Base):
                     connection = connection.output_port
@@ -1430,10 +1430,10 @@ def _parse_connection_specs(connectee_state_type,
                 projection_spec = connection
 
             else:
-                projection_spec = connectee_state_type
+                projection_spec = connectee_port_type
 
             projection_tuple = (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
-            connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, projection_tuple))
+            connect_with_states.extend(_parse_connection_specs(connectee_port_type, owner, projection_tuple))
 
         # If a Projection specification is used to specify the connection:
         #  assign the Projection specification to the projection_specification item of the tuple,
@@ -1442,7 +1442,7 @@ def _parse_connection_specs(connectee_state_type,
         elif _is_projection_spec(connection, include_matrix_spec=False):
             projection_spec = connection
             projection_tuple = (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
-            connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, projection_tuple))
+            connect_with_states.extend(_parse_connection_specs(connectee_port_type, owner, projection_tuple))
 
         # Dict of one or more Mechanism specifications, used to specify individual States of (each) Mechanism;
         #   convert all entries to tuples and call _parse_connection_specs recursively to generate ProjectionTuples;
@@ -1454,7 +1454,7 @@ def _parse_connection_specs(connectee_state_type,
                     not any(spec == STATES for spec in connection)):
                 raise ProjectionError("There are no {}s or {}s in the list ({}) specifying {}s for an {} of {}".
                                  format(Mechanism.__name__, Port.__name__, connection, Projection.__name__,
-                                        connectee_state_type.__name__, owner.name))
+                                        connectee_port_type.__name__, owner.name))
 
             # Add default WEIGHT, EXPONENT, and/or PROJECTION specification for any that are not aleady in the dict
             #    (used as the default values for all the States of all Mechanisms specified for this dict;
@@ -1488,8 +1488,8 @@ def _parse_connection_specs(connectee_state_type,
                         # Call _get_state_for_socket to parse if it is a str,
                         #    and in either case to make sure it belongs to mech
                         state = _get_state_for_socket(owner=owner,
-                                                      state_spec=state_connect_spec,
-                                                      state_types=connect_with_attr,
+                                                      port_spec=state_connect_spec,
+                                                      port_types=connect_with_attr,
                                                       mech=mech,
                                                       projection_socket=projection_socket)
                         if isinstance(state, list):
@@ -1505,11 +1505,11 @@ def _parse_connection_specs(connectee_state_type,
                     # Dict specification for state itself
                     elif isinstance(state_connect_spec, dict):
                         # Get STATE entry
-                        state_spec = state_connect_spec[STATE]
+                        port_spec = state_connect_spec[STATE]
                         # Parse it to get reference to actual Port make sure it belongs to mech:
                         state = _get_state_for_socket(owner=owner,
-                                                    state_spec=state_spec,
-                                                    state_types=connect_with_attr,
+                                                    port_spec=port_spec,
+                                                    port_types=connect_with_attr,
                                                     mech=mech,
                                                     projection_socket=projection_socket)
                         if isinstance(state, list):
@@ -1521,36 +1521,36 @@ def _parse_connection_specs(connectee_state_type,
                     # Tuple specification for Port itself
                     elif isinstance(state_connect_spec, tuple):
                         # Get STATE entry
-                        state_spec = state_connect_spec[0]
+                        port_spec = state_connect_spec[0]
                         # Parse it to get reference to actual Port make sure it belongs to mech:
                         state = _get_state_for_socket(owner=owner,
-                                                    state_spec=state_spec,
-                                                    state_types=connect_with_attr,
+                                                    port_spec=port_spec,
+                                                    port_types=connect_with_attr,
                                                     mech=mech,
                                                     projection_socket=projection_socket)
                         if isinstance(state, list):
                             assert False, 'Got list of allowable states for {} as specification for {} of {}'.\
                                            format(state_connect_spec, projection_socket, mech.name)
                         # Replace parsed value in original tuple, but...
-                        #    tuples are immutable, so have to create new one, with state_spec as (new) first item
+                        #    tuples are immutable, so have to create new one, with port_spec as (new) first item
                         # Get items from original tuple
                         state_connect_spec_tuple_items = [item for item in state_connect_spec]
-                        # Replace state_spec
+                        # Replace port_spec
                         state_connect_spec_tuple_items[0] = state
                         # Reassign to new tuple
                         state_connect_spec = tuple(state_connect_spec_tuple_items)
 
                     # Recusively call _parse_connection_specs to get ProjectionTuple and append to connect_with_states
-                    connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, state_connect_spec))
+                    connect_with_states.extend(_parse_connection_specs(connectee_port_type, owner, state_connect_spec))
 
         # Process tuple, including final validation of Port specification
         # Tuple could be:
-        #     (state_spec, projection_spec) or
-        #     (state_spec, weight, exponent, projection_spec)
+        #     (port_spec, projection_spec) or
+        #     (port_spec, weight, exponent, projection_spec)
         # Note:  this is NOT the same as the Port specification tuple (which can have a similar format);
         #        the weights and exponents here specify *individual* Projections to a particular state,
         #            (vs. weights and exponents for an entire state, such as for InputPort);
-        #        Port specification tuple is handled in the _parse_state_specific_specs() method of Port subclasses
+        #        Port specification tuple is handled in the _parse_port_specific_specs() method of Port subclasses
 
         elif isinstance(connection, tuple):
 
@@ -1565,10 +1565,10 @@ def _parse_connection_specs(connectee_state_type,
                 first_item, weight, exponent, last_item = connection
             else:
                 raise ProjectionError("{} specification tuple for {} ({}) must have either two or four items".
-                                      format(connectee_state_type.__name__, owner.name, connection))
+                                      format(connectee_port_type.__name__, owner.name, connection))
 
             # Default assignments, possibly overridden below
-            state_spec = first_item
+            port_spec = first_item
             projection_spec = last_item
 
             # (<value>, <projection_spec>)
@@ -1577,7 +1577,7 @@ def _parse_connection_specs(connectee_state_type,
 
             # elif is_matrix(first_item):
             #     projection_spec = last_item
-            #     state_spec = None
+            #     port_spec = None
 
             elif _is_projection_spec(last_item):
 
@@ -1589,7 +1589,7 @@ def _parse_connection_specs(connectee_state_type,
                               raise StateError(f"Item in the list used to specify a {last_item.__name__} "
                                                f"for {owner.name} ({connect_with_spec.__name__}) "
                                                f"is not a {Port.__name__} or {Mechanism.__name__}")
-                        c = _parse_connection_specs(connectee_state_type=connectee_state_type,
+                        c = _parse_connection_specs(connectee_port_type=connectee_port_type,
                                                     owner=owner,
                                                     connections=ProjectionTuple(connect_with_spec,
                                                                                 weight, exponent,
@@ -1598,7 +1598,7 @@ def _parse_connection_specs(connectee_state_type,
                     # Move on to other connections
                     continue
                 # Otherwise, go on to process this Projection specification
-                state_spec = first_item
+                port_spec = first_item
                 projection_spec = last_item
 
 
@@ -1609,26 +1609,26 @@ def _parse_connection_specs(connectee_state_type,
 
                 if not isinstance(mech_item, Mechanism):
                     raise ProjectionError("Expected 2nd item of the {} specification tuple for {} ({}) to be a "
-                                          "Mechanism".format(connectee_state_type.__name__, owner.name, mech_item))
+                                          "Mechanism".format(connectee_port_type.__name__, owner.name, mech_item))
                 # First item of tuple is a list of Port names, so recursively process it
                 if isinstance(state_item, list):
                      # Call _parse_connection_spec for each Port name, to generate a conection spec for each
-                    for state_name in state_item:
-                        if not isinstance(state_name, str):
+                    for port_Name in state_item:
+                        if not isinstance(port_Name, str):
                              raise ProjectionError("Expected 1st item of the {} specification tuple for {} ({}) to be "
                                                    "the name of a {} of its 2nd item ({})".
-                                                      format(connectee_state_type.__name__, owner.name, state_name,
+                                                      format(connectee_port_type.__name__, owner.name, port_Name,
                                                               connects_with, mech_item.name))
-                        c = _parse_connection_specs(connectee_state_type=connectee_state_type,
+                        c = _parse_connection_specs(connectee_port_type=connectee_port_type,
                                                     owner=owner,
-                                                    connections=ProjectionTuple(state_name,
+                                                    connections=ProjectionTuple(port_Name,
                                                                                 weight, exponent,
                                                                                 mech_item))
                         connect_with_states.extend(c)
                     # Move on to other connections
                     continue
                 # Otherwise, go on to process (<Port name>, Mechanism) spec
-                state_spec = state_item
+                port_spec = state_item
                 projection_spec = None
                 mech=mech_item
 
@@ -1640,16 +1640,16 @@ def _parse_connection_specs(connectee_state_type,
                     and (isinstance(last_item, OutputPort) or last_item == OutputPort)
                 ):
                     projection_socket = SENDER
-                    state_types = [OutputPort]
+                    port_types = [OutputPort]
                     mech_state_attribute = [OUTPUT_PORTS]
                 else:
-                    state_types = connects_with
+                    port_types = connects_with
                     mech_state_attribute=connect_with_attr
 
                 state = _get_state_for_socket(owner=owner,
-                                              connectee_state_type=connectee_state_type,
-                                              state_spec=state_spec,
-                                              state_types=state_types,
+                                              connectee_port_type=connectee_port_type,
+                                              port_spec=port_spec,
+                                              port_types=port_types,
                                               mech=mech,
                                               mech_state_attribute=mech_state_attribute,
                                               projection_socket=projection_socket)
@@ -1666,24 +1666,24 @@ def _parse_connection_specs(connectee_state_type,
 
             for item in states:
                 if inspect.isclass(item):
-                    state_type = item
+                    port_type = item
                 else:
-                    state_type = item.__class__
+                    port_type = item.__class__
 
-                # # Test that state_type is in the list for state's connects_with
+                # # Test that port_type is in the list for state's connects_with
                 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 
                 # KAM 7/26/18 modified to allow ControlMechanisms to be terminal nodes of compositions
                 # We could only include ControlSignal in the allowed types if the receiver is a CIM?
                 allowed = connects_with + modulators + [ControlSignal]
 
-                if not any(issubclass(connects_with_state, state_type)
+                if not any(issubclass(connects_with_state, port_type)
                            for connects_with_state in allowed):
-                    spec = projection_spec or state_type.__name__
+                    spec = projection_spec or port_type.__name__
                     raise ProjectionError(f"Projection specification (\'{spec}\') for an incompatible connection: "
-                                          f"{state_type.__name__} with {connectee_state_type.__name__} of {owner.name};"
+                                          f"{port_type.__name__} with {connectee_port_type.__name__} of {owner.name};"
                                           f" spec should be one of the following: "
-                                          f"{' or '.join([r for r in state_type.canReceive])}, "
+                                          f"{' or '.join([r for r in port_type.canReceive])}, "
                                           f" or connectee should be one of the following: "
                                           f"{' or '.join([c.__name__ for c in connects_with])},")
 
@@ -1699,17 +1699,17 @@ def _parse_connection_specs(connectee_state_type,
                 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
                 if (not isinstance(projection_spec, GatingProjection)
                     and isinstance(state, GatingSignal)
-                    and connectee_state_type in {InputPort, OutputPort}):
+                    and connectee_port_type in {InputPort, OutputPort}):
                     projection_spec = state
                 if (
                         (not isinstance(projection_spec, GatingProjection)
                          and state.__class__ == GatingSignal
-                         and connectee_state_type in {InputPort, OutputPort})
+                         and connectee_port_type in {InputPort, OutputPort})
                 # # MODIFIED 9/27/19 NEW: [JDC]
                 #     or
                 #         (not isinstance(projection_spec, ControlProjection)
                 #          and state.__class__ == ControlSignal
-                #          and connectee_state_type in {InputPort, OutputPort})
+                #          and connectee_port_type in {InputPort, OutputPort})
                 ):
                     projection_spec = state
 
@@ -1718,21 +1718,21 @@ def _parse_connection_specs(connectee_state_type,
                     projection_spec = first_item
                 projection_spec = _parse_projection_spec(projection_spec,
                                                          owner=owner,
-                                                         state_type=connectee_state_type)
+                                                         port_type=connectee_port_type)
 
                 _validate_connection_request(owner,
                                              connects_with + modulators,
                                              projection_spec,
                                              projection_socket,
-                                             connectee_state_type)
+                                             connectee_port_type)
             else:
                 raise ProjectionError("Invalid {} specification ({}) for connection "
                                       "between {} \'{}\' and {} of \'{}\'.".
                                  format(Projection.__name__,
                                         projection_spec,
-                                        state_type.__name__,
+                                        port_type.__name__,
                                         state.name,
-                                        connectee_state_type.__name__,
+                                        connectee_port_type.__name__,
                                         owner.name))
 
             connect_with_states.extend([ProjectionTuple(state, weight, exponent, projection_spec)])
@@ -1788,7 +1788,7 @@ def _validate_connection_request(
                               "Check assignments to \'connectsWith' and \'modulators\' for each Port class".
                               format(connect_with_states))
 
-    connect_with_state_names = ", ".join([c.__name__ for c in connect_with_states if c is not None])
+    connect_with_port_Names = ", ".join([c.__name__ for c in connect_with_states if c is not None])
 
     # Used below
     def _validate_projection_type(projection_class):
@@ -1805,7 +1805,7 @@ def _validate_connection_request(
         if projection_spec.initialization_status == ContextFlags.DEFERRED_INIT:
 
             # Try to get the Port to which the Projection will be connected when fully initialized
-            #     as confirmation that it is the correct type for state_type
+            #     as confirmation that it is the correct type for port_type
             try:
                 projection_socket_state = projection_spec.socket_assignments[projection_socket]
             # Port for projection's socket couldn't be determined
@@ -1855,7 +1855,7 @@ def _validate_connection_request(
         raise ProjectionError("{} type specified to be connected with{} {} ({}) "
                               "is not compatible with the {} of the specified {} ({})".
                               format(Port.__name__, connectee_str, owner.name, projection_spec.__name__,
-                                     projection_socket, Projection.__name__, connect_with_state_names))
+                                     projection_socket, Projection.__name__, connect_with_port_Names))
 
     # Port
     elif isinstance(projection_spec, Port):
@@ -1864,7 +1864,7 @@ def _validate_connection_request(
         raise ProjectionError("{} specified to be connected with{} {} ({}) "
                               "is not compatible with the {} of the specified {} ({})".
                               format(Port.__name__, connectee_str, owner.name, projection_spec,
-                                     projection_socket, Projection.__name__, connect_with_state_names))
+                                     projection_socket, Projection.__name__, connect_with_port_Names))
 
     # Port class
     elif inspect.isclass(projection_spec) and issubclass(projection_spec, Projection):
@@ -1885,7 +1885,7 @@ def _validate_connection_request(
                 raise ProjectionError("{} ({}) specified to be connected with{} {} is not compatible "
                                       "with the {} ({}) in the specification dict for the {}.".
                                       format(Port.__name__,
-                                             connect_with_state_names,
+                                             connect_with_port_Names,
                                              connectee_str,
                                              owner.name,
                                              projection_socket,
@@ -2071,7 +2071,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
                           format(projection_spec.name, receiver.owner.name))
 
     input_port = _instantiate_state(owner=receiver,
-                                     state_type=InputPort,
+                                     port_type=InputPort,
                                      name=input_port,
                                      reference_value=projection_spec.value,
                                      reference_value_name='Projection_spec value for new InputPort',
@@ -2176,7 +2176,7 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
                                       format(projection_spec.name, sender.name))
 
     output_port = _instantiate_state(owner=sender,
-                                      state_type=OutputPort,
+                                      port_type=OutputPort,
                                       name=output_port,
                                       reference_value=projection_spec.value,
                                       reference_value_name='Projection_spec value for new InputPort',

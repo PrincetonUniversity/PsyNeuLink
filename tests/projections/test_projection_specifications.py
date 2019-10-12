@@ -72,7 +72,7 @@ class TestProjectionSpecificationFormats:
         assert M.output_ports[pnl.DECISION_VARIABLE].mod_afferents[0]==G.gating_signals[0].efferents[0]
         assert M.output_ports[pnl.RESPONSE_TIME].mod_afferents[0]==G.gating_signals[0].efferents[1]
 
-    def test_multiple_modulatory_projections_with_state_name(self):
+    def test_multiple_modulatory_projections_with_port_Name(self):
 
         M = pnl.DDM(name='MY DDM')
         C = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[M.parameter_ports[
@@ -94,7 +94,7 @@ class TestProjectionSpecificationFormats:
         assert M.output_ports[pnl.DECISION_VARIABLE].mod_afferents[0]==G.gating_signals[0].efferents[0]
         assert M.output_ports[pnl.RESPONSE_TIME].mod_afferents[0]==G.gating_signals[0].efferents[1]
 
-    def test_multiple_modulatory_projections_with_mech_and_state_name_specs(self):
+    def test_multiple_modulatory_projections_with_mech_and_port_Name_specs(self):
 
         M = pnl.DDM(name='MY DDM')
         C = pnl.ControlMechanism(control_signals=[{pnl.MECHANISM: M,
@@ -115,7 +115,7 @@ class TestProjectionSpecificationFormats:
         assert M.output_ports[pnl.DECISION_VARIABLE].mod_afferents[0]==G.gating_signals[0].efferents[0]
         assert M.output_ports[pnl.RESPONSE_TIME].mod_afferents[0]==G.gating_signals[0].efferents[1]
 
-    def test_mapping_projection_with_mech_and_state_name_specs(self):
+    def test_mapping_projection_with_mech_and_port_Name_specs(self):
          R1 = pnl.TransferMechanism(output_ports=['OUTPUT_1', 'OUTPUT_2'])
          R2 = pnl.TransferMechanism(default_variable=[[0],[0]],
                                     input_ports=['INPUT_1', 'INPUT_2'])
@@ -134,7 +134,7 @@ class TestProjectionSpecificationFormats:
              for projection in output_port.efferents:
                  assert projection.receiver.owner is R2
 
-    def test_mapping_projection_using_2_item_tuple_with_list_of_state_names(self):
+    def test_mapping_projection_using_2_item_tuple_with_list_of_port_Names(self):
 
         T1 = pnl.TransferMechanism(name='T1', input_ports=[[0,0],[0,0,0]])
         T2 = pnl.TransferMechanism(name='T2',

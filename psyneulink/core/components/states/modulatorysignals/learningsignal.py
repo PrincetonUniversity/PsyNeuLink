@@ -87,7 +87,7 @@ attributes of the LearningSignal, as described below.
 When a LearningSignal is created, it can be assigned one or more `LearningProjections <LearningProjection>`,
 using either the **projections** argument of its constructor, or in an entry of a dictionary assigned to the
 **params** argument with the key *PROJECTIONS*.  These will be assigned to its `efferents
-<LearningSignal.efferents>` attribute.  See `Port Projections <State_Projections>` for additional details
+<LearningSignal.efferents>` attribute.  See `Port Projections <Port_Projections>` for additional details
 concerning the specification of Projections when creating a Port.
 
 .. note::
@@ -426,12 +426,12 @@ class LearningSignal(ModulatorySignal):
     def learning_signal(self):
         return self.value
 
-    def _assign_default_state_name(self, context=None):
+    def _assign_default_port_Name(self, context=None):
         # Preserve LEARNING_SIGNAL as name of the first LearningSignal
         #    as documented, and as it is used by System._instantiate_learning_graph
         if self.name is self.componentName:
             return self.name
         # Otherwise, allow ModulatorySignal to construct default name as usual
         else:
-            super()._assign_default_state_name(context=context)
+            super()._assign_default_port_Name(context=context)
 

@@ -360,7 +360,7 @@ from psyneulink.core.components.component import Component, function_type, metho
 from psyneulink.core.components.functions.function import get_param_value_for_keyword
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
-from psyneulink.core.components.states.state import StateError, Port_Base, _instantiate_state, state_type_keywords
+from psyneulink.core.components.states.state import StateError, Port_Base, _instantiate_state, port_type_keywords
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     CONTEXT, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, FUNCTION, FUNCTION_PARAMS, \
@@ -372,10 +372,10 @@ from psyneulink.core.globals.utilities \
     import ContentAddressableList, ReadOnlyOrderedDict, is_iterable, is_numeric, is_value_spec, iscompatible
 
 __all__ = [
-    'ParameterPort', 'ParameterPortError', 'state_type_keywords',
+    'ParameterPort', 'ParameterPortError', 'port_type_keywords',
 ]
 
-state_type_keywords = state_type_keywords.update({PARAMETER_PORT})
+port_type_keywords = port_type_keywords.update({PARAMETER_PORT})
 
 
 class ParameterPortError(Exception):
@@ -662,12 +662,12 @@ class ParameterPort(Port_Base):
 
 
     @tc.typecheck
-    def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
+    def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
         """Get connections specified in a ParameterPort specification tuple
 
         Tuple specification can be:
-            (state_spec, projections)
-        Assumes that state_spec has already been extracted and used by _parse_state_spec
+            (port_spec, projections)
+        Assumes that port_spec has already been extracted and used by _parse_port_spec
 
         Returns params dict with PROJECTIONS entries if any of these was specified.
 
@@ -675,56 +675,56 @@ class ParameterPort(Port_Base):
         from psyneulink.core.components.projections.projection import _parse_connection_specs, _is_projection_spec
 
         params_dict = {}
-        state_spec = state_specific_spec
+        port_spec = port_specific_spec
 
-        if isinstance(state_specific_spec, dict):
-            return None, state_specific_spec
+        if isinstance(port_specific_spec, dict):
+            return None, port_specific_spec
 
-        elif isinstance(state_specific_spec, tuple):
+        elif isinstance(port_specific_spec, tuple):
 
-            tuple_spec = state_specific_spec
+            tuple_spec = port_specific_spec
 
-            # GET STATE_SPEC (PARAM VALUE) AND ASSIGN PROJECTIONS_SPEC **********************************************
+            # GET PORT_SPEC (PARAM VALUE) AND ASSIGN PROJECTIONS_SPEC **********************************************
 
             # 2-item tuple specification
             if len(tuple_spec) == 2:
 
-                # 1st item is a value, so treat as Port spec (and return to _parse_state_spec to be parsed)
+                # 1st item is a value, so treat as Port spec (and return to _parse_port_spec to be parsed)
                 #   and treat 2nd item as Projection specification
                 if is_numeric(tuple_spec[0]):
-                    state_spec = tuple_spec[0]
-                    reference_value = state_dict[REFERENCE_VALUE]
+                    port_spec = tuple_spec[0]
+                    reference_value = port_dict[REFERENCE_VALUE]
                     # Assign value so sender_dim is skipped below
-                    # (actual assignment is made in _parse_state_spec)
+                    # (actual assignment is made in _parse_port_spec)
                     if reference_value is None:
-                        state_dict[REFERENCE_VALUE]=state_spec
-                    elif  not iscompatible(state_spec, reference_value):
+                        port_dict[REFERENCE_VALUE]=port_spec
+                    elif  not iscompatible(port_spec, reference_value):
                         raise StateError("Value in first item of 2-item tuple specification for {} of {} ({}) "
                                          "is not compatible with its {} ({})".
-                                         format(ParameterPort.__name__, owner.name, state_spec,
+                                         format(ParameterPort.__name__, owner.name, port_spec,
                                                 REFERENCE_VALUE, reference_value))
                     projections_spec = tuple_spec[1]
 
                 elif _is_projection_spec(tuple_spec[0], include_matrix_spec=True):
-                    state_spec, projections_spec = tuple_spec
+                    port_spec, projections_spec = tuple_spec
 
                 # Tuple is Projection specification that is used to specify the Port,
                 else:
-                    # return None in state_spec to suppress further, recursive parsing of it in _parse_state_spec
-                    state_spec = None
+                    # return None in port_spec to suppress further, recursive parsing of it in _parse_port_spec
+                    port_spec = None
                     if tuple_spec[0] != self:
                         # If 1st item is not the current state (self), treat as part of the projection specification
                         projections_spec = tuple_spec
                     else:
                         # Otherwise, just use 2nd item as projection spec
-                        state_spec = None
+                        port_spec = None
                         projections_spec = tuple_spec[1]
 
             # 3- or 4-item tuple specification
             elif len(tuple_spec) in {3,4}:
                 # Tuple is projection specification that is used to specify the Port,
-                #    so return None in state_spec to suppress further, recursive parsing of it in _parse_state_spec
-                state_spec = None
+                #    so return None in port_spec to suppress further, recursive parsing of it in _parse_port_spec
+                port_spec = None
                 # Reduce to 2-item tuple Projection specification
                 projection_item = tuple_spec[3] if len(tuple_spec)==4 else None
                 projections_spec = (tuple_spec[0],projection_item)
@@ -746,9 +746,9 @@ class ParameterPort(Port_Base):
                     from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 
                     for projection_spec in params_dict[PROJECTIONS]:
-                        if state_dict[REFERENCE_VALUE] is None:
+                        if port_dict[REFERENCE_VALUE] is None:
                             # FIX: - PUTTING THIS HERE IS A HACK...
-                            # FIX:     MOVE TO _parse_state_spec UNDER PROCESSING OF ProjectionTuple SPEC
+                            # FIX:     MOVE TO _parse_port_spec UNDER PROCESSING OF ProjectionTuple SPEC
                             # FIX:     USING _get_state_for_socket
                             # from psyneulink.core.components.projections.projection import _parse_projection_spec
 
@@ -764,7 +764,7 @@ class ParameterPort(Port_Base):
                                                               format(Projection.__name__,
                                                                      ControlProjection.__name__,
                                                                      LearningProjection.__name__,
-                                                                     mod_projection, state_dict[NAME], owner.name))
+                                                                     mod_projection, port_dict[NAME], owner.name))
                                 elif VALUE in mod_projection:
                                     mod_proj_value = mod_projection[VALUE]
                                 else:
@@ -776,7 +776,7 @@ class ParameterPort(Port_Base):
                                                               format(Projection.__name__,
                                                                      ControlProjection.__name__,
                                                                      LearningProjection.__name__,
-                                                                     mod_projection, state_dict[NAME], owner.name))
+                                                                     mod_projection, port_dict[NAME], owner.name))
                                 elif mod_projection.initialization_status == ContextFlags.DEFERRED_INIT:
                                     continue
                                 mod_proj_value = mod_projection.defaults.value
@@ -788,18 +788,18 @@ class ParameterPort(Port_Base):
                             # If ModulatoryProjection's value is not specified, try to assign one
                             if mod_proj_value is None:
                                 # If not specified for Port, assign that
-                                if VALUE not in state_dict or state_dict[VALUE] is None:
-                                    state_dict[VALUE] = mod_signal_value
+                                if VALUE not in port_dict or port_dict[VALUE] is None:
+                                    port_dict[VALUE] = mod_signal_value
                                 # If value has been assigned, make sure value is the same for ModulatorySignal
-                                elif state_dict[VALUE] != mod_signal_value:
+                                elif port_dict[VALUE] != mod_signal_value:
                                     # If the values differ, assign None so that Port's default is used
-                                    state_dict[VALUE] = None
+                                    port_dict[VALUE] = None
                                     # No need to check any more ModulatoryProjections
                                     break
 
                             #
                             else:
-                                state_dict[VALUE] = mod_proj_value
+                                port_dict[VALUE] = mod_proj_value
 
                 except ParameterPortError:
                     raise ParameterPortError("Tuple specification in {} specification dictionary "
@@ -812,11 +812,11 @@ class ParameterPort(Port_Base):
                                                  ModulatorySignal.__name__,
                                                  Projection.__name__))
 
-        elif state_specific_spec is not None:
+        elif port_specific_spec is not None:
             raise ParameterPortError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
-                                  format(self.__class__.__name__, state_specific_spec))
+                                  format(self.__class__.__name__, port_specific_spec))
 
-        return state_spec, params_dict
+        return port_spec, params_dict
 
     @staticmethod
     def _get_state_function_value(owner, function, variable):
@@ -870,7 +870,7 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
     except AttributeError:
         return
     # Instantiate ParameterPort for each param in user_params (including all params in function_params dict),
-    #     using its value as the state_spec
+    #     using its value as the port_spec
     # Exclude input_ports and output_ports which are also in user_params
     # IMPLEMENTATION NOTE:  Use user_params_for_instantiation since user_params may have been overwritten
     #                       when defaults were assigned to paramsCurrent in Component.__init__,
@@ -952,7 +952,7 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
 
     elif _is_modulatory_spec(param_value, include_matrix_spec=False) and not isinstance(param_value, tuple):
         # If parameter is a single Modulatory specification (e.g., ControlSignal, or CONTROL, etc.)
-         #  try to place it in a tuple (for interpretation by _parse_state_spec) using default value as 1st item
+         #  try to place it in a tuple (for interpretation by _parse_port_spec) using default value as 1st item
         #   (note: exclude matrix since it is allowed as a value specification but not a projection reference)
         try:
             param_value = _get_tuple_for_single_item_modulatory_spec(function, param_name, param_value)
@@ -1020,7 +1020,7 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
             elif (_is_modulatory_spec(function_param_value, include_matrix_spec=False)
                   and not isinstance(function_param_value, tuple)):
                 # If parameter is a single Modulatory specification (e.g., ControlSignal, or CONTROL, etc.)
-                # try to place it in a tuple (for interpretation by _parse_state_spec) using default value as 1st item
+                # try to place it in a tuple (for interpretation by _parse_port_spec) using default value as 1st item
                 #   (note: exclude matrix since it is allowed as a value specification vs. a projection reference)
                 try:
                     function_param_value = _get_tuple_for_single_item_modulatory_spec(
@@ -1036,11 +1036,11 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
                     )
 
 
-            # # FIX: 10/3/17 - ??MOVE THIS TO _parse_state_specific_specs ----------------
+            # # FIX: 10/3/17 - ??MOVE THIS TO _parse_port_specific_specs ----------------
             # # Use function_param_value as constraint
-            # # IMPLEMENTATION NOTE:  need to copy, since _instantiate_state() calls _parse_state_value()
-            # #                       for constraints before state_spec, which moves items to subdictionaries,
-            # #                       which would make them inaccessible to the subsequent parse of state_spec
+            # # IMPLEMENTATION NOTE:  need to copy, since _instantiate_state() calls _parse_port_value()
+            # #                       for constraints before port_spec, which moves items to subdictionaries,
+            # #                       which would make them inaccessible to the subsequent parse of port_spec
             from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
             from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
             if (
@@ -1054,9 +1054,9 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
 
             # Assign parameterPort for function_param to the component
             state = _instantiate_state(owner=owner,
-                                       state_type=ParameterPort,
+                                       port_type=ParameterPort,
                                        name=function_param_name,
-                                       state_spec=function_param_value,
+                                       port_spec=function_param_value,
                                        reference_value=reference_value,
                                        reference_value_name=function_param_name,
                                        params=None,
@@ -1070,9 +1070,9 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
 
     elif _is_legal_param_value(owner, param_value):
         state = _instantiate_state(owner=owner,
-                                   state_type=ParameterPort,
+                                   port_type=ParameterPort,
                                    name=param_name,
-                                   state_spec=param_value,
+                                   port_spec=param_value,
                                    reference_value=param_value,
                                    reference_value_name=param_name,
                                    params=None,

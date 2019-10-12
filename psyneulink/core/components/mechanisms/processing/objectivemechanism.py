@@ -309,7 +309,7 @@ This specifies that the ObjectiveMechanism should multiply the `value <OutputPor
 *PROBABILITY_UPPER_THRESHOLD*, and divide the result by ``my_decision_mech``'s *RESPONSE_TIME* `value
 <OutputPort.value>`.  The two OutputPorts of ``my_decision_mech`` are referenced as items in the `output_ports
 <Mechanism_Base.output_ports>` list of ``my_decision_mech``.  However, a `2-item (Port name, Mechanism) tuple
-<InputPort_State_Mechanism_Tuple>` can be used to reference them more simply, as follows::
+<InputPort_Port_Mechanism_Tuple>` can be used to reference them more simply, as follows::
 
     >>> my_objective_mech = pnl.ObjectiveMechanism(monitor=[
     ...                                           my_reward_mech,
@@ -360,11 +360,11 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.states.outputport import OutputPort, PRIMARY, standard_output_ports
 from psyneulink.core.components.states.inputport import InputPort, INPUT_PORT
-from psyneulink.core.components.states.state import _parse_state_spec
+from psyneulink.core.components.states.state import _parse_port_spec
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     CONTEXT, CONTROL, EXPONENT, EXPONENTS, FUNCTION, LEARNING, MATRIX, NAME, \
-    OBJECTIVE_MECHANISM, OUTCOME, PARAMS, PROJECTION, PROJECTIONS, STATE_TYPE, VARIABLE, WEIGHT, WEIGHTS, \
+    OBJECTIVE_MECHANISM, OUTCOME, PARAMS, PROJECTION, PROJECTIONS, PORT_TYPE, VARIABLE, WEIGHT, WEIGHTS, \
     PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
@@ -372,7 +372,7 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, P
 from psyneulink.core.globals.utilities import ContentAddressableList, type_match
 
 __all__ = [
-    'DEFAULT_MONITORED_STATE_WEIGHT', 'DEFAULT_MONITORED_STATE_EXPONENT', 'DEFAULT_MONITORED_STATE_MATRIX',
+    'DEFAULT_MONITORED_PORT_WEIGHT', 'DEFAULT_MONITORED_PORT_EXPONENT', 'DEFAULT_MONITORED_PORT_MATRIX',
     'MONITOR', 'MONITOR_SUFFIX', 'MONITORED_OUTPUT_PORT_NAME_SUFFIX', 'MONITORED_OUTPUT_PORTS',
     'OBJECTIVE_OUTPUT', 'ObjectiveMechanism', 'ObjectiveMechanismError', 'OUTCOME', 'ROLE'
 ]
@@ -383,9 +383,9 @@ MONITOR_SUFFIX = '_Monitor'
 MONITORED_OUTPUT_PORTS = 'monitored_output_ports'
 MONITORED_OUTPUT_PORT_NAME_SUFFIX = '_Monitor'
 
-DEFAULT_MONITORED_STATE_WEIGHT = None
-DEFAULT_MONITORED_STATE_EXPONENT = None
-DEFAULT_MONITORED_STATE_MATRIX = None
+DEFAULT_MONITORED_PORT_WEIGHT = None
+DEFAULT_MONITORED_PORT_EXPONENT = None
+DEFAULT_MONITORED_PORT_MATRIX = None
 
 # This is a convenience class that provides list of standard_output_port names in IDE
 class OBJECTIVE_OUTPUT():
@@ -773,7 +773,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 monitor_specs[i] = spec
 
             # Parse spec to get value of OutputPort and (possibly) the Projection from it
-            input_port = _parse_state_spec(owner=self, state_type = InputPort, state_spec=spec)
+            input_port = _parse_port_spec(owner=self, port_type = InputPort, port_spec=spec)
 
             # There should be only one ProjectionTuple specified,
             #    that designates the OutputPort and (possibly) a Projection from it
@@ -911,11 +911,11 @@ def _parse_monitor_specs(monitor_specs):
     specs_to_replace = []
     for i, spec in enumerate(parsed_specs):
         if (isinstance(spec, InputPort)
-                or (isinstance(spec, dict) and spec[STATE_TYPE] in {INPUT_PORT, InputPort})):
+                or (isinstance(spec, dict) and spec[PORT_TYPE] in {INPUT_PORT, InputPort})):
             pass # DO PARSING HERE
             if isinstance(spec, InputPort):
                 pass # Get all projects to it and create InputPort specification dictionary with them
-            if isinstance(spec, dict) and spec[STATE_TYPE] in {INPUT_PORT, InputPort}:
+            if isinstance(spec, dict) and spec[PORT_TYPE] in {INPUT_PORT, InputPort}:
                 pass # Get Projections entry and append
             new_spec = None
             specs_to_replace.append(spec_tuple(i, new_spec))

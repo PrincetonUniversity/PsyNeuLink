@@ -516,13 +516,13 @@ class GatingMechanism(ControlMechanism):
         from psyneulink.core.components.projections.projection import ProjectionError
 
         allocation_parameter_default = self.parameters.gating_allocation.default_value
-        gating_signal = _instantiate_state(state_type=GatingSignal,
+        gating_signal = _instantiate_state(port_type=GatingSignal,
                                                owner=self,
                                                variable=self.default_allocation           # User specified value
                                                         or allocation_parameter_default,  # Parameter default
                                                reference_value=allocation_parameter_default,
                                                modulation=self.modulation,
-                                               state_spec=gating_signal_spec,
+                                               port_spec=gating_signal_spec,
                                                context=context)
         if not type(gating_signal) in convert_to_list(self.outputPortTypes):
             raise ProjectionError(f'{type(gating_signal)} inappropriate for {self.name}')
@@ -545,7 +545,7 @@ class GatingMechanism(ControlMechanism):
         # FIX: 5/23/17 CONSOLIDATE/SIMPLIFY THIS RE: gating_signal ARG??  USE OF PROJECTIONS, ETC.
         # FIX:         ?? WHERE WOULD GATING_PROJECTIONS HAVE BEEN SPECIFIED IN paramsCURRENT??
         # FIX:         DOCUMENT THAT VALUE OF GATING ENTRY CAN BE A PROJECTION
-        # FIX:         RE-WRITE parse_state_spec TO TAKE TUPLE THAT SPECIFIES (PARAM VALUE, GATING SIGNAL)
+        # FIX:         RE-WRITE parse_port_spec TO TAKE TUPLE THAT SPECIFIES (PARAM VALUE, GATING SIGNAL)
         #                       RATHER THAN (PARAM VALUE, GATING PROJECTION)
         # FIX: NOT CLEAR THIS IS GETTING USED AT ALL; ALSO, ??REDUNDANT WITH CALL IN _instantiate_output_ports
         # If GatingProjections were specified, implement them

@@ -1,6 +1,6 @@
 OutputPort
 ===========
 
-.. automodule:: psyneulink.core.components.states.outputPort
+.. automodule:: psyneulink.core.components.ports.outputPort
    :members:
    :exclude-members: Linear, random

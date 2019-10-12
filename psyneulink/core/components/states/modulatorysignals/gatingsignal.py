@@ -28,7 +28,7 @@ Creating a GatingSignal
 
 A GatingSignal is created automatically whenever an `InputPort` or `OutputPort` of a `Mechanism <Mechanism>` is
 specified for gating.  This can be done either in the **gate** argument of the constructor for a `GatingMechanism
-<GatingMechanism_GatingSignals>`, or in the `specification of projections <State_Projections>` to the InputPort or
+<GatingMechanism_GatingSignals>`, or in the `specification of projections <Port_Projections>` to the InputPort or
 OutputPort.  Although a GatingSignal can be created directly using its constructor (or any of the other ways for
 `creating an OutputPort <OutputPorts_Creation>`), this is usually not necessary nor is it advisable, as a GatingSignal
 has dedicated components and requirements for configuration that must be met for it to function properly.
@@ -90,7 +90,7 @@ each of which projects to the InputPort or OutputPort that it gates.
 When a GatingSignal is created, it can be assigned one or more `GatingProjections <GatingProjection>`, using either
 the **projections** argument of its constructor, or in an entry of a dictionary assigned to the **params** argument
 with the key *PROJECTIONS*.  These will be assigned to its `efferents  <GatingSignal.efferents>` attribute.  See
-`Port Projections <State_Projections>` for additional details concerning the specification of Projections when
+`Port Projections <Port_Projections>` for additional details concerning the specification of Projections when
 creating a Port.
 
 .. note::
@@ -524,7 +524,7 @@ class GatingSignal(ControlSignal):
                          function=function,
                          **kwargs)
 
-    def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
+    def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
             """Get connections specified in a ParameterPort specification tuple
 
             Tuple specification can be:
@@ -537,25 +537,25 @@ class GatingSignal(ControlSignal):
             from psyneulink.core.components.projections.projection import _parse_connection_specs
 
             params_dict = {}
-            state_spec = state_specific_spec
+            port_spec = port_specific_spec
 
-            if isinstance(state_specific_spec, dict):
-                return None, state_specific_spec
+            if isinstance(port_specific_spec, dict):
+                return None, port_specific_spec
 
-            elif isinstance(state_specific_spec, tuple):
-                state_spec = None
-                params_dict[PROJECTIONS] = _parse_connection_specs(connectee_state_type=self,
+            elif isinstance(port_specific_spec, tuple):
+                port_spec = None
+                params_dict[PROJECTIONS] = _parse_connection_specs(connectee_port_type=self,
                                                                    owner=owner,
-                                                                   connections=state_specific_spec)
-            elif state_specific_spec is not None:
+                                                                   connections=port_specific_spec)
+            elif port_specific_spec is not None:
                 raise GatingSignalError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
-                                      format(self.__class__.__name__, state_specific_spec))
+                                      format(self.__class__.__name__, port_specific_spec))
 
             if params_dict[PROJECTIONS] is None:
                 raise GatingSignalError("PROGRAM ERROR: No entry found in {} params dict for {} "
                                          "with specification of {}, {} or GatingProjection(s) to it".
                                             format(GATING_SIGNAL, INPUT_PORT, OUTPUT_PORT, owner.name))
-            return state_spec, params_dict
+            return port_spec, params_dict
 
     def _instantiate_cost_functions(self, context):
         """Override ControlSignal as GatingSignal has not cost functions"""

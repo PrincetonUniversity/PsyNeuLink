@@ -524,7 +524,7 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.keywords import \
     ADDITIVE, AFTER, ASSERT, CONTEXT, CONTROL_PROJECTIONS, ENABLED, INPUT_PORTS, \
     LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
-    MATRIX, NAME, ONLINE, OUTPUT_PORT, OUTPUT_PORTS, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, STATE_TYPE, VARIABLE
+    MATRIX, NAME, ONLINE, OUTPUT_PORT, OUTPUT_PORTS, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, PORT_TYPE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -968,7 +968,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         CONTROL_PROJECTIONS: None,
         INPUT_PORTS:input_port_names,
         OUTPUT_PORTS:[{NAME:ERROR_SIGNAL,
-                        STATE_TYPE:OUTPUT_PORT,
+                        PORT_TYPE:OUTPUT_PORT,
                         VARIABLE: (OWNER_VALUE, 1)},
                        {NAME:LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
                         VARIABLE: (OWNER_VALUE, 0)}
@@ -1100,7 +1100,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set,context=context)
 
-        from psyneulink.core.components.states.state import _parse_state_spec
+        from psyneulink.core.components.states.state import _parse_port_spec
         from psyneulink.core.components.states.outputport import OutputPort
         from psyneulink.core.components.states.modulatorysignals.learningsignal import LearningSignal
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -1133,7 +1133,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
                                            format(LEARNING_SIGNAL, self.name))
 
             for spec in target_set[LEARNING_SIGNALS]:
-                learning_signal = _parse_state_spec(state_type=LearningSignal, owner=self, state_spec=spec)
+                learning_signal = _parse_port_spec(port_type=LearningSignal, owner=self, port_spec=spec)
 
                 # Validate that the receiver of the LearningProjection (if specified)
                 #     is a MappingProjection and in the same System as self (if specified)
@@ -1220,16 +1220,16 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
             params = {LEARNED_PARAM: MATRIX}
 
-            # Parses learning_signal specifications (in call to Port._parse_state_spec)
+            # Parses learning_signal specifications (in call to Port._parse_port_spec)
             #    and any embedded Projection specifications (in call to <Port>._instantiate_projections)
-            learning_signal = _instantiate_state(state_type=LearningSignal,
+            learning_signal = _instantiate_state(port_type=LearningSignal,
                                                  owner=self,
                                                  variable=(OWNER_VALUE,0),
                                                  params=params,
                                                  reference_value=self.parameters.learning_signal._get(context),
                                                  modulation=self.modulation,
-                                                 # state_spec=self.learning_signal)
-                                                 state_spec=learning_signal,
+                                                 # port_spec=self.learning_signal)
+                                                 port_spec=learning_signal,
                                                  context=context)
             # Add LearningSignal to output_ports list
             self._output_ports.append(learning_signal)
