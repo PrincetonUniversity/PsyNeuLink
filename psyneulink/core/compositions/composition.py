@@ -2521,7 +2521,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    role: tc.enum(NodeRole.INPUT, NodeRole.OUTPUT)
                                    ):
         """Check for node in nested Composition
-        Return relevant state of relevant CIM if found and nested Composition in which it was found, else (None, None)
+        Return relevant port of relevant CIM if found and nested Composition in which it was found, else (None, None)
         """
 
         nested_comp = CIM_port_for_nested_node = CIM = None

@@ -1235,7 +1235,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                              context=context)
                     # Get the OutputPort, to validate that it is in the ControlMechanism's Composition (below);
                     #    presumes that the monitored_output_port is the first in the list of projection_specs
-                    #    in the InputPort state specification dictionary returned from the parse,
+                    #    in the InputPort port specification dictionary returned from the parse,
                     #    and that it is specified as a projection_spec (parsed into that in the call
                     #    to _parse_connection_specs by _parse_port_spec)
 
@@ -1407,9 +1407,9 @@ class ControlMechanism(ModulatoryMechanism_Base):
             print("{0} monitoring:".format(self.name))
             for port in self.monitored_output_ports:
                 weight = self.monitored_output_ports_weights_and_exponents[
-                                                         self.monitored_output_ports.index(state)][WEIGHT_INDEX]
+                                                         self.monitored_output_ports.index(port)][WEIGHT_INDEX]
                 exponent = self.monitored_output_ports_weights_and_exponents[
-                                                         self.monitored_output_ports.index(state)][EXPONENT_INDEX]
+                                                         self.monitored_output_ports.index(port)][EXPONENT_INDEX]
                 print(f"\t{weight} (exp: {weight}; wt: {exponent})")
 
         # Assign ObjectiveMechanism's role as CONTROL
@@ -1467,13 +1467,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
             self._instantiate_control_signals(context=context)
 
         super()._instantiate_output_ports(context=context)
-
-        # # Reassign control_signals, control_signals and gating_signals to backing fields of corresponding params
-        # # to capture any user_defined ControlSignals and/or GatingSignals instantiated in call to super
-        # # and assign to ContentAddressableLists
-        # self._control_signals = ContentAddressableList(component_type=ControlSignal,
-        #                                                list=[state for port in self.output_ports
-        #                                                      if isinstance(state, (ControlSignal, GatingSignal))])
 
     def _register_control_signal_type(self, context=None):
         from psyneulink.core.globals.registry import register_category
@@ -1903,24 +1896,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
             return [projection for control_signal in self.control_signals for projection in control_signal.efferents]
         except:
             return None
-
-    # # MODIFIED 9/26/19 OLD:
-    # @property
-    # def gating_signals(self):
-    #     try:
-    #         return ContentAddressableList(component_type=GatingSignal,
-    #                                       list=[state for port in self.output_ports
-    #                                             if isinstance(state, GatingSignal)])
-    #     except:
-    #         return None
-    #
-    # @property
-    # def gating_projections(self):
-    #     try:
-    #         return [projection for gating_signal in self.gating_signals for projection in gating_signal.efferents]
-    #     except:
-    #         return None
-    # MODIFIED 9/26/19 END
 
     @property
     def _sim_count_lock(self):
