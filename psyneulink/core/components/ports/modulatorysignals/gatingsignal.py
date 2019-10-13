@@ -47,7 +47,7 @@ InputPort(s) and/or OutputPort(s) it gates must be specified. This can take any 
   ..
   * **specification dictionary** -- can take either of the following two forms:
 
-    * for gating a single state, the dictionary can have the following two entries:
+    * for gating a single port, the dictionary can have the following two entries:
 
         * *NAME*: str
             the string must be the name of the Port to be gated; the GatingSignal will named by appending

@@ -44,7 +44,7 @@ must be met for it to function properly.
 When a ControlSignal is specified in the **control_signals** argument of the constructor for a `ControlMechanism
 <ControlMechanism>`, the parameter(s) to be controlled must be specified.  If other attributes of the ControlSignal
 need to be specified (e.g., one or more of its `cost functions <ControlSignal_Costs>`), then the Constructor for the
-ControlSignal can be used or a `state specification dictionary <Port_Specification>`, in which the parameter(s) to be
+ControlSignal can be used or a `port specification dictionary <Port_Specification>`, in which the parameter(s) to be
 controlled in the **projections** argument or *PROJECTIONS* entry, respectively, using any of the forms below.
 For convenience, the parameters can also be specified on their own in the **control_signals** argument of the
 ControlMechanism's constructor, in which case a default ControlSignal will be created for each.  In all cases, any
@@ -57,7 +57,7 @@ of the following can be use to specify the parameter(s) to be controlled:
     convenience format, that is simpler to use than a specification dictionary (see above), but precludes
     specification of any `parameters <ControlSignal_Structure>` for the ControlSignal.
 
-  * **specification dictionary** -- this is an abbreviated form of `state specification dictionary
+  * **specification dictionary** -- this is an abbreviated form of `port specification dictionary
     <Port_Specification>`, in which the parameter(s) to be controlled can be specified in either of the two
     following ways:
 

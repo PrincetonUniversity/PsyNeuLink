@@ -431,7 +431,7 @@ class ComparatorMechanism(ObjectiveMechanism):
 
             # Validate length of variable for sample = target
             if VARIABLE in input_ports[0]:
-                # input_ports arg specified in standard state specification dict format
+                # input_ports arg specified in standard port specification dict format
                 lengths = [len(input_port[VARIABLE]) for input_port in input_ports]
             else:
                 # input_ports arg specified in {<Port_Name>:<PORT SPECIFICATION DICT>} format

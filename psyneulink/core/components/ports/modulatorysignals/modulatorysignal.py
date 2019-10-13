@@ -539,7 +539,7 @@ class ModulatorySignal(OutputPort):
         Port(s) being modulated.
 
     modulation : ModulationParam
-        determines how the output of the ModulatorySignal is used to modulate the value of the state(s) being modulated.
+        determines how the output of the ModulatorySignal is used to modulate the value of the port(s) being modulated.
 
     efferents : [List[GatingProjection]]
         a list of the `ModulatoryProjections <ModulatoryProjection>` assigned to the ModulatorySignal.
