@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Proactive Control &amp; Task Control: A Stroop Model (Kalanthroff et al., 2018) &mdash; PsyNeuLink 0.6.0.3+2.gf3dff92 documentation</title>
+  <title>Proactive Control &amp; Task Control: A Stroop Model (Kalanthroff et al., 2018) &mdash; PsyNeuLink 0.6.0.3+3.g33a3ccb documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3+2.gf3dff92',
+              VERSION:'0.6.0.3+3.g33a3ccb',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.6.0.3+2
+                0.6.0.3+3
               </div>
             
           
@@ -192,7 +192,7 @@ below). On the left the PsyNeuLink Figure is plotted. On the right the MATLAB fi
 layers (color &amp; word), and task information (color naming or word reading) are connected with each other with
 bidirectional weights. The response layer receives input weights from both hidden layers, but does not project back to
 these the two hidden layers. This is different to the previous Cohen &amp; Huston (1994) model).
-Conflict is computed on the output state of the task layer, and projected from the task layer to the response layer.
+Conflict is computed on the OutPort of the task layer, and projected from the task layer to the response layer.
 If task conflict exists, prevents the response layer from a fast response.
 The conflict projection is the main difference from the Kalanthroff et al., (2018) model to the Cohen &amp; Huston (1994)
 model. A graph of the model is shown below.</p>
@@ -211,26 +211,26 @@ value, the other one set to zero), and assigned a <a class="reference internal" 
 <p><strong>COLOR HIDDEN LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with <strong>size</strong>=2 (one element for each of the two colors, and
 assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function with <strong>gain</strong>=4.0 and <strong>bias</strong>=1.0. The <strong>integrator_mode</strong>=<code class="xref any docutils literal"><span class="pre">True</span></code>
 and <strong>smoothing_factor</strong>=0.03. Both units receive mutually inhibitory weights (<strong>hetero</strong>=-2). A python function that
-sets the output of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function to 0 when it receives 0 as an input is specified on the <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_states" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>. It
+sets the output of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function to 0 when it receives 0 as an input is specified on the <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_ports" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a>. It
 simply subtracts 0.018 from the output of a logistic function and if this leads to a value below 0,
 outputs a 0 as a minimum value.</p>
 <p><strong>WORD HIDDEN LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with <strong>size</strong>=2 (one element for each of the two words, and
 assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function with <strong>gain</strong>=4.0 and <strong>bias</strong>=1.0. The <strong>integrator_mode</strong>=<code class="xref any docutils literal"><span class="pre">True</span></code>
 and <strong>smoothing_factor</strong>=0.03. Both units receive mutually inhibitory weights (<strong>hetero</strong>=-2). A python function that
-sets the output of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function to 0 when it receives 0 as an input is specified on the <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_states" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>. It
+sets the output of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function to 0 when it receives 0 as an input is specified on the <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_ports" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a>. It
 simply subtracts 0.018 from the output of a logistic function and if this leads to a value below 0,
 outputs a 0 as a minimum value.</p>
 <p><strong>TASK DEMAND LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with <strong>size</strong>=2 (one element for each of the two tasks, and
 assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function with <strong>gain</strong>=4.0 and <strong>bias</strong>=1.0. The <strong>integrator_mode</strong>=<code class="xref any docutils literal"><span class="pre">True</span></code>
 and <strong>smoothing_factor</strong>=0.03. Both units receive mutually inhibitory weights (<strong>hetero</strong>=-2). A python function that
-sets the output of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function to 0 when it receives 0 as an input is specified on the <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_states" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>. It
+sets the output of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function to 0 when it receives 0 as an input is specified on the <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_ports" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a>. It
 simply subtracts 0.018 from the output of a logistic function and if this leads to a value below 0,
-outputs a 0 as a minimum value. A second output state is specified that computes the conflict between the two task
+outputs a 0 as a minimum value. A second OutputPort is specified that computes the conflict between the two task
 units.</p>
 <p><strong>WORD HIDDEN LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with <strong>size</strong>=2 (one element for each of the two responses, and
 assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function with <strong>gain</strong>=4.0 and <strong>bias</strong>=1.0. The <strong>integrator_mode</strong>=<code class="xref any docutils literal"><span class="pre">True</span></code>
 and <strong>smoothing_factor</strong>=0.03. Both units receive mutually inhibitory weights (<strong>hetero</strong>=-2). A python function that
-sets the output of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function to 0 when it receives 0 as an input is specified on the <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_states" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>. It
+sets the output of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function to 0 when it receives 0 as an input is specified on the <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_ports" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a>. It
 simply subtracts 0.018 from the output of a logistic function and if this leads to a value below 0,
 outputs a 0 as a minimum value.</p>
 <p><strong>PROJECTIONS</strong>:  The weights of the  network are implemented as <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>.
@@ -245,7 +245,7 @@ The <em>COLOR HIDDEN LAYER</em> with a numpy array with a value of 1.5 on the di
 elements.
 The <em>WORD HIDDEN LAYER</em> with a numpy array with a value of 2.5 on the diagonal elements and 0.0 on the off-diagonal
 elements.
-The <em>TASK LAYER</em> with a numpy array with a value of length 2 with both elements set to -1. The second output state
+The <em>TASK LAYER</em> with a numpy array with a value of length 2 with both elements set to -1. The second OutputPort
 of the <em>TASK LAYER</em> is specified as the sender and the <em>RESPONSE LAYER</em> is specified as the receiver.</p>
 </div>
 </div>

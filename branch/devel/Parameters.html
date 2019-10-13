@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0.6.0.3+2.gf3dff92 documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0.6.0.3+3.g33a3ccb documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3+2.gf3dff92',
+              VERSION:'0.6.0.3+3.g33a3ccb',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.6.0.3+2
+                0.6.0.3+3
               </div>
             
           
@@ -167,7 +167,7 @@
 <span id="parameters"></span><h1>Parameters<a class="headerlink" href="#module-psyneulink.core.globals.parameters" title="Permalink to this headline">¶</a></h1>
 <p id="parameter-attributes">PsyNeuLink <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">parameters</span></code></a> are objects that represent the user-modifiable parameters of a <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>. <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a>s have
 names, default values, and other attributes that define how they are used in models. <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a> s also maintain and provide
-access to the data used in actual computations - <a class="reference internal" href="#parameter-defaults"><span class="std std-ref">default values</span></a>, <a class="reference internal" href="#parameter-statefulness"><span class="std std-ref">current values</span></a>, <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.history" title="psyneulink.core.globals.parameters.Parameter.history"><code class="xref any py py-attr docutils literal"><span class="pre">previous</span> <span class="pre">values</span></code></a>,
+access to the data used in actual computations - <a class="reference internal" href="#parameter-defaults"><span class="std std-ref">default values</span></a>, <a class="reference internal" href="#parameter-portfulness"><span class="std std-ref">current values</span></a>, <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.history" title="psyneulink.core.globals.parameters.Parameter.history"><code class="xref any py py-attr docutils literal"><span class="pre">previous</span> <span class="pre">values</span></code></a>,
 and <a class="reference internal" href="Log.html"><span class="doc">logged values</span></a>.</p>
 <div class="section" id="defaults">
 <span id="parameter-defaults"></span><h2>Defaults<a class="headerlink" href="#defaults" title="Permalink to this headline">¶</a></h2>
@@ -186,7 +186,7 @@ compatibility between this instance and other PNL objects. Given a <a class="ref
 </div>
 </div>
 <div class="section" id="statefulness-of-parameters">
-<span id="parameter-statefulness"></span><h2>Statefulness of Parameters<a class="headerlink" href="#statefulness-of-parameters" title="Permalink to this headline">¶</a></h2>
+<span id="parameter-portfulness"></span><h2>Statefulness of Parameters<a class="headerlink" href="#statefulness-of-parameters" title="Permalink to this headline">¶</a></h2>
 <p>Parameters can have different values in different <a class="reference internal" href="Run.html#run-scope-of-execution"><span class="std std-ref">execution contexts</span></a> in order to ensure correctness
 of and allow access to <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-execution"><span class="std std-ref">simulation</span></a> calculations. As a result, to inspect and use the values
 of a parameter, in general you need to know the execution context in which you are interested. Much of the time, this execution context
@@ -318,140 +318,6 @@ must be avoided at risk of causing computation errors. You may use standard attr
 <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">Run</span></code></a>.</p>
 <p>You should avoid using <a class="reference internal" href="#parameter-dot-notation"><span class="std std-ref">dot notation</span></a> in internal code, as it is ambiguous and can potentially break statefulness.</p>
 <p id="parameter-attributes-table"><a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a> <strong>attributes</strong>:</p>
-<table border="1" class="docutils">
-<colgroup>
-<col width="15%" />
-<col width="13%" />
-<col width="37%" />
-<col width="35%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>Attribute Name</td>
-<td>Default value</td>
-<td>Description</td>
-<td>Dev notes</td>
-</tr>
-<tr class="row-even"><td>default_value</td>
-<td>None</td>
-<td>the default value of the Parameter</td>
-<td>&#160;</td>
-</tr>
-<tr class="row-odd"><td>name</td>
-<td>None</td>
-<td>the name of the Parameter</td>
-<td>&#160;</td>
-</tr>
-<tr class="row-even"><td>stateful</td>
-<td>True</td>
-<td>whether the parameter has different values
-based on execution context</td>
-<td>&#160;</td>
-</tr>
-<tr class="row-odd"><td>modulable</td>
-<td>False</td>
-<td><p class="first">if True, the parameter can be modulated
-(if it belongs to a Mechanism or Projection</p>
-<blockquote class="last">
-<div>it is assigned a <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a>)</div></blockquote>
-</td>
-<td>Currently this does not determine what
-gets a ParameterState, but in the future
-it should</td>
-</tr>
-<tr class="row-even"><td>read_only</td>
-<td>False</td>
-<td>whether the user should be able to set the
-value or not (e.g. variable and value are
-just for informational purposes).</td>
-<td>Can be manually set, but will trigger a
-warning unless override=True</td>
-</tr>
-<tr class="row-odd"><td>aliases</td>
-<td>None</td>
-<td>other names by which the parameter goes
-(e.g. allocation is the same as variable for
-ControlSignal).</td>
-<td>specify as a list of strings</td>
-</tr>
-<tr class="row-even"><td>user</td>
-<td>True</td>
-<td>whether the parameter is something the user
-will care about (e.g. NOT context)</td>
-<td>&#160;</td>
-</tr>
-<tr class="row-odd"><td>values</td>
-<td>None</td>
-<td>stores the parameter’s values under
-different execution contexts</td>
-<td>&#160;</td>
-</tr>
-<tr class="row-even"><td>getter</td>
-<td>None</td>
-<td>hook that allows overriding the retrieval of
-values based on a supplied method
-(e.g. _output_state_variable_getter)</td>
-<td>kwargs self, owning_component, and
-context will be passed in if your
-method uses them. self - the Parameter
-calling the setter; owning_component -
-the Component to which the Parameter
-belongs; context - the context
-the setter is called with; should return
-the value</td>
-</tr>
-<tr class="row-odd"><td>setter</td>
-<td>None</td>
-<td>hook that allows overriding the setting of
-values based on a supplied method (e.g.
-_recurrent_transfer_mechanism_matrix_setter)</td>
-<td>should take a positional argument; kwargs
-self, owning_component, and context
-will be passed in if your method uses
-them. self - the Parameter calling the
-setter; owning_component - the Component
-to which the Parameter belongs;
-context - the context the
-setter is called with; should return the
-value to be set</td>
-</tr>
-<tr class="row-even"><td>loggable</td>
-<td>True</td>
-<td>whether the parameter can be logged</td>
-<td>&#160;</td>
-</tr>
-<tr class="row-odd"><td>log</td>
-<td>None</td>
-<td>stores the log of the parameter if
-applicable</td>
-<td>&#160;</td>
-</tr>
-<tr class="row-even"><td>log_condition</td>
-<td><code class="xref any docutils literal"><span class="pre">OFF</span></code></td>
-<td>the <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal"><span class="pre">LogCondition</span></code></a> for which the parameter
-should be logged</td>
-<td>&#160;</td>
-</tr>
-<tr class="row-odd"><td>history</td>
-<td>None</td>
-<td>stores the history of the parameter
-(previous values)</td>
-<td>&#160;</td>
-</tr>
-<tr class="row-even"><td>history_max_length</td>
-<td>1</td>
-<td>the maximum length of the stored history</td>
-<td>&#160;</td>
-</tr>
-<tr class="row-odd"><td>fallback_default</td>
-<td>False</td>
-<td>if False, the Parameter will return None if
-a requested value is not present for a given
-execution context; if True, the Parameter’s
-default_value will be returned instead</td>
-<td>&#160;</td>
-</tr>
-</tbody>
-</table>
 </div>
 </div>
 </div>
@@ -536,7 +402,7 @@ get or set the default value of the associated <code class="xref py py-class doc
 <dt id="psyneulink.core.globals.parameters.Parameter.modulable">
 <code class="descname">modulable</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.modulable" title="Permalink to this definition">¶</a></dt>
 <dd><p>if True, the parameter can be modulated; if the Parameter belongs to a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> or <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>,
-it is assigned a <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a>.</p>
+it is assigned a <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -544,7 +410,7 @@ it is assigned a <a class="reference internal" href="ParameterState.html"><span 
 <tr class="field-odd field"><th class="field-name">Default:</th><td class="field-body">False</td>
 </tr>
 <tr class="field-even field"><th class="field-name" colspan="2">Developer Notes:</th></tr>
-<tr class="field-even field"><td>&#160;</td><td class="field-body">Currently this does not determine what gets a ParameterState, but in the future it should</td>
+<tr class="field-even field"><td>&#160;</td><td class="field-body">Currently this does not determine what gets a ParameterPort, but in the future it should</td>
 </tr>
 </tbody>
 </table>
@@ -553,12 +419,12 @@ it is assigned a <a class="reference internal" href="ParameterState.html"><span 
 <dl class="attribute">
 <dt id="psyneulink.core.globals.parameters.Parameter.modulation_combination_function">
 <code class="descname">modulation_combination_function</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.modulation_combination_function" title="Permalink to this definition">¶</a></dt>
-<dd><p>specifies the function used in State._get_combined_mod_val() to combine values for the parameter if
+<dd><p>specifies the function used in Port._get_combined_mod_val() to combine values for the parameter if
 it receives more than one ModulatoryProjections;  must be either the keyword <em>MULTIPLICATIVE</em>,
 <em>PRODUCT</em>, <em>ADDITIVE</em>, <em>SUM</em>, or a function that accepts an n dimensional array and retursn an n-1
 dimensional array.  If it is None, the an attempt is made to determine it from the an alias for the
 Parameter’s name (i.e., if that is MULTIPLICATIVE_PARAM or ADDITIVE_PARAM);  otherwise the default
-behavior is determined by State._get_combined_mod_val().</p>
+behavior is determined by Port._get_combined_mod_val().</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -655,7 +521,7 @@ of the Component on which it resides</p>
 <dt id="psyneulink.core.globals.parameters.Parameter.getter">
 <code class="descname">getter</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.getter" title="Permalink to this definition">¶</a></dt>
 <dd><p>hook that allows overriding the retrieval of values based on a supplied method
-(e.g. _output_state_variable_getter).</p>
+(e.g. _output_port_variable_getter).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -819,8 +685,8 @@ inspection.</p>
 <dd><p>if not None, this indicates the argument in the owning Component’s
 constructor that this Parameter corresponds to. Typically this is
 used in Parameters that save specification types, as in
-<code class="xref any docutils literal"><span class="pre">input_states_spec</span></code> and
-<code class="xref any docutils literal"><span class="pre">output_states_spec</span></code></p>
+<code class="xref any docutils literal"><span class="pre">input_ports_spec</span></code> and
+<code class="xref any docutils literal"><span class="pre">output_ports_spec</span></code></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />

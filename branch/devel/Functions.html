@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Functions &mdash; PsyNeuLink 0.6.0.3+2.gf3dff92 documentation</title>
+  <title>Functions &mdash; PsyNeuLink 0.6.0.3+3.g33a3ccb documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3+2.gf3dff92',
+              VERSION:'0.6.0.3+3.g33a3ccb',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -46,7 +46,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="UserDefinedFunction" href="UserDefinedFunction.html" />
-    <link rel="prev" title="GatingSignal" href="GatingSignal.html" /> 
+    <link rel="prev" title="GatingProjection" href="GatingProjection.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.3+2
+                0.6.0.3+3
               </div>
             
           
@@ -250,15 +250,15 @@ callable object (that is, a python function or method of some kind). Unlike othe
 that refers to that Component.  The Function itself is assigned as the Component’s
 <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute.  Each of the Function’s attributes is also assigned
 as an attribute of the <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>, and those are each associated with with a
-<a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> of the <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>.  Projections to those parameterStates can be
+<a class="reference internal" href="ParameterPort.html"><span class="doc">parameterPort</span></a> of the <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>.  Projections to those parameterPorts can be
 used by <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to modify the Function’s parameters.</p>
 </div>
 <div class="section" id="modulatory-parameters">
 <span id="function-modulatory-params"></span><h3><em>Modulatory Parameters</em><a class="headerlink" href="#modulatory-parameters" title="Permalink to this headline">¶</a></h3>
 <p>Some classes of Functions also implement a pair of modulatory parameters: <code class="xref any docutils literal"><span class="pre">multiplicative_param</span></code> and <code class="xref any docutils literal"><span class="pre">additive_param</span></code>.
 Each of these is assigned the name of one of the function’s parameters. These are used by <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignals</span></a> to modulate the output of the function (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-detail-figure"><span class="std std-ref">figure</span></a>).  For
-example, they are used by <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignals</span></a> to modulate the <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.function" title="psyneulink.core.components.states.state.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of an
-<a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> or <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>, and thereby its <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.value" title="psyneulink.core.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>; and by the <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal(s)</span></a>
+example, they are used by <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignals</span></a> to modulate the <a class="reference internal" href="State.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of an
+<a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> or <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>, and thereby its <a class="reference internal" href="State.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>; and by the <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal(s)</span></a>
 of an <a class="reference internal" href="LCControlMechanism.html"><span class="doc">LCControlMechanism</span></a> to modulate the <code class="xref any docutils literal"><span class="pre">multiplicative_param</span></code> of the <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a
 <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>.</p>
 </div>
@@ -268,7 +268,7 @@ of an <a class="reference internal" href="LCControlMechanism.html"><span class="
 <p>Functions are executable objects that can be called directly.  More commonly, however, they are called when
 their <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> is executed.  The parameters
 of the <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> can be modified when it is executed, by assigning a
-<a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter specification dictionary</span></a> to the <strong>params</strong> argument in the
+<a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter specification dictionary</span></a> to the <strong>params</strong> argument in the
 call to the <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
 <p>For <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, this can also be done by specifying <a class="reference internal" href="Run.html#run-runtime-parameters"><span class="std std-ref">runtime_params</span></a> in the <a class="reference internal" href="Run.html"><span class="doc">Run</span></a>
 method of their <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
@@ -285,7 +285,7 @@ method of their <a class="reference internal" href="Composition.html"><span clas
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>variable</strong> (<em>value : default class_defaults.variable</em>) – specifies the format and a default value for the input to <a class="reference internal" href="Function.html"><span class="doc">function</span></a>.</li>
-<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
 <li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
@@ -343,7 +343,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 <li><strong>variable</strong> (<em>boolean</em><em> or </em><em>statement that resolves to one : default class_defaults.variable</em>) – assertion for which a therapeutic response will be offered.</li>
 <li><strong>propensity</strong> (<em>Manner value : default Manner.CONTRARIAN</em>) – specifies preferred therapeutic manner</li>
 <li><strong>pertinacity</strong> (<em>float : default 10.0</em>) – specifies therapeutic consistency</li>
-<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
 <li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
@@ -414,7 +414,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
         <a href="UserDefinedFunction.html" class="btn btn-neutral float-right" title="UserDefinedFunction" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="GatingSignal.html" class="btn btn-neutral float-left" title="GatingSignal" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="GatingProjection.html" class="btn btn-neutral float-left" title="GatingProjection" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

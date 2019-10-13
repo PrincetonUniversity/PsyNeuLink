@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>JSON &mdash; PsyNeuLink 0.6.0.3+2.gf3dff92 documentation</title>
+  <title>JSON &mdash; PsyNeuLink 0.6.0.3+3.g33a3ccb documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3+2.gf3dff92',
+              VERSION:'0.6.0.3+3.g33a3ccb',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.6.0.3+2
+                0.6.0.3+3
               </div>
             
           
@@ -223,7 +223,7 @@ common to all are:</p>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>Note that the value of a parameter may be a long-form dictionary when it corresponds to a <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a>. In this case, it will indicate the ParameterState in a <code class="xref any docutils literal"><span class="pre">source</span></code> field:</p>
+<p>Note that the value of a parameter may be a long-form dictionary when it corresponds to a <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a>. In this case, it will indicate the ParameterPort in a <code class="xref any docutils literal"><span class="pre">source</span></code> field:</p>
 <div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="s2">&quot;intercept&quot;</span><span class="o">:</span> <span class="p">{</span>
     <span class="s2">&quot;source&quot;</span><span class="o">:</span> <span class="s2">&quot;A.input_ports.intercept&quot;</span><span class="p">,</span>
     <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;float&quot;</span><span class="p">,</span>
@@ -240,7 +240,7 @@ common to all are:</p>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p><strong>Mechanisms</strong>, <strong>Projections</strong>, and <strong>States</strong> each have:</p>
+<p><strong>Mechanisms</strong>, <strong>Projections</strong>, and <strong>Ports</strong> each have:</p>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">functions</span></code> : a list of primary <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> JSON objects. In PsyNeuLink, only one primary function is allowed.</li>
 </ul>
@@ -268,8 +268,8 @@ common to all are:</p>
 </div>
 <p><strong>Mechanisms</strong> have:</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">input_ports</span></code> : a list of InputState and ParameterState JSON objects</li>
-<li><code class="docutils literal"><span class="pre">output_ports</span></code> : a list of OutputState JSON objects</li>
+<li><code class="docutils literal"><span class="pre">input_ports</span></code> : a list of InputPort and ParameterPort JSON objects</li>
+<li><code class="docutils literal"><span class="pre">output_ports</span></code> : a list of OutputPort JSON objects</li>
 </ul>
 <p><strong>Projections</strong> have:</p>
 <ul class="simple">
@@ -278,9 +278,9 @@ common to all are:</p>
 <li><code class="docutils literal"><span class="pre">receiver</span></code> : the name of the Component it projects to</li>
 <li><code class="docutils literal"><span class="pre">receiver_port</span></code> : the name of the port on the <code class="docutils literal"><span class="pre">receiver</span></code> to which it connects</li>
 </ul>
-<p><strong>States</strong> have:</p>
+<p><strong>Ports</strong> have:</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">dtype</span></code> : the type of accepted input/output for the State. This corresponds to <a class="reference external" href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.dtype.html">numpy.dtype</a></li>
+<li><code class="docutils literal"><span class="pre">dtype</span></code> : the type of accepted input/output for the Port. This corresponds to <a class="reference external" href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.dtype.html">numpy.dtype</a></li>
 <li><code class="docutils literal"><span class="pre">shape</span></code> : the shape of the accepted input/output. This corresponds to numpy ndarray shapes. (<code class="xref any docutils literal"><span class="pre">numpy.zeros(&lt;shape&gt;)</span></code> would produce an array with the correct shape)</li>
 </ul>
 <p><strong>Compositions</strong> have:</p>

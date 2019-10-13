@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Modulatory Projections &mdash; PsyNeuLink 0.6.0.3+2.gf3dff92 documentation</title>
+  <title>Modulatory Projections &mdash; PsyNeuLink 0.6.0.3+3.g33a3ccb documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3+2.gf3dff92',
+              VERSION:'0.6.0.3+3.g33a3ccb',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.3+2
+                0.6.0.3+3
               </div>
             
           
@@ -111,7 +111,6 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="State.html">States</a></li>
 <li class="toctree-l3"><a class="reference internal" href="Functions.html">Functions</a></li>
 </ul>
 </li>
@@ -204,14 +203,14 @@
 <span id="modulatoryprojection-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A ModulatoryProjection is a subclass of <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> that takes the value of a
 <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> belonging to a <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a>, and uses that to
-modulate the function of the <a class="reference internal" href="State.html"><span class="doc">State</span></a> to which it projects.  There are three types of ModulatoryProjections,
-that modulate different types of Components and their States:</p>
+modulate the function of the <code class="xref any docutils literal"><span class="pre">Port</span></code> to which it projects.  There are three types of ModulatoryProjections,
+that modulate different types of Components and their Ports:</p>
 <ul class="simple">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a></dt>
-<dd>takes the <a class="reference internal" href="LearningSignal.html#psyneulink.core.components.states.modulatorysignals.learningsignal.LearningSignal.value" title="psyneulink.core.components.states.modulatorysignals.learningsignal.LearningSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> belonging to a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>,
-and conveys it to the <em>MATRIX</em> <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, for use by its
-<a class="reference internal" href="ParameterState.html#psyneulink.core.components.states.parameterstate.ParameterState.function" title="psyneulink.core.components.states.parameterstate.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> in modulating the value of the MappingProjection’s
+<dd>takes the <a class="reference internal" href="LearningSignal.html#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.value" title="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> belonging to a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>,
+and conveys it to the <em>MATRIX</em> <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, for use by its
+<a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> in modulating the value of the MappingProjection’s
 <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter.</dd>
 </dl>
 </li>
@@ -219,8 +218,8 @@ and conveys it to the <em>MATRIX</em> <a class="reference internal" href="Parame
 <ul class="simple">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a></dt>
-<dd>takes the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.value" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> belonging to a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a>,
-and conveys it to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for the parameter of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or its
+<dd>takes the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.value" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> belonging to a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a>,
+and conveys it to the <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> for the parameter of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or its
 <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, for use in modulating the value of the parameter.</dd>
 </dl>
 </li>
@@ -228,9 +227,9 @@ and conveys it to the <a class="reference internal" href="ParameterState.html"><
 <ul class="simple">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a></dt>
-<dd>takes the <a class="reference internal" href="GatingSignal.html#psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.value" title="psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a> belonging to a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a>, and conveys it
-to the <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> or <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> for use by the State’s
-<a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.function" title="psyneulink.core.components.states.state.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> in modulating its <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.value" title="psyneulink.core.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</dd>
+<dd>takes the <a class="reference internal" href="GatingSignal.html#psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.value" title="psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a> belonging to a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a>, and conveys it
+to the <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> or <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> for use by the Port’s
+<a class="reference internal" href="State.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> in modulating its <a class="reference internal" href="State.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</dd>
 </dl>
 </li>
 </ul>
@@ -239,28 +238,28 @@ to the <a class="reference internal" href="InputState.html"><span class="doc">In
 <span id="projection-creation"></span><h2>Creating a ModulatoryProjection<a class="headerlink" href="#creating-a-modulatoryprojection" title="Permalink to this headline">¶</a></h2>
 <p>A ModulatoryProjection is a base class, and cannot be instantiated directly.  However, the three types of
 ModulatoryProjections listed above can be created directly, by calling the constructor for the desired type.
-More commonly, however, ModulatoryProjections are either specified in the context of the States to or from
-which they project (<a class="reference internal" href="State.html#state-projections"><span class="std std-ref">Projections</span></a> in State, and <a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">Specifying a Projection</span></a>), or are <a class="reference internal" href="Projection.html#projection-automatic-creation"><span class="std std-ref">created automatically</span></a>, the details of which are described in the documentation for each type of
+More commonly, however, ModulatoryProjections are either specified in the context of the Ports to or from
+which they project (<a class="reference internal" href="State.html#port-projections"><span class="std std-ref">Projections</span></a> in Port, and <a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">Specifying a Projection</span></a>), or are <a class="reference internal" href="Projection.html#projection-automatic-creation"><span class="std std-ref">created automatically</span></a>, the details of which are described in the documentation for each type of
 ModulatoryProjection.</p>
 </div>
 <div class="section" id="structure">
 <span id="modulatoryprojection-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>A ModulatoryProjection has the same basic structure as a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>, augmented by type-specific
 attributes and methods described under each type of ModulatoryProjection.  The ModulatoryProjections received by a
-<a class="reference internal" href="State.html"><span class="doc">State</span></a> are listed in the State’s <a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState.mod_afferents" title="psyneulink.core.components.states.inputstate.InputState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute.</p>
+<code class="xref any docutils literal"><span class="pre">Port</span></code> are listed in the Port’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.mod_afferents" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute.</p>
 </div>
 <div class="section" id="execution">
 <span id="modulatoryprojection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>A ModulatoryProjection, like any Projection, cannot be executed directly.  It is executed when the <a class="reference internal" href="State.html"><span class="doc">State</span></a> to
-which it projects —&nbsp;its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> — is updated;  that occurs when the State’s owner
-Mechanism is executed.  When a ModulatoryProjection executes, it conveys both the <a class="reference internal" href="ModulatorySignal.html#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.value" title="psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of
-the <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> from which it projects, and the ModulatorySignal’s <a class="reference internal" href="ModulatorySignal.html#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.modulation" title="psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute, to the State that receives the Projection.  The State assigns the value to
-the parameter of the State’s <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.function" title="psyneulink.core.components.states.state.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> specified by the <a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.modulation" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute, and then calls
-the <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.function" title="psyneulink.core.components.states.state.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to determine the <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.value" title="psyneulink.core.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the State.</p>
+<p>A ModulatoryProjection, like any Projection, cannot be executed directly.  It is executed when the <code class="xref any docutils literal"><span class="pre">Port</span></code> to
+which it projects —&nbsp;its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> — is updated;  that occurs when the Port’s owner
+Mechanism is executed.  When a ModulatoryProjection executes, it conveys both the <a class="reference internal" href="ModulatorySignal.html#psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.value" title="psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of
+the <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> from which it projects, and the ModulatorySignal’s <a class="reference internal" href="ModulatorySignal.html#psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.modulation" title="psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute, to the Port that receives the Projection.  The Port assigns the value to
+the parameter of the Port’s <a class="reference internal" href="State.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> specified by the <a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.modulation" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute, and then calls
+the <a class="reference internal" href="State.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to determine the <a class="reference internal" href="State.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Port.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The change made to the parameter of the State’s Function in response to the execution of a ModulatoryProjection
-are not applied until the State is updated which, in turn, does not occur until the Mechanism to which the State
+<p class="last">The change made to the parameter of the Port’s Function in response to the execution of a ModulatoryProjection
+are not applied until the Port is updated which, in turn, does not occur until the Mechanism to which the Port
 belongs is next executed; see <span class="xref std std-ref">Lazy Evaluation</span> for an explanation of “lazy” updating).</p>
 </div>
 </div>
@@ -269,7 +268,7 @@ belongs is next executed; see <span class="xref std std-ref">Lazy Evaluation</sp
 <dl class="class">
 <dt id="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base">
 <em class="property">class </em><code class="descclassname">psyneulink.core.components.projections.modulatory.modulatoryprojection.</code><code class="descname">ModulatoryProjection_Base</code><span class="sig-paren">(</span><em>receiver</em>, <em>sender=None</em>, <em>weight=None</em>, <em>exponent=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> that modulates the value of a <a class="reference internal" href="State.html"><span class="doc">State</span></a>.</p>
+<dd><p>Subclass of <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> that modulates the value of a <code class="xref any docutils literal"><span class="pre">Port</span></code>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">ModulatoryProjection is an abstract class and should NEVER be instantiated by a call to its constructor.
@@ -280,13 +279,13 @@ It should be instantiated using the constructor for a <a class="reference intern
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>receiver</strong> (<em>Optional</em><em>[</em><em>State</em><em> or </em><em>Mechanism</em><em>]</em>) – specifies the State to which the ModulatoryProjection projects.</li>
-<li><strong>sender</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a><em> or </em><em>Mechanism</em><em>] </em><em>: default None</em>) – specifies the Component from which the ModulatoryProjection projects.</li>
+<li><strong>receiver</strong> (<em>Optional</em><em>[</em><em>Port</em><em> or </em><em>Mechanism</em><em>]</em>) – specifies the Port to which the ModulatoryProjection projects.</li>
+<li><strong>sender</strong> (<em>Optional</em><em>[</em><em>OutputPort</em><em> or </em><em>Mechanism</em><em>] </em><em>: default None</em>) – specifies the Component from which the ModulatoryProjection projects.</li>
 <li><strong>weight</strong> (<em>number : default None</em>) – specifies the value by which to multiply the ModulatoryProjection’s <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.value" title="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
 before combining it with others (see <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.weight" title="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a> for additional details).</li>
 <li><strong>exponent</strong> (<em>number : default None</em>) – specifies the value by which to exponentiate the ModulatoryProjection’s <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.value" title="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
 before combining it with others (see <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.exponent" title="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a> for additional details).</li>
-<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 ModulatoryProjection, its <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.function" title="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and/or a custom function and its
 parameters. By default, it contains an entry for the ModulatoryProjection’s default <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.function" title="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and parameter assignments.  Values specified for parameters in the
 dictionary override any assigned to those parameters in arguments of the constructor.</li>
@@ -303,14 +302,14 @@ for details.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.receiver">
 <code class="descname">receiver</code><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.receiver" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MATRIX ParameterState of a MappingProjection</em> – the State to which the ModulatoryProjection projects, the <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.function" title="psyneulink.core.components.states.state.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of which is
+<dd><p><em>MATRIX ParameterPort of a MappingProjection</em> – the Port to which the ModulatoryProjection projects, the <a class="reference internal" href="State.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of which is
 modulated by it.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.sender">
 <code class="descname">sender</code><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.sender" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>LEARNING_SIGNAL OutputState of a LearningMechanism</em> – the <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> from which the ModulatoryProjection projects.</p>
+<dd><p><em>LEARNING_SIGNAL OutputPort of a LearningMechanism</em> – the <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> from which the ModulatoryProjection projects.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -330,14 +329,14 @@ its <a class="reference internal" href="#psyneulink.core.components.projections.
 <dl class="attribute">
 <dt id="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.value">
 <code class="descname">value</code><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.array</em> – value used to modulate the <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.function" title="psyneulink.core.components.states.state.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the State that is its <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.receiver" title="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</p>
+<dd><p><em>2d np.array</em> – value used to modulate the <a class="reference internal" href="State.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Port that is its <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.receiver" title="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.weight">
 <code class="descname">weight</code><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.weight" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>number</em> – multiplies the <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.value" title="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the ModulatoryProjection after applying <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.exponent" title="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a>, and before combining it with any others that project to the same
-<a class="reference internal" href="State.html"><span class="doc">States</span></a> to determine that State’s <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.variable" title="psyneulink.core.components.states.state.State_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is modified (see description in <a class="reference internal" href="Projection.html#projection-weight-exponent"><span class="std std-ref">Projection</span></a> for details).</p>
+<code class="xref any docutils literal"><span class="pre">Port</span></code> to determine that Port’s <a class="reference internal" href="State.html#psyneulink.core.components.ports.port.Port_Base.variable" title="psyneulink.core.components.ports.port.Port_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is modified (see description in <a class="reference internal" href="Projection.html#projection-weight-exponent"><span class="std std-ref">Projection</span></a> for details).</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -345,7 +344,7 @@ its <a class="reference internal" href="#psyneulink.core.components.projections.
 <code class="descname">exponent</code><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.exponent" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>number</em> – exponentiates the <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.value" title="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the ModulatoryProjection, before applying
 <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.weight" title="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a>, and before combining it with any others that project to the same
-<a class="reference internal" href="State.html"><span class="doc">States</span></a> to determine that State’s <code class="xref any docutils literal"><span class="pre">variable</span></code> is modified (see description in <a class="reference internal" href="Projection.html#projection-weight-exponent"><span class="std std-ref">Projection</span></a> for details).</p>
+<code class="xref any docutils literal"><span class="pre">Port</span></code> to determine that Port’s <code class="xref any docutils literal"><span class="pre">variable</span></code> is modified (see description in <a class="reference internal" href="Projection.html#projection-weight-exponent"><span class="std std-ref">Projection</span></a> for details).</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -357,7 +356,7 @@ name of an existing ModulatoryProjection, it is appended with an indexed suffix,
 ModulatoryProjection with the same base name (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a>). If the name is not specified in the <strong>name</strong>
 argument of its constructor, a default name is assigned using the following format:
 ‘&lt;ModualatorySignal type&gt; for &lt;receiver owner Mechanism’s name&gt;[&lt;receiver’s name&gt;]’
-(for example, <code class="docutils literal"><span class="pre">'GatingSignal</span> <span class="pre">for</span> <span class="pre">my_mech[InputState-0]'</span></code>).</p>
+(for example, <code class="docutils literal"><span class="pre">'GatingSignal</span> <span class="pre">for</span> <span class="pre">my_mech[InputPort-0]'</span></code>).</p>
 </dd></dl>
 
 <dl class="attribute">

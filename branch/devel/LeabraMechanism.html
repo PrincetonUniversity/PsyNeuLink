@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LeabraMechanism &mdash; PsyNeuLink 0.6.0.3+2.gf3dff92 documentation</title>
+  <title>LeabraMechanism &mdash; PsyNeuLink 0.6.0.3+3.g33a3ccb documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3+2.gf3dff92',
+              VERSION:'0.6.0.3+3.g33a3ccb',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.3+2
+                0.6.0.3+3
               </div>
             
           
@@ -229,24 +229,24 @@ changed after creation of the LeabraMechanism, causing it to start/stop learning
 <p class="last">If the training_flag is True, the network will learn using the Leabra learning algorithm. Other algorithms may be
 added later.</p>
 </div>
-<p>The LeabraMechanism has two InputStates: the <em>MAIN_INPUT</em> <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> and the <em>LEARNING_TARGET</em> InputState. The
-<em>MAIN_INPUT</em> InputState is the input to the leabra network, while the <em>LEARNING_TARGET</em> InputState is the learning
-target for the LeabraMechanism. The input to the <em>MAIN_INPUT</em> InputState should have length equal to
-<a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.input_size" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.input_size"><code class="xref any py py-attr docutils literal"><span class="pre">input_size</span></code></a> and the input to the <em>LEARNING_TARGET</em> InputState should have length equal to
+<p>The LeabraMechanism has two InputPorts: the <em>MAIN_INPUT</em> <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> and the <em>LEARNING_TARGET</em> InputPort. The
+<em>MAIN_INPUT</em> InputPort is the input to the leabra network, while the <em>LEARNING_TARGET</em> InputPort is the learning
+target for the LeabraMechanism. The input to the <em>MAIN_INPUT</em> InputPort should have length equal to
+<a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.input_size" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.input_size"><code class="xref any py py-attr docutils literal"><span class="pre">input_size</span></code></a> and the input to the <em>LEARNING_TARGET</em> InputPort should have length equal to
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_size" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_size"><code class="xref any py py-attr docutils literal"><span class="pre">output_size</span></code></a>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>Currently, there is a bug where LeabraMechanism (and other Mechanisms with multiple input states) cannot be
+<p>Currently, there is a bug where LeabraMechanism (and other Mechanisms with multiple input ports) cannot be
 used as <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">ORIGIN Mechanisms</span></a> for a <a class="reference internal" href="System.html"><span class="doc">System</span></a>. If you desire to use a LeabraMechanism as an ORIGIN
 Mechanism, you can work around this bug by creating two <a class="reference internal" href="TransferMechanism.html#transfer-overview"><span class="std std-ref">TransferMechanisms</span></a> as ORIGIN
-Mechanisms instead, and have these two TransferMechanisms pass their output to the InputStates of the
+Mechanisms instead, and have these two TransferMechanisms pass their output to the InputPorts of the
 LeabraMechanism. Here is an example of how to do this. In the example, T2 passes the training_data to the
-<em>LEARNING_TARGET</em> InputState of L (L.input_states[1]):</p>
+<em>LEARNING_TARGET</em> InputPort of L (L.input_ports[1]):</p>
 <div class="last highlight-default"><div class="highlight"><pre><span></span><span class="n">L</span> <span class="o">=</span> <span class="n">LeabraMechanism</span><span class="p">(</span><span class="n">input_size</span><span class="o">=</span><span class="n">input_size</span><span class="p">,</span> <span class="n">output_size</span><span class="o">=</span><span class="n">output_size</span><span class="p">)</span>
 <span class="n">T1</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;T1&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">input_size</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Linear</span><span class="p">)</span>
 <span class="n">T2</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;T2&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">output_size</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Linear</span><span class="p">)</span>
 <span class="n">p1</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">T1</span><span class="p">,</span> <span class="n">L</span><span class="p">])</span>
-<span class="n">proj</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">T2</span><span class="p">,</span> <span class="n">receiver</span><span class="o">=</span><span class="n">L</span><span class="o">.</span><span class="n">input_states</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">proj</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">T2</span><span class="p">,</span> <span class="n">receiver</span><span class="o">=</span><span class="n">L</span><span class="o">.</span><span class="n">input_ports</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 <span class="n">p2</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">T2</span><span class="p">,</span> <span class="n">proj</span><span class="p">,</span> <span class="n">L</span><span class="p">])</span>
 <span class="n">s</span> <span class="o">=</span> <span class="n">System</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">])</span>
 <span class="n">s</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">T1</span><span class="p">:</span> <span class="n">input_data</span><span class="p">,</span> <span class="n">T2</span><span class="p">:</span> <span class="n">training_data</span><span class="p">})</span>
@@ -257,7 +257,7 @@ LeabraMechanism. Here is an example of how to do this. In the example, T2 passes
 <div class="section" id="execution">
 <span id="leabra-mechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>The LeabraMechanism passes input and training data to the leabra Network it wraps, and the LeabraMechanism passes its
-leabra Network’s output (after one “trial”, default 200 cycles in PsyNeuLink) to its primary <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>. For details
+leabra Network’s output (after one “trial”, default 200 cycles in PsyNeuLink) to its primary <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>. For details
 on Leabra, see <a class="reference external" href="https://grey.colorado.edu/emergent/index.php/Leabra">O’Reilly and Munakata, 2016</a> and the
 <a class="reference external" href="https://github.com/benureau/leabra">leabra Python package on Github</a>.</p>
 </div>
@@ -275,7 +275,7 @@ variable by providing it as input to the leabra network inside the LeabraFunctio
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>default_variable</strong> (<em>number</em><em> or </em><em>np.array : default np.zeros</em><em>(</em><em>) </em><em>(</em><em>array of zeros</em><em>)</em>) – specifies a template for the input to the leabra network.</li>
 <li><strong>network</strong> (<em>leabra.Network</em>) – specifies the leabra network to be used.</li>
-<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
 <li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
@@ -341,7 +341,7 @@ If <strong>leabra_net</strong> argument is provided and <a class="reference inte
 quarter_size result in shorter execution times, though very low values may cause slight fluctuations in output.
 Lower values of quarter_size also effectively reduce the magnitude of learning weight changes during
 a given trial.</li>
-<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
 the mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
 the dictionary override any assigned to those parameters in arguments of the constructor.</li>
 <li><strong>name</strong> (<em>str : default KWTA-&lt;index&gt;</em>) – a string used for the name of the mechanism.
@@ -424,22 +424,22 @@ please see the <code class="xref any docutils literal"><span class="pre">leabra<
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_states">
-<code class="descname">output_states</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_states" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ContentAddressableList[OutputState]</em> : default [<a class="reference internal" href="TransferMechanism.html#transfer-mechanism-result"><span class="std std-ref">RESULT</span></a>] – list of Mechanism’s <code class="xref any docutils literal"><span class="pre">OutputStates</span></code>.  By default there is a single OutputState,
+<dt id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_ports">
+<code class="descname">output_ports</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ContentAddressableList[OutputPort]</em> : default [<a class="reference internal" href="TransferMechanism.html#transfer-mechanism-result"><span class="std std-ref">RESULT</span></a>] – list of Mechanism’s <code class="xref any docutils literal"><span class="pre">OutputPorts</span></code>.  By default there is a single OutputPort,
 <a class="reference internal" href="TransferMechanism.html#transfer-mechanism-result"><span class="std std-ref">RESULT</span></a>, that contains the result of a call to the Mechanism’s
-<a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.function" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>;  additional <a class="reference internal" href="TransferMechanism.html#transfermechanism-standard-outputstates"><span class="std std-ref">standard</span></a>
-and/or custom OutputStates may be included, based on the specifications made in the <strong>output_states</strong> argument
+<a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.function" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>;  additional <a class="reference internal" href="TransferMechanism.html#transfermechanism-standard-outputports"><span class="std std-ref">standard</span></a>
+and/or custom OutputPorts may be included, based on the specifications made in the <strong>output_ports</strong> argument
 of the Mechanism’s constructor.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_values">
 <code class="descname">output_values</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_values" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[array(float64)]</em> – each item is the <a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState.value" title="psyneulink.core.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the corresponding OutputState in <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_states" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>.  The default is a single item containing the result of the
+<dd><p><em>List[array(float64)]</em> – each item is the <code class="xref any docutils literal"><span class="pre">value</span></code> of the corresponding OutputPort in <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_ports" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a>.  The default is a single item containing the result of the
 TransferMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.function" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>;  additional
 ones may be included, based on the specifications made in the
-<strong>output_states</strong> argument of the Mechanism’s constructor (see <a class="reference internal" href="TransferMechanism.html#transfermechanism-standard-outputstates"><span class="std std-ref">TransferMechanism Standard OutputStates</span></a>).</p>
+<strong>output_ports</strong> argument of the Mechanism’s constructor (see <a class="reference internal" href="TransferMechanism.html#transfermechanism-standard-outputports"><span class="std std-ref">TransferMechanism Standard OutputPorts</span></a>).</p>
 </dd></dl>
 
 <dl class="attribute">

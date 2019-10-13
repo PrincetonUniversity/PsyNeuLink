@@ -140,7 +140,7 @@ LC = pnl.LCControlMechanism(
         initial_w_FitzHughNagumo=initial_u,
         objective_mechanism=pnl.ObjectiveMechanism(
                 function=psyneulink.core.components.functions.transferfunctions.Linear,
-                monitored_output_states=[(
+                monitored_output_ports=[(
                     decision_layer,
                     None,
                     None,

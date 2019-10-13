@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Scheduler &mdash; PsyNeuLink 0.6.0.3+2.gf3dff92 documentation</title>
+  <title>Scheduler &mdash; PsyNeuLink 0.6.0.3+3.g33a3ccb documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3+2.gf3dff92',
+              VERSION:'0.6.0.3+3.g33a3ccb',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.3+2
+                0.6.0.3+3
               </div>
             
           
@@ -342,7 +342,7 @@ by passing a dictionary mapping <a class="reference internal" href="Time.html#ps
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">])</span>
-<span class="go">[(TransferMechanism A), (MappingProjection MappingProjection from A[RESULTS] to B[InputState-0]), (TransferMechanism B), (MappingProjection MappingProjection from B[RESULTS] to C[InputState-0]), (TransferMechanism C)]</span>
+<span class="go">[(TransferMechanism A), (MappingProjection MappingProjection from A[RESULTS] to B[InputPort-0]), (TransferMechanism B), (MappingProjection MappingProjection from B[RESULTS] to C[InputPort-0]), (TransferMechanism C)]</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># implicit condition of Always for A</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
@@ -358,7 +358,7 @@ by passing a dictionary mapping <a class="reference internal" href="Time.html#ps
 <li><p class="first">Alternate basic phasing in a linear process:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">])</span>
-<span class="go">[(TransferMechanism A), (MappingProjection MappingProjection from A[RESULTS] to B[InputState-0]), (TransferMechanism B)]</span>
+<span class="go">[(TransferMechanism A), (MappingProjection MappingProjection from A[RESULTS] to B[InputPort-0]), (TransferMechanism B)]</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="n">A</span><span class="p">,</span>
@@ -387,10 +387,10 @@ by passing a dictionary mapping <a class="reference internal" href="Time.html#ps
 <li><p class="first">Basic phasing in two processes:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">A</span><span class="p">,</span> <span class="n">C</span><span class="p">])</span>
-<span class="go">[(TransferMechanism A), (MappingProjection MappingProjection from A[RESULTS] to C[InputState-0]), (TransferMechanism C)]</span>
+<span class="go">[(TransferMechanism A), (MappingProjection MappingProjection from A[RESULTS] to C[InputPort-0]), (TransferMechanism C)]</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">])</span>
-<span class="go">[(TransferMechanism B), (MappingProjection MappingProjection from B[RESULTS] to C[InputState-0]), (TransferMechanism C)]</span>
+<span class="go">[(TransferMechanism B), (MappingProjection MappingProjection from B[RESULTS] to C[InputPort-0]), (TransferMechanism C)]</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNPasses</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>

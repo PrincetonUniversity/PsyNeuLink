@@ -71,7 +71,7 @@
            x="0 9.3240004 16.643999 20.639999 27.959999 35.279999 39.276001 47.268002 51.264 57.936001 61.931999 68.603996 72.599998"
            y="0"
            sodipodi:role="line"
-           id="tspan3754">OutputState-0</tspan></text>
+           id="tspan3754">OutputPort-0</tspan></text>
 <text
          transform="matrix(1,0,0,-1,138,166.39843)"
          style="font-style:italic;font-variant:normal;font-weight:bold;font-size:12px;font-family:Arial;-inkscape-font-specification:Arial-BoldItalicMT;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
@@ -165,7 +165,7 @@
            x="0 3.3239999 10.644 17.964001 25.284 29.280001 37.271999 41.268002 47.939999 51.936001 58.608002 62.604"
            y="0"
            sodipodi:role="line"
-           id="tspan3802">InputState-0</tspan></text>
+           id="tspan3802">InputPort-0</tspan></text>
 <path
          d="m 49.5,210.5 h 252 v -165 h -252 z"
          style="fill:none;stroke:#00ff00;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1"
@@ -193,7 +193,7 @@
            x="0 9.3240004 16.643999 20.639999 27.959999 35.279999 39.276001 47.268002 51.264 57.936001 61.931999 68.603996 72.599998"
            y="0"
            sodipodi:role="line"
-           id="tspan3816">OutputState-0</tspan></text>
+           id="tspan3816">OutputPort-0</tspan></text>
 <text
          transform="matrix(1,0,0,-1,138,378.39843)"
          style="font-style:italic;font-variant:normal;font-weight:bold;font-size:12px;font-family:Arial;-inkscape-font-specification:Arial-BoldItalicMT;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
@@ -287,7 +287,7 @@
            x="0 3.3239999 10.644 17.964001 25.284 29.280001 37.271999 41.268002 47.939999 51.936001 58.608002 62.604"
            y="0"
            sodipodi:role="line"
-           id="tspan3864">InputState-0</tspan></text>
+           id="tspan3864">InputPort-0</tspan></text>
 <path
          d="m 49.5,422.5 h 252 v -165 h -252 z"
          style="fill:none;stroke:#ff0000;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1"

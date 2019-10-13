@@ -1,19 +1,19 @@
-States
+Ports
 ======
 
-.. _State_Subtypes:
+.. _Port_Subtypes:
 
 
 .. toctree::
    :maxdepth: 1
 
    *Subclasses:*
-   InputState
-   ParameterState
-   OutputState
+   InputPort
+   ParameterPort
+   OutputPort
    ModulatorySignals <ModulatorySignal>
 
-.. automodule:: psyneulink.core.components.states.state
+.. automodule:: psyneulink.core.components.ports.port
    :members:
    :exclude-members: random, update, Parameters
 
