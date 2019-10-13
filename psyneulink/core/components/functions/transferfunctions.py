@@ -58,7 +58,7 @@ from psyneulink.core.globals.keywords import \
     IDENTITY_FUNCTION, IDENTITY_MATRIX, INTERCEPT, INVERSE_HOLLOW_MATRIX,\
     LEAK, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, \
     MATRIX_KEYWORD_NAMES, MATRIX, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE, MULTIPLICATIVE_PARAM, \
-    OFF, OFFSET, ON, PARAMETER_STATE_PARAMS, PER_ITEM, PROB, PRODUCT, OUTPUT_TYPE, PROB_INDICATOR, \
+    OFF, OFFSET, ON, PARAMETER_PORT_PARAMS, PER_ITEM, PROB, PRODUCT, OUTPUT_TYPE, PROB_INDICATOR, \
     RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM,\
     TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import \
@@ -181,7 +181,7 @@ class Identity(TransferFunction):  # -------------------------------------------
         specifies a template for the value to be returned.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -259,7 +259,7 @@ class Identity(TransferFunction):  # -------------------------------------------
            a single value or array to be returned.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -279,7 +279,7 @@ class Identity(TransferFunction):  # -------------------------------------------
         #       does not udpate its defaults shape
         from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
         if isinstance(self.owner, CompositionInterfaceMechanism):
-            variable = [state.defaults.value for state in self.owner.input_states]
+            variable = [port.defaults.value for port in self.owner.input_ports]
             # Python list does not care about ndarrays of different lengths
             # we do care, so convert to tuple to create struct
             if all(type(x) == np.ndarray for x in variable) and not all(len(x) == len(variable[0]) for x in variable):
@@ -344,7 +344,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
         specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -422,7 +422,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        PARAMETER_STATE_PARAMS: None
+        PARAMETER_PORT_PARAMS: None
     })
 
     @tc.typecheck
@@ -474,7 +474,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -501,7 +501,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
                 else:
                     raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
             # KAM 6/28/18: If the variable does not have a "dtype" attr but made it to this line, then it must be of a
-            # type that even np does not recognize -- typically a custom output state variable with items of different
+            # type that even np does not recognize -- typically a custom OutputPort variable with items of different
             # shapes (e.g. variable = [[0.0], [0.0], array([[0.0, 0.0]])] )
             elif isinstance(variable, list):
                 result = []
@@ -592,7 +592,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
         after multiplying by `scale <Exponentinal.scale>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -742,7 +742,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
            a single value or array to be exponentiated.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -849,7 +849,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         specifies value by which each element is multiplied after applying the logistic transformation.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -1021,7 +1021,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -1152,7 +1152,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         specifies value by which to multiply each element after applying Tanh transform.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -1321,7 +1321,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -1418,7 +1418,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     leak : float : default 0.0
         specifies a scaling factor between 0 and 1 when (variable - bias) is lesser than or equal to 0.
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
     owner : Component
@@ -1521,7 +1521,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         variable : number or array : default class_defaults.variable
            a single value or array to be transformed.
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -1644,7 +1644,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         value by which to multiply each element after applying Gaussian transform.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -1804,7 +1804,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -1914,7 +1914,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         specifies value to add to each sample after it is drawn and `scale <GaussianDistort.scale>` is applied
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -2084,7 +2084,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -2193,7 +2193,7 @@ class SoftMax(TransferFunction):
         False), or applied to each item in the variable separately (per_item = True).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -2471,7 +2471,7 @@ class SoftMax(TransferFunction):
            an array to be transformed.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -2608,7 +2608,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
             - a matrix keyword specification generates a matrix based on the sender and receiver shapes
 
-        When LinearMatrix is instantiated on its own, or as the function of `Mechanism` or `State`:
+        When LinearMatrix is instantiated on its own, or as the function of `Mechanism` or `Port`:
 
             - the matrix specification must be compatible with the function's own `variable <LinearMatrix.variable>`
 
@@ -2620,7 +2620,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     bounds : None
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -3028,7 +3028,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             array to be transformed;  length must equal the number of rows of `matrix <LinearMatrix.matrix>`.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -3433,7 +3433,7 @@ class TransferWithCosts(TransferFunction):
 
     The `multiplicative_param <Function_Modulatory_Params>` and `additive_param <Function_Modulatory_Params>` of each
     cost function is assigned as a parameter of the TransferWIthCost `Function`.  This makes them accessible for
-    `modulation <ModulatorySignal_Modulation>` when the Function is assigned to a `State` (e.g., as the default
+    `modulation <ModulatorySignal_Modulation>` when the Function is assigned to a `Port` (e.g., as the default
     `function <ControlSignal.function>` of a `ControlSignal`), or a `Mechanism`.
 
     For example, the following scripts shows how modulate the `intensity_cost_function
@@ -3485,7 +3485,7 @@ class TransferWithCosts(TransferFunction):
         specifies the function used to compute `combined_cost <TransferWithCosts.combined_cost>.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -3603,7 +3603,7 @@ class TransferWithCosts(TransferFunction):
         <TransferWithCosts.combined_costs_fct>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -3966,7 +3966,7 @@ class TransferWithCosts(TransferFunction):
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the function.
             Values specified for parameters in the dictionary override any assigned to those parameters in arguments
             of the constructor.
 
@@ -3994,7 +3994,7 @@ class TransferWithCosts(TransferFunction):
 
             # For each cost function that is enabled:
             # - get params for the cost functon using get_current_function_param:
-            #   - if TransferWithControl is owned by a Mechanism, get value from ParameterState for param
+            #   - if TransferWithControl is owned by a Mechanism, get value from ParameterPort for param
             #   - otherwise, get from TransferWithControl parameter ModulationParam (which is also subject to modulation)
 
             # Compute intensity_cost

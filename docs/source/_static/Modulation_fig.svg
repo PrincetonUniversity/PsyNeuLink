@@ -629,7 +629,7 @@
                x="0 3.3336 10.6632 17.9928 25.322399 29.318399 37.322399 41.318401 47.992802 51.9888"
                y="0"
                sodipodi:role="line"
-               id="tspan3610">InputState</tspan></text>
+               id="tspan3610">InputPort</tspan></text>
 </g><g
            id="g3612"
            transform="matrix(0,1,1,0,704.4706,460.8442)"><path
@@ -891,7 +891,7 @@
                x="0 9.3336 16.6632 20.659201 27.9888 35.318401 39.3144 47.318401 51.3144 57.9888 61.984798"
                y="0"
                sodipodi:role="line"
-               id="tspan3828">OutputState</tspan></text>
+               id="tspan3828">OutputPort</tspan></text>
 </g><g
            id="g3830"
            transform="matrix(0,1,1,0,704.4706,537.8442)"><path
@@ -911,7 +911,7 @@
                x="0 8.0039997 14.6784 19.348801 26.023199 36.6936 43.368 47.363998 54.038399 58.708801 66.712799 70.708801 77.383202 81.379204"
                y="0"
                sodipodi:role="line"
-               id="tspan3840">ParameterState</tspan></text>
+               id="tspan3840">ParameterPort</tspan></text>
 </g><path
            d="m 883.7375,515.2259 58.2142,0 0,-18.5251 -58.2142,0 0,18.5251 z"
            style="fill:#f7db96;fill-opacity:1;fill-rule:nonzero;stroke:none"
@@ -1507,7 +1507,7 @@
                x="0 7.3369999 13.4552 17.736401 23.854601 33.635799 39.754002 43.417 49.535198 53.816399 61.1534 64.816399 70.934601 74.597603"
                y="0"
                sodipodi:role="line"
-               id="tspan4354">ParameterState</tspan></text>
+               id="tspan4354">ParameterPort</tspan></text>
 </g><g
            id="g4356"
            transform="matrix(0,1,1,0,759.421,681.9542)"><path

@@ -80,7 +80,7 @@ class NormalDist(DistributionFunction):
         Standard deviation of the normal distribution. Must be > 0.0
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -103,7 +103,7 @@ class NormalDist(DistributionFunction):
         Standard deviation of the normal distribution; if it is 0.0, returns `mean <NormalDist.mean>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -226,7 +226,7 @@ class UniformToNormalDist(DistributionFunction):
         Standard deviation of the normal distribution
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -249,7 +249,7 @@ class UniformToNormalDist(DistributionFunction):
         Standard deviation of the normal distribution
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -362,7 +362,7 @@ class ExponentialDist(DistributionFunction):
         The scale parameter of the exponential distribution
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -382,7 +382,7 @@ class ExponentialDist(DistributionFunction):
         The scale parameter of the exponential distribution
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -468,7 +468,7 @@ class UniformDist(DistributionFunction):
         Upper bound of the uniform distribution
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -491,7 +491,7 @@ class UniformDist(DistributionFunction):
         Upper bound of the uniform distribution
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -593,7 +593,7 @@ class GammaDist(DistributionFunction):
         The shape of the gamma distribution. Should be greater than zero.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -616,7 +616,7 @@ class GammaDist(DistributionFunction):
         The shape of the gamma distribution. Should be greater than zero.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -720,7 +720,7 @@ class WaldDist(DistributionFunction):
          Mean of the Wald distribution. Should be greater than or equal to zero.
 
      params : Dict[param keyword: param value] : default None
-         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
          function.  Values specified for parameters in the dictionary override any assigned to those parameters in
          arguments of the constructor.
 
@@ -742,7 +742,7 @@ class WaldDist(DistributionFunction):
          Mean of the Wald distribution. Should be greater than or equal to zero.
 
      params : Dict[param keyword: param value] : default None
-         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
          function.  Values specified for parameters in the dictionary override any assigned to those parameters in
          arguments of the constructor.
 
@@ -890,7 +890,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         elements must be floats from 0 to 1.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -1100,7 +1100,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
             ignored.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 

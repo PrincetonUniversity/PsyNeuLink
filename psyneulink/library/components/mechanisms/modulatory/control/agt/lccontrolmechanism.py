@@ -35,12 +35,12 @@ Mechanisms that it controls.
 
 .. _LCControlMechanism_ObjectiveMechanism_Creation:
 
-*ObjectiveMechanism and Monitored OutputStates*
+*ObjectiveMechanism and Monitored OutputPorts*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Like any ControlMechanisms, when an LCControlMechanism is created it may `automatically create
 <`ControlMechanism_ObjectiveMechanism`> an `ObjectiveMechanism` from which it receives its input. The
-ObjectiveMechanism receives its input from any `OutputStates <OutputState>` specified in **monitor_for_control**
+ObjectiveMechanism receives its input from any `OutputPorts <OutputPort>` specified in **monitor_for_control**
 argument of the constructor for LCControlMechanism
 COMMENT:
 TBI FOR COMPOSITION
@@ -50,7 +50,7 @@ COMMENT
 By default, the ObjectiveMechanism of an LCControlMechanism is assigned a `CombineMeans` Function  as its `function
 <ObjectiveMechanism.function>` (see `LCControlMechanism_ObjectiveMechanism`).  The ObjectiveMechanism can be
 customized using the **objective_mechanism** argument of the LCControlMechanism's constructor; however, the `value
-<OutputState.value>` of its *OUTCOME* `OutputState` must be a scalar value (that is used as the input to the
+<OutputPort.value>` of its *OUTCOME* `OutputPort` must be a scalar value (that is used as the input to the
 LCControlMechanism's `function <LCControlMechanism.function>` to drive its `phasic response
 <LCControlMechanism_Modes_Of_Operation>`.
 
@@ -68,7 +68,7 @@ specified for control by an LCControlMechanism must be either a `TransferMechani
 *ALL* can also be used to specify all of the eligible `ProcessMechanisms <ProcessingMechanism>` in all of the
 `Compositions <Composition>` to which the LCControlMechanism belongs.  If a Mechanism specified in the
 **modulated_mechanisms** argument does not implement a multiplicative_param, it is ignored. A `ControlProjection` is
-automatically created that projects from the LCControlMechanism to the `ParameterState` for the `multiplicative_param
+automatically created that projects from the LCControlMechanism to the `ParameterPort` for the `multiplicative_param
 <Function_Modulatory_Params>` of every Mechanism specified in the **modulated_mechanisms** argument.  The Mechanisms
 modulated by an LCControlMechanism are listed in its `modulated_mechanisms <LCControlMechanism.modulated_mechanisms>`
 attribute).
@@ -83,8 +83,8 @@ Structure
 *Input*
 ~~~~~~~
 
-An LCControlMechanism has a single (primary) `InputState <InputState_Primary>`, the `value <InputState.value>` of
-which is a scalar that is provided by a `MappingProjection` from the *OUTCOME* `OutputState <ObjectiveMechanism_Output>`
+An LCControlMechanism has a single (primary) `InputPort <InputPort_Primary>`, the `value <InputPort.value>` of
+which is a scalar that is provided by a `MappingProjection` from the *OUTCOME* `OutputPort <ObjectiveMechanism_Output>`
 of the LCControlMechanism's `ObjectiveMechanism`.  That value is used as the input to the LCControlMechanism's
 `function <LCControlMechanism.function>`, which drives its `phasic response <LCControlMechanism_Modes_Of_Operation>`.
 
@@ -95,13 +95,13 @@ ObjectiveMechanism
 ^^^^^^^^^^^^^^^^^^
 
 If an ObjectiveMechanism is `automatically created <LCControlMechanism_ObjectiveMechanism_Creation> for an
-LCControlMechanism, it receives its inputs from the `OutputState(s) <OutputState>` specified the
-**monitor_for_control** argument of the LCControlMechanism constructor, or the **montiored_output_states** argument
+LCControlMechanism, it receives its inputs from the `OutputPort(s) <OutputPort>` specified the
+**monitor_for_control** argument of the LCControlMechanism constructor, or the **montiored_output_ports** argument
 of the LCControlMechanism's `ObjectiveMechanism <ControlMechanism_ObjectiveMechanism>`.  By default, the
 ObjectiveMechanism is assigned a `CombineMeans` Function with a default `operation <LinearCombination.operation>` of
-*SUM*; this takes the mean of each array that the ObjectiveMechanism receives from the `value <OutputState.value>` of
-each of the OutputStates that it monitors, and returns the sum of these means.  The `value <OutputState.value>` of
-each OutputState can be weighted (multiplicatively and/or exponentially), by specifying this in the
+*SUM*; this takes the mean of each array that the ObjectiveMechanism receives from the `value <OutputPort.value>` of
+each of the OutputPorts that it monitors, and returns the sum of these means.  The `value <OutputPort.value>` of
+each OutputPort can be weighted (multiplicatively and/or exponentially), by specifying this in the
 **monitor_for_control** argument of the LCControlMechanism (see `ControlMechanism_Monitor_for_Control` for details).
 As with any ControlMechanism, its ObjectiveMechanism can be explicitly specified to customize its `function
 <ObjectiveMechanism.function>` or any of its other parameters, by specifyihng it in the **objective_mechanism**
@@ -123,8 +123,8 @@ argument of the LCControlMechanism's constructor.
    for an EVCControlMechanism see 1st example under `System_Control_Examples`).
 
 The ObjectiveFunction is listed in the LCControlMechanism's `objective_mechanism
-<LCControlMechanism.objective_mechanism>` attribute.  The OutputStates it monitors are listed in the
-ObjectiveMechanism's `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute) as well as the
+<LCControlMechanism.objective_mechanism>` attribute.  The OutputPorts it monitors are listed in the
+ObjectiveMechanism's `monitored_output_ports <ObjectiveMechanism.monitored_output_ports>` attribute) as well as the
 LCControlMechanism's `monitor_for_control <LCControlMechanism.monitor_for_control>` attribute.  These can be
 displayed using the LCControlMechanism's `show <LCControlMechanism.show>` method.
 
@@ -169,7 +169,7 @@ regulates its operation between `"tonic" and "phasic" modes <https://www.ncbi.nl
 An LCControlMechanism has a single `ControlSignal`, that uses its `control_allocation
 <LCControlMechanism.control_allocation>` (the scalar value generated by its `function <LCControlMechanism.function>`)
 to modulate the function of the Mechanism(s) it controls.  The ControlSignal is assigned a `ControlProjection` to the
-`ParameterState` for the `multiplicative_param <Function_Modulatory_Params>` of the `function
+`ParameterPort` for the `multiplicative_param <Function_Modulatory_Params>` of the `function
 <Mechanism_Base.function>` for each of those Mechanisms.  The Mechanisms modulated by an LCControlMechanism are listed
 in its `modulated_mechanisms <LCControlMechanism.modulated_mechanisms>` attribute) and can be displayed using its
 :func:`show <LCControlMechanism.show>` method.
@@ -179,7 +179,7 @@ VERSION FOR MULTIPLE CONTROL SIGNALS
 An LCControlMechanism has a `ControlSignal` for each Mechanism listed in its `modulated_mechanisms
 <LCControlMechanism.modulated_mechanisms>` attribute.  All of its ControlSignals are assigned the same value:  the
 result of the LCControlMechanism's `function <LCControlMechanism.function>`.  Each ControlSignal is assigned a
-`ControlProjection` to the `ParameterState` for the  `multiplicative_param <Function_Modulatory_Params>` of `function
+`ControlProjection` to the `ParameterPort` for the  `multiplicative_param <Function_Modulatory_Params>` of `function
 <Mechanism_Base.function>` for the Mechanism in `modulated_mechanisms <LCControlMechanism.modulate_mechanisms>` to
 which it corresponds. The Mechanisms modulated by an LCControlMechanism can be displayed using its :func:`show
 <LCControlMechanism.show>` method.
@@ -211,7 +211,7 @@ COMMENT:
 #     <BLANKLINE>
 #     my_LC
 #     <BLANKLINE>
-#       Monitoring the following Mechanism OutputStates:
+#       Monitoring the following Mechanism OutputPorts:
 #     <BLANKLINE>
 #       Modulating the following parameters:
 #         my_logistic_mechanism: gain
@@ -224,7 +224,7 @@ Calling `LC.show()` generates the following report::
 
     my_LC
 
-      Monitoring the following Mechanism OutputStates:
+      Monitoring the following Mechanism OutputPorts:
 
       Modulating the following parameters:
         my_logistic_mechanism: gain
@@ -242,8 +242,8 @@ ADDITIONAL EXAMPLES HERE OF THE DIFFERENT FORMS OF SPECIFICATION FOR
 **monitor_for_control** and **modulated_mechanisms**
 
 STRUCTURE:
-MODE INPUT_STATE <- NAMED ONE, LAST?
-SIGNAL INPUT_STATE(S) <- PRIMARY;  MUST BE FROM PROCESSING MECHANISMS
+MODE INPUT_PORT <- NAMED ONE, LAST?
+SIGNAL INPUT_PORT(S) <- PRIMARY;  MUST BE FROM PROCESSING MECHANISMS
 CONTROL SIGNALS
 
 COMMENT
@@ -256,14 +256,14 @@ Execution
 An LCControlMechanism executes within a `Composition` at a point specified in the Composition's `Scheduler` or, if it
 is the `controller <System>` for a `Composition`, after all of the other Mechanisms in the Composition have `executed
 <Composition_Execution>` in a `TRIAL`. It's `function <LCControlMechanism.function>` takes the `value
-<InputState.value>` of the LCControlMechanism's `primary InputState <InputState_Primary>` as its input, and generates a
+<InputPort.value>` of the LCControlMechanism's `primary InputPort <InputPort_Primary>` as its input, and generates a
 response -- under the influence of its `mode <FitzHughNagumoIntegrator.mode>` parameter -- that is assigned as the
 `allocation <LCControlSignal.allocation>` of its `ControlSignals <ControlSignal>`.  The latter are used by its
 `ControlProjections <ControlProjection>` to modulate the response -- in the next `TRIAL` of execution --  of the
 Mechanisms the LCControlMechanism controls.
 
 .. note::
-   A `ParameterState` that receives a `ControlProjection` does not update its value until its owner Mechanism
+   A `ParameterPort` that receives a `ControlProjection` does not update its value until its owner Mechanism
    executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a
    LCControlMechanism has executed, the `multiplicative_param <Function_Modulatory_Params>` parameter of the `function
    <Mechanism_Base.function>` of a Mechanism that it controls will not assume its new value until that Mechanism has
@@ -283,7 +283,7 @@ from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism i
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.shellclasses import Mechanism, System_Base
-from psyneulink.core.components.states.outputstate import OutputState
+from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.keywords import \
     ALL, CONTROL, CONTROL_PROJECTIONS, FUNCTION, INIT_EXECUTE_METHOD_ONLY, \
@@ -348,16 +348,16 @@ class LCControlMechanism(ControlMechanism):
 
     system : System : default None
         specifies the `System` for which the LCControlMechanism should serve as a `controller <System.controller>`;
-        the LCControlMechanism will inherit any `OutputStates <OutputState>` specified in the **monitor_for_control**
+        the LCControlMechanism will inherit any `OutputPorts <OutputPort>` specified in the **monitor_for_control**
         argument of the `system <LCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
         specified in its **control_signals** argument.
 
-    objective_mechanism : ObjectiveMechanism, List[OutputState or Tuple[OutputState, list or 1d np.array, list or 1d \
+    objective_mechanism : ObjectiveMechanism, List[OutputPort or Tuple[OutputPort, list or 1d np.array, list or 1d \
     np.array]] : default ObjectiveMechanism(function=CombineMeans)
-        specifies either an `ObjectiveMechanism` to use for the LCControlMechanism or a list of the OutputStates it
+        specifies either an `ObjectiveMechanism` to use for the LCControlMechanism or a list of the OutputPorts it
         should
-        monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitor>` is used,
-        a default ObjectiveMechanism is created and the list is passed to its **monitored_output_states** argument.
+        monitor; if a list of `OutputPort specifications <ObjectiveMechanism_Monitor>` is used,
+        a default ObjectiveMechanism is created and the list is passed to its **monitored_output_ports** argument.
 
     modulated_mechanisms : List[`Mechanism`] or *ALL*
         specifies the Mechanisms to be modulated by the LCControlMechanism. If it is a list, every item must be a
@@ -466,7 +466,7 @@ class LCControlMechanism(ControlMechanism):
         scaling_factor_gain = k
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters
         for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
         specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
@@ -483,26 +483,26 @@ class LCControlMechanism(ControlMechanism):
 
     system : System_Base
         the `System` for which LCControlMechanism is the `controller <System.controller>`;
-        the LCControlMechanism inherits any `OutputStates <OutputState>` specified in the **monitor_for_control**
+        the LCControlMechanism inherits any `OutputPorts <OutputPort>` specified in the **monitor_for_control**
         argument of the `system <LCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
         specified in its **control_signals** argument.
 
     objective_mechanism : ObjectiveMechanism : ObjectiveMechanism(function=CombinedMeans))
-        the 'ObjectiveMechanism' used by the LCControlMechanism to aggregate the `value <OutputState.value>`\\s of the
-        OutputStates used to drive its `phasic response <LCControlMechanism_Modes_Of_Operation>`.
+        the 'ObjectiveMechanism' used by the LCControlMechanism to aggregate the `value <OutputPort.value>`\\s of the
+        OutputPorts used to drive its `phasic response <LCControlMechanism_Modes_Of_Operation>`.
 
-    monitor_for_control : List[OutputState]
-        list of the `OutputStates <OutputState>` that project to `objective_mechanism
-        <LCControlMechanism.objective_mechanism>` (and also listed in the ObjectiveMechanism's `monitored_output_states
-        <ObjectiveMechanism.monitored_output_states>` attribute);  these are used by the ObjectiveMechanism to
+    monitor_for_control : List[OutputPort]
+        list of the `OutputPorts <OutputPort>` that project to `objective_mechanism
+        <LCControlMechanism.objective_mechanism>` (and also listed in the ObjectiveMechanism's `monitored_output_ports
+        <ObjectiveMechanism.monitored_output_ports>` attribute);  these are used by the ObjectiveMechanism to
         generate the ControlMechanism's `input <ControlMechanism_Input>`, which drives the `phasic response
         <LCControlMechanism_Modes_Of_Operation>` of its `function <LControlMechanism.function>`.
 
-    monitored_output_states_weights_and_exponents : List[Tuple(float, float)]
+    monitored_output_ports_weights_and_exponents : List[Tuple(float, float)]
         each tuple in the list contains the weight and exponent associated with a corresponding item of
-        `monitored_output_states <LCControlMechanism.monitored_output_states>`;  these are the same as those in
-        the `monitored_output_states_weights_and_exponents
-        <ObjectiveMechanism.monitored_output_states_weights_and_exponents>` attribute of the `objective_mechanism
+        `monitored_output_ports <LCControlMechanism.monitored_output_ports>`;  these are the same as those in
+        the `monitored_output_ports_weights_and_exponents
+        <ObjectiveMechanism.monitored_output_ports_weights_and_exponents>` attribute of the `objective_mechanism
         <LCControlMechanism.objective_mechanism>`, and are used by the ObjectiveMechanism's `function
         <ObjectiveMechanism.function>` to parametrize the contribution made to its output by each of the values that
         it monitors (see `ObjectiveMechanism Function <ObjectiveMechanism_Function>`).
@@ -527,7 +527,7 @@ class LCControlMechanism(ControlMechanism):
 
     control_projections : List[ControlProjection]
         list of `ControlProjections <ControlProjection>` sent by the LCControlMechanism's `ControlSignal`, each of
-        which projects to the `ParameterState` for the `multiplicative_param <Function_Modulatory_Params>` of the
+        which projects to the `ParameterPort` for the `multiplicative_param <Function_Modulatory_Params>` of the
         `function <Mechanism_Base.function>` of one of the Mechanisms listed in `modulated_mechanisms
         <LCControlMechanism.modulated_mechanisms>` attribute.
 
@@ -699,7 +699,7 @@ class LCControlMechanism(ControlMechanism):
                  default_variable=None,
                  system:tc.optional(System_Base)=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
-                 monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
+                 monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputPort))=None,
                  # modulated_mechanisms:tc.optional(tc.any(list,str)) = None,
                  modulated_mechanisms=None,
                  modulation:tc.optional(str)=MULTIPLICATIVE,
@@ -769,7 +769,7 @@ class LCControlMechanism(ControlMechanism):
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS
 
-        Check that all items in MONITOR_FOR_CONTROL are Mechanisms or OutputStates for Mechanisms in self.system
+        Check that all items in MONITOR_FOR_CONTROL are Mechanisms or OutputPorts for Mechanisms in self.system
         Check that every item in `modulated_mechanisms <LCControlMechanism.modulated_mechanisms>` is a Mechanism
             and that its function has a multiplicative_param
         """
@@ -801,12 +801,12 @@ class LCControlMechanism(ControlMechanism):
                                                   self.name, mech,
                                                   repr(MULTIPLICATIVE_PARAM)))
 
-    def _instantiate_output_states(self, context=None):
+    def _instantiate_output_ports(self, context=None):
         """Instantiate ControlSignals and assign ControlProjections to Mechanisms in self.modulated_mechanisms
 
         If **modulated_mechanisms** argument of constructor was specified as *ALL*,
             assign all ProcessingMechanisms in Compositions to which LCControlMechanism belongs to self.modulated_mechanisms
-        Instantiate ControlSignal with Projection to the ParameterState for the multiplicative_param of every
+        Instantiate ControlSignal with Projection to the ParameterPort for the multiplicative_param of every
            Mechanism listed in self.modulated_mechanisms
         """
         from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
@@ -825,7 +825,7 @@ class LCControlMechanism(ControlMechanism):
                                 hasattr(mech.function, MULTIPLICATIVE_PARAM)):
                             self.modulated_mechanisms.append(mech)
             else:
-                # If LCControlMechanism is not in a Process or System, defer implementing OutputStates until it is
+                # If LCControlMechanism is not in a Process or System, defer implementing OutputPorts until it is
                 return
 
         # Get the name of the multiplicative_param of each Mechanism in self.modulated_mechanisms
@@ -844,7 +844,7 @@ class LCControlMechanism(ControlMechanism):
             self.control = [{PROJECTIONS: ctl_sig_projs}]
             self.parameters.control_allocation.default_value = self.value[0]
 
-        super()._instantiate_output_states(context=context)
+        super()._instantiate_output_ports(context=context)
 
     def _check_for_composition(self, context=None):
         from psyneulink.core.compositions.composition import Composition
@@ -923,8 +923,8 @@ class LCControlMechanism(ControlMechanism):
     def _add_system(self, system, role:str):
         super()._add_system(system, role)
         if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms is ALL:
-            # Call with ContextFlags.COMPONENT so that OutputStates are replaced rather than added
-            self._instantiate_output_states(context=Context(source=ContextFlags.COMPONENT))
+            # Call with ContextFlags.COMPONENT so that OutputPorts are replaced rather than added
+            self._instantiate_output_ports(context=Context(source=ContextFlags.COMPONENT))
 
     @tc.typecheck
     def add_modulated_mechanisms(self, mechanisms:list):
@@ -936,14 +936,14 @@ class LCControlMechanism(ControlMechanism):
         self._validate_params(request_set=request_set, target_set=target_set)
 
         # Assign ControlProjection from the LCControlMechanism's ControlSignal
-        #    to the ParameterState for the multiplicative_param of each Mechanism in mechanisms
+        #    to the ParameterPort for the multiplicative_param of each Mechanism in mechanisms
         for mech in mechanisms:
             self.modulated_mechanisms.append(mech)
-            parameter_state = mech._parameter_states[mech.multiplicative_param]
+            parameter_port = mech._parameter_ports[mech.multiplicative_param]
             ControlProjection(sender=self.control_signals[0],
-                              receiver=parameter_state)
+                              receiver=parameter_port)
             # self.aux_components.append(ControlProjection(sender=self.control_signals[0],
-            #                                              receiver=parameter_state))
+            #                                              receiver=parameter_port))
 
     @tc.typecheck
     def remove_modulated_mechanisms(self, mechanisms:list):
@@ -954,10 +954,10 @@ class LCControlMechanism(ControlMechanism):
             if not mech in self.modulated_mechanisms:
                 continue
 
-            parameter_state = mech._parameter_states[mech.multiplicative_param]
+            parameter_port = mech._parameter_ports[mech.multiplicative_param]
 
             # Get ControlProjection
-            for projection in parameter_state.mod_afferents:
+            for projection in parameter_port.mod_afferents:
                 if projection.sender.owner is self:
                     control_projection = projection
                     break
@@ -966,43 +966,43 @@ class LCControlMechanism(ControlMechanism):
             index = self.control_signals[0].efferents[control_projection]
             del(self.control_signals[0].efferents[index])
 
-            # Delete ControlProjection from recipient ParameterState
-            index = parameter_state.mod_afferents[control_projection]
-            del(parameter_state.mod_afferents[index])
+            # Delete ControlProjection from recipient ParameterPort
+            index = parameter_port.mod_afferents[control_projection]
+            del(parameter_port.mod_afferents[index])
 
             # Delete Mechanism from self.modulated_mechanisms
             index = self.modulated_mechanisms.index(mech)
             del(self.modulated_mechanisms[index])
 
     def show(self):
-        """Display the `OutputStates <OutputState>` monitored by the LCControlMechanism's `objective_mechanism`
+        """Display the `OutputPorts <OutputPort>` monitored by the LCControlMechanism's `objective_mechanism`
         and the `multiplicative_params <Function_Modulatory_Params>` modulated by the LCControlMechanism.
         """
 
         print("\n---------------------------------------------------------")
 
         print("\n{0}".format(self.name))
-        print("\n\tMonitoring the following Mechanism OutputStates:")
+        print("\n\tMonitoring the following Mechanism OutputPorts:")
         if self.objective_mechanism is None:
             print("\t\tNone")
         else:
-            for state in self.objective_mechanism.input_states:
-                for projection in state.path_afferents:
-                    monitored_state = projection.sender
-                    monitored_state_mech = projection.sender.owner
-                    monitored_state_index = self.monitored_output_states.index(monitored_state)
+            for port in self.objective_mechanism.input_ports:
+                for projection in port.path_afferents:
+                    monitored_port = projection.sender
+                    monitored_port_Mech = projection.sender.owner
+                    monitored_port_index = self.monitored_output_ports.index(monitored_port)
 
-                    weight = self.monitored_output_states_weights_and_exponents[monitored_state_index][0]
-                    exponent = self.monitored_output_states_weights_and_exponents[monitored_state_index][1]
+                    weight = self.monitored_output_ports_weights_and_exponents[monitored_port_index][0]
+                    exponent = self.monitored_output_ports_weights_and_exponents[monitored_port_index][1]
 
                     print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
-                           format(monitored_state_mech.name, monitored_state.name, weight, exponent))
+                           format(monitored_port_Mech.name, monitored_port.name, weight, exponent))
 
         print ("\n\tModulating the following parameters:".format(self.name))
         # Sort for consistency of output:
-        state_names_sorted = sorted(self.output_states.names)
-        for state_name in state_names_sorted:
-            for projection in self.output_states[state_name].efferents:
+        port_Names_sorted = sorted(self.output_ports.names)
+        for port_Name in port_Names_sorted:
+            for projection in self.output_ports[port_Name].efferents:
                 print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
 
         print ("\n---------------------------------------------------------")

@@ -16,7 +16,7 @@ Overview
 
 A MaskedMappingProjection is a subclass of `MappingProjection` that applies a specified mask array
 (either additively, multiplicatively, or exponentially) to the MappingProjection's `matrix <MappingProjection.matrix>`
-each time the MappingProjection is executed.  The mask is assigned a `ParameterState` and can thus be modulated
+each time the MappingProjection is executed.  The mask is assigned a `ParameterPort` and can thus be modulated
 by a `ControlMechanism <ControlMechanism>`.
 
 .. _Masked_MappingProjection_Creation:
@@ -65,7 +65,7 @@ from psyneulink.core.components.functions.transferfunctions import get_matrix
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import projection_keywords
 from psyneulink.core.components.shellclasses import Mechanism
-from psyneulink.core.components.states.outputstate import OutputState
+from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import DEFAULT_MATRIX, FUNCTION_PARAMS, MASKED_MAPPING_PROJECTION, MATRIX
 from psyneulink.core.globals.parameters import Parameter
@@ -107,14 +107,14 @@ class MaskedMappingProjection(MappingProjection):
     Arguments
     ---------
 
-    sender : Optional[OutputState or Mechanism]
+    sender : Optional[OutputPort or Mechanism]
         specifies the source of the Projection's input. If a Mechanism is specified, its
-        `primary OutputState <OutputState_Primary>` will be used. If it is not specified, it will be assigned in
+        `primary OutputPort <OutputPort_Primary>` will be used. If it is not specified, it will be assigned in
         the context in which the Projection is used.
 
-    receiver : Optional[InputState or Mechanism]
+    receiver : Optional[InputPort or Mechanism]
         specifies the destination of the Projection's output.  If a Mechanism is specified, its
-        `primary InputState <InputState_Primary>` will be used. If it is not specified, it will be assigned in
+        `primary InputPort <InputPort_Primary>` will be used. If it is not specified, it will be assigned in
         the context in which the Projection is used.
 
     matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX
@@ -130,7 +130,7 @@ class MaskedMappingProjection(MappingProjection):
         <MaskedMappingProjection.matrix>` each time the Projection is executed.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
         the Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default assignment (`LinearCombination`).  Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
@@ -149,10 +149,10 @@ class MaskedMappingProjection(MappingProjection):
 
     componentType : MASKED_MAPPING_PROJECTION
 
-    sender : OutputState
+    sender : OutputPort
         identifies the source of the Projection's input.
 
-    receiver: InputState
+    receiver: InputPort
         identifies the destination of the Projection.
 
     matrix : 2d np.ndarray
@@ -168,7 +168,7 @@ class MaskedMappingProjection(MappingProjection):
         <MaskedMappingProjection.matrix>` when the Projection is executed.
 
     value : np.ndarray
-        Output of AutoAssociativeProjection, transmitted to `variable <InputState.variable>` of `receiver`.
+        Output of AutoAssociativeProjection, transmitted to `variable <InputPort.variable>` of `receiver`.
 
     name : str
         a string used for the name of the AutoAssociativeProjection (see `Registry <LINK>` for conventions used in
@@ -272,11 +272,11 @@ class MaskedMappingProjection(MappingProjection):
                                                    format(repr(MASK), self.name, mask_shape,
                                                           repr(MATRIX), matrix_shape))
 
-    def _update_parameter_states(self, context=None, runtime_params=None):
+    def _update_parameter_ports(self, context=None, runtime_params=None):
 
         # Update parameters first, to be sure mask that has been updated if it is being modulated
         #  and that it is applied to the updated matrix param
-        super()._update_parameter_states(context=context, runtime_params=runtime_params)
+        super()._update_parameter_ports(context=context, runtime_params=runtime_params)
 
         mask = self.parameters.mask._get(context)
         mask_operation = self.parameters.mask_operation._get(context)

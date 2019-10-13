@@ -316,12 +316,12 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         * Called by ControlSignalGridSearch.
         * Call System.execute for each `control_allocation` in `control_signal_search_space`.
-        * Store an array of values for output_states in `monitored_output_states`
-          (i.e., the input_states in `input_states`) for each `control_allocation`.
+        * Store an array of values for output_ports in `monitored_output_ports`
+          (i.e., the input_ports in `input_ports`) for each `control_allocation`.
         * Call `_compute_EVC` for each control_allocation to calculate the EVC, identify the  maximum,
           and assign to `EVC_max`.
-        * Set `EVC_max_policy` to the `control_allocation` (outputState.values) corresponding to EVC_max.
-        * Set value for each control_signal (outputState.value) to the values in `EVC_max_policy`.
+        * Set `EVC_max_policy` to the `control_allocation` (outputPort.values) corresponding to EVC_max.
+        * Set value for each control_signal (outputPort.value) to the values in `EVC_max_policy`.
         * Return an control_allocation.
 
         .. note::
@@ -329,7 +329,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
               it is NOT used for System.execute -- that uses the runtime_params provided for the Mechanisms in each
               Process.configuration
 
-        Return (2D np.array): value of outputState for each monitored state (in self.input_states) for EVC_max
+        Return (2D np.array): value of outputPort for each monitored port (in self.input_ports) for EVC_max
 
         """
 
@@ -365,7 +365,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         # Evaluate all combinations of control_signals (policies)
         sample = 0
-        EVC_max_state_values = variable.copy()
+        EVC_max_port_values = variable.copy()
 
         EVC_max_policy = control_signal_search_space[0] * 0.0
 
@@ -411,8 +411,8 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
             result = None
             EVC_max = float('-Infinity')
             EVC_max_policy = np.zeros_like(control_signal_search_space[0])
-            EVC_max_state_values = np.zeros_like(controller.get_input_values(context))
-            max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
+            EVC_max_port_values = np.zeros_like(controller.get_input_values(context))
+            max_value_port_policy_tuple = (EVC_max, EVC_max_port_values, EVC_max_policy)
             # FIX:  INITIALIZE TO FULL LENGTH AND ASSIGN DEFAULT VALUES (MORE EFFICIENT):
             EVC_values = np.array([])
             EVC_policies = np.array([[]])
@@ -448,17 +448,17 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                         EVC_policies = np.append(EVC_policies, np.atleast_2d(allocation_vector), axis=0)
 
                 # If EVC is greater than the previous value:
-                # - store the current set of monitored state value in EVC_max_state_values
+                # - store the current set of monitored port value in EVC_max_port_values
                 # - store the current set of control_signals in EVC_max_policy
                 # if EVC_max > EVC:
                 # FIX: PUT ERROR HERE IF EVC AND/OR EVC_MAX ARE EMPTY (E.G., WHEN EXECUTION_ID IS WRONG)
                 if EVC == EVC_max:
-                    # Keep track of state values and allocation policy associated with EVC max
-                    # EVC_max_state_values = controller.input_value.copy()
+                    # Keep track of port values and allocation policy associated with EVC max
+                    # EVC_max_port_values = controller.input_value.copy()
                     # EVC_max_policy = allocation_vector.copy()
-                    EVC_max_state_values = controller.get_input_values(context)
+                    EVC_max_port_values = controller.get_input_values(context)
                     EVC_max_policy = allocation_vector
-                    max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
+                    max_value_port_policy_tuple = (EVC_max, EVC_max_port_values, EVC_max_policy)
 
             #endregion
 
@@ -466,12 +466,12 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
             if MPI_IMPLEMENTATION:
                 # combine max result tuples from all processes and distribute to all processes
-                max_tuples = Comm.allgather(max_value_state_policy_tuple)
+                max_tuples = Comm.allgather(max_value_port_policy_tuple)
                 # get tuple with "EVC max of maxes"
                 max_of_max_tuples = max(max_tuples, key=lambda max_tuple: max_tuple[0])
-                # get EVC_max, state values and allocation policy associated with "max of maxes"
+                # get EVC_max, port values and allocation policy associated with "max of maxes"
                 EVC_max = max_of_max_tuples[0]
-                EVC_max_state_values = max_of_max_tuples[1]
+                EVC_max_port_values = max_of_max_tuples[1]
                 EVC_max_policy = max_of_max_tuples[2]
 
                 if controller.save_all_values_and_policies:
@@ -479,17 +479,17 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                     EVC_policies = np.concatenate(Comm.allgather(EVC_policies), axis=0)
 
             controller.parameters.EVC_max._set(EVC_max, context)
-            controller.parameters.EVC_max_state_values._set(EVC_max_state_values, context)
+            controller.parameters.EVC_max_port_values._set(EVC_max_port_values, context)
             controller.parameters.EVC_max_policy._set(EVC_max_policy, context)
             if controller.save_all_values_and_policies:
                 controller.parameters.EVC_values._set(EVC_values, context)
                 controller.parameters.EVC_policies._set(EVC_policies, context)
             # # TEST PRINT:
             # import re
-            # print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_state_values: {}\n\t\tEVC_max_policy: {}".
-            #       format(re.sub('[\[,\],\n]','',str(max_value_state_policy_tuple[0])),
-            #              re.sub('[\[,\],\n]','',str(max_value_state_policy_tuple[1])),
-            #              re.sub('[\[,\],\n]','',str(max_value_state_policy_tuple[2]))),
+            # print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_port_values: {}\n\t\tEVC_max_policy: {}".
+            #       format(re.sub('[\[,\],\n]','',str(max_value_port_policy_tuple[0])),
+            #              re.sub('[\[,\],\n]','',str(max_value_port_policy_tuple[1])),
+            #              re.sub('[\[,\],\n]','',str(max_value_port_policy_tuple[2]))),
             #       flush=True)
 
             # FROM MIKE ANDERSON (ALTERNTATIVE TO allgather:  REDUCE USING A FUNCTION OVER LOCAL VERSION)
@@ -506,11 +506,11 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         #region ASSIGN CONTROL SIGNAL VALUES
 
         # Assign allocations to control_signals for optimal allocation policy:
-        EVC_maxStateValue = iter(EVC_max_state_values)
+        EVC_maxStateValue = iter(EVC_max_port_values)
 
-        # Assign max values for optimal allocation policy to controller.input_states (for reference only)
-        for i in range(len(controller.input_states)):
-            controller.input_states[controller.input_states.names[i]].parameters.value._set(np.atleast_1d(next(EVC_maxStateValue)), context)
+        # Assign max values for optimal allocation policy to controller.input_ports (for reference only)
+        for i in range(len(controller.input_ports)):
+            controller.input_ports[controller.input_ports.names[i]].parameters.value._set(np.atleast_1d(next(EVC_maxStateValue)), context)
 
 
         # Report EVC max info
@@ -525,7 +525,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         #endregion
 
         # # TEST PRINT:
-        # print ("\nEND OF TRIAL 1 EVC outputState: {0}\n".format(controller.outputState.value))
+        # print ("\nEND OF TRIAL 1 EVC outputPort: {0}\n".format(controller.outputPort.value))
 
         #region ASSIGN AND RETURN control_allocation
         # Convert EVC_max_policy into 2d array with one control_signal allocation per item,
@@ -558,7 +558,7 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context):
     """
     # # TEST PRINT:
     # print("Allocation vector: {}\nPredicted input: {}".
-    #       format(allocation_vector, [mech.outputState.value for mech in predicted_input]),
+    #       format(allocation_vector, [mech.outputPort.value for mech in predicted_input]),
     #       flush=True)
 
 
@@ -686,10 +686,10 @@ class PredictionMechanism(IntegratorMechanism):
     The `System` to which a PredictionMechanism belongs is referenced in its `system <PredictionMechanism.system>`
     attribute, and the System's `ORIGIN` Mechanism which the PredictionMechanism is associated is referenced in its
     `origin_mechanism <PredictionMechanism.origin_mechanism>` attribute.  A PredictionMechanism has the same number
-    of `InputStates <InputState>` as its `origin_mechanism <PredictionMechanism.origin_mechanism>`, each of which
-    receives a `Projection <Projection>` from the same source as the corresponding InputState of its `origin_mechanism
+    of `InputPorts <InputPort>` as its `origin_mechanism <PredictionMechanism.origin_mechanism>`, each of which
+    receives a `Projection <Projection>` from the same source as the corresponding InputPort of its `origin_mechanism
     <PredictionMechanism.origin_mechanism>` (see `EVCControlMechanism_Prediction_Mechanisms`); and it has one
-    `OutputState` for each of its InputStates.
+    `OutputPort` for each of its InputPorts.
 
     .. _PredictionMechanism_Function:
 
@@ -793,7 +793,7 @@ class PredictionMechanism(IntegratorMechanism):
         necessarily of the same length (see `above <PredictionMechanism_Function>` for additional details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
         the Mechanism, its `function <Mechanism_Base.function>`, and/or a custom function and its parameters.  Values
         specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
@@ -826,7 +826,7 @@ class PredictionMechanism(IntegratorMechanism):
         result returned by the PredictionMechanism's `function <PredictionMechanism.function>`, and provided as
         input to its `origin_mechanism <PredictionMechanism.origin_mechanism>`.  The format conforms to that of a
         System's `run <System.run>` method: items in the outermost dimension (axis 0) correspond to the inputs for
-        each trial of a simulation, each of which is a 2d np.array containing the input for each `InputState` of the
+        each trial of a simulation, each of which is a 2d np.array containing the input for each `InputPort` of the
         `Mechanism`.
 
     """
@@ -867,7 +867,7 @@ class PredictionMechanism(IntegratorMechanism):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_states:tc.optional(tc.any(list, dict))=None,
+                 input_ports:tc.optional(tc.any(list, dict))=None,
                  function:tc.optional(tc.enum(
                          INPUT, TIME_AVERAGE_INPUT, AVERAGE_INPUTS, INPUT_SEQUENCE))=TIME_AVERAGE_INPUT,
                  initial_value=None,
@@ -923,7 +923,7 @@ class PredictionMechanism(IntegratorMechanism):
         super().__init__(
                 default_variable=default_variable,
                 size=size,
-                input_states=input_states,
+                input_ports=input_ports,
                 function=function,
                 params=params,
                 name=name,

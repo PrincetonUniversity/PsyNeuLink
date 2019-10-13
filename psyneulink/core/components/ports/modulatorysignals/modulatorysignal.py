@@ -30,25 +30,25 @@ Sections
 Overview
 --------
 
-A ModulatorySignal is a subclas of `OutputState` that belongs to a `ModulatoryMechanism <ModulatoryMechanism>`, and is
-used to `modulate <ModulatorySignal_Modulation>` the `value <State_Base.value>` of one or more `States <State>` by way
-of one or more `ModulatoryProjctions <ModulatoryProjection>`. A ModulatorySignal modulates the value of a State by
-modifying a  parameter of thatState's `function <State_Base.function>`.  There are three types of ModulatorySignals,
+A ModulatorySignal is a subclas of `OutputPort` that belongs to a `ModulatoryMechanism <ModulatoryMechanism>`, and is
+used to `modulate <ModulatorySignal_Modulation>` the `value <Port_Base.value>` of one or more `Ports <Port>` by way
+of one or more `ModulatoryProjctions <ModulatoryProjection>`. A ModulatorySignal modulates the value of a Port by
+modifying a  parameter of thatState's `function <Port_Base.function>`.  There are three types of ModulatorySignals,
 each of which is  associated wth a particular type of `ModulatoryMechanism <ModulatoryMechanism>` and `ModulatoryProjection
-<ModulatoryProjection>`, and modifies the value of different types of States, as summarized `below:
+<ModulatoryProjection>`, and modifies the value of different types of Ports, as summarized `below:
 
 * `ControlSignal`
     takes the `allocation <ControlSignal.allocation>` assigned to it by the `function <ControlMechanism.function>`
     of the `ControlMechanism <ControlMechanism>` to which it belongs, and uses it to modulate the parameter of a
     `Mechanism <Mechanism>` or its `function <Mechanism_Base.function>` (and thereby the `value
-    <Mechanism_Base.value>` of that Mechanism), or a parameter of the `function <State_Base.function>` one of the
-    Mechanism's `InputStates <InputState>` or `OutputStates <OutputState>` (and thereby the `value <State_Base.value>`
-    of the corresponding State).
+    <Mechanism_Base.value>` of that Mechanism), or a parameter of the `function <Port_Base.function>` one of the
+    Mechanism's `InputPorts <InputPort>` or `OutputPorts <OutputPort>` (and thereby the `value <Port_Base.value>`
+    of the corresponding Port).
 ..
 * `GatingSignal` takes the `allocation <GatingSignal.allocation>` assigned to it by the `function
     <GatingMechanism.function>` of the `GatingMechanism` to which it belongs, and uses it to modulate the parameter
-    of the `function <State_Base.function>` of an `InputState` or `OutputState` (and hence that State's `value
-    <State_Base.value>`).  A GatingMechanism and GatingSignal can be thought of as implementing a form of control
+    of the `function <Port_Base.function>` of an `InputPort` or `OutputPort` (and hence that Port's `value
+    <Port_Base.value>`).  A GatingMechanism and GatingSignal can be thought of as implementing a form of control
     specialized for gating the input to and/or output of a Mechanism.
 ..
 * `LearningSignal`
@@ -83,8 +83,8 @@ ModulatorySignals are created automatically by the `ModulatoryMechanism <Modulat
 by specifying them in the constructor for a `ModulatoryMechanism <ModulatoryMechanism>` (the details of which are
 described in the documentation for each type of ModulatorySignal).  If a ModulatorySignal is constructed explicitly,
 the type of modulation it uses is specifed in the **modulation** argument of its constructor, using a 2-item tuple
-that contains the State to be modulated as the first item, and either the name of the parameter of the State's `function
-<State_Base.function>` to be modulated, or a keyword specifying the type of modulation, as the second item (see
+that contains the Port to be modulated as the first item, and either the name of the parameter of the Port's `function
+<Port_Base.function>` to be modulated, or a keyword specifying the type of modulation, as the second item (see
 `ModulatorySignal_Types` for additional details).
 
 .. _ModulatorySignal_Structure:
@@ -98,11 +98,11 @@ ModulatorySignal receives a `modulatory_allocation` from the ModulatoryMechanism
 as the `variable <Function_Base.variable>` for its `function <ModulatorySignal.function>`, the result of which is the
 modulatory `value <ModulatorySignal.value>` of the ModulatorySignal.  A ModulatorySignal is associated with one or more
 `ModulatoryProjections <ModulatoryProjection>` of the corresponding type, that that receive the ModulatorySignal's
-`value <ModulatorySignal.value>`, and use this to modulate the State(s) to which they project.  All of the
+`value <ModulatorySignal.value>`, and use this to modulate the Port(s) to which they project.  All of the
 ModulatoryProjections from a given ModulatorySignal are assigned the same modulatory `value <ModulatorySignal.value>`
 (see `ModulatorySignal_Projections` below) and use the same `type of modulation <ModulatorySignal_Types>` specified
 by the the ModulatorySignal's `modulation <ModulatorySignal.modulation>` attribute.  The ModulatoryProjections
-received by a `State <State>` are listed in the State's `mod_afferents <State_Base.mod_afferents>` attribute.
+received by a `Port <Port>` are listed in the Port's `mod_afferents <Port_Base.mod_afferents>` attribute.
 
 The section on `Modulation` below provides a comparison of ModulatorySignal `subclasses and their uses
 <ModulatorySignal_Uses>` (summarized in an accompanying `table <ModulatorySignal_Table>` and `figure
@@ -118,14 +118,14 @@ The section on `Modulation` below provides a comparison of ModulatorySignal `sub
 A ModulatorySignal can be assigned one or more `ModulatoryProjections <ModulatoryProjection>`,
 using either the **projections** argument of its constructor, or in an entry of a dictionary assigned to the
 **params** argument with the key *PROJECTIONS*.  These are assigned to its `efferents  <ModulatorySignal.efferents>`
-attribute.  See `State Projections <State_Projections>` for additional details concerning the specification of
-Projections when creating a State.
+attribute.  See `Port Projections <Port_Projections>` for additional details concerning the specification of
+Projections when creating a Port.
 
 Although a ModulatorySignal can be assigned more than one `ModulatoryProjection <ModulatoryProjection>`,
 all of those Projections receive and convey the same modulatory `value <ModulatorySignal.value>` from the
 ModulatorySignal, and use the same form of `modulation <ModulatorySignal_Modulation>`.  This is a common use for some
-ModulatorySignals (e.g., the use of a single `GatingSignal` to gate multiple `InputState(s) <InputState>` or
-`OutputState(s) <OutputState>`), but requires more specialized circumstances for others (e.g., the use of a single
+ModulatorySignals (e.g., the use of a single `GatingSignal` to gate multiple `InputPort(s) <InputPort>` or
+`OutputPort(s) <OutputPort>`), but requires more specialized circumstances for others (e.g., the use of a single
 `LearningSignal` for more than one `MappingProjection`, or a single `ControlSignal` for the parameters of more than
 one Mechanism or function).
 
@@ -134,12 +134,12 @@ one Mechanism or function).
 *Modulation*
 ~~~~~~~~~~~~
 
-A ModulatorySignal modulates the value of a `State <State>` either by modifying a parameter of the State's `function
-<State_Base.function>` (which determines the State's `value <State_Base.value>`), or by  assigning a value to the State
+A ModulatorySignal modulates the value of a `Port <Port>` either by modifying a parameter of the Port's `function
+<Port_Base.function>` (which determines the Port's `value <Port_Base.value>`), or by  assigning a value to the Port
 directly.  The `type of modulation <ModulatorySignal_Types>` is determined by the ModulatorySignal's
 `modulation <ModulatorySignal.modulation>` attribute, which can be specified in the **modulation** argument of its
-ModulatorySignal's constructor, or in a *MODULATION* entry of a `State specification dictionary
-<State_Specification>` used to create the ModulatorySignal (see `Type of Modualtion <ModulatorySignal_Types>` and
+ModulatorySignal's constructor, or in a *MODULATION* entry of a `Port specification dictionary
+<Port_Specification>` used to create the ModulatorySignal (see `Type of Modualtion <ModulatorySignal_Types>` and
 `figure <ModulatorySignal_Detail_Figure>` below for details). If the type of `modulation <ModulatorySignal.modulation>`
 is not specified when a ModulatorySignal is created, it is assigned the value of the `modulation
 <ModulatoryMechanism_Base.modulation>` attribute for the `ModulatoryMechanism <ModulatoryMechanism>` to which it belongs.
@@ -150,52 +150,52 @@ Uses of Modulation
 ^^^^^^^^^^^^^^^^^^
 
 There are three broad categories of modulation that serve different purposes, and differ according to the
-ModulatorySignals used and the type of State modulated:
+ModulatorySignals used and the type of Port modulated:
 
   * **modulation of a** `Mechanism`\\s <function <Mechanism_Base.function> -- a `ControlSignal` must be used; this
-    modulates the `ParameterState` for a parameter of the Mechanism's `function <Mechanism_Base.function>` which,
+    modulates the `ParameterPort` for a parameter of the Mechanism's `function <Mechanism_Base.function>` which,
     in turn, determines how it computes the Mechanism's `value <Mechanism_Base.value>`;
 
   * **modulation of a** `Mechanism`\\s input or output -- a `GatingSignal` is specialized for this purpose, though a
-    `ControlSignal` can also be used;  these modulate an `InputState` of the Mechanism, that determines the
+    `ControlSignal` can also be used;  these modulate an `InputPort` of the Mechanism, that determines the
     Mechanism's `variable <Mechanism_Base.variable>` used as the input to its `function <Mechanism_Base.function>`,
-    or an `OutputState` of the Mechanism, that determines how the `value <Mechanism_Base.value>` of the Mechanism
+    or an `OutputPort` of the Mechanism, that determines how the `value <Mechanism_Base.value>` of the Mechanism
     (i.e., the result of its `function <Mechanism_Base.function>`) is used to generate the output of the Mechanism.
 
-  * **modulation of a** `MappingProjection` -- a `LearningSignal` must be used; this modulates the `ParameterState` for
+  * **modulation of a** `MappingProjection` -- a `LearningSignal` must be used; this modulates the `ParameterPort` for
     the `matrix <MappingProjection.matrix>` parameter of a MappingProjection's `function  <MappingProjection.function>`
     which, in turn, determines how it computes the MappingProjection's `value <MappingProjection.value>`.
 
-The following table summarizes the three uses of modulation, the ModulatorySignals for each, and the States they
+The following table summarizes the three uses of modulation, the ModulatorySignals for each, and the Ports they
 modulate. The mechanics of modulation are described in greater detail in `ModulatorySignal_Implementation`,
 and shown in the `figure below <ModulatorySignal_Anatomy_Figure>`.
 
 .. _ModulatorySignal_Table:
 
-.. table:: **ModulatorySignals and States they Modulate**
+.. table:: **ModulatorySignals and Ports they Modulate**
   :align: left
 
   +------------------------------------+------------------------+------------------------------+----------------------------------------+----------------------------+
   |                                    |                        |Default type of `modulation   |                                        |Default Function (mod param)|
-  |             Purpose                |  ModulatorySignal      |<ModulatorySignal.modulation>`|           Recipient State              |for Recipient State         |
+  |             Purpose                |  ModulatorySignal      |<ModulatorySignal.modulation>`|           Recipient Port              |for Recipient Port         |
   +====================================+========================+==============================+========================================+============================+
-  | Modulate the parameter of a        |                        |                              | Mechanism `ParameterState` (by default)|                            |
+  | Modulate the parameter of a        |                        |                              | Mechanism `ParameterPort` (by default)|                            |
   | Mechanism's `function              | `ControlSignal` (blue) |     *MULTIPLICATIVE*         | but can also be an                     |     `Linear` (`slope`)     |
-  | <Mechanism_Base.function>`         |                        |                              | `InputState` or `OutputState`          |                            |
+  | <Mechanism_Base.function>`         |                        |                              | `InputPort` or `OutputPort`          |                            |
   +------------------------------------+------------------------+------------------------------+----------------------------------------+----------------------------+
   | Modulate the input or output of    |                        |                              |                                        |                            |
-  | a Mechanism's `function            | `GatingSignal` (brown) |     *MULTIPLICATIVE*         |  Mechanism `InputState`/`OutputState`  |     `Linear` (`slope`)     |
+  | a Mechanism's `function            | `GatingSignal` (brown) |     *MULTIPLICATIVE*         |  Mechanism `InputPort`/`OutputPort`  |     `Linear` (`slope`)     |
   | <Mechanism_Base.function>`         |                        |                              |                                        |                            |
   +------------------------------------+------------------------+------------------------------+----------------------------------------+----------------------------+
   | Modulate a MappingProjection's     |                        |                              |                                        |   `AccumulatorIntegrator`  |
-  | `matrix <MappingProjection.matrix>`|`LearningSignal` (green)|        *ADDITIVE*            |  MappingProjection `ParameterState`    |   (`increment`)            |
+  | `matrix <MappingProjection.matrix>`|`LearningSignal` (green)|        *ADDITIVE*            |  MappingProjection `ParameterPort`    |   (`increment`)            |
   | parameter                          |                        |                              |                                        |                            |
   +------------------------------------+------------------------+------------------------------+----------------------------------------+----------------------------+
 
 Colors listed are those used in the `figure <ModulatorySignal_Anatomy_Figure>` below.
 
 It is important to emphasize that, although the purpose of a ModulatorySignal is to modify the functioning of a
-`Mechanism` or a `MappingProjection`, it does this indirectly by modifying a State that determines the input or
+`Mechanism` or a `MappingProjection`, it does this indirectly by modifying a Port that determines the input or
 output of a Mechanism, or the parameters of a Mechanism or Projection's `function`, rather than directly modifying
 the function of the Mechanism or Projection itself.  This is shown in the following figure, and described in greater
 detail under `ModulatorySignal_Implementation`.
@@ -208,13 +208,13 @@ detail under `ModulatorySignal_Implementation`.
    :alt: Modulation
    :scale: 150 %
 
-   **Three types of Modulatory Components and the States they modulate**. The default `type of modulation
+   **Three types of Modulatory Components and the Ports they modulate**. The default `type of modulation
    <ModulatorySignal_Types>` for each type of ModulatorySignal, and the default Function and modulated parameter of
-   its recipient State are listed in the `table <ModulatorySignal_Table>` above. Note that the `ControlMechanism`
-   and `ControlSignal <ControlSignal>` are shown in the figure modulating the `ParameterState` of a Mechanism;
-   however, like Gating components, they can also be used to modulate `InputStates <InputState>` and `OutputStates
-   <OutputState>`. The `figure <ModulatorySignal_Detail_Figure>` below shows a detailed view of how ModulatorySignals
-   modulate the parameters of a State's `function <State_Base.function>`.
+   its recipient Port are listed in the `table <ModulatorySignal_Table>` above. Note that the `ControlMechanism`
+   and `ControlSignal <ControlSignal>` are shown in the figure modulating the `ParameterPort` of a Mechanism;
+   however, like Gating components, they can also be used to modulate `InputPorts <InputPort>` and `OutputPorts
+   <OutputPort>`. The `figure <ModulatorySignal_Detail_Figure>` below shows a detailed view of how ModulatorySignals
+   modulate the parameters of a Port's `function <Port_Base.function>`.
 
 
 .. _ModulatorySignal_Types:
@@ -223,32 +223,32 @@ Types of Modulation
 ^^^^^^^^^^^^^^^^^^^
 
 The `modulation <ModulatorySignal.modulation>` attribute of a ModulatorySignal determines the way in which it
-modulates the `value <State_Base.value>` of a `State`, by specifying which paramter of the State's `function
-<State_Base.function>`that it modifies (see `figure <ModulatorySignal_Detail_Figure>` below).  This is specified
-in a tuple containing the State and the name of the parameter to be modified (see `example <EXAMPLE??> below).
+modulates the `value <Port_Base.value>` of a `Port`, by specifying which paramter of the Port's `function
+<Port_Base.function>`that it modifies (see `figure <ModulatorySignal_Detail_Figure>` below).  This is specified
+in a tuple containing the Port and the name of the parameter to be modified (see `example <EXAMPLE??> below).
 Alternatively, there are four keywords that can be used in place of the parameter's name, that specify the two most
 commonly used types of modulation, and allow two other types:
 
   * *MULTPLICATIVE_PARAM* - assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the parameter of
-    the State's `function <State_Base.function>` specified as its `multiplicative_param <Function_Modulatory_Params>`.
-    For example, if the State's `function <State_Base.function>` is `Linear` (the default for most States), then
+    the Port's `function <Port_Base.function>` specified as its `multiplicative_param <Function_Modulatory_Params>`.
+    For example, if the Port's `function <Port_Base.function>` is `Linear` (the default for most Ports), then
     the ModulatorySignal's `value <ModulatorySignal.value>` is assigned to the function's `slope <Linear.slope>`
-    parameter (it's multiplicative_param), thus multiplying the State's `variable <State_Base.variable>` by that
-    amount each time the State is executed, and assigning the result as the State's `value <State_Base.value>`.
+    parameter (it's multiplicative_param), thus multiplying the Port's `variable <Port_Base.variable>` by that
+    amount each time the Port is executed, and assigning the result as the Port's `value <Port_Base.value>`.
 
   * *ADDITIVE_PARAM* - assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the parameter of the
-    State's `function <State_Base.function>` specified as its `additive_param <Function_Modulatory_Params>`. For
-    example, if the State's `function <State_Base.function>` is `Linear` (the default for most States), then the
+    Port's `function <Port_Base.function>` specified as its `additive_param <Function_Modulatory_Params>`. For
+    example, if the Port's `function <Port_Base.function>` is `Linear` (the default for most Ports), then the
     ModulatorySignal's `value <ModulatorySignal.value>` is assigned to the function's `intercept <Linear.intercept>`
-    parameter (it's additive_param), thus adding that value to the State's `variable <State_Base.variable>` each
-    time the State is executed, and assigning the result as the State's `value <State_Base.value>`.
+    parameter (it's additive_param), thus adding that value to the Port's `variable <Port_Base.variable>` each
+    time the Port is executed, and assigning the result as the Port's `value <Port_Base.value>`.
 
-  * *OVERRIDE* - assign the `value <ModulatorySignal.value>` of the ModulatorySignal directly to the State's
-    `value <State_Base.value>`; in effect, this bypasses the State's `function <State_Base.function>`. Note that
-    this can be specified for **only one** `ModulatorySignal` that modulates a given State (see `below
+  * *OVERRIDE* - assign the `value <ModulatorySignal.value>` of the ModulatorySignal directly to the Port's
+    `value <Port_Base.value>`; in effect, this bypasses the Port's `function <Port_Base.function>`. Note that
+    this can be specified for **only one** `ModulatorySignal` that modulates a given Port (see `below
     <ModulatorySignal_Multiple>` for additional details).
 
-  * *DISABLE* - suppresses the modulatory effect of the ModulatorySignal;  the State's `function <State_Base.function>`
+  * *DISABLE* - suppresses the modulatory effect of the ModulatorySignal;  the Port's `function <Port_Base.function>`
     will operate as if it did not receive a `ModulatoryProjection <ModulatoryProjection>` from that ModulatorySignal.
 
    .. note:
@@ -264,7 +264,7 @@ COMMENT
 The default type of modulation for `ControlSignals <ControlSignal>` and `GatingSignals <GatingSignal>` is
 *MULTIPLICATIVE*.  The default for `LearningSignals <LearningSignal>` is *ADDITIVE* (which additively modifies the
 `value <LearningSignal.value>` of the LearningSignal (i.e., the weight changes computed by the `LearningMechanism`)
-to the State's `variable <State_Base.variable>` (i.e., the current weight `matrix <MappingProjection.matrix>` for
+to the Port's `variable <Port_Base.variable>` (i.e., the current weight `matrix <MappingProjection.matrix>` for
 the `MappingProjection` being learned).
 
 
@@ -274,10 +274,10 @@ Implementation of Modulation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Although the `purpose of a ModulatorySignal <ModulatorySignal_Uses>` is to modify the operation of
-a `Mechanism` or `MappingProjection`, it does not do this *directly*; rather, it does it by way of a `State` that
+a `Mechanism` or `MappingProjection`, it does not do this *directly*; rather, it does it by way of a `Port` that
 modulates the input, function parameter, or output of the Mechanism or MappingProjeciton to be regulated. More
-specifically, a ModulatorySignal modulates the `function <State_Base.function>` of a *State* responsible for
-generating those values, by modifying a parameter of that State's `function <State_Base.function>`.  This is shown
+specifically, a ModulatorySignal modulates the `function <Port_Base.function>` of a *Port* responsible for
+generating those values, by modifying a parameter of that Port's `function <Port_Base.function>`.  This is shown
 in the figure below:
 
 .. _ModulatorySignal_Detail_Figure:
@@ -288,35 +288,35 @@ in the figure below:
    :alt: Modulation_Detail
    :scale: 150 %
 
-   A ModulatorySignal modulates the `value <State_Base.value>` of a State either by modifying a parameter of the
-   State's `function <State_Base.function>`, or assigining the `value <State_Base.value>` of the State directly.
+   A ModulatorySignal modulates the `value <Port_Base.value>` of a Port either by modifying a parameter of the
+   Port's `function <Port_Base.function>`, or assigining the `value <Port_Base.value>` of the Port directly.
    This is determined by the ModulatorySignal's `modulation <ModulatorySignal.modulation>` attribute.  That can be
-   assigned either the name of a parameter of the State's `function <State_Base.function>`, or a keyword that
+   assigned either the name of a parameter of the Port's `function <Port_Base.function>`, or a keyword that
    specifies a standard form of modulation.  The keywords *MULTIPLICATIVE* and *ADDITIVE* specify that the `value
    <ModulatorySignal.value>` of the ModulatorySignal be assigned to the `multiplicative_param or `additive_param
-   <Function_Modulatory_Params>` of the State's function, respectively;  *OVERRIDE* specifies that the
-   ModulatorySignal's `value <ModulatorySignal.value>` be assigned directly as the State's `value
-   <State_Base.value>`, in effect bypassing the State's `function <State_Base.function>` (see
+   <Function_Modulatory_Params>` of the Port's function, respectively;  *OVERRIDE* specifies that the
+   ModulatorySignal's `value <ModulatorySignal.value>` be assigned directly as the Port's `value
+   <Port_Base.value>`, in effect bypassing the Port's `function <Port_Base.function>` (see
    `ModulatorySignal_Types` for additional details).
 
 Though this implementaton of modulation is indirect, it provides a standard for all forms of modulation, as well as
 considerable flexibility in the modulatory regulation of Components within a `Composition` (see
 `ModulatorySignal_Types` below).
 
-The types of States modulated by each type of ModulatorySignal are summarized in `ModulatorySignal_Uses`,
+The types of Ports modulated by each type of ModulatorySignal are summarized in `ModulatorySignal_Uses`,
 and the accompanying `table <ModulatorySignal_Table>` and `figure <ModulatorySignal_Anatomy_Figure>`.
 
 .. _ModulatorySignal_Multiple:
 
-Any `modulable <Parameter.modulable>` parameter of a State's `function <State_Base.function>` can be modulated,
-and different parameters of the same `function <State_Base.function>` of a State can be modulated by different
+Any `modulable <Parameter.modulable>` parameter of a Port's `function <Port_Base.function>` can be modulated,
+and different parameters of the same `function <Port_Base.function>` of a Port can be modulated by different
 ModulatorySignals. The same parameter can also be modulated by more than on ModulatorySignal. If more than one
-ModulatorySignal modulates the same parameter of a State's `function <State_Base.function>`, then that parameter's
+ModulatorySignal modulates the same parameter of a Port's `function <Port_Base.function>`, then that parameter's
 `modulation_combine_function <Parameter.modulation_combine_function>` attribute determines how the `value
 <ModulatorySignal.value>`\\s of the different ModulatorySignals are combined.  By default, the product of their
 vaues is used.  However, if *OVERRIDE* is specfied as the type of `modulation <ModulatorySignal.modulation>` for one
-of them, then that ModulatorySignal's  `value <ModulatorySignal.value>` is assigned directly as the State's `value
-<State_Base.value>`, and the others are all ignored.  Only one ModulatorySignal specified as *OVERRIDE* can modulate
+of them, then that ModulatorySignal's  `value <ModulatorySignal.value>` is assigned directly as the Port's `value
+<Port_Base.value>`, and the others are all ignored.  Only one ModulatorySignal specified as *OVERRIDE* can modulate
 a given parameter;  if there is more than, then an error is generated.
 
 .. _ModulatorySignal_Execution:
@@ -329,32 +329,32 @@ which they belong is executed. When a ModulatorySignal is executed, it calculate
 which is then assigned as the `variable <ModulatoryProjection_Base.variable>` of the `ModulatoryProjections
 <ModulatoryProjection>` listed in its `efferents <ModulatorySignal.efferents>` attribute.
 When those Projections execute, they convey the ModulatorySignal's `value <ModulatorySignal.value>` to the `function
-<State_Base.function>` of the `State <State>` to which they project.  The State's `function <State_Base.function>`
+<Port_Base.function>` of the `Port <Port>` to which they project.  The Port's `function <Port_Base.function>`
 then uses that value in determining value of the parameter designated by the `modulation <ModulatorySignal.modulation>`
-attribute of the ModulatorySignal when the State's `value <State_Baselvalue>` is updated.
+attribute of the ModulatorySignal when the Port's `value <Port_Baselvalue>` is updated.
 
 COMMENT:
 
 # FIX: 9/3/19 -- REWORK AND ADD EXAMPLE HERE
 
 For example, consider a `ControlSignal` that modulates the `bias <Logistic.bias>` parameter of a `Logistic` Function
-used by a `TransferMechanism`, and assume that the `ParameterState` for the bias parameter (to which the ControlSignal
-projects) uses a `Linear` function (the default for a ParameterState) to set the `value <ParameterState.value>` of
+used by a `TransferMechanism`, and assume that the `ParameterPort` for the bias parameter (to which the ControlSignal
+projects) uses a `Linear` function (the default for a ParameterPort) to set the `value <ParameterPort.value>` of
 that parameter. If the `modulation  <ModulatorySignal.modulation>` attribute of the `ControlSignal` is *MULTIPLICATIVE*
 then, when the TransferMechanism's `Logistic` `function <TransferMechanism.function>` is executed, the `function
-<ParameterState.function>` of the ParameterState that sets the value of the `Logistic` Function's `bias <Logistic.bias>`
+<ParameterPort.function>` of the ParameterPort that sets the value of the `Logistic` Function's `bias <Logistic.bias>`
 parameter is executed;  that is a `Linear` Function, that uses the ControlSignal's `value <ControlSignal.value>` as
 its `slope <Linear.slope>` parameter.  Thus, the effect is that the ControlSignal's `value <ControlSignal.value>` is
 multiplied by the base value of the `bias <Logistic.bias>` parameter, before that is used by the TransferMechanism's
 `Logistic` Function.  Thus, the `value <ControlSignal.value>` of the ControlSignal modulates the `bias
 <Logistic.bias>` parameter of the `Logistic` Function when the TransferMechanism's `function
-<TransferMechanism.function>` is executed (see `State Execution <State_Execution>` for additional details).
+<TransferMechanism.function>` is executed (see `Port Execution <State_Execution>` for additional details).
 
 COMMENT
 
 .. note::
-   The change in the value of a `State <State>` in response to a ModulatorySignal does not occur until the Mechanism to
-   which the state belongs is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
+   The change in the value of a `Port <Port>` in response to a ModulatorySignal does not occur until the Mechanism to
+   which the port belongs is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
 
 .. _ModulatorySignal_Class_Reference:
 
@@ -364,20 +364,20 @@ Examples
 --------
 
 MOVE THESE TO SPECIFIC SUBCLASSES? AND REFERENCE THOSE HERE
-FIX: EXAMPLE OF FULL SPECIFIATION (BY STATE AND STATE'S FUCNTION'S PARAMETER NAME)
+FIX: EXAMPLE OF FULL SPECIFIATION (BY PORT AND PORT'S FUCNTION'S PARAMETER NAME)
 The following example uses a parameter's name to specify
     >>> my_mech = ProcessingMechanism(function=Logistic)
     >>> ctl_mech = ControlMechanism(monitor_for_control=my_mech,
-    ...                             control_signals=ControlSignal(modulates=my_mech.parameter_states[GAIN],
+    ...                             control_signals=ControlSignal(modulates=my_mech.parameter_ports[GAIN],
     ...                                                           modulation=SLOPE))
 
-FIX: EXAMPLE OF SPECIFIATION OF CONTROLSIGNAL WITH MECHANISM AND STATE'S PARAMETER NAME
+FIX: EXAMPLE OF SPECIFIATION OF CONTROLSIGNAL WITH MECHANISM AND PORT'S PARAMETER NAME
 
 FIX: EXAMPLE OF SPECIFIATION BY CONTROLSIGNAL WITH MECHANISM AND MECHANISM'S PARAMETER NAME
 
-MENTION STATE-SPECIFIC CONVENIENCE METHODS
+MENTION PORT-SPECIFIC CONVENIENCE METHODS
 
-FIX: EXAMPLE OF CONTROL SIGNAL MODULATION OF INPUT STATE
+FIX: EXAMPLE OF CONTROL SIGNAL MODULATION OF INPUTPORT
 
 
 .  For
@@ -404,8 +404,8 @@ Class Reference
 """
 
 from psyneulink.core.components.component import component_keywords
-from psyneulink.core.components.states.outputstate import OutputState
-from psyneulink.core.components.states.state import State_Base
+from psyneulink.core.components.ports.outputport import OutputPort
+from psyneulink.core.components.ports.port import Port_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import MAYBE, MECHANISM, MODULATION, MODULATORY_SIGNAL, VARIABLE, PROJECTIONS
 from psyneulink.core.globals.defaults import defaultModulatoryAllocation
@@ -441,7 +441,7 @@ modulatory_signal_keywords = {MECHANISM, MODULATION}
 modulatory_signal_keywords.update(component_keywords)
 
 
-class ModulatorySignal(OutputState):
+class ModulatorySignal(OutputPort):
     """
     ModulatorySignal(                                  \
         owner,                                         \
@@ -453,8 +453,8 @@ class ModulatorySignal(OutputState):
         name=None,                                     \
         prefs=None)
 
-    Subclass of `OutputState` used by a `ModulatoryMechanism <ModulatoryMechanism>` to modulate the value
-    of one more `States <State>`.
+    Subclass of `OutputPort` used by a `ModulatoryMechanism <ModulatoryMechanism>` to modulate the value
+    of one more `Ports <Port>`.
 
     .. note::
        ModulatorySignal is an abstract class and should NEVER be instantiated by a call to its constructor.
@@ -464,7 +464,7 @@ class ModulatorySignal(OutputState):
 
         Description
         -----------
-            The ModulatorySignal class is a subtype of the OutputState class in the State category of Component,
+            The ModulatorySignal class is a subtype of the OutputPort class in the Port category of Component,
             It is used primarily as the sender for GatingProjections
             Its FUNCTION updates its value:
                 note:  currently, this is the identity function, that simply maps variable to self.value
@@ -478,9 +478,9 @@ class ModulatorySignal(OutputState):
         Class methods:
             function (executes function specified in params[FUNCTION];  default: Linear
 
-        StateRegistry
+        PortRegistry
         -------------
-            All OutputStates are registered in StateRegistry, which maintains an entry for the subclass,
+            All OutputPorts are registered in PortRegistry, which maintains an entry for the subclass,
               a count for all instances of it, and a dictionary of those instances
     COMMENT
 
@@ -499,17 +499,17 @@ class ModulatorySignal(OutputState):
         `owner <GatingMechanism.owner>`.
 
     modulation : ModulationParam : default MULTIPLICATIVE
-        specifies the type of modulation the ModulatorySignal uses to determine the value of the State(s) it modulates.
+        specifies the type of modulation the ModulatorySignal uses to determine the value of the Port(s) it modulates.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
         the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
 
     name : str : default see `name <ModulatorySignal.name>`
         specifies the name of the ModulatorySignal.
 
-    prefs : PreferenceSet or specification dict : default State.classPreferences
+    prefs : PreferenceSet or specification dict : default Port.classPreferences
         specifies the `PreferenceSet` for the LearningSignal; see `prefs <ControlSignal.prefs>` for details.
 
 
@@ -535,20 +535,20 @@ class ModulatorySignal(OutputState):
         assigns `variable <ModulatorySignal.variable>` as ModulatorySignal's `value <ModulatorySignal.value>`.
 
     value : number, list or np.ndarray
-        result of `function <ModulatorySignal.function>`, used to determine the `value <State_Base.value>` of the
-        State(s) being modulated.
+        result of `function <ModulatorySignal.function>`, used to determine the `value <Port_Base.value>` of the
+        Port(s) being modulated.
 
     modulation : ModulationParam
-        determines how the output of the ModulatorySignal is used to modulate the value of the state(s) being modulated.
+        determines how the output of the ModulatorySignal is used to modulate the value of the port(s) being modulated.
 
     efferents : [List[GatingProjection]]
         a list of the `ModulatoryProjections <ModulatoryProjection>` assigned to the ModulatorySignal.
 
     name : str
         the name of the ModulatorySignal. If the ModulatorySignal's `initialization has been deferred
-        <State_Deferred_Initialization>`, it is assigned a temporary name (indicating its deferred initialization
+        <Port_Deferred_Initialization>`, it is assigned a temporary name (indicating its deferred initialization
         status) until initialization is completed, at which time it is assigned its designated name.  If that is the
-        name of an existing ModulatorySignal, it is appended with an indexed suffix, incremented for each State with
+        name of an existing ModulatorySignal, it is appended with an indexed suffix, incremented for each Port with
         the same base name (see `Naming`). If the name is not  specified in the **name** argument of its constructor,
         a default name is assigned as follows; if the ModulatorySignal has:
 
@@ -556,22 +556,22 @@ class ModulatorySignal(OutputState):
           incremented for each ModulatorySignal with a default named assigned to its `owner <ModulatorySignal.owner>`;
 
         * one `ModulatoryProjection <ModulatoryProjction>` -- the following template is used:
-          "<target Mechanism name> <target State name> <ModulatorySignal type name>"
-          (for example, ``'Decision[drift_rate] ControlSignal'``, or ``'Input Layer[InputState-0] GatingSignal'``);
+          "<target Mechanism name> <target Port name> <ModulatorySignal type name>"
+          (for example, ``'Decision[drift_rate] ControlSignal'``, or ``'Input Layer[InputPort-0] GatingSignal'``);
 
-        * multiple ModulatoryProjections, all to States of the same Mechanism -- the following template is used:
-          "<target Mechanism name> (<target State name>,...) <ModulatorySignal type name>"
+        * multiple ModulatoryProjections, all to Ports of the same Mechanism -- the following template is used:
+          "<target Mechanism name> (<target Port name>,...) <ModulatorySignal type name>"
           (for example, ``Decision (drift_rate, threshold) ControlSignal``, or
-          ``'Input Layer[InputState-0, InputState-1] GatingSignal'``);
+          ``'Input Layer[InputPort-0, InputPort-1] GatingSignal'``);
 
-        * multiple ModulatoryProjections to States of different Mechanisms -- the following template is used:
+        * multiple ModulatoryProjections to Ports of different Mechanisms -- the following template is used:
           "<owner Mechanism's name> divergent <ModulatorySignal type name>"
           (for example, ``'ControlMechanism divergent ControlSignal'`` or ``'GatingMechanism divergent GatingSignal'``).
 
         .. note::
-            Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
+            Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that Ports with
             the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
-            Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
+            Mechanism: Ports within a Mechanism with the same base name are appended an index in the order of their
             creation.
 
     prefs : PreferenceSet or specification dict
@@ -582,9 +582,9 @@ class ModulatorySignal(OutputState):
     """
 
     componentType = MODULATORY_SIGNAL
-    # paramsType = OUTPUT_STATE_PARAMS
+    # paramsType = OUTPUT_PORT_PARAMS
 
-    class Parameters(OutputState.Parameters):
+    class Parameters(OutputPort.Parameters):
         """
             Attributes
             ----------
@@ -598,16 +598,16 @@ class ModulatorySignal(OutputState):
         """
         modulation = None
 
-    stateAttributes = OutputState.stateAttributes | {MODULATION}
+    portAttributes = OutputPort.portAttributes | {MODULATION}
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     PREFERENCE_SET_NAME: 'OutputStateCustomClassPreferences',
+    #     PREFERENCE_SET_NAME: 'OutputPortCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
-    paramClassDefaults = State_Base.paramClassDefaults.copy()
+    paramClassDefaults = Port_Base.paramClassDefaults.copy()
 
     def __init__(self,
                  owner=None,
@@ -633,7 +633,7 @@ class ModulatorySignal(OutputState):
         # Deferred initialization
         # if self.initialization_status & (ContextFlags.DEFERRED_INIT | ContextFlags.INITIALIZING):
         if self.initialization_status & ContextFlags.DEFERRED_INIT:
-            # If init was deferred, it may have been because owner was not yet known (see OutputState.__init__),
+            # If init was deferred, it may have been because owner was not yet known (see OutputPort.__init__),
             #   and so modulation hasn't had a chance to be assigned to the owner's value
             #   (i.e., if it was not specified in the constructor), so do it now;
             #   however modulation has already been assigned to params, so need to assign it there
@@ -659,7 +659,7 @@ class ModulatorySignal(OutputState):
                          **kwargs)
 
         if self.initialization_status == ContextFlags.INITIALIZED:
-            self._assign_default_state_name()
+            self._assign_default_port_Name()
 
     def _instantiate_attributes_after_function(self, context=None):
         # If owner is specified but modulation has not been specified, assign to owner's value
@@ -670,27 +670,27 @@ class ModulatorySignal(OutputState):
 
 
     def _instantiate_projections(self, projections, context=None):
-        """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
+        """Instantiate Projections specified in PROJECTIONS entry of params arg of Port's constructor
 
-        Specification should be an existing ModulatoryProjection, or a receiver Mechanism or State
+        Specification should be an existing ModulatoryProjection, or a receiver Mechanism or Port
         Disallow any other specifications (including PathwayProjections)
-        Call _instantiate_projection_from_state to assign ModulatoryProjections to .efferents
+        Call _instantiate_projection_from_port to assign ModulatoryProjections to .efferents
 
         """
        # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
         for receiver_spec in projections:
-            projection = self._instantiate_projection_from_state(projection_spec=type(self),
-                                                                 receiver=receiver_spec,
-                                                                 # MODIFIED 8/12/19 NEW: [JDC] - MODIFIED FEEDBACK
-                                                                 # feedback=True,
-                                                                 feedback=MAYBE,
-                                                                 # MODIFIED 8/12/19 END
-                                                                 context=context)
+            projection = self._instantiate_projection_from_port(projection_spec=type(self),
+                                                                receiver=receiver_spec,
+                                                                # MODIFIED 8/12/19 NEW: [JDC] - MODIFIED FEEDBACK
+                                                                # feedback=True,
+                                                                feedback=MAYBE,
+                                                                # MODIFIED 8/12/19 END
+                                                                context=context)
             # Projection might be None if it was duplicate
             if projection:
-                projection._assign_default_projection_name(state=self)
+                projection._assign_default_projection_name(port=self)
 
-    def _assign_default_state_name(self, context=None):
+    def _assign_default_port_Name(self, context=None):
 
         # If the name is not a default name for the class,
         #    or the ModulatorySignal has no projections (which are used to name it)
@@ -714,14 +714,14 @@ class ModulatorySignal(OutputState):
             receiver_owner_names.append(receiver_owner_name)
             receiver_owner_receiver_names.append("{}[{}]".format(receiver_owner_name, receiver_name))
 
-        # Only one ModulatoryProjection: "<target mech> <State.name> <ModulatorySignal>"
-        # (e.g., "Decision drift_rate ControlSignal", or "Input Layer InputState-0 GatingSignal")
+        # Only one ModulatoryProjection: "<target mech> <Port.name> <ModulatorySignal>"
+        # (e.g., "Decision drift_rate ControlSignal", or "Input Layer InputPort-0 GatingSignal")
         if len(receiver_owner_receiver_names) == 1:
             default_name = receiver_owner_receiver_names[0] + " " + class_name
 
-        # Multiple ModulatoryProjections all for same mech: "<target mech> (<State.name>,...) <ModulatorySignal>"
+        # Multiple ModulatoryProjections all for same mech: "<target mech> (<Port.name>,...) <ModulatorySignal>"
         # (e.g., "Decision (drift_rate, threshold) ControlSignal" or
-        #        "InputLayer (InputState-0, InputState-0) ControlSignal")
+        #        "InputLayer (InputPort-0, InputPort-0) ControlSignal")
         elif all(name is receiver_owner_names[0] for name in receiver_owner_names):
             default_name = "{}[{}] {}".format(receiver_owner_names[0], ", ".join(receiver_names), class_name)
 

@@ -10,7 +10,7 @@ Input = pnl.TransferMechanism(
     name='Input',
 )
 Reward = pnl.TransferMechanism(
-    output_states=[pnl.RESULT, pnl.OUTPUT_MEAN, pnl.OUTPUT_VARIANCE],
+    output_ports=[pnl.RESULT, pnl.OUTPUT_MEAN, pnl.OUTPUT_VARIANCE],
     name='Reward'
 )
 Decision = pnl.DDM(
@@ -37,7 +37,7 @@ Decision = pnl.DDM(
         starting_point=(0),
         t0=0.45
     ),
-    output_states=[
+    output_ports=[
         pnl.DECISION_VARIABLE,
         pnl.RESPONSE_TIME,
         pnl.PROBABILITY_UPPER_THRESHOLD

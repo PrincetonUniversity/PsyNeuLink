@@ -925,15 +925,15 @@ def convert_to_np_array(value, dimension):
     if dimension is 1:
         # KAM 6/28/18: added for cases when even np does not recognize the shape/dtype
         # Needed this specifically for the following shape: variable = [[0.0], [0.0], np.array([[0.0, 0.0]])]
-        # Which is due to a custom output state variable that includes an owner value, owner param, and owner input
-        # state variable. FIX: This branch of code may erroneously catch other shapes that could be handled by np
+        # Which is due to a custom OutputPort variable that includes an owner value, owner param, and owner input
+        # port variable. FIX: This branch of code may erroneously catch other shapes that could be handled by np
 
         try:
             value = np.atleast_1d(value)
 
         # KAM 6/28/18: added exception for cases when even np does not recognize the shape/dtype
         # Needed this specifically for the following shape: variable = [[0.0], [0.0], np.array([[0.0, 0.0]])]
-        # Due to a custom OutputState variable (variable = [owner value[0], owner param, owner InputState variable])
+        # Due to a custom OutputPort variable (variable = [owner value[0], owner param, owner InputPort variable])
         # FIX: (1) is this exception specific enough? (2) this is not actually converting to an np.array but in this
         # case (as far as I know) we cannot convert to np -- should we warn other methods that this value is "not np"?
         except ValueError:
@@ -1078,18 +1078,18 @@ class ContentAddressableList(UserList):
     entries.
 
     The key with which it is created is also assigned as a property of the class, that returns a list
-    with the keyed attribute of its entries.  For example, the `output_states <Mechanism_Base.output_states>` attribute
-    of a `Mechanism` is a ContentAddressableList of the Mechanism's `OutputStates <OutputState>`, keyed by their
-    names.  Therefore, ``my_mech.output_states.names`` returns the names of all of the Mechanism's OutputStates::
+    with the keyed attribute of its entries.  For example, the `output_ports <Mechanism_Base.output_ports>` attribute
+    of a `Mechanism` is a ContentAddressableList of the Mechanism's `OutputPorts <OutputPort>`, keyed by their
+    names.  Therefore, ``my_mech.output_ports.names`` returns the names of all of the Mechanism's OutputPorts::
 
         >>> import psyneulink as pnl
-        >>> print(pnl.DDM().output_states.names)
+        >>> print(pnl.DDM().output_ports.names)
         ['DECISION_VARIABLE', 'RESPONSE_TIME']
 
     The keyed attribute can also be used to access an item of the list.  For examples::
 
-        >>> print(pnl.DDM().output_states['DECISION_VARIABLE'])
-        (OutputState DECISION_VARIABLE)
+        >>> print(pnl.DDM().output_ports['DECISION_VARIABLE'])
+        (OutputPort DECISION_VARIABLE)
 
     Supports:
       * getting and setting entries in the list using keys (string), in addition to numeric indices.
@@ -1109,11 +1109,11 @@ class ContentAddressableList(UserList):
         and the convenience of access and assignment by name (e.g., akin to a dict).
         Lists are used (instead of a dict or OrderedDict) since:
             - ordering is in many instances convenient, and in some critical (e.g., for consistent mapping from
-                collections of states to other variables, such as lists of their values);
+                collections of ports to other variables, such as lists of their values);
             - they are most commonly accessed either exhaustively (e.g., in looping through them during execution),
                 or by key (e.g., to get the first, "primary" one), which makes the efficiencies of a dict for
                 accessing by key/name less critical;
-            - the number of states in a collection for a given Mechanism is likely to be small so that, even when
+            - the number of ports in a collection for a given Mechanism is likely to be small so that, even when
                 accessed by key/name, the inefficiencies of searching a list are likely to be inconsequential.
 
     Arguments
@@ -1246,7 +1246,7 @@ class ContentAddressableList(UserList):
             return self.data.index(key)
         else:
             raise UtilitiesError("{} is not a legal key for {} (must be "
-                                 "number, string or State)".format(key,
+                                 "number, string or Port)".format(key,
                                                                    self.key))
 
     def __delitem__(self, key):

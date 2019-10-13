@@ -31,10 +31,10 @@ However, unlike standard ControlMechanism, an AGTControlMechanism does not have 
 constructor.  When an AGTControlMechanism is created, it automatically creates an ObjectiveMechanism and assigns a
 `DualAdaptiveIntegrator` Function as its `function <ObjectiveMechanism.function>`.
 
-The OutputStates to be monitored by the AGTControlMechanism's `objective_mechanism <AGTControlMechanism.objective_mechanism>` are
-specified using the **monitored_output_states** argument of the AGTControlMechanism's constructor, using any of the ways to
-`specify the OutputStates monitored by ObjectiveMechanism <ObjectiveMechanism_Monitor>`.  The
-monitored OutputStates are listed in the LCControlMechanism's `monitored_output_states <AGTControlMechanism.monitored_output_states>`
+The OutputPorts to be monitored by the AGTControlMechanism's `objective_mechanism <AGTControlMechanism.objective_mechanism>` are
+specified using the **monitored_output_ports** argument of the AGTControlMechanism's constructor, using any of the ways to
+`specify the OutputPorts monitored by ObjectiveMechanism <ObjectiveMechanism_Monitor>`.  The
+monitored OutputPorts are listed in the LCControlMechanism's `monitored_output_ports <AGTControlMechanism.monitored_output_ports>`
 attribute,  as well as that of its `objective_mechanism <AGTControlMechanism.objective_mechanism>`.
 
 The parameter(s) controlled by an AGTControlMechanism are specified in the **control_signals** argument of its constructor,
@@ -47,19 +47,19 @@ Structure
 
 .. _AGTControlMechanism_Input:
 
-*Input: ObjectiveMechanism and Monitored OutputStates*
+*Input: ObjectiveMechanism and Monitored OutputPorts*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-An AGTControlMechanism has a single (primary) `InputState <InputState_Primary>` that receives its input via a
-`MappingProjection` from the *OUTCOME* `OutputState <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`. The
+An AGTControlMechanism has a single (primary) `InputPort <InputPort_Primary>` that receives its input via a
+`MappingProjection` from the *OUTCOME* `OutputPort <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`. The
 ObjectiveMechanism is created automatically when the AGTControlMechanism is created, using a `DualAdaptiveIntegrator`
 as its `function <ObjectiveMechanism.function>`, and is listed in the AGTControlMechanism's `objective_mechanism
 <AGTControlMechanism.objective_mechanism>` attribute.  The ObjectiveMechanism aggregates the `value
-<OutputState.value>`\\s of the OutputStates that it monitors, integrates their aggregated value at two different
+<OutputPort.value>`\\s of the OutputPorts that it monitors, integrates their aggregated value at two different
 rates, and combines those to generate the its output, which is used by the AGTControlMechanism as its input. The
-OutputStates monitored by the ObjectiveMechanism, listed in its `monitored_output_states
-<ObjectiveMechanism.monitored_output_states>` attribute, are also listed in the AGTControlMechanism's
-`monitored_output_states <AGTControlMechanism_Base.monitored_output_states>` attribute.  They can be displayed using
+OutputPorts monitored by the ObjectiveMechanism, listed in its `monitored_output_ports
+<ObjectiveMechanism.monitored_output_ports>` attribute, are also listed in the AGTControlMechanism's
+`monitored_output_ports <AGTControlMechanism_Base.monitored_output_ports>` attribute.  They can be displayed using
 the AGTControlMechanism's `show <AGTControlMechanism.show>` method.
 
 .. _AGTControlMechanism_Function:
@@ -78,16 +78,16 @@ and the `allocation <ControlSignal.allocation>` of its `ControlSignal(s) <Contro
 ~~~~~~~~
 
 An AGTControlMechanism has a `ControlSignal` for each parameter specified in its `control_signals
-<ControlMechanism.control_signals>` attribute, that sends a `ControlProjection` to the `ParameterState` for the
-corresponding parameter. ControlSignals are a type of `OutputState`, and so they are also listed in the
-AGTControlMechanism's `output_states <AGTControlMechanism_Base.output_states>` attribute. The parameters modulated by an
+<ControlMechanism.control_signals>` attribute, that sends a `ControlProjection` to the `ParameterPort` for the
+corresponding parameter. ControlSignals are a type of `OutputPort`, and so they are also listed in the
+AGTControlMechanism's `output_ports <AGTControlMechanism_Base.output_ports>` attribute. The parameters modulated by an
 AGTControlMechanism's ControlSignals can be displayed using its `show <AGTControlMechanism_Base.show>` method. By default,
 all of its ControlSignals are assigned the result of the AGTControlMechanism's `function <AGTControlMechanism.function>`, which is
 the `input <AGTControlMechanism_Input>` it receives from its `objective_mechanism <AGTControlMechanism.objective_mechanism>`.
 above).  The `allocation <ControlSignal.allocation>` is used by the ControlSignal(s) to determine
 their `intensity <ControlSignal.intensity>`, which is then assigned as the `value <ControlProjection.value>` of the
 ControlSignal's `ControlProjection`.   The `value <ControlProjection.value>` of the ControlProjection is used by the
-`ParameterState` to which it projects to modify the value of the parameter it controls (see
+`ParameterPort` to which it projects to modify the value of the parameter it controls (see
 `ControlSignal_Modulation` for description of how a ControlSignal modulates the value of a parameter).
 
 COMMENT:
@@ -97,23 +97,23 @@ automatically created and assigned to the LCControlMechanism when it is created:
 
     * an `LCController` -- takes the output of the AGTUtilityIntegratorMechanism (see below) and uses this to
       control the value of the LCControlMechanism's `mode <FitzHughNagumoIntegrator.mode>` attribute.  It is assigned a single
-      `ControlSignal` that projects to the `ParameterState` for the LCControlMechanism's `mode <FitzHughNagumoIntegrator.mode>`
+      `ControlSignal` that projects to the `ParameterPort` for the LCControlMechanism's `mode <FitzHughNagumoIntegrator.mode>`
       attribute.
     ..
-    * a `AGTUtilityIntegratorMechanism` -- monitors the `value <OutputState.value>` of any `OutputStates <OutputState>`
+    * a `AGTUtilityIntegratorMechanism` -- monitors the `value <OutputPort.value>` of any `OutputPorts <OutputPort>`
       specified in the **mode** argument of the LCControlMechanism's constructor;  these are listed in the
-      LCControlMechanism's `monitored_output_states <LCControlMechanism.monitored_output_states>` attribute,
+      LCControlMechanism's `monitored_output_ports <LCControlMechanism.monitored_output_ports>` attribute,
       as well as that attribute of the AGTUtilityIntegratorMechanism and LCController.  They are evaluated by the
       AGTUtilityIntegratorMechanism's `DualAdaptiveIntegrator` Function, the result of whch is used by the LCControl to
       control the value of the LCControlMechanism's `mode <FitzHughNagumoIntegrator.mode>` attribute.
     ..
-    * `MappingProjections <MappingProjection>` from Mechanisms or OutputStates specified in **monitor_for_control** to
-      the AGTUtilityIntegratorMechanism's `primary InputState <InputState_Primary>`.
+    * `MappingProjections <MappingProjection>` from Mechanisms or OutputPorts specified in **monitor_for_control** to
+      the AGTUtilityIntegratorMechanism's `primary InputPort <InputPort_Primary>`.
     ..
-    * a `MappingProjection` from the AGTUtilityIntegratorMechanism's *UTILITY_SIGNAL* `OutputState
-      <AGTUtilityIntegratorMechanism_Structure>` to the LCControlMechanism's *MODE* <InputState_Primary>`.
+    * a `MappingProjection` from the AGTUtilityIntegratorMechanism's *UTILITY_SIGNAL* `OutputPort
+      <AGTUtilityIntegratorMechanism_Structure>` to the LCControlMechanism's *MODE* <InputPort_Primary>`.
     ..
-    * a `ControlProjection` from the LCController's ControlSignal to the `ParameterState` for the LCControlMechanism's
+    * a `ControlProjection` from the LCController's ControlSignal to the `ParameterPort` for the LCControlMechanism's
       `mode <FitzHughNagumoIntegrator.mode>` attribute.
 COMMENT
 
@@ -123,17 +123,17 @@ COMMENT
 Execution
 ---------
 
-An AGTControlMechanism's `function <AGTControlMechanism_Base.function>` takes as its input the `value <InputState.value>` of
-its *OUTCOME* `input_state <Mechanism_Base.input_state>`, and uses that to determine its `control_allocation
+An AGTControlMechanism's `function <AGTControlMechanism_Base.function>` takes as its input the `value <InputPort.value>` of
+its *OUTCOME* `input_port <Mechanism_Base.input_port>`, and uses that to determine its `control_allocation
 <ITC.control_allocation>` which specifies the value assigned to the `allocation <ControlSignal.allocation>` of each of
 its `ControlSignals <ControlSignal>`.  An AGTControlMechanism assigns the same value (the `input <AGTControlMechanism_Input>` it
 receives from its `objective_mechanism <AGTControlMechanism.objective_mechanism>` to all of its ControlSignals.  Each
 ControlSignal uses that value to calculate its `intensity <ControlSignal.intensity>`, which is used by its
-`ControlProjection(s) <ControlProjection>` to modulate the value of the ParameterState(s) for the parameter(s) it
+`ControlProjection(s) <ControlProjection>` to modulate the value of the ParameterPort(s) for the parameter(s) it
 controls, which are then used in the subsequent `TRIAL` of execution.
 
 .. note::
-   A `ParameterState` that receives a `ControlProjection` does not update its value until its owner Mechanism
+   A `ParameterPort` that receives a `ControlProjection` does not update its value until its owner Mechanism
    executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a
    ControlMechanism has executed, a parameter that it controls will not assume its new value until the Mechanism
    to which it belongs has executed.
@@ -149,9 +149,9 @@ import typecheck as tc
 
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DualAdaptiveIntegrator
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import MONITORED_OUTPUT_STATES, ObjectiveMechanism
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import MONITORED_OUTPUT_PORTS, ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Mechanism, System_Base
-from psyneulink.core.components.states.outputstate import OutputState
+from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import \
     CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, INIT_EXECUTE_METHOD_ONLY, \
     MECHANISM, MULTIPLICATIVE, OBJECTIVE_MECHANISM
@@ -159,10 +159,10 @@ from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
-    'AGTControlMechanism', 'AGTControlMechanismError', 'ControlMechanismRegistry', 'MONITORED_OUTPUT_STATE_NAME_SUFFIX'
+    'AGTControlMechanism', 'AGTControlMechanismError', 'ControlMechanismRegistry', 'MONITORED_OUTPUT_PORT_NAME_SUFFIX'
 ]
 
-MONITORED_OUTPUT_STATE_NAME_SUFFIX = '_Monitor'
+MONITORED_OUTPUT_PORT_NAME_SUFFIX = '_Monitor'
 
 ControlMechanismRegistry = {}
 
@@ -175,7 +175,7 @@ class AGTControlMechanism(ControlMechanism):
     """
     AGTControlMechanism(                \
         system=None,                    \
-        monitored_output_states=None,   \
+        monitored_output_ports=None,   \
         function=Linear,                \
         control_signals=None,           \
         params=None,                    \
@@ -190,25 +190,25 @@ class AGTControlMechanism(ControlMechanism):
 
     system : System : default None
         specifies the `System` for which the AGTControlMechanism should serve as a `controller <System.controller>`;
-        the AGTControlMechanism will inherit any `OutputStates <OutputState>` specified in the **monitor_for_control**
+        the AGTControlMechanism will inherit any `OutputPorts <OutputPort>` specified in the **monitor_for_control**
         argument of the `system <EVCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
         specified in its **control_signals** argument.
 
-    monitored_output_states : List[`OutputState`, `Mechanism`, str, value, dict, `MonitoredOutputStatesOption`] or Dict
-        specifies the OutputStates to be monitored by the `objective_mechanism <AGTControlMechanism.objective_mechanism>`
-        (see `monitored_output_states <ObjectiveMechanism.monitored_output_states>` for details of specification).
+    monitored_output_ports : List[`OutputPort`, `Mechanism`, str, value, dict, `MonitoredOutputPortsOption`] or Dict
+        specifies the OutputPorts to be monitored by the `objective_mechanism <AGTControlMechanism.objective_mechanism>`
+        (see `monitored_output_ports <ObjectiveMechanism.monitored_output_ports>` for details of specification).
 
     function : TransferFunction :  default Linear(slope=1, intercept=0)
         specifies the Function used to convert the AGTControlMechanism's `input <AGTControlMechanism_Input>` into its
         `control_allocation <AGTControlMechanism.control_allocation>`, that is used to assign the `allocation
         <ControlSignal.allocation>` of its `ControlSignal(s) <ControlSignal>`.
 
-    control_signals : List[ParameterState, tuple[str, Mechanism] or dict]
+    control_signals : List[ParameterPort, tuple[str, Mechanism] or dict]
         specifies the parameters to be controlled by the AGTControlMechanism; a `ControlSignal` is created for each
         (see `ControlSignal_Specification` for details of specification).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters
         for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
         specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
@@ -225,7 +225,7 @@ class AGTControlMechanism(ControlMechanism):
 
     system : System_Base
         the `System` for which AGTControlMechanism is the `controller <System.controller>`;
-        the AGTControlMechanism inherits any `OutputStates <OutputState>` specified in the **monitor_for_control**
+        the AGTControlMechanism inherits any `OutputPorts <OutputPort>` specified in the **monitor_for_control**
         argument of the `system <EVCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
         specified in its **control_signals** argument.
 
@@ -235,17 +235,17 @@ class AGTControlMechanism(ControlMechanism):
         AGTControlMechanism. It is created automatically when AGTControlMechanism is created, and uses as a `DualAdaptiveIntegrator` as
         is `function <ObjectiveMechanism.function>`.
 
-    monitored_output_states : List[OutputState]
-        each item is an `OutputState` monitored by the `objective_mechanism <AGTControlMechanism.objective_mechanism>`; it is
-        the same as the ObjectiveMechanism's `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
-        attribute. The `value <OutputState.value>` of the OutputStates listed are used by the ObjectiveMechanism to
+    monitored_output_ports : List[OutputPort]
+        each item is an `OutputPort` monitored by the `objective_mechanism <AGTControlMechanism.objective_mechanism>`; it is
+        the same as the ObjectiveMechanism's `monitored_output_ports <ObjectiveMechanism.monitored_output_ports>`
+        attribute. The `value <OutputPort.value>` of the OutputPorts listed are used by the ObjectiveMechanism to
         generate the AGTControlMechanism's `input <AGTControlMechanism_Input>`.
 
-    monitored_output_states_weights_and_exponents : List[Tuple(float, float)]
+    monitored_output_ports_weights_and_exponents : List[Tuple(float, float)]
         each tuple in the list contains the weight and exponent associated with a corresponding item of
-        `monitored_output_states <AGTControlMechanism.monitored_output_states>`;  these are the same as those in
-        the `monitored_output_states_weights_and_exponents
-        <ObjectiveMechanism.monitored_output_states_weights_and_exponents>` attribute of the `objective_mechanism
+        `monitored_output_ports <AGTControlMechanism.monitored_output_ports>`;  these are the same as those in
+        the `monitored_output_ports_weights_and_exponents
+        <ObjectiveMechanism.monitored_output_ports_weights_and_exponents>` attribute of the `objective_mechanism
         <AGTControlMechanism.objective_mechanism>`, and are used by the ObjectiveMechanism's `function
         <ObjectiveMechanism.function>` to parametrize the contribution made to its output by each of the values that
         it monitors (see `ObjectiveMechanism Function <ObjectiveMechanism_Function>`).
@@ -265,8 +265,8 @@ class AGTControlMechanism(ControlMechanism):
     control_signals : List[ControlSignal]
         list of the AGTControlMechanism's `ControlSignals <ControlSignals>` , including any inherited from a `system
         <ControlMechanism.system>` for which it is a `controller <System.controller>` (same as
-        ControlMechanism's `output_states <Mechanism_Base.output_states>` attribute); each sends a `ControlProjection`
-        to the `ParameterState` for the parameter it controls
+        ControlMechanism's `output_ports <Mechanism_Base.output_ports>` attribute); each sends a `ControlProjection`
+        to the `ParameterPort` for the parameter it controls
 
     control_projections : List[ControlProjection]
         list of `ControlProjections <ControlProjection>`, one for each `ControlSignal` in `control_signals`.
@@ -305,7 +305,7 @@ class AGTControlMechanism(ControlMechanism):
     @tc.typecheck
     def __init__(self,
                  system:tc.optional(System_Base)=None,
-                 monitored_output_states=None,
+                 monitored_output_ports=None,
                  function=None,
                  # control_signals:tc.optional(list) = None,
                  control_signals= None,
@@ -322,7 +322,7 @@ class AGTControlMechanism(ControlMechanism):
         super().__init__(
             system=system,
             objective_mechanism=ObjectiveMechanism(
-                monitored_output_states=monitored_output_states,
+                monitored_output_ports=monitored_output_ports,
                 function=DualAdaptiveIntegrator
             ),
             control_signals=control_signals,
@@ -338,7 +338,7 @@ class AGTControlMechanism(ControlMechanism):
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS
 
-        Check that all items in MONITOR_FOR_CONTROL are Mechanisms or OutputStates for Mechanisms in self.system
+        Check that all items in MONITOR_FOR_CONTROL are Mechanisms or OutputPorts for Mechanisms in self.system
         Check that every item in `modulated_mechanisms <AGTControlMechanism.modulated_mechanisms>` is a Mechanism
             and that its function has a multiplicative_param
         """
@@ -347,29 +347,29 @@ class AGTControlMechanism(ControlMechanism):
                                  target_set=target_set,
                                  context=context)
 
-        if MONITORED_OUTPUT_STATES in target_set and target_set[MONITORED_OUTPUT_STATES] is not None:
-            # It is a MonitoredOutputStatesOption specification
-            if isinstance(target_set[MONITORED_OUTPUT_STATES], MonitoredOutputStatesOption):
-                # Put in a list (standard format for processing by _parse_monitored_output_states_list)
-                target_set[MONITORED_OUTPUT_STATES] = [target_set[MONITORED_OUTPUT_STATES]]
-            # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or States
+        if MONITORED_OUTPUT_PORTS in target_set and target_set[MONITORED_OUTPUT_PORTS] is not None:
+            # It is a MonitoredOutputPortsOption specification
+            if isinstance(target_set[MONITORED_OUTPUT_PORTS], MonitoredOutputPortsOption):
+                # Put in a list (standard format for processing by _parse_monitored_output_ports_list)
+                target_set[MONITORED_OUTPUT_PORTS] = [target_set[MONITORED_OUTPUT_PORTS]]
+            # It is NOT a MonitoredOutputPortsOption specification, so assume it is a list of Mechanisms or Ports
             else:
-                # Validate each item of MONITORED_OUTPUT_STATES
-                for item in target_set[MONITORED_OUTPUT_STATES]:
-                    if isinstance(item, MonitoredOutputStatesOption):
+                # Validate each item of MONITORED_OUTPUT_PORTS
+                for item in target_set[MONITORED_OUTPUT_PORTS]:
+                    if isinstance(item, MonitoredOutputPortsOption):
                         continue
                     if isinstance(item, tuple):
                         item = item[0]
                     if isinstance(item, dict):
                         item = item[MECHANISM]
-                    if isinstance(item, (OutputState, Mechanism)):
+                    if isinstance(item, (OutputPort, Mechanism)):
                         item = item.name
                     if not isinstance(item, str):
                         raise AGTControlMechanismError("Specification of {} arg for {} appears to be a list of "
-                                                    "Mechanisms and/or OutputStates to be monitored, but one"
+                                                    "Mechanisms and/or OutputPorts to be monitored, but one"
                                                     "of the items ({}) is invalid".
                                                     format(OBJECTIVE_MECHANISM, self.name, item))
-                    _parse_monitored_output_states(source=self, output_state_list=item, context=context)
+                    _parse_monitored_output_ports(source=self, output_port_list=item, context=context)
 
     @property
     def initial_short_term_utility(self):
@@ -448,34 +448,34 @@ class AGTControlMechanism(ControlMechanism):
         return self.objective_mechanism.function.parameters
 
     def show(self):
-        """Display the `OutputStates <OutputState>` monitored by the AGTControlMechanism's `objective_mechanism`
+        """Display the `OutputPorts <OutputPort>` monitored by the AGTControlMechanism's `objective_mechanism`
         and the `multiplicative_params <Function_Modulatory_Params>` modulated by the AGTControlMechanism.
         """
 
         print ("\n---------------------------------------------------------")
 
         print ("\n{0}".format(self.name))
-        print("\n\tMonitoring the following Mechanism OutputStates:")
+        print("\n\tMonitoring the following Mechanism OutputPorts:")
         if self.objective_mechanism is None:
             print ("\t\tNone")
         else:
-            for state in self.objective_mechanism.input_states:
-                for projection in state.path_afferents:
-                    monitored_state = projection.sender
-                    monitored_state_mech = projection.sender.owner
-                    monitored_state_index = self.monitored_output_states.index(monitored_state)
+            for port in self.objective_mechanism.input_ports:
+                for projection in port.path_afferents:
+                    monitored_port = projection.sender
+                    monitored_port_Mech = projection.sender.owner
+                    monitored_port_index = self.monitored_output_ports.index(monitored_port)
 
-                    weight = self.monitored_output_states_weights_and_exponents[monitored_state_index][0]
-                    exponent = self.monitored_output_states_weights_and_exponents[monitored_state_index][1]
+                    weight = self.monitored_output_ports_weights_and_exponents[monitored_port_index][0]
+                    exponent = self.monitored_output_ports_weights_and_exponents[monitored_port_index][1]
 
                     print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
-                           format(monitored_state_mech.name, monitored_state.name, weight, exponent))
+                           format(monitored_port_Mech.name, monitored_port.name, weight, exponent))
 
         print ("\n\tModulating the following parameters:".format(self.name))
         # Sort for consistency of output:
-        state_names_sorted = sorted(self.output_states.names)
-        for state_name in state_names_sorted:
-            for projection in self.output_states[state_name].efferents:
+        port_Names_sorted = sorted(self.output_ports.names)
+        for port_Name in port_Names_sorted:
+            for projection in self.output_ports[port_Name].efferents:
                 print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
 
         print ("\n---------------------------------------------------------")

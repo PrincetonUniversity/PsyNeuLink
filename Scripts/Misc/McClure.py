@@ -36,8 +36,8 @@ action_selection = pnl.TransferMechanism(size=2,
                                          function=psyneulink.core.components.functions.transferfunctions.SoftMax(
                                            output=pnl.ALL,
                                            gain=1.0),
-                                         output_states=[{pnl.NAME: 'SELECTED ACTION',
-                                                         pnl.VARIABLE: [(pnl.INPUT_STATE_VARIABLES, 0),
+                                         output_ports=[{pnl.NAME: 'SELECTED ACTION',
+                                                         pnl.VARIABLE: [(pnl.INPUT_PORT_VARIABLES, 0),
                                                                         (pnl.OWNER_VALUE, 0)],
                                                          # pnl.VARIABLE: [(pnl.OWNER_VALUE, 0)],
                                                          pnl.FUNCTION: psyneulink.core.components.functions
@@ -64,19 +64,19 @@ action_selection = pnl.TransferMechanism(size=2,
 
 
 
-# rate = pnl.ObjectiveMechanism(monitored_output_states=[action_selection.output_states[0]],
+# rate = pnl.ObjectiveMechanism(monitored_output_ports=[action_selection.output_ports[0]],
 #                               function=pnl.AdaptiveIntegrator(rate=0.2,
 #                                                               noise=reward,
 #                                                               time_step_size=0.02),
 #                               name='REWARD RATE')
 
 # K = pnl.ObjectiveMechanism(#size=1,
-#                           monitored_output_states=[action_selection.output_state],
+#                           monitored_output_ports=[action_selection.output_port],
 #                           function=pnl.Stability(metric=pnl.ENERGY,
 #                                                  normalize=True),
 #                           name='K')
 
-conflicts = pnl.IntegratorMechanism(input_states=[action_selection.output_states[2]],
+conflicts = pnl.IntegratorMechanism(input_ports=[action_selection.output_ports[2]],
                                     function=psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DualAdaptiveIntegrator(short_term_gain=6.0,
                                                                                                                                                 long_term_gain=6.0,
                                                                                                                                                 short_term_rate=0.05,
@@ -88,17 +88,17 @@ decision_process = pnl.Process(default_variable=[0, 0],
                                         action_selection],
                                learning=pnl.LearningProjection(learning_function=psyneulink.core.components.functions
                                    .learningfunctions.Reinforcement(
-                                   learning_rate=0.03)), # if learning rate set to .3 output state values annealing to [0., 0.]
+                                   learning_rate=0.03)), # if learning rate set to .3 OutputPort values annealing to [0., 0.]
                                # which leads to error in reward function
                                target=0
                                )
 
-print('reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
-print('target_mechanism weights: \n', action_selection.output_state.efferents[0].matrix)
+print('reward prediction weights: \n', action_selection.input_port.path_afferents[0].matrix)
+print('target_mechanism weights: \n', action_selection.output_port.efferents[0].matrix)
 
 conflict_process = pnl.Process(pathway=[action_selection, conflicts])
 
-LC_NE = pnl.LCControlMechanism(objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[action_selection],
+LC_NE = pnl.LCControlMechanism(objective_mechanism=pnl.ObjectiveMechanism(monitored_output_ports=[action_selection],
                                                                           name='LC-NE ObjectiveMech'),
                                modulated_mechanisms=[action_selection],
                                integration_method='EULER',
@@ -125,8 +125,8 @@ LC_NE = pnl.LCControlMechanism(objective_mechanism=pnl.ObjectiveMechanism(monito
                                name='LC-NE')
 
 updateC = pnl.ControlMechanism(objective_mechanism=pnl.ObjectiveMechanism(
-    monitor_for_control=[action_selection.output_states[1], conflicts.output_state]),
-    control_signals=[LC_NE.parameter_states[35]],
+    monitor_for_control=[action_selection.output_ports[1], conflicts.output_port]),
+    control_signals=[LC_NE.parameter_ports[35]],
     name='C Update')
 
 update_process = pnl.Process(pathway=[LC_NE],
@@ -137,12 +137,12 @@ actions = ['left', 'right']
 reward_values = np.array([1, 0])
 first_reward = 0
 
-action_selection.output_state.value = [0, 1]
+action_selection.output_port.value = [0, 1]
 
 
 def reward():
-    print(reward_values, action_selection.output_state.value)
-    return [reward_values[int(np.nonzero(action_selection.output_state.value)[0])]]
+    print(reward_values, action_selection.output_port.value)
+    return [reward_values[int(np.nonzero(action_selection.output_port.value)[0])]]
 
 
 rrate = [0.]
@@ -157,15 +157,15 @@ def print_header(system):
 
 
 def show_weights(system):
-    # print('Reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
+    # print('Reward prediction weights: \n', action_selection.input_port.path_afferents[0].matrix)
     # print(
     #     '\nAction selected:  {}; predicted reward: {}'.format(
-    #         np.nonzero(action_selection.output_state.value)[0][0],
-    #         action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0]
+    #         np.nonzero(action_selection.output_port.value)[0][0],
+    #         action_selection.output_port.value[np.nonzero(action_selection.output_port.value)][0]
     #     )
     assert True
-    comparator = action_selection.output_state.efferents[0].receiver.owner
-    learn_mech = action_selection.output_state.efferents[1].receiver.owner
+    comparator = action_selection.output_port.efferents[0].receiver.owner
+    learn_mech = action_selection.output_port.efferents[1].receiver.owner
     print('\n'
           '\naction_selection value:     {} '
           '\naction_selection output:    {} '
@@ -183,20 +183,20 @@ def show_weights(system):
           '\nshort-long-term conflict:   {} '.
         format(
             action_selection.parameters.value.get(system),
-            action_selection.output_state.parameters.value.get(system),
-            comparator.input_states[pnl.SAMPLE].parameters.value.get(system),
-            comparator.input_states[pnl.TARGET].parameters.value.get(system),
-            learn_mech.input_states[pnl.ACTIVATION_INPUT].parameters.value.get(system),
-            learn_mech.input_states[pnl.ACTIVATION_OUTPUT].parameters.value.get(system),
-            learn_mech.input_states[pnl.ERROR_SIGNAL].parameters.value.get(system),
-            learn_mech.output_states[pnl.ERROR_SIGNAL].parameters.value.get(system),
-            learn_mech.output_states[pnl.LEARNING_SIGNAL].parameters.value.get(system),
-            action_selection.output_state.parameters.value.get(system)[np.nonzero(action_selection.output_state.parameters.value.get(system))][0],
-            rrate.append(action_selection.output_states[1].parameters.value.get(system)),
-            conflictK.append(action_selection.output_states[2].parameters.value.get(system)),
-            coherence.append(LC_NE.parameter_states[35].parameters.value.get(system)),
-            update.append(updateC.output_state.parameters.value.get(system)),
-            cons.append(conflicts.output_state.parameters.value.get(system))
+            action_selection.output_port.parameters.value.get(system),
+            comparator.input_ports[pnl.SAMPLE].parameters.value.get(system),
+            comparator.input_ports[pnl.TARGET].parameters.value.get(system),
+            learn_mech.input_ports[pnl.ACTIVATION_INPUT].parameters.value.get(system),
+            learn_mech.input_ports[pnl.ACTIVATION_OUTPUT].parameters.value.get(system),
+            learn_mech.input_ports[pnl.ERROR_SIGNAL].parameters.value.get(system),
+            learn_mech.output_ports[pnl.ERROR_SIGNAL].parameters.value.get(system),
+            learn_mech.output_ports[pnl.LEARNING_SIGNAL].parameters.value.get(system),
+            action_selection.output_port.parameters.value.get(system)[np.nonzero(action_selection.output_port.parameters.value.get(system))][0],
+            rrate.append(action_selection.output_ports[1].parameters.value.get(system)),
+            conflictK.append(action_selection.output_ports[2].parameters.value.get(system)),
+            coherence.append(LC_NE.parameter_ports[35].parameters.value.get(system)),
+            update.append(updateC.output_port.parameters.value.get(system)),
+            cons.append(conflicts.output_port.parameters.value.get(system))
                 )
     )
 

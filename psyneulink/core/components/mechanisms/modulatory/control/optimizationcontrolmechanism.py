@@ -105,7 +105,7 @@ Creating an OptimizationControlMechanism
 An OptimizationControlMechanism is created in the same was as any `ControlMechanism <ControlMechanism>`.
 The following arguments of its constructor are specific to the OptimizationControlMechanism:
 
-* **features** -- takes the place of the standard **input_states** argument in the constructor for a Mechanism`,
+* **features** -- takes the place of the standard **input_ports** argument in the constructor for a Mechanism`,
   and specifies the values used by the OptimizationControlMechanism, together with a `control_allocation
   <ControlMechanism.control_allocation>`, to calculate a `net_outcome <ControlMechanism.net_outcome>`.  For
   `model-based optimzation <OptimizationControlMechanism_Model_Based>` these are also used as the inputs to the
@@ -113,10 +113,10 @@ The following arguments of its constructor are specific to the OptimizationContr
   method is called (see `OptimizationControlMechanism_Features` below).  Features can be specified using any of the
   following, singly or combined in a list:
 
-  * *InputState specification* -- this can be any form of `InputState specification <InputState_Specification>`
-    that resolves to an OutputState from which the InputState receives a Projection;  the `value
-    <OutputState.value>` of that OutputState is used as the feature. Each of these InputStates is marked as
-    `internal_only <InputStates.internal_only>` = `True`.
+  * *InputPort specification* -- this can be any form of `InputPort specification <InputPort_Specification>`
+    that resolves to an OutputPort from which the InputPort receives a Projection;  the `value
+    <OutputPort.value>` of that OutputPort is used as the feature. Each of these InputPorts is marked as
+    `internal_only <InputPorts.internal_only>` = `True`.
 
   Features can also be added to an existing OptimizationControlMechanism using its `add_features` method.  If the
   **features** argument is not specified, then the `input <Composition.input_values>` to the `Composition` on the last
@@ -124,7 +124,7 @@ The following arguments of its constructor are specific to the OptimizationContr
 
 .. _OptimizationControlMechanism_Feature_Function:
 
-* **feature_function** -- specifies `function <InputState>` of the InputState created for each item listed in
+* **feature_function** -- specifies `function <InputPort>` of the InputPort created for each item listed in
   **features**.  By default, this is the identity function, that assigns the current value of the feature
   to the OptimizationControlMechanism's `feature_values <OptimizationControlMechanism.feature_values>` attribute.
   However, other functions can be assigned, for example to maintain a record of past values, or integrate them over
@@ -147,7 +147,7 @@ Structure
 ---------
 
 In addition to the standard Components associated with a `ControlMechanism`, including a `Projection <Projection>`
-to its *OUTCOME* InputState from its `objective_mechanism <ControlMechanism.objective_mechanism>`, and a
+to its *OUTCOME* InputPort from its `objective_mechanism <ControlMechanism.objective_mechanism>`, and a
 `function <OptimizationControlMechanism.function>` used to carry out the optimization process, it has several
 other constiuents, as described below.
 
@@ -182,9 +182,9 @@ OptimizationControlMechanism's `agent_rep <OptimizationControlMechanism.agent_re
 *Features*
 ^^^^^^^^^^
 
-In addition to its `primary InputState <InputState_Primary>` (which typically receives a projection from the
-*OUTCOME* OutpuState of the `objective_mechanism <ControlMechanism.objective_mechanism>`,
-an OptimizationControlMechanism also has an `InputState` for each of its features. By default, these are the current
+In addition to its `primary InputPort <InputPort_Primary>` (which typically receives a projection from the
+*OUTCOME* OutputPort of the `objective_mechanism <ControlMechanism.objective_mechanism>`,
+an OptimizationControlMechanism also has an `InputPort` for each of its features. By default, these are the current
 `input <Composition.input_values>` for the Composition to which the OptimizationControlMechanism belongs.  However,
 different values can be specified, as can a `feature_function <OptimizationControlMechanism_Feature_Function>` that
 transforms these.  For OptimizationControlMechanisms that implement `model-free
@@ -200,17 +200,17 @@ it is executed to evaluate the `net_outcome <ControlMechanism.net_outcome>` for 
 Features can be of two types:
 
 * *Input Features* -- these are values received as input by other Mechanisms in the `Composition`. They are
-  specified as `shadowed inputs <InputState_Shadow_Inputs>` in the **features** argument of the
-  OptimizationControlMechanism's constructor (see `OptimizationControlMechanism_Creation`).  An InputState is
+  specified as `shadowed inputs <InputPort_Shadow_Inputs>` in the **features** argument of the
+  OptimizationControlMechanism's constructor (see `OptimizationControlMechanism_Creation`).  An InputPort is
   created on the OptimziationControlMechanism for each feature, that receives a `Projection` paralleling
   the input to be shadowed.
 ..
-* *Output Features* -- these are the `value <OutputState.value>` of an `OutputState` of some other `Mechanism` in
+* *Output Features* -- these are the `value <OutputPort.value>` of an `OutputPort` of some other `Mechanism` in
   the Composition.  These too are specified in the **features** argument of the OptimizationControlMechanism's
   constructor (see `OptimizationControlMechanism_Creation`), and each is assigned a `Projection` from the specified
-  OutputState(s) to the InputState of the OptimizationControlMechanism for that feature.
+  OutputPort(s) to the InputPort of the OptimizationControlMechanism for that feature.
 
-The current `value <InputState.value>` of the InputStates for the features are listed in the `feature_values
+The current `value <InputPort.value>` of the InputPorts for the features are listed in the `feature_values
 <OptimizationControlMechanism.feature_values>` attribute.
 
 .. _OptimizationControlMechanism_State:
@@ -400,14 +400,14 @@ from psyneulink.core.components.functions.transferfunctions import CostFunctions
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.shellclasses import Function
-from psyneulink.core.components.states.inputstate import InputState, _parse_shadow_inputs
-from psyneulink.core.components.states.outputstate import OutputState
-from psyneulink.core.components.states.state import _parse_state_spec
+from psyneulink.core.components.ports.inputport import InputPort, _parse_shadow_inputs
+from psyneulink.core.components.ports.outputport import OutputPort
+from psyneulink.core.components.ports.port import _parse_port_spec
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, NAME, \
-    OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMETER_STATES, PARAMS
+    OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMETER_PORTS, PARAMS
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -463,20 +463,20 @@ class OptimizationControlMechanism(ControlMechanism):
     Arguments
     ---------
 
-    objective_mechanism : ObjectiveMechanism or List[OutputState specification]
+    objective_mechanism : ObjectiveMechanism or List[OutputPort specification]
         specifies either an `ObjectiveMechanism` to use for the OptimizationControlMechanism, or a list of the
-        `OutputState <OutputState>`\\s it should monitor; if a list of `OutputState specifications
+        `OutputPort <OutputPort>`\\s it should monitor; if a list of `OutputPort specifications
         <ObjectiveMechanism_Monitor>` is used, a default ObjectiveMechanism is created and the list
-        is passed to its **monitored_output_states** argument.
+        is passed to its **monitored_output_ports** argument.
 
-    features : Mechanism, OutputState, Projection, dict, or list containing any of these
+    features : Mechanism, OutputPort, Projection, dict, or list containing any of these
         specifies Components, the values of which are assigned to `feature_values
         <OptimizationControlMechanism.feature_values>` and used to predict `net_outcome <ControlMechanism.net_outcome>`.
-        Any `InputState specification <InputState_Specification>` can be used that resolves to an `OutputState` that
-        projects to the InputState.
+        Any `InputPort specification <InputPort_Specification>` can be used that resolves to an `OutputPort` that
+        projects to the InputPort.
 
     feature_function : Function or function : default None
-        specifies the `function <InputState.function>` for the `InputState` assigned to each `feature
+        specifies the `function <InputPort.function>` for the `InputPort` assigned to each `feature
         <OptimizationControlMechanism_Features>`.
 
     agent_rep : Composition  : default Composition to which the OptimizationControlMechanism belongs
@@ -518,7 +518,7 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism_Function>` for additional details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for the
         OptimizationControlMechanism, its `function <OptimizationControlMechanism.function>`, and/or a custom function
         and its parameters.  Values specified for parameters in the dictionary override any assigned to those
         parameters in arguments of the constructor.
@@ -708,13 +708,13 @@ class OptimizationControlMechanism(ControlMechanism):
         control_allocation_search_space = None
 
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
-    paramClassDefaults.update({PARAMETER_STATES: NotImplemented}) # This suppresses parameterStates
+    paramClassDefaults.update({PARAMETER_PORTS: NotImplemented}) # This suppresses parameterPorts
 
 
     @tc.typecheck
     def __init__(self,
                  agent_rep=None,
-                 features: tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState)) = None,
+                 features: tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort)) = None,
                  feature_function: tc.optional(tc.any(is_function_type)) = None,
                  num_estimates = None,
                  search_function: tc.optional(tc.any(is_function_type)) = None,
@@ -731,7 +731,7 @@ class OptimizationControlMechanism(ControlMechanism):
         self.saved_values = None
 
         # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(input_states=features,
+        params = self._assign_args_to_param_dicts(input_ports=features,
                                                   feature_function=feature_function,
                                                   num_estimates=num_estimates,
                                                   search_statefulness=search_statefulness,
@@ -764,44 +764,44 @@ class OptimizationControlMechanism(ControlMechanism):
             raise OptimizationControlMechanismError(f"The {repr(AGENT_REP)} arg of an {self.__class__.__name__} "
                                                     f"must be either a {Composition.__name__} or a sublcass of one")
 
-    def _instantiate_input_states(self, context=None):
-        """Instantiate input_states for Projections from features and objective_mechanism.
+    def _instantiate_input_ports(self, context=None):
+        """Instantiate input_ports for Projections from features and objective_mechanism.
 
-        Inserts InputState specification for Projection from ObjectiveMechanism as first item in list of
-        InputState specifications generated in _parse_feature_specs from the **features** and
+        Inserts InputPort specification for Projection from ObjectiveMechanism as first item in list of
+        InputPort specifications generated in _parse_feature_specs from the **features** and
         **feature_function** arguments of the OptimizationControlMechanism constructor.
         """
 
-        # Specify *OUTCOME* InputState;  receives Projection from *OUTCOME* OutputState of objective_mechanism
-        outcome_input_state = {NAME:OUTCOME, PARAMS:{INTERNAL_ONLY:True}}
+        # Specify *OUTCOME* InputPort;  receives Projection from *OUTCOME* OutputPort of objective_mechanism
+        outcome_input_port = {NAME:OUTCOME, PARAMS:{INTERNAL_ONLY:True}}
 
-        # If any features were specified (assigned to self.input_states in __init__):
-        if self.input_states:
-            self.input_states = _parse_shadow_inputs(self, self.input_states)
-            self.input_states = self._parse_feature_specs(self.input_states, self.feature_function)
-            # Insert primary InputState for outcome from ObjectiveMechanism;
+        # If any features were specified (assigned to self.input_ports in __init__):
+        if self.input_ports:
+            self.input_ports = _parse_shadow_inputs(self, self.input_ports)
+            self.input_ports = self._parse_feature_specs(self.input_ports, self.feature_function)
+            # Insert primary InputPort for outcome from ObjectiveMechanism;
             #     assumes this will be a single scalar value and must be named OUTCOME by convention of ControlSignal
-            self.input_states.insert(0, outcome_input_state),
+            self.input_ports.insert(0, outcome_input_port),
         else:
-            self.input_states = [outcome_input_state]
+            self.input_ports = [outcome_input_port]
 
-        # Configure default_variable to comport with full set of input_states
-        self.defaults.variable, _ = self._handle_arg_input_states(self.input_states)
+        # Configure default_variable to comport with full set of input_ports
+        self.defaults.variable, _ = self._handle_arg_input_ports(self.input_ports)
 
-        super()._instantiate_input_states(context=context)
+        super()._instantiate_input_ports(context=context)
 
-        for i in range(1, len(self.input_states)):
-            state = self.input_states[i]
-            if len(state.path_afferents) > 1:
-                raise OptimizationControlMechanismError(f"Invalid {InputState.__name__} on {self.name}. "
-                                                        f"{state.name} should receive exactly one projection, "
-                                                        f"but it receives {len(state.path_afferents)} projections.")
+        for i in range(1, len(self.input_ports)):
+            port = self.input_ports[i]
+            if len(port.path_afferents) > 1:
+                raise OptimizationControlMechanismError(f"Invalid {InputPort.__name__} on {self.name}. "
+                                                        f"{port.name} should receive exactly one projection, "
+                                                        f"but it receives {len(port.path_afferents)} projections.")
 
-    def _instantiate_output_states(self, context=None):
+    def _instantiate_output_ports(self, context=None):
         """Assign CostFunctions.DEFAULTS as default for cost_option of ControlSignals.
         OptimizationControlMechanism requires use of at least one of the cost options
         """
-        super()._instantiate_output_states(context)
+        super()._instantiate_output_ports(context)
 
         for control_signal in self.control_signals:
             if control_signal.cost_options is None:
@@ -852,22 +852,22 @@ class OptimizationControlMechanism(ControlMechanism):
         if (isinstance(self.agent_rep, CompositionFunctionApproximator)):
             self._initialize_composition_function_approximator(context)
 
-    def _update_input_states(self, context=None, runtime_params=None):
-        """Update value for each InputState in self.input_states:
+    def _update_input_ports(self, context=None, runtime_params=None):
+        """Update value for each InputPort in self.input_ports:
 
-        Call execute method for all (MappingProjection) Projections in InputState.path_afferents
-        Aggregate results (using InputState execute method)
-        Update InputState.value
+        Call execute method for all (MappingProjection) Projections in InputPort.path_afferents
+        Aggregate results (using InputPort execute method)
+        Update InputPort.value
         """
         # "Outcome"
-        outcome_input_state = self.input_state
-        outcome_input_state._update(context=context, params=runtime_params)
-        state_values = [np.atleast_2d(outcome_input_state.parameters.value._get(context))]
-        for i in range(1, len(self.input_states)):
-            state = self.input_states[i]
-            state._update(context=context, params=runtime_params)
-            state_values.append(state.parameters.value._get(context))
-        return np.array(state_values)
+        outcome_input_port = self.input_port
+        outcome_input_port._update(context=context, params=runtime_params)
+        port_values = [np.atleast_2d(outcome_input_port.parameters.value._get(context))]
+        for i in range(1, len(self.input_ports)):
+            port = self.input_ports[i]
+            port._update(context=context, params=runtime_params)
+            port_values.append(port.parameters.value._get(context))
+        return np.array(port_values)
 
     def _execute(self, variable=None, context=None, runtime_params=None):
         """Find control_allocation that optimizes result of `agent_rep.evaluate`  ."""
@@ -1004,23 +1004,23 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _get_evaluate_param_struct_type(self, ctx):
         num_estimates = ctx.int32_ty
-        intensity_cost = [ctx.get_param_struct_type(os.intensity_cost_function) for os in self.output_states]
+        intensity_cost = [ctx.get_param_struct_type(os.intensity_cost_function) for os in self.output_ports]
         intensity_cost_struct = pnlvm.ir.LiteralStructType(intensity_cost)
         return pnlvm.ir.LiteralStructType([intensity_cost_struct, num_estimates])
 
     def _get_evaluate_param_initializer(self, context):
         num_estimates = self.parameters.num_estimates.get(context) or 0
         # FIXME: The intensity cost function is not setup with the right execution id
-        intensity_cost = tuple((os.intensity_cost_function._get_param_initializer(None) for os in self.output_states))
+        intensity_cost = tuple((os.intensity_cost_function._get_param_initializer(None) for os in self.output_ports))
         return (intensity_cost, num_estimates)
 
     def _get_evaluate_state_struct_type(self, ctx):
-        intensity_cost = [ctx.get_state_struct_type(os.intensity_cost_function) for os in self.output_states]
+        intensity_cost = [ctx.get_state_struct_type(os.intensity_cost_function) for os in self.output_ports]
         intensity_cost_struct = pnlvm.ir.LiteralStructType(intensity_cost)
         return pnlvm.ir.LiteralStructType([intensity_cost_struct])
 
     def _get_evaluate_state_initializer(self, context):
-        intensity_cost = tuple((os.intensity_cost_function._get_state_initializer(context) for os in self.output_states))
+        intensity_cost = tuple((os.intensity_cost_function._get_state_initializer(context) for os in self.output_ports))
         return (intensity_cost,)
 
     def _get_evaluate_input_struct_type(self, ctx):
@@ -1051,7 +1051,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # calculate cost function
         total_cost = builder.alloca(ctx.float_ty)
         builder.store(ctx.float_ty(-0.0), total_cost)
-        for i, os in enumerate(self.output_states):
+        for i, os in enumerate(self.output_ports):
             # FIXME: Add support for other cost types
             assert os.cost_options == CostFunctions.INTENSITY
 
@@ -1117,11 +1117,11 @@ class OptimizationControlMechanism(ControlMechanism):
             builder.store(builder.load(base_comp_data), comp_data)
 
             # Apply allocation sample to simulation data
-            assert len(self.output_states) == len(allocation_sample.type.pointee)
+            assert len(self.output_ports) == len(allocation_sample.type.pointee)
             idx = self.agent_rep._get_node_index(self)
             ocm_out = builder.gep(comp_data, [ctx.int32_ty(0), ctx.int32_ty(0),
                                               ctx.int32_ty(idx)])
-            for i, _ in enumerate(self.output_states):
+            for i, _ in enumerate(self.output_ports):
                 idx = ctx.int32_ty(i)
                 sample_ptr = builder.gep(allocation_sample, [ctx.int32_ty(0), idx])
                 sample_dst = builder.gep(ocm_out, [ctx.int32_ty(0), idx, ctx.int32_ty(0)])
@@ -1211,8 +1211,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return fun_out, builder
 
-    def _gen_llvm_output_state_parse_variable(self, ctx, builder, params, context, value, state):
-        i = self.output_states.index(state)
+    def _gen_llvm_output_port_parse_variable(self, ctx, builder, params, context, value, state):
+        i = self.output_ports.index(state)
         os_input = builder.alloca(pnlvm.ir.ArrayType(ctx.float_ty, 1))
         val_ptr = builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
         dest_ptr = builder.gep(os_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -1229,7 +1229,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         value = [np.atleast_1d(a) for a in control_allocation]
         self.parameters.value._set(value, context)
-        self._update_output_states(context=context, runtime_params=runtime_params,
+        self._update_output_ports(context=context, runtime_params=runtime_params,
                                    )
 
     # @property
@@ -1244,33 +1244,33 @@ class OptimizationControlMechanism(ControlMechanism):
 
     @tc.typecheck
     def add_features(self, features):
-        """Add InputStates and Projections to OptimizationControlMechanism for features used to
+        """Add InputPorts and Projections to OptimizationControlMechanism for features used to
         predict `net_outcome <ControlMechanism.net_outcome>`
 
-        **features** argument can use any of the forms of specification allowed for InputState(s)
+        **features** argument can use any of the forms of specification allowed for InputPort(s)
         """
 
         if features:
             features = self._parse_feature_specs(features=features,
                                                  context=Context(source=ContextFlags.COMMAND_LINE))
-        self.add_states(InputState, features)
+        self.add_ports(InputPort, features)
 
     @tc.typecheck
-    def _parse_feature_specs(self, input_states, feature_function, context=None):
-        """Parse entries of features into InputState spec dictionaries
-        Set INTERNAL_ONLY entry of params dict of InputState spec dictionary to True
+    def _parse_feature_specs(self, input_ports, feature_function, context=None):
+        """Parse entries of features into InputPort spec dictionaries
+        Set INTERNAL_ONLY entry of params dict of InputPort spec dictionary to True
             (so that inputs to Composition are not required if the specified state is on an INPUT Mechanism)
-        Assign functions specified in **feature_function** to InputStates for all features
-        Return list of InputState specification dictionaries
+        Assign functions specified in **feature_function** to InputPorts for all features
+        Return list of InputPort specification dictionaries
         """
 
         parsed_features = []
 
-        if not isinstance(input_states, list):
-            input_states = [input_states]
+        if not isinstance(input_ports, list):
+            input_ports = [input_ports]
 
-        for spec in input_states:
-            spec = _parse_state_spec(owner=self, state_type=InputState, state_spec=spec)    # returns InputState dict
+        for spec in input_ports:
+            spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)    # returns InputPort dict
             spec[PARAMS][INTERNAL_ONLY] = True
             if feature_function:
                 if isinstance(feature_function, Function):
@@ -1293,7 +1293,7 @@ class OptimizationControlMechanism(ControlMechanism):
     def _model_spec_parameter_blacklist(self):
         # default_variable is hidden in constructor arguments,
         # and anyway assigning it is problematic because it is modified
-        # several times when creating input states, and assigning function that
+        # several times when creating input ports, and assigning function that
         # fits the control allocation
         return super()._model_spec_parameter_blacklist.union({
             'variable',

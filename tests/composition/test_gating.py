@@ -24,7 +24,7 @@ def test_gating(benchmark, mode):
         name='Output_Layer',
         default_variable=[0, 0, 0],
         function=pnl.Linear(),
-        output_states={
+        output_ports={
             pnl.NAME: 'RESULTS USING UDF',
             pnl.FUNCTION: pnl.Linear(slope=pnl.GATING)
         }
@@ -32,7 +32,7 @@ def test_gating(benchmark, mode):
 
     Gating_Mechanism = pnl.GatingMechanism(
         size=[1],
-        gating_signals=[Output_Layer.output_state]
+        gating_signals=[Output_Layer.output_port]
     )
 
     p_pathway = [Input_Layer, Output_Layer]
@@ -80,7 +80,7 @@ def test_gating(benchmark, mode):
 #         name='Output_Layer',
 #         default_variable=[0, 0, 0],
 #         function=pnl.Linear(),
-#         output_states={
+#         output_ports={
 #             pnl.NAME: 'RESULTS USING UDF',
 #             pnl.FUNCTION: pnl.Linear(slope=pnl.GATING)
 #         }
@@ -88,7 +88,7 @@ def test_gating(benchmark, mode):
 #
 #     Gating_Mechanism = pnl.ControlMechanism(
 #         size=[1],
-#         control_signals=[Output_Layer.output_state]
+#         control_signals=[Output_Layer.output_port]
 #     )
 #
 #     p_pathway = [Input_Layer, Output_Layer]

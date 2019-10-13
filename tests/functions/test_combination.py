@@ -215,15 +215,15 @@ def test_linear_combination_function(variable, operation, exponents, weights, sc
 @pytest.mark.function
 @pytest.mark.combination_function
 @pytest.mark.parametrize("operation", [pnl.SUM, pnl.PRODUCT])
-@pytest.mark.parametrize("input, input_states", [ ([[1,2,3,4]], ["hi"]), ([[1,2,3,4], [5,6,7,8], [9,10,11,12]], ['1','2','3']), ([[1, 2, 3, 4], [5, 6, 7, 8], [0, 0, 1, 2]], ['1','2','3']) ], ids=["1S", "2S", "3S"])
+@pytest.mark.parametrize("input, input_ports", [ ([[1,2,3,4]], ["hi"]), ([[1,2,3,4], [5,6,7,8], [9,10,11,12]], ['1','2','3']), ([[1, 2, 3, 4], [5, 6, 7, 8], [0, 0, 1, 2]], ['1','2','3']) ], ids=["1S", "2S", "3S"])
 @pytest.mark.parametrize("scale", [None, 2.5, [1,2.5,0,0]], ids=["S_NONE", "S_SCALAR", "S_VECTOR"])
 @pytest.mark.parametrize("offset", [None, 1.5, [1,2.5,0,0]], ids=["O_NONE", "O_SCALAR", "O_VECTOR"])
 @pytest.mark.parametrize("mode", ["Python",
                                   pytest.param("LLVM", marks=pytest.mark.llvm),
                                   pytest.param("PTX", marks=[pytest.mark.llvm, pytest.mark.cuda])])
-def test_linear_combination_function_in_mechanism(operation, input, input_states, scale, offset, benchmark, mode):
+def test_linear_combination_function_in_mechanism(operation, input, input_ports, scale, offset, benchmark, mode):
     f = pnl.core.components.functions.combinationfunctions.LinearCombination(default_variable=input, operation=operation, scale=scale, offset=offset)
-    p = pnl.ProcessingMechanism(size=[len(input[0])] * len(input), function=f, input_states=input_states)
+    p = pnl.ProcessingMechanism(size=[len(input[0])] * len(input), function=f, input_ports=input_ports)
     benchmark.group = "CombinationFunction " + pnl.core.components.functions.combinationfunctions.LinearCombination.componentName + "in Mechanism"
 
     if mode == "Python":

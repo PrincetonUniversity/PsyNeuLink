@@ -26,7 +26,7 @@ shape as the individual items.
 All CombinationFunctions must have two attributes - **multiplicative_param** and **additive_param** -
 each of which is assigned the name of one of the function's parameters;
 this is for use by ModulatoryProjections (and, in particular, GatingProjections,
-when the CombinationFunction is used as the function of an InputState or OutputState).
+when the CombinationFunction is used as the function of an InputPort or OutputPort).
 
 
 """
@@ -58,7 +58,7 @@ class CombinationFunction(Function_Base):
     All CombinationFunctions must have two attributes - multiplicative_param and additive_param -
         each of which is assigned the name of one of the function's parameters;
         this is for use by ModulatoryProjections (and, in particular, GatingProjections,
-        when the CombinationFunction is used as the function of an InputState or OutputState).
+        when the CombinationFunction is used as the function of an InputPort or OutputPort).
 
     """
     componentType = COMBINATION_FUNCTION_TYPE
@@ -140,7 +140,7 @@ class Concatenate(CombinationFunction):  # -------------------------------------
         (see `offset <Concatenate.offset>` for details)
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -272,7 +272,7 @@ class Concatenate(CombinationFunction):  # -------------------------------------
            a list or np.array of numeric values.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -354,7 +354,7 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
         (see `offset <Rearrange.offset>` for details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -451,7 +451,7 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
                          prefs=prefs,
                          )
 
-    def _handle_default_variable(self, default_variable=None, size=None, input_states=None, function=None, params=None):
+    def _handle_default_variable(self, default_variable=None, size=None, input_ports=None, function=None, params=None):
         if default_variable is not None:
             self.parameters.variable._user_specified = True
         return default_variable
@@ -548,7 +548,7 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
            a list or np.array of numeric values.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -644,7 +644,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         (see `offset <Reduce.offset>` for details)
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -835,7 +835,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
            a list or np.array of numeric values.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -983,7 +983,7 @@ class LinearCombination(
         (see `offset <LinearCombination.offset>` for details)
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -1271,7 +1271,7 @@ class LinearCombination(
            a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -1330,7 +1330,7 @@ class LinearCombination(
         if weights is not None:
             variable = variable * weights
 
-        # CW 3/19/18: a total hack, e.g. to make scale=[4.] turn into scale=4. Used b/c the `scale` ParameterState
+        # CW 3/19/18: a total hack, e.g. to make scale=[4.] turn into scale=4. Used b/c the `scale` ParameterPort
         # changes scale's format: e.g. if you write c = pnl.LinearCombination(scale = 4), print(c.scale) returns [4.]
         if isinstance(scale, (list, np.ndarray)):
             if len(scale) == 1 and isinstance(scale[0], numbers.Number):
@@ -1585,7 +1585,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         (see `offset <CombineMeans.offset>` for details)
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -1845,7 +1845,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
            a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -2088,7 +2088,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
             have the same length
 
         params : Dict[param keyword, param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that
+            a `parameter dictionary <ParameterPort_Specification>` that
             specifies the parameters for the function. Values specified for
             parameters in the dictionary override any assigned to those
             parameters in arguments of the constructor.

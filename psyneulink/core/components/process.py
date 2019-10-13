@@ -168,12 +168,12 @@ specified in any of the following ways:
   ..
   * **Default assignment** -- for any Mechanism that does not receive a MappingProjection from another Mechanism in the
     Process (specified using one of the methods above), a `MappingProjection` is automatically created from the
-    Mechanism that precedes it in the `pathway <Process.pathway>`. If the format of the `value <OutputState.value>`
-    of the preceding Mechanism's `primary OutputState <OutputState_Primary>` matches that of the next Mechanism, then an
+    Mechanism that precedes it in the `pathway <Process.pathway>`. If the format of the `value <OutputPort.value>`
+    of the preceding Mechanism's `primary OutputPort <OutputPort_Primary>` matches that of the next Mechanism, then an
     `IDENTITY_MATRIX` is used for the Projection's `matrix <MappingProjection.matrix>` parameter;  if the formats do not
     match, or `learning has been specified <Process_Learning_Sequence>` either for the Projection or the Process, then a
     `FULL_CONNECTIVITY_MATRIX` is used.  If the Mechanism is the `origin_mechanism <Process.origin_mechanism>`
-    (i.e., first in the `pathway <Process.pathway>`), a `ProcessInputState <Process_Input_And_Output>` is used
+    (i.e., first in the `pathway <Process.pathway>`), a `ProcessInputPort <Process_Input_And_Output>` is used
     as the `sender <MappingProjection.sender>`, and an `IDENTITY_MATRIX` is used for the MappingProjection.
 
 .. _Process_Input_And_Output:
@@ -183,26 +183,26 @@ specified in any of the following ways:
 
 The `input <Process.input>` of a Process is a list or 2d np.array provided as the **input** argument in its
 `execute <Process.execute>` method, or the **inputs** argument of its `run <Process.run>` method. When a
-Process is created, a set of `ProcessInputStates <ProcessInputState>` (listed in its `process_input_states` attribute)
+Process is created, a set of `ProcessInputPorts <ProcessInputPort>` (listed in its `process_input_ports` attribute)
 and `MappingProjections <MappingProjection>` are automatically created to transmit the Process' `input
 <Process.input>` to its `origin_mechanism <Process.origin_mechanism>`, as follows:
 
-    * if the number of items in the **input** is the same as the number of `InputStates <InputState>` for the
+    * if the number of items in the **input** is the same as the number of `InputPorts <InputPort>` for the
       `origin_mechanism <Process.origin_mechanism>`, a MappingProjection is created for each item of the input to a
-      distinct InputState of the `origin_mechanism <Process.origin_mechanism>`;
+      distinct InputPort of the `origin_mechanism <Process.origin_mechanism>`;
     ..
     * if the **input** has only one item but the `origin_mechanism <Process.origin_mechanism>` has more than one
-      InputState, a single `ProcessInputState <ProcessInputState>` is created with Projections to each of the
-      `origin_mechanism <Process.origin_mechanism>`'s InputStates;
+      InputPort, a single `ProcessInputPort <ProcessInputPort>` is created with Projections to each of the
+      `origin_mechanism <Process.origin_mechanism>`'s InputPorts;
     ..
     * if the **input** has more than one item but the `origin_mechanism <Process.origin_mechanism>` has only one
-      InputState, a `ProcessInputState <ProcessInputState>` is created for each item of the input, and all project to
-      the `origin_mechanism <Process.origin_mechanism>`'s InputState;
+      InputPort, a `ProcessInputPort <ProcessInputPort>` is created for each item of the input, and all project to
+      the `origin_mechanism <Process.origin_mechanism>`'s InputPort;
     ..
     * otherwise, if the **input** has more than one item and the `origin_mechanism <Process.origin_mechanism>` has
-      more than one InputState, but the numbers are not equal, an error message is generated indicating that there is an
+      more than one InputPort, but the numbers are not equal, an error message is generated indicating that there is an
       ambiguous mapping from the Process' **input** value to `origin_mechanism <Process.origin_mechanism>`'s
-      InputStates.
+      InputPorts.
 
 .. _Process_Output:
 
@@ -228,7 +228,7 @@ Learning can be `specified for individual (or subsets of) MappingProjections
 assigning a specification for a `LearningProjection <LearningProjection_Creation>` or `LearningSignal
 <LearningSignal_Specification>` specification, or the keyword *ENABLED*, to the **learning** argument of the
 Process' constructor.  Specifying learning for a Process implements it for all MappingProjections in the Process (except
-those that project from the `process_input_states` to the `origin_mechanism <Process.origin_mechanism>`), which
+those that project from the `process_input_ports` to the `origin_mechanism <Process.origin_mechanism>`), which
 are treated as a single learning sequence.  Mechanisms that receive MappingProjections for which learning has been
 specified must be compatible with learning (that is, their `function <Mechanism_Base.function>` must be compatible with
 the `function <LearningMechanism.function>` of the `LearningMechanism` for the MappingProjections they receive (see
@@ -241,25 +241,25 @@ The following Components are created for each learning sequence specified for a 
     * a `TARGET` `ComparatorMechanism` (assigned to the Process' `target_nodes <Process.target_nodes>`
       attribute), that is used to `calculate an error signal <ComparatorMechanism_Function>` for the sequence, by
       comparing `a specified output <LearningMechanism_Activation_Output>` of the last Mechanism in the learning
-      sequence (received in the ComparatorMechanism's *SAMPLE* `InputState <ComparatorMechanism_Structure>`) with the
+      sequence (received in the ComparatorMechanism's *SAMPLE* `InputPort <ComparatorMechanism_Structure>`) with the
       item of the **target** argument in Process' `execute <Process.execute>` or `run <Process.run>` method
-      corresponding to the learning sequence (received in the ComparatorMechanism's *TARGET* `InputState
+      corresponding to the learning sequence (received in the ComparatorMechanism's *TARGET* `InputPort
       <ComparatorMechanism_Structure>`).
     ..
-    * a MappingProjection that projects from the last ProcessingMechanism in the sequence to the *SAMPLE* `InputState
+    * a MappingProjection that projects from the last ProcessingMechanism in the sequence to the *SAMPLE* `InputPort
       <ComparatorMechanism_Structure>` of the `TARGET` Mechanism;
     ..
-    * a ProcessingInputState to represent the corresponding item of the **target** argument of the Process' `execute
+    * a ProcessingInputPort to represent the corresponding item of the **target** argument of the Process' `execute
       <Process.execute>` and `run <Process.run>` methods;
     ..
-    * a MappingProjection that projects from the `ProcessInputState <ProcessInputState>` for the **target** item to the
-      *TARGET* `InputState <ComparatorMechanism_Structure>` of the `TARGET` Mechanism;
+    * a MappingProjection that projects from the `ProcessInputPort <ProcessInputPort>` for the **target** item to the
+      *TARGET* `InputPort <ComparatorMechanism_Structure>` of the `TARGET` Mechanism;
     ..
     * a `LearningMechanism` for each MappingProjection in the sequence that calculates the `learning_signal
       <LearningMechanism.learning_signal>` used to modify the `matrix <MappingProjection.matrix>` parameter for that
       MappingProjection, along with a `LearningSignal` and `LearningProjection` that convey the `learning_signal
-      <LearningMechanism.learning_signal>` to the MappingProjection's *MATRIX* `ParameterState
-      <Mapping_Matrix_ParameterState>` (additional MappingProjections are created for the LearningMechanism -- see
+      <LearningMechanism.learning_signal>` to the MappingProjection's *MATRIX* `ParameterPort
+      <Mapping_Matrix_ParameterPort>` (additional MappingProjections are created for the LearningMechanism -- see
       `LearningMechanism_Learning_Configurations` for details).
 
     .. note::
@@ -309,7 +309,7 @@ can be "clamped" on using the **clamp_input** argument of `execute <Process.exec
 After the `origin_mechanism <Process.origin_mechanism>` is executed, each subsequent Mechanism in the `pathway` is
 executed in sequence.  If a Mechanism is specified in the pathway using a `MechanismTuple
 <Process_Mechanism_Specification>`, then the `runtime parameters <Mechanism_Runtime_Parameters>` are applied and the
-Mechanism is executed using them (see `Mechanism <Mechanism_ParameterStates>` for parameter specification).  Finally the
+Mechanism is executed using them (see `Mechanism <Mechanism_ParameterPorts>` for parameter specification).  Finally the
 output of the `terminal_mechanism <Process.terminal_mechanism>` (the last one in the pathway) is assigned as the
 `output <Process_Output>` of the Process.
 
@@ -351,7 +351,7 @@ argument of the Process' `execute <Process.execute>` or `run <Process.run>` meth
 sequence <Process_Learning_Sequence>`. These are used to calculate a `learning_signal
 <LearningMechanism.learning_signal>` for each MappingProjection in a learning sequence. This is conveyed by a
 `LearningProjection` as a `weight_change_matrix <LearningProjection.weight_change_matrix>` to the MappingProjection's
-*MATRIX* `ParameterState <Mapping_Matrix_ParameterState>`, that  is used to modify the MappingProjection's `matrix
+*MATRIX* `ParameterPort <Mapping_Matrix_ParameterPort>`, that  is used to modify the MappingProjection's `matrix
 <MappingProjection.matrix>` parameter when it executes.
 
 .. note::
@@ -359,7 +359,7 @@ sequence <Process_Learning_Sequence>`. These are used to calculate a `learning_s
    projections are next executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
 
 The `learning_signal <LearningMechanism>`\\s for a learning sequence are calculated, for each sequence, so as to reduce
-the difference between the value received by the *TARGET* Mechanism in its *SAMPLE* `InputState
+the difference between the value received by the *TARGET* Mechanism in its *SAMPLE* `InputPort
 <ComparatorMechanism_Structure>` (see `above <Process_Learning_Sequence>`) and the target value for the sequence
 specified in the corresponding item of the **target** argument of the Process' `execute <Process.execute>` or
 `run <Process.run>` method.
@@ -376,7 +376,7 @@ instance, the second as a default instance of a Mechanism type, and the third in
 
     mechanism_1 = TransferMechanism()
     mechanism_2 = DDM()
-    some_params = {PARAMETER_STATE_PARAMS:{THRESHOLD:2,NOISE:0.1}}
+    some_params = {PARAMETER_PORT_PARAMS:{THRESHOLD:2,NOISE:0.1}}
     my_process = Process(pathway=[mechanism_1, TransferMechanism, (mechanism_2, my_params)])
 
 *Default Projection specification:*  The `pathway` for this Process uses default Projection specifications; as a
@@ -466,13 +466,13 @@ from psyneulink.core.components.projections.modulatory.learningprojection import
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import _add_projection_to, _is_projection_spec
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Projection, System_Base
-from psyneulink.core.components.states.modulatorysignals.learningsignal import LearningSignal
-from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.components.states.state import _instantiate_state, _instantiate_state_list
+from psyneulink.core.components.ports.modulatorysignals.learningsignal import LearningSignal
+from psyneulink.core.components.ports.parameterport import ParameterPort
+from psyneulink.core.components.ports.port import _instantiate_port, _instantiate_port_list
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, ENABLED, FUNCTION, FUNCTION_PARAMS, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, \
-    MAPPING_PROJECTION, MATRIX, NAME, OBJECTIVE_MECHANISM, ORIGIN, PARAMETER_STATE, PATHWAY, SENDER, SINGLETON, \
+    MAPPING_PROJECTION, MATRIX, NAME, OBJECTIVE_MECHANISM, ORIGIN, PARAMETER_PORT, PATHWAY, SENDER, SINGLETON, \
     TARGET, TERMINAL, PROCESS_COMPONENT_CATEGORY, RECEIVER_ARG
 from psyneulink.core.globals.parameters import Defaults, Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -481,8 +481,8 @@ from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import append_type_to_name, convert_to_np_array, iscompatible
 
 __all__ = [
-    'DEFAULT_PHASE_SPEC', 'DEFAULT_PROJECTION_MATRIX', 'defaultInstanceCount', 'kwProcessInputState', 'kwTarget',
-    'Process', 'proc', 'ProcessError', 'ProcessInputState', 'ProcessList', 'ProcessRegistry', 'ProcessTuple',
+    'DEFAULT_PHASE_SPEC', 'DEFAULT_PROJECTION_MATRIX', 'defaultInstanceCount', 'kwProcessInputPort', 'kwTarget',
+    'Process', 'proc', 'ProcessError', 'ProcessInputPort', 'ProcessList', 'ProcessRegistry', 'ProcessTuple',
 ]
 
 # *****************************************    PROCESS CLASS    ********************************************************
@@ -507,11 +507,11 @@ class ProcessError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-kwProcessInputState = 'ProcessInputState'
+kwProcessInputPort = 'ProcessInputPort'
 kwTarget = 'target'
-from psyneulink.core.components.states.outputstate import OutputState
+from psyneulink.core.components.ports.outputport import OutputPort
 
-# DOCUMENT:  HOW DO MULTIPLE PROCESS INPUTS RELATE TO # OF INPUTSTATES IN FIRST MECHANISM
+# DOCUMENT:  HOW DO MULTIPLE PROCESS INPUTS RELATE TO # OF InputPortS IN FIRST MECHANISM
 #            WHAT HAPPENS IF LENGTH OF INPUT TO PROCESS DOESN'T MATCH LENGTH OF VARIABLE FOR FIRST MECHANISM??
 
 
@@ -552,7 +552,7 @@ class Process(Process_Base):
                 * if no pathway is provided:
                     no mechanism is used
                 * the input to the Process is assigned as the input to its ORIGIN Mechanism
-                * the output of the Process is taken as the value of the primary OutputState of its TERMINAL Mechanism
+                * the output of the Process is taken as the value of the primary OutputPort of its TERMINAL Mechanism
 
         Class attributes
         ----------------
@@ -598,16 +598,16 @@ class Process(Process_Base):
         the `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjections <MappingProjection>` between them that
         are executed in the order listed when the Process `executes <Process_Execution>`.
 
-    process_input_states : List[ProcessInputState]
-        represent the input to the Process when it is executed.  Each `ProcessInputState <ProcessInputState>` represents
-        an item of the `input <Process.base>` to a corresponding `InputState` of the Process' `origin_mechanism
+    process_input_ports : List[ProcessInputPort]
+        represent the input to the Process when it is executed.  Each `ProcessInputPort <ProcessInputPort>` represents
+        an item of the `input <Process.base>` to a corresponding `InputPort` of the Process' `origin_mechanism
         <Process.origin_mechanism>` (see `Process_Input_And_Output` for details).
 
     input :  List[value] or ndarray
         input to the Process for each `TRIAL` of execution;  it is assigned the value of the **input** argument
         in a call to the Process' `execute <Process.execute>`  or `run <Process.run>` method. Each of its
-        items is assigned as the `value <InputState.value>` of the corresponding `ProcessInputState <ProcessInputState>`
-        in `process_input_states`, and each must match the format of the corresponding item of the `variable
+        items is assigned as the `value <InputPort.value>` of the corresponding `ProcessInputPort <ProcessInputPort>`
+        in `process_input_ports`, and each must match the format of the corresponding item of the `variable
         <Mechanism_Base.variable>` for the Process' `origin_mechanism <Process.origin_mechanism>`
         (see `Process_Input_And_Output` for details).
 
@@ -624,7 +624,7 @@ class Process(Process_Base):
     COMMENT
         input_value :  2d np.array : default ``defaults.variable``
             same as the `variable <Process.variable>` attribute of the Process; contains the `value
-            <InputState.value>` of each ProcessInputState in its `process_input_states` attribute.
+            <InputPort.value>` of each ProcessInputPort in its `process_input_ports` attribute.
     COMMENT
 
     clamp_input : Optional[keyword]
@@ -652,11 +652,11 @@ class Process(Process_Base):
         their `variable <Mechanism_Base.variable>` attribute (i.e., the default input for that Mechanism).
 
     value: 2d np.array
-        same as the `value <OutputState.value>` of the `primary OutputState <OutputState_Primary>` of
+        same as the `value <OutputPort.value>` of the `primary OutputPort <OutputPort_Primary>` of
         `terminal_mechanism <Process.terminal_mechanism>`.
 
-    output_state : State
-        the `primary OutputState <OutputState_Primary>` of `terminal_mechanism <Process.terminal_mechanism>`.
+    output_port : Port
+        the `primary OutputPort <OutputPort_Primary>` of `terminal_mechanism <Process.terminal_mechanism>`.
 
     output : list
         same as the `output_values <Mechanism_Base.output_values>` attribute of `terminal_mechanism
@@ -795,7 +795,7 @@ class Process(Process_Base):
         associated with a MappingProjection, that is applied in addition to any specified for the Process or the
         relevant LearningMechanism.
 
-    results : List[OutputState.value]
+    results : List[OutputPort.value]
         the return values from a sequence of executions of the Process;  its value is `None` if the Process has not
         been executed.
 
@@ -851,9 +851,9 @@ class Process(Process_Base):
         '_context': None,
         PATHWAY: None,
         'input':[],
-        'process_input_states': [],
+        'process_input_ports': [],
         'targets': None,
-        'target_input_states': [],
+        'target_input_ports': [],
         'systems': [],
         '_phaseSpecMax': 0,
         '_isControllerProcess': False
@@ -935,7 +935,7 @@ class Process(Process_Base):
         """Call methods that must be run before function method is instantiated
 
         Need to do this before _instantiate_function as mechanisms in pathway must be instantiated
-            in order to assign input Projection and self.outputState to first and last mechanisms, respectively
+            in order to assign input Projection and self.outputPort to first and last mechanisms, respectively
 
         :param function:
         :param context:
@@ -977,11 +977,11 @@ class Process(Process_Base):
 
         Iterate through Pathway, parsing and instantiating each Mechanism item;
             - raise exception if two Projections are found in a row;
-            - for last Mechanism in Pathway, assign ouputState to Process.outputState
+            - for last Mechanism in Pathway, assign ouputPort to Process.outputPort
         Iterate through Pathway, assigning Projections to Mechanisms:
             - first Mechanism in Pathway:
                 if it does NOT already have any projections:
-                    assign Projection(s) from ProcessInputState(s) to corresponding Mechanism.input_state(s):
+                    assign Projection(s) from ProcessInputPort(s) to corresponding Mechanism.input_port(s):
                 if it DOES already has a Projection, and it is from:
                     (A) the current Process input, leave intact
                     (B) another Process input, if verbose warn
@@ -1040,8 +1040,8 @@ class Process(Process_Base):
         self._terminal_mechs = [pathway[-1]]
         self.terminal_mechanisms = MechanismList(self, self._terminal_mechs)
 
-        # # Assign process OutputState to last mechanisms in pathway
-        # self.outputState = self.last_mechanism.outputState
+        # # Assign process OutputPort to last mechanisms in pathway
+        # self.outputPort = self.last_mechanism.outputPort
 
         # PARSE AND INSTANTIATE PROJECTION ENTRIES  ------------------------------------
 
@@ -1072,9 +1072,9 @@ class Process(Process_Base):
         # Otherwise, just set Process output info to the corresponding info for the last mechanism in the pathway
         else:
             # MODIFIED 6/24/18 OLD:
-            # value = self.pathway[-1].output_state.value
+            # value = self.pathway[-1].output_port.value
             # MODIFIED 6/24/18 NEW:
-            value = self.last_mechanism.output_state.value
+            value = self.last_mechanism.output_port.value
             # MODIFIED 6/24/18 END
             try:
                 # Could be mutable, so assign copy
@@ -1153,11 +1153,11 @@ class Process(Process_Base):
             # If this is the last mechanism in the pathway, and it has a self-recurrent Projection,
             #    add that to the pathway so that it can be identified and assigned for learning if so specified
             if i+1 == len(pathway):
-                if mech.output_states and any(any(proj.receiver.owner is mech
-                           for proj in state.efferents)
-                       for state in mech.output_states):
-                    for state in mech.output_states:
-                        for proj in state.efferents:
+                if mech.output_ports and any(any(proj.receiver.owner is mech
+                           for proj in port.efferents)
+                       for port in mech.output_ports):
+                    for port in mech.output_ports:
+                        for proj in port.efferents:
                             if proj.receiver.owner is mech:
                                 pathway.append(proj)
                                 pathway.append(pathway[i])
@@ -1192,7 +1192,7 @@ class Process(Process_Base):
 
             # FIX: IF self.learning IS AN ACTUAL LearningProjection OBJECT, NEED TO RESPECIFY AS CLASS + PARAMS
             # FIX:     OR CAN THE SAME LearningProjection OBJECT BE SHARED BY MULTIPLE PROJECTIONS?
-            # FIX:     DOES IT HAVE ANY INTERNAL STATE VARIABLES OR PARAMS THAT NEED TO BE PROJECTIONS-SPECIFIC?
+            # FIX:     DOES IT HAVE ANY INTERNAL PORT VARIABLES OR PARAMS THAT NEED TO BE PROJECTIONS-SPECIFIC?
             # FIX:     MAKE IT A COPY?
 
             matrix_spec = (self.default_projection_matrix, self.learning)
@@ -1214,7 +1214,7 @@ class Process(Process_Base):
                 mech = item
 
                 # Check if first Mechanism already has any projections and, if so, issue appropriate warning
-                if mech.input_state.path_afferents:
+                if mech.input_port.path_afferents:
                     self._warn_about_existing_projections_to_first_mechanism(mech, context)
 
                 # Assign input Projection from Process
@@ -1234,51 +1234,51 @@ class Process(Process_Base):
                 if isinstance(preceding_item, Projection):
                     if self.learning:
 
-                        # Check if preceding_item has a matrix ParameterState and, if so, it has any learningSignals
+                        # Check if preceding_item has a matrix ParameterPort and, if so, it has any learningSignals
                         # If it does, assign them to learning_projections
                         try:
                             learning_projections = list(
-                                projection for projection in preceding_item._parameter_states[MATRIX].mod_afferents
+                                projection for projection in preceding_item._parameter_ports[MATRIX].mod_afferents
                                 if isinstance(projection, LearningProjection)
                             )
 
-                        # FIX: 10/3/17: USE OF TUPLE AS ITEM IN state_list ARGS BELOW IS NO LONGER SUPPORTED
-                        #               NEED TO REFORMAT SPECS FOR state_list BELOW
+                        # FIX: 10/3/17: USE OF TUPLE AS ITEM IN port_list ARGS BELOW IS NO LONGER SUPPORTED
+                        #               NEED TO REFORMAT SPECS FOR port_list BELOW
                         #               (NOTE: THESE EXCEPTIONS ARE NOT BEING CALLED IN CURRENT TEST SUITES)
-                        # preceding_item doesn't have a _parameter_states attrib, so assign one with self.learning
+                        # preceding_item doesn't have a _parameter_ports attrib, so assign one with self.learning
                         except AttributeError:
-                            # Instantiate _parameter_states Ordered dict with ParameterState and self.learning
-                            preceding_item._parameter_states = _instantiate_state_list(
+                            # Instantiate _parameter_ports Ordered dict with ParameterPort and self.learning
+                            preceding_item._parameter_ports = _instantiate_port_list(
                                     owner=preceding_item,
-                                    state_list=[(MATRIX, self.learning)],
-                                    state_types=ParameterState,
-                                    state_param_identifier=PARAMETER_STATE,
+                                    port_list=[(MATRIX, self.learning)],
+                                    port_types=ParameterPort,
+                                    port_Param_identifier=PARAMETER_PORT,
                                     reference_value=self.learning,
                                     reference_value_name=LEARNING_PROJECTION,
                                     context=context
                             )
 
-                        # preceding_item has _parameter_states but not (yet!) one for MATRIX, so instantiate it
+                        # preceding_item has _parameter_ports but not (yet!) one for MATRIX, so instantiate it
                         except KeyError:
-                            # Instantiate ParameterState for MATRIX
-                            preceding_item._parameter_states[MATRIX] = _instantiate_state(
+                            # Instantiate ParameterPort for MATRIX
+                            preceding_item._parameter_ports[MATRIX] = _instantiate_port(
                                 owner=preceding_item,
-                                state_type=ParameterState,
+                                port_type=ParameterPort,
                                 name=MATRIX,
                                 # # FIX: NOT SURE IF THIS IS CORRECT:
-                                # state_spec=PARAMETER_STATE,
+                                # port_spec=PARAMETER_PORT,
                                 reference_value=self.learning,
                                 reference_value_name=LEARNING_PROJECTION,
                                 params=self.learning,
                                 context=context
                             )
-                        # preceding_item has ParameterState for MATRIX,
+                        # preceding_item has ParameterPort for MATRIX,
                         else:
                             if not learning_projections:
                                 # Add learningProjection to Projection if it doesn't have one
                                 projs = _add_projection_to(
                                     preceding_item,
-                                    preceding_item._parameter_states[MATRIX],
+                                    preceding_item._parameter_ports[MATRIX],
                                     projection_spec=self.learning
                                 )
                                 for proj in projs:
@@ -1288,12 +1288,12 @@ class Process(Process_Base):
 
                 # Preceding item was a Mechanism, so check if a Projection needs to be instantiated between them
                 # Check if Mechanism already has a Projection from the preceding Mechanism, by testing whether the
-                #    preceding mechanism is the sender of any projections received by the current one's inputState
-# FIX: THIS SHOULD BE DONE FOR ALL INPUTSTATES
-# FIX: POTENTIAL PROBLEM - EVC *CAN* HAVE MULTIPLE PROJECTIONS FROM (DIFFERENT OutputStates OF) THE SAME MECHANISM
+                #    preceding mechanism is the sender of any projections received by the current one's inputPort
+# FIX: THIS SHOULD BE DONE FOR ALL InputPortS
+# FIX: POTENTIAL PROBLEM - EVC *CAN* HAVE MULTIPLE PROJECTIONS FROM (DIFFERENT OutputPorts OF) THE SAME MECHANISM
 
                 # PRECEDING ITEM IS A MECHANISM
-                projection_list = item.input_state.path_afferents
+                projection_list = item.input_port.path_afferents
                 projection_found = False
                 for projection in projection_list:
                     # Current mechanism DOES receive a Projection from the preceding item
@@ -1304,30 +1304,30 @@ class Process(Process_Base):
                         if self.learning:
                             # Make sure Projection includes a learningSignal and add one if it doesn't
                             try:
-                                matrix_param_state = projection._parameter_states[MATRIX]
+                                matrix_param_port = projection._parameter_ports[MATRIX]
 
-                            # Projection doesn't have a _parameter_states attrib, so assign one with self.learning
+                            # Projection doesn't have a _parameter_ports attrib, so assign one with self.learning
                             except AttributeError:
-                                # Instantiate _parameter_states Ordered dict with ParameterState for self.learning
-                                projection._parameter_states = _instantiate_state_list(
+                                # Instantiate _parameter_ports Ordered dict with ParameterPort for self.learning
+                                projection._parameter_ports = _instantiate_port_list(
                                     owner=preceding_item,
-                                    state_list=[(MATRIX, self.learning)],
-                                    state_types=ParameterState,
-                                    state_param_identifier=PARAMETER_STATE,
+                                    port_list=[(MATRIX, self.learning)],
+                                    port_types=ParameterPort,
+                                    port_Param_identifier=PARAMETER_PORT,
                                     reference_value=self.learning,
                                     reference_value_name=LEARNING_PROJECTION,
                                     context=context
                                 )
 
-                            # Projection has _parameter_states but not (yet!) one for MATRIX,
+                            # Projection has _parameter_ports but not (yet!) one for MATRIX,
                             #    so instantiate it with self.learning
                             except KeyError:
-                                # Instantiate ParameterState for MATRIX
-                                projection._parameter_states[MATRIX] = _instantiate_state(
+                                # Instantiate ParameterPort for MATRIX
+                                projection._parameter_ports[MATRIX] = _instantiate_port(
                                     owner=preceding_item,
-                                    state_type=ParameterState,
+                                    port_type=ParameterPort,
                                     name=MATRIX,
-                                    # state_spec=PARAMETER_STATE,
+                                    # port_spec=PARAMETER_PORT,
                                     reference_value=self.learning,
                                     reference_value_name=LEARNING_PROJECTION,
                                     params=self.learning,
@@ -1339,12 +1339,12 @@ class Process(Process_Base):
                                 if not (
                                     any(
                                         isinstance(projection, LearningProjection)
-                                        for projection in matrix_param_state.mod_afferents
+                                        for projection in matrix_param_port.mod_afferents
                                     )
                                 ):
                                     projs = _add_projection_to(
                                         projection,
-                                        matrix_param_state,
+                                        matrix_param_port,
                                         projection_spec=self.learning
                                     )
                                     for p in projs:
@@ -1390,15 +1390,15 @@ class Process(Process_Base):
                         # Check whether ObjectiveMechanism already receives a projection
                         #     from the preceding Mechanism in the pathway
                         # if not any(projection.sender.owner is preceding_item
-                        #            for projection in item.objective_mechanism.input_state.path_afferents):
+                        #            for projection in item.objective_mechanism.input_port.path_afferents):
                         item._objective_projection._activate_for_compositions(self)
                         if (
                             not any(
                                 any(
                                     projection.sender.owner is preceding_item
-                                    for projection in input_state.path_afferents
+                                    for projection in input_port.path_afferents
                                 )
-                                for input_state in item.objective_mechanism.input_states
+                                for input_port in item.objective_mechanism.input_ports
                             )
                         ):
                             # Assign projection from preceding Mechanism in pathway to ObjectiveMechanism
@@ -1406,8 +1406,8 @@ class Process(Process_Base):
 
                         else:
                             # Ignore (ObjectiveMechanism already as a projection from the Mechanism)
-                            for input_state in item.objective_mechanism.input_states:
-                                for projection in input_state.path_afferents:
+                            for input_port in item.objective_mechanism.input_ports:
+                                for projection in input_port.path_afferents:
                                     if projection.sender.owner is preceding_item:
                                         projection._activate_for_compositions(self)
                             continue
@@ -1423,7 +1423,7 @@ class Process(Process_Base):
                     )
 
                     projection._activate_for_compositions(self)
-                    for mod_proj in itertools.chain.from_iterable([p.mod_afferents for p in projection.parameter_states]):
+                    for mod_proj in itertools.chain.from_iterable([p.mod_afferents for p in projection.parameter_ports]):
                         mod_proj._activate_for_compositions(self)
 
                     if self.prefs.verbosePref:
@@ -1447,7 +1447,7 @@ class Process(Process_Base):
 
                 # FIX: PARSE/VALIDATE ALL FORMS OF PROJECTION SPEC (ITEM PART OF TUPLE) HERE:
                 # FIX:                                                          CLASS, OBJECT, DICT, STR, TUPLE??
-                # IMPLEMENT: MOVE State._instantiate_projections_to_state(), _check_projection_receiver()
+                # IMPLEMENT: MOVE Port._instantiate_projections_to_port(), _check_projection_receiver()
                 #            and _parse_projection_keyword() all to Projection_Base.__init__() and call that
                 #           VALIDATION OF PROJECTION OBJECT:
                 #                MAKE SURE IT IS A MappingProjection
@@ -1489,62 +1489,62 @@ class Process(Process_Base):
                     if item.initialization_status == ContextFlags.DEFERRED_INIT:
                         # Check sender arg
                         try:
-                            sender_arg = item.init_args[SENDER]
+                            sender_arg = item._init_args[SENDER]
                         except AttributeError:
                             raise ProcessError(
                                 "PROGRAM ERROR: initialization_status of {} is {} but "
-                                "it does not have init_args".format(
+                                "it does not have _init_args".format(
                                     item, ContextFlags.DEFERRED_INIT.name
                                 )
                             )
                         except KeyError:
                             raise ProcessError(
                                 "PROGRAM ERROR: Value of {} is {} but "
-                                "init_args does not have entry for {}".format(
-                                    item.init_args[NAME], ContextFlags.DEFERRED_INIT.name, SENDER
+                                "_init_args does not have entry for {}".format(
+                                    item._init_args[NAME], ContextFlags.DEFERRED_INIT.name, SENDER
                                 )
                             )
                         else:
                             # If sender is not specified for the Projection,
                             #    assign mechanism that precedes in pathway
                             if sender_arg is None:
-                                item.init_args[SENDER] = sender_mech
+                                item._init_args[SENDER] = sender_mech
                             elif sender_arg is not sender_mech:
                                 raise ProcessError(
                                     "Sender of Projection ({}) specified in item {} of"
                                     " pathway for {} is not the Mechanism ({}) "
                                     "that precedes it in the pathway".format(
-                                        item.init_args[NAME], i, self.name, sender_mech.name
+                                        item._init_args[NAME], i, self.name, sender_mech.name
                                     )
                                 )
                         # Check receiver arg
                         try:
-                            receiver_arg = item.init_args[RECEIVER_ARG]
+                            receiver_arg = item._init_args[RECEIVER_ARG]
                         except AttributeError:
                             raise ProcessError(
                                 "PROGRAM ERROR: initialization_status of {} is {} "
-                                "but it does not have init_args".format(
+                                "but it does not have _init_args".format(
                                     item, ContextFlags.DEFERRED_INIT
                                 )
                             )
                         except KeyError:
                             raise ProcessError(
                                 "PROGRAM ERROR: initialization_status of {} is {} "
-                                "but init_args does not have entry for {}".format(
-                                    item.init_args[NAME], ContextFlags.DEFERRED_INIT, RECEIVER_ARG
+                                "but _init_args does not have entry for {}".format(
+                                    item._init_args[NAME], ContextFlags.DEFERRED_INIT, RECEIVER_ARG
                                 )
                             )
                         else:
                             # If receiver is not specified for the Projection,
                             #    assign mechanism that follows it in the pathway
                             if receiver_arg is None:
-                                item.init_args[RECEIVER_ARG] = receiver_mech
+                                item._init_args[RECEIVER_ARG] = receiver_mech
                             elif receiver_arg is not receiver_mech:
                                 raise ProcessError(
                                     "Receiver of Projection ({}) specified in item {} of"
                                     " pathway for {} is not the Mechanism ({}) "
                                     "that follows it in the pathway". format(
-                                        item.init_args[NAME], i, self.name, receiver_mech.name
+                                        item._init_args[NAME], i, self.name, receiver_mech.name
                                     )
                                 )
 
@@ -1635,8 +1635,8 @@ class Process(Process_Base):
                 - replace proj_spec with existing projection
         """
 
-        for input_state in rcvr_mech.input_states:
-            for proj in input_state.path_afferents:
+        for input_port in rcvr_mech.input_ports:
+            for proj in input_port.path_afferents:
                 if proj.sender.owner is sndr_mech:
                     # Skip recurrent projections
                     try:
@@ -1654,10 +1654,10 @@ class Process(Process_Base):
     def _warn_about_existing_projections_to_first_mechanism(self, mechanism, context=None):
 
         # Check where the Projection(s) is/are from and, if verbose pref is set, issue appropriate warnings
-        for projection in mechanism.input_state.all_afferents:
+        for projection in mechanism.input_port.all_afferents:
 
             # Projection to first Mechanism in Pathway comes from a Process input
-            if isinstance(projection.sender, ProcessInputState):
+            if isinstance(projection.sender, ProcessInputPort):
                 # If it is:
                 # (A) from self, ignore
                 # (B) from another Process, warn if verbose pref is set
@@ -1717,102 +1717,102 @@ class Process(Process_Base):
                               format(self.name))
 
     def _assign_process_input_projections(self, mechanism, context=None):
-        """Create Projection(s) for each item in Process input to InputState(s) of the specified Mechanism
+        """Create Projection(s) for each item in Process input to InputPort(s) of the specified Mechanism
 
         For each item in Process input:
-        - create process_input_state, as sender for MappingProjection to the ORIGIN Mechanism.input_state
-        - create the MappingProjection (with process_input_state as sender, and ORIGIN Mechanism as receiver)
+        - create process_input_port, as sender for MappingProjection to the ORIGIN Mechanism.input_port
+        - create the MappingProjection (with process_input_port as sender, and ORIGIN Mechanism as receiver)
 
         If number of Process inputs == len(ORIGIN Mechanism.defaults.variable):
-            - create one Projection for each of the ORIGIN Mechanism.input_state(s)
+            - create one Projection for each of the ORIGIN Mechanism.input_port(s)
         If number of Process inputs == 1 but len(ORIGIN Mechanism.defaults.variable) > 1:
-            - create a Projection for each of the ORIGIN Mechanism.input_states, and provide Process' input to each
+            - create a Projection for each of the ORIGIN Mechanism.input_ports, and provide Process' input to each
         If number of Process inputs > 1 but len(ORIGIN Mechanism.defaults.variable) == 1:
-            - create one Projection for each Process input and assign all to ORIGIN Mechanism.input_state
+            - create one Projection for each Process input and assign all to ORIGIN Mechanism.input_port
         Otherwise,  if number of Process inputs != len(ORIGIN Mechanism.defaults.) and both > 1:
-            - raise exception:  ambiguous mapping from Process input values to ORIGIN Mechanism's input_states
+            - raise exception:  ambiguous mapping from Process input values to ORIGIN Mechanism's input_ports
 
         :param Mechanism:
         :return:
         """
 
-        # FIX: LENGTH OF EACH PROCESS INPUT STATE SHOUD BE MATCHED TO LENGTH OF INPUT STATE FOR CORRESPONDING ORIGIN MECHANISM
+        # FIX: LENGTH OF EACH PROCESS INPUTPORT SHOUD BE MATCHED TO LENGTH OF INPUTPORT FOR CORRESPONDING ORIGIN MECHANISM
 
         process_input = self.defaults.variable
 
         # Get number of Process inputs
         num_process_inputs = len(process_input)
 
-        # Get number of mechanism.input_states
+        # Get number of mechanism.input_ports
         #    - assume mechanism.defaults.variable is a 2D np.array, and that
-        #    - there is one inputState for each item (1D array) in mechanism.defaults.variable
-        num_mechanism_input_states = len(mechanism.defaults.variable)
+        #    - there is one inputPort for each item (1D array) in mechanism.defaults.variable
+        num_mechanism_input_ports = len(mechanism.defaults.variable)
 
-        # There is a mismatch between number of Process inputs and number of mechanism.input_states:
-        if num_process_inputs > 1 and num_mechanism_input_states > 1 and num_process_inputs != num_mechanism_input_states:
+        # There is a mismatch between number of Process inputs and number of mechanism.input_ports:
+        if num_process_inputs > 1 and num_mechanism_input_ports > 1 and num_process_inputs != num_mechanism_input_ports:
             raise ProcessError("Mismatch between number of input values ({0}) for {1} and "
-                               "number of input_states ({2}) for {3}".format(num_process_inputs,
+                               "number of input_ports ({2}) for {3}".format(num_process_inputs,
                                                                             self.name,
-                                                                            num_mechanism_input_states,
+                                                                            num_mechanism_input_ports,
                                                                             mechanism.name))
 
-        # Create input state for each item of Process input, and assign to list
+        # Create InputPort for each item of Process input, and assign to list
         for i in range(num_process_inputs):
-            process_input_state = ProcessInputState(owner=self,
+            process_input_port = ProcessInputPort(owner=self,
                                                     variable=process_input[i],
                                                     prefs=self.prefs)
-            self.process_input_states.append(process_input_state)
+            self.process_input_ports.append(process_input_port)
 
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 
-        # If there is the same number of Process input values and mechanism.input_states, assign one to each
-        if num_process_inputs == num_mechanism_input_states:
-            for i in range(num_mechanism_input_states):
-                if mechanism.input_states[i].internal_only:
+        # If there is the same number of Process input values and mechanism.input_ports, assign one to each
+        if num_process_inputs == num_mechanism_input_ports:
+            for i in range(num_mechanism_input_ports):
+                if mechanism.input_ports[i].internal_only:
                     continue
-                # Insure that each Process input value is compatible with corresponding variable of mechanism.input_state
-                input_state_variable = mechanism.input_states[i].socket_template
-                if not iscompatible(process_input[i], input_state_variable):
+                # Insure that each Process input value is compatible with corresponding variable of mechanism.input_port
+                input_port_variable = mechanism.input_ports[i].socket_template
+                if not iscompatible(process_input[i], input_port_variable):
                     raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "
-                                       "variable for corresponding inputState of {3} (format: {4})".
-                                       format(i, process_input[i], self.name, mechanism.name, input_state_variable))
-                # Create MappingProjection from Process input state to corresponding mechanism.input_state
-                proj = MappingProjection(sender=self.process_input_states[i],
-                                         receiver=mechanism.input_states[i],
+                                       "variable for corresponding inputPort of {3} (format: {4})".
+                                       format(i, process_input[i], self.name, mechanism.name, input_port_variable))
+                # Create MappingProjection from Process InputPort to corresponding mechanism.input_port
+                proj = MappingProjection(sender=self.process_input_ports[i],
+                                         receiver=mechanism.input_ports[i],
                                          name=self.name+'_Input Projection')
                 proj._activate_for_compositions(self)
                 if self.prefs.verbosePref:
-                    print("Assigned input value {0} ({1}) of {2} to corresponding inputState of {3}".
+                    print("Assigned input value {0} ({1}) of {2} to corresponding inputPort of {3}".
                           format(i, process_input[i], self.name, mechanism.name))
 
-        # If the number of Process inputs and mechanism.input_states is unequal, but only a single of one or the other:
-        # - if there is a single Process input value and multiple mechanism.input_states,
-        #     instantiate a single Process input state with projections to each of the mechanism.input_states
-        # - if there are multiple Process input values and a single mechanism.input_state,
-        #     instantiate multiple Process input states each with a Projection to the single mechanism.input_state
+        # If the number of Process inputs and mechanism.input_ports is unequal, but only a single of one or the other:
+        # - if there is a single Process input value and multiple mechanism.input_ports,
+        #     instantiate a single Process InputPort with projections to each of the mechanism.input_ports
+        # - if there are multiple Process input values and a single mechanism.input_port,
+        #     instantiate multiple Process input ports each with a Projection to the single mechanism.input_port
         else:
-            for i in range(num_mechanism_input_states):
-                if mechanism.input_states[i].internal_only:
+            for i in range(num_mechanism_input_ports):
+                if mechanism.input_ports[i].internal_only:
                     continue
                 for j in range(num_process_inputs):
                     if not iscompatible(process_input[j], mechanism.defaults.variable[i]):
                         raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "
-                                           "variable ({3}) for inputState {4} of {5}".
+                                           "variable ({3}) for inputPort {4} of {5}".
                                            format(j, process_input[j], self.name,
                                                   mechanism.defaults.variable[i], i, mechanism.name))
-                    # Create MappingProjection from Process buffer_intput_state to corresponding mechanism.input_state
-                    proj = MappingProjection(sender=self.process_input_states[j],
-                            receiver=mechanism.input_states[i],
+                    # Create MappingProjection from Process buffer_intput_port to corresponding mechanism.input_port
+                    proj = MappingProjection(sender=self.process_input_ports[j],
+                            receiver=mechanism.input_ports[i],
                             name=self.name+'_Input Projection')
                     proj._activate_for_compositions(self)
                     if self.prefs.verbosePref:
-                        print("Assigned input value {0} ({1}) of {2} to inputState {3} of {4}".
+                        print("Assigned input value {0} ({1}) of {2} to inputPort {3} of {4}".
                               format(j, process_input[j], self.name, i, mechanism.name))
 
         mechanism._receivesProcessInput = True
 
     def _assign_input_values(self, input, context=None):
-        """Validate input, assign each item (1D array) in input to corresponding process_input_state
+        """Validate input, assign each item (1D array) in input to corresponding process_input_port
 
         Returns converted version of input
 
@@ -1838,7 +1838,7 @@ class Process(Process_Base):
                 print("- No input provided;  default will be used: {0}")
 
         else:
-            # Insure that input is a list of 1D array items, one for each processInputState
+            # Insure that input is a list of 1D array items, one for each processInputPort
             # If input is a single number, wrap in a list
             from numpy import ndarray
             if isinstance(input, numbers.Number) or (isinstance(input, ndarray) and input.ndim == 0):
@@ -1847,19 +1847,19 @@ class Process(Process_Base):
             if all(isinstance(i, numbers.Number) for i in input):
                 input = [input]
 
-        if len(self.process_input_states) != len(input):
+        if len(self.process_input_ports) != len(input):
             raise ProcessError("Length ({}) of input to {} does not match the number "
                                "required for the inputs of its origin Mechanisms ({}) ".
-                               format(len(input), self.name, len(self.process_input_states)))
+                               format(len(input), self.name, len(self.process_input_ports)))
 
-        # Assign items in input to value of each process_input_state
-        for i in range(len(self.process_input_states)):
-            self.process_input_states[i].parameters.value._set(input[i], context)
+        # Assign items in input to value of each process_input_port
+        for i in range(len(self.process_input_ports)):
+            self.process_input_ports[i].parameters.value._set(input[i], context)
 
         return input
 
     def _update_input(self):
-        for s, i in zip(self.process_input_states, range(len(self.process_input_states))):
+        for s, i in zip(self.process_input_ports, range(len(self.process_input_ports))):
             self.input = s.value
 
     def _instantiate__deferred_inits(self, context=None):
@@ -1870,7 +1870,7 @@ class Process(Process_Base):
                 go through _mechs in reverse order of pathway since
                     LearningProjections are processed from the output (where the training signal is provided) backwards
                 exhaustively check all of Components of each Mechanism,
-                    including all projections to its input_states and _parameter_states
+                    including all projections to its input_ports and _parameter_ports
                 initialize all items that specified deferred initialization
                 construct a _learning_mechs of Mechanism tuples (mech, params):
                 add _learning_mechs to the Process' _mechs
@@ -1886,12 +1886,12 @@ class Process(Process_Base):
             mech = item
             mech._deferred_init(context=context)
 
-            # For each inputState of the mechanism
-            for input_state in mech.input_states:
-                input_state._deferred_init(context=context)
+            # For each inputPort of the mechanism
+            for input_port in mech.input_ports:
+                input_port._deferred_init(context=context)
                 # Restrict projections to those from mechanisms in the current process
                 projections = []
-                for projection in input_state.all_afferents:
+                for projection in input_port.all_afferents:
                     try:
                         if self in projection.sender.owner.processes:
                             projections.append(projection)
@@ -1900,17 +1900,17 @@ class Process(Process_Base):
                         pass
                 self._instantiate__deferred_init_projections(projections, context=context)
 
-            # For each ParameterState of the mechanism
-            for parameter_state in mech._parameter_states:
-                parameter_state._deferred_init(context=context)
+            # For each ParameterPort of the mechanism
+            for parameter_port in mech._parameter_ports:
+                parameter_port._deferred_init(context=context)
                 # MODIFIED 5/2/17 OLD:
-                # self._instantiate__deferred_init_projections(parameter_state.path_afferents)
+                # self._instantiate__deferred_init_projections(parameter_port.path_afferents)
                 # MODIFIED 5/2/17 NEW:
                 # Defer instantiation of ControlProjections to System
-                #   and there should not be any other type of Projection to the ParameterState of a Mechanism
+                #   and there should not be any other type of Projection to the ParameterPort of a Mechanism
                 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
-                if not all(isinstance(proj, ControlProjection) for proj in parameter_state.mod_afferents):
-                    raise ProcessError("PROGRAM ERROR:  non-ControlProjection found to ParameterState for a Mechanism")
+                if not all(isinstance(proj, ControlProjection) for proj in parameter_port.mod_afferents):
+                    raise ProcessError("PROGRAM ERROR:  non-ControlProjection found to ParameterPort for a Mechanism")
                 # MODIFIED 5/2/17 END
 
         # CHANGYAN NOTE: check this spot
@@ -1927,7 +1927,7 @@ class Process(Process_Base):
                 # then designate mech as a TARGET
                 if (isinstance(mech, ObjectiveMechanism) and
                         # any(projection.sender.owner.processes[self] == TERMINAL
-                        #     for projection in mech.input_states[SAMPLE].path_afferents) and
+                        #     for projection in mech.input_ports[SAMPLE].path_afferents) and
                         mech._learning_role is TARGET and
                         self.learning
                             ):
@@ -1957,12 +1957,12 @@ class Process(Process_Base):
             projection._deferred_init(context=context)
 
             # FIX:  WHY DOESN'T THE PROJECTION HANDLE THIS? (I.E., IN ITS deferred_init() METHOD?)
-            # For each parameter_state of the Projection
+            # For each parameter_port of the Projection
             try:
-                for parameter_state in projection._parameter_states:
-                    # Initialize each Projection to the ParameterState (learning or control)
+                for parameter_port in projection._parameter_ports:
+                    # Initialize each Projection to the ParameterPort (learning or control)
                     # IMPLEMENTATION NOTE:  SHOULD ControlProjections BE IGNORED HERE?
-                    for param_projection in parameter_state.mod_afferents:
+                    for param_projection in parameter_port.mod_afferents:
                         param_projection._deferred_init(context=context)
                         if isinstance(param_projection, LearningProjection):
                             # Get ObjectiveMechanism if there is one, and add to _learning_mechs
@@ -2004,9 +2004,9 @@ class Process(Process_Base):
                         except AttributeError:
                             pass
 
-            # Not all Projection subclasses instantiate ParameterStates
+            # Not all Projection subclasses instantiate ParameterPorts
             except TypeError as e:
-                if 'parameterStates' in e.args[0]:
+                if 'parameterPorts' in e.args[0]:
                     pass
                 else:
                     error_msg = 'Error in attempt to initialize LearningProjection ({}) for {}: \"{}\"'.\
@@ -2032,15 +2032,15 @@ class Process(Process_Base):
                    return TARGET ObjectiveMechanism if one is found upstream;
                    return None if no TARGET ObjectiveMechanism is found.
             """
-            for input_state in mech.input_states:
-                for projection in input_state.path_afferents:
+            for input_port in mech.input_ports:
+                for projection in input_port.path_afferents:
                     sender = projection.sender.owner
                     # If Projection is not from another ObjectiveMechanism, ignore
                     if not isinstance(sender, (ObjectiveMechanism)):
                         continue
                     if isinstance(sender, ObjectiveMechanism) and sender._learning_role is TARGET:
                         return sender
-                    if sender.input_states:
+                    if sender.input_ports:
                         target_mech = trace_learning_objective_mechanism_projections(sender)
                         if target_mech:
                             return target_mech
@@ -2091,13 +2091,13 @@ class Process(Process_Base):
                                                              self.last_mechanism.name,
                                                              list(process.name for process in target_mech.processes)))
             # Check for AutoAssociativeLearningMechanism:
-            #    its *ACTIVATION_INPUT* InputState should receive a projection from the same Mechanism
+            #    its *ACTIVATION_INPUT* InputPort should receive a projection from the same Mechanism
             #    that receives a MappingProjection to which its *LEARNING_SIGNAL* projects
             elif any(projection.sender.owner in [projection.sender.owner
                                                  for projection in
-                                                 last_learning_mech.input_states[ACTIVATION_INPUT].path_afferents]
+                                                 last_learning_mech.input_ports[ACTIVATION_INPUT].path_afferents]
                      for projection in
-                     last_learning_mech.input_states[ACTIVATION_INPUT].path_afferents):
+                     last_learning_mech.input_ports[ACTIVATION_INPUT].path_afferents):
                 pass
             else:
 
@@ -2112,8 +2112,8 @@ class Process(Process_Base):
 
         if self.target is None:
             # target arg was not specified in Process' constructor,
-            #    so use the value of the TARGET InputState for each TARGET Mechanism as the default
-            self.target = [mech.input_states[TARGET].value for mech in self._target_mechs]
+            #    so use the value of the TARGET InputPort for each TARGET Mechanism as the default
+            self.target = [mech.input_ports[TARGET].value for mech in self._target_mechs]
             if self.verbosePref:
                 warnings.warn("Learning has been specified for {} and it has TARGET Mechanism(s), but its "
                               "\'target\' argument was not specified; default value(s) will be used ({})".
@@ -2121,10 +2121,10 @@ class Process(Process_Base):
         else:
             self.target = np.atleast_2d(self.target)
 
-        # Create ProcessInputState for each item of target and
-        #   assign to TARGET inputState of each item of _target_mechs
+        # Create ProcessInputPort for each item of target and
+        #   assign to TARGET inputPort of each item of _target_mechs
         for target_mech, target in zip(self._target_mechs, self.target):
-            target_mech_target = target_mech.input_states[TARGET]
+            target_mech_target = target_mech.input_ports[TARGET]
 
             target = np.atleast_1d(target)
 
@@ -2135,15 +2135,15 @@ class Process(Process_Base):
                                           target_mech.name,
                                           len(target_mech_target.value)))
 
-            target_input_state = ProcessInputState(owner=self,
+            target_input_port = ProcessInputPort(owner=self,
                                                     variable=target,
                                                     prefs=self.prefs,
                                                     name=TARGET)
-            self.target_input_states.append(target_input_state)
+            self.target_input_ports.append(target_input_port)
 
-            # Add MappingProjection from target_input_state to ComparatorMechanism's TARGET InputState
+            # Add MappingProjection from target_input_port to ComparatorMechanism's TARGET InputPort
             from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-            proj = MappingProjection(sender=target_input_state,
+            proj = MappingProjection(sender=target_input_port,
                     receiver=target_mech_target,
                     name=self.name+'_Input Projection to '+target_mech_target.name)
             proj._activate_for_compositions(self)
@@ -2191,15 +2191,15 @@ class Process(Process_Base):
 
         target : List[value] or ndarray: default None
             specifies the target value assigned to each of the `target_nodes <Process.target_nodes>` for
-            the `execution <Process_Execution>`.  Each item is assigned to the *TARGET* `InputState
+            the `execution <Process_Execution>`.  Each item is assigned to the *TARGET* `InputPort
             <ComparatorMechanism_Structure>` of the corresponding `ComparatorMechanism` in `target_nodes
             <Process.target_nodes>`; the number of items must equal the number of items in
             `target_nodes <Process.target_nodes>`, and each item of **target** be compatible with the
-            `variable <InputState.variable>` attribute of the *TARGET* `InputState <ComparatorMechanism_Structure>`
+            `variable <InputPort.variable>` attribute of the *TARGET* `InputPort <ComparatorMechanism_Structure>`
             for the corresponding `ComparatorMechanism` in `target_nodes <Process.target_nodes>`.
 
         params : Dict[param keyword: param value] :  default None
-            a `parameter dictionary <ParameterState_Specification>` that can include any of the parameters used
+            a `parameter dictionary <ParameterPort_Specification>` that can include any of the parameters used
             as arguments to instantiate the object. Use parameter's name as the keyword for its entry.  Values specified
             for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
@@ -2212,7 +2212,7 @@ class Process(Process_Base):
         -------
 
         output of Process : ndarray
-            the `value <OutputState.value>` of the `primary OutputState <OutputState_Primary>` of the
+            the `value <OutputPort.value>` of the `primary OutputPort <OutputPort_Primary>` of the
             `terminal_mechanism <Process.terminal_mechanism>` of the Process.
 
         COMMENT:
@@ -2286,7 +2286,7 @@ class Process(Process_Base):
             self._report_process_completion(separator=True, context=context)
 
         # FIX:  WHICH SHOULD THIS BE?
-        return self.output_state.parameters.value._get(context)
+        return self.output_port.parameters.value._get(context)
         # return self.output
 
     def _execute_learning(self, context=None, target=None):
@@ -2306,7 +2306,7 @@ class Process(Process_Base):
 
         # If targets were specified as a function in call to Run() or in System (and assigned to self.targets),
         #  call the function now (i.e., after execution of the pathways, but before learning)
-        #  and assign value to self.target (that will be used below to assign values to target_input_states)
+        #  and assign value to self.target (that will be used below to assign values to target_input_ports)
         # Note:  this accommodates functions that predicate the target on the outcome of processing
         #        (e.g., for rewards in reinforcement learning)
         if isinstance(target, function_type):
@@ -2316,18 +2316,18 @@ class Process(Process_Base):
         if callable(target):
             target = target()
 
-        # Assign items of self.target to target_input_states
-        #   (ProcessInputStates that project to corresponding target_nodes for the Process)
-        for i, target_input_state in zip(range(len(self.target_input_states)), self.target_input_states):
-            target_input_state.parameters.value._set(target[i], context)
+        # Assign items of self.target to target_input_ports
+        #   (ProcessInputPorts that project to corresponding target_nodes for the Process)
+        for i, target_input_port in zip(range(len(self.target_input_ports)), self.target_input_ports):
+            target_input_port.parameters.value._set(target[i], context)
 
         # # Zero any input from projections to target(s) from any other processes
         for target_mech in self.target_mechanisms:
             for process in target_mech.processes:
                 if process is self:
                     continue
-                for target_input_state in  process.target_input_states:
-                    target_input_state.value *= 0
+                for target_input_port in  process.target_input_ports:
+                    target_input_port.value *= 0
 
         # THEN, execute ComparatorMechanism and LearningMechanism
         context.add_flag(ContextFlags.LEARNING)
@@ -2337,13 +2337,13 @@ class Process(Process_Base):
         # FINALLY, execute LearningProjections to MappingProjections in the process' pathway
         for mech in self._mechs:
             # IMPLEMENTATION NOTE:
-            #    This implementation restricts learning to ParameterStates of projections to input_states
+            #    This implementation restricts learning to ParameterPorts of projections to input_ports
             #    That means that other parameters (e.g. object or function parameters) are not currenlty learnable
 
-            # For each inputState of the mechanism
-            for input_state in mech.input_states:
+            # For each inputPort of the mechanism
+            for input_port in mech.input_ports:
                 # For each Projection in the list
-                for projection in input_state.path_afferents:
+                for projection in input_port.path_afferents:
 
                     # Skip learning if Projection is an input from the Process or a system
                     # or comes from a mechanism that belongs to another process
@@ -2353,33 +2353,33 @@ class Process(Process_Base):
                     if isinstance(sender, Process) or not self in (sender.processes):
                         continue
 
-                    # Call parameter_state._update with LEARNING in context to update LearningSignals
+                    # Call parameter_port._update with LEARNING in context to update LearningSignals
                     # Note: context is set on the projection,
-                    #    as the ParameterStates are assigned their owner's context in their update methods
+                    #    as the ParameterPorts are assigned their owner's context in their update methods
                     # Note: do this rather just calling LearningSignals directly
-                    #       since parameter_state._update() handles parsing of LearningProjection-specific params
+                    #       since parameter_port._update() handles parsing of LearningProjection-specific params
 
-                    # For each parameter_state of the Projection
+                    # For each parameter_port of the Projection
                     try:
-                        for parameter_state in projection._parameter_states:
+                        for parameter_port in projection._parameter_ports:
 
                             # Skip learning if the LearningMechanism to which the LearningProjection belongs is disabled
                             if all(projection.sender.owner.learning_enabled is False
-                                   for projection in parameter_state.mod_afferents):
+                                   for projection in parameter_port.mod_afferents):
                                 continue
 
                             # NOTE: This will need to be updated when runtime params are re-enabled
-                            # parameter_state._update(params=params, context=context)
-                            parameter_state._update(context=context)
+                            # parameter_port._update(params=params, context=context)
+                            parameter_port._update(context=context)
 
-                    # Not all Projection subclasses instantiate ParameterStates
+                    # Not all Projection subclasses instantiate ParameterPorts
                     except AttributeError as e:
-                        if e.args[0] is '_parameter_states':
+                        if e.args[0] is '_parameter_ports':
                             pass
                         else:
                             raise ProcessError("PROGRAM ERROR: unrecognized attribute (\'{}\') encountered "
                                                "while attempting to update {} {} of {}".
-                                               format(e.args[0], parameter_state.name, ParameterState.__name__,
+                                               format(e.args[0], parameter_port.name, ParameterPort.__name__,
                                                       projection.name))
 
         context.remove_flag(ContextFlags.LEARNING)
@@ -2437,10 +2437,10 @@ class Process(Process_Base):
             specifies the target value assigned to each of the `target_nodes <Process.target_nodes>` in
             each `TRIAL` of execution.  Each item of the outermost level (if a nested list) or axis 0 (if an ndarray)
             corresponds to a single `TRIAL`;  the number of items must equal the number of items in the **inputs**
-            argument.  Each item is assigned to the *TARGET* `InputState <ComparatorMechanism_Structure>` of the
+            argument.  Each item is assigned to the *TARGET* `InputPort <ComparatorMechanism_Structure>` of the
             corresponding `ComparatorMechanism` in `target_nodes <Process.target_nodes>`; the number of
             items must equal the number of items in `target_nodes <Process.target_nodes>`, and each item
-            of **target** be compatible with the `variable <InputState.variable>` attribute of the *TARGET* `InputState
+            of **target** be compatible with the `variable <InputPort.variable>` attribute of the *TARGET* `InputPort
             <ComparatorMechanism_Structure>` for the corresponding `ComparatorMechanism` in `target_nodes
             <Process.target_nodes>`.
 
@@ -2464,8 +2464,8 @@ class Process(Process_Base):
         Returns
         -------
 
-        <Process>.results : List[OutputState.value]
-            list of the `value <OutputState.value>`\\s of the `primary OutputState <OutputState_Primary>` for the
+        <Process>.results : List[OutputPort.value]
+            list of the `value <OutputPort.value>`\\s of the `primary OutputPort <OutputPort_Primary>` for the
             `terminal_mechanism <Process.terminal_mechanism>` of the Process returned for each execution.
 
         """
@@ -2492,8 +2492,8 @@ class Process(Process_Base):
         ----------
         input : ndarray
             input to ORIGIN Mechanism for current execution.  By default, it is the value specified by the
-            `ProcessInputState <ProcessInputState>` that projects to the ORIGIN Mechanism.  Used by system to specify
-            the input from the `SystemInputState <SystemInputState>` when the ORIGIN Mechanism is executed as part of
+            `ProcessInputPort <ProcessInputPort>` that projects to the ORIGIN Mechanism.  Used by system to specify
+            the input from the `SystemInputPort <SystemInputPort>` when the ORIGIN Mechanism is executed as part of
             that System.
 
         separator : boolean
@@ -2522,21 +2522,21 @@ class Process(Process_Base):
         #       format(self.name,
         #              mechanism.name,
         #              re.sub('[\[,\],\n]','',
-        #                     str(mechanism.outputState.value))))
+        #                     str(mechanism.outputPort.value))))
 
     def _report_process_completion(self, context=None, separator=False):
 
         print("\n\'{}' completed:\n- output: {}".
               format(append_type_to_name(self),
-                     re.sub(r'[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in self.output_state.parameters.value.get(context)]))))
+                     re.sub(r'[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in self.output_port.parameters.value.get(context)]))))
 
         if self.learning:
             from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import MSE
             for mech in self.target_mechanisms:
-                if not MSE in mech.output_states:
+                if not MSE in mech.output_ports:
                     continue
                 print("\n- MSE: {:0.3}".
-                      format(float(mech.output_states[MSE].parameters.value.get(context))))
+                      format(float(mech.output_ports[MSE].parameters.value.get(context))))
 
         elif separator:
             print("\n\n****************************************\n")
@@ -2576,8 +2576,8 @@ class Process(Process_Base):
 
         print ("\n\tTerminal Mechanism: ".format(self.name))
         print("\t\t{}".format(self.terminal_mechanism.name))
-        for output_state in self.terminal_mechanism.output_states:
-            print("\t\t\t{0}".format(output_state.name))
+        for output_port in self.terminal_mechanism.output_ports:
+            print("\t\t\t{0}".format(output_port.name))
 
         print ("\n---------------------------------------------------------")
 
@@ -2597,13 +2597,13 @@ class Process(Process_Base):
         return self._all_mechanisms.names
 
     @property
-    def output_state(self):
-        return self.last_mechanism.output_state
+    def output_port(self):
+        return self.last_mechanism.output_port
 
     @property
     def output(self):
         # FIX: THESE NEED TO BE PROPERLY MAPPED
-        # return np.array(list(item.value for item in self.last_mechanism.output_states.values()))
+        # return np.array(list(item.value for item in self.last_mechanism.output_ports.values()))
         return self.last_mechanism.output_values
 
     @property
@@ -2628,51 +2628,51 @@ class Process(Process_Base):
         ))
 
 
-class ProcessInputState(OutputState):
+class ProcessInputPort(OutputPort):
     """Represents inputs and targets specified in a call to the Process' `execute <Process.execute>` and `run
     <Process.run>` methods.
 
     COMMENT:
         Each instance encodes one of the following:
         - an input to the Process and provides it to a `MappingProjection` that projects to one or more
-            `input_states <Mechanism_Base.input_states>` of the `ORIGIN` Mechanism in the process.
+            `input_ports <Mechanism_Base.input_ports>` of the `ORIGIN` Mechanism in the process.
         - a target to the Process (also a 1d array) and provides it to a `MappingProjection` that
              projects to the `TARGET` Mechanism of the process.
     COMMENT
 
-    .. _ProcessInputState:
+    .. _ProcessInputPort:
 
-    A ProcessInputState is created for each `InputState` of the `origin_mechanism`, and for the *TARGET* `InputState
+    A ProcessInputPort is created for each `InputPort` of the `origin_mechanism`, and for the *TARGET* `InputPort
     <ComparatorMechanism_Structure>` of each `ComparatorMechanism <ComparatorMechanism>` listed in `target_nodes
-    <Process.target_nodes>`.  A `MappingProjection` is created that projects to each of these InputStates
-    from the corresponding ProcessingInputState.  When the Process' `execute <Process.execute>` or
+    <Process.target_nodes>`.  A `MappingProjection` is created that projects to each of these InputPorts
+    from the corresponding ProcessingInputPort.  When the Process' `execute <Process.execute>` or
     `run <Process.run>` method is called, each item of its **inputs** and **targets** arguments is assigned as
-    the `value <ProcessInputState.value>` of a ProcessInputState, which is then conveyed to the
-    corresponding InputState of the `origin_mechanism <Process.origin_mechanism>` and `terminal_mechanisms
+    the `value <ProcessInputPort.value>` of a ProcessInputPort, which is then conveyed to the
+    corresponding InputPort of the `origin_mechanism <Process.origin_mechanism>` and `terminal_mechanisms
     <Process.terminal_mechanisms>`.  See `Process_Input_And_Output` for additional details.
 
     COMMENT:
-    .. Declared as a sublcass of OutputState so that it is recognized as a legitimate sender to a Projection
+    .. Declared as a sublcass of OutputPort so that it is recognized as a legitimate sender to a Projection
        in Projection_Base._instantiate_sender()
 
        value is used to represent the corresponding item of the input arg to process.execute or process.run
     COMMENT
 
     """
-    class Parameters(OutputState.Parameters):
+    class Parameters(OutputPort.Parameters):
         """
             Attributes
             ----------
 
                 variable
-                    see `variable <ProcessInputState.variable>`
+                    see `variable <ProcessInputPort.variable>`
 
                     :default value: numpy.array([0])
                     :type: numpy.ndarray
                     :read only: True
 
                 value
-                    see `value <ProcessInputState.value>`
+                    see `value <ProcessInputPort.value>`
 
                     :default value: numpy.array([0])
                     :type: numpy.ndarray
@@ -2689,7 +2689,7 @@ class ProcessInputState(OutputState):
         :param variable:
         """
         if not name:
-            self.name = owner.name + "_" + kwProcessInputState
+            self.name = owner.name + "_" + kwProcessInputPort
         else:
             self.name = owner.name + "_" + name
         self.prefs = prefs

@@ -79,7 +79,7 @@ def new_episode():
 
     initial_observation = ddqn_agent.env.reset()
 
-    # Initialize both states to verdical state based on first observation
+    # Initialize both ports to verdical state based on first observation
     perceptual_state = veridical_state = ddqn_agent.buffer.next(initial_observation, is_new_episode=True)
 
 def get_optimal_action(observation):
@@ -134,7 +134,7 @@ def get_action(variable=[[0,0],[0,0],[0,0]]):
 #    note: unitization is done in main loop, to allow compilation of LinearCombination function in ObjectiveMech) (TBI)
 action_mech = ProcessingMechanism(default_variable=[[0,0],[0,0],[0,0]],
                                   function=get_action, name='ACTION',
-                                  output_states='agent action')
+                                  output_ports='agent action')
 
 # ************************************** BASIC COMPOSITION *************************************************************
 
@@ -142,9 +142,9 @@ agent_comp = Composition(name='PREDATOR-PREY COMPOSITION')
 agent_comp.add_nodes([player_percept, predator_percept, prey_percept, optimal_action_mech])
 agent_comp.add_node(action_mech, required_roles=[NodeRole.OUTPUT])
 
-a = MappingProjection(sender=player_percept, receiver=action_mech.input_states[0])
-b = MappingProjection(sender=predator_percept, receiver=action_mech.input_states[1])
-c = MappingProjection(sender=prey_percept, receiver=action_mech.input_states[2])
+a = MappingProjection(sender=player_percept, receiver=action_mech.input_ports[0])
+b = MappingProjection(sender=predator_percept, receiver=action_mech.input_ports[1])
+c = MappingProjection(sender=prey_percept, receiver=action_mech.input_ports[2])
 agent_comp.add_projections([a,b,c])
 
 

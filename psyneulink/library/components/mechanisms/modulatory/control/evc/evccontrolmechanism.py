@@ -59,7 +59,7 @@ Creating an EVCControlMechanism
 An EVCControlMechanism can be created in any of the ways used to `create a ControlMechanism
 <ControlMechanism_Creation>`; it is also created automatically when a `System` is created and the EVCControlMechanism
 class is specified in the **controller** argument of the System's constructor (see `System_Creation`).  The
-ObjectiveMechanism, the OutputStates it monitors and evaluates, and the parameters controlled by an
+ObjectiveMechanism, the OutputPorts it monitors and evaluates, and the parameters controlled by an
 EVCControlMechanism can be specified in the standard way for a ControlMechanism (see
 `ControlMechanism_ObjectiveMechanism` and `ControlMechanism_Control_Signals`, respectively).
 
@@ -67,11 +67,11 @@ EVCControlMechanism can be specified in the standard way for a ControlMechanism 
    Although an EVCControlMechanism can be created on its own, it can only be assigned to, and executed within a `System`
    as the System's `controller <System.controller>`.
 
-When an EVCControlMechanism is assigned to, or created by a System, it is assigned the OutputStates to be monitored and
+When an EVCControlMechanism is assigned to, or created by a System, it is assigned the OutputPorts to be monitored and
 parameters to be controlled specified for that System (see `System_Control`), and a `prediction Mechanism
 <EVCControlMechanism_Prediction_Mechanisms>` is created for each `ORIGIN` Mechanism in the `system
 <EVCControlMechanism.system>`. The prediction Mechanisms are assigned to the EVCControlMechanism's
-`prediction_mechanisms` attribute. The OutputStates used to determine an EVCControlMechanism’s control_allocation and
+`prediction_mechanisms` attribute. The OutputPorts used to determine an EVCControlMechanism’s control_allocation and
 the parameters it controls can be listed using its show method. The EVCControlMechanism and the Components
 associated with it in its `system <EVCControlMechanism.system>` can be displayed using the System's
 `System.show_graph` method with its **show_control** argument assigned as `True`
@@ -102,23 +102,23 @@ its `ControlSignals <EVCControlMechanism_ControlSignals>`.  Each of these specia
 ObjectiveMechanism
 ^^^^^^^^^^^^^^^^^^
 
-Like any ControlMechanism, an EVCControlMechanism receives its input from the *OUTCOME* `OutputState
-<ObjectiveMechanism_Output>` of an `ObjectiveMechanism`, via a MappingProjection to its `primary InputState
-<InputState_Primary>`.  The ObjectiveMechanism is listed in the EVCControlMechanism's `objective_mechanism
+Like any ControlMechanism, an EVCControlMechanism receives its input from the *OUTCOME* `OutputPort
+<ObjectiveMechanism_Output>` of an `ObjectiveMechanism`, via a MappingProjection to its `primary InputPort
+<InputPort_Primary>`.  The ObjectiveMechanism is listed in the EVCControlMechanism's `objective_mechanism
 <EVCControlMechanism.objective_mechanism>` attribute.  By default, the ObjectiveMechanism's function is a
 `LinearCombination` function with its `operation <LinearCombination.operation>` attribute assigned as *PRODUCT*;
-this takes the product of the `value <OutputState.value>`\\s of the OutputStates that it monitors (listed in its
-`monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute.  However, this can be customized
+this takes the product of the `value <OutputPort.value>`\\s of the OutputPorts that it monitors (listed in its
+`monitored_output_ports <ObjectiveMechanism.monitored_output_ports>` attribute.  However, this can be customized
 in a variety of ways:
 
     * by specifying a different `function <ObjectiveMechanism.function>` for the ObjectiveMechanism
       (see `Objective Mechanism Examples <ObjectiveMechanism_Weights_and_Exponents_Example>` for an example);
     ..
-    * using a list to specify the OutputStates to be monitored  (and the `tuples format
-      <InputState_Tuple_Specification>` to specify weights and/or exponents for them) in either the
+    * using a list to specify the OutputPorts to be monitored  (and the `tuples format
+      <InputPort_Tuple_Specification>` to specify weights and/or exponents for them) in either the
       **monitor_for_control** or **objective_mechanism** arguments of the EVCControlMechanism's constructor;
     ..
-    * using the  **monitored_output_states** argument for an ObjectiveMechanism specified in the `objective_mechanism
+    * using the  **monitored_output_ports** argument for an ObjectiveMechanism specified in the `objective_mechanism
       <EVCControlMechanism.objective_mechanism>` argument of the EVCControlMechanism's constructor;
     ..
     * specifying a different `ObjectiveMechanism` in the **objective_mechanism** argument of the EVCControlMechanism's
@@ -162,26 +162,26 @@ created that projects to the corresponding prediction Mechanism.  By default, th
 used for all prediction mechanisms, which calculates an exponentially weighted time-average of its input over (
 non-simuated) trials, that is provided as input to the corresponding `ORIGIN` Mechanism on each simulated trial.
 However, any other type of Mechanism can be used as a prediction mechanism, so long as it has the same number of
-`InputStates <InputState>` as the `ORIGIN` Mechanism to which it corresponds, and an `OutputState` corresponding to
+`InputPorts <InputPort>` as the `ORIGIN` Mechanism to which it corresponds, and an `OutputPort` corresponding to
 each.  The default type is a `PredictionMechanism`, that calculates an exponentially weighted time-average of its
 input. The prediction mechanisms can be customized using the *prediction_mechanisms* argument of the
 EVCControlMechanism's constructor, which can be specified using any of the following formats:
 
   * **Mechanism** -- convenience format for cases in which the EVCControlMechanism's `system
     <EVCControlMechanism.system>` has a single `ORIGIN` Mechanism;  the Mechanism must have the same number of
-    `InputStates <InputState>` as the `system <EVCControlMechanism.system>`\\'s `ORIGIN` Mechanism, and
-    an `OutputState` for each.
+    `InputPorts <InputPort>` as the `system <EVCControlMechanism.system>`\\'s `ORIGIN` Mechanism, and
+    an `OutputPort` for each.
   ..
   * **Mechanism subclass** -- used as the class for all prediction mechanisms; a default instance of that class
-    is created for each prediction mechanism, with a number of InputStates and OutputStates equal to the number of
-    InputStates of the `ORIGIN` Mechanism to which it corresponds.
+    is created for each prediction mechanism, with a number of InputPorts and OutputPorts equal to the number of
+    InputPorts of the `ORIGIN` Mechanism to which it corresponds.
   ..
-  * **dict** -- a `parameter specification dictionary <ParameterState_Specification>` specifying the parameters to be
+  * **dict** -- a `parameter specification dictionary <ParameterPort_Specification>` specifying the parameters to be
     assigned to all prediction mechanisms, all of which are instances of a `PredictionMechanism` (thus, the parameters
     specified must be appropriate for a PredictionMechanism).
   ..
   * **2-item tuple:** *(Mechanism subclass, dict)* -- the Mechanism subclass, and parameters specified in
-    the `parameter specification dictionary <ParameterState_Specification>`, are used for all prediction mechanisms.
+    the `parameter specification dictionary <ParameterPort_Specification>`, are used for all prediction mechanisms.
   ..
   * **list** -- its length must equal the number of `ORIGIN` Mechanisms in the EVCControlMechanism's `system
     <EVCControlMechanism.system>` each item must be a Mechanism, a subclass of one, or a 2-item tuple (see above),
@@ -245,9 +245,9 @@ greatest EVC value. The following steps are used to calculate the EVC for each `
   * **Evaluate the System's performance** - this is carried out by the EVCControlMechanism's `objective_mechanism
     <EVCControlMechanism.objective_mechanism>`, which is executed as part of the simulation of the System.  The
     `function <ObjectiveMechanism.function>` for a default ObjectiveMechanism is a `LinearCombination` Function that
-    combines the `value <OutputState.value>`\\s of the OutputStates listed in the EVCControlMechanism's
-    `monitored_output_states <EVCControlMechanism.monitored_output_states>` attribute (and the `objective_mechanism
-    <EVCControlMechanism.objective_mechanism>`'s `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
+    combines the `value <OutputPort.value>`\\s of the OutputPorts listed in the EVCControlMechanism's
+    `monitored_output_ports <EVCControlMechanism.monitored_output_ports>` attribute (and the `objective_mechanism
+    <EVCControlMechanism.objective_mechanism>`'s `monitored_output_ports <ObjectiveMechanism.monitored_output_ports>`
     attribute) by taking their elementwise (Hadamard) product.  However, this behavior can be customized in a variety
     of ways, as described `above <EVCControlMechanism_ObjectiveMechanism>`.
 
@@ -286,15 +286,15 @@ function (see note below).
 *ControlSignals*
 ~~~~~~~~~~~~~~~~
 
-The OutputStates of an EVCControlMechanism (like any `ControlMechanism`) are a set of `ControlSignals
+The OutputPorts of an EVCControlMechanism (like any `ControlMechanism`) are a set of `ControlSignals
 <ControlSignal>`, that are listed in its `control_signals <EVCControlMechanism.control_signals>` attribute (as well as
-its `output_states <ControlMechanism.output_states>` attribute).  Each ControlSignal is assigned a  `ControlProjection`
-that projects to the `ParameterState` for a parameter controlled by the EVCControlMechanism.  Each ControlSignal is
+its `output_ports <ControlMechanism.output_ports>` attribute).  Each ControlSignal is assigned a  `ControlProjection`
+that projects to the `ParameterPort` for a parameter controlled by the EVCControlMechanism.  Each ControlSignal is
 assigned an item of the EVCControlMechanism's `control_allocation`, that determines its `allocation
 <ControlSignal.allocation>` for a given `TRIAL` of execution.  The `allocation <ControlSignal.allocation>` is used by
 a ControlSignal to determine its `intensity <ControlSignal.intensity>`, which is then assigned as the `value
 <ControlProjection.value>` of the ControlSignal's ControlProjection.   The `value <ControlProjection>` of the
-ControlProjection is used by the `ParameterState` to which it projects to modify the value of the parameter (see
+ControlProjection is used by the `ParameterPort` to which it projects to modify the value of the parameter (see
 `ControlSignal_Modulation` for description of how a ControlSignal modulates the value of a parameter it controls).
 A ControlSignal also calculates a `cost <ControlSignal.cost>`, based on its `intensity <ControlSignal.intensity>`
 and/or its time course. The `cost <ControlSignal.cost>` is included in the evaluation that the EVCControlMechanism
@@ -354,16 +354,16 @@ The following example implements a System with an EVCControlMechanism (and two p
     ...                                            pnl.DDM_OUTPUT.DECISION_VARIABLE,    #doctest: +SKIP
     ...                                            (pnl.RESPONSE_TIME, 1, -1)],         #doctest: +SKIP
 
-It uses the System's **monitor_for_control** argument to assign three OutputStates to be monitored.  The first one
-references the Reward Mechanism (not shown);  its `primary OutputState <OutputState_Primary>` will be used by default.
-The second and third use keywords that are the names of outputStates of a  `DDM` Mechanism (also not shown).
+It uses the System's **monitor_for_control** argument to assign three OutputPorts to be monitored.  The first one
+references the Reward Mechanism (not shown);  its `primary OutputPort <OutputPort_Primary>` will be used by default.
+The second and third use keywords that are the names of outputPorts of a  `DDM` Mechanism (also not shown).
 The last one (RESPONSE_TIME) is assigned a weight of 1 and an exponent of -1. As a result, each calculation of the EVC
-computation will multiply the value of the primary OutputState of the Reward Mechanism by the value of the
-*DDM_DECISION_VARIABLE* OutputState of the DDM Mechanism, and then divide that by the value of the *RESPONSE_TIME*
-OutputState of the DDM Mechanism.
+computation will multiply the value of the primary OutputPort of the Reward Mechanism by the value of the
+*DDM_DECISION_VARIABLE* OutputPort of the DDM Mechanism, and then divide that by the value of the *RESPONSE_TIME*
+OutputPort of the DDM Mechanism.
 
 See `ObjectiveMechanism <ObjectiveMechanism_Monitor_Examples>` for additional examples of how to specify it's
-**monitored_output_states** argument, `ControlMechanism <ControlMechanism_Examples>` for additional examples of how to
+**monitored_output_ports** argument, `ControlMechanism <ControlMechanism_Examples>` for additional examples of how to
 specify ControlMechanisms, and `System <System_Examples>` for how to specify the `controller <System.controller>`
 of a System.
 
@@ -386,13 +386,13 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.shellclasses import Function, System_Base
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.core.components.states.outputstate import OutputState
-from psyneulink.core.components.states.parameterstate import ParameterState
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.components.ports.outputport import OutputPort
+from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM, INIT_FUNCTION_METHOD_ONLY, \
-    MULTIPLICATIVE, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM
+    MULTIPLICATIVE, PARAMETER_PORTS, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -435,7 +435,7 @@ class EVCControlMechanism(ControlMechanism):
             + componentType (str): System Default Mechanism
             + paramClassDefaults (dict):
                 + SYSTEM (System)
-                + MONITORED_OUTPUT_STATES (list of Mechanisms and/or OutputStates)
+                + MONITORED_OUTPUT_PORTS (list of Mechanisms and/or OutputPorts)
 
         Class methods:
             None
@@ -447,20 +447,20 @@ class EVCControlMechanism(ControlMechanism):
         # - specification of System:  required param: SYSTEM
         # - kwDefaultController:  True =>
         #         takes over all unassigned ControlProjections (i.e., without a sender) in its System;
-        #         does not take monitored states (those are created de-novo)
+        #         does not take monitored ports (those are created de-novo)
         # TBI: - CONTROL_PROJECTIONS:
-        #         list of projections to add (and for which outputStates should be added)
+        #         list of projections to add (and for which outputPorts should be added)
 
-        # - input_states: one for each performance/environment variable monitored
+        # - input_ports: one for each performance/environment variable monitored
 
         ControlProjection Specification:
         #    - wherever a ControlProjection is specified, using kwEVC instead of CONTROL_PROJECTION
         #     this should override the default sender SYSTEM_DEFAULT_CONTROLLER in ControlProjection._instantiate_sender
-        #    ? expclitly, in call to "EVC.monitor(input_state, parameter_state=NotImplemented) method
+        #    ? expclitly, in call to "EVC.monitor(input_port, parameter_port=NotImplemented) method
 
         # - specification of function: default is default allocation policy (BADGER/GUMBY)
-        #   constraint:  if specified, number of items in variable must match number of input_states in INPUT_STATES
-        #                  and names in list in kwMonitor must match those in INPUT_STATES
+        #   constraint:  if specified, number of items in variable must match number of input_ports in INPUT_PORTS
+        #                  and names in list in kwMonitor must match those in INPUT_PORTS
 
        **********************************************************************************************
 
@@ -479,30 +479,30 @@ class EVCControlMechanism(ControlMechanism):
 
     system : System : default None
         specifies the `System` for which the EVCControlMechanism should serve as a `controller <System.controller>`;
-        the EVCControlMechanism will inherit any `OutputStates <OutputState>` specified in the **monitor_for_control**
+        the EVCControlMechanism will inherit any `OutputPorts <OutputPort>` specified in the **monitor_for_control**
         argument of the `system <EVCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
         specified in its **control_signals** argument.
 
-    objective_mechanism : ObjectiveMechanism, List[OutputState or Tuple[OutputState, list or 1d np.array, list or 1d
+    objective_mechanism : ObjectiveMechanism, List[OutputPort or Tuple[OutputPort, list or 1d np.array, list or 1d
     np.array]] : \
-    default MonitoredOutputStatesOptions.PRIMARY_OUTPUT_STATES
-        specifies either an `ObjectiveMechanism` to use for the EVCControlMechanism or a list of the OutputStates it
-        should monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitor>` is used,
-        a default ObjectiveMechanism is created and the list is passed to its **monitored_output_states** argument.
+    default MonitoredOutputPortsOptions.PRIMARY_OUTPUT_PORTS
+        specifies either an `ObjectiveMechanism` to use for the EVCControlMechanism or a list of the OutputPorts it
+        should monitor; if a list of `OutputPort specifications <ObjectiveMechanism_Monitor>` is used,
+        a default ObjectiveMechanism is created and the list is passed to its **monitored_output_ports** argument.
 
     prediction_mechanisms : Mechanism, Mechanism subclass, dict, (Mechanism subclass, dict) or list: \
     default PredictionMechanism
         the `Mechanism(s) <Mechanism>` or class(es) of Mechanisms  used for `prediction Mechanism(s)
         <EVCControlMechanism_Prediction_Mechanisms>` and, optionally, their parameters (specified in a `parameter
-        specification dictionary <ParameterState_Specification>`);  see `EVCControlMechanism_Prediction_Mechanisms`
+        specification dictionary <ParameterPort_Specification>`);  see `EVCControlMechanism_Prediction_Mechanisms`
         for details.
 
         COMMENT:
         the `Mechanism(s) <Mechanism>` or class(es) of Mechanisms  used for `prediction Mechanism(s)
         <EVCControlMechanism_Prediction_Mechanisms>`.  If a class, dict, or tuple is specified, it is used as the
         specification for all prediction Mechanisms.  A dict specified on its own is assumed to be a `parameter
-        specification dictionary <ParameterState_Specification>` for a `PredictionMechanism`; a dict specified
-        in a tuple must be a `parameter specification dictionary <ParameterState_Specification>` appropriate for the
+        specification dictionary <ParameterPort_Specification>` for a `PredictionMechanism`; a dict specified
+        in a tuple must be a `parameter specification dictionary <ParameterPort_Specification>` appropriate for the
         type of Mechanism specified as the first item of the tuple.  If a list is specified, its length must equal
         the number of `ORIGIN` Mechanisms in the System for which the EVCControlMechanism is the `controller
         <System.controller>`;  each item must be a Mechanism, subclass of one, or a tuple specifying a subclass and
@@ -542,7 +542,7 @@ class EVCControlMechanism(ControlMechanism):
         (see `ControlSignal_Specification` for details of specification).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for the
         Mechanism, its `function <EVCControlMechanism.function>`, and/or a custom function and its parameters.  Values
         specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
@@ -558,7 +558,7 @@ class EVCControlMechanism(ControlMechanism):
 
     system : System
         the `System` for which EVCControlMechanism is the `controller <System.controller>`;
-        the EVCControlMechanism inherits any `OutputStates <OutputState>` specified in the **monitor_for_control**
+        the EVCControlMechanism inherits any `OutputPorts <OutputPort>` specified in the **monitor_for_control**
         argument of the `system <EVCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
         specified in its **control_signals** argument.
 
@@ -566,7 +566,7 @@ class EVCControlMechanism(ControlMechanism):
         list of `predictions mechanisms <EVCControlMechanism_Prediction_Mechanisms>` generated for the
         EVCControlMechanism's `system <EVCControlMechanism.system>` when the EVCControlMechanism is created,
         one for each `ORIGIN` Mechanism in the `system <EVCControlMechanism.system>`.  Each prediction Mechanism is
-        named using the name of the ` ORIGIN` Mechanism + "PREDICTION_MECHANISM" and assigned an `OutputState` with
+        named using the name of the ` ORIGIN` Mechanism + "PREDICTION_MECHANISM" and assigned an `OutputPort` with
         a name based on the same.
 
     origin_prediction_mechanisms : Dict[ProcessingMechanism, ProcessingMechanism]
@@ -583,26 +583,26 @@ class EVCControlMechanism(ControlMechanism):
 
     objective_mechanism : ObjectiveMechanism
         the 'ObjectiveMechanism' used by the EVCControlMechanism to evaluate the performance of its `system
-        <EVCControlMechanism.system>`.  If a list of OutputStates is specified in the **objective_mechanism** argument
-        of the EVCControlMechanism's constructor, they are assigned as the `monitored_output_states
-        <ObjectiveMechanism.monitored_output_states>` attribute for the `objective_mechanism
+        <EVCControlMechanism.system>`.  If a list of OutputPorts is specified in the **objective_mechanism** argument
+        of the EVCControlMechanism's constructor, they are assigned as the `monitored_output_ports
+        <ObjectiveMechanism.monitored_output_ports>` attribute for the `objective_mechanism
         <EVCControlMechanism.objective_mechanism>`.
 
-    monitored_output_states : List[OutputState]
-        list of the OutputStates monitored by `objective_mechanism <EVCControlMechanism.objective_mechanism>` (and
-        listed in its `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute), and used to
+    monitored_output_ports : List[OutputPort]
+        list of the OutputPorts monitored by `objective_mechanism <EVCControlMechanism.objective_mechanism>` (and
+        listed in its `monitored_output_ports <ObjectiveMechanism.monitored_output_ports>` attribute), and used to
         evaluate the performance of the EVCControlMechanism's `system <EVCControlMechanism.system>`.
 
     COMMENT:
     [TBI]
-        monitored_output_states : 3D np.array
-            an array of values of the outputStates in `monitored_output_states` (equivalent to the values of
-            the EVCControlMechanism's `input_states <EVCControlMechanism.input_states>`).
+        monitored_output_ports : 3D np.array
+            an array of values of the outputPorts in `monitored_output_ports` (equivalent to the values of
+            the EVCControlMechanism's `input_ports <EVCControlMechanism.input_ports>`).
     COMMENT
 
-    monitored_output_states_weights_and_exponents: List[Tuple[scalar, scalar]]
-        a list of tuples, each of which contains the weight and exponent (in that order) for an OutputState in
-        `monitored_outputStates`, listed in the same order as the outputStates are listed in `monitored_outputStates`.
+    monitored_output_ports_weights_and_exponents: List[Tuple[scalar, scalar]]
+        a list of tuples, each of which contains the weight and exponent (in that order) for an OutputPort in
+        `monitored_outputPorts`, listed in the same order as the outputPorts are listed in `monitored_outputPorts`.
 
     function : function : default ControlSignalGridSearch
         determines the `control_allocation` to use for the next round of the System's
@@ -627,9 +627,9 @@ class EVCControlMechanism(ControlMechanism):
             controller._get_simulation_system_inputs gets inputs for a simulated run (using predictionMechanisms)
             controller._assign_simulation_inputs assigns value of prediction_mechanisms to inputs of `ORIGIN` Mechanisms
             controller.run will execute a specified number of trials with the simulation inputs
-            controller.monitored_states is a list of the Mechanism OutputStates being monitored for outcome
-            controller.input_value is a list of current outcome values (values for monitored_states)
-            controller.monitored_output_states_weights_and_exponents is a list of parameterizations for OutputStates
+            controller.monitored_ports is a list of the Mechanism OutputPorts being monitored for outcome
+            controller.input_value is a list of current outcome values (values for monitored_ports)
+            controller.monitored_output_ports_weights_and_exponents is a list of parameterizations for OutputPorts
             controller.control_signals is a list of control_signal objects
             controller.control_signal_search_space is a list of all allocationPolicies specifed by allocation_samples
             control_signal.allocation_samples is the set of samples specified for that control_signal
@@ -664,7 +664,7 @@ class EVCControlMechanism(ControlMechanism):
         <EVCControlMechanism_ControlSignals>`.  The `weights <LinearCombination.weights>` and/or `exponents
         <LinearCombination.exponents>` parameters of the function can be used, respectively, to scale and/or
         exponentiate the contribution of each ControlSignal cost to the combined cost.  These must be specified as
-        1d arrays in a *WEIGHTS* and/or *EXPONENTS* entry of a `parameter dictionary <ParameterState_Specification>`
+        1d arrays in a *WEIGHTS* and/or *EXPONENTS* entry of a `parameter dictionary <ParameterPort_Specification>`
         assigned to the **params** argument of the constructor of a `LinearCombination` function; the length of
         each array must equal the number of (and the values listed in the same order as) the ControlSignals in the
         EVCControlMechanism's `control_signals <EVCControlMechanism.control_signals>` attribute. The default function
@@ -696,8 +696,8 @@ class EVCControlMechanism(ControlMechanism):
     EVC_max : 1d np.array with single value
         the maximum `EVC <EVCControlMechanism_EVC>` value over all allocation policies in `control_signal_search_space`.
 
-    EVC_max_state_values : 2d np.array
-        an array of the values for the OutputStates in `monitored_output_states` using the `control_allocation` that
+    EVC_max_port_values : 2d np.array
+        an array of the values for the OutputPorts in `monitored_output_ports` using the `control_allocation` that
         generated `EVC_max`.
 
     EVC_max_policy : 1d np.array
@@ -725,8 +725,8 @@ class EVCControlMechanism(ControlMechanism):
 
     control_signals : ContentAddressableList[ControlSignal]
         list of the EVCControlMechanism's `ControlSignals <EVCControlMechanism_ControlSignals>`, including any that it
-        inherited from its `system <EVCControlMechanism.system>` (same as the EVCControlMechanism's `output_states
-        <Mechanism_Base.output_states>` attribute); each sends a `ControlProjection` to the `ParameterState` for the
+        inherited from its `system <EVCControlMechanism.system>` (same as the EVCControlMechanism's `output_ports
+        <Mechanism_Base.output_ports>` attribute); each sends a `ControlProjection` to the `ParameterPort` for the
         parameter it controls
 
     name : str
@@ -771,8 +771,8 @@ class EVCControlMechanism(ControlMechanism):
                     :type:
                     :read only: True
 
-                EVC_max_state_values
-                    see `EVC_max_state_values <EVCControlMechanism.EVC_max_state_values>`
+                EVC_max_port_values
+                    see `EVC_max_port_values <EVCControlMechanism.EVC_max_port_values>`
 
                     :default value: None
                     :type:
@@ -854,14 +854,14 @@ class EVCControlMechanism(ControlMechanism):
         EVC_max = Parameter(None, read_only=True)
         EVC_values = Parameter([], read_only=True)
         EVC_policies = Parameter([], read_only=True)
-        EVC_max_state_values = Parameter(None, read_only=True)
+        EVC_max_port_values = Parameter(None, read_only=True)
         EVC_max_policy = Parameter(None, read_only=True)
         control_signal_search_space = Parameter(None, read_only=True)
         predicted_input = Parameter(None, read_only=True)
 
     # from Components.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
-    paramClassDefaults.update({PARAMETER_STATES: NotImplemented}) # This suppresses parameterStates
+    paramClassDefaults.update({PARAMETER_PORTS: NotImplemented}) # This suppresses parameterPorts
 
     @tc.typecheck
     def __init__(self,
@@ -870,13 +870,13 @@ class EVCControlMechanism(ControlMechanism):
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  origin_objective_mechanism=False,
                  terminal_objective_mechanism=False,
-                 monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
+                 monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputPort))=None,
                  function=ControlSignalGridSearch,
                  value_function=ValueFunction,
                  cost_function=LinearCombination(operation=SUM),
                  combine_outcome_and_cost_function=LinearCombination(operation=SUM),
                  save_all_values_and_policies:bool=False,
-                 control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
+                 control_signals:tc.optional(tc.any(is_iterable, ParameterPort, ControlSignal))=None,
                  modulation:tc.optional(str)=MULTIPLICATIVE,
                  params=None,
                  name=None,
@@ -923,12 +923,12 @@ class EVCControlMechanism(ControlMechanism):
                                        "and parameter specification dictionary".
                                        format(pm, repr(PREDICTION_MECHANISMS), self.name))
 
-    def _instantiate_input_states(self, context=None):
+    def _instantiate_input_ports(self, context=None):
         """Instantiate PredictionMechanisms
         """
         if self.system is not None:
             self._instantiate_prediction_mechanisms(system=self.system, context=context)
-        super()._instantiate_input_states(context=context)
+        super()._instantiate_input_ports(context=context)
 
     def _instantiate_control_signals(self, context):
         """Size control_allocation and assign modulatory_signals
@@ -949,25 +949,25 @@ class EVCControlMechanism(ControlMechanism):
         Instantiate prediction_mechanisms for `ORIGIN` Mechanisms in system; these will now be `TERMINAL` Mechanisms:
             - if their associated input mechanisms were TERMINAL MECHANISMS, they will no longer be so;  therefore...
             - if an associated input Mechanism must be monitored by the EVCControlMechanism, it must be specified
-                explicitly in an OutputState, Mechanism, controller or system OBJECTIVE_MECHANISM param (see below)
+                explicitly in an OutputPort, Mechanism, controller or system OBJECTIVE_MECHANISM param (see below)
 
         For each `ORIGIN` Mechanism in system:
             - instantiate a corresponding PredictionMechanism
             - instantiate a MappingProjection to the PredictionMechanism
-                that shadows the one from the SystemInputState to the ORIGIN Mechanism
+                that shadows the one from the SystemInputPort to the ORIGIN Mechanism
 
         Instantiate self.predicted_input dict:
             - key for each entry is an `ORIGIN` Mechanism of system
             - value of each entry is a list of the values of the corresponding predictionMechanism,
                 one for each trial to be simulated; each value is a 2d array, each item of which is the value of an
-                InputState of the predictionMechanism
+                InputPort of the predictionMechanism
 
         Args:
             context:
         """
 
-        from psyneulink.core.components.process import ProcessInputState
-        from psyneulink.core.components.system import SystemInputState
+        from psyneulink.core.components.process import ProcessInputPort
+        from psyneulink.core.components.system import SystemInputPort
 
         # FIX: 1/16/18 - Should should check for any new origin_mechs? What if origin_mech deleted?
         # If system's controller already has prediction_mechanisms, use those
@@ -1016,12 +1016,12 @@ class EVCControlMechanism(ControlMechanism):
                            repr(ORIGIN_MECHANISMS), len(system.orign_mechanisms), self.system.name))
 
         for origin_mech, pm_spec in zip(system.origin_mechanisms.mechanisms, prediction_mech_specs):
-            state_names = []
+            port_Names = []
             variable = []
-            for state_name in origin_mech.input_states.names:
-                state_names.append(state_name)
-                # variable.append(origin_mech.input_states[state_name].defaults.variable)
-                variable.append(origin_mech.input_states[state_name].value)
+            for port_Name in origin_mech.input_ports.names:
+                port_Names.append(port_Name)
+                # variable.append(origin_mech.input_ports[port_Name].defaults.variable)
+                variable.append(origin_mech.input_ports[port_Name].value)
 
             # Instantiate PredictionMechanism
             if isinstance(pm_spec, Mechanism):
@@ -1032,7 +1032,7 @@ class EVCControlMechanism(ControlMechanism):
                 prediction_mechanism = mech_class(
                         name=origin_mech.name + " " + PREDICTION_MECHANISM,
                         default_variable=variable,
-                        input_states=state_names,
+                        input_ports=port_Names,
                         # params = mech_params
                         **mech_params,
                         context=context
@@ -1045,15 +1045,15 @@ class EVCControlMechanism(ControlMechanism):
             prediction_mechanism.origin_mech = origin_mech
 
             # Assign projections to prediction_mechanism that duplicate those received by origin_mech
-            #    (this includes those from ProcessInputState, SystemInputState and/or recurrent ones
-            for orig_input_state, prediction_input_state in zip(origin_mech.input_states,
-                                                            prediction_mechanism.input_states):
-                for projection in orig_input_state.path_afferents:
+            #    (this includes those from ProcessInputPort, SystemInputPort and/or recurrent ones
+            for orig_input_port, prediction_input_port in zip(origin_mech.input_ports,
+                                                            prediction_mechanism.input_ports):
+                for projection in orig_input_port.path_afferents:
                     proj = MappingProjection(sender=projection.sender,
-                                      receiver=prediction_input_state,
+                                      receiver=prediction_input_port,
                                       matrix=projection.matrix)
 
-                    if isinstance(proj.sender, (ProcessInputState, SystemInputState)):
+                    if isinstance(proj.sender, (ProcessInputPort, SystemInputPort)):
                         proj._activate_for_compositions(proj.sender.owner)
                     else:
                         proj._activate_for_compositions(system)
@@ -1115,22 +1115,6 @@ class EVCControlMechanism(ControlMechanism):
                                           COST_FUNCTION,
                                           self.name,
                                           num_control_projections))
-
-    # MODIFIED 9/26/19 OLD:
-    # def _instantiate_control_signal(self, control_signal, context=None):
-    #     """Implement CostFunctions.DEFAULTS as default for cost_option of ControlSignals
-    #     EVCControlMechanism requires use of at least one of the cost options
-    #     """
-    #     control_signal = super()._instantiate_control_signal(control_signal, context)
-    #
-    #     if not control_signal:
-    #         return
-    #
-    #     if control_signal.cost_options is None:
-    #         control_signal.cost_options = CostFunctions.DEFAULTS
-    #         control_signal._instantiate_cost_attributes()
-    #     return control_signal
-    # MODIFIED 9/26/19 END
 
     @handle_external_context()
     @tc.typecheck
@@ -1219,7 +1203,7 @@ class EVCControlMechanism(ControlMechanism):
             # Get origin Mechanism for each process
             # Assign value of predictionMechanism to the entry of predicted_input for the corresponding ORIGIN Mechanism
             self.parameters.predicted_input._get(context)[origin_mech] = self.origin_prediction_mechanisms[origin_mech].parameters.value._get(context)
-            # self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].output_state.value
+            # self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].output_port.value
 
     def evaluate(
         self,
@@ -1247,7 +1231,7 @@ class EVCControlMechanism(ControlMechanism):
 
         runtime_params : Optional[Dict[str, Dict[str, Dict[str, value]]]]
             a dictionary that can include any of the parameters used as arguments to instantiate the mechanisms,
-            their functions, or Projection(s) to any of their states.  See `Mechanism_Runtime_Parameters` for a full
+            their functions, or Projection(s) to any of their ports.  See `Mechanism_Runtime_Parameters` for a full
             description.
 
         """
@@ -1256,8 +1240,8 @@ class EVCControlMechanism(ControlMechanism):
             # Initialize value if it is None
             self.parameters.value._set(np.empty(len(self.control_signals)), context)
 
-        # Implement the current control_allocation over ControlSignals (OutputStates),
-        #    by assigning allocation values to EVCControlMechanism.value, and then calling _update_output_states
+        # Implement the current control_allocation over ControlSignals (OutputPorts),
+        #    by assigning allocation values to EVCControlMechanism.value, and then calling _update_output_ports
         for i in range(len(self.control_signals)):
             # MODIFIED 6/6/19 OLD:
             self.parameters.value._get(context)[i] = np.atleast_1d(allocation_vector[i])
@@ -1266,7 +1250,7 @@ class EVCControlMechanism(ControlMechanism):
             #                                runtime_params=runtime_params,
             #                                context=context)
             # MODIFIED 6/6/19 END
-        self._update_output_states(context=context, runtime_params=runtime_params)
+        self._update_output_ports(context=context, runtime_params=runtime_params)
 
         # RUN SIMULATION
 
@@ -1288,9 +1272,9 @@ class EVCControlMechanism(ControlMechanism):
         self.system._animate = animate_buffer
 
         # Get outcomes for current control_allocation
-        #    = the values of the monitored output states (self.input_states)
+        #    = the values of the monitored output ports (self.input_ports)
         # self.objective_mechanism.execute(context=EVC_SIMULATION)
-        monitored_states = self._update_input_states(context=context, runtime_params=runtime_params)
+        monitored_ports = self._update_input_ports(context=context, runtime_params=runtime_params)
 
         # # MODIFIED 9/18/18 OLD:
         # for i in range(len(self.control_signals)):
@@ -1307,7 +1291,7 @@ class EVCControlMechanism(ControlMechanism):
         self.parameters.control_signal_costs._set(control_signal_costs, context)
         # MODIFIED 9/18/18 END
 
-        return monitored_states
+        return monitored_ports
 
     # The following implementation of function attributes as properties insures that even if user sets the value of a
     #    function directly (i.e., without using assign_params), it will still be wrapped as a UserDefinedFunction.

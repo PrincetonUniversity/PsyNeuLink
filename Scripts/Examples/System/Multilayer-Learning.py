@@ -86,7 +86,7 @@ def print_header(system):
 
 def show_target(system):
     i = system.input
-    t = system.target_input_states[0].parameters.value.get(system)
+    t = system.target_input_ports[0].parameters.value.get(system)
     print('\nOLD WEIGHTS: \n')
     print('- Input Weights: \n', Input_Weights.parameters.matrix.get(system))
     print('- Middle Weights: \n', Middle_Weights.parameters.matrix.get(system))

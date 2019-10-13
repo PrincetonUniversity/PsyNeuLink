@@ -201,8 +201,8 @@ m = my_Stroop.run(inputs=CN_trial_initialize_input)
 #   CREATE THRESHOLD FUNCTION
 # first value of DDM's value is DECISION_VARIABLE
 def pass_threshold(mech1, mech2, thresh):
-    results1 = mech1.output_states[0].value
-    results2 = mech2.output_states[0].value
+    results1 = mech1.output_ports[0].value
+    results2 = mech2.output_ports[0].value
     for val in results1:
         if val >= thresh:
             return True

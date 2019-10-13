@@ -332,7 +332,7 @@ class OptimizationFunction(Function_Base):
         save_samples = Parameter(False, pnl_internal=True)
         save_values = Parameter(False, pnl_internal=True)
 
-        # these are created as parameter states, but should they be?
+        # these are created as parameter ports, but should they be?
         max_iterations = Parameter(None, modulable=True)
 
         saved_samples = Parameter([], read_only=True, pnl_internal=True)
@@ -1374,7 +1374,7 @@ class GridSearch(OptimizationFunction):
 
     def _get_input_struct_type(self, ctx):
         if self.owner is not None:
-            variable = [state.defaults.value for state in self.owner.input_states]
+            variable = [port.defaults.value for port in self.owner.input_ports]
             # Python list does not care about ndarrays of different lengths
             # we do care, so convert to tuple to create struct
             if all(type(x) == np.ndarray for x in variable) and not all(len(x) == len(variable[0]) for x in variable):
@@ -1672,7 +1672,7 @@ class GridSearch(OptimizationFunction):
                 # FIX: PUT ERROR HERE IF value AND/OR value_max ARE EMPTY (E.G., WHEN EXECUTION_ID IS WRONG)
                 # If value is optimal, store corresponing sample
                 if value == value_optimal:
-                    # Keep track of state values and allocation policy associated with EVC max
+                    # Keep track of port values and allocation policy associated with EVC max
                     sample_optimal = sample
                     sample_value_max_tuple = (sample_optimal, value_optimal)
 
@@ -1691,7 +1691,7 @@ class GridSearch(OptimizationFunction):
             max_tuples = Comm.allgather(sample_value_max_tuple)
             # get tuple with "value_max of maxes"
             max_value_of_max_tuples = max(max_tuples, key=lambda max_tuple: max_tuple[1])
-            # get value_optimal, state values and allocation policy associated with "max of maxes"
+            # get value_optimal, port values and allocation policy associated with "max of maxes"
             return_optimal_sample = max_value_of_max_tuples[0]
             return_optimal_value = max_value_of_max_tuples[1]
 

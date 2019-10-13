@@ -1005,7 +1005,7 @@
                x="0 10.1114 18.0518 22.3808 30.321199 38.2616 42.590599 51.2616 55.590599 62.821201 67.1502"
                y="0"
                sodipodi:role="line"
-               id="tspan3691">OutputState</tspan></text>
+               id="tspan3691">OutputPort</tspan></text>
 </g></g></g><g
        id="g3693"><g
          id="g3695"
@@ -1179,7 +1179,7 @@
                x="0 10.1114 18.0518 22.3808 30.321199 38.2616 42.590599 51.2616 55.590599 62.821201 67.1502"
                y="0"
                sodipodi:role="line"
-               id="tspan3899">OutputState</tspan></text>
+               id="tspan3899">OutputPort</tspan></text>
 </g></g></g><g
        id="g3901"><g
          id="g3903"
@@ -1366,7 +1366,7 @@
                x="0 3.6113999 11.5518 19.492201 27.4326 31.7616 40.432598 44.7616 51.992199 56.321201"
                y="0"
                sodipodi:role="line"
-               id="tspan4121">InputState</tspan></text>
+               id="tspan4121">InputPort</tspan></text>
 </g></g></g><g
        id="g4123"><g
          id="g4125"
@@ -1527,7 +1527,7 @@
                x="0 3.6113999 11.5518 19.492201 27.4326 31.7616 40.432598 44.7616 51.992199 56.321201"
                y="0"
                sodipodi:role="line"
-               id="tspan4315">InputState</tspan></text>
+               id="tspan4315">InputPort</tspan></text>
 </g></g></g><g
        id="g4317"><g
          id="g4319"
@@ -1726,7 +1726,7 @@
                x="0 8.6709995 15.9016 20.961201 28.191799 39.7514 46.981998 51.311001 58.541599 63.6012 72.272202 76.601196 83.831802 88.160797"
                y="0"
                sodipodi:role="line"
-               id="tspan4597">ParameterState</tspan></text>
+               id="tspan4597">ParameterPort</tspan></text>
 </g></g></g><g
        id="g4599"><g
          id="g4601"
@@ -1912,7 +1912,7 @@
                x="0 8.6709995 15.9016 20.961201 28.191799 39.7514 46.981998 51.311001 58.541599 63.6012 72.272202 76.601196 83.831802 88.160797"
                y="0"
                sodipodi:role="line"
-               id="tspan4807">ParameterState</tspan></text>
+               id="tspan4807">ParameterPort</tspan></text>
 </g></g></g><g
        id="g4809"><g
          id="g4811"

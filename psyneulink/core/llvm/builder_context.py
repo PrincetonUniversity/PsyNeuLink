@@ -217,7 +217,7 @@ class LLVMBuilderContext:
         if hasattr(component, '_get_state_struct_type'):
             return component._get_state_struct_type(self)
 
-        stateful = component._get_state_values()
+        stateful = component._get_port_values()
         return self.convert_python_struct_to_llvm_ir(stateful)
 
     def get_data_struct_type(self, component):
@@ -231,10 +231,10 @@ class LLVMBuilderContext:
         return builder.gep(params_ptr, [self.int32_ty(0), idx],
                            name="ptr_param_{}_{}".format(param_name, component.name))
 
-    def get_state_ptr(self, component, builder, state_ptr, state_name):
-        idx = self.int32_ty(component._get_state_ids().index(state_name))
+    def get_state_ptr(self, component, builder, state_ptr, port_Name):
+        idx = self.int32_ty(component._get_state_ids().index(port_Name))
         return builder.gep(state_ptr, [self.int32_ty(0), idx],
-                           name="ptr_state_{}_{}".format(state_name, component.name))
+                           name="ptr_state_{}_{}".format(port_Name, component.name))
 
     def unwrap_2d_array(self, builder, element):
         if isinstance(element.type.pointee, ir.ArrayType) and isinstance(element.type.pointee.element, ir.ArrayType):
@@ -598,7 +598,7 @@ class LLVMBuilderContext:
 
         if not simulation and "const_input" in debug_env:
             if not debug_env["const_input"]:
-                input_init = pnlvm._tupleize([[os.defaults.variable] for os in composition.input_CIM.input_states])
+                input_init = pnlvm._tupleize([[os.defaults.variable] for os in composition.input_CIM.input_ports])
                 print("Setting default input: ", input_init)
             else:
                 input_init = ast.literal_eval(debug_env["const_input"])

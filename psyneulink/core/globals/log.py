@@ -84,21 +84,21 @@ to access its `entries <Log.entries>`:
 
 Although every Component is assigned its own Log, that records the `value <Component.value>` of that Component,
 the Logs for `Mechanisms <Mechanism>` and `MappingProjections <MappingProjection>` also  provide access to and control
-the Logs of their `States <State>`.  Specifically the Logs of these Components contain the following information:
+the Logs of their `Ports <Port>`.  Specifically the Logs of these Components contain the following information:
 
 * **Mechanisms**
 
   * *value* -- the `value <Mechanism_Base.value>` of the Mechanism.
 
-  * *InputStates* -- the `value <InputState.value>` of any `InputState` (listed in the Mechanism's `input_states
-    <Mechanism_Base.input_states>` attribute).
+  * *InputPorts* -- the `value <InputPort.value>` of any `InputPort` (listed in the Mechanism's `input_ports
+    <Mechanism_Base.input_ports>` attribute).
 
-  * *ParameterStates* -- the `value <ParameterState.value>` of `ParameterState` (listed in the Mechanism's
-    `parameter_states <Mechanism_Base.parameter_states>` attribute);  this includes all of the `user configurable
+  * *ParameterPorts* -- the `value <ParameterPort.value>` of `ParameterPort` (listed in the Mechanism's
+    `parameter_ports <Mechanism_Base.parameter_ports>` attribute);  this includes all of the `user configurable
     <Component_User_Params>` parameters of the Mechanism and its `function <Mechanism_Base.function>`.
 
-  * *OutputStates* -- the `value <OutputState.value>` of any `OutputState` (listed in the Mechanism's `output_states
-    <Mechanism_Base.output_states>` attribute).
+  * *OutputPorts* -- the `value <OutputPort.value>` of any `OutputPort` (listed in the Mechanism's `output_ports
+    <Mechanism_Base.output_ports>` attribute).
 ..
 * **Projections**
 
@@ -162,7 +162,7 @@ Examples
 --------
 
 The following example creates a Process with two `TransferMechanisms <TransferMechanism>`, one that projects to
-another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputState` of the first and the
+another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputPort` of the first and the
 `MappingProjection` from the first to the second::
 
     # Create a Process with two TransferMechanisms, and get a reference for the Projection created between them:
@@ -177,13 +177,13 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
     COMMENT
     # Show the loggable items (and current condition assignments) for each Mechanism and the Projection between them:
     >> my_mech_A.loggable_items
-    {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'integration_rate': 'OFF', 'intercept': 'OFF', 'noise': 'OFF'}
+    {'InputPort-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'integration_rate': 'OFF', 'intercept': 'OFF', 'noise': 'OFF'}
     >> my_mech_B.loggable_items
-    {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'integration_rate': 'OFF'}
+    {'InputPort-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'integration_rate': 'OFF'}
     >> proj_A_to_B.loggable_items
     {'value': 'OFF', 'matrix': 'OFF'}
 
-    # Assign the noise parameter and RESULTS OutputState of my_mech_A, and the matrix of the Projection, to be logged
+    # Assign the noise parameter and RESULTS OutputPort of my_mech_A, and the matrix of the Projection, to be logged
     >>> my_mech_A.set_log_conditions([pnl.NOISE, pnl.RESULTS])
     >>> proj_A_to_B.set_log_conditions(pnl.MATRIX)
 
@@ -320,7 +320,7 @@ An attribute is logged if:
 
 # * it is one `automatically included <LINK>` in logging;
 
-* it is included in the *LOG_ENTRIES* entry of a `parameter specification dictionary <ParameterState_Specification>`
+* it is included in the *LOG_ENTRIES* entry of a `parameter specification dictionary <ParameterPort_Specification>`
   assigned to the **params** argument of the constructor for the Component;
 
 * the LogCondition(s) specified in a Component's logpref match the current `ContextFlags` in its context attribute
@@ -329,8 +329,8 @@ Entry values are added by the setter method for the attribute being logged.
 
 The following entries are automatically included in the `loggable_items` of a `Mechanism` object:
     - the `value <Mechanism_Base.value>` of the Mechanism;
-    - the value attribute of every State for which the Mechanism is an owner
-    - value of every projection that sends to those States]
+    - the value attribute of every Port for which the Mechanism is an owner
+    - value of every projection that sends to those Ports]
     - the system variables defined in SystemLogEntries (see declaration above)
     - any variables listed in the params[LOG_ENTRIES] of a Mechanism
 
@@ -604,8 +604,8 @@ class Log:
             - the context of the assignment is above the ContextFlags specified in the logPref setting of the owner object
         Entry values are added by the setter method for the attribute being logged
         The following entries are automatically included in self.entries for a Mechanism object:
-            - the value attribute of every State for which the Mechanism is an owner
-            [TBI: - value of every projection that sends to those States]
+            - the value attribute of every Port for which the Mechanism is an owner
+            [TBI: - value of every projection that sends to those Ports]
             - the system variables defined in SystemLogEntries (see declaration above)
             - any variables listed in the params[LOG_ENTRIES] of a Mechanism
         The ContextFlags class (see declaration above) defines five levels of logging:
@@ -690,7 +690,7 @@ class Log:
 
         Each item of the entries list should be a string designating a Component to be logged;
         Initialize self.entries dict, each entry of which has a:
-            - key corresponding to a State of the Component to which the Log belongs
+            - key corresponding to a Port of the Component to which the Log belongs
             - value that is a list of sequentially logged LogEntry items
         """
 
@@ -706,23 +706,23 @@ class Log:
         return self.owner._loggable_parameters
 
     @property
-    def input_state_items(self):
+    def input_port_items(self):
         try:
-            return self.owner.input_states.names
+            return self.owner.input_ports.names
         except AttributeError:
             return []
 
     @property
-    def output_state_items(self):
+    def output_port_items(self):
         try:
-            return self.owner.output_states.names
+            return self.owner.output_ports.names
         except AttributeError:
             return []
 
     @property
-    def parameter_state_items(self):
+    def parameter_port_items(self):
         try:
-            return [MODULATED_PARAMETER_PREFIX + name for name in self.owner.parameter_states.names]
+            return [MODULATED_PARAMETER_PREFIX + name for name in self.owner.parameter_ports.names]
         except AttributeError:
             return []
 
@@ -735,14 +735,14 @@ class Log:
 
     @property
     def all_items(self):
-        return sorted(self.parameter_items + self.input_state_items + self.output_state_items + self.parameter_state_items + self.function_items)
+        return sorted(self.parameter_items + self.input_port_items + self.output_port_items + self.parameter_port_items + self.function_items)
 
     def _get_parameter_from_item_string(self, string):
         # KDM 8/15/18: can easily cache these results if it occupies too much time, assuming
         # no duplicates/changing
         if string.startswith(MODULATED_PARAMETER_PREFIX):
             try:
-                return self.owner.parameter_states[string[len(MODULATED_PARAMETER_PREFIX):]].parameters.value
+                return self.owner.parameter_ports[string[len(MODULATED_PARAMETER_PREFIX):]].parameters.value
             except (AttributeError, TypeError):
                 pass
 
@@ -752,12 +752,12 @@ class Log:
             pass
 
         try:
-            return self.owner.input_states[string].parameters.value
+            return self.owner.input_ports[string].parameters.value
         except (AttributeError, TypeError):
             pass
 
         try:
-            return self.owner.output_states[string].parameters.value
+            return self.owner.output_ports[string].parameters.value
         except (AttributeError, TypeError):
             pass
 
@@ -1688,7 +1688,7 @@ class Log:
     def loggable_components(self):
         """Return a list of owner's Components that are loggable
 
-        The loggable items of a Component are the Components (typically States) specified in the _logagble_items
+        The loggable items of a Component are the Components (typically Ports) specified in the _logagble_items
         property of its class, and its own `value <Component.value>` attribute.
         """
         from psyneulink.core.components.component import Component

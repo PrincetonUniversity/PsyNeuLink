@@ -95,7 +95,7 @@ task_decision = pnl.DDM(
                 noise=0.4,
                 t0=.4
         ),
-        output_states=[
+        output_ports=[
             pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
             pnl.DDM_OUTPUT.PROBABILITY_LOWER_THRESHOLD,
             pnl.DDM_OUTPUT.RESPONSE_TIME
@@ -103,7 +103,7 @@ task_decision = pnl.DDM(
 )
 
 # print("Task decision loggable: ", task_decision.loggable_items)
-task_decision.set_log_conditions('InputState-0')  
+task_decision.set_log_conditions('InputPort-0')
 # task_decision.set_log_conditions('func_drift_rate')     
 # task_decision.set_log_conditions('mod_drift_rate')      
 task_decision.set_log_conditions('PROBABILITY_LOWER_THRESHOLD')     
@@ -126,16 +126,16 @@ c.add_projection(sender=word_task, receiver=task_decision)
 
 lvoc = pnl.OptimizationControlMechanism(
     name='LVOC ControlMechanism',
-    features=[color_stim.input_state, word_stim.input_state],
+    features=[color_stim.input_port, word_stim.input_port],
     # features={pnl.SHADOW_EXTERNAL_INPUTS: [color_stim, word_stim]},
 
     # computes value of processing, reward received
     objective_mechanism=pnl.ObjectiveMechanism(
         name='LVOC ObjectiveMechanism',
-        monitor=[task_decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD],
-                 task_decision.output_states[pnl.PROBABILITY_LOWER_THRESHOLD],
+        monitor=[task_decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
+                 task_decision.output_ports[pnl.PROBABILITY_LOWER_THRESHOLD],
                  reward,
-                 task_decision.output_states[pnl.RESPONSE_TIME]],
+                 task_decision.output_ports[pnl.RESPONSE_TIME]],
         function=objective_function
     ),
     # posterior weight distribution

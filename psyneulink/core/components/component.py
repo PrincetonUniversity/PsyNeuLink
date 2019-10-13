@@ -38,13 +38,13 @@ and `Informational Attributes` below).
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If information necessary to complete initialization is not specified in the constructor (e.g, the **owner** for a
-`State <State_Base.owner>`, or the **sender** or **receiver** for a `Projection <Projection_Structure>`), then its
-full initialization is deferred until its the information is available (e.g., the `State <State>` is assigned to a
+`Port <Port_Base.owner>`, or the **sender** or **receiver** for a `Projection <Projection_Structure>`), then its
+full initialization is deferred until its the information is available (e.g., the `Port <Port>` is assigned to a
 `Mechanism <Mechanism>`, or a `Projection <Projection>` is assigned its `sender <Projection_Base.sender>` and `receiver
 <Projection_Base.receiver>`).  This allows Components to be created before all of the information they require is
 available (e.g., at the beginning of a script). However, for the Component to be operational, its initialization must
 be completed by a call to it `deferred_init` method.  This is usually done automatically when the Component is
-assigned to another Component to which it belongs (e.g., assigning a State to a Mechanism) or to a Composition (e.g.,
+assigned to another Component to which it belongs (e.g., assigning a Port to a Mechanism) or to a Composition (e.g.,
 a Projection to the `pathway <Process.pahtway>`) of a `Process`), as appropriate.
 
 .. _Component_Structure:
@@ -123,7 +123,7 @@ user once the component is constructed, with the one exception of `prefs <Compon
         more than one Component, without being assigned simultaneously to multiple Components.
 
   A `function <Component.function>` can also be specified in an entry of a
-  `parameter specification dictionary <ParameterState_Specification>` assigned to the
+  `parameter specification dictionary <ParameterPort_Specification>` assigned to the
   **params** argument of the constructor for the Component, with the keyword *FUNCTION* as its key, and one of the
   specifications above as its value, as in the following example::
 
@@ -195,7 +195,7 @@ A Component defines its `parameters <Parameters>` in its *parameters* attribute,
   as can its full list of entries (e.g., ``my_component.user_params``).  However, because it is read-only,
   it cannot be used to make assignments.  Rather, changes to the value of a parameter must be made by assigning a
   value to the attribute for that parameter directly (e.g., ``my_component.my_parameter``), but using a dedicated
-  method if one exists (e.g., `Mechanism_Base.add_states`), or by using the Component's `assign_params
+  method if one exists (e.g., `Mechanism_Base.add_ports`), or by using the Component's `assign_params
   <Component.assign_params>` method.
 
   All of the parameters listed in the *user_params* dictionary can be modified by the user (as described above).  Some
@@ -203,12 +203,12 @@ A Component defines its `parameters <Parameters>` in its *parameters* attribute,
   general, only parameters that take numerical values and/or do not affect the structure, mode of operation,
   or format of the values associated with a Component can be subject to modulation.  For example, for a
   `TransferMechanism`, `clip <TransferMechanism.clip>`, `initial_value <TransferMechanism.initial_value>`,
-  `integrator_mode <TransferMechanism.integrator_mode>`, `input_states <TransferMechanism.input_states>`,
-  `output_states`, and `function <TransferMechanism.function>`, are all listed in user_params, and are user-modifiable,
+  `integrator_mode <TransferMechanism.integrator_mode>`, `input_ports <TransferMechanism.input_ports>`,
+  `output_ports`, and `function <TransferMechanism.function>`, are all listed in user_params, and are user-modifiable,
   but are not subject to modulation; whereas `noise <TransferMechanism.noise>` and `integration_rate
   <TransferMechanism.integration_rate>`, as well as the parameters of the TransferMechanism's `function
   <TransferMechanism.function>` (listed in the *function_params* subdictionary) can all be subject to modulation.
-  Parameters that are subject to modulation are associated with a `ParameterState` to which the ControlSignals
+  Parameters that are subject to modulation are associated with a `ParameterPort` to which the ControlSignals
   can project (by way of a `ControlProjection`).
 
 .. _Component_Function_Params:
@@ -234,7 +234,7 @@ A Component defines its `parameters <Parameters>` in its *parameters* attribute,
         `function <Component.function>` share some or all of their parameters in common, the shared paramters may appear
         as arguments in the constructor of the Component itself, which can be used to set their values.
 
-      * in an entry of a `parameter specification dictionary <ParameterState_Specification>` assigned to the
+      * in an entry of a `parameter specification dictionary <ParameterPort_Specification>` assigned to the
         **params** argument of the constructor for the Component.  The entry must use the keyword
         FUNCTION_PARAMS as its key, and its value must be a dictionary containing the parameters and their values.
         The key for each entry in the FUNCTION_PARAMS dictionary must be the name of a parameter, and its value the
@@ -244,7 +244,7 @@ A Component defines its `parameters <Parameters>` in its *parameters* attribute,
                                          params={FUNCTION_PARAMS:{SOME_PARAM=1, SOME_OTHER_PARAM=2}})
 
   The parameters of functions for some Components may allow other forms of specification (see
-  `ParameterState_Specification` for details concerning different ways in which the value of a
+  `ParameterPort_Specification` for details concerning different ways in which the value of a
   parameter can be specified).
 
 .. _Informational_Attributes:
@@ -326,7 +326,7 @@ COMMENT:
 
       * `_validate_params <Component._validate_params>` validates the value of any parameters specified in the
         constructor for the Component (whether they are made directly in the argument for a parameter, or in a
-        `parameter specification dictionary <ParameterState_Specification>`.  If it is overridden by a subclass,
+        `parameter specification dictionary <ParameterPort_Specification>`.  If it is overridden by a subclass,
         customized validation should generally be performed *after* the call to super().
 
     * **Instantiation methods** create, assign, and/or perform *semantic* checks on the values of Component attributes.
@@ -359,7 +359,7 @@ COMMENT
 .. _Component_Assign_Params:
 
 * **assign_params** - assign the value of one or more parameters of a Component.  Each parameter is specified
-  as an entry in a `parameter specification dictionary <ParameterState_Specification>` in the **request_set**
+  as an entry in a `parameter specification dictionary <ParameterPort_Specification>` in the **request_set**
   argument;  parameters for the Component's `function <Component.function>` are specified as entries in a
   *FUNCTION_PARAMS* dict within **request_set** dict.
 ..
@@ -423,8 +423,8 @@ from psyneulink.core.globals.context import Context, ContextError, ContextFlags,
 from psyneulink.core.globals.json import JSONDumpable
 from psyneulink.core.globals.keywords import \
     COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, \
-    FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, \
-    LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, \
+    FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_PORTS, \
+    LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, \
     PARAMS, PARAMS_CURRENT, PREFS_ARG, REINITIALIZE_WHEN, SIZE, USER_PARAMS, VALUE, VARIABLE, FUNCTION_COMPONENT_CATEGORY, \
     MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_PARAMETER_SOURCE, \
     MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS
@@ -698,11 +698,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
              it can be referenced either as self.function, self.params[FUNCTION] or self.paramsCurrent[FUNCTION]
          - function (Function): the object to which function belongs (and that defines it's parameters)
          - output (value: self.value)
-         - output_values (return from self.execute: concatenated set of values of output_states)
+         - output_values (return from self.execute: concatenated set of values of output_ports)
          - class and instance variable defaults
          - class and instance param defaults
         The Components's execute method (<subclass>.execute is the Component's primary method
-            (e.g., it is the one called when Process, Mechanism, State and Projections objects are updated);
+            (e.g., it is the one called when Process, Mechanism, Port and Projections objects are updated);
             the following attributes for or associated with the method are defined for every Component object:
                 + execute (method) - the execute method itself
                 + value (value) - the output of the execute method
@@ -957,16 +957,16 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     paramClassDefaults = {}
 
-    exclude_from_parameter_states = [INPUT_STATES, OUTPUT_STATES]
+    exclude_from_parameter_ports = [INPUT_PORTS, OUTPUT_PORTS]
 
-    # IMPLEMENTATION NOTE: This is needed so that the State class can be used with ContentAddressableList,
+    # IMPLEMENTATION NOTE: This is needed so that the Port class can be used with ContentAddressableList,
     #                      which requires that the attribute used for addressing is on the class;
     #                      it is also declared as a property, so that any assignments are validated to be strings,
     #                      insuring that assignment by one instance will not affect the value of others.
     name = None
 
     _deepcopy_shared_keys = frozenset([
-        'init_args',
+        '_init_args',
     ])
 
     class _CompilationData(ParametersBase):
@@ -1123,7 +1123,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # KDM: this is a poorly implemented hack that stops the .update call from
         # starting off a chain of assignment/validation calls that ends up
         # calling _instantiate_attributes_before_function and so attempting to create
-        # ParameterStates twice in some cases
+        # ParameterPorts twice in some cases
         self.paramsCurrent = {}
         orig_validation_pref = self.paramValidationPref
         self.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
@@ -1141,7 +1141,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         function = self._instantiate_attributes_before_function(function=function, context=context) or function
 
         # INSTANTIATE FUNCTION
-        #    - assign initial function parameter values from ParameterStates,
+        #    - assign initial function parameter values from ParameterPorts,
         #    - assign function's output to self.defaults.value (based on call of self.execute)
         self._instantiate_function(function=function, function_params=function_params, context=context)
 
@@ -1152,7 +1152,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         # INSTANTIATE ATTRIBUTES AFTER FUNCTION
         # Stub for methods that need to be executed after instantiating function
-        #    (e.g., instantiate_output_state in Mechanism)
+        #    (e.g., instantiate_output_port in Mechanism)
         self._instantiate_attributes_after_function(context=context)
 
         self._validate(context=context)
@@ -1192,10 +1192,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     def _get_state_ids(self):
         return [sp.name for sp in self._get_compilation_state()]
 
-    def _get_state_values(self, context=None):
-        def _state_values(x):
-            return x._get_state_values(context) if isinstance(x, Component) else x
-        return tuple(map(_state_values, (sp.get(context) for sp in self._get_compilation_state())))
+    def _get_port_values(self, context=None):
+        def _port_values(x):
+            return x._get_port_values(context) if isinstance(x, Component) else x
+        return tuple(map(_port_values, (sp.get(context) for sp in self._get_compilation_state())))
 
     def _get_state_initializer(self, context):
         def _convert(x):
@@ -1204,7 +1204,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 return x.get_state()[1:]
             else:
                 return x
-        lists = (_convert(s) for s in self._get_state_values(context))
+        lists = (_convert(s) for s in self._get_port_values(context))
         return pnlvm._tupleize(lists)
 
     def _get_compilation_params(self, context=None):
@@ -1231,9 +1231,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         def _get_values(p):
             param = p.get(context)
             try:
-                # Existence of parameter state changes the shape to array
+                # Existence of ParameterPort changes the shape to array
                 # the base value should remain the same though
-                if p.name in self.owner.parameter_states:
+                if p.name in self.owner.parameter_ports:
                     param = [param]
             except AttributeError:
                 pass
@@ -1307,13 +1307,13 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     # IMPLEMENTATION NOTE: (7/7/17 CW) Due to System and Process being initialized with size at the moment (which will
     # be removed later), I’m keeping _handle_size in Component.py. I’ll move the bulk of the function to Mechanism
-    # through an override, when Composition is done. For now, only State.py overwrites _handle_size().
+    # through an override, when Composition is done. For now, only Port.py overwrites _handle_size().
     def _handle_size(self, size, variable):
         """If variable is None, _handle_size tries to infer variable based on the **size** argument to the
-            __init__() function. This method is overwritten in subclasses like Mechanism and State.
+            __init__() function. This method is overwritten in subclasses like Mechanism and Port.
             If self is a Mechanism, it converts variable to a 2D array, (for a Mechanism, variable[i] represents
-            the input from the i-th input state). If self is a State, variable is a 1D array and size is a length-1 1D
-            array. It performs some validations on size and variable as well. This function is overridden in State.py.
+            the input from the i-th InputPort). If self is a Port, variable is a 1D array and size is a length-1 1D
+            array. It performs some validations on size and variable as well. This function is overridden in Port.py.
             If size is NotImplemented (usually in the case of Projections/Functions), then this function passes without
             doing anything. Be aware that if size is NotImplemented, then variable is never cast to a particular shape.
         """
@@ -1439,29 +1439,29 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             #       (usually in _instantiate_function)
             self.initialization_status = ContextFlags.INITIALIZING
 
-            del self.init_args['self']
+            del self._init_args['self']
 
             try:
-                del self.init_args['__class__']
+                del self._init_args['__class__']
             except KeyError:
                 pass
 
             # Delete reference to dict created by paramsCurrent -> ParamsDict
             try:
-                del self.init_args['__pydevd_ret_val_dict']
+                del self._init_args['__pydevd_ret_val_dict']
             except KeyError:
                 pass
 
-            self.init_args['context'] = context
+            self._init_args['context'] = context
 
             # Complete initialization
             # MODIFIED 10/27/18 OLD:
-            super(self.__class__,self).__init__(**self.init_args)
+            super(self.__class__,self).__init__(**self._init_args)
             # MODIFIED 10/27/18 NEW:  FOLLOWING IS NEEDED TO HANDLE FUNCTION DEFERRED INIT (JDC)
             # try:
-            #     super(self.__class__,self).__init__(**self.init_args)
+            #     super(self.__class__,self).__init__(**self._init_args)
             # except:
-            #     self.__init__(**self.init_args)
+            #     self.__init__(**self._init_args)
             # MODIFIED 10/27/18 END
 
             # If name was assigned, "[DEFERRED INITIALIZATION]" was appended to it, so remove it
@@ -1664,9 +1664,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 for param_name in sorted(list(kwargs[arg].keys())):
                     params[FUNCTION_PARAMS].__additem__(param_name,kwargs[arg][param_name])
 
-            # If no input_states or output_states are specified, ignore
+            # If no input_ports or output_ports are specified, ignore
             #   (ones in paramClassDefaults will be assigned to paramsCurrent below (in params_class_defaults_only)
-            elif arg in {INPUT_STATES, OUTPUT_STATES} and kwargs[arg] is None:
+            elif arg in {INPUT_PORTS, OUTPUT_PORTS} and kwargs[arg] is None:
                 continue
 
             # For all other params, assign arg and its default value to paramClassDefaults
@@ -1776,8 +1776,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             else:
                 self.user_params_for_instantiation[param_name] = param_value
 
-        # FIX: 6/1/17 - MAKE SURE FUNCTIONS DON'T GET ASSIGNED AS PROPERTIES, SINCE THEY DON'T HAVE ParameterStates
-        #                AND SO CAN'T RETURN A ParameterState.value AS THEIR VALUE
+        # FIX: 6/1/17 - MAKE SURE FUNCTIONS DON'T GET ASSIGNED AS PROPERTIES, SINCE THEY DON'T HAVE ParameterPorts
+        #                AND SO CAN'T RETURN A ParameterPort.value AS THEIR VALUE
 
         # Provide opportunity for subclasses to filter final set of params in class-specific way
         # Note:  this is done here to preserve identity of user-specified params assigned to user_params above
@@ -1834,19 +1834,19 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     def _set_parameter_value(self, param, val, context=None):
         getattr(self.parameters, param)._set(val, context)
-        if hasattr(self, "parameter_states"):
-            if param in self.parameter_states:
-                new_state_value = self.parameter_states[param].execute(
+        if hasattr(self, "parameter_ports"):
+            if param in self.parameter_ports:
+                new_port_value = self.parameter_ports[param].execute(
                     context=Context(execution_phase=ContextFlags.EXECUTING, execution_id=context.execution_id)
                 )
-                self.parameter_states[param].parameters.value._set(new_state_value, context)
+                self.parameter_ports[param].parameters.value._set(new_port_value, context)
         elif hasattr(self, "owner"):
-            if hasattr(self.owner, "parameter_states"):
-                if param in self.owner.parameter_states:
-                    new_state_value = self.owner.parameter_states[param].execute(
+            if hasattr(self.owner, "parameter_ports"):
+                if param in self.owner.parameter_ports:
+                    new_port_value = self.owner.parameter_ports[param].execute(
                         context=Context(execution_phase=ContextFlags.EXECUTING, execution_id=context.execution_id)
                     )
-                    self.owner.parameter_states[param].parameters.value._set(new_state_value, context)
+                    self.owner.parameter_ports[param].parameters.value._set(new_port_value, context)
 
     def _check_args(self, variable=None, params=None, context=None, target_set=None):
         """validate variable and params, instantiate variable (if necessary) and assign any runtime params.
@@ -1911,9 +1911,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             for param_name in runtime_params:
                 # (1) store current attribute value in _runtime_params_reset so that it can be reset later
                 # (2) assign runtime param values to attributes (which calls validation via properties)
-                # (3) update parameter states if needed
+                # (3) update parameter ports if needed
                 if hasattr(self, param_name):
-                    if param_name in {FUNCTION, INPUT_STATES, OUTPUT_STATES}:
+                    if param_name in {FUNCTION, INPUT_PORTS, OUTPUT_PORTS}:
                         continue
                     if context.execution_id not in self._runtime_params_reset:
                         self._runtime_params_reset[context.execution_id] = {}
@@ -1958,7 +1958,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
               IMPLEMENTATION NOTE:  for now, treating class defaults as hard coded;
                                     could be changed in the future simply by commenting out code below
 
-          If not context:  instantiates function and any states specified in request set
+          If not context:  instantiates function and any ports specified in request set
                            (if they have changed from the previous value(s))
 
         :param variable: (anything but a dict (variable) - value to assign as defaults.variable
@@ -2239,7 +2239,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         Call _instantiate_defaults with context = COMMAND_LINE, and "validated_set" as target_set.
         Update paramInstanceDefaults with validated_set so that any instantiations (below) are done in proper context.
-        Instantiate any items in request set that require it (i.e., function or states).
+        Instantiate any items in request set that require it (i.e., function or ports).
 
         """
         self._assign_params(request_set=request_set, context=context)
@@ -2278,21 +2278,21 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         self.paramValidationPref = pref_buffer
 
         # FIX: THIS NEEDS TO BE HANDLED BETTER:
-        # FIX: DEAL WITH INPUT_STATES AND PARAMETER_STATES DIRECTLY (RATHER THAN VIA instantiate_attributes_before...)
+        # FIX: DEAL WITH INPUT_PORTS AND PARAMETER_PORTS DIRECTLY (RATHER THAN VIA instantiate_attributes_before...)
         # FIX: SAME FOR FUNCTIONS THAT NEED TO BE "WRAPPED"
-        # FIX: FIGURE OUT HOW TO DEAL WITH INPUT_STATES
-        # FIX: FOR PARAMETER_STATES:
+        # FIX: FIGURE OUT HOW TO DEAL WITH INPUT_PORTS
+        # FIX: FOR PARAMETER_PORTS:
         #        CALL THE FOLLOWING FOR EACH PARAM:
         # FIX: NEED TO CALL
 
         validated_set_param_names = list(validated_set.keys())
 
-        # If an input_state is being added from the command line,
-        #    must _instantiate_attributes_before_function to parse input_states specification
+        # If an input_port is being added from the command line,
+        #    must _instantiate_attributes_before_function to parse input_ports specification
         # Otherwise, should not be run,
-        #    as it induces an unecessary call to _instantatiate_parameter_states (during instantiate_input_states),
+        #    as it induces an unecessary call to _instantatiate_parameter_ports (during instantiate_input_ports),
         #    that causes name-repetition problems when it is called as part of the standard init procedure
-        if INPUT_STATES in validated_set_param_names and context.source & ContextFlags.COMMAND_LINE:
+        if INPUT_PORTS in validated_set_param_names and context.source & ContextFlags.COMMAND_LINE:
             self._instantiate_attributes_before_function(context=context)
 
         # If the object's function is being assigned, and it is a class, instantiate it as a Function object
@@ -2300,9 +2300,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             self._instantiate_function(context=context)
         # FIX: WHY SHOULD IT BE CALLED DURING STANDRD INIT PROCEDURE?
         # # MODIFIED 5/5/17 OLD:
-        # if OUTPUT_STATES in validated_set:
-        # MODIFIED 5/5/17 NEW:  [THIS FAILS WITH A SPECIFICATION IN output_states ARG OF CONSTRUCTOR]
-        if OUTPUT_STATES in validated_set and context.source & ContextFlags.COMMAND_LINE:
+        # if OUTPUT_PORTS in validated_set:
+        # MODIFIED 5/5/17 NEW:  [THIS FAILS WITH A SPECIFICATION IN output_ports ARG OF CONSTRUCTOR]
+        if OUTPUT_PORTS in validated_set and context.source & ContextFlags.COMMAND_LINE:
         # MODIFIED 5/5/17 END
             self._instantiate_attributes_after_function(context=context)
 
@@ -2424,7 +2424,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         """
             Transforms **variable** into a form that Components expect. Used to allow
             users to pass input in convenient forms, like a single float when a list
-            for input states is expected
+            for input ports is expected
 
             Returns
             -------
@@ -2479,7 +2479,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         VARIABLE SPECIFICATION:                                        ENCODING:
         Simple value variable:                                         0 -> [array([0])]
         Single state array (vector) variable:                         [0, 1] -> [array([0, 1])]
-        Multiple state variables, each with a single value variable:  [[0], [0]] -> [array[0], array[0]]
+        Multiple port variables, each with a single value variable:  [[0], [0]] -> [array[0], array[0]]
 
         Perform top-level type validation of variable against the self.class_defaults.variable;
             if the type is OK, the value is returned (which should be used by the function)
@@ -2746,7 +2746,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         """
         from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
         from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-        from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
+        from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
 
         ALLOWABLE_TUPLE_SPEC_KEYWORDS = MODULATORY_SPEC_KEYWORDS
         ALLOWABLE_TUPLE_SPEC_CLASSES = (ModulatoryProjection_Base, ModulatorySignal, ModulatoryMechanism_Base)
@@ -2870,7 +2870,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # KDM 11/12/18: parse an instance of a Function's .function method to itself
         # (not sure how worth it this is, but it existed in Scripts/Examples/Reinforcement-Learning REV)
         # purposely not attempting to parse a class Function.function
-        # JDC 3/6/19:  ?what about parameter states for its parameters (see python function problem below)?
+        # JDC 3/6/19:  ?what about parameter ports for its parameters (see python function problem below)?
         if isinstance(function, types.MethodType):
             try:
                 if isinstance(function.__self__, Function):
@@ -2879,7 +2879,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 pass
 
         # Specification is a standard python function, so wrap as a UserDefnedFunction
-        # Note:  parameter_states for function's parameters will be created in_instantiate_attributes_after_function
+        # Note:  parameter_ports for function's parameters will be created in_instantiate_attributes_after_function
         if isinstance(function, types.FunctionType):
             self.function = UserDefinedFunction(default_variable=function_variable,
                                                 custom_function=function,
@@ -2921,7 +2921,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             self.function._update_default_variable(function_variable, context)
 
         # Specification is Function class
-        # Note:  parameter_states for function's parameters will be created in_instantiate_attributes_after_function
+        # Note:  parameter_ports for function's parameters will be created in_instantiate_attributes_after_function
         elif inspect.isclass(function) and issubclass(function, Function):
             kwargs_to_instantiate = function.class_defaults.values().copy()
             if function_params is not None:
@@ -2935,11 +2935,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     except KeyError:
                         pass
 
-                # matrix is determined from parameter state based on string value in function_params
+                # matrix is determined from ParameterPort based on string value in function_params
                 # update it here if needed
                 if MATRIX in kwargs_to_instantiate:
                     try:
-                        kwargs_to_instantiate[MATRIX] = self.parameter_states[MATRIX].defaults.value
+                        kwargs_to_instantiate[MATRIX] = self.parameter_ports[MATRIX].defaults.value
                     except (AttributeError, KeyError, TypeError):
                         pass
 
@@ -2950,18 +2950,18 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             raise ComponentError(f'Unsupported function type: {type(function)}, function={function}.')
 
         # KAM added 6/14/18 for functions that do not pass their has_initializers status up to their owner via property
-        # FIX: need comprehensive solution for has_initializers; need to determine whether states affect mechanism's
+        # FIX: need comprehensive solution for has_initializers; need to determine whether ports affect mechanism's
         # has_initializers status
         if self.function.has_initializers:
             self.has_initializers = True
 
-        self._parse_param_state_sources()
+        self._parse_param_port_sources()
 
     def _instantiate_attributes_after_function(self, context=None):
-        if hasattr(self, "_parameter_states"):
-            for param_state in self._parameter_states:
-                setattr(self.__class__, "mod_"+param_state.name, make_property_mod(param_state.name))
-                setattr(self.__class__, "get_mod_" + param_state.name, make_stateful_getter_mod(param_state.name))
+        if hasattr(self, "_parameter_ports"):
+            for param_port in self._parameter_ports:
+                setattr(self.__class__, "mod_"+param_port.name, make_property_mod(param_port.name))
+                setattr(self.__class__, "get_mod_" + param_port.name, make_stateful_getter_mod(param_port.name))
 
     def _instantiate_value(self, context=None):
         #  - call self.execute to get value, since the value of a Component is defined as what is returned by its
@@ -3070,11 +3070,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         self.most_recent_context = context
         return value
 
-    def _parse_param_state_sources(self):
+    def _parse_param_port_sources(self):
         try:
-            for param_state in self._parameter_states:
-                if param_state.source is FUNCTION:
-                    param_state.source = self.function
+            for param_port in self._parameter_ports:
+                if param_port.source is FUNCTION:
+                    param_port.source = self.function
         except AttributeError:
             pass
 
@@ -3330,8 +3330,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     @property
     def _dict_summary(self):
         from psyneulink.core.compositions.composition import Composition
-        from psyneulink.core.components.states.state import State
-        from psyneulink.core.components.states.outputstate import OutputState
+        from psyneulink.core.components.ports.port import Port
+        from psyneulink.core.components.ports.outputport import OutputPort
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 
         def parse_parameter_value(value):
@@ -3347,8 +3347,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 }
             elif isinstance(value, Composition):
                 value = value.name
-            elif isinstance(value, State):
-                if isinstance(value, OutputState):
+            elif isinstance(value, Port):
+                if isinstance(value, OutputPort):
                     state_port_name = MODEL_SPEC_ID_OUTPUT_PORTS
                 else:
                     state_port_name = MODEL_SPEC_ID_INPUT_PORTS
@@ -3384,7 +3384,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         deferred_init_values = {}
 
         if self.initialization_status is ContextFlags.DEFERRED_INIT:
-            deferred_init_values = copy.copy(self.init_args)
+            deferred_init_values = copy.copy(self._init_args)
             try:
                 deferred_init_values.update(deferred_init_values['params'])
             except KeyError:
@@ -3416,9 +3416,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 val = parse_parameter_value(val)
 
                 try:
-                    matching_parameter_state = self.owner.parameter_states[p.name]
+                    matching_parameter_port = self.owner.parameter_ports[p.name]
 
-                    if matching_parameter_state.source is self:
+                    if matching_parameter_port.source is self:
                         val = {
                             MODEL_SPEC_ID_PARAMETER_SOURCE: '{0}.{1}.{2}'.format(
                                 self.owner.name,
@@ -3540,7 +3540,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     def function(self, value):
         # TODO: currently no validation, should replicate from _instantiate_function
         self.parameters.function._set(value, Context())
-        self._parse_param_state_sources()
+        self._parse_param_port_sources()
 
     @property
     def function_params(self):
@@ -3668,14 +3668,14 @@ def make_property(name):
             setattr(self, backing_field, val)
 
         # Update user_params dict with new value
-        # KAM COMMENTED OUT 3/2/18 -- we do not want to update user_params with the base value, only param state value
+        # KAM COMMENTED OUT 3/2/18 -- we do not want to update user_params with the base value, only param port value
         # self.user_params.__additem__(name, val)
 
         # If Component is a Function and has an owner, update function_params dict for owner
-        #    also, get parameter_state_owner if one exists
+        #    also, get parameter_port_owner if one exists
         from psyneulink.core.components.functions.function import Function_Base
         if isinstance(self, Function_Base) and hasattr(self, 'owner') and self.owner is not None:
-            param_state_owner = self.owner
+            param_port_owner = self.owner
             # NOTE CW 1/26/18: if you're getting an error (such as "self.owner has no attribute function_params", or
             # "function_params" has no attribute __additem__ (this happens when it's a dict rather than a
             # ReadOnlyOrderedDict)) it may be caused by function_params not being included in paramInstanceDefaults,
@@ -3684,17 +3684,17 @@ def make_property(name):
             # we do not want to update function_params with the base value, only param state value
             # self.owner.function_params.__additem__(name, val)
         else:
-            param_state_owner = self
+            param_port_owner = self
 
-        # If the parameter is associated with a ParameterState, assign the value to the ParameterState's variable
-        # if hasattr(param_state_owner, '_parameter_states') and name in param_state_owner._parameter_states:
-        #     param_state = param_state_owner._parameter_states[name]
+        # If the parameter is associated with a ParameterPort, assign the value to the ParameterPort's variable
+        # if hasattr(param_port_owner, '_parameter_ports') and name in param_port_owner._parameter_ports:
+        #     param_port = param_port_owner._parameter_ports[name]
         #
-        #     # MODIFIED 7/24/17 CW: If the ParameterState's function has an initializer attribute (i.e. it's an
+        #     # MODIFIED 7/24/17 CW: If the ParameterPort's function has an initializer attribute (i.e. it's an
         #     # integrator function), then also reset the 'previous_value' and 'initializer' attributes by setting
         #     # 'reinitialize'
-        #     if hasattr(param_state.function, 'initializer'):
-        #         param_state.function.reinitialize = val
+        #     if hasattr(param_port.function, 'initializer'):
+        #         param_port.function.reinitialize = val
 
     # Create the property
     prop = property(getter).setter(setter)
@@ -3707,13 +3707,13 @@ def make_property_mod(param_name):
 
     def getter(self):
         try:
-            return self._parameter_states[param_name].value
+            return self._parameter_ports[param_name].value
         except TypeError:
-            raise ComponentError("{} does not have a '{}' ParameterState."
+            raise ComponentError("{} does not have a '{}' ParameterPort."
                                  .format(self.name, param_name))
 
     def setter(self, value):
-        raise ComponentError("Cannot set to {}'s mod_{} directly because it is computed by the ParameterState."
+        raise ComponentError("Cannot set to {}'s mod_{} directly because it is computed by the ParameterPort."
                              .format(self.name, param_name))
 
     prop = property(getter).setter(setter)
@@ -3725,9 +3725,9 @@ def make_stateful_getter_mod(param_name):
 
     def getter(self, context=None):
         try:
-            return self._parameter_states[param_name].parameters.value.get(context)
+            return self._parameter_ports[param_name].parameters.value.get(context)
         except TypeError:
-            raise ComponentError("{} does not have a '{}' ParameterState."
+            raise ComponentError("{} does not have a '{}' ParameterPort."
                                  .format(self.name, param_name))
 
     return getter

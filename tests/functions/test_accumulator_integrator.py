@@ -178,7 +178,7 @@ class TestAccumulator():
         assert np.allclose(val, [[1.0204]])
 
     def test_accumulator_as_function_of_matrix_param_of_mapping_projection(self):
-        # Test that accumulator is function of parameter_state of mapping project,
+        # Test that accumulator is function of parameter_port of mapping project,
         # and that its increment param works properly (used as modulatory param by LearningProjetion)
 
         T1 = TransferMechanism(size=3)
@@ -188,7 +188,7 @@ class TestAccumulator():
         C.add_linear_processing_pathway([T1, M, T2])
         C.run(inputs={T1: [1.0, 1.0, 1.0]})
         assert np.allclose(M.matrix, [[ 1.,  0.,  0.], [ 0.,  1.,  0.],[ 0.,  0.,  1.]])
-        M.parameter_states[MATRIX].function.parameters.increment.set(2, C)
+        M.parameter_ports[MATRIX].function.parameters.increment.set(2, C)
         C.run(inputs={T1: [1.0, 1.0, 1.0]})
         assert np.allclose(M.matrix, [[ 3.,  2.,  2.], [ 2.,  3.,  2.], [ 2.,  2.,  3.]])
         C.run(inputs={T1: [1.0, 1.0, 1.0]})

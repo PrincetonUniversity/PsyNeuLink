@@ -75,7 +75,7 @@ class PytorchModelCreator(torch.nn.Module):
                         value = torch.tensor(component.parameters.value._get(context)[0], device=self.device)
                 else:
                     input_length = len(
-                        component.input_states[0].parameters.value.get(None))
+                        component.input_ports[0].parameters.value.get(None))
                     value = torch.zeros(
                         input_length, device=self.device).double()
 
@@ -84,7 +84,7 @@ class PytorchModelCreator(torch.nn.Module):
                     # if not copying parameters from psyneulink, set up pytorch biases for node
                     if not param_init_from_pnl:
                         input_length = len(
-                            component.input_states[0].parameters.value.get(None))
+                            component.input_ports[0].parameters.value.get(None))
                         biases = nn.Parameter(torch.zeros(
                             input_length, device=self.device).double())
                         self.params.append(biases)
@@ -730,7 +730,7 @@ class PytorchModelCreator(torch.nn.Module):
                 # forward computation if we do not have origin node
                 else:
                     value = torch.zeros(
-                        len(component.input_states[0].defaults.value), device=self.device).double()
+                        len(component.input_ports[0].defaults.value), device=self.device).double()
                     for input_node, weights in afferents.items():
                         if input_node.component in current_exec_set:
                             input_value = frozen_values[input_node.component]
@@ -786,7 +786,7 @@ class PytorchModelCreator(torch.nn.Module):
             detached_value = value.detach().cpu().numpy()
             component.parameters.value._set(
                 detached_value, context, skip_history=True, skip_log=True)
-            component.output_state.parameters.value._set(
+            component.output_port.parameters.value._set(
                 detached_value, context, skip_history=True, skip_log=True)
 
     @handle_external_context()

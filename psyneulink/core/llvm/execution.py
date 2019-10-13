@@ -208,8 +208,8 @@ class MechExecution(FuncExecution):
 
     def execute(self, variable):
         # convert to 3d. we always assume that:
-        # a) the input is vector of input states
-        # b) input states take vector of projection outputs
+        # a) the input is vector of input ports
+        # b) input ports take vector of projection outputs
         # c) projection output is a vector (even 1 element vector)
         new_var = np.asfarray([np.atleast_2d(x) for x in variable])
         return super().execute(new_var)
@@ -382,7 +382,7 @@ class CompExecution(CUDAExecution):
         # All execute functions expect inputs to be 3rd param.
         c_input = self._bin_func.byref_arg_types[2]
 
-        # Read provided input data and separate each input state
+        # Read provided input data and separate each InputPort
         if len(self._execution_ids) > 1:
             assert len(self._execution_ids) == len(inputs)
             c_input = c_input * len(self._execution_ids)
@@ -400,9 +400,9 @@ class CompExecution(CUDAExecution):
         # This happens during node execution of nested compositions.
         if inputs is None and node is self._composition.input_CIM:
             # This assumes origin mechanisms are in the same order as
-            # CIM input states
-            origins = (n for n in self._composition.get_nodes_by_role(NodeRole.INPUT) for istate in n.input_states)
-            input_data = ([proj.parameters.value._get(context) for proj in state.all_afferents] for state in node.input_states)
+            # CIM input ports
+            origins = (n for n in self._composition.get_nodes_by_role(NodeRole.INPUT) for iport in n.input_ports)
+            input_data = ([proj.parameters.value._get(context) for proj in port.all_afferents] for port in node.input_ports)
             inputs = defaultdict(list)
             for n, d in zip(origins, input_data):
                 inputs[n].append(d[0])

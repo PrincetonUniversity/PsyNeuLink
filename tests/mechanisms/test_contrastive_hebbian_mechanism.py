@@ -67,11 +67,11 @@ class TestContrastiveHebbian:
         #   and the behavior of the scheduler's time can be a bit odd - should hopefully fix that in future
         #   and test in its own module
         # assert S.scheduler.get_clock(S).previous_time.pass_ == 6
-        np.testing.assert_allclose(R.output_states[pnl.ACTIVITY_DIFFERENCE_OUTPUT].parameters.value.get(S),
+        np.testing.assert_allclose(R.output_ports[pnl.ACTIVITY_DIFFERENCE_OUTPUT].parameters.value.get(S),
                                    [1.20074767, 0.0, 1.20074767, 0.0])
         np.testing.assert_allclose(R.parameters.plus_phase_activity.get(S), [1.20074767, 0.0, 1.20074767, 0.0])
         np.testing.assert_allclose(R.parameters.minus_phase_activity.get(S), [0.0, 0.0, 0.0, 0.0])
-        np.testing.assert_allclose(R.output_states[pnl.CURRENT_ACTIVITY_OUTPUT].parameters.value.get(S), [1.20074767, 0.0, 1.20074767, 0.0])
+        np.testing.assert_allclose(R.output_ports[pnl.CURRENT_ACTIVITY_OUTPUT].parameters.value.get(S), [1.20074767, 0.0, 1.20074767, 0.0])
         np.testing.assert_allclose(
             R.recurrent_projection.get_mod_matrix(S),
             [
@@ -83,7 +83,7 @@ class TestContrastiveHebbian:
         )
 
         # Reset state so learning of new pattern is "uncontaminated" by activity from previous one
-        R.output_state.parameters.value.set([0, 0, 0, 0], S, override=True)
+        R.output_port.parameters.value.set([0, 0, 0, 0], S, override=True)
         inputs_dict = {R:[0,1,0,1]}
         S.run(num_trials=4,
               inputs=inputs_dict)
@@ -96,7 +96,7 @@ class TestContrastiveHebbian:
                 [0.0,        0.2399363,   0.0,        0.0      ]
             ]
         )
-        np.testing.assert_allclose(R.output_states[pnl.ACTIVITY_DIFFERENCE_OUTPUT].parameters.value.get(S), [0.0, 1.20074767, 0.0, 1.20074767])
+        np.testing.assert_allclose(R.output_ports[pnl.ACTIVITY_DIFFERENCE_OUTPUT].parameters.value.get(S), [0.0, 1.20074767, 0.0, 1.20074767])
         np.testing.assert_allclose(R.parameters.plus_phase_activity.get(S), [0.0, 1.20074767, 0.0, 1.20074767])
         np.testing.assert_allclose(R.parameters.minus_phase_activity.get(S), [0.0, 0.0, 0.0, 0.0])
 
@@ -133,11 +133,11 @@ class TestContrastiveHebbian:
         #   and the behavior of the scheduler's time can be a bit odd - should hopefully fix that in future
         #   and test in its own module
         # assert S.scheduler.get_clock(S).previous_time.pass_ == 19
-        np.testing.assert_allclose(R.output_states[pnl.ACTIVITY_DIFFERENCE_OUTPUT].parameters.value.get(S),
+        np.testing.assert_allclose(R.output_ports[pnl.ACTIVITY_DIFFERENCE_OUTPUT].parameters.value.get(S),
                                    [1.14142296, 0.0, 1.14142296, 0.0])
         np.testing.assert_allclose(R.parameters.plus_phase_activity.get(S), [1.14142296, 0.0, 1.14142296, 0.0])
         np.testing.assert_allclose(R.parameters.minus_phase_activity.get(S), [0.0, 0.0, 0.0, 0.0])
-        np.testing.assert_allclose(R.output_states[pnl.CURRENT_ACTIVITY_OUTPUT].parameters.value.get(S),
+        np.testing.assert_allclose(R.output_ports[pnl.CURRENT_ACTIVITY_OUTPUT].parameters.value.get(S),
                                    [1.1414229612568625, 0.0, 1.1414229612568625, 0.0])
         np.testing.assert_allclose(
             R.recurrent_projection.get_mod_matrix(S),
@@ -149,7 +149,7 @@ class TestContrastiveHebbian:
             ]
         )
         # Reset state so learning of new pattern is "uncontaminated" by activity from previous one
-        R.output_state.parameters.value.set([0, 0, 0, 0], S, override=True)
+        R.output_port.parameters.value.set([0, 0, 0, 0], S, override=True)
         inputs_dict = {R:[0,1,0,1]}
         S.run(num_trials=4,
               inputs=inputs_dict)
@@ -162,27 +162,27 @@ class TestContrastiveHebbian:
                 [0.0,        0.22035998, 0.0,        0.        ]
             ]
         )
-        np.testing.assert_allclose(R.output_states[pnl.CURRENT_ACTIVITY_OUTPUT].parameters.value.get(S),
+        np.testing.assert_allclose(R.output_ports[pnl.CURRENT_ACTIVITY_OUTPUT].parameters.value.get(S),
                                    [0.0, 1.1414229612568625, 0.0, 1.1414229612568625])
-        np.testing.assert_allclose(R.output_states[pnl.ACTIVITY_DIFFERENCE_OUTPUT].parameters.value.get(S),
+        np.testing.assert_allclose(R.output_ports[pnl.ACTIVITY_DIFFERENCE_OUTPUT].parameters.value.get(S),
                                    [ 0.0, 1.14142296, 0.0, 1.14142296])
         np.testing.assert_allclose(R.parameters.plus_phase_activity.get(S), [0.0, 1.14142296, 0.0, 1.14142296])
         np.testing.assert_allclose(R.parameters.minus_phase_activity.get(S), [0.0, 0.0, 0.0, 0.0])
 
 
-    def test_additional_output_states(self):
+    def test_additional_output_ports(self):
         CHL1 = pnl.ContrastiveHebbianMechanism(
                 input_size=2, hidden_size=0, target_size=2,
-                additional_output_states=[pnl.PLUS_PHASE_OUTPUT, pnl.MINUS_PHASE_OUTPUT])
-        assert len(CHL1.output_states)==5
-        assert pnl.PLUS_PHASE_OUTPUT in CHL1.output_states.names
+                additional_output_ports=[pnl.PLUS_PHASE_OUTPUT, pnl.MINUS_PHASE_OUTPUT])
+        assert len(CHL1.output_ports)==5
+        assert pnl.PLUS_PHASE_OUTPUT in CHL1.output_ports.names
 
         CHL2 = pnl.ContrastiveHebbianMechanism(
                 input_size=2, hidden_size=0, target_size=2,
-                additional_output_states=[pnl.PLUS_PHASE_OUTPUT, pnl.MINUS_PHASE_OUTPUT],
+                additional_output_ports=[pnl.PLUS_PHASE_OUTPUT, pnl.MINUS_PHASE_OUTPUT],
                 separated=False)
-        assert len(CHL2.output_states)==5
-        assert pnl.PLUS_PHASE_OUTPUT in CHL2.output_states.names
+        assert len(CHL2.output_ports)==5
+        assert pnl.PLUS_PHASE_OUTPUT in CHL2.output_ports.names
 
 
     def test_configure_learning(self):

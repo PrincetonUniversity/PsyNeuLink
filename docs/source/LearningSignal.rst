@@ -1,6 +1,6 @@
 LearningSignal
 ==============
 
-.. automodule:: psyneulink.core.components.states.modulatorysignals.learningsignal
+.. automodule:: psyneulink.core.components.ports.modulatorysignals.learningsignal
    :members:
    :exclude-members: Linear, random, Parameters

@@ -99,8 +99,8 @@ class TestRecurrentTransferMechanismInputs:
             size=3
         )
         np.testing.assert_allclose(R.recurrent_projection.matrix, R.matrix)
-        assert R.recurrent_projection.sender is R.output_state
-        assert R.recurrent_projection.receiver is R.input_state
+        assert R.recurrent_projection.sender is R.output_port
+        assert R.recurrent_projection.receiver is R.input_port
 
     @pytest.mark.mechanism
     @pytest.mark.recurrent_transfer_mechanism
@@ -165,7 +165,7 @@ class TestRecurrentTransferMechanismInputs:
                                        hetero=-2.0,
                                        integrator_mode=True,
                                        integration_rate=0.01,
-                                       output_states = [RECURRENT_OUTPUT.RESULT])
+                                       output_ports = [RECURRENT_OUTPUT.RESULT])
         if mode == 'Python':
             EX = R.execute
         elif mode == 'LLVM':
@@ -309,7 +309,7 @@ class TestRecurrentTransferMechanismMatrix:
             size=3,
             hetero=-1
         )
-        # (7/28/17 CW) these numbers assume that execute() leaves its value in the outputState of the mechanism: if
+        # (7/28/17 CW) these numbers assume that execute() leaves its value in the outputPort of the mechanism: if
         # the behavior of execute() changes, feel free to change these numbers
         val = R.execute([-1, -2, -3])
         np.testing.assert_allclose(val, [[-1, -2, -3]])
@@ -660,7 +660,7 @@ class TestRecurrentTransferMechanismInProcess:
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
 
     def test_recurrent_mech_transfer_mech_process_three_runs(self):
-        # this test ASSUMES that the parameter state for auto and hetero is updated one run-cycle AFTER they are set by
+        # this test ASSUMES that the ParameterPort for auto and hetero is updated one run-cycle AFTER they are set by
         # lines by `R.auto = 0`. If this (potentially buggy) behavior is changed, then change these values
         R = RecurrentTransferMechanism(
             size=4,
@@ -747,7 +747,7 @@ class TestRecurrentTransferMechanismInSystem:
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
 
     def test_recurrent_mech_transfer_mech_system_three_runs(self):
-        # this test ASSUMES that the parameter state for auto and hetero is updated one run-cycle AFTER they are set by
+        # this test ASSUMES that the ParameterPort for auto and hetero is updated one run-cycle AFTER they are set by
         # lines by `R.auto = 0`. If this (potentially buggy) behavior is changed, then change these values
         R = RecurrentTransferMechanism(
             size=4,
@@ -874,7 +874,7 @@ class TestRecurrentTransferMechanismInSystem:
             ]
         )
         np.testing.assert_allclose(R.recurrent_projection.matrix, R.matrix)
-        np.testing.assert_allclose(R.input_state.path_afferents[0].matrix, R.matrix)
+        np.testing.assert_allclose(R.input_port.path_afferents[0].matrix, R.matrix)
 
         # Test that activity is properly computed prior to learning
         p = Process(pathway=[R])
@@ -983,10 +983,10 @@ class TestRecurrentTransferMechanismInSystem:
                 [0.0,        0.0,  0.0,         0.0]
             ]
         )
-        np.testing.assert_allclose(R.output_state.parameters.value.get(S), [1.18518086, 0.0, 1.18518086, 0.0])
+        np.testing.assert_allclose(R.output_port.parameters.value.get(S), [1.18518086, 0.0, 1.18518086, 0.0])
 
         # Reset state so learning of new pattern is "uncontaminated" by activity from previous one
-        R.output_state.parameters.value.set([0, 0, 0, 0], S, override=True)
+        R.output_port.parameters.value.set([0, 0, 0, 0], S, override=True)
         inputs_dict = {R:[0,1,0,1]}
         S.run(num_trials=4,
               inputs=inputs_dict)
@@ -999,7 +999,7 @@ class TestRecurrentTransferMechanismInSystem:
                 [0.0,        0.23700501, 0.0,        0.        ]
             ]
         )
-        np.testing.assert_allclose(R.output_state.parameters.value.get(S),[0.0, 1.18518086, 0.0, 1.18518086])
+        np.testing.assert_allclose(R.output_port.parameters.value.get(S),[0.0, 1.18518086, 0.0, 1.18518086])
 
 
 # this doesn't work consistently due to EVC's issue with the scheduler
@@ -1016,7 +1016,7 @@ class TestRecurrentTransferMechanismInSystem:
 #             function=Linear)
 #         p = Process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismControl.simple_prefs)
 #         s = System(processes=[p], prefs=TestRecurrentTransferMechanismControl.simple_prefs, controller = EVCControlMechanism,
-#            enable_controller = True, monitor_for_control = [T.output_state], control_signals=[('auto', R), ('hetero', R)])
+#            enable_controller = True, monitor_for_control = [T.output_port], control_signals=[('auto', R), ('hetero', R)])
 #         s.run(inputs = {R: [[1, 3, 2, 5]]})
 #         print('T.value: ', T.value)
 #         np.testing.assert_allclose(T.value, [[-.09645391388158941, -.09645391388158941, -.09645391388158941]])
@@ -1088,28 +1088,28 @@ class TestClip:
         assert np.allclose(R.execute([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
                            [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])
 
-class TestRecurrentInputState:
+class TestRecurrentInputPort:
 
     def test_ris_simple(self):
         R2 = RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
                                             matrix=[[1.0, 2.0, 3.0],
                                                     [2.0, 1.0, 2.0],
                                                     [3.0, 2.0, 1.0]],
-                                            has_recurrent_input_state=True)
+                                            has_recurrent_input_port=True)
         R2.execute(input=[1, 3, 2])
         p2 = Process(pathway=[R2])
         s2 = System(processes=[p2])
         s2.run(inputs=[[1, 3, 2]])
         np.testing.assert_allclose(R2.parameters.value.get(s2), [[14., 12., 13.]])
-        assert len(R2.input_states) == 2
-        assert "Recurrent Input State" not in R2.input_state.name  # make sure recurrent input state isn't primary
+        assert len(R2.input_ports) == 2
+        assert "Recurrent Input Port" not in R2.input_port.name  # make sure recurrent InputPort isn't primary
 
 
 class TestCustomCombinationFunction:
 
     def test_rt_without_custom_comb_fct(self):
         R1 = RecurrentTransferMechanism(
-                has_recurrent_input_state=True,
+                has_recurrent_input_port=True,
                 size=2,
         )
         result = R1.execute([1,2])
@@ -1119,7 +1119,7 @@ class TestCustomCombinationFunction:
         def my_fct(x):
             return x[0] * x[1] if len(x) == 2 else x[0]
         R2 = RecurrentTransferMechanism(
-                has_recurrent_input_state=True,
+                has_recurrent_input_port=True,
                 size=2,
                 combination_function=my_fct
         )

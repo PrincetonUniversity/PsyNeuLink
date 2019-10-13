@@ -27,7 +27,7 @@ def test_integrator_mechanism():
                     pytrace=False)
 
 
-# FAILS: AttributeError: 'InputState' object has no attribute '_name'
+# FAILS: AttributeError: 'InputPort' object has no attribute '_name'
 def test_objective_mechanism():
     fail, total = doctest.testmod(
             pnl.core.components.mechanisms.processing.objectivemechanism)

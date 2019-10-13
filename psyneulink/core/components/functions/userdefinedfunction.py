@@ -15,7 +15,7 @@ from psyneulink.core.components.functions.function import FunctionError, Functio
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, CONTEXT, CUSTOM_FUNCTION, EXECUTION_ID, MULTIPLICATIVE_PARAM, OWNER, PARAMS, \
-    PARAMETER_STATE_PARAMS, SELF, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE
+    PARAMETER_PORT_PARAMS, SELF, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences import is_pref_set
 from psyneulink.core.globals.utilities import iscompatible
@@ -56,9 +56,9 @@ class UserDefinedFunction(Function_Base):
     * It may have have **any number of additional arguments** (positional and/or keyword);  these are treated as
       parameters of the UDF, and can be modulated by `ModulatorySignals <ModulatorySignal>` like the parameters of
       ordinary PsyNeuLink `Functions <Function>`.  If the UDF is assigned to (or automatically created for) a
-      `Mechanism` or `Projection <Projection>`, these parameters are each automatically assigned a `ParameterState`
+      `Mechanism` or `Projection <Projection>`, these parameters are each automatically assigned a `ParameterPort`
       so that they can be modulated by `ControlSignals <ControlSignal>` or `LearningSignals <LearningSignal>`,
-      respectively.  If the UDF is assigned to (or automatically created for) an `InputState` or `OutputState`,
+      respectively.  If the UDF is assigned to (or automatically created for) an `InputPort` or `OutputPort`,
       and any of the parameters are specified as `Function_Modulatory_Params` (see `below <UDF_Modulatory_Params>`),
       then they can be modulated by `GatingSignals <GatingSignal>`. The function or method wrapped by the UDF is called
       with these parameters by their name and with their current values (i.e., as determined by any
@@ -75,13 +75,13 @@ class UserDefinedFunction(Function_Base):
     .. _UDF_Modulatory_Params:
 
     * The parameters of a UDF can be specified as `Function_Modulatory_Params` in a `parameter specification dictionary
-      <ParameterState_Specification>` assigned to the **params** argument of the constructor for either the Python
+      <ParameterPort_Specification>` assigned to the **params** argument of the constructor for either the Python
       function or method, or of an explicitly defined UDF (see `examples below <UDF_Modulatory_Params_Examples>`).
       It can include either or both of the following two entries:
          *MULTIPLICATIVE_PARAM*: <parameter name>\n
          *ADDITIVE_PARAM*: <parameter name>
-      These are used only when the UDF is assigned as the `function <State_Base.function>` of an InputState or
-      OutputState that receives one more more `GatingProjections <GatingProjection>`.
+      These are used only when the UDF is assigned as the `function <Port_Base.function>` of an InputPort or
+      OutputPort that receives one more more `GatingProjections <GatingProjection>`.
 
       COMMENT:
       # IMPLEMENT INTERFACE FOR OTHER ModulationParam TYPES (i.e., for ability to add new custom ones)
@@ -156,7 +156,7 @@ class UserDefinedFunction(Function_Base):
     to a 2d array).
 
     ``my_sinusoidal_fct`` also has two other arguments, ``phase`` and ``amplitude``.   When it is assigned to
-    ``my_wave_mech``, those parameters are assigned to `ParameterStates <ParameterState>` of ``my_wave_mech``, which
+    ``my_wave_mech``, those parameters are assigned to `ParameterPorts <ParameterPort>` of ``my_wave_mech``, which
     that be used to modify their values by `ControlSignals <ControlSignal>` (see `example below <_
     UDF_Control_Signal_Example>`).
 
@@ -226,22 +226,22 @@ class UserDefinedFunction(Function_Base):
         array([[2.88079708, 2.98201379, 2.99752738]])
 
 
-    .. _UDF_Assign_to_State_Examples:
+    .. _UDF_Assign_to_Port_Examples:
 
-    **Assigning of a custom function to a State**
+    **Assigning of a custom function to a Port**
 
-    A custom function can also be assigned as the `function <State_Base.function>` of an `InputState` or `OutputState`.
-    For example, the following assigns ``my_sinusoidal_fct`` to the `function <OutputState.function>` of an OutputState
+    A custom function can also be assigned as the `function <Port_Base.function>` of an `InputPort` or `OutputPort`.
+    For example, the following assigns ``my_sinusoidal_fct`` to the `function <OutputPort.function>` of an OutputPort
     of ``my_mech``, rather the Mechanism's `function <Mechanism_Base.function>`::
 
         >>> my_wave_mech = pnl.ProcessingMechanism(size=1,
         ...                                        function=pnl.Linear,
-        ...                                        output_states=[{pnl.NAME: 'SINUSOIDAL OUTPUT',
+        ...                                        output_ports=[{pnl.NAME: 'SINUSOIDAL OUTPUT',
         ...                                                       pnl.VARIABLE: [(pnl.OWNER_VALUE, 0),pnl.EXECUTION_COUNT],
         ...                                                       pnl.FUNCTION: my_sinusoidal_fct}])
 
-    For details on how to specify a function of an OutputState, see `OutputState Customization <OutputState_Customization>`.
-    Below is an example plot of the output of the 'SINUSOIDAL OUTPUT' `OutputState` from my_wave_mech above, as the
+    For details on how to specify a function of an OutputPort, see `OutputPort Customization <OutputPort_Customization>`.
+    Below is an example plot of the output of the 'SINUSOIDAL OUTPUT' `OutputPort` from my_wave_mech above, as the
     execution count increments, when the input to the mechanism is 0.005 for 1000 runs::
 
 .. figure:: _static/sinusoid_005.png
@@ -250,7 +250,7 @@ class UserDefinedFunction(Function_Base):
 
 .. _UDF_Modulatory_Params_Examples:
 
-    The parameters of a custom function assigned to an InputState or OutputState can also be used for `gating
+    The parameters of a custom function assigned to an InputPort or OutputPort can also be used for `gating
     <GatingMechanism_Specifying_Gating>`.  However, this requires that its `Function_Modulatory_Params` be specified
     (see `above <UDF_Modulatory_Params>`). This can be done by including a **params** argument in the definition of
     the function itself::
@@ -274,7 +274,7 @@ class UserDefinedFunction(Function_Base):
 
 
     The ``phase`` and ``amplitude`` parameters of ``my_sinusoidal_fct`` can now be used as the
-    `Function_Modulatory_Params` for gating any InputState or OutputState to which the function is assigned (see
+    `Function_Modulatory_Params` for gating any InputPort or OutputPort to which the function is assigned (see
     `GatingMechanism_Specifying_Gating` and `GatingSignal_Examples`).
 
     **Class Definition:**
@@ -295,7 +295,7 @@ class UserDefinedFunction(Function_Base):
         see `above <UDF_Description>` for additional details.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the function.
         This can be used to define an `additive_param <UserDefinedFunction.additive_param>` and/or
         `multiplicative_param <UserDefinedFunction.multiplicative_param>` for the UDF, by including one or both
         of the following entries:\n
@@ -358,7 +358,7 @@ class UserDefinedFunction(Function_Base):
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        PARAMETER_STATE_PARAMS: None,
+        PARAMETER_PORT_PARAMS: None,
         CUSTOM_FUNCTION: None,
         MULTIPLICATIVE_PARAM: None,
         ADDITIVE_PARAM: None
@@ -511,7 +511,7 @@ class UserDefinedFunction(Function_Base):
             if PARAMS in kwargs and kwargs[PARAMS] is not None and param in kwargs[PARAMS]:
                 self.cust_fct_params[param] = kwargs[PARAMS][param]
             else:
-                # Otherwise, get current value from ParameterState (in case it is being modulated by ControlSignal(s)
+                # Otherwise, get current value from ParameterPort (in case it is being modulated by ControlSignal(s)
                 self.cust_fct_params[param] = self.get_current_function_param(param, context)
 
         call_params = self.cust_fct_params.copy()

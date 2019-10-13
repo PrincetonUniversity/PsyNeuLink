@@ -78,8 +78,8 @@ PsyNeuLink, this is indicated by `PNL`:
     }
 
 Note that the value of a parameter may be a long-form dictionary when \
-it corresponds to a `ParameterState`. In this case, it will indicate \
-the ParameterState in a `source<>` field:
+it corresponds to a `ParameterPort`. In this case, it will indicate \
+the ParameterPort in a `source<>` field:
 
 .. code-block:: javascript
 
@@ -103,7 +103,7 @@ relevant.
     }
 
 
-**Mechanisms**, **Projections**, and **States** each have:
+**Mechanisms**, **Projections**, and **Ports** each have:
 
 * ``functions`` : a list of primary `Function` JSON objects. In \
 PsyNeuLink, only one primary function is allowed.
@@ -133,9 +133,9 @@ PsyNeuLink, only one primary function is allowed.
 
 **Mechanisms** have:
 
-* ``input_ports`` : a list of InputState and ParameterState JSON objects
+* ``input_ports`` : a list of InputPort and ParameterPort JSON objects
 
-* ``output_ports`` : a list of OutputState JSON objects
+* ``output_ports`` : a list of OutputPort JSON objects
 
 **Projections** have:
 
@@ -149,9 +149,9 @@ connects
 * ``receiver_port`` : the name of the port on the ``receiver`` to \
 which it connects
 
-**States** have:
+**Ports** have:
 
-* ``dtype`` : the type of accepted input/output for the State. This \
+* ``dtype`` : the type of accepted input/output for the Port. This \
 corresponds to `numpy.dtype <https://docs.scipy.org/doc/numpy/ \
 reference/generated/numpy.dtype.html>`_
 
@@ -295,7 +295,7 @@ def _parse_parameter_value(value, component_identifiers=None):
             MODEL_SPEC_ID_PARAMETER_SOURCE in value
             and MODEL_SPEC_ID_PARAMETER_VALUE in value
         ):
-            # handle ParameterState spec
+            # handle ParameterPort spec
             try:
                 value_type = eval(value[MODEL_SPEC_ID_TYPE])
             except Exception as e:
@@ -364,7 +364,7 @@ def _parse_parameter_value(value, component_identifiers=None):
         # handle IO port specification
         match = re.match(r'(.+)\.(.+)_ports\.(.+)', value)
         if match is not None:
-            comp_name, state_type, name = match.groups()
+            comp_name, port_type, name = match.groups()
             comp_identifer = parse_valid_identifier(comp_name)
 
             if comp_identifer in component_identifiers:
@@ -374,7 +374,7 @@ def _parse_parameter_value(value, component_identifiers=None):
                 else:
                     name = f"'{name}'"
 
-                return f'{comp_identifer}.{state_type}_states[{name}]'
+                return f'{comp_identifer}.{port_type}_ports[{name}]'
 
         # if value is just a non-fixed component name, use the fixed name
         identifier = parse_valid_identifier(value)
@@ -445,8 +445,8 @@ def _generate_component_string(
             # constructor of the object.
             # Examples:
             #   ControlMechanism.control_spec / control_signals
-            #   Mechanism.input_states_spec / input_states
-            #   Mechanism.output_states_spec / output_states
+            #   Mechanism.input_ports_spec / input_ports
+            #   Mechanism.output_ports_spec / output_ports
             if constructor_parameter_name is not None:
                 constructor_arg = constructor_parameter_name
             else:

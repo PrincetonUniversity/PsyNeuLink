@@ -32,8 +32,8 @@ class TestKWTAInputs:
         assert(np.allclose(K.defaults.variable, [[0., 0., 0.]]))
         assert(K.size == [3])
         assert(np.allclose(K.matrix, [[5, 0, 0], [0, 5, 0], [0, 0, 5]]))
-        assert(K.recurrent_projection.sender is K.output_state)
-        assert(K.recurrent_projection.receiver is K.input_state)
+        assert(K.recurrent_projection.sender is K.output_port)
+        assert(K.recurrent_projection.receiver is K.input_port)
 
     def test_kwta_inputs_list_of_ints(self):
         K = KWTAMechanism(
