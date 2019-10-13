@@ -1672,7 +1672,7 @@ class GridSearch(OptimizationFunction):
                 # FIX: PUT ERROR HERE IF value AND/OR value_max ARE EMPTY (E.G., WHEN EXECUTION_ID IS WRONG)
                 # If value is optimal, store corresponing sample
                 if value == value_optimal:
-                    # Keep track of state values and allocation policy associated with EVC max
+                    # Keep track of port values and allocation policy associated with EVC max
                     sample_optimal = sample
                     sample_value_max_tuple = (sample_optimal, value_optimal)
 
@@ -1691,7 +1691,7 @@ class GridSearch(OptimizationFunction):
             max_tuples = Comm.allgather(sample_value_max_tuple)
             # get tuple with "value_max of maxes"
             max_value_of_max_tuples = max(max_tuples, key=lambda max_tuple: max_tuple[1])
-            # get value_optimal, state values and allocation policy associated with "max of maxes"
+            # get value_optimal, port values and allocation policy associated with "max of maxes"
             return_optimal_sample = max_value_of_max_tuples[0]
             return_optimal_value = max_value_of_max_tuples[1]
 

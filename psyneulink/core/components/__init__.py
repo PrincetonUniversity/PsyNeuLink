@@ -112,9 +112,9 @@ SystemDefaultControlMechanism = DefaultControlMechanism
 # Note:  This is used only for assignment of default projection types for each port subclass
 #        Individual stateRegistries (used for naming) are created for each owner (mechanism or projection) of a state
 #        Note: all ports that belong to a given owner are registered in the owner's _portRegistry,
-#              which maintains a dict for each state type that it uses, a count for all instances of that type,
+#              which maintains a dict for each port type that it uses, a count for all instances of that type,
 #              and a dictionary of those instances;  NONE of these are registered in the PortRegistry.
-#              This is so that the same name can be used for instances of a state type by different owners,
+#              This is so that the same name can be used for instances of a port type by different owners,
 #              without adding index suffixes for that name across owners
 #              while still indexing multiple uses of the same base name within an owner
 #

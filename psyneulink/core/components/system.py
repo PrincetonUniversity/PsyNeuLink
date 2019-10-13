@@ -2178,7 +2178,7 @@ class System(System_Base):
         """
         Parse a list of OutputPort specifications for System, controller, Mechanisms and/or their OutputPorts:
             - if specification in output_port is None:
-                 do NOT monitor this state (this overrides any other specifications)
+                 do NOT monitor this port (this overrides any other specifications)
             - if an OutputPort is specified in *any* MONITOR_FOR_CONTROL, monitor it (this overrides any other specs)
             - if a Mechanism is terminal and/or specified in the System or `controller <Systsem.controller>`:
                 if MonitoredOutputPortsOptions is PRIMARY_OUTPUT_PORTS:  monitor only its primary (first) OutputPort

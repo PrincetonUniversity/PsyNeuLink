@@ -2479,7 +2479,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         VARIABLE SPECIFICATION:                                        ENCODING:
         Simple value variable:                                         0 -> [array([0])]
         Single state array (vector) variable:                         [0, 1] -> [array([0, 1])]
-        Multiple state variables, each with a single value variable:  [[0], [0]] -> [array[0], array[0]]
+        Multiple port variables, each with a single value variable:  [[0], [0]] -> [array[0], array[0]]
 
         Perform top-level type validation of variable against the self.class_defaults.variable;
             if the type is OK, the value is returned (which should be used by the function)
@@ -3668,7 +3668,7 @@ def make_property(name):
             setattr(self, backing_field, val)
 
         # Update user_params dict with new value
-        # KAM COMMENTED OUT 3/2/18 -- we do not want to update user_params with the base value, only param state value
+        # KAM COMMENTED OUT 3/2/18 -- we do not want to update user_params with the base value, only param port value
         # self.user_params.__additem__(name, val)
 
         # If Component is a Function and has an owner, update function_params dict for owner
