@@ -1192,10 +1192,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     def _get_state_ids(self):
         return [sp.name for sp in self._get_compilation_state()]
 
-    def _get_port_values(self, context=None):
-        def _port_values(x):
-            return x._get_port_values(context) if isinstance(x, Component) else x
-        return tuple(map(_port_values, (sp.get(context) for sp in self._get_compilation_state())))
+    def _get_state_values(self, context=None):
+        def _state_values(x):
+            return x._get_state_values(context) if isinstance(x, Component) else x
+        return tuple(map(_state_values, (sp.get(context) for sp in self._get_compilation_state())))
 
     def _get_state_initializer(self, context):
         def _convert(x):
@@ -1204,7 +1204,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 return x.get_state()[1:]
             else:
                 return x
-        lists = (_convert(s) for s in self._get_port_values(context))
+        lists = (_convert(s) for s in self._get_state_values(context))
         return pnlvm._tupleize(lists)
 
     def _get_compilation_params(self, context=None):

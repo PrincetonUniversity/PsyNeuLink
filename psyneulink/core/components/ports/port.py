@@ -2271,7 +2271,7 @@ class Port_Base(Port):
     def _get_compilation_state(self):
         return [self.parameters.function]
 
-    def _gen_llvm_function_body(self, ctx, builder, params, port, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         state_f = ctx.get_llvm_function(self.function)
 
         # Create a local copy of the function parameters
@@ -2318,7 +2318,7 @@ class Port_Base(Port):
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         # Extract the data part of input
         f_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        f_state = ctx.get_state_ptr(self, builder, port, self.parameters.function.name)
+        f_state = ctx.get_state_ptr(self, builder, state, self.parameters.function.name)
         builder.call(state_f, [f_params, f_state, f_input, arg_out])
         return builder
 

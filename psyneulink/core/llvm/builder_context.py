@@ -217,7 +217,7 @@ class LLVMBuilderContext:
         if hasattr(component, '_get_state_struct_type'):
             return component._get_state_struct_type(self)
 
-        stateful = component._get_port_values()
+        stateful = component._get_state_values()
         return self.convert_python_struct_to_llvm_ir(stateful)
 
     def get_data_struct_type(self, component):
