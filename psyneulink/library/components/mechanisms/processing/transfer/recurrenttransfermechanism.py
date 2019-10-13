@@ -199,7 +199,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import PRIMARY, StandardOutputPorts
 from psyneulink.core.components.ports.parameterport import ParameterPort
-from psyneulink.core.components.ports.port import _instantiate_state
+from psyneulink.core.components.ports.port import _instantiate_port
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_PORT, MATRIX, MAX_ABS_DIFF, NAME, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT
 from psyneulink.core.globals.parameters import Parameter
@@ -1175,7 +1175,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         if AUTO not in param_keys and HETERO in param_keys:
             d = np.diagonal(matrix).copy()
-            state = _instantiate_state(owner=self,
+            port = _instantiate_port(owner=self,
                                        port_type=ParameterPort,
                                        name=AUTO,
                                        reference_value=d,
@@ -1183,9 +1183,9 @@ class RecurrentTransferMechanism(TransferMechanism):
                                        params=None,
                                        context=context)
             self._auto = d
-            if state is not None:
-                self._parameter_ports[AUTO] = state
-                state.source = self
+            if port is not None:
+                self._parameter_ports[AUTO] = port
+                port.source = self
             else:
                 raise RecurrentTransferError("Failed to create ParameterPort for `auto` attribute for {} \"{}\"".
                                            format(self.__class__.__name__, self.name))
@@ -1194,16 +1194,16 @@ class RecurrentTransferMechanism(TransferMechanism):
             m = matrix.copy()
             np.fill_diagonal(m, 0.0)
             self._hetero = m
-            state = _instantiate_state(owner=self,
+            port = _instantiate_port(owner=self,
                                        port_type=ParameterPort,
                                        name=HETERO,
                                        reference_value=m,
                                        reference_value_name=HETERO,
                                        params=None,
                                        context=context)
-            if state is not None:
-                self._parameter_ports[HETERO] = state
-                state.source = self
+            if port is not None:
+                self._parameter_ports[HETERO] = port
+                port.source = self
             else:
                 raise RecurrentTransferError("Failed to create ParameterPort for `hetero` attribute for {} \"{}\"".
                                            format(self.__class__.__name__, self.name))
@@ -1306,12 +1306,12 @@ class RecurrentTransferMechanism(TransferMechanism):
                 del self.output_ports[ENTROPY]
 
     def _update_parameter_ports(self, context=None, runtime_params=None):
-        for state in self._parameter_ports:
+        for port in self._parameter_ports:
             # (8/2/17 CW) because the auto and hetero params are solely used by the AutoAssociativeProjection
             # (the RecurrentTransferMechanism doesn't use them), the auto and hetero param ports are updated in the
             # projection's _update_parameter_ports, and accordingly are not updated here
-            if state.name != AUTO and state.name != HETERO:
-                state._update(context=context, params=runtime_params)
+            if port.name != AUTO and port.name != HETERO:
+                port._update(context=context, params=runtime_params)
 
     def _update_previous_value(self, context=None):
         value = self.parameters.value._get(context)
@@ -1406,10 +1406,10 @@ class RecurrentTransferMechanism(TransferMechanism):
             assert (len(new_input_port.all_afferents) == 0)  # just a sanity check
             assert(self.input_port.name != "Recurrent Input Port")
             # Rename existing InputPort as EXTERNAL
-            remove_instance_from_registry(registry=self._stateRegistry,
+            remove_instance_from_registry(registry=self._portRegistry,
                                           category=INPUT_PORT,
                                           component=self.input_port)
-            register_instance(self.input_port, EXTERNAL, InputPort, self._stateRegistry, INPUT_PORT)
+            register_instance(self.input_port, EXTERNAL, InputPort, self._portRegistry, INPUT_PORT)
             proj = AutoAssociativeProjection(owner=mech,
                                              receiver=new_input_port,
                                              matrix=matrix,
@@ -1552,9 +1552,9 @@ class RecurrentTransferMechanism(TransferMechanism):
         # FIXME: What if we have more than one state? Does the autoprojection
         # connect only to the first one?
         assert len(self.input_ports) == 1
-        for state in self.input_ports:
+        for port in self.input_ports:
             # Extract the non-modulation portion of InputPort input struct
-            s_type = ctx.get_input_struct_type(state).elements[0]
+            s_type = ctx.get_input_struct_type(port).elements[0]
             if isinstance(s_type, pnlvm.ir.ArrayType):
                 # Subtract one incoming mapping projections.
                 # Unless it's the only incoming projection (mechanism is standalone)
@@ -1604,7 +1604,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         # FIXME: What if we have more than one state? Does the autoprojection
         # connect only to the first one?
         assert len(self.input_ports) == 1
-        for i, state in enumerate(self.input_ports):
+        for i, port in enumerate(self.input_ports):
             is_real_input = builder.gep(real_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
             is_current_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
             for idx in range(len(is_current_input.type.pointee)):
@@ -1614,7 +1614,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
             # FIXME: This is a workaround to find out if we are in a
             #        composition
-            if len(state.pathway_projections) == 1:
+            if len(port.pathway_projections) == 1:
                 continue
 
             assert len(is_real_input.type.pointee) == len(is_current_input.type.pointee) + 1

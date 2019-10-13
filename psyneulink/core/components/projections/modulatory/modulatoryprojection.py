@@ -202,7 +202,7 @@ class ModulatoryProjection_Base(Projection_Base):
     """
     componentCategory = MODULATORY_PROJECTION
 
-    def _assign_default_projection_name(self, state=None, sender_name=None, receiver_name=None):
+    def _assign_default_projection_name(self, port=None, sender_name=None, receiver_name=None):
 
         template = "{} for {}[{}]"
 
@@ -213,7 +213,7 @@ class ModulatoryProjection_Base(Projection_Base):
             self.name = template.format(self.className, self.receiver.owner.name, self.receiver.name)
 
         elif self.initialization_status == ContextFlags.DEFERRED_INIT:
-            projection_name = template.format(self.className, state.owner.name, state.name)
+            projection_name = template.format(self.className, port.owner.name, port.name)
             # self._init_args[NAME] = self._init_args[NAME] or projection_name
             self.name = self._init_args[NAME] or projection_name
 

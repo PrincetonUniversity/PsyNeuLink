@@ -1374,7 +1374,7 @@ class GridSearch(OptimizationFunction):
 
     def _get_input_struct_type(self, ctx):
         if self.owner is not None:
-            variable = [state.defaults.value for state in self.owner.input_ports]
+            variable = [port.defaults.value for port in self.owner.input_ports]
             # Python list does not care about ndarrays of different lengths
             # we do care, so convert to tuple to create struct
             if all(type(x) == np.ndarray for x in variable) and not all(len(x) == len(variable[0]) for x in variable):

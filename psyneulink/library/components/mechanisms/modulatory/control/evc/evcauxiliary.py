@@ -329,7 +329,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
               it is NOT used for System.execute -- that uses the runtime_params provided for the Mechanisms in each
               Process.configuration
 
-        Return (2D np.array): value of outputPort for each monitored state (in self.input_ports) for EVC_max
+        Return (2D np.array): value of outputPort for each monitored port (in self.input_ports) for EVC_max
 
         """
 
@@ -448,12 +448,12 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                         EVC_policies = np.append(EVC_policies, np.atleast_2d(allocation_vector), axis=0)
 
                 # If EVC is greater than the previous value:
-                # - store the current set of monitored state value in EVC_max_port_values
+                # - store the current set of monitored port value in EVC_max_port_values
                 # - store the current set of control_signals in EVC_max_policy
                 # if EVC_max > EVC:
                 # FIX: PUT ERROR HERE IF EVC AND/OR EVC_MAX ARE EMPTY (E.G., WHEN EXECUTION_ID IS WRONG)
                 if EVC == EVC_max:
-                    # Keep track of state values and allocation policy associated with EVC max
+                    # Keep track of port values and allocation policy associated with EVC max
                     # EVC_max_port_values = controller.input_value.copy()
                     # EVC_max_policy = allocation_vector.copy()
                     EVC_max_port_values = controller.get_input_values(context)
@@ -469,7 +469,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                 max_tuples = Comm.allgather(max_value_port_policy_tuple)
                 # get tuple with "EVC max of maxes"
                 max_of_max_tuples = max(max_tuples, key=lambda max_tuple: max_tuple[0])
-                # get EVC_max, state values and allocation policy associated with "max of maxes"
+                # get EVC_max, port values and allocation policy associated with "max of maxes"
                 EVC_max = max_of_max_tuples[0]
                 EVC_max_port_values = max_of_max_tuples[1]
                 EVC_max_policy = max_of_max_tuples[2]

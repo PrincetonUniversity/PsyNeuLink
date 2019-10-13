@@ -986,8 +986,8 @@ class LCControlMechanism(ControlMechanism):
         if self.objective_mechanism is None:
             print("\t\tNone")
         else:
-            for state in self.objective_mechanism.input_ports:
-                for projection in state.path_afferents:
+            for port in self.objective_mechanism.input_ports:
+                for projection in port.path_afferents:
                     monitored_port = projection.sender
                     monitored_port_Mech = projection.sender.owner
                     monitored_port_index = self.monitored_output_ports.index(monitored_port)

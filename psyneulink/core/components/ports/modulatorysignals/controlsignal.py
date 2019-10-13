@@ -44,7 +44,7 @@ must be met for it to function properly.
 When a ControlSignal is specified in the **control_signals** argument of the constructor for a `ControlMechanism
 <ControlMechanism>`, the parameter(s) to be controlled must be specified.  If other attributes of the ControlSignal
 need to be specified (e.g., one or more of its `cost functions <ControlSignal_Costs>`), then the Constructor for the
-ControlSignal can be used or a `state specification dictionary <Port_specification>`, in which the parameter(s) to be
+ControlSignal can be used or a `state specification dictionary <Port_Specification>`, in which the parameter(s) to be
 controlled in the **projections** argument or *PROJECTIONS* entry, respectively, using any of the forms below.
 For convenience, the parameters can also be specified on their own in the **control_signals** argument of the
 ControlMechanism's constructor, in which case a default ControlSignal will be created for each.  In all cases, any
@@ -58,7 +58,7 @@ of the following can be use to specify the parameter(s) to be controlled:
     specification of any `parameters <ControlSignal_Structure>` for the ControlSignal.
 
   * **specification dictionary** -- this is an abbreviated form of `state specification dictionary
-    <Port_specification>`, in which the parameter(s) to be controlled can be specified in either of the two
+    <Port_Specification>`, in which the parameter(s) to be controlled can be specified in either of the two
     following ways:
 
     * for controlling a single parameter, the dictionary can have the following two entries:
@@ -435,9 +435,9 @@ class ControlSignal(ModulatorySignal):
         Class methods:
             function (executes function specified in params[FUNCTION];  default: Linear)
 
-        StateRegistry
+        PortRegistry
         -------------
-            All OutputPorts are registered in StateRegistry, which maintains an entry for the subclass,
+            All OutputPorts are registered in PortRegistry, which maintains an entry for the subclass,
               a count for all instances of it, and a dictionary of those instances
     COMMENT
 
@@ -749,7 +749,7 @@ class ControlSignal(ModulatorySignal):
         # construction?
         # _validate_modulation = get_validator_by_function(_is_modulation_param)
 
-    stateAttributes = ModulatorySignal.stateAttributes | {ALLOCATION_SAMPLES,
+    portAttributes = ModulatorySignal.portAttributes | {ALLOCATION_SAMPLES,
                                                           COST_OPTIONS,
                                                           INTENSITY_COST_FUNCTION,
                                                           ADJUSTMENT_COST_FUNCTION,

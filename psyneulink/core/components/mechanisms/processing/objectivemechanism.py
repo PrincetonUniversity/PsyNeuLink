@@ -713,20 +713,20 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         from psyneulink.core.globals.registry import remove_instance_from_registry, register_instance
         if not input_ports:
             return
-        for state in input_ports:
-            if not state.path_afferents:
+        for port in input_ports:
+            if not port.path_afferents:
                 continue
-            if len(state.path_afferents) > 1:
+            if len(port.path_afferents) > 1:
                 assert False
             # If the name is not a default name, return
-            if not (state.name is InputPort.__name__ or InputPort.__name__ + '-' in state.name):
+            if not (port.name is InputPort.__name__ or InputPort.__name__ + '-' in port.name):
                 return
-            proj = state.path_afferents[0]
-            remove_instance_from_registry(registry=self._stateRegistry,
+            proj = port.path_afferents[0]
+            remove_instance_from_registry(registry=self._portRegistry,
                                           category=INPUT_PORT,
-                                          component=state)
-            state.name = "Value of {} [{}]".format(proj.sender.owner.name, proj.sender.name)
-            register_instance(state, state.name, InputPort, self._stateRegistry, INPUT_PORT)
+                                          component=port)
+            port.name = "Value of {} [{}]".format(proj.sender.owner.name, proj.sender.name)
+            register_instance(port, port.name, InputPort, self._portRegistry, INPUT_PORT)
 
     def add_to_monitor(self, monitor_specs, context=None):
         """Instantiate `OutputPorts <OutputPort>` to be monitored by the ObjectiveMechanism.
@@ -786,11 +786,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 reference_value.append(projection_tuple.projection[PROJECTION].value)
             # If matrix is specified for Projection, get its receiver dimension
             elif MATRIX in projection_tuple.projection:
-                reference_value.append(_get_projection_value_shape(projection_tuple.state,
+                reference_value.append(_get_projection_value_shape(projection_tuple.port,
                                                                    projection_tuple.projection[MATRIX]))
             # Otherwise, use its sender's (OutputPort) value
             else:
-                reference_value.append(projection_tuple.state.value)
+                reference_value.append(projection_tuple.port.value)
 
         if not context:
             from psyneulink.core.globals.context import Context
@@ -802,7 +802,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                       context=context
                                                       )
 
-        output_ports = [[projection.sender for projection in state.path_afferents] for state in input_ports]
+        output_ports = [[projection.sender for projection in port.path_afferents] for port in input_ports]
 
         self._instantiate_function_weights_and_exponents(context=context)
 
@@ -929,7 +929,7 @@ def _parse_monitor_specs(monitor_specs):
     return monitor_specs
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-#                      ??MAYBE INTEGRATE INTO Port MODULE (IN _instantate_state)
+#                      ??MAYBE INTEGRATE INTO Port MODULE (IN _instantate_port)
 # KAM commented out _instantiate_monitoring_projections 9/28/18 to avoid confusion because it never gets called
 # @tc.typecheck
 # def _instantiate_monitoring_projections(
@@ -966,7 +966,7 @@ def _parse_monitor_specs(monitor_specs):
 #         if isinstance(recvr_projs,list) and len(recvr_projs) > 1 and owner.verbosePref:
 #             warnings.warn("{} projections were specified for InputPort ({}) of {} ;"
 #                           "only the first ({}) will be used".
-#                           format(len(recvr_projs), receiver.name, owner.name, recvr_projs[0].state.name))
+#                           format(len(recvr_projs), receiver.name, owner.name, recvr_projs[0].port.name))
 #             projection_spec = recvr_projs[0]
 #         else:
 #             projection_spec = recvr_projs

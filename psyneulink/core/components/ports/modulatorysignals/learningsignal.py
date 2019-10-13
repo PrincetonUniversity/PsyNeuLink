@@ -231,9 +231,9 @@ class LearningSignal(ModulatorySignal):
         Class methods:
             function (executes function specified in params[FUNCTION];  default: Linear)
 
-        StateRegistry
+        PortRegistry
         -------------
-            All OutputPorts are registered in StateRegistry, which maintains an entry for the subclass,
+            All OutputPorts are registered in PortRegistry, which maintains an entry for the subclass,
               a count for all instances of it, and a dictionary of those instances
     COMMENT
 
@@ -334,7 +334,7 @@ class LearningSignal(ModulatorySignal):
     componentType = LEARNING_SIGNAL
     paramsType = OUTPUT_PORT_PARAMS
 
-    stateAttributes = ModulatorySignal.stateAttributes
+    portAttributes = ModulatorySignal.portAttributes
 
     connectsWith = [PARAMETER_PORT]
     connectsWithAttribute = [PARAMETER_PORTS]

@@ -111,71 +111,71 @@ SystemDefaultControlMechanism = DefaultControlMechanism
 
 # Note:  This is used only for assignment of default projection types for each state subclass
 #        Individual stateRegistries (used for naming) are created for each owner (mechanism or projection) of a state
-#        Note: all ports that belong to a given owner are registered in the owner's _stateRegistry,
+#        Note: all ports that belong to a given owner are registered in the owner's _portRegistry,
 #              which maintains a dict for each state type that it uses, a count for all instances of that type,
-#              and a dictionary of those instances;  NONE of these are registered in the StateRegistry.
+#              and a dictionary of those instances;  NONE of these are registered in the PortRegistry.
 #              This is so that the same name can be used for instances of a state type by different owners,
 #              without adding index suffixes for that name across owners
 #              while still indexing multiple uses of the same base name within an owner
 #
 # Port registry
-from psyneulink.core.components.ports.port import StateRegistry
+from psyneulink.core.components.ports.port import PortRegistry
 from psyneulink.core.components.ports.port import Port_Base
 
 # InputPort
 from psyneulink.core.components.ports.inputport import InputPort
 register_category(entry=InputPort,
                   base_class=Port_Base,
-                  registry=StateRegistry,
+                  registry=PortRegistry,
                   context=kwInitPy)
 
 # ParameterPort
 from psyneulink.core.components.ports.parameterport import ParameterPort
 register_category(entry=ParameterPort,
                   base_class=Port_Base,
-                  registry=StateRegistry,
+                  registry=PortRegistry,
                   context=kwInitPy)
 
 # OutputPort
 from psyneulink.core.components.ports.outputport import OutputPort
 register_category(entry=OutputPort,
                   base_class=Port_Base,
-                  registry=StateRegistry,
+                  registry=PortRegistry,
                   context=kwInitPy)
 
 # ProcessInputPort
 from psyneulink.core.components.process import ProcessInputPort
 register_category(entry=ProcessInputPort,
                   base_class=Port_Base,
-                  registry=StateRegistry,
+                  registry=PortRegistry,
                   context=kwInitPy)
 
 # ProcessInputPort
 from psyneulink.core.components.system import SystemInputPort
 register_category(entry=SystemInputPort,
                   base_class=Port_Base,
-                  registry=StateRegistry,
+                  registry=PortRegistry,
                   context=kwInitPy)
 
 # LearningSignal
 from psyneulink.core.components.ports.modulatorysignals.learningsignal import LearningSignal
 register_category(entry=LearningSignal,
                   base_class=Port_Base,
-                  registry=StateRegistry,
+                  registry=PortRegistry,
                   context=kwInitPy)
 
 # ControlSignal
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 register_category(entry=ControlSignal,
                   base_class=Port_Base,
-                  registry=StateRegistry,
+                  registry=PortRegistry,
                   context=kwInitPy)
 
 # GatingSignal
 from psyneulink.core.components.ports.modulatorysignals.gatingsignal import GatingSignal
 register_category(entry=GatingSignal,
                   base_class=Port_Base,
-                  registry=StateRegistry,
+                  registry=PortRegistry,
                   context=kwInitPy)
 
 
@@ -230,8 +230,8 @@ register_category(entry=GatingProjection,
 # (this is necessary, as the classes reference each other, thus producing import loops)
 
 # Assign default Projection type for Port subclasses
-for port_type in StateRegistry:
-    port_Params =StateRegistry[port_type].subclass.paramClassDefaults
+for port_type in PortRegistry:
+    port_Params =PortRegistry[port_type].subclass.paramClassDefaults
     try:
         # Use string specified in Port's PROJECTION_TYPE param to get
         # class reference for projection type from ProjectionRegistry
@@ -285,8 +285,8 @@ for projection_type in ProjectionRegistry:
         try:
             # Look it up in Port Registry;  if that fails, raise an exception
             # FIX 5/24/16
-            # projection_sender = StateRegistry[projection_sender].subclass
-            projection_params[PROJECTION_SENDER] = StateRegistry[projection_sender].subclass
+            # projection_sender = PortRegistry[projection_sender].subclass
+            projection_params[PROJECTION_SENDER] = PortRegistry[projection_sender].subclass
 
         except KeyError:
             raise InitError("{0} param ({1}) for {2} not found in Mechanism or Port registries".
@@ -375,22 +375,22 @@ Function.classPreferences = BasePreferenceSet(owner=Function,
 
 #
 #     try:
-#         # First try to get spec from StateRegistry
-#         projection_params[PROJECTION_SENDER] = StateRegistry[projection_params[PROJECTION_SENDER]].subclass
+#         # First try to get spec from PortRegistry
+#         projection_params[PROJECTION_SENDER] = PortRegistry[projection_params[PROJECTION_SENDER]].subclass
 #     except AttributeError:
 #         # No PROJECTION_SENDER spec found for for projection class
 #         raise InitError("paramClassDefaults[PROJECTION_SENDER] not defined for".format(projection))
 #     except (KeyError, NameError):
-#         # PROJECTION_SENDER spec not found in StateRegistry;  try next
+#         # PROJECTION_SENDER spec not found in PortRegistry;  try next
 #         pass
 #
 #     try:
-#         # First try to get spec from StateRegistry
+#         # First try to get spec from PortRegistry
 #         projection_params[PROJECTION_SENDER] = MechanismRegistry[projection_params[PROJECTION_SENDER]].subclass
 #     except (KeyError, NameError):
-#         # PROJECTION_SENDER spec not found in StateRegistry;  try next
+#         # PROJECTION_SENDER spec not found in PortRegistry;  try next
 # xxx
-#         # raise InitError("{0} not found in StateRegistry".format(projection_params[PROJECTION_SENDER]))
+#         # raise InitError("{0} not found in PortRegistry".format(projection_params[PROJECTION_SENDER]))
 #     else:
 #         if not ((inspect.isclass(projection_params[PROJECTION_SENDER]) and
 #                      issubclass(projection_params[PROJECTION_SENDER], Port_Base)) or

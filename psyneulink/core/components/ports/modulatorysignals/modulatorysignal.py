@@ -139,7 +139,7 @@ A ModulatorySignal modulates the value of a `Port <Port>` either by modifying a 
 directly.  The `type of modulation <ModulatorySignal_Types>` is determined by the ModulatorySignal's
 `modulation <ModulatorySignal.modulation>` attribute, which can be specified in the **modulation** argument of its
 ModulatorySignal's constructor, or in a *MODULATION* entry of a `Port specification dictionary
-<Port_specification>` used to create the ModulatorySignal (see `Type of Modualtion <ModulatorySignal_Types>` and
+<Port_Specification>` used to create the ModulatorySignal (see `Type of Modualtion <ModulatorySignal_Types>` and
 `figure <ModulatorySignal_Detail_Figure>` below for details). If the type of `modulation <ModulatorySignal.modulation>`
 is not specified when a ModulatorySignal is created, it is assigned the value of the `modulation
 <ModulatoryMechanism_Base.modulation>` attribute for the `ModulatoryMechanism <ModulatoryMechanism>` to which it belongs.
@@ -354,7 +354,7 @@ COMMENT
 
 .. note::
    The change in the value of a `Port <Port>` in response to a ModulatorySignal does not occur until the Mechanism to
-   which the state belongs is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
+   which the port belongs is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
 
 .. _ModulatorySignal_Class_Reference:
 
@@ -364,18 +364,18 @@ Examples
 --------
 
 MOVE THESE TO SPECIFIC SUBCLASSES? AND REFERENCE THOSE HERE
-FIX: EXAMPLE OF FULL SPECIFIATION (BY STATE AND STATE'S FUCNTION'S PARAMETER NAME)
+FIX: EXAMPLE OF FULL SPECIFIATION (BY PORT AND PORT'S FUCNTION'S PARAMETER NAME)
 The following example uses a parameter's name to specify
     >>> my_mech = ProcessingMechanism(function=Logistic)
     >>> ctl_mech = ControlMechanism(monitor_for_control=my_mech,
     ...                             control_signals=ControlSignal(modulates=my_mech.parameter_ports[GAIN],
     ...                                                           modulation=SLOPE))
 
-FIX: EXAMPLE OF SPECIFIATION OF CONTROLSIGNAL WITH MECHANISM AND STATE'S PARAMETER NAME
+FIX: EXAMPLE OF SPECIFIATION OF CONTROLSIGNAL WITH MECHANISM AND PORT'S PARAMETER NAME
 
 FIX: EXAMPLE OF SPECIFIATION BY CONTROLSIGNAL WITH MECHANISM AND MECHANISM'S PARAMETER NAME
 
-MENTION STATE-SPECIFIC CONVENIENCE METHODS
+MENTION PORT-SPECIFIC CONVENIENCE METHODS
 
 FIX: EXAMPLE OF CONTROL SIGNAL MODULATION OF INPUTPORT
 
@@ -478,9 +478,9 @@ class ModulatorySignal(OutputPort):
         Class methods:
             function (executes function specified in params[FUNCTION];  default: Linear
 
-        StateRegistry
+        PortRegistry
         -------------
-            All OutputPorts are registered in StateRegistry, which maintains an entry for the subclass,
+            All OutputPorts are registered in PortRegistry, which maintains an entry for the subclass,
               a count for all instances of it, and a dictionary of those instances
     COMMENT
 
@@ -598,7 +598,7 @@ class ModulatorySignal(OutputPort):
         """
         modulation = None
 
-    stateAttributes = OutputPort.stateAttributes | {MODULATION}
+    portAttributes = OutputPort.portAttributes | {MODULATION}
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
@@ -674,21 +674,21 @@ class ModulatorySignal(OutputPort):
 
         Specification should be an existing ModulatoryProjection, or a receiver Mechanism or Port
         Disallow any other specifications (including PathwayProjections)
-        Call _instantiate_projection_from_state to assign ModulatoryProjections to .efferents
+        Call _instantiate_projection_from_port to assign ModulatoryProjections to .efferents
 
         """
        # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
         for receiver_spec in projections:
-            projection = self._instantiate_projection_from_state(projection_spec=type(self),
-                                                                 receiver=receiver_spec,
-                                                                 # MODIFIED 8/12/19 NEW: [JDC] - MODIFIED FEEDBACK
-                                                                 # feedback=True,
-                                                                 feedback=MAYBE,
-                                                                 # MODIFIED 8/12/19 END
-                                                                 context=context)
+            projection = self._instantiate_projection_from_port(projection_spec=type(self),
+                                                                receiver=receiver_spec,
+                                                                # MODIFIED 8/12/19 NEW: [JDC] - MODIFIED FEEDBACK
+                                                                # feedback=True,
+                                                                feedback=MAYBE,
+                                                                # MODIFIED 8/12/19 END
+                                                                context=context)
             # Projection might be None if it was duplicate
             if projection:
-                projection._assign_default_projection_name(state=self)
+                projection._assign_default_projection_name(port=self)
 
     def _assign_default_port_Name(self, context=None):
 

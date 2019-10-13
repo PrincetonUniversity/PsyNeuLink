@@ -293,9 +293,9 @@ class GatingSignal(ControlSignal):
         Class methods:
             function (executes function specified in params[FUNCTION];  default: Linear
 
-        StateRegistry
+        PortRegistry
         -------------
-            All OutputPorts are registered in StateRegistry, which maintains an entry for the subclass,
+            All OutputPorts are registered in PortRegistry, which maintains an entry for the subclass,
               a count for all instances of it, and a dictionary of those instances
     COMMENT
 
@@ -411,7 +411,7 @@ class GatingSignal(ControlSignal):
     componentName = 'GatingSignal'
     paramsType = OUTPUT_PORT_PARAMS
 
-    stateAttributes = ControlSignal.stateAttributes | {GATE}
+    portAttributes = ControlSignal.portAttributes | {GATE}
 
     connectsWith = [INPUT_PORT, OUTPUT_PORT]
     connectsWithAttribute = [INPUT_PORTS, OUTPUT_PORTS]

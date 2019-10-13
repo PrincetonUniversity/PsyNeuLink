@@ -21,7 +21,7 @@ import typecheck as tc
 from psyneulink.core.components.functions.function import Function_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    FUNCTION_OUTPUT_TYPE_CONVERSION, PARAMETER_PORT_PARAMS, STATE_MAP_FUNCTION, TRANSFER_FUNCTION_TYPE, \
+    FUNCTION_OUTPUT_TYPE_CONVERSION, PARAMETER_PORT_PARAMS, PORT_MAP_FUNCTION, TRANSFER_FUNCTION_TYPE, \
     PREFERENCE_SET_NAME
 from psyneulink.core.globals.preferences.basepreferenceset import \
     PreferenceEntry, PreferenceLevel, is_pref_set, REPORT_OUTPUT_PREF
@@ -88,7 +88,7 @@ class InterfaceStateMap(InterfaceFunction):
         <LINK>` for details).
     """
 
-    componentName = STATE_MAP_FUNCTION
+    componentName = PORT_MAP_FUNCTION
 
     classPreferences = {
         PREFERENCE_SET_NAME: 'LinearClassPreferences',

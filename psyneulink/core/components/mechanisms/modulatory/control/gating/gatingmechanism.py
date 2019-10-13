@@ -409,8 +409,8 @@ class GatingMechanism(ControlMechanism):
     initMethod = INIT_EXECUTE_METHOD_ONLY
 
     outputPortTypes = GatingSignal
-    stateListAttr = ControlMechanism.stateListAttr.copy()
-    stateListAttr.update({GatingSignal:GATING_SIGNALS})
+    portListAttr = ControlMechanism.portListAttr.copy()
+    portListAttr.update({GatingSignal:GATING_SIGNALS})
 
 
     classPreferenceLevel = PreferenceLevel.TYPE
@@ -507,16 +507,16 @@ class GatingMechanism(ControlMechanism):
         # Create registry for GatingSignals (to manage names)
         register_category(entry=GatingSignal,
                           base_class=Port_Base,
-                          registry=self._stateRegistry,
+                          registry=self._portRegistry,
                           context=context)
 
     def _instantiate_control_signal_type(self, gating_signal_spec, context):
         """Instantiate actual ControlSignal, or subclass if overridden"""
-        from psyneulink.core.components.ports.port import _instantiate_state
+        from psyneulink.core.components.ports.port import _instantiate_port
         from psyneulink.core.components.projections.projection import ProjectionError
 
         allocation_parameter_default = self.parameters.gating_allocation.default_value
-        gating_signal = _instantiate_state(port_type=GatingSignal,
+        gating_signal = _instantiate_port(port_type=GatingSignal,
                                                owner=self,
                                                variable=self.default_allocation           # User specified value
                                                         or allocation_parameter_default,  # Parameter default
@@ -561,8 +561,8 @@ class GatingMechanism(ControlMechanism):
         # Check the input_ports and output_ports of the System's Mechanisms
         #    for any GatingProjections with deferred_init()
         for mech in self.system.mechanisms:
-            for state in mech._input_ports + mech._output_ports:
-                for projection in state.mod_afferents:
+            for port in mech._input_ports + mech._output_ports:
+                for projection in port.mod_afferents:
                     # If projection was deferred for init, initialize it now and instantiate for self
                     if (projection.initialization_status == ContextFlags.DEFERRED_INIT
                         and projection._init_args['sender'] is None):
@@ -581,33 +581,14 @@ class GatingMechanism(ControlMechanism):
     def gating_signals(self):
         try:
             return ContentAddressableList(component_type=GatingSignal,
-                                          list=[state for state in self.output_ports
-                                                if isinstance(state, GatingSignal)])
+                                          list=[port for port in self.output_ports
+                                                if isinstance(port, GatingSignal)])
         except:
             return None
 
     @gating_signals.setter
     def gating_signals(self, value):
         self._control_signals = value
-
-    # Suppress control_signals
-    # @property
-    # def control_signals(self):
-    #     from psyneulink.core.components.mechanisms.modulatory.controlmechanism import ControlMechanism
-    #     from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
-    #     raise GatingMechanismError(f"'control_signals' attribute is not implemented on {self.name} (a "
-    #                                f"{self.__class__.__name__}); consider using a {ControlMechanism.__name__} "
-    #                                f"instead, or a {ControlMechanism.__name__} if both {ControlSignal.__name__}s "
-    #                                f"and {GatingSignal.__name__}s are needed.")
-    #
-    # @control_signals.setter
-    # def control_signals(self, value):
-    #     from psyneulink.core.components.mechanisms.modulatory.controlmechanism import ControlMechanism
-    #     from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
-    #     raise GatingMechanismError(f"'control_signals' attribute is not implemented on {self.name} (a "
-    #                                f"{self.__class__.__name__}); consider using a {ControlMechanism.__name__} "
-    #                                f"instead, or a {ControlMechanism.__name__} if both {ControlSignal.__name__}s "
-    #                                f"and {GatingSignal.__name__}s are needed.")
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 def _add_gating_mechanism_to_system(owner:GatingMechanism):
@@ -621,5 +602,5 @@ def _add_gating_mechanism_to_system(owner:GatingMechanism):
                         system.execution_graph[owner] = set()
                         # FIX: NEED TO ALSO ADD SystemInputPort (AND ??ProcessInputPort) PROJECTIONS
                         # # Add self to system's list of OriginMechanisms if it doesn't have any afferents
-                        # if not any(state.path_afferents for state in owner.input_ports):
+                        # if not any(port.path_afferents for port in owner.input_ports):
                         #     system.origin_mechanisms.mechs.append(owner)

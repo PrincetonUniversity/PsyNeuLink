@@ -340,7 +340,7 @@ or by its own `function <Component.function>`.
 .. note::
    It is important to note the distinction between the `function <ParameterPort.function>` of a ParameterPort,
    and the `function <Component.function>` of the Component to which it belongs. The former is used to determine the
-   value of a parameter used by the latter (see `figure <ModulatorySignal_Anatomy_Figure>`, and `State_Execution` for
+   value of a parameter used by the latter (see `figure <ModulatorySignal_Anatomy_Figure>`, and `Port_Execution` for
    additional details).
 
 .. _ParameterPort_Class_Reference:
@@ -360,7 +360,7 @@ from psyneulink.core.components.component import Component, function_type, metho
 from psyneulink.core.components.functions.function import get_param_value_for_keyword
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
-from psyneulink.core.components.ports.port import PortError, Port_Base, _instantiate_state, port_type_keywords
+from psyneulink.core.components.ports.port import PortError, Port_Base, _instantiate_port, port_type_keywords
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     CONTEXT, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, FUNCTION, FUNCTION_PARAMS, \
@@ -424,9 +424,9 @@ class ParameterPort(Port_Base):
             _instantiate_function: insures that function is ARITHMETIC) (default: Operation.PRODUCT)
             update: updates self.value from Projections, base_value and runtime in PARAMETER_PORT_PARAMS
 
-        StateRegistry
+        PortRegistry
         -------------
-            All ParameterPorts are registered in StateRegistry, which maintains an entry for the subclass,
+            All ParameterPorts are registered in PortRegistry, which maintains an entry for the subclass,
               a count for all instances of it, and a dictionary of those instances
 
     COMMENT
@@ -501,7 +501,7 @@ class ParameterPort(Port_Base):
     value : number, List[number] or np.ndarray
         the result returned by the ParameterPort's `function <ParameterPort.function>`, and used by the
         ParameterPort's owner or its `function <Component.function>` as the value of the parameter for which the
-        ParmeterState is responsible.  Note that this is not necessarily the same as the parameter's attribute value
+        ParmeterPort is responsible.  Note that this is not necessarily the same as the parameter's attribute value
         (that is, the value of the owner's attribute for the parameter), since the ParameterPort's
         `function <ParameterPort.function>` may modify the latter under the influence of its
         `mod_afferents <ParameterPort.mod_afferents>`.
@@ -525,7 +525,7 @@ class ParameterPort(Port_Base):
     componentType = PARAMETER_PORT
     paramsType = PARAMETER_PORT_PARAMS
 
-    stateAttributes = Port_Base.stateAttributes
+    portAttributes = Port_Base.portAttributes
 
     connectsWith = [CONTROL_SIGNAL, LEARNING_SIGNAL]
     connectsWithAttribute = [CONTROL_SIGNALS, LEARNING_SIGNALS]
@@ -619,13 +619,13 @@ class ParameterPort(Port_Base):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of Port's constructor
 
         Disallow any PathwayProjections
-        Call _instantiate_projections_to_state to assign ModulatoryProjections to .mod_afferents
+        Call _instantiate_projections_to_port to assign ModulatoryProjections to .mod_afferents
 
         """
 
         # MODIFIED 7/8/17
         # FIX:  THIS SHOULD ALSO LOOK FOR OTHER FORMS OF SPECIFICATION
-        # FIX:  OF A PathwayProjection (E.G., TARGET STATE OR MECHANISM)
+        # FIX:  OF A PathwayProjection (E.G., TARGET PORT OR MECHANISM)
 
         from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
         pathway_projections = [proj for proj in projections if isinstance(proj, PathwayProjection_Base)]
@@ -638,7 +638,7 @@ class ParameterPort(Port_Base):
                                     self.__class__.__name__,
                                     pathway_proj_names))
 
-        self._instantiate_projections_to_state(projections=projections, context=context)
+        self._instantiate_projections_to_port(projections=projections, context=context)
 
     def _check_for_duplicate_projections(self, projection):
         """Check if projection is redundant with one in mod_afferents of ParameterPort
@@ -713,7 +713,7 @@ class ParameterPort(Port_Base):
                     # return None in port_spec to suppress further, recursive parsing of it in _parse_port_spec
                     port_spec = None
                     if tuple_spec[0] != self:
-                        # If 1st item is not the current state (self), treat as part of the projection specification
+                        # If 1st item is not the current port (self), treat as part of the projection specification
                         projections_spec = tuple_spec
                     else:
                         # Otherwise, just use 2nd item as projection spec
@@ -753,8 +753,8 @@ class ParameterPort(Port_Base):
                             # from psyneulink.core.components.projections.projection import _parse_projection_spec
 
                             # defaults.value?
-                            mod_signal_value = projection_spec.state.value \
-                                if isinstance(projection_spec.state, Port_Base) else None
+                            mod_signal_value = projection_spec.port.value \
+                                if isinstance(projection_spec.port, Port_Base) else None
 
                             mod_projection = projection_spec.projection
                             if isinstance(mod_projection, dict):
@@ -888,7 +888,7 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
 
 
 def _instantiate_parameter_port(owner, param_name, param_value, context, function=None):
-    """Call _instantiate_state for allowable params, to instantiate a ParameterPort for it
+    """Call _instantiate_port for allowable params, to instantiate a ParameterPort for it
 
     Include ones in owner.user_params[FUNCTION_PARAMS] (nested iteration through that dict)
     Exclude if it is a:
@@ -1038,7 +1038,7 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
 
             # # FIX: 10/3/17 - ??MOVE THIS TO _parse_port_specific_specs ----------------
             # # Use function_param_value as constraint
-            # # IMPLEMENTATION NOTE:  need to copy, since _instantiate_state() calls _parse_port_value()
+            # # IMPLEMENTATION NOTE:  need to copy, since _instantiate_port() calls _parse_port_value()
             # #                       for constraints before port_spec, which moves items to subdictionaries,
             # #                       which would make them inaccessible to the subsequent parse of port_spec
             from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
@@ -1053,7 +1053,7 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
                 reference_value = deepcopy(function_param_value)
 
             # Assign parameterPort for function_param to the component
-            state = _instantiate_state(owner=owner,
+            port = _instantiate_port(owner=owner,
                                        port_type=ParameterPort,
                                        name=function_param_name,
                                        port_spec=function_param_value,
@@ -1061,15 +1061,15 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
                                        reference_value_name=function_param_name,
                                        params=None,
                                        context=context)
-            if state:
-                owner._parameter_ports[function_param_name] = state
+            if port:
+                owner._parameter_ports[function_param_name] = port
                 # will be parsed on assignment of function
                 # FIX: if the function is manually changed after assignment,
                 # FIX: the source will remain pointing to the original Function
-                state.source = FUNCTION
+                port.source = FUNCTION
 
     elif _is_legal_param_value(owner, param_value):
-        state = _instantiate_state(owner=owner,
+        port = _instantiate_port(owner=owner,
                                    port_type=ParameterPort,
                                    name=param_name,
                                    port_spec=param_value,
@@ -1077,9 +1077,9 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
                                    reference_value_name=param_name,
                                    params=None,
                                    context=context)
-        if state:
-            owner._parameter_ports[param_name] = state
-            state.source = owner
+        if port:
+            owner._parameter_ports[param_name] = port
+            port.source = owner
 
 
 def _is_legal_param_value(owner, value):

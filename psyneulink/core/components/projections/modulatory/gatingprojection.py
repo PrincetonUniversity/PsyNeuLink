@@ -149,11 +149,11 @@ class GatingProjection(ModulatoryProjection_Base):
         Description:
             The GatingProjection class is a type in the Projection category of Component.
             It implements a projection to the InputPort or OutputPort of a Mechanism that modulates the value of
-            that state
+            that port
             It:
                - takes a scalar as its input (sometimes referred to as a "gating signal")
                - uses its `function` to compute its value
-               - its value is used to modulate the value of the state to which it projects
+               - its value is used to modulate the value of the port to which it projects
 
         ** MOVE:
         ProjectionRegistry:
@@ -375,7 +375,7 @@ class GatingProjection(ModulatoryProjection_Base):
                                             format(self.receiver, self.name))
 
     def _instantiate_receiver(self, context=None):
-        """Assign state if receiver is Mechanism, and match output to param being modulated
+        """Assign port if receiver is Mechanism, and match output to param being modulated
         """
         # If receiver specification was a Mechanism, re-assign to the mechanism's primary inputPort
         if isinstance(self.receiver, Mechanism):

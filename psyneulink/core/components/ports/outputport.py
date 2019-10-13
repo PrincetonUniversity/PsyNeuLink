@@ -140,7 +140,7 @@ Forms of Specification
 ^^^^^^^^^^^^^^^^^^^^^^
 
 OutputPorts can be specified in a variety of ways, that fall into three broad categories:  specifying an OutputPort
-directly; use of a `Port specification dictionary <Port_specification>`; or by specifying one or more Components to
+directly; use of a `Port specification dictionary <Port_Specification>`; or by specifying one or more Components to
 which it should project. Each of these is described below:
 
     .. _OutputPort_Direct_Specification:
@@ -169,8 +169,8 @@ which it should project. Each of these is described below:
     **OutputPort Specification Dictionary**
 
     * **OutputPort specification dictionary** -- this can be used to specify the attributes of an OutputPort,
-      using any of the entries that can be included in a `Port specification dictionary <Port_specification>`
-      (see `examples <Port_specification_Dictionary_Examples>` in Port), including:
+      using any of the entries that can be included in a `Port specification dictionary <Port_Specification>`
+      (see `examples <Port_Specification_Dictionary_Examples>` in Port), including:
 
       * *VARIABLE*:<keyword or list> - specifies the attribute(s) of its `owner <OutputPort.owner>` Mechanism to use
         as the input to the OutputPort's `function <OutputPort.function>` (see `OutputPort_Customization`); this
@@ -260,7 +260,7 @@ which it should project. Each of these is described below:
         * **2-item tuple:** *(<Port name or list of Port names>, <Mechanism>)* -- 1st item must be the name of an
           `InputPort` or `ModulatorySignal`, or a list of such names, and the 2nd item must be the Mechanism to
           which they all belong.  Projections of the relevant types are created for each of the specified Ports
-          (see `Port 2-item tuple <State_2_Item_Tuple>` for additional details).
+          (see `Port 2-item tuple <Port_2_Item_Tuple>` for additional details).
 
         * **2-item tuple:** *(<Port, Mechanism, or list of them>, <Projection specification>)* -- this is a contracted
           form of the 3-item tuple described below
@@ -600,7 +600,7 @@ from psyneulink.core.globals.keywords import \
     MAPPING_PROJECTION, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MECHANISM_VALUE, NAME, \
     OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, OUTPUT_STD_DEV, OUTPUT_VARIANCE, \
     OWNER_VALUE, PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, PROJECTION_TYPE, \
-    RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_OUTPUT_PORTS, STATE, VALUE, VARIABLE, \
+    RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_OUTPUT_PORTS, PORT, VALUE, VARIABLE, \
     output_port_spec_to_parameter_name
 from psyneulink.core.globals.parameters import Parameter, ParameterError
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -800,9 +800,9 @@ class OutputPort(Port_Base):
         Class methods:
             function (executes function specified in params[FUNCTION];  default: Linear)
 
-        StateRegistry
+        PortRegistry
         -------------
-            All OutputPorts are registered in StateRegistry, which maintains an entry for the subclass,
+            All OutputPorts are registered in PortRegistry, which maintains an entry for the subclass,
               a count for all instances of it, and a dictionary of those instances
 
     COMMENT
@@ -948,7 +948,7 @@ class OutputPort(Port_Base):
     componentType = OUTPUT_PORT
     paramsType = OUTPUT_PORT_PARAMS
 
-    # stateAttributes = Port_Base.stateAttributes | {INDEX, ASSIGN}
+    # portAttributes = Port_Base.portAttributes | {INDEX, ASSIGN}
 
     connectsWith = [INPUT_PORT, GATING_SIGNAL, CONTROL_SIGNAL]
     connectsWithAttribute = [INPUT_PORTS]
@@ -1087,11 +1087,11 @@ class OutputPort(Port_Base):
             ModulatoryProjection
             ModulatorySignal
             ModulatoryMechanism
-        Call _instantiate_projections_to_state to assign ModulatoryProjections to .mod_afferents
+        Call _instantiate_projections_to_port to assign ModulatoryProjections to .mod_afferents
 
         Assume all remaining specifications in projections are for outgoing MappingProjections;
             these should be either Mechanisms, Ports or MappingProjections to one of those
-        Call _instantiate_projections_from_state to assign MappingProjections to .efferents
+        Call _instantiate_projections_from_port to assign MappingProjections to .efferents
 
         Store result of function as self.function_value
         function_value is converted to returned value by assign function
@@ -1102,12 +1102,12 @@ class OutputPort(Port_Base):
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 
         modulatory_projections = [proj for proj in projections if _is_modulatory_spec(proj)]
-        self._instantiate_projections_to_state(projections=modulatory_projections, context=context)
+        self._instantiate_projections_to_port(projections=modulatory_projections, context=context)
 
         # Treat all remaining specifications in projections as ones for outgoing MappingProjections
         pathway_projections = [proj for proj in projections if not proj in modulatory_projections]
         for proj in pathway_projections:
-            self._instantiate_projection_from_state(projection_spec=MappingProjection,
+            self._instantiate_projection_from_port(projection_spec=MappingProjection,
                                                     receiver=proj,
                                                     context=context)
 
@@ -1132,7 +1132,7 @@ class OutputPort(Port_Base):
                           f'one specified ({projection.name}).')
         return duplicate
 
-    def _get_primary_state(self, mechanism):
+    def _get_primary_port(self, mechanism):
         return mechanism.output_port
 
     def _parse_arg_variable(self, default_variable):
@@ -1209,7 +1209,7 @@ class OutputPort(Port_Base):
                                        "either 2 ({} and {}) or 3 (optional additional {}) items, "
                                        "or must be a {}".
                                        format(OutputPort.__name__, owner.name, tuple_spec,
-                                              STATE, PROJECTION, 'variable spec', ProjectionTuple.__name__))
+                                              PORT, PROJECTION, 'variable spec', ProjectionTuple.__name__))
 
 
             params_dict[PROJECTIONS] = _parse_connection_specs(connectee_port_type=self,
@@ -1434,7 +1434,7 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
     # Should change the default behavior such that, if len(owner_value) == len owner.paramsCurrent[OUTPUT_PORTS]
     #        (that is, there is the same number of items in owner_value as there are OutputPorts)
     #        then increment index so as to assign each item of owner_value to each OutputPort
-    # IMPLEMENTATION NOTE:  SHOULD BE REFACTORED TO USE _parse_port_spec TO PARSE ouput_states arg
+    # IMPLEMENTATION NOTE:  SHOULD BE REFACTORED TO USE _parse_port_spec TO PARSE ouput_ports arg
     if output_ports:
         for i, output_port in enumerate(output_ports):
 
@@ -1506,8 +1506,8 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
         # Use OutputPort as default
         port_types = OutputPort
 
-    state_list = _instantiate_port_list(owner=owner,
-                                         state_list=output_ports,
+    port_list = _instantiate_port_list(owner=owner,
+                                         port_list=output_ports,
                                          port_types=port_types,
                                          port_Param_identifier=OUTPUT_PORT,
                                          reference_value=reference_value,
@@ -1516,17 +1516,17 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
 
     # Call from Mechanism.add_ports, so add to rather than assign output_ports (i.e., don't replace)
     if context.source & (ContextFlags.COMMAND_LINE | ContextFlags.METHOD):
-        owner.output_ports.extend(state_list)
+        owner.output_ports.extend(port_list)
     else:
-        owner._output_ports = state_list
+        owner._output_ports = port_list
 
     # Assign value of require_projection_in_composition
-    for state in owner._output_ports:
+    for port in owner._output_ports:
         # Assign True for owner's primary OutputPort and the value has not already been set in OutputPort constructor
-        if state.require_projection_in_composition is None and owner.output_port == state:
-            state.parameters.require_projection_in_composition._set(True, context)
+        if port.require_projection_in_composition is None and owner.output_port == port:
+            port.parameters.require_projection_in_composition._set(True, context)
 
-    return state_list
+    return port_list
 
 
 class StandardOutputPortsError(Exception):
@@ -1653,29 +1653,29 @@ class StandardOutputPorts():
 
         # Validate all INDEX specifications, parse any assigned as ALL, and
         # Add names of each OutputPort as property of the owner's class that returns its name string
-        for state in dict_list:
-            if INDEX in state:
-                if state[INDEX] in ALL:
-                    state._update({VARIABLE:OWNER_VALUE})
-                elif state[INDEX] in PRIMARY:
+        for port in dict_list:
+            if INDEX in port:
+                if port[INDEX] in ALL:
+                    port._update({VARIABLE:OWNER_VALUE})
+                elif port[INDEX] in PRIMARY:
                     port_dict.update({VARIABLE:(OWNER_VALUE, PRIMARY)})
-                elif state[INDEX] in SEQUENTIAL:
+                elif port[INDEX] in SEQUENTIAL:
                     raise OutputPortError("\'{}\' incorrectly assigned to individual {} in {} of {}.".
                                            format(SEQUENTIAL.upper(), OutputPort.__name__, OUTPUT_PORT.upper(),
                                                   self.name))
-                del state[INDEX]
-            setattr(self.owner.__class__, state[NAME], make_readonly_property(state[NAME]))
+                del port[INDEX]
+            setattr(self.owner.__class__, port[NAME], make_readonly_property(port[NAME]))
 
         # For each OutputPort dict with a VARIABLE entry that references it's owner's value (by index)
         # add <NAME_INDEX> as property of the OutputPort owner's class that returns its index.
-        for state in dict_list:
-            if isinstance(state[VARIABLE], tuple):
-                index = state[VARIABLE][1]
-            elif isinstance(state[VARIABLE], int):
-                index = state[VARIABLE]
+        for port in dict_list:
+            if isinstance(port[VARIABLE], tuple):
+                index = port[VARIABLE][1]
+            elif isinstance(port[VARIABLE], int):
+                index = port[VARIABLE]
             else:
                 continue
-            setattr(self.owner.__class__, state[NAME]+'_INDEX', make_readonly_property(index, name=state[NAME] + '_INDEX'))
+            setattr(self.owner.__class__, port[NAME]+'_INDEX', make_readonly_property(index, name=port[NAME] + '_INDEX'))
 
         return dict_list
 

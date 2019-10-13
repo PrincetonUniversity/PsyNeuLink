@@ -685,7 +685,7 @@ class TestInputPortSpec:
         with pytest.raises(ProjectionError) as error_text:
             T1 = TransferMechanism()
             T2 = TransferMechanism()
-            TransferMechanism(input_ports=[{'MY STATE':{T1, T2}}])
+            TransferMechanism(input_ports=[{'MY PORT':{T1, T2}}])
         assert ('Connection specification for InputPort of' in str(error_text.value)
                 and 'is a set' in str(error_text.value)
                 and 'it should be a list' in str(error_text.value))
@@ -696,8 +696,8 @@ class TestInputPortSpec:
     def test_multiple_states_specified_using_port_Name_format_error(self):
         with pytest.raises(PortError) as error_text:
             # Don't bother to specify anything as the value for each entry in the dict, since doesn't get there
-            TransferMechanism(input_ports=[{'MY STATE A':{},
-                                             'MY STATE B':{}}])
+            TransferMechanism(input_ports=[{'MY PORT A':{},
+                                             'MY PORT B':{}}])
         assert ('There is more than one entry of the InputPort specification dictionary' in str(error_text.value)
                 and'that is not a keyword; there should be only one (used to name the Port, with a list of '
                    'Projection specifications' in str(error_text.value))

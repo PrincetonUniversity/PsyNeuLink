@@ -65,10 +65,10 @@ def test_EVC():
         mech.function.prefs.paramValidationPref = False
         for os in mech.output_ports:
             os.prefs.paramValidationPref = False
-        for instate in mech.input_ports:
-            instate.prefs.paramValidationPref = False
-        for pstate in mech._parameter_ports:
-            pstate.prefs.paramValidationPref = False
+        for inport in mech.input_ports:
+            inport.prefs.paramValidationPref = False
+        for pport in mech._parameter_ports:
+            pport.prefs.paramValidationPref = False
 
     # Processes:
     TaskExecutionProcess = Process(

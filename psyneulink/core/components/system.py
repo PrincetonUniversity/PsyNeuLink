@@ -2293,7 +2293,7 @@ class System(System_Base):
             if isinstance(spec, tuple):
                 # 2-item tuple (<OutputPort(s) name(s)>, <Mechanism>)
                 if len(spec) == 2:
-                    # FIX: DO ERROR CHECK ON THE FOLLOWING / ALLOW LIST OF STATES
+                    # FIX: DO ERROR CHECK ON THE FOLLOWING / ALLOW LIST OF PORTS
                     spec = spec[1].output_ports[spec[0]]
                 # 3-item tuple (<OutputPort(s) spec>, weight, exponent)
                 elif len(spec) == 3:

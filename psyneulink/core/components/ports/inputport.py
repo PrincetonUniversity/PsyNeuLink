@@ -131,7 +131,7 @@ Adding InputPorts to a Mechanism after it is created
 
 InputPorts can also be **added** to a Mechanism, either by creating the InputPort on its own, and specifying the
 Mechanism in the InputPort's **owner** argument, or by using the Mechanism's `add_ports <Mechanism_Base.add_ports>`
-method (see `examples <State_Create_Port_Examples>` in Port).
+method (see `examples <Port_Create_Port_Examples>` in Port).
 
     .. _InputPort_Add_Port_Note:
 
@@ -153,7 +153,7 @@ Forms of Specification
 ^^^^^^^^^^^^^^^^^^^^^^
 
 InputPorts can be specified in a variety of ways, that fall into three broad categories:  specifying an InputPort
-directly; use of a `Port specification dictionary <Port_specification>`; or by specifying one or more Components that
+directly; use of a `Port specification dictionary <Port_Specification>`; or by specifying one or more Components that
 should project to the InputPort. Each of these is described below:
 
     .. _InputPort_Direct_Specification:
@@ -187,8 +187,8 @@ should project to the InputPort. Each of these is described below:
     **InputPort Specification Dictionary**
 
     * **InputPort specification dictionary** -- this can be used to specify the attributes of an InputPort, using
-      any of the entries that can be included in a `Port specification dictionary <Port_specification>` (see
-      `examples <Port_specification_Dictionary_Examples>` in Port).  If the dictionary is used to specify an
+      any of the entries that can be included in a `Port specification dictionary <Port_Specification>` (see
+      `examples <Port_Specification_Dictionary_Examples>` in Port).  If the dictionary is used to specify an
       InputPort in the constructor for a Mechanism, and it includes a *VARIABLE* and/or *VALUE* or entry, the value
       must be compatible with the item of the owner Mechanism's `variable <Mechanism_Base.variable>` to which the
       InputPort is assigned (see `Mechanism InputPort specification <Mechanism_InputPort_Specification>`).
@@ -198,7 +198,7 @@ should project to the InputPort. Each of these is described below:
       `ModulatoryProjections <ModulatoryProjection>`; however, this may be constrained by or have consequences for the
       InputPort's `variable <InputPort.variable>` (see `InputPort_Compatability_and_Constraints`).
 
-      In addition to the standard entries of a `Port specification dictionary <Port_specification>`, the dictionary
+      In addition to the standard entries of a `Port specification dictionary <Port_Specification>`, the dictionary
       can also include either or both of the following entries specific to InputPorts:
 
       * *WEIGHT*:<number>
@@ -256,7 +256,7 @@ should project to the InputPort. Each of these is described below:
         * **2-item tuple:** *(<Port name or list of Port names>, <Mechanism>)* -- 1st item must be the name of an
           `OutputPort` or `ModulatorySignal`, or a list of such names, and the 2nd item must be the Mechanism to
           which they all belong.  Projections of the relevant types are created for each of the specified Ports
-          (see `Port 2-item tuple <State_2_Item_Tuple>` for additional details).
+          (see `Port 2-item tuple <Port_2_Item_Tuple>` for additional details).
 
         * **2-item tuple:** *(<value, Port specification, or list of Port specs>, <Projection specification>)* --
           this is a contracted form of the 4-item tuple described below;
@@ -698,7 +698,7 @@ class InputPort(Port_Base):
     componentType = INPUT_PORT
     paramsType = INPUT_PORT_PARAMS
 
-    stateAttributes = Port_Base.stateAttributes | {WEIGHT, EXPONENT}
+    portAttributes = Port_Base.portAttributes | {WEIGHT, EXPONENT}
 
     connectsWith = [OUTPUT_PORT,
                     PROCESS_INPUT_PORT,
@@ -720,7 +720,7 @@ class InputPort(Port_Base):
     #     PREFERENCE_SET_NAME: 'InputPortCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
-    # Note: the following enforce encoding as 1D np.ndarrays (one variable/value array per state)
+    # Note: the following enforce encoding as 1D np.ndarrays (one variable/value array per port)
     variableEncodingDim = 1
     valueEncodingDim = 1
 
@@ -860,13 +860,13 @@ class InputPort(Port_Base):
             projections = [projections]
 
         # Use only first specification in the list returned, and assume any others are the same size
-        #     (which they must be); leave validation of this to _instantiate_projections_to_state
+        #     (which they must be); leave validation of this to _instantiate_projections_to_port
         proj_spec = _parse_connection_specs(InputPort, self, projections)[0]
 
         if isinstance(proj_spec.projection, Projection):
             variable = proj_spec.projection.defaults.value
-        elif isinstance(proj_spec.state, OutputPort):
-            variable = proj_spec.state.defaults.value
+        elif isinstance(proj_spec.port, OutputPort):
+            variable = proj_spec.port.defaults.value
         else:
             raise InputPortError("Unrecognized specification for \'{}\' arg of {}".format(PROJECTIONS, self.name))
 
@@ -956,11 +956,11 @@ class InputPort(Port_Base):
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of Port's constructor
 
-        Call _instantiate_projections_to_state to assign:
+        Call _instantiate_projections_to_port to assign:
             PathwayProjections to .path_afferents
             ModulatoryProjections to .mod_afferents
         """
-        self._instantiate_projections_to_state(projections=projections, context=context)
+        self._instantiate_projections_to_port(projections=projections, context=context)
 
     def _check_for_duplicate_projections(self, projection):
         """Check if projection is redundant with one in path_afferents of InputPort
@@ -1011,7 +1011,7 @@ class InputPort(Port_Base):
         else:
             return None
 
-    def _get_primary_state(self, mechanism):
+    def _get_primary_port(self, mechanism):
         return mechanism.input_port
 
     @tc.typecheck
@@ -1088,7 +1088,7 @@ class InputPort(Port_Base):
                     # return None in port_spec to suppress further, recursive parsing of it in _parse_port_spec
                     port_spec = None
                     if tuple_spec[0] != self:
-                        # If 1st item is not the current state (self), treat as part of the projection specification
+                        # If 1st item is not the current port (self), treat as part of the projection specification
                         projections_spec = tuple_spec
                     else:
                         # Otherwise, just use 2nd item as projection spec
@@ -1126,15 +1126,15 @@ class InputPort(Port_Base):
 
                         # Try to get matrix for projection
                         try:
-                            sender_dim = np.array(projection_spec.state.value).ndim
+                            sender_dim = np.array(projection_spec.port.value).ndim
                         except AttributeError as e:
-                            if (isinstance(projection_spec.state, type) or
-                                     projection_spec.state.initialization_status == ContextFlags.DEFERRED_INIT):
+                            if (isinstance(projection_spec.port, type) or
+                                     projection_spec.port.initialization_status == ContextFlags.DEFERRED_INIT):
                                 continue
                             else:
                                 raise PortError("PROGRAM ERROR: indeterminate value for {} "
                                                  "specified to project to {} of {}".
-                                                 format(projection_spec.state.name, self.__name__, owner.name))
+                                                 format(projection_spec.port.name, self.__name__, owner.name))
 
                         projection = projection_spec.projection
                         if isinstance(projection, dict):
@@ -1164,7 +1164,7 @@ class InputPort(Port_Base):
                                 continue
                             # If matrix has not been specified, no worries;
                             #    variable_item can be determined by value of sender
-                            sender_shape = np.array(projection_spec.state.value).shape
+                            sender_shape = np.array(projection_spec.port.value).shape
                             variable_item = np.zeros(sender_shape)
                             # If variable_item HASN'T been specified, or it is same shape as any previous ones,
                             #     use sender's value
@@ -1331,7 +1331,7 @@ class InputPort(Port_Base):
 
         InputPort variable must be embedded in a list so that LinearCombination (its default function)
         returns a variable that is >=2d intact (rather than as arrays to be combined);
-        this is normally done in state._update() (and in Port._instantiate-function), but that
+        this is normally done in port._update() (and in Port._instantiate-function), but that
         can't be called by _parse_port_spec since the InputPort itself may not yet have been instantiated.
 
         """
@@ -1387,8 +1387,8 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
     if input_ports is not None:
         input_ports = _parse_shadow_inputs(owner, input_ports)
 
-    state_list = _instantiate_port_list(owner=owner,
-                                         state_list=input_ports,
+    port_list = _instantiate_port_list(owner=owner,
+                                         port_list=input_ports,
                                          port_types=InputPort,
                                          port_Param_identifier=INPUT_PORT,
                                          reference_value=reference_value if reference_value is not None
@@ -1398,15 +1398,15 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
 
     # Call from Mechanism.add_ports, so add to rather than assign input_ports (i.e., don't replace)
     if context.source & (ContextFlags.METHOD | ContextFlags.COMMAND_LINE):
-        owner.input_ports.extend(state_list)
+        owner.input_ports.extend(port_list)
     else:
-        owner._input_ports = state_list
+        owner._input_ports = port_list
 
     # Assign value of require_projection_in_composition
-    for state in owner._input_ports:
+    for port in owner._input_ports:
         # Assign True for owner's primary InputPort and the value has not already been set in InputPort constructor
-        if state.require_projection_in_composition is None and owner.input_port == state:
-            state.parameters.require_projection_in_composition._set(True, context)
+        if port.require_projection_in_composition is None and owner.input_port == port:
+            port.parameters.require_projection_in_composition._set(True, context)
 
     # Check that number of input_ports and their variables are consistent with owner.defaults.variable,
     #    and adjust the latter if not
@@ -1422,7 +1422,7 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
 
     if not variable_item_is_OK:
         old_variable = owner.defaults.variable
-        owner.defaults.variable = owner._handle_default_variable(default_variable=[state.value for state in owner.input_ports])
+        owner.defaults.variable = owner._handle_default_variable(default_variable=[port.value for port in owner.input_ports])
 
         if owner.verbosePref:
             warnings.warn(
@@ -1433,7 +1433,7 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
                 )
             )
 
-    return state_list
+    return port_list
 
 def _parse_shadow_inputs(owner, input_ports):
     """Parses any {SHADOW_INPUTS:[InputPort or Mechaism,...]} items in input_ports into InputPort specif. dict."""

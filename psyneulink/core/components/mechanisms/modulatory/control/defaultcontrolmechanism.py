@@ -233,9 +233,9 @@ class DefaultControlMechanism(ControlMechanism):
         variable_item_index = self.defaults.variable.size-1
 
         # Instantiate inputPort
-        from psyneulink.core.components.ports.port import _instantiate_state
+        from psyneulink.core.components.ports.port import _instantiate_port
         from psyneulink.core.components.ports.inputport import InputPort
-        input_port = _instantiate_state(owner=self,
+        input_port = _instantiate_port(owner=self,
                                          port_type=InputPort,
                                          name=input_port_name,
                                          reference_value=np.array(self.defaults.variable[variable_item_index]),
@@ -252,6 +252,6 @@ class DefaultControlMechanism(ControlMechanism):
                                                         list=[input_port],
                                                         name=self.name+'.input_ports')
 
-        # self.input_value = [state.value for state in self.input_ports]
+        # self.input_value = [port.value for port in self.input_ports]
 
         return input_port

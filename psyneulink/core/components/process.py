@@ -468,7 +468,7 @@ from psyneulink.core.components.projections.projection import _add_projection_to
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Projection, System_Base
 from psyneulink.core.components.ports.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.core.components.ports.parameterport import ParameterPort
-from psyneulink.core.components.ports.port import _instantiate_state, _instantiate_port_list
+from psyneulink.core.components.ports.port import _instantiate_port, _instantiate_port_list
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, ENABLED, FUNCTION, FUNCTION_PARAMS, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, \
@@ -977,7 +977,7 @@ class Process(Process_Base):
 
         Iterate through Pathway, parsing and instantiating each Mechanism item;
             - raise exception if two Projections are found in a row;
-            - for last Mechanism in Pathway, assign ouputState to Process.outputPort
+            - for last Mechanism in Pathway, assign ouputPort to Process.outputPort
         Iterate through Pathway, assigning Projections to Mechanisms:
             - first Mechanism in Pathway:
                 if it does NOT already have any projections:
@@ -1154,10 +1154,10 @@ class Process(Process_Base):
             #    add that to the pathway so that it can be identified and assigned for learning if so specified
             if i+1 == len(pathway):
                 if mech.output_ports and any(any(proj.receiver.owner is mech
-                           for proj in state.efferents)
-                       for state in mech.output_ports):
-                    for state in mech.output_ports:
-                        for proj in state.efferents:
+                           for proj in port.efferents)
+                       for port in mech.output_ports):
+                    for port in mech.output_ports:
+                        for proj in port.efferents:
                             if proj.receiver.owner is mech:
                                 pathway.append(proj)
                                 pathway.append(pathway[i])
@@ -1192,7 +1192,7 @@ class Process(Process_Base):
 
             # FIX: IF self.learning IS AN ACTUAL LearningProjection OBJECT, NEED TO RESPECIFY AS CLASS + PARAMS
             # FIX:     OR CAN THE SAME LearningProjection OBJECT BE SHARED BY MULTIPLE PROJECTIONS?
-            # FIX:     DOES IT HAVE ANY INTERNAL STATE VARIABLES OR PARAMS THAT NEED TO BE PROJECTIONS-SPECIFIC?
+            # FIX:     DOES IT HAVE ANY INTERNAL PORT VARIABLES OR PARAMS THAT NEED TO BE PROJECTIONS-SPECIFIC?
             # FIX:     MAKE IT A COPY?
 
             matrix_spec = (self.default_projection_matrix, self.learning)
@@ -1242,15 +1242,15 @@ class Process(Process_Base):
                                 if isinstance(projection, LearningProjection)
                             )
 
-                        # FIX: 10/3/17: USE OF TUPLE AS ITEM IN state_list ARGS BELOW IS NO LONGER SUPPORTED
-                        #               NEED TO REFORMAT SPECS FOR state_list BELOW
+                        # FIX: 10/3/17: USE OF TUPLE AS ITEM IN port_list ARGS BELOW IS NO LONGER SUPPORTED
+                        #               NEED TO REFORMAT SPECS FOR port_list BELOW
                         #               (NOTE: THESE EXCEPTIONS ARE NOT BEING CALLED IN CURRENT TEST SUITES)
                         # preceding_item doesn't have a _parameter_ports attrib, so assign one with self.learning
                         except AttributeError:
                             # Instantiate _parameter_ports Ordered dict with ParameterPort and self.learning
                             preceding_item._parameter_ports = _instantiate_port_list(
                                     owner=preceding_item,
-                                    state_list=[(MATRIX, self.learning)],
+                                    port_list=[(MATRIX, self.learning)],
                                     port_types=ParameterPort,
                                     port_Param_identifier=PARAMETER_PORT,
                                     reference_value=self.learning,
@@ -1261,7 +1261,7 @@ class Process(Process_Base):
                         # preceding_item has _parameter_ports but not (yet!) one for MATRIX, so instantiate it
                         except KeyError:
                             # Instantiate ParameterPort for MATRIX
-                            preceding_item._parameter_ports[MATRIX] = _instantiate_state(
+                            preceding_item._parameter_ports[MATRIX] = _instantiate_port(
                                 owner=preceding_item,
                                 port_type=ParameterPort,
                                 name=MATRIX,
@@ -1311,7 +1311,7 @@ class Process(Process_Base):
                                 # Instantiate _parameter_ports Ordered dict with ParameterPort for self.learning
                                 projection._parameter_ports = _instantiate_port_list(
                                     owner=preceding_item,
-                                    state_list=[(MATRIX, self.learning)],
+                                    port_list=[(MATRIX, self.learning)],
                                     port_types=ParameterPort,
                                     port_Param_identifier=PARAMETER_PORT,
                                     reference_value=self.learning,
@@ -1323,7 +1323,7 @@ class Process(Process_Base):
                             #    so instantiate it with self.learning
                             except KeyError:
                                 # Instantiate ParameterPort for MATRIX
-                                projection._parameter_ports[MATRIX] = _instantiate_state(
+                                projection._parameter_ports[MATRIX] = _instantiate_port(
                                     owner=preceding_item,
                                     port_type=ParameterPort,
                                     name=MATRIX,
@@ -1447,7 +1447,7 @@ class Process(Process_Base):
 
                 # FIX: PARSE/VALIDATE ALL FORMS OF PROJECTION SPEC (ITEM PART OF TUPLE) HERE:
                 # FIX:                                                          CLASS, OBJECT, DICT, STR, TUPLE??
-                # IMPLEMENT: MOVE Port._instantiate_projections_to_state(), _check_projection_receiver()
+                # IMPLEMENT: MOVE Port._instantiate_projections_to_port(), _check_projection_receiver()
                 #            and _parse_projection_keyword() all to Projection_Base.__init__() and call that
                 #           VALIDATION OF PROJECTION OBJECT:
                 #                MAKE SURE IT IS A MappingProjection
@@ -1800,7 +1800,7 @@ class Process(Process_Base):
                                            "variable ({3}) for inputPort {4} of {5}".
                                            format(j, process_input[j], self.name,
                                                   mechanism.defaults.variable[i], i, mechanism.name))
-                    # Create MappingProjection from Process buffer_intput_state to corresponding mechanism.input_port
+                    # Create MappingProjection from Process buffer_intput_port to corresponding mechanism.input_port
                     proj = MappingProjection(sender=self.process_input_ports[j],
                             receiver=mechanism.input_ports[i],
                             name=self.name+'_Input Projection')

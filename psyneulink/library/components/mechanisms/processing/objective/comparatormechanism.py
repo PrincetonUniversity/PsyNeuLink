@@ -45,7 +45,7 @@ the length specified for an InputPort can differ from its corresponding OutputPo
 MappingProjection created uses a `FULL_CONNECTIVITY` matrix.  Thus, OutputPorts of differing lengths can be mapped
 to the sample and target InputPorts of a ComparatorMechanism (see the `example <ComparatorMechanism_Example>` below),
 so long as the latter are of the same length.  If a projection other than a `FULL_CONNECTIVITY` matrix is needed, this
-can be specified using the *PROJECTION* entry of a `Port specification dictionary <Port_specification>` for the
+can be specified using the *PROJECTION* entry of a `Port specification dictionary <Port_Specification>` for the
 InputPort in the **input_ports** argument.
 
 .. _ComparatorMechanism_Structure:
@@ -434,7 +434,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                 # input_ports arg specified in standard state specification dict format
                 lengths = [len(input_port[VARIABLE]) for input_port in input_ports]
             else:
-                # input_ports arg specified in {<Port_Name>:<STATE SPECIFICATION DICT>} format
+                # input_ports arg specified in {<Port_Name>:<PORT SPECIFICATION DICT>} format
                 lengths = [len(list(input_port_dict.values())[0][VARIABLE]) for input_port_dict in input_ports]
 
             if lengths[0] != lengths[1]:

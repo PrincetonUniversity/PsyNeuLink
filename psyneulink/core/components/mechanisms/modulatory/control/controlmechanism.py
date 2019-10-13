@@ -949,8 +949,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
     initMethod = INIT_EXECUTE_METHOD_ONLY
 
     outputPortTypes = ControlSignal
-    stateListAttr = Mechanism_Base.stateListAttr.copy()
-    stateListAttr.update({ControlSignal:CONTROL_SIGNALS})
+    portListAttr = Mechanism_Base.portListAttr.copy()
+    portListAttr.update({ControlSignal:CONTROL_SIGNALS})
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
@@ -1405,7 +1405,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         # Print monitored_output_ports
         if self.prefs.verbosePref:
             print("{0} monitoring:".format(self.name))
-            for state in self.monitored_output_ports:
+            for port in self.monitored_output_ports:
                 weight = self.monitored_output_ports_weights_and_exponents[
                                                          self.monitored_output_ports.index(state)][WEIGHT_INDEX]
                 exponent = self.monitored_output_ports_weights_and_exponents[
@@ -1455,7 +1455,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
     def _instantiate_output_ports(self, context=None):
 
     # ---------------------------------------------------
-    # FIX 5/23/17: PROJECTIONS AND PARAMS SHOULD BE PASSED BY ASSIGNING TO STATE SPECIFICATION DICT
+    # FIX 5/23/17: PROJECTIONS AND PARAMS SHOULD BE PASSED BY ASSIGNING TO PORT SPECIFICATION DICT
     # FIX          UPDATE parse_port_spec TO ACCOMODATE (param, ControlSignal) TUPLE
     # FIX          TRACK DOWN WHERE PARAMS ARE BEING HANDED OFF TO ControlProjection
     # FIX                   AND MAKE SURE THEY ARE NOW ADDED TO ControlSignal SPECIFICATION DICT
@@ -1472,7 +1472,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         # # to capture any user_defined ControlSignals and/or GatingSignals instantiated in call to super
         # # and assign to ContentAddressableLists
         # self._control_signals = ContentAddressableList(component_type=ControlSignal,
-        #                                                list=[state for state in self.output_ports
+        #                                                list=[state for port in self.output_ports
         #                                                      if isinstance(state, (ControlSignal, GatingSignal))])
 
     def _register_control_signal_type(self, context=None):
@@ -1482,7 +1482,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         # Create registry for ControlSignals (to manage names)
         register_category(entry=ControlSignal,
                           base_class=Port_Base,
-                          registry=self._stateRegistry,
+                          registry=self._portRegistry,
                           context=context)
 
     def _instantiate_control_signals(self, context):
@@ -1564,12 +1564,12 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
     def _instantiate_control_signal_type(self, control_signal_spec, context):
         """Instantiate actual ControlSignal, or subclass if overridden"""
-        from psyneulink.core.components.ports.port import _instantiate_state
+        from psyneulink.core.components.ports.port import _instantiate_port
         from psyneulink.core.components.projections.projection import ProjectionError
 
         allocation_parameter_default = self.parameters.control_allocation.default_value
 
-        control_signal = _instantiate_state(port_type=ControlSignal,
+        control_signal = _instantiate_port(port_type=ControlSignal,
                                                owner=self,
                                                variable=self.default_allocation           # User specified value
                                                         or allocation_parameter_default,  # Parameter default
@@ -1593,7 +1593,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         for existing_ctl_sig in control_signals:
             # OK if control_signal is one already assigned to ControlMechanism (i.e., let it get processed below);
-            # this can happen if it was in deferred_init status and initalized in call to _instantiate_state above.
+            # this can happen if it was in deferred_init status and initalized in call to _instantiate_port above.
             if control_signal == existing_ctl_sig:
                 continue
 
@@ -1624,8 +1624,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         print("\n{0}".format(self.name))
         print("\n\tMonitoring the following Mechanism OutputPorts:")
-        for state in self.objective_mechanism.input_ports:
-            for projection in state.path_afferents:
+        for port in self.objective_mechanism.input_ports:
+            for projection in port.path_afferents:
                 monitored_port = projection.sender
                 monitored_port_Mech = projection.sender.owner
                 # ContentAddressableList
@@ -1770,7 +1770,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         if (len(self.control_signals)==1
                 and self.control_signals[0].name=='ControlSignal-0'
                 and not self.control_signals[0].efferents):
-            # FIX: REPLACE WITH remove_states
+            # FIX: REPLACE WITH remove_ports
             del self._output_ports[0]
             # del self.control_signals[0]
 
@@ -1819,7 +1819,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         if (len(ctl_sig_attribute)==1
                 and ctl_sig_attribute[0].name==type+'-0'
                 and not ctl_sig_attribute[0].efferents):
-            self.remove_states(ctl_sig_attribute[0])
+            self.remove_ports(ctl_sig_attribute[0])
 
     def _activate_projections_for_compositions(self, composition=None):
         """Activate eligible Projections to or from nodes in Composition.
@@ -1891,19 +1891,9 @@ class ControlMechanism(ModulatoryMechanism_Base):
     def control_signals(self):
         """Get ControlSignals from OutputPorts"""
         try:
-            # # MODIFIED 9/25/19 OLD:
-            # return ContentAddressableList(component_type=ControlSignal,
-            #                               list=[state for state in self.output_ports
-            #                                     if isinstance(state, (ControlSignal, GatingSignal))])
-            # # MODIFIED 9/25/19 NEW: [JDC]
-            # return [state for state in self.output_ports if isinstance(state, (ControlSignal, GatingSignal))]
-            # # MODIFIED 9/25/19 NEWER: [JDC]
-            # return [state for state in self.output_ports if isinstance(state, ControlSignal)]
-            # MODIFIED 9/26/19 NEWEST: [JDC]
             return ContentAddressableList(component_type=ControlSignal,
-                                          list=[state for state in self.output_ports
-                                                if isinstance(state, (ControlSignal))])
-            # MODIFIED 9/25/19 END
+                                          list=[port for port in self.output_ports
+                                                if isinstance(port, (ControlSignal))])
         except:
             return []
 
@@ -1919,7 +1909,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
     # def gating_signals(self):
     #     try:
     #         return ContentAddressableList(component_type=GatingSignal,
-    #                                       list=[state for state in self.output_ports
+    #                                       list=[state for port in self.output_ports
     #                                             if isinstance(state, GatingSignal)])
     #     except:
     #         return None

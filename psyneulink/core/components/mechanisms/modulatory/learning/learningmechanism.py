@@ -907,8 +907,8 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
     outputPortTypes = LearningSignal
 
-    stateListAttr = Mechanism_Base.stateListAttr.copy()
-    stateListAttr.update({LearningSignal:LEARNING_SIGNALS})
+    portListAttr = Mechanism_Base.portListAttr.copy()
+    portListAttr.update({LearningSignal:LEARNING_SIGNALS})
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
@@ -1186,12 +1186,12 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
         from psyneulink.core.globals.registry import register_category
         from psyneulink.core.components.ports.modulatorysignals.learningsignal import LearningSignal
-        from psyneulink.core.components.ports.port import Port_Base, _instantiate_state
+        from psyneulink.core.components.ports.port import Port_Base, _instantiate_port
 
         # Create registry for LearningSignals (to manage names)
         register_category(entry=LearningSignal,
                           base_class=Port_Base,
-                          registry=self._stateRegistry,
+                          registry=self._portRegistry,
                           context=context)
 
         # Instantiate LearningSignals if they are specified, and assign to self._output_ports
@@ -1222,7 +1222,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
             # Parses learning_signal specifications (in call to Port._parse_port_spec)
             #    and any embedded Projection specifications (in call to <Port>._instantiate_projections)
-            learning_signal = _instantiate_state(port_type=LearningSignal,
+            learning_signal = _instantiate_port(port_type=LearningSignal,
                                                  owner=self,
                                                  variable=(OWNER_VALUE,0),
                                                  params=params,
@@ -1235,7 +1235,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
             self._output_ports.append(learning_signal)
 
         # Assign LEARNING_SIGNAL as the name of the 1st LearningSignal; the names of any others can be user-defined
-        first_learning_signal = next(state for state in self.output_ports if isinstance(state, LearningSignal))
+        first_learning_signal = next(port for port in self.output_ports if isinstance(port, LearningSignal))
         first_learning_signal.name = LEARNING_SIGNAL
 
         super()._instantiate_output_ports(context=context)
@@ -1243,8 +1243,8 @@ class LearningMechanism(ModulatoryMechanism_Base):
         # Reassign learning_signals to capture any user_defined LearningSignals instantiated in call to super
         #   and assign them to a ContentAddressableList
         self._learning_signals = ContentAddressableList(component_type=LearningSignal,
-                                                        list=[state for state in self.output_ports if
-                                                                  isinstance(state, LearningSignal)])
+                                                        list=[port for port in self.output_ports if
+                                                                  isinstance(port, LearningSignal)])
 
         # Initialize _error_signals;  this is assigned for efficiency (rather than just using the property)
         #    since it is used by the execute method
@@ -1254,9 +1254,9 @@ class LearningMechanism(ModulatoryMechanism_Base):
     def add_ports(self, error_sources, context=None):
         """Add error_source and error_matrix for each InputPort added"""
 
-        states = super().add_ports(states=error_sources)
+        ports = super().add_ports(ports=error_sources)
         instantiated_input_ports = []
-        for input_port in states[INPUT_PORTS]:
+        for input_port in ports[INPUT_PORTS]:
             error_source = input_port.path_afferents[0].sender.owner
             self.error_matrices.append(error_source.primary_learned_projection.parameter_ports[MATRIX])
             if ERROR_SIGNAL in input_port.name:
@@ -1266,12 +1266,12 @@ class LearningMechanism(ModulatoryMechanism_Base):
         return instantiated_input_ports
 
     # FIX 7/28/19 [JDC]:  REMOVE THIS ONCE error_input_ports HAS SETTER OR IS OTHERWISE REFACTORED
-    def remove_states(self, states):
+    def remove_ports(self, ports):
         """Keep error_signal_input_ports and error_matrices in sych with error_signals in input_ports"""
-        states = convert_to_list(states)
-        for i, state in enumerate([s for s in states if s in self.error_signal_input_ports]):
+        ports = convert_to_list(ports)
+        for i, port in enumerate([s for s in ports if s in self.error_signal_input_ports]):
             del self.error_matrices[i]
-        super().remove_states(states=states)
+        super().remove_ports(ports=ports)
         self._error_signal_input_ports = [s for s in self.input_ports if ERROR_SIGNAL in s.name]
 
     def _execute(

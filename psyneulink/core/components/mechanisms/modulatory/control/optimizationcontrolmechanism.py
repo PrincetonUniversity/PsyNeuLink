@@ -183,7 +183,7 @@ OptimizationControlMechanism's `agent_rep <OptimizationControlMechanism.agent_re
 ^^^^^^^^^^
 
 In addition to its `primary InputPort <InputPort_Primary>` (which typically receives a projection from the
-*OUTCOME* OutpuState of the `objective_mechanism <ControlMechanism.objective_mechanism>`,
+*OUTCOME* OutputPort of the `objective_mechanism <ControlMechanism.objective_mechanism>`,
 an OptimizationControlMechanism also has an `InputPort` for each of its features. By default, these are the current
 `input <Composition.input_values>` for the Composition to which the OptimizationControlMechanism belongs.  However,
 different values can be specified, as can a `feature_function <OptimizationControlMechanism_Feature_Function>` that
@@ -215,7 +215,7 @@ The current `value <InputPort.value>` of the InputPorts for the features are lis
 
 .. _OptimizationControlMechanism_State:
 
-*Port*
+*State*
 ^^^^^^^
 
 The state of the Composition (or part of one) controlled by an OptimizationControlMechanism is defined by a combination
@@ -791,11 +791,11 @@ class OptimizationControlMechanism(ControlMechanism):
         super()._instantiate_input_ports(context=context)
 
         for i in range(1, len(self.input_ports)):
-            state = self.input_ports[i]
-            if len(state.path_afferents) > 1:
+            port = self.input_ports[i]
+            if len(port.path_afferents) > 1:
                 raise OptimizationControlMechanismError(f"Invalid {InputPort.__name__} on {self.name}. "
-                                                        f"{state.name} should receive exactly one projection, "
-                                                        f"but it receives {len(state.path_afferents)} projections.")
+                                                        f"{port.name} should receive exactly one projection, "
+                                                        f"but it receives {len(port.path_afferents)} projections.")
 
     def _instantiate_output_ports(self, context=None):
         """Assign CostFunctions.DEFAULTS as default for cost_option of ControlSignals.
@@ -864,9 +864,9 @@ class OptimizationControlMechanism(ControlMechanism):
         outcome_input_port._update(context=context, params=runtime_params)
         port_values = [np.atleast_2d(outcome_input_port.parameters.value._get(context))]
         for i in range(1, len(self.input_ports)):
-            state = self.input_ports[i]
-            state._update(context=context, params=runtime_params)
-            port_values.append(state.parameters.value._get(context))
+            port = self.input_ports[i]
+            port._update(context=context, params=runtime_params)
+            port_values.append(port.parameters.value._get(context))
         return np.array(port_values)
 
     def _execute(self, variable=None, context=None, runtime_params=None):

@@ -1202,8 +1202,8 @@ class AutodiffComposition(Composition):
             if len(node.component.input_ports) > 1:
                 raise AutodiffCompositionError("Mechanism {0} of {1} has more than one InputPort. Autodiff "
                                                "Compositions only allow mechanisms to have one InputPort. The "
-                                               "dimensionality of this state's value will become the dimensionality of "
-                                               "the tensor representing the state's mechanism in the underlying "
+                                               "dimensionality of this port's value will become the dimensionality of "
+                                               "the tensor representing the port's mechanism in the underlying "
                                                "Pytorch model."
                                                .format(node.component, self.name))
 

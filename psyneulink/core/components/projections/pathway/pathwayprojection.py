@@ -68,7 +68,7 @@ class PathwayProjection_Base(Projection_Base):
 
     componentCategory = PATHWAY_PROJECTION
 
-    def _assign_default_projection_name(self, state=None, sender_name=None, receiver_name=None):
+    def _assign_default_projection_name(self, port=None, sender_name=None, receiver_name=None):
 
         from psyneulink.core.components.mechanisms.mechanism import Mechanism
 

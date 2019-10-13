@@ -30,7 +30,7 @@ class TestOutputPorts:
         #    as a consequence, when added as a terminal node, the Composition can't construct an IDENTITY_MATRIX
         #    from the mech's OutputPorts to the Composition's output_CIM.
         # FIX: Remove the following line and correct assertions below once above condition is resolved
-        mech.remove_states(states=mech.output_ports['all'])
+        mech.remove_ports(ports=mech.output_ports['all'])
         C = pnl.Composition(name='MyComp')
         C.add_node(node=mech)
         outs = C.run(inputs={mech: np.array([[0]])})
