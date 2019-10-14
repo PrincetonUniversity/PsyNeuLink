@@ -35,9 +35,8 @@ install:
   - pip install --user -U certifi
   - pip install --user git+https://github.com/benureau/leabra.git@master
 
-  # pytorch does not distribute windows packages over pypi.
-  # Install it directly, or remove from requirements if not available (win32).
-  - if "%ARCH%" == "" (findstr /V torch < requirements.txt > tmp_req && move /Y tmp_req requirements.txt) else (pip install --user torch -f https://download.pytorch.org/whl/cpu/torch_stable.html)
+  # pytorch does not distribute windows packages over pypi. Install it directly.
+  - if not "%ARCH%" == "" (pip install --user torch -f https://download.pytorch.org/whl/cpu/torch_stable.html)
 
   - pip install --user -e .[dev]
 
