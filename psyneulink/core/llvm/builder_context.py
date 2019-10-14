@@ -164,6 +164,10 @@ class LLVMBuilderContext:
         return cls.__current_context
 
     @classmethod
+    def is_active(cls):
+        return cls.__current_context is not None
+
+    @classmethod
     def clear_global(cls):
         cls.__current_context = None
 
