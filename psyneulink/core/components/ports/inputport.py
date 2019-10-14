@@ -137,11 +137,12 @@ method (see `examples <Port_Create_Port_Examples>` in Port).
 
     .. note::
        Adding InputPorts *does not replace* any that the Mechanism generates by default;  rather they are added to the
-       Mechanism, and appended to the list of InputPorts in its `input_ports <Mechanism_Base>` attribute. Importantly,
-       the Mechanism's `variable <Mechanism_Base.variable>` attribute is extended with items that correspond to the
-       `value <InputPort.value>` attribute of each added InputPort.  This may affect the relationship of the
-       Mechanism's `variable <Mechanism_Base.variable>` to its `function <Mechanism_Base.function>`, as well as the
-       number of its `OutputPorts <OutputPort>` (see `note <Mechanism_Add_InputPorts_Note>`).
+       Mechanism, and appended to the list of InputPorts in its `input_ports <Mechanism_Base.input_ports>` attribute.
+       Importantly, the Mechanism's `variable <Mechanism_Base.variable>` attribute is extended with items that
+       correspond to the `value <InputPort.value>` attribute of each added InputPort.  This may affect the
+       relationship of the Mechanism's `variable <Mechanism_Base.variable>` to its `function
+       <Mechanism_Base.function>`, as well as the number of its `OutputPorts <OutputPort>` (see `note
+       <Mechanism_Add_InputPorts_Note>`).
 
 If the name of an InputPort added to a Mechanism is the same as one that already exists, its name is suffixed with a
 numerical index (incremented for each InputPort with that name; see `Naming`), and the InputPort is added to the
