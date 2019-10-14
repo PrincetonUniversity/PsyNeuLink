@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AGTControlMechanism &mdash; PsyNeuLink 0.6.0.3+3.g33a3ccb documentation</title>
+  <title>AGTControlMechanism &mdash; PsyNeuLink 0.6.0.3+4.g56a6c15 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3+3.g33a3ccb',
+              VERSION:'0.6.0.3+4.g56a6c15',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.3+3
+                0.6.0.3+4
               </div>
             
           
@@ -214,10 +214,10 @@ in the <a class="reference internal" href="ControlMechanism.html#controlmechanis
 <span id="agtcontrolmechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="input-objectivemechanism-and-monitored-outputports">
 <span id="agtcontrolmechanism-input"></span><h3><em>Input: ObjectiveMechanism and Monitored OutputPorts</em><a class="headerlink" href="#input-objectivemechanism-and-monitored-outputports" title="Permalink to this headline">¶</a></h3>
-<p>An AGTControlMechanism has a single (primary) <code class="xref any docutils literal"><span class="pre">InputPort</span></code> that receives its input via a
+<p>An AGTControlMechanism has a single (primary) <a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">InputPort</span></a> that receives its input via a
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the <em>OUTCOME</em> <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-output"><span class="std std-ref">OutputPort</span></a> of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>. The
 ObjectiveMechanism is created automatically when the AGTControlMechanism is created, using a <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DualAdaptiveIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DualAdaptiveIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">DualAdaptiveIntegrator</span></code></a>
-as its <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and is listed in the AGTControlMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> attribute.  The ObjectiveMechanism aggregates the <code class="xref any docutils literal"><span class="pre">value</span></code>s of the OutputPorts that it monitors, integrates their aggregated value at two different
+as its <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and is listed in the AGTControlMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> attribute.  The ObjectiveMechanism aggregates the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>s of the OutputPorts that it monitors, integrates their aggregated value at two different
 rates, and combines those to generate the its output, which is used by the AGTControlMechanism as its input. The
 OutputPorts monitored by the ObjectiveMechanism, listed in its <code class="xref any docutils literal"><span class="pre">monitored_output_ports</span></code> attribute, are also listed in the AGTControlMechanism’s
 <code class="xref any docutils literal"><span class="pre">monitored_output_ports</span></code> attribute.  They can be displayed using
@@ -246,7 +246,7 @@ ControlSignal’s <a class="reference internal" href="ControlProjection.html"><s
 </div>
 <div class="section" id="execution">
 <span id="agtcontrolmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>An AGTControlMechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code> takes as its input the <code class="xref any docutils literal"><span class="pre">value</span></code> of
+<p>An AGTControlMechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code> takes as its input the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of
 its <em>OUTCOME</em> <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_port" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_port"><code class="xref any py py-attr docutils literal"><span class="pre">input_port</span></code></a>, and uses that to determine its <code class="xref any docutils literal"><span class="pre">control_allocation</span></code> which specifies the value assigned to the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> of each of
 its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>.  An AGTControlMechanism assigns the same value (the <a class="reference internal" href="#agtcontrolmechanism-input"><span class="std std-ref">input</span></a> it
 receives from its <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> to all of its ControlSignals.  Each
@@ -316,7 +316,7 @@ is <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.c
 <code class="descname">monitored_output_ports</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.monitored_output_ports" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>List[OutputPort]</em> – each item is an <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> monitored by the <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>; it is
 the same as the ObjectiveMechanism’s <code class="xref any docutils literal"><span class="pre">monitored_output_ports</span></code>
-attribute. The <code class="xref any docutils literal"><span class="pre">value</span></code> of the OutputPorts listed are used by the ObjectiveMechanism to
+attribute. The <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the OutputPorts listed are used by the ObjectiveMechanism to
 generate the AGTControlMechanism’s <a class="reference internal" href="#agtcontrolmechanism-input"><span class="std std-ref">input</span></a>.</p>
 </dd></dl>
 

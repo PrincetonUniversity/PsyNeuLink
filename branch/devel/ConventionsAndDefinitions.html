@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Conventions and Definitions &mdash; PsyNeuLink 0.6.0.3+3.g33a3ccb documentation</title>
+  <title>Conventions and Definitions &mdash; PsyNeuLink 0.6.0.3+4.g56a6c15 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3+3.g33a3ccb',
+              VERSION:'0.6.0.3+4.g56a6c15',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.6.0.3+3
+                0.6.0.3+4
               </div>
             
           
@@ -293,7 +293,7 @@ MappingProjection.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><code class="xref any docutils literal"><span class="pre">Ports</span></code></dt>
+<dt><a class="reference internal" href="Port.html"><span class="doc">Ports</span></a></dt>
 <dd>A Port is an object that belongs to a Mechanism, and that it is used to represent it input(s), parameter(s)
 of its function, or its output(s).   There are three types of Ports, one for each type of representation,
 each of which can receive and/or send a combination of PathwayProjections and/or ModulatoryProjections
@@ -321,7 +321,7 @@ that modify the parameter(s) of the Port’s function, and thereby the value of 
 <dt><a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a></dt>
 <dd>Represents an output of the Mechanism.
 Takes an item of the Mechanism’s <code class="xref any docutils literal"><span class="pre">value</span></code> as the <code class="xref any docutils literal"><span class="pre">variable</span></code> for the Port’s
-<code class="xref any docutils literal"><span class="pre">function</span></code>, assigns the result as the Port’s <code class="xref any docutils literal"><span class="pre">value</span></code>, and provides that
+<code class="xref any docutils literal"><span class="pre">function</span></code>, assigns the result as the Port’s <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, and provides that
 to one or more efferent PathwayProjections.  It can also receive one or more <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">modulatory projections</span></a> (<a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> or <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a>), that modify the parameter(s) of the Port’s
 function, and thereby the Port’s <code class="xref any docutils literal"><span class="pre">value</span></code>.</dd>
 </dl>

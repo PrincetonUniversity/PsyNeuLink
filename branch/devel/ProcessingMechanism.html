@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Processing Mechanisms &mdash; PsyNeuLink 0.6.0.3+3.g33a3ccb documentation</title>
+  <title>Processing Mechanisms &mdash; PsyNeuLink 0.6.0.3+4.g56a6c15 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3+3.g33a3ccb',
+              VERSION:'0.6.0.3+4.g56a6c15',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.3+3
+                0.6.0.3+4
               </div>
             
           
@@ -111,6 +111,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Port.html">Ports</a></li>
 <li class="toctree-l3"><a class="reference internal" href="Functions.html">Functions</a></li>
 </ul>
 </li>
@@ -238,8 +239,8 @@ individual subtypes of ProcessingMechanism for more specific information about t
 <div class="section" id="execution">
 <span id="processingmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>Three main tasks are completed each time a ProcessingMechanism executes:</p>
-<p>1. The ProcessingMechanism updates its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.variable" title="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">InputPort`(s),</span> <span class="pre">and</span> <span class="pre">their</span> <span class="pre">values</span> <span class="pre">are</span> <span class="pre">used</span> <span class="pre">to</span> <span class="pre">assemble</span> <span class="pre">`variable</span></code></a>. Each InputPort <code class="xref any docutils literal"><span class="pre">value</span></code> (often there is only one <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>) is
-added to an outer array, such that each item of variable corresponds to an InputPort <code class="xref any docutils literal"><span class="pre">value</span></code>.</p>
+<p>1. The ProcessingMechanism updates its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.variable" title="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">InputPort`(s),</span> <span class="pre">and</span> <span class="pre">their</span> <span class="pre">values</span> <span class="pre">are</span> <span class="pre">used</span> <span class="pre">to</span> <span class="pre">assemble</span> <span class="pre">`variable</span></code></a>. Each InputPort <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (often there is only one <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>) is
+added to an outer array, such that each item of variable corresponds to an InputPort <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</p>
 <p>2. The ProcessingMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.variable" title="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is handed off as the input to the
 ProcessingMechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code>, and the function executes.</p>
 <p>3. The result of the ProcessingMechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code> is placed in the Mechanism’s
@@ -265,7 +266,7 @@ belongs is run. A ProcessingMechanism always executes before any <a class="refer
 <li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray</em>) – the input to the Mechanism to use if none is provided in a call to its
 <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.run" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> methods;
 also serves as a template to specify the length of <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.variable" title="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for
-<code class="xref any docutils literal"><span class="pre">function</span></code>, and the <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">outputPort</span></code> of the
+<code class="xref any docutils literal"><span class="pre">function</span></code>, and the <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary outputPort</span></a> of the
 Mechanism.</li>
 <li><strong>size</strong> (<em>int</em><em>, </em><em>list</em><em> or </em><em>np.ndarray of ints</em>) – <p>specifies default_variable as array(s) of zeros if <strong>default_variable</strong> is not passed as an argument;
 if <strong>default_variable</strong> is specified, it takes precedence over the specification of <strong>size</strong>.

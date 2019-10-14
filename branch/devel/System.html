@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>System &mdash; PsyNeuLink 0.6.0.3+3.g33a3ccb documentation</title>
+  <title>System &mdash; PsyNeuLink 0.6.0.3+4.g56a6c15 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3+3.g33a3ccb',
+              VERSION:'0.6.0.3+4.g56a6c15',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.6.0.3+3
+                0.6.0.3+4
               </div>
             
           
@@ -204,17 +204,17 @@ any of the ways used to specify the <em>monitored_output_ports</em> for an Objec
 <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitor"><span class="std std-ref">Monitor</span></a>).  In addition, the <strong>monitor_for_control</strong> argument supports two
 other forms of specification:</p>
 <ul class="simple">
-<li><strong>string</strong> – must be the <code class="xref any docutils literal"><span class="pre">name</span></code> of an <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> in the System
+<li><strong>string</strong> – must be the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.name" title="psyneulink.core.components.ports.outputport.OutputPort.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a> of an <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> in the System
 (see third example under <a class="reference internal" href="#system-control-examples"><span class="std std-ref">Specifying Control for a System</span></a>).  This can be used anywhere a reference to an OutputPort can
-ordinarily be used (e.g., in an <code class="xref any docutils literal"><span class="pre">InputPort</span> <span class="pre">tuple</span> <span class="pre">specification</span></code>). Any OutputPort
+ordinarily be used (e.g., in an <a class="reference internal" href="InputPort.html#inputport-tuple-specification"><span class="std std-ref">InputPort tuple specification</span></a>). Any OutputPort
 with a name matching the string will be monitored, including ones with the same name that belong to different
 Mechanisms within the System. If an OutputPort of a particular Mechanism is desired, and it shares its name with
-other Mechanisms in the System, then it must be referenced explicitly (see <code class="xref any docutils literal"><span class="pre">InputPort</span> <span class="pre">specification</span></code>, and examples under <a class="reference internal" href="#system-control-examples"><span class="std std-ref">Specifying Control for a System</span></a>).</li>
+other Mechanisms in the System, then it must be referenced explicitly (see <a class="reference internal" href="InputPort.html#inputport-specification"><span class="std std-ref">InputPort specification</span></a>, and examples under <a class="reference internal" href="#system-control-examples"><span class="std std-ref">Specifying Control for a System</span></a>).</li>
 <li><strong>MonitoredOutputPortsOption</strong> – must be a value of <code class="xref any docutils literal"><span class="pre">MonitoredOutputPortsOption</span></code>, and must appear alone or as a
 single item in the list specifying the <strong>monitor_for_control</strong> argument;  any other specification(s) included in
 the list will take precedence.  The MonitoredOutputPortsOption applies to all of the Mechanisms in the System
 except its <a class="reference internal" href="#psyneulink.core.components.system.System.controller" title="psyneulink.core.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> and <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a>. The
-<em>PRIMARY_OUTPUT_PORTS</em> value specifies that the <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">OutputPort</span></code> of every Mechanism be
+<em>PRIMARY_OUTPUT_PORTS</em> value specifies that the <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> of every Mechanism be
 monitored, whereas <em>ALL_OUTPUT_PORTS</em> specifies that <em>every</em> OutputPort of every Mechanism be monitored.</li>
 </ul>
 <p>The default for the <strong>monitor_for_control</strong> argument is <em>MonitoredOutputPortsOption.PRIMARY_OUTPUT_PORTS</em>.
@@ -415,7 +415,7 @@ that include two <a class="reference internal" href="Mechanism.html"><span class
 </pre></div>
 </div>
 <p>A constructor is used to specify the EVCControlMechanism that includes a constructor specifying its <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>;  the <strong>monitored_output_ports</strong> argument of the ObjectiveMechanism’s constructor
-is used to specify that it should monitor the <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">OutputPort</span></code> of the Reward Mechanism
+is used to specify that it should monitor the <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> of the Reward Mechanism
 and the <em>PROBABILITY_UPPER_THRESHOLD</em> and <em>RESPONSE_TIME</em> and, specifying how it should combine them (see the <a class="reference internal" href="ControlMechanism.html#controlmechanism-examples"><span class="std std-ref">example</span></a> under ControlMechanism for an explanation). Note that the <strong>function</strong> argument for the
 ObjectiveMechanism’s constructor is also specified;  this is because an ObjectiveMechanism uses <em>SUM</em> as the default
 for the <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination.operation" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.operation"><code class="xref any py py-attr docutils literal"><span class="pre">operation</span></code></a> of its <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function, whereas as the EVCControlMechanism
@@ -485,7 +485,7 @@ lists, each is treated as a pathway specification for a Process; any other args 
 <dl class="attribute">
 <dt id="psyneulink.core.components.system.System.controller">
 <code class="descname">controller</code><a class="headerlink" href="#psyneulink.core.components.system.System.controller" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ControlMechanism : default SystemDefaultControlMechanism</em> – the <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> used to monitor the <code class="xref any docutils literal"><span class="pre">value</span></code> of the <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort(s)</span></a> and/or <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> specified in the <strong>monitor_for_control</strong> argument,
+<dd><p><em>ControlMechanism : default SystemDefaultControlMechanism</em> – the <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> used to monitor the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort(s)</span></a> and/or <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> specified in the <strong>monitor_for_control</strong> argument,
 and that controls the parameters specified in the <strong>control_signals</strong> argument of the System’s constructor.</p>
 </dd></dl>
 
@@ -935,11 +935,11 @@ Processes;  these represent intersections of Processes within the System.</li>
 <code class="xref any docutils literal"><span class="pre">Ports</span></code>;  can have the following settings:</p>
 <ul>
 <li><code class="xref any docutils literal"><span class="pre">True</span></code> – shows Ports of Mechanism, but not information about the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> or <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism or its Ports.</li>
-<li><em>VALUES</em> – shows the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism and the <a class="reference internal" href="State.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each of its Ports.</li>
-<li><em>LABELS</em> – shows the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism and the <a class="reference internal" href="State.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each of its Ports, using any labels for the values of InputPorts and
+<li><em>VALUES</em> – shows the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism and the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each of its Ports.</li>
+<li><em>LABELS</em> – shows the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism and the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each of its Ports, using any labels for the values of InputPorts and
 OutputPorts specified in the Mechanism’s <code class="xref any docutils literal"><span class="pre">input_labels_dict</span></code> and
 <code class="xref any docutils literal"><span class="pre">output_labels_dict</span></code>, respectively.</li>
-<li><em>FUNCTIONS</em> – shows the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism and the <a class="reference internal" href="State.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of its InputPorts and OutputPorts.</li>
+<li><em>FUNCTIONS</em> – shows the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism and the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of its InputPorts and OutputPorts.</li>
 <li><em>ROLES</em> – shows the <a class="reference internal" href="#system-mechanisms"><span class="std std-ref">role</span></a> of the Mechanism in the System in square brackets
 (but not any of the other information;  use <em>ALL</em> to show ROLES with other information).</li>
 <li><em>ALL</em> – shows both <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> and <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism and
@@ -969,8 +969,8 @@ by the <strong>origin_color</strong>, <strong>terminal_color</strong> and <stron
 is <code class="xref any docutils literal"><span class="pre">True</span></code>);  can have the following settings:</p>
 <ul>
 <li><em>MECHANISMS</em> – shows <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> input and output dimensions.  Input dimensions are shown in parentheses
-below the name of the Mechanism; each number represents the dimension of the <code class="xref any docutils literal"><span class="pre">variable</span></code> for each <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> of the Mechanism; Output dimensions are shown above
-the name of the Mechanism; each number represents the dimension for <code class="xref any docutils literal"><span class="pre">value</span></code> of each
+below the name of the Mechanism; each number represents the dimension of the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for each <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> of the Mechanism; Output dimensions are shown above
+the name of the Mechanism; each number represents the dimension for <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each
 of <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of the Mechanism.</li>
 <li><em>PROJECTIONS</em> – shows <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> dimensions.  Each is
 shown in (&lt;dim&gt;x&lt;dim&gt;…) format;  for standard 2x2 “weight” matrix, the first entry is the number of

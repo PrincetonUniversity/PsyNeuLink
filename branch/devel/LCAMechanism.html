@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCAMechanism &mdash; PsyNeuLink 0.6.0.3+3.g33a3ccb documentation</title>
+  <title>LCAMechanism &mdash; PsyNeuLink 0.6.0.3+4.g56a6c15 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3+3.g33a3ccb',
+              VERSION:'0.6.0.3+4.g56a6c15',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.3+3
+                0.6.0.3+4
               </div>
             
           
@@ -239,7 +239,7 @@ first execution, <em>initial_value</em> sets previous_value.</p>
 standard <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> would implement the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AdaptiveIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AdaptiveIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">AdaptiveIntegrator</span></code></a> as its <code class="xref any docutils literal"><span class="pre">integrator_function</span></code>)</p>
 <p>2. its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.matrix" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> consisting of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation"><code class="xref any py py-attr docutils literal"><span class="pre">self_excitation</span></code></a> and <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.competition" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.competition"><code class="xref any py py-attr docutils literal"><span class="pre">competition</span></code></a>
 off diagonal.</p>
-<p>In addition to its <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">OutputPort</span></code> (which contains the current value of the
+<p>In addition to its <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> (which contains the current value of the
 elements of the LCAMechanism) and the OutputPorts of a RecurrentTransferMechanism, it has two additional OutputPorts:</p>
 <ul class="simple">
 <li><code class="xref any docutils literal"><span class="pre">MAX_VS_NEXT</span></code></li>
@@ -268,7 +268,7 @@ For an LCAMechanism with more than two elements, <code class="xref any docutils 
 <dl class="class">
 <dt id="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism_OUTPUT">
 <em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.</code><code class="descname">LCAMechanism_OUTPUT</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism_OUTPUT" title="Permalink to this definition">¶</a></dt>
-<dd><p id="lcamechanism-standard-outputports"><code class="xref any docutils literal"><span class="pre">Standard</span> <span class="pre">OutputPorts</span></code> for <a class="reference internal" href="#"><span class="doc">LCAMechanism</span></a>:</p>
+<dd><p id="lcamechanism-standard-outputports"><a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPorts</span></a> for <a class="reference internal" href="#"><span class="doc">LCAMechanism</span></a>:</p>
 <dl class="docutils">
 <dt><em>RESULT</em> <span class="classifier-delimiter">:</span> <span class="classifier">1d np.array</span></dt>
 <dd>result of the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.function" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> calculation</dd>
@@ -324,7 +324,7 @@ other elements</dd>
 <li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray : default Transfer_DEFAULT_BIAS</em>) – specifies the input to the Mechanism to use if none is provided in a call to its
 <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.run" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method;
 also serves as a template to specify the length of <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.variable" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for
-<a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and the <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">OutputPort</span></code>
+<a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and the <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a>
 of the Mechanism.</li>
 <li><strong>size</strong> (<em>int</em><em>, </em><em>list</em><em> or </em><em>np.ndarray of ints</em>) – <p>specifies variable as array(s) of zeros if <strong>variable</strong> is not passed as an argument;
 if <strong>variable</strong> is specified, it takes precedence over the specification of <strong>size</strong>.
@@ -427,7 +427,7 @@ recurrent value (<span class="math">\(f(x)_{i}\)</span>) to the accumulation of 
 <dl class="attribute">
 <dt id="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.recurrent_projection">
 <code class="descname">recurrent_projection</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.recurrent_projection" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MappingProjection</em> – a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that projects from the Mechanism’s <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">OutputPort</span></code>
+<dd><p><em>MappingProjection</em> – a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that projects from the Mechanism’s <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a>
 back to it <a class="reference internal" href="Mechanism.html#mechanism-inputports"><span class="std std-ref">primary inputPort</span></a>.</p>
 </dd></dl>
 

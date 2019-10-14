@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Log &mdash; PsyNeuLink 0.6.0.3+3.g33a3ccb documentation</title>
+  <title>Log &mdash; PsyNeuLink 0.6.0.3+4.g56a6c15 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3+3.g33a3ccb',
+              VERSION:'0.6.0.3+4.g56a6c15',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.3+3
+                0.6.0.3+4
               </div>
             
           
@@ -241,14 +241,14 @@ programmatically (“manually”).  Components can be specified by their names o
 <span id="log-loggable-items"></span><h3><em>Loggable Items</em><a class="headerlink" href="#loggable-items" title="Permalink to this headline">¶</a></h3>
 <p>Although every Component is assigned its own Log, that records the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of that Component,
 the Logs for <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> and <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> also  provide access to and control
-the Logs of their <code class="xref any docutils literal"><span class="pre">Ports</span></code>.  Specifically the Logs of these Components contain the following information:</p>
+the Logs of their <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a>.  Specifically the Logs of these Components contain the following information:</p>
 <ul class="simple">
 <li><strong>Mechanisms</strong><ul>
 <li><em>value</em> – the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism.</li>
-<li><em>InputPorts</em> – the <code class="xref any docutils literal"><span class="pre">value</span></code> of any <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> (listed in the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal"><span class="pre">input_ports</span></code></a> attribute).</li>
+<li><em>InputPorts</em> – the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of any <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> (listed in the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal"><span class="pre">input_ports</span></code></a> attribute).</li>
 <li><em>ParameterPorts</em> – the <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> (listed in the Mechanism’s
 <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.parameter_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.parameter_ports"><code class="xref any py py-attr docutils literal"><span class="pre">parameter_ports</span></code></a> attribute);  this includes all of the <code class="xref any docutils literal"><span class="pre">user</span> <span class="pre">configurable</span></code> parameters of the Mechanism and its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</li>
-<li><em>OutputPorts</em> – the <code class="xref any docutils literal"><span class="pre">value</span></code> of any <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> (listed in the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a> attribute).</li>
+<li><em>OutputPorts</em> – the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of any <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> (listed in the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a> attribute).</li>
 </ul>
 </li>
 </ul>

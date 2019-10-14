@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LearningSignal &mdash; PsyNeuLink 0.6.0.3+3.g33a3ccb documentation</title>
+  <title>LearningSignal &mdash; PsyNeuLink 0.6.0.3+4.g56a6c15 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3+3.g33a3ccb',
+              VERSION:'0.6.0.3+4.g56a6c15',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -44,7 +44,9 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ControlSignal" href="ControlSignal.html" />
+    <link rel="prev" title="Modulatory Signals" href="ModulatorySignal.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -68,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.3+3
+                0.6.0.3+4
               </div>
             
           
@@ -92,11 +94,33 @@
               
             
             
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="Port.html">Ports</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="InputPort.html">InputPort</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ParameterPort.html">ParameterPort</a></li>
+<li class="toctree-l4"><a class="reference internal" href="OutputPort.html">OutputPort</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignals</a><ul class="current">
+<li class="toctree-l5 current"><a class="current reference internal" href="#">LearningSignal</a></li>
+<li class="toctree-l5"><a class="reference internal" href="ControlSignal.html">ControlSignal</a></li>
+<li class="toctree-l5"><a class="reference internal" href="GatingSignal.html">GatingSignal</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="Functions.html">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Composition.html">Compositions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
 </ul>
@@ -144,6 +168,14 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
+          <li><a href="Core.html">Core</a> &raquo;</li>
+        
+          <li><a href="Component.html">Component</a> &raquo;</li>
+        
+          <li><a href="Port.html">Ports</a> &raquo;</li>
+        
+          <li><a href="ModulatorySignal.html">Modulatory Signals</a> &raquo;</li>
+        
       <li>LearningSignal</li>
     
     
@@ -180,7 +212,7 @@ the MappingProjection(s) being learned.</p>
 <p>A LearningSignal is created automatically whenever a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is <a class="reference internal" href="LearningMechanism.html#learningmechanism-creation"><span class="std std-ref">specified for learning</span></a> and the Projection belongs to the same <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> as the
 <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>. LearningSignals can also be specified in the <strong>learning_signals</strong> argument of the constructor
 for a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>. Although a LearningSignal can be created directly using its constructor (or any of the
-other ways for <code class="xref any docutils literal"><span class="pre">creating</span> <span class="pre">an</span> <span class="pre">OutputPort</span></code>), this is neither necessary nor advisable, as a
+other ways for <a class="reference internal" href="OutputPort.html#outputports-creation"><span class="std std-ref">creating an OutputPort</span></a>), this is neither necessary nor advisable, as a
 LearningSignal has dedicated Components and requirements for configuration that must be met for it to function properly.</p>
 <div class="section" id="specifying-learningsignals">
 <span id="learningsignal-specification"></span><h3><em>Specifying LearningSignals</em><a class="headerlink" href="#specifying-learningsignals" title="Permalink to this headline">¶</a></h3>
@@ -238,7 +270,7 @@ attributes of the LearningSignal, as described below.</p>
 <span id="learningsignal-projections"></span><h3><em>Projections</em><a class="headerlink" href="#projections" title="Permalink to this headline">¶</a></h3>
 <p>When a LearningSignal is created, it can be assigned one or more <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a>,
 using either the <strong>projections</strong> argument of its constructor, or in an entry of a dictionary assigned to the
-<strong>params</strong> argument with the key <em>PROJECTIONS</em>.  These will be assigned to its <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.efferents" title="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.efferents"><code class="xref any py py-attr docutils literal"><span class="pre">efferents</span></code></a> attribute.  See <a class="reference internal" href="State.html#port-projections"><span class="std std-ref">Port Projections</span></a> for additional details
+<strong>params</strong> argument with the key <em>PROJECTIONS</em>.  These will be assigned to its <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.efferents" title="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.efferents"><code class="xref any py py-attr docutils literal"><span class="pre">efferents</span></code></a> attribute.  See <a class="reference internal" href="Port.html#port-projections"><span class="std std-ref">Port Projections</span></a> for additional details
 concerning the specification of Projections when creating a Port.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -428,6 +460,15 @@ details).</p>
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="ControlSignal.html" class="btn btn-neutral float-right" title="ControlSignal" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="ModulatorySignal.html" class="btn btn-neutral float-left" title="Modulatory Signals" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

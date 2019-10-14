@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>PredictionErrorMechanism &mdash; PsyNeuLink 0.6.0.3+3.g33a3ccb documentation</title>
+  <title>PredictionErrorMechanism &mdash; PsyNeuLink 0.6.0.3+4.g56a6c15 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3+3.g33a3ccb',
+              VERSION:'0.6.0.3+4.g56a6c15',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.3+3
+                0.6.0.3+4
               </div>
             
           
@@ -229,8 +229,8 @@ differ, the <strong>input_ports</strong> argument can be used to explicitly spec
 format of the PredictionErrorMechanism’s <em>SAMPLE</em> and <em>TARGET</em> InputPorts, to
 insure they are compatible with one another (as well as to customize their
 names, if desired). If the <strong>input_ports</strong> argument is used, <em>both</em> the sample
-and target InputPorts must be specified. Any of the formats for <code class="xref any docutils literal"><span class="pre">specifying</span>
-<span class="pre">InputPorts</span></code> can be used in the argument. If values
+and target InputPorts must be specified. Any of the formats for <a class="reference internal" href="InputPort.html#inputport-specification"><span class="std std-ref">specifying
+InputPorts</span></a> can be used in the argument. If values
 are assigned for the InputPorts, they must be of equal length and type. Their
 types must also be compatible with the value of the OutputPorts specified in
 the <strong>sample</strong> and <strong>target</strong> arguments. However, the length specified for an
@@ -239,7 +239,7 @@ default, the MappingProjection created uses a <code class="xref any docutils lit
 OutputPorts of differing lengths can be mapped to the sample and target
 InputPorts of a PredictionErrorMechanism (see the <a class="reference internal" href="#predictionerrormechanism-example"><span class="std std-ref">example</span></a> below), so long as the latter of of the
 same length. If a projection other than a <code class="xref any docutils literal"><span class="pre">FULL_CONNECTIVITY</span></code> matrix is
-needed, this can be specified using the <em>PROJECTION</em> entry of a <a class="reference internal" href="State.html#port-specification"><span class="std std-ref">Port
+needed, this can be specified using the <em>PROJECTION</em> entry of a <a class="reference internal" href="Port.html#port-specification"><span class="std std-ref">Port
 specification dictionary</span></a> for the InputPort in the
 <strong>input_ports</strong> argument.</p>
 </div>
@@ -259,7 +259,7 @@ default, it uses a <a class="reference internal" href="CombinationFunctions.html
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function" title="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> can be customized, so long as it
 is replaced with one that takes two arrays with the same format as its inputs
 and generates a similar array as its result. The result is assigned as the
-value of the PredictionErrorMechanism’s <em>OUTCOME</em> (<code class="xref any docutils literal"><span class="pre">primary</span></code>) OutputPort.</p>
+value of the PredictionErrorMechanism’s <em>OUTCOME</em> (<a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary</span></a>) OutputPort.</p>
 </div>
 <div class="section" id="execution">
 <span id="predictionerrormechanism-function"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
@@ -292,7 +292,7 @@ value of which is a vector of the same length as the output of sample.</p>
 </pre></div>
 </div>
 <p>Note that <code class="docutils literal"><span class="pre">sample_mech</span></code> is specified to take an array of length 5 as its
-input, and therefore generate one of the same length as its <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">output</span></code>. Since it is assigned as the <strong>sample</strong> of the
+input, and therefore generate one of the same length as its <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary output</span></a>. Since it is assigned as the <strong>sample</strong> of the
 PredictionErrorMechanism, by default this will create a <em>SAMPLE</em> InputPort of
 length 5, that will match the length of the <em>TARGET</em> InputPort.</p>
 <p>Currently the default method of implementing temporal difference learning in
@@ -311,12 +311,12 @@ array representing a full time series as an experiment. See
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>sample</strong> (<em>OutputPort</em><em>, </em><a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base"><em>Mechanism_Base</em></a><em>, </em><em>dict</em><em>, </em><em>number</em><em>, or </em><em>str</em>) – specifies the SAMPLE InputPort, which will be evaluated by
+<li><strong>sample</strong> (<a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><em>OutputPort</em></a><em>, </em><a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base"><em>Mechanism_Base</em></a><em>, </em><em>dict</em><em>, </em><em>number</em><em>, or </em><em>str</em>) – specifies the SAMPLE InputPort, which will be evaluated by
 the function</li>
-<li><strong>target</strong> (<em>OutputPort</em><em>, </em><a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base"><em>Mechanism_Base</em></a><em>, </em><em>dict</em><em>, </em><em>number</em><em>, or </em><em>str</em>) – specifies the TARGET InputPort, which will be used by the function to
+<li><strong>target</strong> (<a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><em>OutputPort</em></a><em>, </em><a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base"><em>Mechanism_Base</em></a><em>, </em><em>dict</em><em>, </em><em>number</em><em>, or </em><em>str</em>) – specifies the TARGET InputPort, which will be used by the function to
 evaluate the sample</li>
 <li><strong>function</strong> (<em>CombinationFunction</em><em>, </em><a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction" title="psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction"><em>ObjectiveFunction</em></a><em>, </em><a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function"><em>function</em></a><em>, or </em><em>method : default PredictionErrorDeltaFunction</em>) – the function used to evaluate the sample and target inputs.</li>
-<li><strong>output_ports</strong> (<em>str</em><em>, </em><em>Iterable : default OUTCOME</em>) – by default, contains only the <em>OUTCOME</em> (<code class="xref any docutils literal"><span class="pre">primary</span></code>)
+<li><strong>output_ports</strong> (<em>str</em><em>, </em><em>Iterable : default OUTCOME</em>) – by default, contains only the <em>OUTCOME</em> (<a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary</span></a>)
 OutputPort of the PredictionErrorMechanism.</li>
 <li><strong>learning_rate</strong> (<em>Number : default 0.3</em>) – controls the weight of later timesteps compared to earlier ones. Higher
 rates weight later timesteps more heavily than previous ones.</li>
@@ -352,7 +352,7 @@ evaluate the sample</p>
 <dl class="attribute">
 <dt id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.output_ports">
 <code class="descname">output_ports</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.output_ports" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str, Iterable : default OUTCOME</em> – by default, contains only the <em>OUTCOME</em> (<code class="xref any docutils literal"><span class="pre">primary</span></code>)
+<dd><p><em>str, Iterable : default OUTCOME</em> – by default, contains only the <em>OUTCOME</em> (<a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary</span></a>)
 OutputPort of the PredictionErrorMechanism.</p>
 </dd></dl>
 

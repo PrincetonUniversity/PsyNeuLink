@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.6.0.3+3.g33a3ccb documentation</title>
+  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.6.0.3+4.g56a6c15 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3+3.g33a3ccb',
+              VERSION:'0.6.0.3+4.g56a6c15',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.3+3
+                0.6.0.3+4
               </div>
             
           
@@ -111,6 +111,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Port.html">Ports</a></li>
 <li class="toctree-l3"><a class="reference internal" href="Functions.html">Functions</a></li>
 </ul>
 </li>
@@ -199,7 +200,7 @@
 <p>An ObjectiveMechanism is a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that monitors the <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>
 of one or more other ProcessingMechanisms specified in its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal"><span class="pre">monitor</span></code></a> attribute,
 and evaluates them using its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>. The result of the evaluation is placed in the
-ObjectiveMechanism’s <em>OUTCOME</em> (<code class="xref any docutils literal"><span class="pre">primary</span></code>) OutputPort.  ObjectiveMechanisms are typically used
+ObjectiveMechanism’s <em>OUTCOME</em> (<a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary</span></a>) OutputPort.  ObjectiveMechanisms are typically used
 closely with (and often created automatically by) <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanisms</span></a>.</p>
 </div>
 <div class="section" id="creating-an-objectivemechanism">
@@ -215,17 +216,17 @@ attribute, that is specified using the corresponding argument of its constructor
 This takes the place of the <strong>input_ports</strong> argument used by most other forms of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, and is used
 by the ObjectiveMechanism to create an <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> for each OutputPort it monitors, along with a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>
 from the OutputPort to that InputPort.  The <strong>monitor</strong> argument takes a list of items that can
-include any of the <code class="xref any docutils literal"><span class="pre">forms</span> <span class="pre">of</span> <span class="pre">specification</span></code> used in a standard <strong>input_ports</strong> argument.
+include any of the <a class="reference internal" href="InputPort.html#inputport-specification"><span class="std std-ref">forms of specification</span></a> used in a standard <strong>input_ports</strong> argument.
 For the <strong>monitor</strong> argument, this is usually a list of OutputPorts to be monitored.  However, as with a standard
-<strong>input_ports</strong> argument, the <strong>monitor</strong> argument can include Mechanisms (in which case their <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">OutputPort</span></code> is used) or the <a class="reference internal" href="InputPort.html"><span class="doc">InputPort(s)</span></a> of other Mechanisms (in which case the
+<strong>input_ports</strong> argument, the <strong>monitor</strong> argument can include Mechanisms (in which case their <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> is used) or the <a class="reference internal" href="InputPort.html"><span class="doc">InputPort(s)</span></a> of other Mechanisms (in which case the
 ObjectiveMechanism will be assigned Projections from all of the OutputPorts that project to the specified InputPort
-– that is, it will <code class="xref any docutils literal"><span class="pre">shadow</span> <span class="pre">their</span> <span class="pre">inputs</span></code>). Items in the <em>monitor</em> argument can also be
+– that is, it will <a class="reference internal" href="InputPort.html#inputport-shadow-inputs"><span class="std std-ref">shadow their inputs</span></a>). Items in the <em>monitor</em> argument can also be
 used to specify attributes of the InputPort and/or MappingProjection(s) to it, that the ObjectiveMechanism creates to
-monitor the specified OutputPort.  In general, the <code class="xref any docutils literal"><span class="pre">value</span></code> of each specified OutputPort determines
-the format of the <code class="xref any docutils literal"><span class="pre">variable</span></code> of the InputPort that is created for it by the ObjectiveMechanism.
+monitor the specified OutputPort.  In general, the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each specified OutputPort determines
+the format of the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of the InputPort that is created for it by the ObjectiveMechanism.
 However, this can be overridden using the ObjectiveMechanism’s <code class="xref any docutils literal"><span class="pre">default_variable</span></code>
 or <code class="xref any docutils literal"><span class="pre">size</span></code> attributes (see <a class="reference internal" href="Mechanism.html#mechanism-inputport-specification"><span class="std std-ref">Mechanism InputPort specification</span></a>), or by specifying a Projection from the OutputPort to the InputPort (see
-<code class="xref any docutils literal"><span class="pre">Input</span> <span class="pre">Source</span> <span class="pre">Specification</span></code>). If an item in the
+<a class="reference internal" href="InputPort.html#inputport-projection-source-specification"><span class="std std-ref">Input Source Specification</span></a>). If an item in the
 <strong>monitor</strong> argument specifies an InputPort for the ObjectiveMechanism, but not the OutputPort to
 be monitored, the InputPort is created but will be ignored until an OutputPort (and MappingProjection from it) are
 specified for that InputPort.</p>
@@ -244,13 +245,13 @@ argument (see <a class="reference internal" href="ControlMechanism.html#controlm
 corresponding OutputPort, the values of which are used by the ObjectiveMechanism’s
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to generate the value of its <em>OUTCOME</em> <a class="reference internal" href="#objectivemechanism-output"><span class="std std-ref">OutputPort</span></a>.  The InputPorts are listed in the ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_ports" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_ports"><code class="xref any py py-attr docutils literal"><span class="pre">input_ports</span></code></a> attribute, and the monitored OutputPorts from which they receive projections are
 listed in the same order its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal"><span class="pre">monitor</span></code></a> attribute.</p>
-<p>By default, the format of the <code class="xref any docutils literal"><span class="pre">variable</span></code> for each InputPort is determined by the <code class="xref any docutils literal"><span class="pre">value</span></code> of the monitored OutputPort(s) to which it corresponds.  However, if either the
-<strong>default_variable</strong> or <strong>size</strong> argument is specified in an Objective Mechanism’s constructor, or a <code class="xref any docutils literal"><span class="pre">variable</span></code> is <code class="xref any docutils literal"><span class="pre">specified</span> <span class="pre">for</span> <span class="pre">an</span> <span class="pre">InputPort</span></code> for one or more of the items in
+<p>By default, the format of the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for each InputPort is determined by the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the monitored OutputPort(s) to which it corresponds.  However, if either the
+<strong>default_variable</strong> or <strong>size</strong> argument is specified in an Objective Mechanism’s constructor, or a <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is <a class="reference internal" href="InputPort.html#inputport-specification"><span class="std std-ref">specified for an InputPort</span></a> for one or more of the items in
 its <strong>monitor</strong> argument, then that is used as the format for the corresponding InputPort(s).  This can be used to
-transform the <code class="xref any docutils literal"><span class="pre">value</span></code> of a monitored OutputPort into different form for the <code class="xref any docutils literal"><span class="pre">variable</span></code> of the InputPort (see the <a class="reference internal" href="#objectivemechanism-monitor-examples"><span class="std std-ref">first example</span></a> below).</p>
+transform the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a monitored OutputPort into different form for the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of the InputPort (see the <a class="reference internal" href="#objectivemechanism-monitor-examples"><span class="std std-ref">first example</span></a> below).</p>
 <p>If the weight and/or exponent is specified for ay item in the <strong>monitor</strong> argument of the ObjectiveMechanism’s
 constructor, it is assigned to the corresponding InputPort.  If the ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> implements a weights and/or exponents attribute, the values specified is assigned to
-the corresponding attribute, and applied to the <code class="xref any docutils literal"><span class="pre">value</span></code> of the InputPort before it is combined
+the corresponding attribute, and applied to the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the InputPort before it is combined
 with that of the other InputPorts to generate the ObjectiveMechanism’s <a class="reference internal" href="#objectivemechanism-output"><span class="std std-ref">output</span></a>.</p>
 </div>
 <div class="section" id="function">
@@ -265,7 +266,7 @@ If it implements <code class="xref std std-keyword docutils literal"><span class
 </div>
 <div class="section" id="output">
 <span id="objectivemechanism-output"></span><h3><em>Output</em><a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h3>
-<p>The <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">OutputPort</span></code> of an Objective mechanism is a 1d array, named <em>OUTCOME</em>, that is the
+<p>The <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> of an Objective mechanism is a 1d array, named <em>OUTCOME</em>, that is the
 result of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (as described above).</p>
 </div>
 </div>
@@ -274,7 +275,7 @@ result of its <a class="reference internal" href="#psyneulink.core.components.me
 <p>When an ObjectiveMechanism is executed, it updates its input_ports with the values of the OutputPorts listed in
 its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal"><span class="pre">monitor</span></code></a> attribute, and then uses its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to
 evaluate these.  The result is assigned as to its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.value" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute as the value of its
-<em>OUTCOME</em> (<code class="xref any docutils literal"><span class="pre">primary</span></code>) OutputPort.</p>
+<em>OUTCOME</em> (<a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary</span></a>) OutputPort.</p>
 <p class="rubric" id="objectivemechanism-examples">Examples</p>
 <p id="objectivemechanism-monitor-examples"><em>Specifying</em> the <strong>variable</strong> for the InputPorts of an ObjectiveMechanism</p>
 <p>This can be useful in some situations, and there are several ways it can be done. For example, for
@@ -315,18 +316,18 @@ different lengths).  This produces the desired effect, since the action selected
 output of <code class="docutils literal"><span class="pre">my_action_select_mech</span></code>, and so the <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX" title="psyneulink.core.globals.keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code></a> will combine it with zeros (the other values
 in the vector), and so its value will be assigned as the value of the corresponding InputPort in the
 ObjectiveMechanism.</p>
-<p>An alternative would be to explicitly specify the <code class="xref any docutils literal"><span class="pre">variable</span></code> attribute for the InputPort created
-for <code class="docutils literal"><span class="pre">my_action_select_mech</span></code> using a <code class="xref any docutils literal"><span class="pre">InputPort</span> <span class="pre">specification</span> <span class="pre">dictionary</span></code> in
+<p>An alternative would be to explicitly specify the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute for the InputPort created
+for <code class="docutils literal"><span class="pre">my_action_select_mech</span></code> using a <a class="reference internal" href="InputPort.html#inputport-specification-dictionary"><span class="std std-ref">InputPort specification dictionary</span></a> in
 the <strong>monitor</strong> argument of <code class="docutils literal"><span class="pre">my_objective_mech</span></code>, as follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_objective_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ObjectiveMechanism</span><span class="p">(</span><span class="n">monitor</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">MECHANISM</span><span class="p">:</span> <span class="n">my_action_select_mech</span><span class="p">,</span>
 <span class="gp">... </span>                                                     <span class="n">pnl</span><span class="o">.</span><span class="n">VARIABLE</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">]},</span>
 <span class="gp">... </span>                                                     <span class="n">my_reward_mech</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>Note that the <em>VARIABLE</em> entry here specifies the <code class="xref any docutils literal"><span class="pre">variable</span></code> for the InputPort of the
+<p>Note that the <em>VARIABLE</em> entry here specifies the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for the InputPort of the
 ObjectiveMechanism created to receive a Projection from <code class="docutils literal"><span class="pre">my_action_select_mech</span></code>, and not <code class="docutils literal"><span class="pre">my_action_select_mech</span></code>
 itself (see <a class="reference internal" href="#objectivemechanism-input"><span class="std std-ref">Input</span></a> for a full explanation).</p>
-<p id="objectivemechanism-projection-example">Another way to specify the <code class="xref any docutils literal"><span class="pre">variable</span></code> for the InputPort of an ObjectiveMechanism is to
+<p id="objectivemechanism-projection-example">Another way to specify the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for the InputPort of an ObjectiveMechanism is to
 specify the Projections it receives from the OutputPort it monitors.  The following example uses a <code class="xref any docutils literal"><span class="pre">tuple</span>
 <span class="pre">specification</span></code> to assign the matrix for the MappingProjection from
 <code class="docutils literal"><span class="pre">my_action_select_mech</span></code> to the corresponding InputPort of <code class="docutils literal"><span class="pre">my_objective_mech</span></code>:</p>
@@ -337,13 +338,13 @@ specify the Projections it receives from the OutputPort it monitors.  The follow
 <p>Since the matrix specified has three rows (for its inputs) and one col (for the output), it will take the length three
 vector provided as the output of <code class="docutils literal"><span class="pre">my_action_select_mech</span></code> and combine its elements into a single value that is
 provided to the InputPort of the ObjectiveMechanism.</p>
-<p>A <code class="xref any docutils literal"><span class="pre">Connection</span> <span class="pre">tuple</span></code> could also be used to specify the matrix, but this would require
+<p>A <a class="reference internal" href="InputPort.html#inputport-tuple-specification"><span class="std std-ref">Connection tuple</span></a> could also be used to specify the matrix, but this would require
 that additional entries (for the weight and exponent of the InputPort) which, in this case, are not necessary (see
 <a class="reference internal" href="#objectivemechanism-tuple-specification-example"><span class="std std-ref">example</span></a> below for how these can be used).</p>
 <p id="objectivemechanism-weights-and-exponents-example">By default, an ObjectiveMechanism simply adds the values received by each of its InputPorts to generate its output.
 However, this too can be customized in a variety of ways.</p>
 <p id="objectivemechanism-tuple-specification-example">The simplest way is to assign values to the <code class="xref any docutils literal"><span class="pre">weight</span></code> and/or <code class="xref any docutils literal"><span class="pre">exponent</span></code>
-attributes of its InputPorts.  This can be done by placing them in a <code class="xref any docutils literal"><span class="pre">tuple</span> <span class="pre">specification</span></code> for the OutputPort that provides value for the InputPort. In the example
+attributes of its InputPorts.  This can be done by placing them in a <a class="reference internal" href="InputPort.html#inputport-tuple-specification"><span class="std std-ref">tuple specification</span></a> for the OutputPort that provides value for the InputPort. In the example
 below, the ObjectiveMechanism used in the previous example is further customized to subtract the value of the action
 selected from the value of the reward:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_objective_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ObjectiveMechanism</span><span class="p">(</span><span class="n">default_variable</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span>
@@ -367,9 +368,9 @@ OutputPorts for the DDM that report its response time and accuracy:</p>
 <span class="gp">... </span>                                             <span class="p">(</span><span class="n">my_decision_mech</span><span class="o">.</span><span class="n">output_ports</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">RESPONSE_TIME</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)])</span>
 </pre></div>
 </div>
-<p>This specifies that the ObjectiveMechanism should multiply the <code class="xref any docutils literal"><span class="pre">value</span></code> of <code class="docutils literal"><span class="pre">my_reward_mech</span></code>’s
-<code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">OutputPort</span></code> by the <code class="xref any docutils literal"><span class="pre">value</span></code> of <code class="docutils literal"><span class="pre">my_decision_mech</span></code>’s
-<em>PROBABILITY_UPPER_THRESHOLD</em>, and divide the result by <code class="docutils literal"><span class="pre">my_decision_mech</span></code>’s <em>RESPONSE_TIME</em> <code class="xref any docutils literal"><span class="pre">value</span></code>.  The two OutputPorts of <code class="docutils literal"><span class="pre">my_decision_mech</span></code> are referenced as items in the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a> list of <code class="docutils literal"><span class="pre">my_decision_mech</span></code>.  However, a <code class="xref any docutils literal"><span class="pre">2-item</span> <span class="pre">(Port</span> <span class="pre">name,</span> <span class="pre">Mechanism)</span> <span class="pre">tuple</span></code> can be used to reference them more simply, as follows:</p>
+<p>This specifies that the ObjectiveMechanism should multiply the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of <code class="docutils literal"><span class="pre">my_reward_mech</span></code>’s
+<a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> by the <code class="xref any docutils literal"><span class="pre">value</span></code> of <code class="docutils literal"><span class="pre">my_decision_mech</span></code>’s
+<em>PROBABILITY_UPPER_THRESHOLD</em>, and divide the result by <code class="docutils literal"><span class="pre">my_decision_mech</span></code>’s <em>RESPONSE_TIME</em> <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.  The two OutputPorts of <code class="docutils literal"><span class="pre">my_decision_mech</span></code> are referenced as items in the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a> list of <code class="docutils literal"><span class="pre">my_decision_mech</span></code>.  However, a <a class="reference internal" href="InputPort.html#inputport-port-mechanism-tuple"><span class="std std-ref">2-item (Port name, Mechanism) tuple</span></a> can be used to reference them more simply, as follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_objective_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ObjectiveMechanism</span><span class="p">(</span><span class="n">monitor</span><span class="o">=</span><span class="p">[</span>
 <span class="gp">... </span>                                          <span class="n">my_reward_mech</span><span class="p">,</span>
 <span class="gp">... </span>                                          <span class="p">(</span><span class="n">pnl</span><span class="o">.</span><span class="n">PROBABILITY_UPPER_THRESHOLD</span><span class="p">,</span> <span class="n">my_decision_mech</span><span class="p">),</span>
@@ -399,7 +400,7 @@ specified, as it is not used.  However it, and the <a class="reference internal"
 <dl class="class">
 <dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.OBJECTIVE_OUTPUT">
 <em class="property">class </em><code class="descclassname">psyneulink.core.components.mechanisms.processing.objectivemechanism.</code><code class="descname">OBJECTIVE_OUTPUT</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.OBJECTIVE_OUTPUT" title="Permalink to this definition">¶</a></dt>
-<dd><p id="objectivemechanism-standard-outputports"><code class="xref any docutils literal"><span class="pre">Standard</span> <span class="pre">OutputPorts</span></code> for <a class="reference internal" href="#"><span class="doc">ObjectiveMechanism</span></a>:</p>
+<dd><p id="objectivemechanism-standard-outputports"><a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPorts</span></a> for <a class="reference internal" href="#"><span class="doc">ObjectiveMechanism</span></a>:</p>
 <dl class="docutils">
 <dt><em>OUTCOME</em> <span class="classifier-delimiter">:</span> <span class="classifier">1d np.array</span></dt>
 <dd>the value of the objective or “loss” function computed based on the
@@ -417,7 +418,7 @@ of one or more <a class="reference internal" href="OutputPort.html"><span class=
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>monitor</strong> (List[<a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>, ‘InputPort`, <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, str, value, dict, <code class="xref any docutils literal"><span class="pre">MonitoredOutputPortsOption</span></code>] or dict) – specifies the OutputPorts, the <code class="xref any docutils literal"><span class="pre">values</span></code> of which will be monitored, and evaluated by
+<li><strong>monitor</strong> (List[<a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>, ‘InputPort`, <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, str, value, dict, <code class="xref any docutils literal"><span class="pre">MonitoredOutputPortsOption</span></code>] or dict) – specifies the OutputPorts, the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">values</span></code></a> of which will be monitored, and evaluated by
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (see <a class="reference internal" href="#objectivemechanism-monitor"><span class="std std-ref">Monitor</span></a> for details of specification).</li>
 <li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray : default monitor</em>) – specifies the format of the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.variable" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for the <code class="xref any docutils literal"><span class="pre">InputPorts</span></code> of the
 ObjectiveMechanism (see <a class="reference internal" href="Mechanism.html#mechanism-inputport-specification"><span class="std std-ref">Mechanism InputPort specification</span></a> for details).</li>
@@ -431,7 +432,7 @@ As an example, the following mechanisms are equivalent:</p>
 </li>
 <li><strong>function</strong> (<em>CombinationFunction</em><em>, </em><a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction" title="psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction"><em>ObjectiveFunction</em></a><em>, </em><a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function"><em>function</em></a><em> or </em><em>method : default LinearCombination</em>) – specifies the function used to evaluate the values listed in <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal"><span class="pre">monitor</span></code></a> &lt;ObjectiveMechanism.monitor&gt;`
 (see <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for details).</li>
-<li><strong>output_ports</strong> (<em>List</em><em>[</em><em>OutputPort</em><em>, </em><a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value"><em>value</em></a><em>, </em><em>str</em><em> or </em><em>dict</em><em>] or </em><em>Dict</em><em>[</em><em>] </em><em>: default</em><em> [</em><em>OUTCOME</em><em>]</em>) – specifies the OutputPorts for the Mechanism;</li>
+<li><strong>output_ports</strong> (<em>List</em><em>[</em><a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><em>OutputPort</em></a><em>, </em><a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value"><em>value</em></a><em>, </em><em>str</em><em> or </em><em>dict</em><em>] or </em><em>Dict</em><em>[</em><em>] </em><em>: default</em><em> [</em><em>OUTCOME</em><em>]</em>) – specifies the OutputPorts for the Mechanism;</li>
 <li><strong>role</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.LEARNING" title="psyneulink.core.globals.utilities.NodeRole.LEARNING"><em>LEARNING</em></a><em>, </em><em>CONTROL</em><em>]</em>) – specifies if the ObjectiveMechanism is being used for learning or control (see <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.role" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.role"><code class="xref any py py-attr docutils literal"><span class="pre">role</span></code></a> for details).</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for the
 Mechanism, its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and/or a custom function and its parameters. Values
@@ -453,14 +454,14 @@ constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor">
 <code class="descname">monitor</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ContentAddressableList[OutputPort]</em> – determines the OutputPorts, the <code class="xref any docutils literal"><span class="pre">values</span></code> of which are monitored, and evaluated by the
+<dd><p><em>ContentAddressableList[OutputPort]</em> – determines the OutputPorts, the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">values</span></code></a> of which are monitored, and evaluated by the
 ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  Each item in the list refers to an
 <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> containing the value to be monitored, with a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from it to an
 corresponding <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> listed in the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_ports" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_ports"><code class="xref any py py-attr docutils literal"><span class="pre">input_ports</span></code></a> attribute</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">If any of the ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_ports" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_ports"><code class="xref any py py-attr docutils literal"><span class="pre">input_ports</span></code></a> were specified to <code class="xref any docutils literal"><span class="pre">shadow</span>
-<span class="pre">the</span> <span class="pre">InputPort</span></code> of another Mechanism, and any of those shadowed InputPorts
+<p class="last">If any of the ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_ports" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_ports"><code class="xref any py py-attr docutils literal"><span class="pre">input_ports</span></code></a> were specified to <a class="reference internal" href="InputPort.html#inputport-shadow-inputs"><span class="std std-ref">shadow
+the InputPort</span></a> of another Mechanism, and any of those shadowed InputPorts
 receives more than one <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>, then the list of monitored OutputPorts in <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal"><span class="pre">monitor</span></code></a> will be longer
 than the list of the ObjectiveMechanism’s <code class="xref any docutils literal"><span class="pre">input_ports</span></code>.</p>
 </div>
@@ -507,7 +508,7 @@ input_ports) and returns a 1d array.</p>
 <dl class="attribute">
 <dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.output_port">
 <code class="descname">output_port</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.output_port" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>OutputPort</em> – contains the <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">OutputPort</span></code> of the ObjectiveMechanism; the default is
+<dd><p><em>OutputPort</em> – contains the <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> of the ObjectiveMechanism; the default is
 its <em>OUTCOME</em> <a class="reference internal" href="#objectivemechanism-output"><span class="std std-ref">OutputPort</span></a>, the value of which is equal to the
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.value" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute of the ObjectiveMechanism.</p>
 </dd></dl>
@@ -515,7 +516,7 @@ its <em>OUTCOME</em> <a class="reference internal" href="#objectivemechanism-out
 <dl class="attribute">
 <dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.output_ports">
 <code class="descname">output_ports</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.output_ports" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ContentAddressableList[OutputPort]</em> – by default, contains only the <em>OUTCOME</em> (<code class="xref any docutils literal"><span class="pre">primary</span></code>) OutputPort of the ObjectiveMechanism.</p>
+<dd><p><em>ContentAddressableList[OutputPort]</em> – by default, contains only the <em>OUTCOME</em> (<a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary</span></a>) OutputPort of the ObjectiveMechanism.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -542,15 +543,15 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 <dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.add_to_monitor">
 <code class="descname">add_to_monitor</code><span class="sig-paren">(</span><em>monitor_specs</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.add_to_monitor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instantiate <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a> to be monitored by the ObjectiveMechanism.</p>
-<p>Used by other Components to add a <code class="xref any docutils literal"><span class="pre">Port</span></code> or list of Ports to be monitored by the ObjectiveMechanism.
+<p>Used by other Components to add a <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> or list of Ports to be monitored by the ObjectiveMechanism.
 The <strong>monitor_spec</strong> can be any of the following:
 - MonitoredOutputPortTuple
 - <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>;
 - <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>;
-- <code class="xref any docutils literal"><span class="pre">tuple</span> <span class="pre">specification</span></code>;
-- <code class="xref any docutils literal"><span class="pre">Port</span> <span class="pre">specification</span> <span class="pre">dictionary</span></code>;
+- <a class="reference internal" href="InputPort.html#inputport-tuple-specification"><span class="std std-ref">tuple specification</span></a>;
+- <a class="reference internal" href="InputPort.html#inputport-specification-dictionary"><span class="std std-ref">Port specification dictionary</span></a>;
 - list with any of the above.
-If the item is a Mechanism, its <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">OutputPort</span></code> is used.</p>
+If the item is a Mechanism, its <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> is used.</p>
 </dd></dl>
 
 </dd></dl>

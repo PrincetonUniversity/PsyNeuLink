@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.6.0.3+3.g33a3ccb documentation</title>
+  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.6.0.3+4.g56a6c15 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3+3.g33a3ccb',
+              VERSION:'0.6.0.3+4.g56a6c15',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.3+3
+                0.6.0.3+4
               </div>
             
           
@@ -110,6 +110,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Port.html">Ports</a></li>
 <li class="toctree-l3"><a class="reference internal" href="Functions.html">Functions</a></li>
 </ul>
 </li>
@@ -251,8 +252,8 @@ Compositoin (i.e., <a class="reference internal" href="#psyneulink.core.componen
 method is called (see <a class="reference internal" href="#optimizationcontrolmechanism-features"><span class="std std-ref">Features</span></a> below).  Features can be specified using any of the
 following, singly or combined in a list:</p>
 <ul class="simple">
-<li><em>InputPort specification</em> – this can be any form of <code class="xref any docutils literal"><span class="pre">InputPort</span> <span class="pre">specification</span></code>
-that resolves to an OutputPort from which the InputPort receives a Projection;  the <code class="xref any docutils literal"><span class="pre">value</span></code> of that OutputPort is used as the feature. Each of these InputPorts is marked as
+<li><em>InputPort specification</em> – this can be any form of <a class="reference internal" href="InputPort.html#inputport-specification"><span class="std std-ref">InputPort specification</span></a>
+that resolves to an OutputPort from which the InputPort receives a Projection;  the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of that OutputPort is used as the feature. Each of these InputPorts is marked as
 <code class="xref any docutils literal"><span class="pre">internal_only</span></code> = <code class="xref any docutils literal"><span class="pre">True</span></code>.</li>
 </ul>
 <p>Features can also be added to an existing OptimizationControlMechanism using its <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.add_features" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.add_features"><code class="xref any py py-meth docutils literal"><span class="pre">add_features</span></code></a> method.  If the
@@ -302,7 +303,7 @@ into account when calculating the <a class="reference internal" href="ControlMec
 </div>
 <div class="section" id="features">
 <span id="optimizationcontrolmechanism-features"></span><h3><em>Features</em><a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h3>
-<p>In addition to its <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">InputPort</span></code> (which typically receives a projection from the
+<p>In addition to its <a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary InputPort</span></a> (which typically receives a projection from the
 <em>OUTCOME</em> OutputPort of the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>,
 an OptimizationControlMechanism also has an <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> for each of its features. By default, these are the current
 <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.input_values" title="psyneulink.core.compositions.composition.Composition.input_values"><code class="xref any py py-attr docutils literal"><span class="pre">input</span></code></a> for the Composition to which the OptimizationControlMechanism belongs.  However,
@@ -315,18 +316,18 @@ it is executed to evaluate the <a class="reference internal" href="ControlMechan
 <p>Features can be of two types:</p>
 <ul class="simple">
 <li><em>Input Features</em> – these are values received as input by other Mechanisms in the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>. They are
-specified as <code class="xref any docutils literal"><span class="pre">shadowed</span> <span class="pre">inputs</span></code> in the <strong>features</strong> argument of the
+specified as <a class="reference internal" href="InputPort.html#inputport-shadow-inputs"><span class="std std-ref">shadowed inputs</span></a> in the <strong>features</strong> argument of the
 OptimizationControlMechanism’s constructor (see <a class="reference internal" href="#optimizationcontrolmechanism-creation"><span class="std std-ref">Creating an OptimizationControlMechanism</span></a>).  An InputPort is
 created on the OptimziationControlMechanism for each feature, that receives a <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> paralleling
 the input to be shadowed.</li>
 </ul>
 <ul class="simple">
-<li><em>Output Features</em> – these are the <code class="xref any docutils literal"><span class="pre">value</span></code> of an <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of some other <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> in
+<li><em>Output Features</em> – these are the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of an <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of some other <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> in
 the Composition.  These too are specified in the <strong>features</strong> argument of the OptimizationControlMechanism’s
 constructor (see <a class="reference internal" href="#optimizationcontrolmechanism-creation"><span class="std std-ref">Creating an OptimizationControlMechanism</span></a>), and each is assigned a <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> from the specified
 OutputPort(s) to the InputPort of the OptimizationControlMechanism for that feature.</li>
 </ul>
-<p>The current <code class="xref any docutils literal"><span class="pre">value</span></code> of the InputPorts for the features are listed in the <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values"><code class="xref any py py-attr docutils literal"><span class="pre">feature_values</span></code></a> attribute.</p>
+<p>The current <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the InputPorts for the features are listed in the <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values"><code class="xref any py py-attr docutils literal"><span class="pre">feature_values</span></code></a> attribute.</p>
 </div>
 <div class="section" id="state">
 <span id="optimizationcontrolmechanism-state"></span><h3><em>State</em><a class="headerlink" href="#state" title="Permalink to this headline">¶</a></h3>
@@ -434,10 +435,10 @@ performance of the <a class="reference internal" href="Composition.html"><span c
 <li><strong>objective_mechanism</strong> (<a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism"><em>ObjectiveMechanism</em></a><em> or </em><em>List</em><em>[</em><em>OutputPort specification</em><em>]</em>) – specifies either an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> to use for the OptimizationControlMechanism, or a list of the
 <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>s it should monitor; if a list of <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitor"><span class="std std-ref">OutputPort specifications</span></a> is used, a default ObjectiveMechanism is created and the list
 is passed to its <strong>monitored_output_ports</strong> argument.</li>
-<li><strong>features</strong> (<em>Mechanism</em><em>, </em><em>OutputPort</em><em>, </em><em>Projection</em><em>, </em><em>dict</em><em>, or </em><em>list containing any of these</em>) – specifies Components, the values of which are assigned to <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values"><code class="xref any py py-attr docutils literal"><span class="pre">feature_values</span></code></a> and used to predict <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a>.
-Any <code class="xref any docutils literal"><span class="pre">InputPort</span> <span class="pre">specification</span></code> can be used that resolves to an <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> that
+<li><strong>features</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><em>OutputPort</em></a><em>, </em><em>Projection</em><em>, </em><em>dict</em><em>, or </em><em>list containing any of these</em>) – specifies Components, the values of which are assigned to <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values"><code class="xref any py py-attr docutils literal"><span class="pre">feature_values</span></code></a> and used to predict <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a>.
+Any <a class="reference internal" href="InputPort.html#inputport-specification"><span class="std std-ref">InputPort specification</span></a> can be used that resolves to an <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> that
 projects to the InputPort.</li>
-<li><strong>feature_function</strong> (<em>Function</em><em> or </em><em>function : default None</em>) – specifies the <code class="xref any docutils literal"><span class="pre">function</span></code> for the <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> assigned to each <a class="reference internal" href="#optimizationcontrolmechanism-features"><span class="std std-ref">feature</span></a>.</li>
+<li><strong>feature_function</strong> (<em>Function</em><em> or </em><em>function : default None</em>) – specifies the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.function" title="psyneulink.core.components.ports.inputport.InputPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for the <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> assigned to each <a class="reference internal" href="#optimizationcontrolmechanism-features"><span class="std std-ref">feature</span></a>.</li>
 <li><strong>agent_rep</strong> (<em>Composition  : default Composition to which the OptimizationControlMechanism belongs</em>) – specifies the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> used by the <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.evaluation_function" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.evaluation_function"><code class="xref any py py-attr docutils literal"><span class="pre">evalution_function</span></code></a>
 to predict the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a> for a given <a class="reference internal" href="#optimizationcontrolmechanism-state"><span class="std std-ref">state</span></a>.  If a Composition other than the default is assigned,
 it must be suitably configured (see <a class="reference internal" href="#optimizationcontrolmechanism-agent-rep"><span class="std std-ref">above</span></a> for additional details).

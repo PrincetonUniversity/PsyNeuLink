@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>UserDefinedFunction &mdash; PsyNeuLink 0.6.0.3+3.g33a3ccb documentation</title>
+  <title>UserDefinedFunction &mdash; PsyNeuLink 0.6.0.3+4.g56a6c15 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3+3.g33a3ccb',
+              VERSION:'0.6.0.3+4.g56a6c15',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.3+3
+                0.6.0.3+4
               </div>
             
           
@@ -220,7 +220,7 @@ It can include either or both of the following two entries:</p>
 <div><p><em>MULTIPLICATIVE_PARAM</em>: &lt;parameter name&gt;</p>
 <p><em>ADDITIVE_PARAM</em>: &lt;parameter name&gt;</p>
 </div></blockquote>
-<p>These are used only when the UDF is assigned as the <a class="reference internal" href="State.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of an InputPort or
+<p>These are used only when the UDF is assigned as the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of an InputPort or
 OutputPort that receives one more more <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a>.</p>
 </li>
 </ul>
@@ -325,8 +325,8 @@ indirectly, such as:</p>
 </pre></div>
 </div>
 <p id="udf-assign-to-port-examples"><strong>Assigning of a custom function to a Port</strong></p>
-<p>A custom function can also be assigned as the <a class="reference internal" href="State.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of an <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> or <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>.
-For example, the following assigns <code class="docutils literal"><span class="pre">my_sinusoidal_fct</span></code> to the <code class="xref any docutils literal"><span class="pre">function</span></code> of an OutputPort
+<p>A custom function can also be assigned as the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of an <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> or <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>.
+For example, the following assigns <code class="docutils literal"><span class="pre">my_sinusoidal_fct</span></code> to the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.function" title="psyneulink.core.components.ports.outputport.OutputPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of an OutputPort
 of <code class="docutils literal"><span class="pre">my_mech</span></code>, rather the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_wave_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
 <span class="gp">... </span>                                       <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span>
@@ -335,7 +335,7 @@ of <code class="docutils literal"><span class="pre">my_mech</span></code>, rathe
 <span class="gp">... </span>                                                      <span class="n">pnl</span><span class="o">.</span><span class="n">FUNCTION</span><span class="p">:</span> <span class="n">my_sinusoidal_fct</span><span class="p">}])</span>
 </pre></div>
 </div>
-<p>For details on how to specify a function of an OutputPort, see <code class="xref any docutils literal"><span class="pre">OutputPort</span> <span class="pre">Customization</span></code>.
+<p>For details on how to specify a function of an OutputPort, see <a class="reference internal" href="OutputPort.html#outputport-customization"><span class="std std-ref">OutputPort Customization</span></a>.
 Below is an example plot of the output of the ‘SINUSOIDAL OUTPUT’ <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> from my_wave_mech above, as the
 execution count increments, when the input to the mechanism is 0.005 for 1000 runs:</p>
 </div></blockquote>

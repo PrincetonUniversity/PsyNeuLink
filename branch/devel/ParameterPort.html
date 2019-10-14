@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ParameterPort &mdash; PsyNeuLink 0.6.0.3+3.g33a3ccb documentation</title>
+  <title>ParameterPort &mdash; PsyNeuLink 0.6.0.3+4.g56a6c15 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3+3.g33a3ccb',
+              VERSION:'0.6.0.3+4.g56a6c15',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -44,7 +44,9 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="OutputPort" href="OutputPort.html" />
+    <link rel="prev" title="InputPort" href="InputPort.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -68,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.3+3
+                0.6.0.3+4
               </div>
             
           
@@ -92,11 +94,28 @@
               
             
             
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="Port.html">Ports</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="InputPort.html">InputPort</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">ParameterPort</a></li>
+<li class="toctree-l4"><a class="reference internal" href="OutputPort.html">OutputPort</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignals</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="Functions.html">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Composition.html">Compositions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
 </ul>
@@ -143,6 +162,12 @@
   <ul class="wy-breadcrumbs">
     
       <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Core.html">Core</a> &raquo;</li>
+        
+          <li><a href="Component.html">Component</a> &raquo;</li>
+        
+          <li><a href="Port.html">Ports</a> &raquo;</li>
         
       <li>ParameterPort</li>
     
@@ -438,7 +463,7 @@ or by its own <a class="reference internal" href="Component.html#psyneulink.core
 <p class="first admonition-title">Note</p>
 <p class="last">It is important to note the distinction between the <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a ParameterPort,
 and the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Component to which it belongs. The former is used to determine the
-value of a parameter used by the latter (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-anatomy-figure"><span class="std std-ref">figure</span></a>, and <a class="reference internal" href="State.html#port-execution"><span class="std std-ref">Execution</span></a> for
+value of a parameter used by the latter (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-anatomy-figure"><span class="std std-ref">figure</span></a>, and <a class="reference internal" href="Port.html#port-execution"><span class="std std-ref">Execution</span></a> for
 additional details).</p>
 </div>
 </div>
@@ -447,7 +472,7 @@ additional details).</p>
 <dl class="class">
 <dt id="psyneulink.core.components.ports.parameterport.ParameterPort">
 <em class="property">class </em><code class="descclassname">psyneulink.core.components.ports.parameterport.</code><code class="descname">ParameterPort</code><span class="sig-paren">(</span><em>owner</em>, <em>reference_value=None                                             function=LinearCombination(operation=PRODUCT)</em>, <em>variable=None</em>, <em>size=None</em>, <em>parameter_modulation_operation=Modulation.MULTIPLY</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subclass of <code class="xref any docutils literal"><span class="pre">Port</span></code> that represents and possibly modifies the parameter of
+<dd><p>Subclass of <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> that represents and possibly modifies the parameter of
 a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>, or its <a class="reference internal" href="Function.html"><span class="doc">Function</span></a>.</p>
 <dl class="attribute">
 <dt id="psyneulink.core.components.ports.parameterport.ParameterPort.owner">
@@ -523,6 +548,15 @@ constructor, a default is assigned using <code class="xref any docutils literal"
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="OutputPort.html" class="btn btn-neutral float-right" title="OutputPort" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="InputPort.html" class="btn btn-neutral float-left" title="InputPort" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

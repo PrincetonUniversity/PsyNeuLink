@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EVCControlMechanism &mdash; PsyNeuLink 0.6.0.3+3.g33a3ccb documentation</title>
+  <title>EVCControlMechanism &mdash; PsyNeuLink 0.6.0.3+4.g56a6c15 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3+3.g33a3ccb',
+              VERSION:'0.6.0.3+4.g56a6c15',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.3+3
+                0.6.0.3+4
               </div>
             
           
@@ -255,9 +255,9 @@ its <a class="reference internal" href="#evccontrolmechanism-controlsignals"><sp
 <span id="evccontrolmechanism-input"></span><h3><em>Input</em><a class="headerlink" href="#input" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="objectivemechanism">
 <span id="evccontrolmechanism-objectivemechanism"></span><h4>ObjectiveMechanism<a class="headerlink" href="#objectivemechanism" title="Permalink to this headline">¶</a></h4>
-<p>Like any ControlMechanism, an EVCControlMechanism receives its input from the <em>OUTCOME</em> <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-output"><span class="std std-ref">OutputPort</span></a> of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>, via a MappingProjection to its <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">InputPort</span></code>.  The ObjectiveMechanism is listed in the EVCControlMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.evc.evccontrolmechanism.EVCControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.modulatory.control.evc.evccontrolmechanism.EVCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> attribute.  By default, the ObjectiveMechanism’s function is a
+<p>Like any ControlMechanism, an EVCControlMechanism receives its input from the <em>OUTCOME</em> <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-output"><span class="std std-ref">OutputPort</span></a> of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>, via a MappingProjection to its <a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary InputPort</span></a>.  The ObjectiveMechanism is listed in the EVCControlMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.evc.evccontrolmechanism.EVCControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.modulatory.control.evc.evccontrolmechanism.EVCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> attribute.  By default, the ObjectiveMechanism’s function is a
 <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function with its <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination.operation" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.operation"><code class="xref any py py-attr docutils literal"><span class="pre">operation</span></code></a> attribute assigned as <em>PRODUCT</em>;
-this takes the product of the <code class="xref any docutils literal"><span class="pre">value</span></code>s of the OutputPorts that it monitors (listed in its
+this takes the product of the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>s of the OutputPorts that it monitors (listed in its
 <code class="xref any docutils literal"><span class="pre">monitored_output_ports</span></code> attribute.  However, this can be customized
 in a variety of ways:</p>
 <blockquote>
@@ -266,7 +266,7 @@ in a variety of ways:</p>
 (see <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-weights-and-exponents-example"><span class="std std-ref">Objective Mechanism Examples</span></a> for an example);</li>
 </ul>
 <ul class="simple">
-<li>using a list to specify the OutputPorts to be monitored  (and the <code class="xref any docutils literal"><span class="pre">tuples</span> <span class="pre">format</span></code> to specify weights and/or exponents for them) in either the
+<li>using a list to specify the OutputPorts to be monitored  (and the <a class="reference internal" href="InputPort.html#inputport-tuple-specification"><span class="std std-ref">tuples format</span></a> to specify weights and/or exponents for them) in either the
 <strong>monitor_for_control</strong> or <strong>objective_mechanism</strong> arguments of the EVCControlMechanism’s constructor;</li>
 </ul>
 <ul class="simple">
@@ -378,7 +378,7 @@ are based on the same initial conditions.  Each simulation includes execution of
 <code class="xref any docutils literal"><span class="pre">simulation_results</span></code> attribute of <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.evc.evccontrolmechanism.EVCControlMechanism.system" title="psyneulink.library.components.mechanisms.modulatory.control.evc.evccontrolmechanism.EVCControlMechanism.system"><code class="xref any py py-attr docutils literal"><span class="pre">system</span></code></a>.</li>
 <li><strong>Evaluate the System’s performance</strong> - this is carried out by the EVCControlMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.evc.evccontrolmechanism.EVCControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.modulatory.control.evc.evccontrolmechanism.EVCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>, which is executed as part of the simulation of the System.  The
 <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for a default ObjectiveMechanism is a <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> Function that
-combines the <code class="xref any docutils literal"><span class="pre">value</span></code>s of the OutputPorts listed in the EVCControlMechanism’s
+combines the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>s of the OutputPorts listed in the EVCControlMechanism’s
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.evc.evccontrolmechanism.EVCControlMechanism.monitored_output_ports" title="psyneulink.library.components.mechanisms.modulatory.control.evc.evccontrolmechanism.EVCControlMechanism.monitored_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_ports</span></code></a> attribute (and the <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.evc.evccontrolmechanism.EVCControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.modulatory.control.evc.evccontrolmechanism.EVCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>’s <code class="xref any docutils literal"><span class="pre">monitored_output_ports</span></code>
 attribute) by taking their elementwise (Hadamard) product.  However, this behavior can be customized in a variety
 of ways, as described <a class="reference internal" href="#evccontrolmechanism-objectivemechanism"><span class="std std-ref">above</span></a>.</li>
@@ -465,7 +465,7 @@ EVCControlMechanism’s <a class="reference internal" href="#psyneulink.library.
 </pre></div>
 </div>
 <p>It uses the System’s <strong>monitor_for_control</strong> argument to assign three OutputPorts to be monitored.  The first one
-references the Reward Mechanism (not shown);  its <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">OutputPort</span></code> will be used by default.
+references the Reward Mechanism (not shown);  its <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> will be used by default.
 The second and third use keywords that are the names of outputPorts of a  <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a> Mechanism (also not shown).
 The last one (RESPONSE_TIME) is assigned a weight of 1 and an exponent of -1. As a result, each calculation of the EVC
 computation will multiply the value of the primary OutputPort of the Reward Mechanism by the value of the
@@ -492,7 +492,7 @@ of a System.</p>
 the EVCControlMechanism will inherit any <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a> specified in the <strong>monitor_for_control</strong>
 argument of the <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.evc.evccontrolmechanism.EVCControlMechanism.system" title="psyneulink.library.components.mechanisms.modulatory.control.evc.evccontrolmechanism.EVCControlMechanism.system"><code class="xref any py py-attr docutils literal"><span class="pre">system</span></code></a>’s constructor, and any <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>
 specified in its <strong>control_signals</strong> argument.</li>
-<li><strong>objective_mechanism</strong> (<a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism"><em>ObjectiveMechanism</em></a><em>, </em><em>List</em><em>[</em><em>OutputPort</em><em> or </em><em>Tuple</em><em>[</em><em>OutputPort</em><em>, </em><em>list</em><em> or </em><em>1d np.array</em><em>, </em><em>list</em><em> or </em><em>1d</em>) – </li>
+<li><strong>objective_mechanism</strong> (<a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism"><em>ObjectiveMechanism</em></a><em>, </em><em>List</em><em>[</em><a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><em>OutputPort</em></a><em> or </em><em>Tuple</em><em>[</em><a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><em>OutputPort</em></a><em>, </em><em>list</em><em> or </em><em>1d np.array</em><em>, </em><em>list</em><em> or </em><em>1d</em>) – </li>
 <li><strong>np.array</strong><strong>]</strong><strong>]</strong> (<em>default MonitoredOutputPortsOptions.PRIMARY_OUTPUT_PORTS</em>) – specifies either an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> to use for the EVCControlMechanism or a list of the OutputPorts it
 should monitor; if a list of <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitor"><span class="std std-ref">OutputPort specifications</span></a> is used,
 a default ObjectiveMechanism is created and the list is passed to its <strong>monitored_output_ports</strong> argument.</li>

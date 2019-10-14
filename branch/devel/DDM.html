@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DDM &mdash; PsyNeuLink 0.6.0.3+3.g33a3ccb documentation</title>
+  <title>DDM &mdash; PsyNeuLink 0.6.0.3+4.g56a6c15 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3+3.g33a3ccb',
+              VERSION:'0.6.0.3+4.g56a6c15',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.3+3
+                0.6.0.3+4
               </div>
             
           
@@ -257,10 +257,10 @@ automatically assigned, depending on the <a class="reference internal" href="#ps
 table below:</p>
 <p id="ddm-custom-outputports">The <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_ports" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a> assigned to a DDM can be customized by specifying a list of the desired DDM
 <a class="reference internal" href="#ddm-standard-outputports"><span class="std std-ref">Standard OutputPorts</span></a> in the <strong>output_ports</strong> argument of its constructor, or the
-<em>OUTPUT_PORTS</em> entry of an <code class="xref any docutils literal"><span class="pre">OutputPort</span> <span class="pre">specification</span> <span class="pre">dictionary</span></code>.  This can
+<em>OUTPUT_PORTS</em> entry of an <a class="reference internal" href="OutputPort.html#outputport-specification-dictionary"><span class="std std-ref">OutputPort specification dictionary</span></a>.  This can
 include two additional <a class="reference internal" href="#ddm-standard-outputports"><span class="std std-ref">Standard OutputPorts</span></a> for the DDM - <code class="xref any docutils literal"><span class="pre">DECISION_VARIABLE_ARRAY</span></code> and <code class="xref any docutils literal"><span class="pre">SELECTED_INPUT_ARRAY</span></code>,
 that are available  if the <em>ARRAY</em> option is specified in its <strong>input_format</strong> argument (see <a class="reference internal" href="#ddm-input"><span class="std std-ref">Input</span></a>).  As with
-any Mechanism, <code class="xref any docutils literal"><span class="pre">customized</span> <span class="pre">OutputPorts</span></code> can also be created and assigned.</p>
+any Mechanism, <a class="reference internal" href="OutputPort.html#outputport-customization"><span class="std std-ref">customized OutputPorts</span></a> can also be created and assigned.</p>
 </div>
 <div class="section" id="ddm-function-types">
 <span id="ddm-modes"></span><h3><em>DDM Function Types</em><a class="headerlink" href="#ddm-function-types" title="Permalink to this headline">¶</a></h3>
@@ -343,7 +343,7 @@ ISSN 0022-2496,
 <dl class="class">
 <dt id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM_OUTPUT">
 <em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.integrator.ddm.</code><code class="descname">DDM_OUTPUT</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM_OUTPUT" title="Permalink to this definition">¶</a></dt>
-<dd><p id="ddm-standard-outputports"><code class="xref any docutils literal"><span class="pre">Standard</span> <span class="pre">OutputPorts</span></code> for <a class="reference internal" href="#"><span class="doc">DDM</span></a>:</p>
+<dd><p id="ddm-standard-outputports"><a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPorts</span></a> for <a class="reference internal" href="#"><span class="doc">DDM</span></a>:</p>
 <dl class="docutils" id="ddm-decision-variable">
 <dt><em>DECISION_VARIABLE</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
 <dd><ul class="first simple">
@@ -383,7 +383,7 @@ execution, assigned to the 1st element if the decision variable is closer to the
 <ul class="last simple">
 <li><a class="reference internal" href="#ddm-analytic-mode"><span class="std std-ref">analytic mode</span></a>: two element array, with one (“selected”) element – determined by the
 outcome of the decision process – set to the value of the corresponding element in the stimulus array (i.e.,
-the DDM’s input_port <code class="xref any docutils literal"><span class="pre">variable</span></code>).  The “selected” element is the 1st one if the decision
+the DDM’s input_port <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>).  The “selected” element is the 1st one if the decision
 process resulted in crossing the upper threshold, and the 2nd if it crossed the lower threshold; the other
 element is set to 0.</li>
 <li><a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">integration mode</span></a>: the value of the element in the stimulus array based on the
@@ -573,7 +573,7 @@ DDM’s constructor (see <a class="reference internal" href="#ddm-standard-outpu
 <dl class="attribute">
 <dt id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_values">
 <code class="descname">output_values</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_values" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[array(float64),array(float64),array(float64),array(float64)]</em> – each item is the <code class="xref any docutils literal"><span class="pre">value</span></code>.  The first two items are always the <code class="xref any docutils literal"><span class="pre">value</span></code>s of the
+<dd><p><em>List[array(float64),array(float64),array(float64),array(float64)]</em> – each item is the <code class="xref any docutils literal"><span class="pre">value</span></code>.  The first two items are always the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>s of the
 <a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a> and <a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a> OutputPorts;  additional
 ones may be included, based on the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and any specifications made in the
 <strong>output_ports</strong> argument of the DDM’s constructor (see <a class="reference internal" href="#ddm-standard-outputports"><span class="std std-ref">DDM Standard OutputPorts</span></a>).</p>

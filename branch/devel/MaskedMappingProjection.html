@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MaskedMappingProjection &mdash; PsyNeuLink 0.6.0.3+3.g33a3ccb documentation</title>
+  <title>MaskedMappingProjection &mdash; PsyNeuLink 0.6.0.3+4.g56a6c15 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3+3.g33a3ccb',
+              VERSION:'0.6.0.3+4.g56a6c15',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.3+3
+                0.6.0.3+4
               </div>
             
           
@@ -229,11 +229,11 @@ each time the Projection is executed, its <a class="reference internal" href="#p
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>sender</strong> (<em>Optional</em><em>[</em><em>OutputPort</em><em> or </em><em>Mechanism</em><em>]</em>) – specifies the source of the Projection’s input. If a Mechanism is specified, its
-<code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">OutputPort</span></code> will be used. If it is not specified, it will be assigned in
+<li><strong>sender</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><em>OutputPort</em></a><em> or </em><em>Mechanism</em><em>]</em>) – specifies the source of the Projection’s input. If a Mechanism is specified, its
+<a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> will be used. If it is not specified, it will be assigned in
 the context in which the Projection is used.</li>
-<li><strong>receiver</strong> (<em>Optional</em><em>[</em><em>InputPort</em><em> or </em><em>Mechanism</em><em>]</em>) – specifies the destination of the Projection’s output.  If a Mechanism is specified, its
-<code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">InputPort</span></code> will be used. If it is not specified, it will be assigned in
+<li><strong>receiver</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort" title="psyneulink.core.components.ports.inputport.InputPort"><em>InputPort</em></a><em> or </em><em>Mechanism</em><em>]</em>) – specifies the destination of the Projection’s output.  If a Mechanism is specified, its
+<a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary InputPort</span></a> will be used. If it is not specified, it will be assigned in
 the context in which the Projection is used.</li>
 <li><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function"><em>function</em></a><em> or </em><em>keyword : default DEFAULT_MATRIX</em>) – the matrix used by <code class="xref any docutils literal"><span class="pre">function</span></code> (default: <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>) to transform
 the value of the <a class="reference internal" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.sender" title="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>.</li>
@@ -290,7 +290,7 @@ determines the manner in which the <a class="reference internal" href="#psyneuli
 <dl class="attribute">
 <dt id="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.value">
 <code class="descname">value</code><a class="headerlink" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>np.ndarray</em> – Output of AutoAssociativeProjection, transmitted to <code class="xref any docutils literal"><span class="pre">variable</span></code> of <a class="reference internal" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.receiver" title="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</p>
+<dd><p><em>np.ndarray</em> – Output of AutoAssociativeProjection, transmitted to <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of <a class="reference internal" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.receiver" title="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
