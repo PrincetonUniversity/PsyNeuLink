@@ -343,7 +343,7 @@ Mechanism's `value <Mechanism_Base.value>` attribute which is  also at least a 2
 .. note::
    The input to a Mechanism is not necessarily the same as the input to its `function <Mechanism_Base.function>`. The
    input to a Mechanism is first processed by its `InputPort(s) <Mechanism_InputPorts>`, and then assigned to the
-   Mechanism's `variable <Mechanism_Base>` attribute, which is used as the input to its `function
+   Mechanism's `variable <Mechanism_Base.variable>` attribute, which is used as the input to its `function
    <Mechanism_Base.function>`. Similarly, the result of a Mechanism's function is not necessarily the same as the
    Mechanism's output.  The result of the `function <Mechanism_Base.function>` is assigned to the Mechanism's  `value
    <Mechanism_Base.value>` attribute, which is then used by its `OutputPort(s) <Mechanism_OutputPorts>` to assign
@@ -453,7 +453,7 @@ attribute, as well as the number of InputPorts it has and their `variable <Input
 <InputPort.value>` attributes, are determined by one of the following arguments in the Mechanism's constructor:
 
 * **default_variable** (at least 2d ndarray) -- determines the number and format of the items of the Mechanism's
-  `variable <Mechanism_Base>` attribute.  The number of items in its outermost dimension (axis 0) determines the
+  `variable <Mechanism_Base.variable>` attribute.  The number of items in its outermost dimension (axis 0) determines the
   number of InputPorts created for the Mechanism, and the format of each item determines the format for the
   `variable <InputPort.variable>` and `value  <InputPort.value>` attributes of the corresponding InputPort.
   If any InputPorts are specified in the **input_ports** argument or an *INPUT_PORTS* entry of

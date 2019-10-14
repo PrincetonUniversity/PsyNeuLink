@@ -29,7 +29,7 @@ used to send ModulatoryProjections), as summarized in the table below:
    | `InputPort`       |  `Mechanism          |receives input from    | `GatingSignal`  |`InputPort` constructor;      |
    |                   |  <Mechanism>`        |`MappingProjection`    |                 |`Mechanism <Mechanism>`       |
    |                   |                      |                       |                 |constructor or its            |
-   |                   |                      |                       |                 |`add_ports` method           |
+   |                   |                      |                       |                 |`add_ports` method            |
    +-------------------+----------------------+-----------------------+-----------------+------------------------------+
    |`ParameterPort`    |  `Mechanism          |represents parameter   | `LearningSignal`|Implicitly whenever a         |
    |                   |  <Mechanism>` or     |value for a `Component | and/or          |parameter value is            |
@@ -40,7 +40,7 @@ used to send ModulatoryProjections), as summarized in the table below:
    | `OutputPort`      |  `Mechanism          |provides output to     | `GatingSignal`  |`OutputPort` constructor;     |
    |                   |  <Mechanism>`        |`MappingProjection`    |                 |`Mechanism <Mechanism>`       |
    |                   |                      |                       |                 |constructor or its            |
-   |                   |                      |                       |                 |`add_ports` method           |
+   |                   |                      |                       |                 |`add_ports` method            |
    +-------------------+----------------------+-----------------------+-----------------+------------------------------+
    |`ModulatorySignal  |`ModulatoryMechanism  |provides value for     |                 |`ModulatoryMechanism          |
    |<ModulatorySignal>`|<ModulatoryMechanism>`|`ModulatoryProjection  |                 |<ModulatoryMechanism>`        |
@@ -227,20 +227,28 @@ The following types of Projections can be specified for each type of Port:
         | *Port Type*      | *PROJECTIONS* specification   | *Assigned to Attribute*             |
         +==================+===============================+=====================================+
         |`InputPort`       | `PathwayProjection(s)         | `path_afferents                     |
-        |                  |   <PathwayProjection>`        |   <InputPort.path_afferents>`       |
-        |                  |  `GatingProjection(s)         |  `mod_afferents                     |
-        |                  |   <GatingProjection>`         |   <InputPort.mod_afferents>`        |
+        |                  | <PathwayProjection>`          | <InputPort.path_afferents>`         |
+        |                  |                               |                                     |
+        |                  | `ControlProjection(s)         | `mod_afferents                      |
+        |                  | <ControlProjection>`          | <InputPort.mod_afferents>`          |
+        |                  |                               |                                     |
+        |                  | `GatingProjection(s)          | `mod_afferents                      |
+        |                  | <GatingProjection>`           | <InputPort.mod_afferents>`          |
         +------------------+-------------------------------+-------------------------------------+
         |`ParameterPort`   | `ControlProjection(s)         | `mod_afferents                      |
-        |                  |   <ControlProjection>`        |   <ParameterPort.mod_afferents>`    |
+        |                  | <ControlProjection>`          | <ParameterPort.mod_afferents>`      |
         +------------------+-------------------------------+-------------------------------------+
         |`OutputPort`      | `PathwayProjection(s)         | `efferents                          |
-        |                  |   <PathwayProjection>`        |   <OutputPort.efferents>`           |
-        |                  |  `GatingProjection(s)         |  `mod_afferents                     |
-        |                  |   <GatingProjection>`         |   <OutputPort.mod_afferents>`       |
+        |                  | <PathwayProjection>`          | <OutputPort.efferents>`             |
+        |                  |                               |                                     |
+        |                  | `ControlProjection(s)         | `mod_afferents                      |
+        |                  | <ControlProjection>`          | <OutputPort.mod_afferents>`         |
+        |                  |                               |                                     |
+        |                  | `GatingProjection(s)          | `mod_afferents                      |
+        |                  | <GatingProjection>`           | <OutputPort.mod_afferents>`         |
         +------------------+-------------------------------+-------------------------------------+
-        |`ModulatorySignal`|  `ModulatoryProjection(s)     |  `efferents                         |
-        |                  |   <ModulatoryProjection>`     |   <ModulatorySignal.efferents>`     |
+        |`ModulatorySignal`|  `ModulatoryProjection(s)     | `efferents                          |
+        |                  |  <ModulatoryProjection>`      | <ModulatorySignal.efferents>`       |
         +------------------+-------------------------------+-------------------------------------+
 
 Projections must be specified in a list.  Each entry must be either a `specification for a projection
@@ -261,10 +269,10 @@ assigned to it.
 
 If a Port is created on its own, and its `owner <Port_Owner>` Mechanism is specified, it is assigned to that
 Mechanism; if its owner not specified, then its initialization is `deferred <Port_Deferred_Initialization>`.
-Its initialization is completed automatically when it is assigned to an owner `Mechanism <Mechanism_Base>` using the
+Its initialization is completed automatically when it is assigned to an owner `Mechanism <Mechanism>` using the
 owner's `add_ports <Mechanism_Base.add_ports>` method.  If the Port is not assigned to an owner, it will not be
-functional (i.e., used during the execution of `Mechanisms <Mechanism_Base_Execution>` and/or `Compositions
-<Composition_Execution>`, irrespective of whether it has any `Projections <Projection>` assigned to it.
+functional (i.e., used during the execution of `Mechanisms <Mechanism_Execution>` and/or `Compositions
+<Composition_Run>`, irrespective of whether it has any `Projections <Projection>` assigned to it.
 
 
 .. _Port_Structure:
@@ -424,8 +432,8 @@ For example, the following specifies the InputPort by a value to use as its `def
     my_mech = pnl.TransferMechanism(input_ports=[[0,0])
 
 The value is also used to format the InputPort's `value <InputPort.value>`, as well as the first (and, in this case,
-only) item of the Mechanism's `variable <Mechanism_Base>` (i.e., the one to which the InputPort is assigned), as
-show below::
+only) item of the Mechanism's `variable <Mechanism_Base.variable>` (i.e., the one to which the InputPort is
+assigned), as show below::
 
     print(my_mech.input_ports[0].variable)
     > [0 0]

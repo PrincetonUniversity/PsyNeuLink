@@ -438,7 +438,7 @@ Execution
 ---------
 
 If a ControlMechanism is assigned as the `controller` of a `Composition`, then it is executed either before or after
-all of the other  `Mechanisms <Mechanism_Base>` executed in a `TRIAL` for that Composition, depending on the
+all of the other  `Mechanisms <Mechanism>` executed in a `TRIAL` for that Composition, depending on the
 value assigned to the Composition's `controller_mode <Composition.controller_mode>` attribute (see
 `Composition_Controller_Execution`).  If a ControlMechanism is added to a Composition for which it is not a
 `controller <Composition.controller>`, then it executes in the same way as a `ProcessingMechanism
