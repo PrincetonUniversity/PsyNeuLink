@@ -1596,10 +1596,10 @@ class RecurrentTransferMechanism(TransferMechanism):
         retval_init = (tuple(os.defaults.value) if not np.isscalar(os.defaults.value) else os.defaults.value for os in self.output_ports)
         return tuple((transfer_init, projection_init, tuple(retval_init)))
 
-    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         real_input_type = super()._get_input_struct_type(ctx)
         real_in = builder.alloca(real_input_type)
-        old_val = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        old_val = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
 
         # FIXME: What if we have more than one state? Does the autoprojection
         # connect only to the first one?
@@ -1622,11 +1622,11 @@ class RecurrentTransferMechanism(TransferMechanism):
             real_last_ptr = builder.gep(is_real_input, [ctx.int32_ty(0), ctx.int32_ty(last_idx)])
 
             recurrent_f = ctx.get_llvm_function(self.recurrent_projection)
-            recurrent_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            recurrent_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
             recurrent_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
             # FIXME: Why does this have a wrapper struct?
             recurrent_in = builder.gep(old_val, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            builder.call(recurrent_f, [recurrent_params, recurrent_context, recurrent_in, real_last_ptr])
+            builder.call(recurrent_f, [recurrent_params, recurrent_state, recurrent_in, real_last_ptr])
 
         # Copy mod afferents. These are not impacted by the recurrent projection
         if len(self.mod_afferents) > 1:
@@ -1634,9 +1634,9 @@ class RecurrentTransferMechanism(TransferMechanism):
             mod_afferent_in_ptr = builder.gep(real_in, [ctx.int32_ty(0), ctx.int32_ty(len(self.input_ports))])
             builder.store(builder.load(mod_afferent_arg_ptr), mod_afferent_in_ptr)
 
-        transfer_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        transfer_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
         transfer_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        builder = super()._gen_llvm_function_body(ctx, builder, transfer_params, transfer_context, real_in, arg_out)
+        builder = super()._gen_llvm_function_body(ctx, builder, transfer_params, transfer_state, real_in, arg_out)
 
         builder.store(builder.load(arg_out), old_val)
 

@@ -2821,28 +2821,28 @@ class Mechanism_Base(Mechanism):
                                        mech_params, mech_state, mech_in)
         return builder
 
-    def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable):
+    def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable):
         fun = ctx.get_llvm_function(function)
         fun_in, builder = self._gen_llvm_function_input_parse(builder, ctx, fun, variable)
         fun_out = builder.alloca(fun.args[3].type.pointee)
 
-        builder.call(fun, [params, context, fun_in, fun_out])
+        builder.call(fun, [params, state, fun_in, fun_out])
 
         return fun_out, builder
 
-    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
 
-        is_output, builder = self._gen_llvm_input_ports(ctx, builder, params, context, arg_in)
+        is_output, builder = self._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
 
         mf_params_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        mf_params, builder = self._gen_llvm_param_ports(self.function, mf_params_ptr, ctx, builder, params, context, arg_in)
+        mf_params, builder = self._gen_llvm_param_ports(self.function, mf_params_ptr, ctx, builder, params, state, arg_in)
 
-        mf_ctx = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        mf_ctx = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
         value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_ctx, is_output)
 
         ppval, builder = self._gen_llvm_function_postprocess(builder, ctx, value)
 
-        builder = self._gen_llvm_output_ports(ctx, builder, ppval, params, context, arg_in, arg_out)
+        builder = self._gen_llvm_output_ports(ctx, builder, ppval, params, state, arg_in, arg_out)
         return builder
 
     def _gen_llvm_function_input_parse(self, builder, ctx, func, func_in):
