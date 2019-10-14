@@ -736,7 +736,7 @@ def multi_getattr(obj, attr, default = None):
 
 
 # based off the answer here https://stackoverflow.com/a/15774013/3131666
-def get_deepcopy_with_shared(shared_keys=None, shared_types=None):
+def get_deepcopy_with_shared(shared_keys=frozenset(), shared_types=()):
     """
         Arguments
         ---------
@@ -751,30 +751,20 @@ def get_deepcopy_with_shared(shared_keys=None, shared_types=None):
         -------
             a __deepcopy__ function
     """
-    try:
-        shared_types = tuple(shared_types)
-    except TypeError:
-        shared_types = ()
-
-    if shared_keys is None:
-        shared_keys = []
+    shared_types = tuple(shared_types)
+    shared_keys = frozenset(shared_keys)
 
     def __deepcopy__(self, memo):
         cls = self.__class__
         result = cls.__new__(cls)
         memo[id(self)] = result
 
-        for k in shared_keys:
-            if k in self.__dict__:
-                setattr(result, k, self.__dict__[k])
-
         for k, v in self.__dict__.items():
-            if isinstance(self.__dict__[k], shared_types):
-                res_val = self.__dict__[k]
-                setattr(result, k, res_val)
-            elif k not in shared_keys:
+            if k in shared_keys or isinstance(v, shared_types):
+                res_val = v
+            else:
                 res_val = copy.deepcopy(v, memo)
-                setattr(result, k, res_val)
+            setattr(result, k, res_val)
         return result
 
     return __deepcopy__
