@@ -1261,12 +1261,12 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             llvm_func = builder.function
 
             llvm_func.attributes.add('alwaysinline')
-            params, context, arg_in, arg_out = llvm_func.args[:len(args)]
+            params, state, arg_in, arg_out = llvm_func.args[:len(args)]
             if len(extra_args) == 0:
-                for p in params, context, arg_in, arg_out:
+                for p in params, state, arg_in, arg_out:
                     p.attributes.add('noalias')
 
-            builder = self._gen_llvm_function_body(ctx, builder, params, context, arg_in, arg_out)
+            builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, arg_out)
             builder.ret_void()
 
         return llvm_func
