@@ -41,6 +41,8 @@ def pytest_addoption(parser):
     parser.addoption('--fp-precision', action='store', default='fp64', choices=['fp32', 'fp64'],
                      help='Set default fp precision for the runtime compiler. Default: fp64')
 
+    parser.addoption('--skip-pnlvm-leak-check', action='store_true', default=False, help='Skip leak check at the end of each compiled test.')
+
 def pytest_runtest_setup(item):
     # Check that all 'cuda' tests are also marked 'llvm'
     assert 'llvm' in item.keywords or 'cuda' not in item.keywords
@@ -126,7 +128,7 @@ def pytest_runtest_teardown(item):
         # Clear Registry to have a stable reference for indexed suffixes of default names
         clear_registry(registry)
 
-    pnlvm.cleanup()
+    pnlvm.cleanup(item.config.getvalue("--skip-pnlvm-leak-check") is False)
 
 @pytest.fixture
 def comp_mode_no_llvm():
