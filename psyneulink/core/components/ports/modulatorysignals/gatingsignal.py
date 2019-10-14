@@ -485,7 +485,7 @@ class GatingSignal(ControlSignal):
                  size=None,
                  index=None,
                  # assign=None,
-                 function=Linear(),
+                 function=Linear,
                  modulation:tc.optional(str)=None,
                  modulates=None,
                  params=None,
