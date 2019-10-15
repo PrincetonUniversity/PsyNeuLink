@@ -10,6 +10,10 @@ language: shell
 os: linux
 dist: bionic
 
+arch:
+  - amd64
+  - ppc64le
+
 env:
   jobs:
     - PYTHON=3.8
@@ -34,9 +38,17 @@ addons:
 before_install:
   - |
     # Install venv on Linux using Ubuntu distributed python
+    if [ "$TRAVIS_CPU_ARCH" != "amd64" ]; then
+      # There are a lot fewer wheels distributed for non-x86 architectures.
+      # We end up building a lot of them locally, install dev packages
+      EXTRA_PKGS="build-essential gfortran llvm-8-dev libfreetype6-dev libjpeg-dev liblapack-dev zlib1g-dev"
+      export LLVM_CONFIG=llvm-config-8
+      # Cython is needed to build scikit-learn
+      EXTRA_PIP="cython"
+    fi
     # distutils and lib2to3 are only needed for python3.8
     # https://bugs.launchpad.net/ubuntu/+source/python3.8/+bug/1851684
-    sudo apt-get install -y python$PYTHON-dev python$PYTHON-venv python3-distutils python3-lib2to3
+    sudo apt-get install -y python$PYTHON-dev python$PYTHON-venv python3-distutils python3-lib2to3 $EXTRA_PKGS
     python$PYTHON -m venv $HOME/venv
     # Provide fake xdg-open
     echo "#!/bin/sh" > $HOME/venv/bin/xdg-open
