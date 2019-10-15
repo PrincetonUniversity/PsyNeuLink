@@ -1298,19 +1298,41 @@ class ParametersBase(ParametersTemplate):
 
             self._register_parameter(attr)
 
-    def _get_prefixed_method(self, parse=False, validate=False, parameter_name=None):
+    def _get_prefixed_method(
+        self,
+        parse=False,
+        validate=False,
+        modulable=False,
+        parameter_name=None
+    ):
         """
-            Returns the method named **prefix**\\ **parameter_name**, used to simplify
-            pluggable methods for parsing and validation of `Parameter`\\ s
+            Returns the parsing or validation method for the Parameter named
+            **parameter_name** or for any modulable Parameter
         """
+
+        if (
+            parse and validate
+            or (not parse and not validate)
+        ):
+            raise ValueError('Exactly one of parse or validate must be True')
+
         if parse:
             prefix = self._parsing_method_prefix
         elif validate:
             prefix = self._validation_method_prefix
-        else:
-            return None
 
-        return getattr(self, '{0}{1}'.format(prefix, parameter_name))
+        if (
+            modulable and parameter_name is not None
+            or not modulable and parameter_name is None
+        ):
+            raise ValueError('modulable must be True or parameter_name must be specified, but not both.')
+
+        if modulable:
+            suffix = 'modulable'
+        elif parameter_name is not None:
+            suffix = parameter_name
+
+        return getattr(self, '{0}{1}'.format(prefix, suffix))
 
     def _validate(self, attr, value):
         try:
