@@ -11,23 +11,7 @@ import psyneulink as pnl
 import pytest
 from itertools import product
 
-# constants
 
-# this code only works for N_PERCEPTS == 2
-
-ALL_PERCEPTS = ['a', 'b']
-
-N_PERCEPTS = len(ALL_PERCEPTS)
-
-assert N_PERCEPTS == 2
-
-
-
-# variables
-
-n_nodes_per_percepts = 3
-
-node_dict = {percept: None for percept in ALL_PERCEPTS}
 
 
 @pytest.mark.model
@@ -41,8 +25,14 @@ node_dict = {percept: None for percept in ALL_PERCEPTS}
     pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
 ])
 def test_simplified_necker_cube(benchmark, mode):
+    # this code only works for N_PERCEPTS == 2
+    ALL_PERCEPTS = ['a', 'b']
+
+    # variables
+    n_nodes_per_percepts = 3
     excit_level = 1
     inhib_level = 1
+    node_dict = {percept: None for percept in ALL_PERCEPTS}
 
     def get_node(percept, node_id):
 
