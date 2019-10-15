@@ -1030,7 +1030,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         variable = Parameter(np.array([[defaultControlAllocation]]), pnl_internal=True, constructor_argument='default_variable')
         value = Parameter(np.array([defaultControlAllocation]), aliases='control_allocation', pnl_internal=True)
-        default_allocation = None,
+        default_allocation = None
         combine_costs = Parameter(np.sum, stateful=False, loggable=False)
         costs = Parameter(None, read_only=True, getter=_control_mechanism_costs_getter)
         control_signal_costs = Parameter(None, read_only=True, pnl_internal=True)
