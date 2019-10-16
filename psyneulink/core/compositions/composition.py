@@ -1091,7 +1091,7 @@ from PIL import Image
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.components.functions.function import is_function_type
-from psyneulink.core.components.functions.interfacefunctions import InterfaceStateMap
+from psyneulink.core.components.functions.interfacefunctions import InterfacePortMap
 from psyneulink.core.components.functions.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
@@ -2358,7 +2358,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     interface_output_port = OutputPort(owner=self.input_CIM,
                                                         variable=OWNER_VALUE,
                                                         default_variable=self.input_CIM.defaults.variable,
-                                                        function=InterfaceStateMap(
+                                                        function=InterfacePortMap(
                                                              corresponding_input_port=interface_input_port),
                                                         name="INPUT_CIM_" + node.name + "_" + input_port.name)
 
@@ -2427,7 +2427,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     interface_output_port = OutputPort(
                         owner=self.output_CIM,
                         variable=OWNER_VALUE,
-                        function=InterfaceStateMap(corresponding_input_port=interface_input_port),
+                        function=InterfacePortMap(corresponding_input_port=interface_input_port),
                         reference_value=output_port.defaults.value,
                         name="OUTPUT_CIM_" + node.name + "_" + output_port.name)
 
@@ -2490,7 +2490,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 owner = pcim,
                                 modulation = modulation,
                                 variable = OWNER_VALUE,
-                                function = InterfaceStateMap(
+                                function = InterfacePortMap(
                                     corresponding_input_port = input_port
                                 ),
                                 modulates = receiver,
