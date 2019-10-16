@@ -244,13 +244,13 @@ class TestProjectionSpecificationFormats:
             C1, C2 = ctl_tuple
 
             # This shenanigans is to avoid assigning the same instantiated ControlProjection more than once
-            if C1 is 'CP_OBJECT':
+            if C1 == 'CP_OBJECT':
                 C1 = pnl.ControlProjection()
-            elif isinstance(C1, tuple) and C1[1] is 'CP_OBJECT':
+            elif isinstance(C1, tuple) and C1[1] == 'CP_OBJECT':
                 C1 = (C1[0], pnl.ControlProjection())
-            if C2 is 'CP_OBJECT':
+            if C2 == 'CP_OBJECT':
                 C2 = pnl.ControlProjection()
-            elif isinstance(C2, tuple) and C2[1] is 'CP_OBJECT':
+            elif isinstance(C2, tuple) and C2[1] == 'CP_OBJECT':
                 C2 = (C2[0], pnl.ControlProjection())
 
             R = pnl.RecurrentTransferMechanism(noise=C1,
@@ -301,13 +301,13 @@ class TestProjectionSpecificationFormats:
             G_IN, G_OUT = gating_tuple
 
             # This shenanigans is to avoid assigning the same instantiated ControlProjection more than once
-            if G_IN is 'GP_OBJECT':
+            if G_IN == 'GP_OBJECT':
                 G_IN = pnl.GatingProjection()
-            elif isinstance(G_IN, tuple) and G_IN[1] is 'GP_OBJECT':
+            elif isinstance(G_IN, tuple) and G_IN[1] == 'GP_OBJECT':
                 G_IN = (G_IN[0], pnl.GatingProjection())
-            if G_OUT is 'GP_OBJECT':
+            if G_OUT == 'GP_OBJECT':
                 G_OUT = pnl.GatingProjection()
-            elif isinstance(G_OUT, tuple) and G_OUT[1] is 'GP_OBJECT':
+            elif isinstance(G_OUT, tuple) and G_OUT[1] == 'GP_OBJECT':
                 G_OUT = (G_OUT[0], pnl.GatingProjection())
 
             if isinstance(G_IN, tuple):

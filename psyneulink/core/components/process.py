@@ -2374,7 +2374,7 @@ class Process(Process_Base):
 
                     # Not all Projection subclasses instantiate ParameterPorts
                     except AttributeError as e:
-                        if e.args[0] is '_parameter_ports':
+                        if e.args[0] == '_parameter_ports':
                             pass
                         else:
                             raise ProcessError("PROGRAM ERROR: unrecognized attribute (\'{}\') encountered "

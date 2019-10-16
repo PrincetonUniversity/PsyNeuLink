@@ -1071,7 +1071,7 @@ class GradientOptimization(OptimizationFunction):
         previous_variable = self.parameters.previous_variable._get(context)
         previous_value = self.parameters.previous_value._get(context)
 
-        if iteration is 0:
+        if iteration == 0:
             # self._convergence_metric = self.convergence_threshold + EPSILON
             self.parameters.previous_variable._set(variable, context)
             self.parameters.previous_value._set(value, context)
