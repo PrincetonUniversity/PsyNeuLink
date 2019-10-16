@@ -836,8 +836,12 @@ class Parameter(types.SimpleNamespace):
                         delattr(self, attr)
             else:
                 for attr in self._param_attrs:
-                    if attr not in self._uninherited_attrs:
+                    if (
+                        attr not in self._uninherited_attrs
+                        and getattr(self, attr) is getattr(self._parent, attr)
+                    ):
                         setattr(self, attr, self._inherited_attrs_cache[attr])
+
             self.__inherited = value
 
     def _cache_inherited_attrs(self):
