@@ -2920,20 +2920,21 @@ class Mechanism_Base(Mechanism):
 
     @tc.typecheck
     def _show_structure(self,
-                       show_functions:bool=False,
-                       show_mech_function_params:bool=False,
-                       show_port_function_params:bool=False,
-                       show_values:bool=False,
-                       use_labels:bool=False,
-                       show_headers:bool=False,
-                       show_roles:bool=False,
-                       show_conditions:bool=False,
-                       composition=None,
-                       compact_cim:bool=False,
-                       condition:tc.optional(Condition)=None,
-                       node_border:str="1",
-                       output_fmt:tc.enum('pdf','struct')='pdf'
-                       ):
+                        show_functions:bool=False,
+                        show_mech_function_params:bool=False,
+                        show_port_function_params:bool=False,
+                        show_values:bool=False,
+                        use_labels:bool=False,
+                        show_headers:bool=False,
+                        show_roles:bool=False,
+                        show_conditions:bool=False,
+                        composition=None,
+                        compact_cim:bool=False,
+                        condition:tc.optional(Condition)=None,
+                        node_border:str="1",
+                        output_fmt:tc.enum('pdf','struct')='pdf',
+                        context=None
+                        ):
         """Generate a detailed display of a the structure of a Mechanism.
 
         .. note::
@@ -3108,7 +3109,7 @@ class Mechanism_Base(Mechanism):
                     fct_params = []
                     for param in [param for param in self.function_parameters
                                   if param.modulable and param.name not in {ADDITIVE_PARAM, MULTIPLICATIVE_PARAM}]:
-                        fct_params.append(f'{param.name}={param._get()}')
+                        fct_params.append(f'{param.name}={param._get(context)}')
                     fct_params = ", ".join(fct_params)
                 mech_function = f'<br/><i>{self.function.__class__.__name__}({fct_params})</i>'
             mech_value = ''
@@ -3144,7 +3145,7 @@ class Mechanism_Base(Mechanism):
                         fct_params = []
                         for param in [param for param in self.function_parameters
                                       if param.modulable and param.name not in {ADDITIVE_PARAM, MULTIPLICATIVE_PARAM}]:
-                            fct_params.append(f'{param.name}={param._get()}')
+                            fct_params.append(f'{param.name}={param._get(context)}')
                         fct_params = ", ".join(fct_params)
                     function = f'<br/><i>{port.function.__class__.__name__}({fct_params})</i>'
                 value=''

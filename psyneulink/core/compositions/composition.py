@@ -1001,53 +1001,53 @@ By default, Nodes are shown as ovals labeled by their `names <Mechanism.name>`, 
 <NodeRole.INPUT>` Mechanisms shown in green, its `OUTPUT <NodeRole.OUTPUT>` Mechanisms shown in red, and Projections
 shown as unlabeled arrows, as illustrated for the Composition in the example below:
 
-.. _System_show_graph_basic_figure:
+.. _Composition_show_graph_basic_figure:
 
-+-----------------------------------------------------------+-------------------------------------------+
-| >>> from psyneulink import *                              | .. figure:: _static/show_graph_basic.svg  |
-| >>> a = ProcessingMechanism(                              |                                           |
-|               name='A',                                   |                                           |
-| ...           size=3,                                     |                                           |
-| ...           output_ports=[RESULTS, OUTPUT_MEAN]        |                                           |
-| ...           )                                           |                                           |
-| >>> b = ProcessingMechanism(                              |                                           |
-| ...           name='B',                                   |                                           |
-| ...           size=5                                      |                                           |
-| ...           )                                           |                                           |
-| >>> c = ProcessingMechanism(                              |                                           |
-| ...           name='C',                                   |                                           |
-| ...           size=2,                                     |                                           |
-| ...           function=Logistic(gain=pnl.CONTROL)         |                                           |
-| ...           )                                           |                                           |
-| >>> comp = Composition(                                   |                                           |
-| ...           name='Comp',                                |                                           |
-| ...           enable_controller=True                      |                                           |
-| ...           )                                           |                                           |
-| >>> comp.add_linear_processing_pathway([a,c])             |                                           |
-| >>> comp.add_linear_processing_pathway([b,c])             |                                           |
-| >>> ctlr = OptimizationControlMechanism(                  |                                           |
-| ...            name='Controller',                         |                                           |
-| ...            monitor_for_control=[(pnl.OUTPUT_MEAN, a)],|                                           |
-| ...            function=GridSearch,                       |                                           |
-| ...            control_signals=(GAIN, c),                 |                                           |
-| ...            agent_rep=comp                             |                                           |
-| ...            )                                          |                                           |
-| >>> comp.add_controller(ctlr)                             |                                           |
-+-----------------------------------------------------------+-------------------------------------------+
++-----------------------------------------------------------+----------------------------------------------------------+
+| >>> from psyneulink import *                              | .. figure:: _static/Composition_show_graph_basic_fig.svg |
+| >>> a = ProcessingMechanism(                              |                                                          |
+|               name='A',                                   |                                                          |
+| ...           size=3,                                     |                                                          |
+| ...           output_ports=[RESULTS, OUTPUT_MEAN]         |                                                          |
+| ...           )                                           |                                                          |
+| >>> b = ProcessingMechanism(                              |                                                          |
+| ...           name='B',                                   |                                                          |
+| ...           size=5                                      |                                                          |
+| ...           )                                           |                                                          |
+| >>> c = ProcessingMechanism(                              |                                                          |
+| ...           name='C',                                   |                                                          |
+| ...           size=2,                                     |                                                          |
+| ...           function=Logistic(gain=pnl.CONTROL)         |                                                          |
+| ...           )                                           |                                                          |
+| >>> comp = Composition(                                   |                                                          |
+| ...           name='Comp',                                |                                                          |
+| ...           enable_controller=True                      |                                                          |
+| ...           )                                           |                                                          |
+| >>> comp.add_linear_processing_pathway([a,c])             |                                                          |
+| >>> comp.add_linear_processing_pathway([b,c])             |                                                          |
+| >>> ctlr = OptimizationControlMechanism(                  |                                                          |
+| ...            name='Controller',                         |                                                          |
+| ...            monitor_for_control=[(pnl.OUTPUT_MEAN, a)],|                                                          |
+| ...            function=GridSearch,                       |                                                          |
+| ...            control_signals=(GAIN, c),                 |                                                          |
+| ...            agent_rep=comp                             |                                                          |
+| ...            )                                          |                                                          |
+| >>> comp.add_controller(ctlr)                             |                                                          |
++-----------------------------------------------------------+----------------------------------------------------------+
 
 Note that the Composition's `controller <Composition.controller>` is not shown by default.  However this
 can be shown, along with other information, using options in the Composition's `show_graph <Composition.show_graph>`
 method.  The figure below shows several examples.
 
-.. _System_show_graph_figure:
+.. _Composition_show_graph_options_figure:
 
 **Output of show_graph using different options**
 
-.. figure:: _static/show_graph_figure.svg
+.. figure:: _static/Composition_show_graph_options_fig.svg
    :alt: Composition graph examples
    :scale: 150 %
 
-   Displays of the Composition used in the `example above <System_show_graph_basic_figure>`, generated using various
+   Displays of the Composition used in the `example above <Composition_show_graph_basic_figure>`, generated using various
    options of its `show_graph <Composition.show_graph>` method. **Panel A** shows the graph with its Projections labeled
    and Component dimensions displayed.  **Panel B** shows the `controller <Composition.controller>` for the
    Composition and its associated `ObjectiveMechanism` using the **show_controller** option (controller-related
@@ -1058,15 +1058,15 @@ method.  The figure below shows several examples.
 
 If a Composition has one ore more Compositions nested as Nodes within it, then these can be shown using the
 **show_nested** option. For example, if two Compositions identical to **comp** in the `example above
-<System_show_graph_basic_figure>` are added as the nodes of the linear processing pathway of a third* **comp** *,
+<Composition_show_graph_basic_figure>` are added as the nodes of the linear processing pathway of a third* **comp** *,
 these can be shown as follows:
 
-        +-------------------------------------------+-------------------------------------------+
-        |    >>> comp.show_graph()                  | .. figure:: _static/nested.svg            |
-        +-------------------------------------------+-------------------------------------------+
-        |    >>> comp.show_graph(show_nested=True)  | .. figure:: _static/show_nested.svg       |
-        |                                           |                                           |
-        +-------------------------------------------+-------------------------------------------+
+        +-------------------------------------------+----------------------------------------------------------------+
+        |    >>> comp.show_graph()                  | .. figure:: _static/Composition_show_graph_nested_fig.svg      |
+        +-------------------------------------------+----------------------------------------------------------------+
+        |    >>> comp.show_graph(show_nested=True)  | .. figure:: _static/Composition_show_graph_show_nested_fig.svg |
+        |                                           |                                                                |
+        +-------------------------------------------+----------------------------------------------------------------+
 
 
 
@@ -1101,6 +1101,7 @@ from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.projection import DuplicateProjectionError
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -1116,7 +1117,14 @@ from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import AFTER, ALL, BEFORE, BOLD, BOTH, COMPARATOR_MECHANISM, COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROLLER, CONTROL_SIGNAL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, SAMPLE, SIMULATIONS, SOFT_CLAMP, TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
+from psyneulink.core.globals.keywords import \
+    AFTER, ALL, BEFORE, BOLD, BOTH, COMPARATOR_MECHANISM, COMPONENT, COMPOSITION, CONDITIONS, \
+    CONTROL, CONTROLLER, CONTROL_SIGNAL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, \
+    LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
+    MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
+    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
+    ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
+    SAMPLE, SIMULATIONS, SOFT_CLAMP, TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
@@ -1734,8 +1742,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @property
     def scheduler(self):
         """
-            A default `Scheduler` automatically generated by the Composition, used for the
-            (`processing <System_Execution_Processing>` phase of execution.
+            A default `Scheduler` automatically generated by the Composition, and used for its execution
+            when it is `run <Composition_Run>`.
 
             :getter: Returns the default scheduler, and builds it if it needs updating since the last access.
         """
@@ -4547,7 +4555,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
                                                             STATE_FUNCTION_PARAMS, ROLES, ALL))=False,
                    show_nested:tc.optional(tc.any(bool,dict,tc.enum(ALL)))=ALL,
-                   show_controller:bool=False,
+                   show_controller:tc.any(bool, tc.enum(AGENT_REP))=False,
                    show_cim:bool=False,
                    show_learning:bool=False,
                    show_headers:bool=True,
@@ -4644,9 +4652,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             passes all arguments specified for the main Composition to the nested one(s);  True uses the default
             values of show_graph args for the nested Composition(s).
 
-        show_controller :  bool : default False
-            specifies whether or not to show the Composition's controller and associated ObjectiveMechanism;
-            these are displayed in the color specified for **controller_color**.
+        show_controller :  bool or AGENT_REP : default False
+            specifies whether or not to show the Composition's `controller <Composition.controller>` and associated
+            `objective_mechanism <ControlMechanism.objective_mechanism>` if it has one.  If the controller is an
+            OptimizationControlMechanism and it has an `agent_rep <OptimizationControlMechanism>`, then specifying
+            *AGENT_REP* will also show that.  All of these items are displayed in the color specified for
+            **controller_color**.
 
         show_cim : bool : default False
             specifies whether or not to show the Composition's input and out CompositionInterfaceMechanisms (CIMs)
@@ -5263,7 +5274,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                color=proj_color, penwidth=proj_width)
 
             # If controller has an agent_rep, assign its node and edges (not Projections per se)
-            if hasattr(controller, 'agent_rep') and controller.agent_rep:
+            if hasattr(controller, 'agent_rep') and controller.agent_rep and show_controller==AGENT_REP :
                 # get agent_rep
                 agent_rep = controller.agent_rep
                 # controller is active, treat
@@ -5538,7 +5549,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 'show_values': any(key in show_node_structure for key in {VALUES, ALL}),
                                 'use_labels': any(key in show_node_structure for key in {LABELS, ALL}),
                                 'show_headers': show_headers,
-                                'output_fmt': 'struct'}
+                                'output_fmt': 'struct',
+                                'context':context}
         else:
             node_struct_args = {'composition': self,
                                 'show_roles': show_node_structure in {ROLES, ALL},
@@ -5549,7 +5561,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 'show_values': show_node_structure in {VALUES, LABELS, ALL},
                                 'use_labels': show_node_structure in {LABELS, ALL},
                                 'show_headers': show_headers,
-                                'output_fmt': 'struct'}
+                                'output_fmt': 'struct',
+                                'context': context}
 
         # DEFAULT ATTRIBUTES ----------------------------------------------------------------
 
@@ -5681,19 +5694,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @tc.typecheck
     def _show_structure(self,
-                       # direction = 'BT',
-                       show_functions:bool=False,
-                       show_values:bool=False,
-                       use_labels:bool=False,
-                       show_headers:bool=False,
-                       show_roles:bool=False,
-                       show_conditions:bool=False,
-                       system=None,
-                       composition=None,
-                       condition:tc.optional(Condition)=None,
-                       compact_cim:tc.optional(tc.enum(INPUT, OUTPUT))=None,
-                       output_fmt:tc.enum('pdf','struct')='pdf'
-                       ):
+                        # direction = 'BT',
+                        show_functions:bool=False,
+                        show_values:bool=False,
+                        use_labels:bool=False,
+                        show_headers:bool=False,
+                        show_roles:bool=False,
+                        show_conditions:bool=False,
+                        system=None,
+                        composition=None,
+                        condition:tc.optional(Condition)=None,
+                        compact_cim:tc.optional(tc.enum(INPUT, OUTPUT))=None,
+                        output_fmt:tc.enum('pdf','struct')='pdf',
+                        context=None
+                        ):
         """Generate a detailed display of a the structure of a Mechanism.
 
         .. note::

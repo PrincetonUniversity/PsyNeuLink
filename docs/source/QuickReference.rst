@@ -128,12 +128,12 @@ The four types of Components in PsyNeuLink -- Functions, Mechanisms, Projections
      available to other Components.  There are two primary types of Mechanisms in PsyNeuLink:
      ProcessingMechanisms and ModulatoryMechanisms:
 
-     + `ProcessingMechanism`
+     - `ProcessingMechanism`
          Aggregates the inputs it receives from its afferent Projections, transforms them in some way,
          and provides the result as output to its efferent Projections.  Subtypes implement various types of
          opearations, such as intergration and comparison.
 
-     + `ModulatoryMechanism`
+     - `ModulatoryMechanism`
          Uses the input it receives from other Mechanisms to modify the parameters of one or more other
          PsyNeuLink Components.  There are two primary types:
 

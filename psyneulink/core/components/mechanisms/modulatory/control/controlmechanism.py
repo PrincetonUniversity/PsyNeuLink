@@ -493,7 +493,7 @@ Examples
 
 The following example creates a ControlMechanism by specifying its **objective_mechanism** using a constructor
 that specifies the OutputPorts to be monitored by its `objective_mechanism <ControlMechanism.objective_mechanism>`
-and the function used to evaluated these::
+and the function used to evaluate these::
 
     >>> my_mech_A = ProcessingMechanism(name="Mech A")
     >>> my_DDM = DDM(name="My DDM")
@@ -1060,7 +1060,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
         variable = Parameter(np.array([[defaultControlAllocation]]), pnl_internal=True, constructor_argument='default_variable')
         value = Parameter(np.array([defaultControlAllocation]), aliases='control_allocation', pnl_internal=True)
         default_allocation = None,
-
         combine_costs = Parameter(np.sum, stateful=False, loggable=False)
         costs = Parameter(None, read_only=True, getter=_control_mechanism_costs_getter)
         control_signal_costs = Parameter(None, read_only=True, pnl_internal=True)
@@ -1225,7 +1224,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 if isinstance(spec, MonitoredOutputPortTuple):
                     spec = spec.output_port
                 elif isinstance(spec, tuple):
-                    spec = spec[0]
+                    spec = self._parse_monitor_for_control_tuple_spec(spec)
                 elif isinstance(spec, dict):
                     # If it is a dict, parse to validate that it is an InputPort specification dict
                     #    (for InputPort of ObjectiveMechanism to be assigned to the monitored_output_port)
@@ -1450,6 +1449,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
         elif self.monitor_for_control:
             from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
             for sender in convert_to_list(self.monitor_for_control):
+                if isinstance(sender, tuple):
+                    sender = self._parse_monitor_for_control_tuple_spec(sender)
                 self.aux_components.append(MappingProjection(sender=sender, receiver=self.input_ports[OUTCOME]))
 
     def _instantiate_output_ports(self, context=None):
@@ -1858,6 +1859,13 @@ class ControlMechanism(ModulatoryMechanism_Base):
         self.parameters.value._set(value, context)
         self._update_output_ports(context=context,
                                    runtime_params=runtime_params,)
+
+    def _parse_monitor_for_control_tuple_spec(self, spec):
+        if len(spec)==2: # 2-item tuple: (OutputPort, Mechanism))
+            return spec[1].output_ports[spec[0]]
+        elif len(spec)==4: # 4-item tuple: (Mechanism, weights, exponents, matrix)
+            return spec[0]
+        return spec
 
     @property
     def monitored_output_ports(self):
