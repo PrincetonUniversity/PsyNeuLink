@@ -1047,18 +1047,18 @@ method.  The figure below shows several examples.
    :alt: Composition graph examples
    :scale: 150 %
 
-   Displays of the Composition used in the `example above <Composition_show_graph_basic_figure>`, generated using various
+   Displays of the Composition in the `example above <Composition_show_graph_basic_figure>`, generated using various
    options of its `show_graph <Composition.show_graph>` method. **Panel A** shows the graph with its Projections labeled
    and Component dimensions displayed.  **Panel B** shows the `controller <Composition.controller>` for the
    Composition and its associated `ObjectiveMechanism` using the **show_controller** option (controller-related
    Components are displayed in blue by default).  **Panel C** adds the Composition's `CompositionInterfaceMechanisms
    <CompositionInterfaceMechanism>` using the **show_cim** option. **Panel D** shows a detailed view of the Mechanisms
    using the **show_node_structure** option, that includes their `Ports <Port>` and their `roles <NodeRole>` in the
-   Composition. **Panel E** show an even more detailed view using **show_node_structure** as well as **show_cim**.
+   Composition. **Panel E** shows an even more detailed view using **show_node_structure** as well as **show_cim**.
 
 If a Composition has one ore more Compositions nested as Nodes within it, then these can be shown using the
 **show_nested** option. For example, if two Compositions identical to **comp** in the `example above
-<Composition_show_graph_basic_figure>` are added as the nodes of the linear processing pathway of a third* **comp** *,
+<Composition_show_graph_basic_figure>` are added as the nodes of the linear processing pathway of a *third* ``comp``,
 these can be shown as follows:
 
         +-------------------------------------------+----------------------------------------------------------------+
