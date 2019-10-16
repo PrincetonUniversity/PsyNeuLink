@@ -74,23 +74,17 @@ Overview
 
 The two primary types of objects in PsyNeuLink are `Components <Component>` (basic building blocks) and `Compositions
 <Composition>` (combinations of Components that implement a model).  There are four primary types of Components:
-Functions, Mechanisms, Ports and Projections.
-
 `Functions <Function>` are the basic units of computation in PsyNeuLink -- every other type of Component in PsyNeuLink
 has at least one Function, and sometimes more.  They "package" an executable method that is assigned to a Component's
 `function <Component.function>` attribute, and used to carry out the computation for which the Component is
 responsible.
-
 `Mechanisms <Mechanism>` are the basic units of processing in a PsyNeuLink model. They have one or more Functions that
 perform their characteristic operations.
-
 `Ports <Port>` represent the input(s) and output(s) of a Mechanism, and the parameters of its Function(s).  Ports
 have Functions themselves, that determine the value of the Port, and that can be used to modulate that value for
 learning, control and/or gating.
-
 `Projections <Projection>` are used to connect Mechanisms and/or nested Compositions, transmit information between them,
 and to modulate the value of their Ports.
-
 Mechanisms and Projections are combined to make up a `Composition`.  A Composition can also contain nested
 Compositions, that receive and/or send Projections to Mechanisms and/or other nested Compositions. The outermost
 Composition constitutes a model, that can be executed using its `run <Composition.run>` method.
@@ -116,7 +110,17 @@ Components are objects that perform a specific function. Every Component has the
 
 * `name <Component.name>` - string label that uniquely identifies the Component.
 
-The four types of Components in PsyNeuLink, Mechanisms, Projections, Ports and Functions, are described below:
+The four types of Components in PsyNeuLink -- Functions, Mechanisms, Projections, and Ports -- are described below:
+
+* `Functions <Function>`
+   A Function is the most fundamental unit of computation in PsyNeuLink.  Every `Component` has a Function
+   object, that wraps a callable object (usually an executable function) together with attributes for its parameters.
+   This allows parameters to be maintained from one call of a function to the next, for those parameters to be subject
+   to modulation by `ModulatoryProjections <ModulatoryProjection>` (see below), and for Functions to be swapped out
+   for one another or replaced with customized ones.  PsyNeuLink provides a library of standard Functions (e.g. for
+   linear, non-linear, and matrix transformations, integration, and comparison), as well as a standard Application
+   Programmers Interface (API) or creating new Functions that can be used to "wrap" any callable object that can be
+   written in or called from Python.
 
 * `Mechanisms <Mechanism>`
      A Mechanism takes one or more inputs received from its afferent `Projections <Projection>`,
@@ -170,43 +174,37 @@ The four types of Components in PsyNeuLink, Mechanisms, Projections, Ports and F
             MappingProjection.
 
 * `Ports <Port>`
-   A Port is a Component that belongs to a `Mechanism` and is used to represent it input(s), the parameter(s)
-   of its function, or its output(s).   There are three types of Ports, one for each type of representation
-   (see `figure <Mechanism_Figure>`), each of which can receive and/or send `PathwayProjections <PathwayProjection>`
-   and/or `ModulatoryProjections <ModulatoryProjection>` (see `figure <ModulatorySignal_Anatomy_Figure>`):
+   A Port is a Component that belongs to a `Mechanism` or a `Projection`.  For Mechanisms, it is used to represent it
+   input(s), the parameter(s) of its function, or its output(s) (see `figure <Mechanism_Figure>`).  For Projections,
+   it is used to represent the the parameter(s) of its function.  There are three types of Ports, one for each type of
+   information, as described below.  A Port can receive and/or send `PathwayProjections <PathwayProjection>`
+   and/or `ModulatoryProjections <ModulatoryProjection>`, depending on its type (see `figure
+   <ModulatorySignal_Anatomy_Figure>`).
 
    + `InputPort`
-       Represents a set of inputs to the Mechanism.
+       Represents a set of inputs to a Mechanism.
        Receives one or more afferent PathwayProjections to a Mechanism, combines them using its `function
        <Port_Base.function>`, and assigns the result (its `value <Port_Base.value>`)as an item of the Mechanism's
-       `variable <Mechanism_Base.variable>`.  It can also receive one or more `GatingProjections <GatingProjection>`,
-       that modify the parameter(s) of the Port's function, and thereby the Port's `value <Port_Base.value>`.
-
-   + `ParameterPort`
-       Represents a parameter of the Mechanism's `function <Mechanism_Base.function>`.  Takes the assigned value of the
-       parameter as the `variable <Port_Base.variable>` for the Port's `function <Port_Base.function>`, and assigns
-       the result as the value of the parameter used by the Mechanism's `function <Mechanism_Base.function>` when the
-       Mechanism executes.  It can also receive one or more `ControlProjections <ControlProjection>` that modify
-       parameter(s) of the Port's `function <Port_Base.function>, and thereby the value of the parameters used by the
-       Mechanism's `function <Mechanism_Base.function>`.
-
-   + `OutputPort`
-       Represents an output of the Mechanism.
-       Takes an item of the Mechanism's `value <Mechanism_Base.value>` as the `variable <Port_Base.variable>` for the
-       Port's `function <Port_Base.function>`, assigns the result as the Port's `value <OutputPort.value>`, and
-       provides that to one or more efferent PathwayProjections.  It can also receive one or more
-       `GatingProjections <GatingProjection>`, that modify parameter(s) of the Port's function, and thereby the
+       `variable <Mechanism_Base.variable>`.  It can also receive one or more `ControlProjections <ControlProjection>`
+       or `GatingProjections <GatingProjection>`, that modify the parameter(s) of the Port's function, and thereby the
        Port's `value <Port_Base.value>`.
 
-* `Functions <Function>`
-   A Function is the most fundamental unit of computation in PsyNeuLink.  Every `Component` has a Function
-   object, that wraps a callable object (usually an executable function) together with attributes for its parameters.
-   This allows parameters to be maintained from one call of a function to the next, for those parameters to be subject
-   to modulation by `ModulatoryProjections <ModulatoryProjection>` (see below), and for Functions to be swapped out
-   for one another or replaced with customized ones.  PsyNeuLink provides a library of standard Functions (e.g. for
-   linear, non-linear, and matrix transformations, integration, and comparison), as well as a standard Application
-   Programmers Interface (API) or creating new Functions that can be used to "wrap" any callable object that can be
-   written in or called from Python.
+   + `ParameterPort`
+       Represents a parameter of the `function <Component.function>` of a Mechanism or Projection.  Takes the
+       assigned value of the parameter as the `variable <Port_Base.variable>` for the Port's `function <Port_Base
+       .function>`, and assigns the result as the value of the parameter used by the Mechanism's `function
+       <Mechanism_Base.function>` when the Componet executes.  It can also receive one or more `ControlProjections
+       <ControlProjection>` that modify parameter(s) of the Port's `function <Port_Base.function>, and thereby the
+       value of the parameters used by the `function <Component.function>` of the Mechanism or Projection.
+
+   + `OutputPort`
+       Represents an output of a `Mechanism`.
+       Takes an item of the Mechanism's `value <Mechanism_Base.value>` as the `variable <Port_Base.variable>` for the
+       Port's `function <Port_Base.function>`, assigns the result as the Port's `value <OutputPort.value>`, and
+       provides that to one or more efferent PathwayProjections.  It can also receive one or more `ControlProjections
+       <ControlProjection>` or `GatingProjections <GatingProjection>`, that modify parameter(s) of the Port's
+       function, and thereby the Port's `value <Port_Base.value>`.
+
 
 .. _Quick_Reference_Compositions:
 
@@ -216,41 +214,44 @@ The four types of Components in PsyNeuLink, Mechanisms, Projections, Ports and F
 A Composition is made up of one more Mechanisms and/or nested Compositions, connected by Projections.  A Composition
 is created by first calling its constructor and then using its `add methods <Composition_Creation>` to add Components.
 Every Composition has a `graph <Composition.graph>` attribute, in which each Mechanism or nested Composition is a
-node and each `Projection` is a directed edge.  The graph defines the default flow of computation (from each node
-to the ones to which it projects), that may be modified by `Conditions <Condition>` assigned to the Composition's
-`scheduler <Composition.scheduler>`.  The graph can be displayed using the Composition's `show_graph
-<Composition.show-graph>` method, an example of which is shown in the `figure <QuickReference_Overview_Figure>` below.
-The sections that follow provide a description of these and the other basic objects in PsyNeuLink.
+node and each `Projection` is a directed edge.  The graph defines the default flow of computation (from each node to
+the ones to which it projects)when it is executed using its `run <Composition.run>` method, that may be modified by
+`Conditions <Condition>` assigned to the Composition's `scheduler <Composition.scheduler>` (see
+`below <Quick_Reference_Scheduling>`.  The graph can be displayed using the Composition's `show_graph
+<Composition.show_graph>` method, an example of which is shown in the following figure:
 
 .. _Quick_Reference_Compositions__Figure:
 
 .. figure:: _static/QuickReference_Composition_fig.svg
-   :width: 50%
+   :width: 75%
 
    **Composition.** Example of a PsyNeuLink Composition that contains various types of `Mechanisms <Mechanism>`
-   (shown as ovals, which each type shown capitalized in its label) and `Projections <Projections>` between them
-   (shown as arrows);  see `BasicsAndSampler_Stroop_Example_With_Control_Figure` for a more complete description
-   of the model implemented by this Composition).
+   (shown as ovals, which each type shown in parentheses belown the Mechanism's name) and `Projections <Projections>`
+   between them (shown as arrows);  see `Basics And Sampler <BasicsAndSampler_Elaborate_Configurations>` for a more
+   complete description of the model implemented by this Composition).
 
 .. _Quick_Reference_Scheduling:
 
 `Scheduling <Scheduler>`
 ------------------------
 
-PsyNeuLink Mechanisms can be executed on their own.  However, usually, they are executed when a Composition to which
-they belong is executed, under the control of the `Scheduler`.  The Schedule executes Compositions iteratively
-in rounds of execution referred to as `PASS` es, in which each Mechanism in the Composition is given an opportunity
-to execute;  By default, each Mechanism in a Composition executes exactly once per `PASS`.  However, the Scheduler
-can be used to specify one or more `Conditions <Condition>` for each Mechanism that determine whether it executes in
-a given `PASS`.  This can be used to determine when a Mechanism begins and/or ends executing, how many times it
-executes or the frequency with which it executes relative to other Mechanisms, and any other dependency that can be
-expressed in terms of the attributes of other Components in PsyNeuLink. Using a `Scheduler` and a combination of
-`pre-specified <Condition_Pre_Specified>` and `custom <Condition_Custom>` Conditions, any pattern of execution can be
- configured that is logically possible.
+PsyNeuLink Mechanisms can be executed on their own.  However, usually they are executed as part of a Composition to
+which they belong, when that is executed using its `run <Composition.run>` method.  When a Composition is `run
+<Composition_Run>`, its Components are executed under the control of its `scheduler <Composition.scheduler>`.  This
+is a `Scheduler`, that executes the Composition iteratively in rounds of execution referred to as a `PASS`, in which
+each node (Mechanism and/or nested Composition) in the Composition's `graph <Composition.graph>` is given an
+opportunity to execute.  By default, each node executes exactly once per `PASS`, in the order determined by the edges
+(`Projections <Projection>`) between them.  However, the Scheduler can be used to specify one or more `Conditions
+<Condition>` for each node that determine whether it executes in a given `PASS`.  This can be
+used to determine when a node begins and/or ends executing, how many times it executes or the frequency with
+which it executes relative to other nodes, and any other dependency that can be expressed in terms of the
+attributes of other Components in PsyNeuLink. Using a `Scheduler` and a combination of `pre-specified
+<Condition_Pre_Specified>` and `custom <Condition_Custom>` Conditions, any pattern of execution can be configured
+that is logically possible.
 
-Using a Scheduler, a Composition continues to execute `PASS` es until its `TRIAL` `termination Condition
+A Composition continues to execute `PASS`\es until its `TRIAL` `termination Condition
 <Scheduler_Termination_Conditions>` is met, which constitutes a `TRIAL` of executions.  This is associated with a
-single input to the System. Multiple `TRIAL` s (corresponding to a sequences of inputs) can be executed using a
+single input to the Composition. Multiple `TRIAL` s (corresponding to a sequences of inputs) can be executed using a
 Composition's `run <Composition.run>` method.
 
 .. _Quick_Reference_Logging:
@@ -267,15 +268,14 @@ context in which the value was recorded, and the third the `value <Component.val
 
 .. _Quick_Reference_Graphic_Displays:
 
-Graphic Displays
-----------------
+Graphic Display
+---------------
 
-At the moment, PsyNeuLink has limited support for graphic displays:  the graph of a `System` can be displayed
-using its `show_graph <System.show_graph>` method.  This can be used to display just the processing components
+At the moment, PsyNeuLink has limited support for graphic displays:  the graph of a `Composition` can be displayed
+using its `show_graph <Composition.show_graph>` method.  This can be used to display just the processing components
 (i.e., `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjections <MappingProjection>`), or to include
-`learning <LearningMechanism>` and/or `control <ControlMechanism>` components.  A future release may include
-a more complete graphical user interface.
-
+`learning <LearningMechanism>` and/or `control <ControlMechanism>` components.  A future release will include
+a more complete and interacdtive graphical user interface.
 
 .. _Quick_Reference_Preferences:
 
