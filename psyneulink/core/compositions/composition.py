@@ -4551,6 +4551,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    show_cim:bool=False,
                    show_learning:bool=False,
                    show_headers:bool=True,
+                   show_types:bool=False,
                    show_dimensions:bool=False,
                    show_projection_labels:bool=False,
                    direction:tc.enum('BT', 'TB', 'LR', 'RL')='BT',
@@ -4578,6 +4579,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            show_cim=False,                    \
            show_learning=False,               \
            show_headers=True,                 \
+           show_types=False,                  \
            show_dimensions=False,             \
            show_projection_labels=False,      \
            direction='BT',                    \
@@ -4663,6 +4665,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         show_headers : bool : default True
             specifies whether or not to show headers in the subfields of a Mechanism's node;  only takes effect if
             **show_node_structure** is specified (see above).
+
+        show_types : bool : default False
+            specifies whether or not to show type (class) of `Mechanism <Mechanism>` in each node label.
 
         show_dimensions : bool : default False
             specifies whether or not to show dimensions for the `variable <Component.variable>` and `value
@@ -4890,7 +4895,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     rcvr_penwidth = str(default_width)
 
                 # Implement rcvr node
-                rcvr_label = self._get_graph_node_label(rcvr, show_dimensions)
+                rcvr_label = self._get_graph_node_label(rcvr,
+                                                        show_types,
+                                                        show_dimensions)
 
                 if show_node_structure and isinstance(rcvr, Mechanism):
                     g.node(rcvr_label,
@@ -4979,7 +4986,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     assert False, '_assignm_cim_components called with node that is not input_CIM or output_CIM'
 
                 # Assign lablel
-                cim_label = self._get_graph_node_label(cim, show_dimensions)
+                cim_label = self._get_graph_node_label(cim, show_types, show_dimensions)
 
                 if show_node_structure:
                     g.node(cim_label,
@@ -5018,7 +5025,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                        format(self.name, input_mech,
                                                               NodeRole.INPUT.name, NodeRole.INPUT.name.lower()))
                             # Construct edge name
-                            input_mech_label = self._get_graph_node_label(input_mech, show_dimensions)
+                            input_mech_label = self._get_graph_node_label(input_mech,
+                                                                          show_types,
+                                                                          show_dimensions)
                             if show_node_structure:
                                 cim_proj_label = '{}:{}-{}'. \
                                     format(cim_label, OutputPort.__name__, proj.sender.name)
@@ -5040,7 +5049,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 proj_color = default_node_color
                                 proj_width = str(default_width)
                             if show_projection_labels:
-                                label = self._get_graph_node_label(proj, show_dimensions)
+                                label = self._get_graph_node_label(proj, show_types, show_dimensions)
                             else:
                                 label = ''
                             g.edge(cim_proj_label, proc_mech_rcvr_label, label=label,
@@ -5060,7 +5069,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                        format(self.name, output_mech,
                                                               NodeRole.OUTPUT.name, NodeRole.OUTPUT.name.lower()))
                             # Construct edge name
-                            output_mech_label = self._get_graph_node_label(output_mech, show_dimensions)
+                            output_mech_label = self._get_graph_node_label(output_mech,
+                                                                           show_types,
+                                                                           show_dimensions)
                             if show_node_structure:
                                 cim_proj_label = '{}:{}'. \
                                     format(cim_label, cim._get_port_name(proj.receiver))
@@ -5083,7 +5094,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 proj_color = default_node_color
                                 proj_width = str(default_width)
                             if show_projection_labels:
-                                label = self._get_graph_node_label(proj, show_dimensions)
+                                label = self._get_graph_node_label(proj, show_types, show_dimensions)
                             else:
                                 label = ''
                             g.edge(proc_mech_sndr_label, cim_proj_label, label=label,
@@ -5111,7 +5122,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Assign controller node
             node_shape = mechanism_shape
-            ctlr_label = self._get_graph_node_label(controller, show_dimensions)
+            ctlr_label = self._get_graph_node_label(controller, show_types, show_dimensions)
             if show_node_structure:
                 g.node(ctlr_label,
                        controller._show_structure(**node_struct_args, node_border=ctlr_width,
@@ -5129,7 +5140,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # outgoing edges (from controller to ProcessingMechanisms)
             for control_signal in controller.control_signals:
                 for ctl_proj in control_signal.efferents:
-                    proc_mech_label = self._get_graph_node_label(ctl_proj.receiver.owner, show_dimensions)
+                    proc_mech_label = self._get_graph_node_label(ctl_proj.receiver.owner, show_types, show_dimensions)
                     if controller in active_items:
                         if active_color is BOLD:
                             ctl_proj_color = controller_color
@@ -5186,10 +5197,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     objmech_color = controller_color
                     objmech_width = str(default_width)
 
-                objmech_label = self._get_graph_node_label(objmech, show_dimensions)
+                objmech_label = self._get_graph_node_label(objmech, show_types, show_dimensions)
                 if show_node_structure:
                     if objmech in self.scheduler.conditions:
-                        condition = self.scheduler.conditions[obj_mech]
+                        condition = self.scheduler.conditions[objmech]
                     else:
                         condition = None
                     g.node(objmech_label,
@@ -5232,12 +5243,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             proj_color = controller_color
                             proj_width = str(default_width)
                         if show_node_structure:
-                            sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions) + \
+                            sndr_proj_label = self._get_graph_node_label(projection.sender.owner,
+                                                                         show_types,
+                                                                         show_dimensions) + \
                                               ':' + objmech._get_port_name(projection.sender)
                             objmech_proj_label = objmech_label + ':' + objmech._get_port_name(input_port)
                         else:
-                            sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions)
-                            objmech_proj_label = self._get_graph_node_label(objmech, show_dimensions)
+                            sndr_proj_label = self._get_graph_node_label(projection.sender.owner,
+                                                                         show_types,
+                                                                         show_dimensions)
+                            objmech_proj_label = self._get_graph_node_label(objmech,
+                                                                            show_types,
+                                                                            show_dimensions)
                         if show_projection_labels:
                             edge_label = projection.name
                         else:
@@ -5262,7 +5279,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     agent_rep_width = str(default_width)
 
                 # agent_rep node
-                agent_rep_label = self._get_graph_node_label(agent_rep, show_dimensions)
+                agent_rep_label = self._get_graph_node_label(agent_rep, show_types, show_dimensions)
                 g.node(agent_rep_label,
                         color=agent_rep_color, penwidth=agent_rep_width, shape=agent_rep_shape,
                         rank=control_rank)
@@ -5292,7 +5309,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     return
 
                 # Get rcvr info
-                rcvr_label = self._get_graph_node_label(rcvr, show_dimensions)
+                rcvr_label = self._get_graph_node_label(rcvr, show_types, show_dimensions)
                 if rcvr in active_items:
                     if active_color is BOLD:
                         rcvr_color = learning_color
@@ -5364,8 +5381,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 learning_proj_width = str(default_width)
             sndrs = proj._parameter_ports['matrix'].mod_afferents # GET ALL LearningProjections to proj
             for sndr in sndrs:
-                sndr_label = self._get_graph_node_label(sndr.sender.owner, show_dimensions)
-                rcvr_label = self._get_graph_node_label(proj, show_dimensions)
+                sndr_label = self._get_graph_node_label(sndr.sender.owner, show_types, show_dimensions)
+                rcvr_label = self._get_graph_node_label(proj, show_types, show_dimensions)
                 if show_projection_labels:
                     edge_label = proj._parameter_ports['matrix'].mod_afferents[0].name
                 else:
@@ -5389,7 +5406,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for sndr in senders:
 
                 # Set sndr info
-                sndr_label = self._get_graph_node_label(sndr, show_dimensions)
+                sndr_label = self._get_graph_node_label(sndr, show_types, show_dimensions)
 
                 # Iterate through all Projections from all OutputPorts of sndr
                 for output_port in sndr.output_ports:
@@ -5416,7 +5433,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             except AttributeError:
                                 has_learning = None
 
-                            edge_label = self._get_graph_node_label(proj, show_dimensions)
+                            edge_label = self._get_graph_node_label(proj, show_types, show_dimensions)
                             is_learning_component = rcvr in self.learning_components or sndr in self.learning_components
 
                             # Check if Projection or its receiver is active
@@ -5873,18 +5890,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif output_fmt == 'jupyter':
             return m
 
-    def _get_graph_node_label(self, item, show_dimensions=None):
+    def _get_graph_node_label(self, item, show_types=None, show_dimensions=None):
         if not isinstance(item, (Mechanism, Composition, Projection)):
             raise CompositionError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
         # TBI Show Dimensions
         name = item.name
+
+        # MODIFIED 10/16/19 NEW: [JDC]
+        if show_types:
+            name = item.name+'\n('+item.__class__.__name__+')'
+        # MODIFIED 10/16/19 END
 
         if show_dimensions in {ALL, MECHANISMS} and isinstance(item, Mechanism):
             input_str = "in ({})".format(",".join(str(input_port.socket_width)
                                                   for input_port in item.input_ports))
             output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_port.value)))
                                                     for output_port in item.output_ports))
-            return "{}\n{}\n{}".format(output_str, name, input_str)
+            return f"{output_str}\n{name}\n{input_str}"
         if show_dimensions in {ALL, PROJECTIONS} and isinstance(item, Projection):
             # MappingProjections use matrix
             if isinstance(item, MappingProjection):

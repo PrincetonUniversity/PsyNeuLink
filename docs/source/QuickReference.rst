@@ -88,22 +88,15 @@ perform their characteristic operations.
 have Functions themselves, that determine the value of the Port, and that can be used to modulate that value for
 learning, control and/or gating.
 
-`Projections <Projection>` are used to connect Mechanisms, transmit information between them, and to modulate the value
-of their Ports.
+`Projections <Projection>` are used to connect Mechanisms and/or nested Compositions, transmit information between them,
+and to modulate the value of their Ports.
 
-Mechanisms and Projections are used to construct `Processes <Process>` -- simple Compositions that comprise a linear
-sequence of Mechanisms and Projections. Processes, in turn, can be combined to construct a `System` -- a more complex
-Composition used to implement a full PsyNeuLink model. The `figure <QuickReference_Overview_Figure>` below shows
-examples of some of the Components (various kinds of Mechanisms and Projections) in PsyNeuLink, combined to form two
-Processes and a System.  The sections that follow provide a description of these and the other basic objects in
+Mechanisms and Projections are combined to make up a `Composition`.  A Composition can also contain nested
+Compositions, that receive and/or send Projections to Mechanisms and/or other nested Compositions. The outermost
+Composition constitutes a model, that can be executed using its `run <Composition.run>` method.
+
+The sections that follow provide a description of the Component types, Composition, and other basic objects in
 PsyNeuLink.
-
-.. _QuickReference_Overview_Figure:
-
-.. figure:: _static/Overview_fig.svg
-
-    **Constituents of a PsyNeuLink Model**. Includes examples of some types of Components (Mechanisms and Projections)
-    and Compositions (Processes and a System).
 
 .. _Quick_Reference_Components:
 
@@ -220,33 +213,24 @@ The four types of Components in PsyNeuLink, Mechanisms, Projections, Ports and F
 `Compositions <Composition>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Compositions are combinations of Components that make up a PsyNeuLink model.  There are two primary types of
-Compositions:
-
-   + `Processes <Process>`
-       One or more `Mechanisms <Mechanism>` connected in a linear chain by `Projections <Projection>`.  A Process can
-       have recurrent Projections, but it cannot have any branches.
-
-   + `System`
-       A collection of Processes that can have any configuration, and is represented by a graph in which each node is
-        a `Mechanism` and each edge is a `Projection`.  Systems are generally constructed from Processes, but they
-        can also be constructed directly from Mechanisms and Projections.
-
+A Composition is made up of one more Mechanisms and/or nested Compositions, connected by Projections.  A Composition
+is created by first calling its constructor and then using its `add methods <Composition_Creation>` to add Components.
+Every Composition has a `graph <Composition.graph>` attribute, in which each Mechanism or nested Composition is a
+node and each `Projection` is a directed edge.  The graph defines the default flow of computation (from each node
+to the ones to which it projects), that may be modified by `Conditions <Condition>` assigned to the Composition's
+`scheduler <Composition.scheduler>`.  The graph can be displayed using the Composition's `show_graph
+<Composition.show-graph>` method, an example of which is shown in the `figure <QuickReference_Overview_Figure>` below.
+The sections that follow provide a description of these and the other basic objects in PsyNeuLink.
 
 .. _Quick_Reference_Compositions__Figure:
 
-**PsyNeuLink Compositions**
+.. figure:: _static/QuickReference_Composition_fig.svg
+   :width: 50%
 
-.. figure:: _static/System_simple_fig.jpg
-   :alt: Overview of major PsyNeuLink Components
-   :scale: 50 %
-
-   Two `Processes <Process>` are shown, both belonging to the same `System`.  Each Process has a series of
-   `ProcessingMechanisms <ProcessingMechanism>` linked by `MappingProjections <MappingProjection>`, that converge on
-   a common final ProcessingMechanism (see figure `above <QuickReference_Overview_Figure>` for a more complete
-   example, and `ModulatorySignals <ModulatorySignal_Anatomy_Figure>` for details of Components responsible for
-   `control <ControlMechanism>` and `learning <LearningMechanism>`.
-
+   **Composition.** Example of a PsyNeuLink Composition that contains various types of `Mechanisms <Mechanism>`
+   (shown as ovals, which each type shown capitalized in its label) and `Projections <Projections>` between them
+   (shown as arrows);  see `BasicsAndSampler_Stroop_Example_With_Control_Figure` for a more complete description
+   of the model implemented by this Composition).
 
 .. _Quick_Reference_Scheduling:
 
