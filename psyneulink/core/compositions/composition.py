@@ -5896,10 +5896,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # TBI Show Dimensions
         name = item.name
 
-        # MODIFIED 10/16/19 NEW: [JDC]
         if show_types:
             name = item.name+'\n('+item.__class__.__name__+')'
-        # MODIFIED 10/16/19 END
 
         if show_dimensions in {ALL, MECHANISMS} and isinstance(item, Mechanism):
             input_str = "in ({})".format(",".join(str(input_port.socket_width)
