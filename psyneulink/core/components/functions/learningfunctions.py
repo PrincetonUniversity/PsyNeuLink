@@ -33,7 +33,8 @@ from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.component import ComponentError, function_type, method_type
 from psyneulink.core.globals.keywords import \
     CONTRASTIVE_HEBBIAN_FUNCTION, DEFAULT_VARIABLE, TDLEARNING_FUNCTION, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
-    KOHONEN_FUNCTION, GAUSSIAN, LINEAR, EXPONENTIAL, HEBBIAN_FUNCTION, RL_FUNCTION, BACKPROPAGATION_FUNCTION, MATRIX
+    KOHONEN_FUNCTION, GAUSSIAN, LINEAR, EXPONENTIAL, HEBBIAN_FUNCTION, RL_FUNCTION, BACKPROPAGATION_FUNCTION, MATRIX, \
+    MSE, SSE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import is_numeric, scalar_distance
@@ -1818,6 +1819,9 @@ class BackPropagation(LearningFunction):
     default_learning_rate : float
         the value used for the `learning_rate <BackPropagation.learning_rate>` if it is not otherwise specified.
 
+    loss_function : string : default 'MSE'
+        the operation to apply to the error signal before computing weight changes.
+
     owner : Component
         `Mechanism <Mechanism>` to which the Function belongs.
 
@@ -1873,9 +1877,17 @@ class BackPropagation(LearningFunction):
                     :default value: 1.0
                     :type: float
 
+                loss_function
+                    see `loss_function <BackPropagation.loss_function>`
+
+                    :default value: 'MSE'
+                    :type: string
+                    :read only: True
+
         """
         variable = Parameter(np.array([[0], [0], [0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         learning_rate = Parameter(1.0, modulable=True)
+        loss_function = Parameter(None, read_only=True)
 
         activation_input = Parameter([0], read_only=True, getter=_activation_input_getter)
         activation_output = Parameter([0], read_only=True, getter=_activation_output_getter)
@@ -1893,6 +1905,7 @@ class BackPropagation(LearningFunction):
                  activation_derivative_fct: tc.optional(tc.any(function_type, method_type)) = Logistic().derivative,
                  # learning_rate: tc.optional(parameter_spec) = None,
                  learning_rate=None,
+                 loss_function=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
@@ -1904,6 +1917,7 @@ class BackPropagation(LearningFunction):
         params = self._assign_args_to_param_dicts(activation_derivative_fct=activation_derivative_fct,
                                                   error_matrix=error_matrix,
                                                   learning_rate=learning_rate,
+                                                  loss_function=loss_function,
                                                   params=params)
 
         # self.return_val = ReturnVal(None, None)
@@ -2099,7 +2113,14 @@ class BackPropagation(LearningFunction):
         activation_input = np.array(activation_input).reshape(len(activation_input), 1)
 
         # Derivative of error with respect to output activity (contribution of each output unit to the error above)
-        dE_dA = np.dot(error_matrix, self.get_current_function_param(ERROR_SIGNAL, context))
+        loss_function = self.parameters.loss_function.get(context)
+        if loss_function is MSE:
+            num_output_units = self.get_current_function_param(ERROR_SIGNAL, context).shape[0]
+            dE_dA = np.dot(error_matrix, self.get_current_function_param(ERROR_SIGNAL, context)) / num_output_units * 2
+        elif loss_function is SSE:
+            dE_dA = np.dot(error_matrix, self.get_current_function_param(ERROR_SIGNAL, context)) * 2
+        else:
+            dE_dA = np.dot(error_matrix, self.get_current_function_param(ERROR_SIGNAL, context))
 
         # Derivative of the output activity
         activation_output = self.get_current_function_param(ACTIVATION_OUTPUT, context)

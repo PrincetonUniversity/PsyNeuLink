@@ -11,7 +11,7 @@
 
 """
 
-* InterfaceStateMap
+* InterfacePortMap
 
 """
 
@@ -27,7 +27,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import \
     PreferenceEntry, PreferenceLevel, is_pref_set, REPORT_OUTPUT_PREF
 
 
-__all__ = ['InterfaceFunction', 'InterfaceStateMap']
+__all__ = ['InterfaceFunction', 'InterfacePortMap']
 
 class InterfaceFunction(Function_Base):
     """Simple functions for CompositionInterfaceMechanisms
@@ -35,7 +35,7 @@ class InterfaceFunction(Function_Base):
     componentType = TRANSFER_FUNCTION_TYPE
 
 
-class InterfaceStateMap(InterfaceFunction):
+class InterfacePortMap(InterfaceFunction):
     """
     Identity(                \
              default_variable, \
@@ -47,7 +47,7 @@ class InterfaceStateMap(InterfaceFunction):
 
     .. _Identity:
 
-    Returns `variable <InterfaceStateMap.variable>`.
+    Returns `variable <InterfacePortMap.variable>`.
 
     Arguments
     ---------
@@ -129,9 +129,9 @@ class InterfaceStateMap(InterfaceFunction):
 
     ):
         """
-        Return: The item of `value <InterfaceStateMap.value>` whose index corresponds to the index of
-        `corresponding_input_port <InterfaceStateMap.corresponding_input_port>` in `input_ports
-        <InterfaceStateMap.input_ports>`
+        Return: The item of `value <InterfacePortMap.value>` whose index corresponds to the index of
+        `corresponding_input_port <InterfacePortMap.corresponding_input_port>` in `input_ports
+        <InterfacePortMap.input_ports>`
 
         Arguments
         ---------
@@ -151,9 +151,9 @@ class InterfaceStateMap(InterfaceFunction):
         Returns
         -------
 
-        The item of `value <InterfaceStateMap.value>` whose index corresponds to the index of
-        `corresponding_input_port <InterfaceStateMap.corresponding_input_port>` in `input_ports
-        <InterfaceStateMap.input_ports>`
+        The item of `value <InterfacePortMap.value>` whose index corresponds to the index of
+        `corresponding_input_port <InterfacePortMap.corresponding_input_port>` in `input_ports
+        <InterfacePortMap.input_ports>`
 
         """
         index = self.corresponding_input_port.position_in_mechanism

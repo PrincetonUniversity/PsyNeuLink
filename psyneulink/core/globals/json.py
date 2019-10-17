@@ -12,26 +12,23 @@ Sections
 Overview
 --------
 
-The developers of PsyNeuLink are collaborating with the scientific
-community to create a common data format for sharing and replicating
-models. As part of this effort, PsyNeuLink includes the ability to
-export models into JSON, and generate valid Python scripts from this
-JSON.
+The developers of PsyNeuLink are collaborating with the scientific community, as part of the `OpenNeuro effort
+<https://openneuro.org>`_, to create a standard, JSON-based format for the description and exchange of computational
+models of brain and psychological function across different simulation environments. As part of this effort,
+PsyNeuLink includes the ability to export models into, and import valid Python scripts from this JSON format.
 
-Each Component can be dumped to JSON using its `json_summary`
-method, which uses its `_dict_summary <Component._dict_summary>`.
-Passing this output into `generate_script_from_json` will produce a
-valid Python script replicating the original model.
+Each Component can be exported to the JSON format using its `json_summary` method, which uses its `_dict_summary
+<Component._dict_summary>`. Passing this output into `generate_script_from_json` produced a valid Python script
+replicating the original PsyNeuLink model.
 
 .. _JSON_Examples:
 
 Model Examples
 --------------
 
-Below is a Stroop model with conflict monitoring and its output
-in JSON. Running `generate_script_from_json` on the output will produce
-another PsyNeuLink script which will give the same results when run
-on the same input as the original.
+Below is an example of a script that implements a PsyNeuLink model of the Stroop model with conflict monitoring,
+and its output in JSON. Running `generate_script_from_json` on the output will produce another PsyNeuLink script
+that will give the same results when run on the same input as the original.
 
 :download:`Download stroop_conflict_monitoring.py
 <../../tests/json/stroop_conflict_monitoring.py>`
@@ -48,18 +45,15 @@ JSON Model Specification
     The JSON format is in early development, and is subject to change.
 
 
-The outermost level of a JSON model is a dictionary with entry \
-``graphs``, a list of Composition objects.
+The outermost level of a JSON model is a dictionary with entry ``graphs``, a list of Composition objects.
 
-Each Component's JSON object contains multiple entries. Those that are
-common to all are:
+Each Component's JSON object contains multiple entries. Those that are common to all are:
 
 * ``name`` : a label for the Component
 
-* ``parameters`` (non-`Function`\\ s) / ``args`` (`Function`\\ s) : a \
-dictionary where each entry is either a `Parameter` name and value, or \
-a subdictionary of modeling-environment specific parameters. For \
-PsyNeuLink, this is indicated by `PNL`:
+* ``parameters`` (non-`Function`\\ s) / ``args`` (`Function`\\ s) : a dictionary where each entry is either a
+  `Parameter` name and value, or a subdictionary of modeling-environment specific parameters. For PsyNeuLink,
+  this is indicated by `PNL`:
 
 
 .. code-block:: javascript
@@ -77,9 +71,8 @@ PsyNeuLink, this is indicated by `PNL`:
         "slope": 1.0
     }
 
-Note that the value of a parameter may be a long-form dictionary when \
-it corresponds to a `ParameterPort`. In this case, it will indicate \
-the ParameterPort in a `source<>` field:
+Note that the value of a parameter may be a long-form dictionary when it corresponds to a `ParameterPort`.
+In this case, it will indicate the ParameterPort in a `source<>` field:
 
 .. code-block:: javascript
 
@@ -89,11 +82,9 @@ the ParameterPort in a `source<>` field:
         "value": 2.0
     }
 
-* ``type`` : a dictionary with entries based on modeling environment \
-to describe the type of the object. The `generic` entry is \
-populated if the object has a universal name (such as a linear \
-function). Modeling-environment-specific entries are populated when \
-relevant.
+* ``type`` : a dictionary with entries based on modeling environment to describe the type of the object.
+  The `generic` entry is populated if the object has a universal name (such as a linear function).
+  Modeling-environment-specific entries are populated when relevant.
 
 .. code-block:: javascript
 
