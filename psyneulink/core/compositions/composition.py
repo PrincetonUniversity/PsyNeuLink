@@ -1057,18 +1057,28 @@ method.  The figure below shows several examples.
    Composition. **Panel E** shows an even more detailed view using **show_node_structure** as well as **show_cim**.
 
 If a Composition has one ore more Compositions nested as Nodes within it, then these can be shown using the
-**show_nested** option. For example, if two Compositions identical to **comp** in the `example above
-<Composition_show_graph_basic_figure>` are added as the nodes of the linear processing pathway of a *third* ``comp``,
-these can be shown as follows:
+**show_nested** option. For example, the pathway in the script below contains a sequence of Mechanisms
+and Compositions that, added to *third* ``comp``, can be shown as follows::
 
-        +-------------------------------------------+----------------------------------------------------------------+
-        |    >>> comp.show_graph()                  | .. figure:: _static/Composition_show_graph_nested_fig.svg      |
-        +-------------------------------------------+----------------------------------------------------------------+
-        |    >>> comp.show_graph(show_nested=True)  | .. figure:: _static/Composition_show_graph_show_nested_fig.svg |
-        |                                           |                                                                |
-        +-------------------------------------------+----------------------------------------------------------------+
-
-
+  +---------------------------------------------------- +-------------------------------------------------------------+
+  |>>> mech_stim = ProcessingMechanism(name='STIMULUS') |                                                             |
+  |>>> mech_A1 = ProcessingMechanism(name='A1')         |                                                             |
+  |>>> mech_B1 = ProcessingMechanism(name='B1')         |                                                             |
+  |>>> comp1 = Composition(name='comp1')                |                                                             |
+  |>>> comp1.add_linear_processing_pathway([mech_A1,    |                                                             |
+  |>>>                                      mech_B1])   |..figure::_static/Composition_show_graph_show_nested_fig.svg |
+  |>>> mech_A2 = ProcessingMechanism(name='A2')         |                                                             |
+  |>>> mech_B2 = ProcessingMechanism(name='B2')         |                                                             |
+  |>>> comp2 = Composition(name='comp2')                |                                                             |
+  |>>> comp2.add_linear_processing_pathway([mech_A2,    |                                                             |                                                     |
+  |>>>                                      mech_B2])   |                                                             |
+  |>>> mech_resp = ProcessingMechanism(name='RESPONSE') |                                                             |
+  |>>> comp = Composition()                             |                                                             |
+  |>>> comp.add_linear_processing_pathway([mech_stim,   |                                                             |
+  |>>>                                     comp1, comp2,|                                                             |
+  |>>>                                     mech_resp])  |                                                             |
+  |>>> comp.show_graph(show_nested=True)                |                                                             |
+  +-----------------------------------------------------+-------------------------------------------------------------+
 
 .. _Composition_Class_Reference:
 
