@@ -690,6 +690,10 @@ class DefaultAllocationFunction(Function_Base):
         result = np.array([variable[0]] * num_ctl_sigs)
         return self.convert_output_type(result)
 
+    def reinitialize(self, *args, context=None):
+        # Override Component.reinitialize which requires that the Component is stateful
+        pass
+
     def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out):
         val_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
         val = builder.load(val_ptr)
@@ -1237,7 +1241,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     #    in the InputPort port specification dictionary returned from the parse,
                     #    and that it is specified as a projection_spec (parsed into that in the call
                     #    to _parse_connection_specs by _parse_port_spec)
-
                     spec = spec[PROJECTIONS][0][0]
 
                 if not isinstance(spec, (OutputPort, Mechanism)):

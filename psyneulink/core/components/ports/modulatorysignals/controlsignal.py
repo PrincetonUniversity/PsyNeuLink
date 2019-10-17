@@ -726,12 +726,7 @@ class ControlSignal(ModulatorySignal):
             pnl_internal=True,
             history_min_length=1
         )
-        # # MODIFIED 10/16/19 OLD:
-        # allocation_samples = Parameter(None, modulable=True)
-        # MODIFIED 10/16/19 NEW: [JDC]
-        # allocation_samples = Parameter(SampleSpec(0.1, 1, 0.1), modulable=True)
-        allocation_samples = Parameter([1], modulable=True)
-        # MODIFIED 10/16/19 END
+        allocation_samples = Parameter(None, modulable=True)
 
         cost_options = Parameter(CostFunctions.DEFAULTS, getter=_cost_options_getter, setter=_cost_options_setter)
         intensity_cost = Parameter(None, read_only=True, getter=_intensity_cost_getter)

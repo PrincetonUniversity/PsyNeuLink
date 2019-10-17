@@ -1028,7 +1028,6 @@ shown as unlabeled arrows, as illustrated for the Composition in the example bel
 | >>> ctlr = OptimizationControlMechanism(                  |                                                          |
 | ...            name='Controller',                         |                                                          |
 | ...            monitor_for_control=[(pnl.OUTPUT_MEAN, a)],|                                                          |
-| ...            function=GridSearch,                       |                                                          |
 | ...            control_signals=(GAIN, c),                 |                                                          |
 | ...            agent_rep=comp                             |                                                          |
 | ...            )                                          |                                                          |
@@ -5688,21 +5687,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # GENERATE OUTPUT ---------------------------------------------------------------------
 
         # Show as pdf
-        if output_fmt == 'pdf':
-            # G.format = 'svg'
-            G.view(self.name.replace(" ", "-"), cleanup=True, directory='show_graph OUTPUT/PDFS')
-
-        # Generate images for animation
-        elif output_fmt == 'gif':
-            if self.active_item_rendered or INITIAL_FRAME in active_items:
-                self._generate_gifs(G, active_items, context)
-
-        # Return graph to show in jupyter
-        elif output_fmt == 'jupyter':
-            return G
-
-        elif output_fmt == 'gv':
-            return G
+        try:
+            if output_fmt == 'pdf':
+                # G.format = 'svg'
+                G.view(self.name.replace(" ", "-"), cleanup=True, directory='show_graph OUTPUT/PDFS')
+    
+            # Generate images for animation
+            elif output_fmt == 'gif':
+                if self.active_item_rendered or INITIAL_FRAME in active_items:
+                    self._generate_gifs(G, active_items, context)
+    
+            # Return graph to show in jupyter
+            elif output_fmt == 'jupyter':
+                return G
+    
+            elif output_fmt == 'gv':
+                return G
+        except:
+            raise CompositionError(f"Problem displaying graph for {self.name}")
 
     @tc.typecheck
     def _show_structure(self,
