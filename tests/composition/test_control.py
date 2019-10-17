@@ -772,122 +772,6 @@ class TestControlMechanisms:
 
 class TestModelBasedOptimizationControlMechanisms:
 
-    def test_nested_evc(self):
-        import psyneulink as pnl
-        import numpy as np
-        from psyneulink import PROJECTIONS, ALLOCATION_SAMPLES
-
-        outer_comp = pnl.Composition(retain_old_simulation_data=True)
-        # Mechanisms
-        Input = pnl.TransferMechanism(name='Input')
-        reward = pnl.TransferMechanism(output_ports=[pnl.RESULT, pnl.OUTPUT_MEAN, pnl.OUTPUT_VARIANCE],
-                                       name='reward')
-        Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
-                                            drift_rate=(1.0,
-                                                        pnl.ControlProjection(function=pnl.Linear,
-                                                                              control_signal_params={
-                                                                                  pnl.ALLOCATION_SAMPLES: np.arange(
-                                                                                          0.1, 1.01,
-                                                                                          0.3)})),
-                                            threshold=(1.0,
-                                                       pnl.ControlProjection(function=pnl.Linear,
-                                                                             control_signal_params={
-                                                                                 pnl.ALLOCATION_SAMPLES: np.arange(
-                                                                                         0.1, 1.01,
-                                                                                         0.3)})),
-                                            noise=0.5,
-                                            starting_point=0,
-                                            t0=0.45),
-                                            output_ports=[pnl.DECISION_VARIABLE,
-                                                                      pnl.RESPONSE_TIME,
-                                                                      pnl.PROBABILITY_UPPER_THRESHOLD],
-                                                       name='Decision')
-
-        comp = pnl.Composition(name="evc", retain_old_simulation_data=True)
-        comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
-        comp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
-        task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
-        comp.add_linear_processing_pathway(task_execution_pathway)
-        comp._analyze_graph()
-        outer_comp.add_node(comp)
-        outer_comp._analyze_graph()
-        outer_comp.add_controller(controller=pnl.OptimizationControlMechanism(
-            agent_rep=outer_comp,
-            features=[Input.input_port, reward.input_port],
-            feature_function=pnl.AdaptiveIntegrator(rate=0.5),
-            objective_mechanism=pnl.ObjectiveMechanism(
-                function=pnl.LinearCombination(operation=pnl.PRODUCT),
-                monitor=[reward,
-                         Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
-                         (Decision.output_ports[pnl.RESPONSE_TIME], -1, 1)]),
-            function=pnl.GridSearch(),
-            control_signals=[{PROJECTIONS: ("drift_rate", Decision),
-                              ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
-                             {PROJECTIONS: ("threshold", Decision),
-                              ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
-        )
-
-        comp.enable_controller = True
-
-        comp._analyze_graph()
-
-        outer_comp._analyze_graph()
-        outer_comp.run(inputs=[
-            [[20], [0.5]],
-            [[20], [0.123]]
-        ])
-
-        # Note: Removed decision variable OutputPort from simulation results because sign is chosen randomly
-        expected_sim_results_array = [
-            [[10.], [10.0], [0.0], [0.48999867], [0.50499983]],
-            [[10.], [10.0], [0.0], [1.08965888], [0.51998934]],
-            [[10.], [10.0], [0.0], [2.40680493], [0.53494295]],
-            [[10.], [10.0], [0.0], [4.43671978], [0.549834]],
-            [[10.], [10.0], [0.0], [0.48997868], [0.51998934]],
-            [[10.], [10.0], [0.0], [1.08459402], [0.57932425]],
-            [[10.], [10.0], [0.0], [2.36033556], [0.63645254]],
-            [[10.], [10.0], [0.0], [4.24948962], [0.68997448]],
-            [[10.], [10.0], [0.0], [0.48993479], [0.53494295]],
-            [[10.], [10.0], [0.0], [1.07378304], [0.63645254]],
-            [[10.], [10.0], [0.0], [2.26686573], [0.72710822]],
-            [[10.], [10.0], [0.0], [3.90353015], [0.80218389]],
-            [[10.], [10.0], [0.0], [0.4898672], [0.549834]],
-            [[10.], [10.0], [0.0], [1.05791834], [0.68997448]],
-            [[10.], [10.0], [0.0], [2.14222978], [0.80218389]],
-            [[10.], [10.0], [0.0], [3.49637662], [0.88079708]],
-            [[15.], [15.0], [0.0], [0.48999926], [0.50372993]],
-            [[15.], [15.0], [0.0], [1.08981011], [0.51491557]],
-            [[15.], [15.0], [0.0], [2.40822035], [0.52608629]],
-            [[15.], [15.0], [0.0], [4.44259627], [0.53723096]],
-            [[15.], [15.0], [0.0], [0.48998813], [0.51491557]],
-            [[15.], [15.0], [0.0], [1.0869779], [0.55939819]],
-            [[15.], [15.0], [0.0], [2.38198336], [0.60294711]],
-            [[15.], [15.0], [0.0], [4.33535807], [0.64492386]],
-            [[15.], [15.0], [0.0], [0.48996368], [0.52608629]],
-            [[15.], [15.0], [0.0], [1.08085171], [0.60294711]],
-            [[15.], [15.0], [0.0], [2.32712843], [0.67504223]],
-            [[15.], [15.0], [0.0], [4.1221271], [0.7396981]],
-            [[15.], [15.0], [0.0], [0.48992596], [0.53723096]],
-            [[15.], [15.0], [0.0], [1.07165729], [0.64492386]],
-            [[15.], [15.0], [0.0], [2.24934228], [0.7396981]],
-            [[15.], [15.0], [0.0], [3.84279648], [0.81637827]]
-        ]
-
-        for simulation in range(len(expected_sim_results_array)):
-            assert np.allclose(expected_sim_results_array[simulation],
-                               # Note: Skip decision variable OutputPort
-                               outer_comp.simulation_results[simulation][0:3] + outer_comp.simulation_results[
-                                                                                    simulation][4:6])
-
-        expected_results_array = [
-            [[20.0], [20.0], [0.0], [1.0], [2.378055160151634], [0.9820137900379085]],
-            [[20.0], [20.0], [0.0], [0.1], [0.48999967725112503], [0.5024599801509442]]
-        ]
-
-        for trial in range(len(expected_results_array)):
-            np.testing.assert_allclose(outer_comp.results[trial], expected_results_array[trial], atol=1e-08,
-                                       err_msg='Failed on expected_output[{0}]'.format(trial))
-
     def test_evc(self):
         # Mechanisms
         Input = pnl.TransferMechanism(name='Input')
@@ -1166,6 +1050,267 @@ class TestModelBasedOptimizationControlMechanisms:
             assert np.allclose(expected_sim_results_array[simulation],
                                # Note: Skip decision variable OutputPort
                                evc_gratton.simulation_results[simulation][1:])
+
+    @pytest.mark.control
+    @pytest.mark.composition
+    def test_laming_validation_specify_control_signals(self):
+        # Mechanisms
+        Input = pnl.TransferMechanism(name='Input')
+        reward = pnl.TransferMechanism(
+            output_ports=[pnl.RESULT, pnl.OUTPUT_MEAN, pnl.OUTPUT_VARIANCE],
+            name='reward'
+        )
+        Decision = pnl.DDM(
+            function=pnl.DriftDiffusionAnalytical(
+                drift_rate=1.0,
+                threshold=1.0,
+                noise=0.5,
+                starting_point=0,
+                t0=0.45
+            ),
+            output_ports=[
+                pnl.DECISION_VARIABLE,
+                pnl.RESPONSE_TIME,
+                pnl.PROBABILITY_UPPER_THRESHOLD
+            ],
+            name='Decision'
+        )
+
+        comp = pnl.Composition(name="evc", retain_old_simulation_data=True)
+        comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
+        comp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
+        task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
+        comp.add_linear_processing_pathway(task_execution_pathway)
+
+        comp.add_controller(
+            controller=pnl.OptimizationControlMechanism(
+                agent_rep=comp,
+                features=[Input.input_port, reward.input_port],
+                feature_function=pnl.AdaptiveIntegrator(rate=0.5),
+                objective_mechanism=pnl.ObjectiveMechanism(
+                    function=pnl.LinearCombination(operation=pnl.PRODUCT),
+                    monitor=[
+                        reward,
+                        Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
+                        (Decision.output_ports[pnl.RESPONSE_TIME], -1, 1)
+                    ]
+                ),
+                function=pnl.GridSearch(),
+                control_signals=[
+                    {
+                        PROJECTIONS: (pnl.DRIFT_RATE, Decision),
+                        ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
+                    },
+                    {
+                        PROJECTIONS: (pnl.THRESHOLD, Decision),
+                        ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
+                    }
+                ],
+            )
+        )
+
+        stim_list_dict = {
+            Input: [0.5, 0.123],
+            reward: [20, 20]
+        }
+
+        comp.run(inputs=stim_list_dict)
+
+        # Note: Removed decision variable OutputPort from simulation results
+        # because sign is chosen randomly
+        expected_sim_results_array = [
+            [[10.], [10.0], [0.0], [0.48999867], [0.50499983]],
+            [[10.], [10.0], [0.0], [1.08965888], [0.51998934]],
+            [[10.], [10.0], [0.0], [2.40680493], [0.53494295]],
+            [[10.], [10.0], [0.0], [4.43671978], [0.549834]],
+            [[10.], [10.0], [0.0], [0.48997868], [0.51998934]],
+            [[10.], [10.0], [0.0], [1.08459402], [0.57932425]],
+            [[10.], [10.0], [0.0], [2.36033556], [0.63645254]],
+            [[10.], [10.0], [0.0], [4.24948962], [0.68997448]],
+            [[10.], [10.0], [0.0], [0.48993479], [0.53494295]],
+            [[10.], [10.0], [0.0], [1.07378304], [0.63645254]],
+            [[10.], [10.0], [0.0], [2.26686573], [0.72710822]],
+            [[10.], [10.0], [0.0], [3.90353015], [0.80218389]],
+            [[10.], [10.0], [0.0], [0.4898672], [0.549834]],
+            [[10.], [10.0], [0.0], [1.05791834], [0.68997448]],
+            [[10.], [10.0], [0.0], [2.14222978], [0.80218389]],
+            [[10.], [10.0], [0.0], [3.49637662], [0.88079708]],
+            [[15.], [15.0], [0.0], [0.48999926], [0.50372993]],
+            [[15.], [15.0], [0.0], [1.08981011], [0.51491557]],
+            [[15.], [15.0], [0.0], [2.40822035], [0.52608629]],
+            [[15.], [15.0], [0.0], [4.44259627], [0.53723096]],
+            [[15.], [15.0], [0.0], [0.48998813], [0.51491557]],
+            [[15.], [15.0], [0.0], [1.0869779], [0.55939819]],
+            [[15.], [15.0], [0.0], [2.38198336], [0.60294711]],
+            [[15.], [15.0], [0.0], [4.33535807], [0.64492386]],
+            [[15.], [15.0], [0.0], [0.48996368], [0.52608629]],
+            [[15.], [15.0], [0.0], [1.08085171], [0.60294711]],
+            [[15.], [15.0], [0.0], [2.32712843], [0.67504223]],
+            [[15.], [15.0], [0.0], [4.1221271], [0.7396981]],
+            [[15.], [15.0], [0.0], [0.48992596], [0.53723096]],
+            [[15.], [15.0], [0.0], [1.07165729], [0.64492386]],
+            [[15.], [15.0], [0.0], [2.24934228], [0.7396981]],
+            [[15.], [15.0], [0.0], [3.84279648], [0.81637827]]
+        ]
+
+        for simulation in range(len(expected_sim_results_array)):
+            assert np.allclose(
+                expected_sim_results_array[simulation],
+                # Note: Skip decision variable OutputPort
+                comp.simulation_results[simulation][0:3] + comp.simulation_results[simulation][4:6]
+            )
+
+        expected_results_array = [
+            [[20.0], [20.0], [0.0], [1.0], [2.378055160151634], [0.9820137900379085]],
+            [[20.0], [20.0], [0.0], [0.1], [0.48999967725112503], [0.5024599801509442]]
+        ]
+
+        for trial in range(len(expected_results_array)):
+            np.testing.assert_allclose(
+                comp.results[trial],
+                expected_results_array[trial],
+                atol=1e-08,
+                err_msg='Failed on expected_output[{0}]'.format(trial)
+            )
+
+    @pytest.mark.control
+    @pytest.mark.composition
+    def test_stateful_mechanism_in_simulation(self):
+        # Mechanisms
+        Input = pnl.TransferMechanism(name='Input', integrator_mode=True)
+        reward = pnl.TransferMechanism(
+            output_ports=[pnl.RESULT, pnl.OUTPUT_MEAN, pnl.OUTPUT_VARIANCE],
+            name='reward'
+        )
+        Decision = pnl.DDM(
+            function=pnl.DriftDiffusionAnalytical(
+                drift_rate=(
+                    1.0,
+                    pnl.ControlProjection(
+                        function=pnl.Linear,
+                        control_signal_params={
+                            ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
+                        },
+                    ),
+                ),
+                threshold=(
+                    1.0,
+                    pnl.ControlProjection(
+                        function=pnl.Linear,
+                        control_signal_params={
+                            ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
+                        },
+                    ),
+                ),
+                noise=(0.5),
+                starting_point=(0),
+                t0=0.45
+            ),
+            output_ports=[
+                pnl.DECISION_VARIABLE,
+                pnl.RESPONSE_TIME,
+                pnl.PROBABILITY_UPPER_THRESHOLD
+            ],
+            name='Decision',
+        )
+
+        comp = pnl.Composition(name="evc", retain_old_simulation_data=True)
+        comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
+        comp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
+        task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
+        comp.add_linear_processing_pathway(task_execution_pathway)
+
+        comp.add_controller(
+            controller=pnl.OptimizationControlMechanism(
+                agent_rep=comp,
+                features=[Input.input_port, reward.input_port],
+                feature_function=pnl.AdaptiveIntegrator(rate=0.5),
+                objective_mechanism=pnl.ObjectiveMechanism(
+                    function=pnl.LinearCombination(operation=pnl.PRODUCT),
+                    monitor=[
+                        reward,
+                        Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
+                        (Decision.output_ports[pnl.RESPONSE_TIME], -1, 1)
+                    ]
+                ),
+                function=pnl.GridSearch(),
+                control_signals=[
+                    {
+                        PROJECTIONS: (pnl.DRIFT_RATE, Decision),
+                        ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
+                    },
+                    {
+                        PROJECTIONS: (pnl.THRESHOLD, Decision),
+                        ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
+                    }
+                ],
+            )
+        )
+
+        stim_list_dict = {
+            Input: [0.5, 0.123],
+            reward: [20, 20]
+        }
+        Input.reinitialize_when = pnl.Never()
+
+        comp.run(inputs=stim_list_dict)
+
+        # Note: Removed decision variable OutputPort from simulation results
+        # because sign is chosen randomly
+        expected_sim_results_array = [
+            [[10.], [10.0], [0.0], [0.48999867], [0.50499983]],
+            [[10.], [10.0], [0.0], [1.08965888], [0.51998934]],
+            [[10.], [10.0], [0.0], [2.40680493], [0.53494295]],
+            [[10.], [10.0], [0.0], [4.43671978], [0.549834]],
+            [[10.], [10.0], [0.0], [0.48997868], [0.51998934]],
+            [[10.], [10.0], [0.0], [1.08459402], [0.57932425]],
+            [[10.], [10.0], [0.0], [2.36033556], [0.63645254]],
+            [[10.], [10.0], [0.0], [4.24948962], [0.68997448]],
+            [[10.], [10.0], [0.0], [0.48993479], [0.53494295]],
+            [[10.], [10.0], [0.0], [1.07378304], [0.63645254]],
+            [[10.], [10.0], [0.0], [2.26686573], [0.72710822]],
+            [[10.], [10.0], [0.0], [3.90353015], [0.80218389]],
+            [[10.], [10.0], [0.0], [0.4898672], [0.549834]],
+            [[10.], [10.0], [0.0], [1.05791834], [0.68997448]],
+            [[10.], [10.0], [0.0], [2.14222978], [0.80218389]],
+            [[10.], [10.0], [0.0], [3.49637662], [0.88079708]],
+            [[15.], [15.0], [0.0], [0.48999926], [0.50372993]],
+            [[15.], [15.0], [0.0], [1.08981011], [0.51491557]],
+            [[15.], [15.0], [0.0], [2.40822035], [0.52608629]],
+            [[15.], [15.0], [0.0], [4.44259627], [0.53723096]],
+            [[15.], [15.0], [0.0], [0.48998813], [0.51491557]],
+            [[15.], [15.0], [0.0], [1.0869779], [0.55939819]],
+            [[15.], [15.0], [0.0], [2.38198336], [0.60294711]],
+            [[15.], [15.0], [0.0], [4.33535807], [0.64492386]],
+            [[15.], [15.0], [0.0], [0.48996368], [0.52608629]],
+            [[15.], [15.0], [0.0], [1.08085171], [0.60294711]],
+            [[15.], [15.0], [0.0], [2.32712843], [0.67504223]],
+            [[15.], [15.0], [0.0], [4.1221271], [0.7396981]],
+            [[15.], [15.0], [0.0], [0.48992596], [0.53723096]],
+            [[15.], [15.0], [0.0], [1.07165729], [0.64492386]],
+            [[15.], [15.0], [0.0], [2.24934228], [0.7396981]],
+            [[15.], [15.0], [0.0], [3.84279648], [0.81637827]]
+        ]
+
+        for simulation in range(len(expected_sim_results_array)):
+            assert np.allclose(
+                expected_sim_results_array[simulation],
+                # Note: Skip decision variable OutputPort
+                comp.simulation_results[simulation][0:3] + comp.simulation_results[simulation][4:6]
+            )
+
+        expected_results_array = [
+            [[20.0], [20.0], [0.0], [1.0], [3.4963766238230596], [0.8807970779778824]],
+            [[20.0], [20.0], [0.0], [0.1], [0.4899992579951842], [0.503729930808051]]
+        ]
+
+        for trial in range(len(expected_results_array)):
+            np.testing.assert_allclose(
+                comp.results[trial],
+                expected_results_array[trial],
+                atol=1e-08,
+                err_msg='Failed on expected_output[{0}]'.format(trial)
+            )
 
     @pytest.mark.control
     @pytest.mark.composition
