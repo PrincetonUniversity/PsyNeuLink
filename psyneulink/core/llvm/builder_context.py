@@ -739,59 +739,28 @@ class LLVMBuilderContext:
         cond_init = cond_type(cond_gen.get_condition_initializer())
         builder.store(cond_init, cond)
 
-        iter_ptr = builder.alloca(self.int32_ty, name="iter_counter")
-        builder.store(self.int32_ty(0), iter_ptr)
-
-        loop_condition = builder.append_basic_block(name="run_loop_condition")
-        builder.branch(loop_condition)
-
-        # Generate a "while < count" loop
-        builder.position_at_end(loop_condition)
-        count = builder.load(iter_ptr)
-        runs = builder.load(runs_ptr)
-        run_cond = builder.icmp_unsigned('<', count, runs)
-
-        loop_body = builder.append_basic_block(name="run_loop_body")
-        exit_block = builder.append_basic_block(name="exit")
-        builder.cbranch(run_cond, loop_body, exit_block)
-
-        # Generate loop body
-        builder.position_at_end(loop_body)
-
-        # Current iteration
-        iters = builder.load(iter_ptr)
-
-        # Get the right input stimulus
-        input_idx = builder.urem(iters, builder.load(inputs_ptr))
-        data_in_ptr = builder.gep(data_in, [input_idx])
+        with pnlvm.helpers.for_loop_zero_inc(builder, builder.load(runs_ptr), "run_loop") as (b, iters):
+            # Get the right input stimulus
+            input_idx = b.urem(iters, b.load(inputs_ptr))
+            data_in_ptr = b.gep(data_in, [input_idx])
         
-        # Call execution
-        if simulation:
-            exec_f = self.get_llvm_function(composition._llvm_simulation.name)
-        else:
-            exec_f = self.get_llvm_function(composition)
-        builder.call(exec_f, [state, params, data_in_ptr, data, cond])
+            # Call execution
+            if simulation:
+                exec_f = self.get_llvm_function(composition._llvm_simulation.name)
+            else:
+                exec_f = self.get_llvm_function(composition)
+            b.call(exec_f, [state, params, data_in_ptr, data, cond])
 
-        if not simulation:
-            # Extract output_CIM result
-            idx = composition._get_node_index(composition.output_CIM)
-            result_ptr = builder.gep(data, [self.int32_ty(0), self.int32_ty(0), self.int32_ty(idx)])
-            output_ptr = builder.gep(data_out, [iters])
-            result = builder.load(result_ptr)
-            builder.store(result, output_ptr)
-
-        # Increment counter
-        iters = builder.add(iters, self.int32_ty(1))
-        builder.store(iters, iter_ptr)
-        builder.branch(loop_condition)
-
-        builder.position_at_end(exit_block)
-
-        # Store the number of executed iterations
-        builder.store(builder.load(iter_ptr), runs_ptr)
+            if not simulation:
+                # Extract output_CIM result
+                idx = composition._get_node_index(composition.output_CIM)
+                result_ptr = b.gep(data, [self.int32_ty(0), self.int32_ty(0),
+                                          self.int32_ty(idx)])
+                output_ptr = b.gep(data_out, [iters])
+                result = b.load(result_ptr)
+                b.store(result, output_ptr)
 
         builder.ret_void()
-
         return llvm_func
 
     def gen_multirun_wrapper(self, function: ir.Function) -> ir.Function:
