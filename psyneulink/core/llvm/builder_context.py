@@ -804,59 +804,40 @@ class LLVMBuilderContext:
         multirun_ty = ir.FunctionType(function.type.pointee.return_type, args)
         multirun_f = ir.Function(self.module, multirun_ty, function.name + "_multirun")
         block = multirun_f.append_basic_block(name="entry")
-        cond_block = multirun_f.append_basic_block(name="loop_cond")
-        body_block = multirun_f.append_basic_block(name="loop_body")
-        exit_block = multirun_f.append_basic_block(name="exit_loop")
-
         builder = ir.IRBuilder(block)
 
-        limit_ptr = multirun_f.args[-1]
-        index_ptr = builder.alloca(self.int32_ty)
-        builder.store(index_ptr.type.pointee(0), index_ptr)
-        builder.branch(cond_block)
+        multi_runs = builder.load(multirun_f.args[-1])
+        # Runs need special handling. data_in and data_out are one dimensional,
+        # but hold entries for all parallel invocations.
+        is_comp_run = len(function.args) == 7
+        if is_comp_run:
+            runs_count = builder.load(multirun_f.args[5])
+            input_count = builder.load(multirun_f.args[6])
 
-        with builder.goto_block(cond_block):
-            index = builder.load(index_ptr)
-            limit = builder.load(limit_ptr)
-            cond = builder.icmp_unsigned("<", index, limit)
-            builder.cbranch(cond, body_block, exit_block)
 
-        with builder.goto_block(body_block):
-            # Runs need special handling. data_in and data_out are one dimensional,
-            # but hold entries for all parallel invocations.
-            is_comp_run = len(function.args) == 7
-            if is_comp_run:
-                runs_count = multirun_f.args[5]
-                input_count = multirun_f.args[6]
-
+        with pnlvm.helpers.for_loop_zero_inc(builder, multi_runs, "multi_run_loop") as (b, index):
             # Index all pointer arguments
-            index = builder.load(index_ptr)
             indexed_args = []
             for i, arg in enumerate(multirun_f.args[:-1]):
                 # Don't adjust #inputs and #trials
                 if isinstance(arg.type, ir.PointerType):
                     offset = index
-                    # #runs and #trials needs to be the same
+                    # #runs and #trials needs to be the same for every invocation
                     if is_comp_run and i >= 5:
                         offset = self.int32_ty(0)
                     # data arrays need special handling
                     elif is_comp_run and i == 4:  # data_out
-                        offset = builder.mul(index, builder.load(runs_count))
+                        offset = b.mul(index, runs_count)
                     elif is_comp_run and i == 3:  # data_in
-                        offset = builder.mul(index, builder.load(input_count))
+                        offset = b.mul(index, input_count)
 
-                    arg = builder.gep(arg, [offset])
+                    arg = b.gep(arg, [offset])
 
                 indexed_args.append(arg)
 
-            builder.call(function, indexed_args)
-            new_idx = builder.add(index, index.type(1))
-            builder.store(new_idx, index_ptr)
-            builder.branch(cond_block)
+            b.call(function, indexed_args)
 
-        with builder.goto_block(exit_block):
-            builder.ret_void()
-
+        builder.ret_void()
         return multirun_f
 
     def convert_python_struct_to_llvm_ir(self, t):
