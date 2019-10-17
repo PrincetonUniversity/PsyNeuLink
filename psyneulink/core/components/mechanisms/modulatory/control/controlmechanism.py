@@ -493,7 +493,7 @@ Examples
 
 The following example creates a ControlMechanism by specifying its **objective_mechanism** using a constructor
 that specifies the OutputPorts to be monitored by its `objective_mechanism <ControlMechanism.objective_mechanism>`
-and the function used to evaluated these::
+and the function used to evaluate these::
 
     >>> my_mech_A = ProcessingMechanism(name="Mech A")
     >>> my_DDM = DDM(name="My DDM")
@@ -689,6 +689,10 @@ class DefaultAllocationFunction(Function_Base):
         num_ctl_sigs = self.get_current_function_param('num_control_signals')
         result = np.array([variable[0]] * num_ctl_sigs)
         return self.convert_output_type(result)
+
+    def reinitialize(self, *args, context=None):
+        # Override Component.reinitialize which requires that the Component is stateful
+        pass
 
     def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out):
         val_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -1060,7 +1064,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
         variable = Parameter(np.array([[defaultControlAllocation]]), pnl_internal=True, constructor_argument='default_variable')
         value = Parameter(np.array([defaultControlAllocation]), aliases='control_allocation', pnl_internal=True)
         default_allocation = None,
-
         combine_costs = Parameter(np.sum, stateful=False, loggable=False)
         costs = Parameter(None, read_only=True, getter=_control_mechanism_costs_getter)
         control_signal_costs = Parameter(None, read_only=True, pnl_internal=True)
@@ -1225,7 +1228,11 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 if isinstance(spec, MonitoredOutputPortTuple):
                     spec = spec.output_port
                 elif isinstance(spec, tuple):
-                    spec = spec[0]
+                    spec = _parse_port_spec(owner=self,
+                                             port_type=InputPort,
+                                             port_spec=spec,
+                                             context=context)
+                    spec = spec['params'][PROJECTIONS][0][0]
                 elif isinstance(spec, dict):
                     # If it is a dict, parse to validate that it is an InputPort specification dict
                     #    (for InputPort of ObjectiveMechanism to be assigned to the monitored_output_port)
@@ -1238,7 +1245,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     #    in the InputPort port specification dictionary returned from the parse,
                     #    and that it is specified as a projection_spec (parsed into that in the call
                     #    to _parse_connection_specs by _parse_port_spec)
-
                     spec = spec[PROJECTIONS][0][0]
 
                 if not isinstance(spec, (OutputPort, Mechanism)):
@@ -1315,22 +1321,12 @@ class ControlMechanism(ModulatoryMechanism_Base):
             control = target_set[CONTROL]
             assert isinstance(control, list), \
                 f"PROGRAM ERROR: control arg {control} of {self.name} should have been converted to a list."
-            # # MODIFIED 9/26/19 OLD:
-            # from psyneulink.core.components.projections.projection import ProjectionError
-            # for ctl_spec in control:
-            #     # _parse_port_spec(port_type=ControlSignal, owner=self, port_spec=control_signal)
-            #     try:
-            #         _parse_port_spec(port_type=ControlSignal, owner=self, port_spec=ctl_spec)
-            #     except ProjectionError:
-            #         _parse_port_spec(port_type=GatingSignal, owner=self, port_spec=ctl_spec)
-            # MODIFIED 9/26/19 NEW:
             for ctl_spec in control:
                 ctl_spec = _parse_port_spec(port_type=ControlSignal, owner=self, port_spec=ctl_spec)
                 if not (isinstance(ctl_spec, ControlSignal)
                         or (isinstance(ctl_spec, dict) and ctl_spec[PORT_TYPE]==ControlSignal.__name__)):
                     raise ControlMechanismError(f"Invalid specification for '{CONTROL}' argument of {self.name}:"
                                                 f"({ctl_spec})")
-            # MODIFIED 9/26/19 END
 
     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
     def _instantiate_objective_mechanism(self, context=None):

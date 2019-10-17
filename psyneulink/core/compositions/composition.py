@@ -1001,74 +1001,85 @@ By default, Nodes are shown as ovals labeled by their `names <Mechanism.name>`, 
 <NodeRole.INPUT>` Mechanisms shown in green, its `OUTPUT <NodeRole.OUTPUT>` Mechanisms shown in red, and Projections
 shown as unlabeled arrows, as illustrated for the Composition in the example below:
 
-.. _System_show_graph_basic_figure:
+.. _Composition_show_graph_basic_figure:
 
-+-----------------------------------------------------------+-------------------------------------------+
-| >>> from psyneulink import *                              | .. figure:: _static/show_graph_basic.svg  |
-| >>> a = ProcessingMechanism(                              |                                           |
-|               name='A',                                   |                                           |
-| ...           size=3,                                     |                                           |
-| ...           output_ports=[RESULTS, OUTPUT_MEAN]        |                                           |
-| ...           )                                           |                                           |
-| >>> b = ProcessingMechanism(                              |                                           |
-| ...           name='B',                                   |                                           |
-| ...           size=5                                      |                                           |
-| ...           )                                           |                                           |
-| >>> c = ProcessingMechanism(                              |                                           |
-| ...           name='C',                                   |                                           |
-| ...           size=2,                                     |                                           |
-| ...           function=Logistic(gain=pnl.CONTROL)         |                                           |
-| ...           )                                           |                                           |
-| >>> comp = Composition(                                   |                                           |
-| ...           name='Comp',                                |                                           |
-| ...           enable_controller=True                      |                                           |
-| ...           )                                           |                                           |
-| >>> comp.add_linear_processing_pathway([a,c])             |                                           |
-| >>> comp.add_linear_processing_pathway([b,c])             |                                           |
-| >>> ctlr = OptimizationControlMechanism(                  |                                           |
-| ...            name='Controller',                         |                                           |
-| ...            monitor_for_control=[(pnl.OUTPUT_MEAN, a)],|                                           |
-| ...            function=GridSearch,                       |                                           |
-| ...            control_signals=(GAIN, c),                 |                                           |
-| ...            agent_rep=comp                             |                                           |
-| ...            )                                          |                                           |
-| >>> comp.add_controller(ctlr)                             |                                           |
-+-----------------------------------------------------------+-------------------------------------------+
++-----------------------------------------------------------+----------------------------------------------------------+
+| >>> from psyneulink import *                              | .. figure:: _static/Composition_show_graph_basic_fig.svg |
+| >>> a = ProcessingMechanism(                              |                                                          |
+|               name='A',                                   |                                                          |
+| ...           size=3,                                     |                                                          |
+| ...           output_ports=[RESULTS, OUTPUT_MEAN]         |                                                          |
+| ...           )                                           |                                                          |
+| >>> b = ProcessingMechanism(                              |                                                          |
+| ...           name='B',                                   |                                                          |
+| ...           size=5                                      |                                                          |
+| ...           )                                           |                                                          |
+| >>> c = ProcessingMechanism(                              |                                                          |
+| ...           name='C',                                   |                                                          |
+| ...           size=2,                                     |                                                          |
+| ...           function=Logistic(gain=pnl.CONTROL)         |                                                          |
+| ...           )                                           |                                                          |
+| >>> comp = Composition(                                   |                                                          |
+| ...           name='Comp',                                |                                                          |
+| ...           enable_controller=True                      |                                                          |
+| ...           )                                           |                                                          |
+| >>> comp.add_linear_processing_pathway([a,c])             |                                                          |
+| >>> comp.add_linear_processing_pathway([b,c])             |                                                          |
+| >>> ctlr = OptimizationControlMechanism(                  |                                                          |
+| ...            name='Controller',                         |                                                          |
+| ...            monitor_for_control=[(pnl.OUTPUT_MEAN, a)],|                                                          |
+| ...            control_signals=(GAIN, c),                 |                                                          |
+| ...            agent_rep=comp                             |                                                          |
+| ...            )                                          |                                                          |
+| >>> comp.add_controller(ctlr)                             |                                                          |
++-----------------------------------------------------------+----------------------------------------------------------+
 
 Note that the Composition's `controller <Composition.controller>` is not shown by default.  However this
 can be shown, along with other information, using options in the Composition's `show_graph <Composition.show_graph>`
 method.  The figure below shows several examples.
 
-.. _System_show_graph_figure:
+.. _Composition_show_graph_options_figure:
 
 **Output of show_graph using different options**
 
-.. figure:: _static/show_graph_figure.svg
+.. figure:: _static/Composition_show_graph_options_fig.svg
    :alt: Composition graph examples
    :scale: 150 %
 
-   Displays of the Composition used in the `example above <System_show_graph_basic_figure>`, generated using various
+   Displays of the Composition in the `example above <Composition_show_graph_basic_figure>`, generated using various
    options of its `show_graph <Composition.show_graph>` method. **Panel A** shows the graph with its Projections labeled
    and Component dimensions displayed.  **Panel B** shows the `controller <Composition.controller>` for the
    Composition and its associated `ObjectiveMechanism` using the **show_controller** option (controller-related
    Components are displayed in blue by default).  **Panel C** adds the Composition's `CompositionInterfaceMechanisms
    <CompositionInterfaceMechanism>` using the **show_cim** option. **Panel D** shows a detailed view of the Mechanisms
    using the **show_node_structure** option, that includes their `Ports <Port>` and their `roles <NodeRole>` in the
-   Composition. **Panel E** show an even more detailed view using **show_node_structure** as well as **show_cim**.
+   Composition. **Panel E** shows an even more detailed view using **show_node_structure** as well as **show_cim**.
 
-If a Composition has one ore more Compositions nested as Nodes within it, then these can be shown using the
-**show_nested** option. For example, if two Compositions identical to **comp** in the `example above
-<System_show_graph_basic_figure>` are added as the nodes of the linear processing pathway of a third* **comp** *,
-these can be shown as follows:
+If a Composition has one ore more Compositions nested as Nodes within it, these can be shown using the
+**show_nested** option. For example, the pathway in the script below contains a sequence of Mechanisms
+and nested Compositions in an outer Composition, ``comp``:
 
-        +-------------------------------------------+-------------------------------------------+
-        |    >>> comp.show_graph()                  | .. figure:: _static/nested.svg            |
-        +-------------------------------------------+-------------------------------------------+
-        |    >>> comp.show_graph(show_nested=True)  | .. figure:: _static/show_nested.svg       |
-        |                                           |                                           |
-        +-------------------------------------------+-------------------------------------------+
+.. _Composition_show_graph_show_nested_figure:
 
-
++------------------------------------------------------+---------------------------------------------------------------+
+| >>> mech_stim = ProcessingMechanism(name='STIMULUS') |.. figure:: _static/Composition_show_graph_show_nested_fig.svg |
+| >>> mech_A1 = ProcessingMechanism(name='A1')         |                                                               |
+| >>> mech_B1 = ProcessingMechanism(name='B1')         |                                                               |
+| >>> comp1 = Composition(name='comp1')                |                                                               |
+| >>> comp1.add_linear_processing_pathway([mech_A1,    |                                                               |
+| ...                                      mech_B1])   |                                                               |
+| >>> mech_A2 = ProcessingMechanism(name='A2')         |                                                               |
+| >>> mech_B2 = ProcessingMechanism(name='B2')         |                                                               |
+| >>> comp2 = Composition(name='comp2')                |                                                               |
+| >>> comp2.add_linear_processing_pathway([mech_A2,    |                                                               |
+| ...                                      mech_B2])   |                                                               |
+| >>> mech_resp = ProcessingMechanism(name='RESPONSE') |                                                               |
+| >>> comp = Composition()                             |                                                               |
+| >>> comp.add_linear_processing_pathway([mech_stim,   |                                                               |
+| ...                                     comp1, comp2,|                                                               |
+| ...                                     mech_resp])  |                                                               |
+| >>> comp.show_graph(show_nested=True)                |                                                               |
++------------------------------------------------------+---------------------------------------------------------------+
 
 .. _Composition_Class_Reference:
 
@@ -1091,7 +1102,7 @@ from PIL import Image
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.components.functions.function import is_function_type
-from psyneulink.core.components.functions.interfacefunctions import InterfaceStateMap
+from psyneulink.core.components.functions.interfacefunctions import InterfacePortMap
 from psyneulink.core.components.functions.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
@@ -1101,6 +1112,7 @@ from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.projection import DuplicateProjectionError
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -1116,7 +1128,14 @@ from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import AFTER, ALL, BEFORE, BOLD, BOTH, COMPARATOR_MECHANISM, COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROLLER, CONTROL_SIGNAL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, SAMPLE, SIMULATIONS, SOFT_CLAMP, TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
+from psyneulink.core.globals.keywords import \
+    AFTER, ALL, BEFORE, BOLD, BOTH, COMPARATOR_MECHANISM, COMPONENT, COMPOSITION, CONDITIONS, \
+    CONTROL, CONTROLLER, CONTROL_SIGNAL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, \
+    LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
+    MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
+    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
+    ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
+    SAMPLE, SIMULATIONS, SOFT_CLAMP, TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
@@ -1734,8 +1753,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @property
     def scheduler(self):
         """
-            A default `Scheduler` automatically generated by the Composition, used for the
-            (`processing <System_Execution_Processing>` phase of execution.
+            A default `Scheduler` automatically generated by the Composition, and used for its execution
+            when it is `run <Composition_Run>`.
 
             :getter: Returns the default scheduler, and builds it if it needs updating since the last access.
         """
@@ -2358,7 +2377,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     interface_output_port = OutputPort(owner=self.input_CIM,
                                                         variable=OWNER_VALUE,
                                                         default_variable=self.input_CIM.defaults.variable,
-                                                        function=InterfaceStateMap(
+                                                        function=InterfacePortMap(
                                                              corresponding_input_port=interface_input_port),
                                                         name="INPUT_CIM_" + node.name + "_" + input_port.name)
 
@@ -2427,7 +2446,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     interface_output_port = OutputPort(
                         owner=self.output_CIM,
                         variable=OWNER_VALUE,
-                        function=InterfaceStateMap(corresponding_input_port=interface_input_port),
+                        function=InterfacePortMap(corresponding_input_port=interface_input_port),
                         reference_value=output_port.defaults.value,
                         name="OUTPUT_CIM_" + node.name + "_" + output_port.name)
 
@@ -2490,7 +2509,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 owner = pcim,
                                 modulation = modulation,
                                 variable = OWNER_VALUE,
-                                function = InterfaceStateMap(
+                                function = InterfacePortMap(
                                     corresponding_input_port = input_port
                                 ),
                                 modulates = receiver,
@@ -4547,10 +4566,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
                                                             STATE_FUNCTION_PARAMS, ROLES, ALL))=False,
                    show_nested:tc.optional(tc.any(bool,dict,tc.enum(ALL)))=ALL,
-                   show_controller:bool=False,
+                   show_controller:tc.any(bool, tc.enum(AGENT_REP))=False,
                    show_cim:bool=False,
                    show_learning:bool=False,
                    show_headers:bool=True,
+                   show_types:bool=False,
                    show_dimensions:bool=False,
                    show_projection_labels:bool=False,
                    direction:tc.enum('BT', 'TB', 'LR', 'RL')='BT',
@@ -4578,6 +4598,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            show_cim=False,                    \
            show_learning=False,               \
            show_headers=True,                 \
+           show_types=False,                  \
            show_dimensions=False,             \
            show_projection_labels=False,      \
            direction='BT',                    \
@@ -4642,9 +4663,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             passes all arguments specified for the main Composition to the nested one(s);  True uses the default
             values of show_graph args for the nested Composition(s).
 
-        show_controller :  bool : default False
-            specifies whether or not to show the Composition's controller and associated ObjectiveMechanism;
-            these are displayed in the color specified for **controller_color**.
+        show_controller :  bool or AGENT_REP : default False
+            specifies whether or not to show the Composition's `controller <Composition.controller>` and associated
+            `objective_mechanism <ControlMechanism.objective_mechanism>` if it has one.  If the controller is an
+            OptimizationControlMechanism and it has an `agent_rep <OptimizationControlMechanism>`, then specifying
+            *AGENT_REP* will also show that.  All of these items are displayed in the color specified for
+            **controller_color**.
 
         show_cim : bool : default False
             specifies whether or not to show the Composition's input and out CompositionInterfaceMechanisms (CIMs)
@@ -4663,6 +4687,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         show_headers : bool : default True
             specifies whether or not to show headers in the subfields of a Mechanism's node;  only takes effect if
             **show_node_structure** is specified (see above).
+
+        show_types : bool : default False
+            specifies whether or not to show type (class) of `Mechanism <Mechanism>` in each node label.
 
         show_dimensions : bool : default False
             specifies whether or not to show dimensions for the `variable <Component.variable>` and `value
@@ -4890,7 +4917,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     rcvr_penwidth = str(default_width)
 
                 # Implement rcvr node
-                rcvr_label = self._get_graph_node_label(rcvr, show_dimensions)
+                rcvr_label = self._get_graph_node_label(rcvr,
+                                                        show_types,
+                                                        show_dimensions)
 
                 if show_node_structure and isinstance(rcvr, Mechanism):
                     g.node(rcvr_label,
@@ -4979,7 +5008,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     assert False, '_assignm_cim_components called with node that is not input_CIM or output_CIM'
 
                 # Assign lablel
-                cim_label = self._get_graph_node_label(cim, show_dimensions)
+                cim_label = self._get_graph_node_label(cim, show_types, show_dimensions)
 
                 if show_node_structure:
                     g.node(cim_label,
@@ -5018,7 +5047,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                        format(self.name, input_mech,
                                                               NodeRole.INPUT.name, NodeRole.INPUT.name.lower()))
                             # Construct edge name
-                            input_mech_label = self._get_graph_node_label(input_mech, show_dimensions)
+                            input_mech_label = self._get_graph_node_label(input_mech,
+                                                                          show_types,
+                                                                          show_dimensions)
                             if show_node_structure:
                                 cim_proj_label = '{}:{}-{}'. \
                                     format(cim_label, OutputPort.__name__, proj.sender.name)
@@ -5040,7 +5071,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 proj_color = default_node_color
                                 proj_width = str(default_width)
                             if show_projection_labels:
-                                label = self._get_graph_node_label(proj, show_dimensions)
+                                label = self._get_graph_node_label(proj, show_types, show_dimensions)
                             else:
                                 label = ''
                             g.edge(cim_proj_label, proc_mech_rcvr_label, label=label,
@@ -5060,7 +5091,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                        format(self.name, output_mech,
                                                               NodeRole.OUTPUT.name, NodeRole.OUTPUT.name.lower()))
                             # Construct edge name
-                            output_mech_label = self._get_graph_node_label(output_mech, show_dimensions)
+                            output_mech_label = self._get_graph_node_label(output_mech,
+                                                                           show_types,
+                                                                           show_dimensions)
                             if show_node_structure:
                                 cim_proj_label = '{}:{}'. \
                                     format(cim_label, cim._get_port_name(proj.receiver))
@@ -5083,7 +5116,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 proj_color = default_node_color
                                 proj_width = str(default_width)
                             if show_projection_labels:
-                                label = self._get_graph_node_label(proj, show_dimensions)
+                                label = self._get_graph_node_label(proj, show_types, show_dimensions)
                             else:
                                 label = ''
                             g.edge(proc_mech_sndr_label, cim_proj_label, label=label,
@@ -5111,7 +5144,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Assign controller node
             node_shape = mechanism_shape
-            ctlr_label = self._get_graph_node_label(controller, show_dimensions)
+            ctlr_label = self._get_graph_node_label(controller, show_types, show_dimensions)
             if show_node_structure:
                 g.node(ctlr_label,
                        controller._show_structure(**node_struct_args, node_border=ctlr_width,
@@ -5129,7 +5162,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # outgoing edges (from controller to ProcessingMechanisms)
             for control_signal in controller.control_signals:
                 for ctl_proj in control_signal.efferents:
-                    proc_mech_label = self._get_graph_node_label(ctl_proj.receiver.owner, show_dimensions)
+                    proc_mech_label = self._get_graph_node_label(ctl_proj.receiver.owner, show_types, show_dimensions)
                     if controller in active_items:
                         if active_color is BOLD:
                             ctl_proj_color = controller_color
@@ -5186,10 +5219,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     objmech_color = controller_color
                     objmech_width = str(default_width)
 
-                objmech_label = self._get_graph_node_label(objmech, show_dimensions)
+                objmech_label = self._get_graph_node_label(objmech, show_types, show_dimensions)
                 if show_node_structure:
                     if objmech in self.scheduler.conditions:
-                        condition = self.scheduler.conditions[obj_mech]
+                        condition = self.scheduler.conditions[objmech]
                     else:
                         condition = None
                     g.node(objmech_label,
@@ -5232,12 +5265,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             proj_color = controller_color
                             proj_width = str(default_width)
                         if show_node_structure:
-                            sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions) + \
+                            sndr_proj_label = self._get_graph_node_label(projection.sender.owner,
+                                                                         show_types,
+                                                                         show_dimensions) + \
                                               ':' + objmech._get_port_name(projection.sender)
                             objmech_proj_label = objmech_label + ':' + objmech._get_port_name(input_port)
                         else:
-                            sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions)
-                            objmech_proj_label = self._get_graph_node_label(objmech, show_dimensions)
+                            sndr_proj_label = self._get_graph_node_label(projection.sender.owner,
+                                                                         show_types,
+                                                                         show_dimensions)
+                            objmech_proj_label = self._get_graph_node_label(objmech,
+                                                                            show_types,
+                                                                            show_dimensions)
                         if show_projection_labels:
                             edge_label = projection.name
                         else:
@@ -5246,7 +5285,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                color=proj_color, penwidth=proj_width)
 
             # If controller has an agent_rep, assign its node and edges (not Projections per se)
-            if hasattr(controller, 'agent_rep') and controller.agent_rep:
+            if hasattr(controller, 'agent_rep') and controller.agent_rep and show_controller==AGENT_REP :
                 # get agent_rep
                 agent_rep = controller.agent_rep
                 # controller is active, treat
@@ -5262,7 +5301,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     agent_rep_width = str(default_width)
 
                 # agent_rep node
-                agent_rep_label = self._get_graph_node_label(agent_rep, show_dimensions)
+                agent_rep_label = self._get_graph_node_label(agent_rep, show_types, show_dimensions)
                 g.node(agent_rep_label,
                         color=agent_rep_color, penwidth=agent_rep_width, shape=agent_rep_shape,
                         rank=control_rank)
@@ -5292,7 +5331,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     return
 
                 # Get rcvr info
-                rcvr_label = self._get_graph_node_label(rcvr, show_dimensions)
+                rcvr_label = self._get_graph_node_label(rcvr, show_types, show_dimensions)
                 if rcvr in active_items:
                     if active_color is BOLD:
                         rcvr_color = learning_color
@@ -5364,8 +5403,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 learning_proj_width = str(default_width)
             sndrs = proj._parameter_ports['matrix'].mod_afferents # GET ALL LearningProjections to proj
             for sndr in sndrs:
-                sndr_label = self._get_graph_node_label(sndr.sender.owner, show_dimensions)
-                rcvr_label = self._get_graph_node_label(proj, show_dimensions)
+                sndr_label = self._get_graph_node_label(sndr.sender.owner, show_types, show_dimensions)
+                rcvr_label = self._get_graph_node_label(proj, show_types, show_dimensions)
                 if show_projection_labels:
                     edge_label = proj._parameter_ports['matrix'].mod_afferents[0].name
                 else:
@@ -5389,7 +5428,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for sndr in senders:
 
                 # Set sndr info
-                sndr_label = self._get_graph_node_label(sndr, show_dimensions)
+                sndr_label = self._get_graph_node_label(sndr, show_types, show_dimensions)
 
                 # Iterate through all Projections from all OutputPorts of sndr
                 for output_port in sndr.output_ports:
@@ -5416,7 +5455,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             except AttributeError:
                                 has_learning = None
 
-                            edge_label = self._get_graph_node_label(proj, show_dimensions)
+                            edge_label = self._get_graph_node_label(proj, show_types, show_dimensions)
                             is_learning_component = rcvr in self.learning_components or sndr in self.learning_components
 
                             # Check if Projection or its receiver is active
@@ -5521,7 +5560,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 'show_values': any(key in show_node_structure for key in {VALUES, ALL}),
                                 'use_labels': any(key in show_node_structure for key in {LABELS, ALL}),
                                 'show_headers': show_headers,
-                                'output_fmt': 'struct'}
+                                'output_fmt': 'struct',
+                                'context':context}
         else:
             node_struct_args = {'composition': self,
                                 'show_roles': show_node_structure in {ROLES, ALL},
@@ -5532,7 +5572,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 'show_values': show_node_structure in {VALUES, LABELS, ALL},
                                 'use_labels': show_node_structure in {LABELS, ALL},
                                 'show_headers': show_headers,
-                                'output_fmt': 'struct'}
+                                'output_fmt': 'struct',
+                                'context': context}
 
         # DEFAULT ATTRIBUTES ----------------------------------------------------------------
 
@@ -5646,37 +5687,41 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # GENERATE OUTPUT ---------------------------------------------------------------------
 
         # Show as pdf
-        if output_fmt == 'pdf':
-            # G.format = 'svg'
-            G.view(self.name.replace(" ", "-"), cleanup=True, directory='show_graph OUTPUT/PDFS')
-
-        # Generate images for animation
-        elif output_fmt == 'gif':
-            if self.active_item_rendered or INITIAL_FRAME in active_items:
-                self._generate_gifs(G, active_items, context)
-
-        # Return graph to show in jupyter
-        elif output_fmt == 'jupyter':
-            return G
-
-        elif output_fmt == 'gv':
-            return G
+        try:
+            if output_fmt == 'pdf':
+                # G.format = 'svg'
+                G.view(self.name.replace(" ", "-"), cleanup=True, directory='show_graph OUTPUT/PDFS')
+    
+            # Generate images for animation
+            elif output_fmt == 'gif':
+                if self.active_item_rendered or INITIAL_FRAME in active_items:
+                    self._generate_gifs(G, active_items, context)
+    
+            # Return graph to show in jupyter
+            elif output_fmt == 'jupyter':
+                return G
+    
+            elif output_fmt == 'gv':
+                return G
+        except:
+            raise CompositionError(f"Problem displaying graph for {self.name}")
 
     @tc.typecheck
     def _show_structure(self,
-                       # direction = 'BT',
-                       show_functions:bool=False,
-                       show_values:bool=False,
-                       use_labels:bool=False,
-                       show_headers:bool=False,
-                       show_roles:bool=False,
-                       show_conditions:bool=False,
-                       system=None,
-                       composition=None,
-                       condition:tc.optional(Condition)=None,
-                       compact_cim:tc.optional(tc.enum(INPUT, OUTPUT))=None,
-                       output_fmt:tc.enum('pdf','struct')='pdf'
-                       ):
+                        # direction = 'BT',
+                        show_functions:bool=False,
+                        show_values:bool=False,
+                        use_labels:bool=False,
+                        show_headers:bool=False,
+                        show_roles:bool=False,
+                        show_conditions:bool=False,
+                        system=None,
+                        composition=None,
+                        condition:tc.optional(Condition)=None,
+                        compact_cim:tc.optional(tc.enum(INPUT, OUTPUT))=None,
+                        output_fmt:tc.enum('pdf','struct')='pdf',
+                        context=None
+                        ):
         """Generate a detailed display of a the structure of a Mechanism.
 
         .. note::
@@ -5873,18 +5918,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif output_fmt == 'jupyter':
             return m
 
-    def _get_graph_node_label(self, item, show_dimensions=None):
+    def _get_graph_node_label(self, item, show_types=None, show_dimensions=None):
         if not isinstance(item, (Mechanism, Composition, Projection)):
             raise CompositionError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
         # TBI Show Dimensions
         name = item.name
+
+        if show_types:
+            name = item.name+'\n('+item.__class__.__name__+')'
 
         if show_dimensions in {ALL, MECHANISMS} and isinstance(item, Mechanism):
             input_str = "in ({})".format(",".join(str(input_port.socket_width)
                                                   for input_port in item.input_ports))
             output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_port.value)))
                                                     for output_port in item.output_ports))
-            return "{}\n{}\n{}".format(output_str, name, input_str)
+            return f"{output_str}\n{name}\n{input_str}"
         if show_dimensions in {ALL, PROJECTIONS} and isinstance(item, Projection):
             # MappingProjections use matrix
             if isinstance(item, MappingProjection):

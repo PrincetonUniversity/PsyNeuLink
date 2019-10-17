@@ -2756,7 +2756,7 @@ def _parse_port_spec(port_type=None,
     standard_args = get_args(inspect.currentframe())
 
     PORT_SPEC_ARG = 'port_spec'
-    Port_Specification = None
+    port_specification = None
     port_specific_args = {}
 
     # If there is a port_specs arg passed from _instantiate_port:
@@ -2798,12 +2798,12 @@ def _parse_port_spec(port_type=None,
                     port_tuple.append(spec[PROJECTION])
                 except KeyError:
                     pass
-                Port_Specification = tuple(port_tuple)
+                port_specification = tuple(port_tuple)
             except KeyError:
                 pass
 
         else:
-            Port_Specification = port_spec[PORT_SPEC_ARG]
+            port_specification = port_spec[PORT_SPEC_ARG]
 
         # Delete the Port specification dictionary from port_spec
         del port_spec[PORT_SPEC_ARG]
@@ -2844,26 +2844,26 @@ def _parse_port_spec(port_type=None,
     #    and validate that it is consistent with any standard_args specified in call to _instantiate_port
 
     # function; try to resolve to a value
-    if isinstance(Port_Specification, function_type):
-        Port_Specification = Port_Specification()
+    if isinstance(port_specification, function_type):
+        port_specification = port_specification()
 
     # ModulatorySpecification of some kind
-    if _is_modulatory_spec(Port_Specification):
+    if _is_modulatory_spec(port_specification):
         # If it is a ModulatoryMechanism specification, get its ModulatorySignal class
         # (so it is recognized by _is_projection_spec below (Mechanisms are not for secondary reasons)
-        if isinstance(Port_Specification, type) and issubclass(Port_Specification, ModulatoryMechanism_Base):
-            Port_Specification = Port_Specification.outputPortTypes
+        if isinstance(port_specification, type) and issubclass(port_specification, ModulatoryMechanism_Base):
+            port_specification = port_specification.outputPortTypes
             # IMPLEMENTATION NOTE:  The following is to accomodate GatingSignals on ControlMechanism
             # FIX: TRY ELIMINATING SIMILAR HANDLING IN Projection (and OutputPort?)
             # FIX: AND ANY OTHER PLACES WHERE LISTS ARE DEALT WITH
-            if isinstance(Port_Specification, list):
+            if isinstance(port_specification, list):
                 # If modulatory projection is specified as a Mechanism that allows more than one type of OutputPort
                 #   (e.g., ModulatoryMechanism allows either ControlSignals or GatingSignals together with standard
                 #   OutputPorts) make sure that only one of these is appropriate for port to be modulated
                 #   (port_type.connectswith), otherwise it is ambiguous which to assign as Port_Specification
-                specs = [s for s in Port_Specification if s.__name__ in port_type.connectsWith]
+                specs = [s for s in port_specification if s.__name__ in port_type.connectsWith]
                 try:
-                    Port_Specification, = specs
+                    port_specification, = specs
                 except ValueError:
                     assert False, \
                         f"PROGRAM ERROR:  More than one {Port.__name__} type found ({specs})" \
@@ -2872,45 +2872,45 @@ def _parse_port_spec(port_type=None,
         projection = port_type
 
     # Port or Mechanism object specification:
-    if isinstance(Port_Specification, (Mechanism, Port)):
+    if isinstance(port_specification, (Mechanism, Port)):
 
         projection = None
 
         # Mechanism object:
-        if isinstance(Port_Specification, Mechanism):
-            mech = Port_Specification
+        if isinstance(port_specification, Mechanism):
+            mech = port_specification
             # Instantiating Port of specified Mechanism, so get primary Port of port_type
             if mech is owner:
-                Port_Specification = port_type._get_primary_port(port_type, mech)
+                port_specification = port_type._get_primary_port(port_type, mech)
             # mech used to specify Port to be connected with:
             else:
-                Port_Specification = mech
+                port_specification = mech
                 projection = port_type
 
-        if Port_Specification.__class__ == port_type:
+        if port_specification.__class__ == port_type:
             # Make sure that the specified Port belongs to the Mechanism passed in the owner arg
-            if Port_Specification.initialization_status == ContextFlags.DEFERRED_INIT:
-                port_owner = Port_Specification._init_args[OWNER]
+            if port_specification.initialization_status == ContextFlags.DEFERRED_INIT:
+                port_owner = port_specification._init_args[OWNER]
             else:
-                port_owner = Port_Specification.owner
+                port_owner = port_specification.owner
             if owner is not None and port_owner is not None and port_owner is not owner:
                 try:
                     new_port_specification = port_type._parse_self_port_type_spec(port_type,
                                                                                      owner,
-                                                                                     Port_Specification,
+                                                                                     port_specification,
                                                                                      context)
-                    Port_Specification = _parse_port_spec(port_type=port_type,
+                    port_specification = _parse_port_spec(port_type=port_type,
                                                             owner=owner,
                                                             port_spec=new_port_specification)
                     assert True
                 except AttributeError:
                     raise PortError("Attempt to assign a {} ({}) to {} that belongs to another {} ({})".
-                                     format(Port.__name__, Port_Specification.name, owner.name,
+                                     format(Port.__name__, port_specification.name, owner.name,
                                             Mechanism.__name__, port_owner.name))
-            return Port_Specification
+            return port_specification
 
         # Specication is a Port with which connectee can connect, so assume it is a Projection specification
-        elif Port_Specification.__class__.__name__ in port_type.connectsWith + port_type.modulators:
+        elif port_specification.__class__.__name__ in port_type.connectsWith + port_type.modulators:
             projection = port_type
 
         # Re-process with Projection specified
@@ -2922,17 +2922,17 @@ def _parse_port_spec(port_type=None,
                                        params=params,
                                        prefs=prefs,
                                        context=context,
-                                       port_spec=ProjectionTuple(port=Port_Specification,
+                                       port_spec=ProjectionTuple(port=port_specification,
                                                                   weight=None,
                                                                   exponent=None,
                                                                   projection=projection))
 
     # Projection specification (class, object, or matrix value (matrix keyword processed below):
-    elif _is_projection_spec(Port_Specification, include_matrix_spec=False):
+    elif _is_projection_spec(port_specification, include_matrix_spec=False):
 
         # FIX: 11/12/17 - HANDLE SITUATION IN WHICH projection_spec IS A MATRIX (AND SENDER IS SOMEHOW KNOWN)
         # Parse to determine whether Projection's value is specified
-        projection_spec = _parse_projection_spec(Port_Specification, owner=owner, port_type=port_dict[PORT_TYPE])
+        projection_spec = _parse_projection_spec(port_specification, owner=owner, port_type=port_dict[PORT_TYPE])
 
         projection_value=None
         sender=None
@@ -2979,12 +2979,12 @@ def _parse_port_spec(port_type=None,
         # Move projection_spec to PROJECTIONS entry of params specification dict (for instantiation of Projection)
         if port_dict[PARAMS] is None:
             port_dict[PARAMS] = {}
-        port_dict[PARAMS].update({PROJECTIONS:[Port_Specification]})
+        port_dict[PARAMS].update({PROJECTIONS:[port_specification]})
 
     # string (keyword or name specification)
-    elif isinstance(Port_Specification, str):
+    elif isinstance(port_specification, str):
         # Check if it is a keyword
-        spec = get_param_value_for_keyword(owner, Port_Specification)
+        spec = get_param_value_for_keyword(owner, port_specification)
         # A value was returned, so use value of keyword as reference_value
         if spec is not None:
             port_dict[REFERENCE_VALUE] = spec
@@ -2995,7 +2995,7 @@ def _parse_port_spec(port_type=None,
                       format(VARIABLE, port_type, owner.name, port_dict[REFERENCE_VALUE]))
         # It is not a keyword, so treat string as the name for the port
         else:
-            port_dict[NAME] = Port_Specification
+            port_dict[NAME] = port_specification
 
     # # function; try to resolve to a value
     # elif isinstance(Port_Specification, function_type):
@@ -3010,10 +3010,10 @@ def _parse_port_spec(port_type=None,
     #      FOR OutputPort: index
     #      FOR ModulatorySignal: default value of ModulatorySignal (e.g, allocation or gating policy)
     # value, so use as variable of Port
-    elif is_value_spec(Port_Specification):
-        port_dict[REFERENCE_VALUE] = np.atleast_1d(Port_Specification)
+    elif is_value_spec(port_specification):
+        port_dict[REFERENCE_VALUE] = np.atleast_1d(port_specification)
 
-    elif isinstance(Port_Specification, Iterable) or Port_Specification is None:
+    elif isinstance(port_specification, Iterable) or port_specification is None:
 
         # Standard port specification dict
         # Warn if VARIABLE was not in dict
@@ -3023,25 +3023,25 @@ def _parse_port_spec(port_type=None,
                   "will be inferred from context or the default ({}) will be used".
                   format(VARIABLE, port_type, owner.name, port_dict))
 
-        if isinstance(Port_Specification, (list, set)):
-            port_specific_specs = ProjectionTuple(port=Port_Specification,
+        if isinstance(port_specification, (list, set)):
+            port_specific_specs = ProjectionTuple(port=port_specification,
                                               weight=None,
                                               exponent=None,
                                               projection=port_type)
 
         # Port specification is a tuple
-        elif isinstance(Port_Specification, tuple):
+        elif isinstance(port_specification, tuple):
 
             # 1st item of tuple is a tuple (presumably a (Port name, Mechanism) tuple),
             #    so parse to get specified Port (any projection spec should be included as 4th item of outer tuple)
-            if isinstance(Port_Specification[0],tuple):
+            if isinstance(port_specification[0],tuple):
                 proj_spec = _parse_connection_specs(connectee_port_type=port_type,
                                                     owner=owner,
-                                                    connections=Port_Specification[0])
-                Port_Specification = (proj_spec[0].port,) + Port_Specification[1:]
+                                                    connections=port_specification[0])
+                port_specification = (proj_spec[0].port,) + port_specification[1:]
 
             # Reassign tuple for handling by _parse_port_specific_specs
-            port_specific_specs = Port_Specification
+            port_specific_specs = port_specification
 
         # Otherwise, just pass params to Port subclass
         else:
@@ -3157,7 +3157,7 @@ def _parse_port_spec(port_type=None,
         #                  format(port_type_name, owner.name, port_spec))
         # return
         raise PortError("PROGRAM ERROR: port_spec for {} of {} is an unrecognized specification ({})".
-                         format(port_type_name, owner.name, Port_Specification))
+                         format(port_type_name, owner.name, port_specification))
 
     # If variable is none, use value:
     if port_dict[VARIABLE] is None:
