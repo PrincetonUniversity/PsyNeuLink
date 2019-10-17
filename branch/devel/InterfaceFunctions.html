@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>InterfaceFunctions &mdash; PsyNeuLink 0.6.0.3+12.g917d07d documentation</title>
+  <title>InterfaceFunctions &mdash; PsyNeuLink 0.6.0.3+13.g5b7d989 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3+12.g917d07d',
+              VERSION:'0.6.0.3+13.g5b7d989',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.6.0.3+12
+                0.6.0.3+13
               </div>
             
           
@@ -168,7 +168,7 @@
 <div class="toctree-wrapper compound">
 </div>
 <span class="target" id="module-psyneulink.core.components.functions.interfacefunctions"></span><ul class="simple">
-<li>InterfaceStateMap</li>
+<li>InterfacePortMap</li>
 </ul>
 <dl class="class">
 <dt id="psyneulink.core.components.functions.interfacefunctions.InterfaceFunction">
@@ -177,10 +177,10 @@
 </dd></dl>
 
 <dl class="class">
-<dt id="psyneulink.core.components.functions.interfacefunctions.InterfaceStateMap">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.interfacefunctions.</code><code class="descname">InterfaceStateMap</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>corresponding_input_port=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x111350840&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.interfacefunctions.InterfaceStateMap" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.components.functions.interfacefunctions.InterfacePortMap">
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.interfacefunctions.</code><code class="descname">InterfacePortMap</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>corresponding_input_port=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x11b24a840&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.interfacefunctions.InterfacePortMap" title="Permalink to this definition">¶</a></dt>
 <dd><p>Identity(                             default_variable,              params=None,                   owner=None,                    name=None,                     prefs=None                    )</p>
-<p id="identity">Returns <a class="reference internal" href="#psyneulink.core.components.functions.interfacefunctions.InterfaceStateMap.variable" title="psyneulink.core.components.functions.interfacefunctions.InterfaceStateMap.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+<p id="identity">Returns <a class="reference internal" href="#psyneulink.core.components.functions.interfacefunctions.InterfacePortMap.variable" title="psyneulink.core.components.functions.interfacefunctions.InterfacePortMap.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -199,27 +199,27 @@ arguments of the constructor.</li>
 </tbody>
 </table>
 <dl class="attribute">
-<dt id="psyneulink.core.components.functions.interfacefunctions.InterfaceStateMap.variable">
-<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.interfacefunctions.InterfaceStateMap.variable" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.components.functions.interfacefunctions.InterfacePortMap.variable">
+<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.interfacefunctions.InterfacePortMap.variable" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>number or np.array</em> – contains value to be transformed.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.core.components.functions.interfacefunctions.InterfaceStateMap.owner">
-<code class="descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.interfacefunctions.InterfaceStateMap.owner" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.components.functions.interfacefunctions.InterfacePortMap.owner">
+<code class="descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.interfacefunctions.InterfacePortMap.owner" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Component</em> – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.core.components.functions.interfacefunctions.InterfaceStateMap.name">
-<code class="descname">name</code><a class="headerlink" href="#psyneulink.core.components.functions.interfacefunctions.InterfaceStateMap.name" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.components.functions.interfacefunctions.InterfacePortMap.name">
+<code class="descname">name</code><a class="headerlink" href="#psyneulink.core.components.functions.interfacefunctions.InterfacePortMap.name" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>str</em> – the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a
 default is assigned by FunctionRegistry (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions used for default and duplicate names).</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.core.components.functions.interfacefunctions.InterfaceStateMap.prefs">
-<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.interfacefunctions.InterfaceStateMap.prefs" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.components.functions.interfacefunctions.InterfacePortMap.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.interfacefunctions.InterfacePortMap.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>

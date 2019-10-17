@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>JSON &mdash; PsyNeuLink 0.6.0.3+12.g917d07d documentation</title>
+  <title>JSON &mdash; PsyNeuLink 0.6.0.3+13.g5b7d989 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3+12.g917d07d',
+              VERSION:'0.6.0.3+13.g5b7d989',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.6.0.3+12
+                0.6.0.3+13
               </div>
             
           
@@ -177,22 +177,17 @@
 </div>
 <div class="section" id="overview">
 <span id="json-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>The developers of PsyNeuLink are collaborating with the scientific
-community to create a common data format for sharing and replicating
-models. As part of this effort, PsyNeuLink includes the ability to
-export models into JSON, and generate valid Python scripts from this
-JSON.</p>
-<p>Each Component can be dumped to JSON using its <code class="xref any docutils literal"><span class="pre">json_summary</span></code>
-method, which uses its <code class="xref any docutils literal"><span class="pre">_dict_summary</span></code>.
-Passing this output into <a class="reference internal" href="#psyneulink.core.globals.json.generate_script_from_json" title="psyneulink.core.globals.json.generate_script_from_json"><code class="xref any py py-func docutils literal"><span class="pre">generate_script_from_json</span></code></a> will produce a
-valid Python script replicating the original model.</p>
+<p>The developers of PsyNeuLink are collaborating with the scientific community, as part of the <a class="reference external" href="https://openneuro.org">OpenNeuro effort</a>, to create a standard, JSON-based format for the description and exchange of computational
+models of brain and psychological function across different simulation environments. As part of this effort,
+PsyNeuLink includes the ability to export models into, and import valid Python scripts from this JSON format.</p>
+<p>Each Component can be exported to the JSON format using its <code class="xref any docutils literal"><span class="pre">json_summary</span></code> method, which uses its <code class="xref any docutils literal"><span class="pre">_dict_summary</span></code>. Passing this output into <a class="reference internal" href="#psyneulink.core.globals.json.generate_script_from_json" title="psyneulink.core.globals.json.generate_script_from_json"><code class="xref any py py-func docutils literal"><span class="pre">generate_script_from_json</span></code></a> produced a valid Python script
+replicating the original PsyNeuLink model.</p>
 </div>
 <div class="section" id="model-examples">
 <span id="json-examples"></span><h2>Model Examples<a class="headerlink" href="#model-examples" title="Permalink to this headline">¶</a></h2>
-<p>Below is a Stroop model with conflict monitoring and its output
-in JSON. Running <a class="reference internal" href="#psyneulink.core.globals.json.generate_script_from_json" title="psyneulink.core.globals.json.generate_script_from_json"><code class="xref any py py-func docutils literal"><span class="pre">generate_script_from_json</span></code></a> on the output will produce
-another PsyNeuLink script which will give the same results when run
-on the same input as the original.</p>
+<p>Below is an example of a script that implements a PsyNeuLink model of the Stroop model with conflict monitoring,
+and its output in JSON. Running <a class="reference internal" href="#psyneulink.core.globals.json.generate_script_from_json" title="psyneulink.core.globals.json.generate_script_from_json"><code class="xref any py py-func docutils literal"><span class="pre">generate_script_from_json</span></code></a> on the output will produce another PsyNeuLink script
+that will give the same results when run on the same input as the original.</p>
 <p><a class="reference download internal" href="_downloads/stroop_conflict_monitoring.py" download=""><code class="xref download docutils literal"><span class="pre">Download</span> <span class="pre">stroop_conflict_monitoring.py</span></code></a></p>
 <p><a class="reference download internal" href="_downloads/stroop_conflict_monitoring.json" download=""><code class="xref download docutils literal"><span class="pre">Download</span> <span class="pre">stroop_conflict_monitoring.json</span></code></a></p>
 </div>
@@ -203,11 +198,12 @@ on the same input as the original.</p>
 <p class="last">The JSON format is in early development, and is subject to change.</p>
 </div>
 <p>The outermost level of a JSON model is a dictionary with entry <code class="docutils literal"><span class="pre">graphs</span></code>, a list of Composition objects.</p>
-<p>Each Component’s JSON object contains multiple entries. Those that are
-common to all are:</p>
+<p>Each Component’s JSON object contains multiple entries. Those that are common to all are:</p>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">name</span></code> : a label for the Component</li>
-<li><code class="docutils literal"><span class="pre">parameters</span></code> (non-<a class="reference internal" href="Function.html"><span class="doc">Function</span></a>s) / <code class="docutils literal"><span class="pre">args</span></code> (<a class="reference internal" href="Function.html"><span class="doc">Function</span></a>s) : a dictionary where each entry is either a <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a> name and value, or a subdictionary of modeling-environment specific parameters. For PsyNeuLink, this is indicated by <code class="xref any docutils literal"><span class="pre">PNL</span></code>:</li>
+<li><code class="docutils literal"><span class="pre">parameters</span></code> (non-<a class="reference internal" href="Function.html"><span class="doc">Function</span></a>s) / <code class="docutils literal"><span class="pre">args</span></code> (<a class="reference internal" href="Function.html"><span class="doc">Function</span></a>s) : a dictionary where each entry is either a
+<a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a> name and value, or a subdictionary of modeling-environment specific parameters. For PsyNeuLink,
+this is indicated by <code class="xref any docutils literal"><span class="pre">PNL</span></code>:</li>
 </ul>
 <div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="s2">&quot;args&quot;</span><span class="o">:</span> <span class="p">{</span>
     <span class="s2">&quot;PNL&quot;</span><span class="o">:</span> <span class="p">{</span>
@@ -223,7 +219,8 @@ common to all are:</p>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>Note that the value of a parameter may be a long-form dictionary when it corresponds to a <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a>. In this case, it will indicate the ParameterPort in a <code class="xref any docutils literal"><span class="pre">source</span></code> field:</p>
+<p>Note that the value of a parameter may be a long-form dictionary when it corresponds to a <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a>.
+In this case, it will indicate the ParameterPort in a <code class="xref any docutils literal"><span class="pre">source</span></code> field:</p>
 <div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="s2">&quot;intercept&quot;</span><span class="o">:</span> <span class="p">{</span>
     <span class="s2">&quot;source&quot;</span><span class="o">:</span> <span class="s2">&quot;A.input_ports.intercept&quot;</span><span class="p">,</span>
     <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;float&quot;</span><span class="p">,</span>
@@ -232,7 +229,9 @@ common to all are:</p>
 </pre></div>
 </div>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">type</span></code> : a dictionary with entries based on modeling environment to describe the type of the object. The <code class="xref any docutils literal"><span class="pre">generic</span></code> entry is populated if the object has a universal name (such as a linear function). Modeling-environment-specific entries are populated when relevant.</li>
+<li><code class="docutils literal"><span class="pre">type</span></code> : a dictionary with entries based on modeling environment to describe the type of the object.
+The <code class="xref any docutils literal"><span class="pre">generic</span></code> entry is populated if the object has a universal name (such as a linear function).
+Modeling-environment-specific entries are populated when relevant.</li>
 </ul>
 <div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="p">{</span>
     <span class="s2">&quot;PNL&quot;</span><span class="o">:</span> <span class="s2">&quot;Composition&quot;</span><span class="p">,</span>

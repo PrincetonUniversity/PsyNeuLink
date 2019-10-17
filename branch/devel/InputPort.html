@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>InputPort &mdash; PsyNeuLink 0.6.0.3+12.g917d07d documentation</title>
+  <title>InputPort &mdash; PsyNeuLink 0.6.0.3+13.g5b7d989 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3+12.g917d07d',
+              VERSION:'0.6.0.3+13.g5b7d989',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.3+12
+                0.6.0.3+13
               </div>
             
           
@@ -375,9 +375,9 @@ which they all belong.  Projections of the relevant types are created for each o
 <li><p class="first"><strong>2-item tuple:</strong> <em>(&lt;value, Port specification, or list of Port specs&gt;, &lt;Projection specification&gt;)</em> –
 this is a contracted form of the 4-item tuple described below;</p>
 </li>
-<li><p class="first"><strong>4-item tuple:</strong> <em>(&lt;value, Port spec, or list of Port specs&gt;, weight, exponent, Projection specification)</em>
-– this allows the specification of Port(s) that should project to the InputPort, together with a
-specification of the InputPort’s <code class="xref any docutils literal"><span class="pre">weight</span></code> and/or <code class="xref any docutils literal"><span class="pre">exponent</span></code>
+<li><p class="first"><strong>3 or 4-item tuple:</strong> <em>(&lt;value, Port spec, or list of Port specs&gt;, weight, exponent, Projection
+specification)</em> – this allows the specification of Port(s) that should project to the InputPort, together
+with a specification of the InputPort’s <code class="xref any docutils literal"><span class="pre">weight</span></code> and/or <code class="xref any docutils literal"><span class="pre">exponent</span></code>
 attributes of the InputPort, and (optionally) the Projection(s) to it.  This can be used to compactly
 specify a set of Ports that project the InputPort, while using the 4th item to determine its variable
 (e.g., using the matrix of the Projection specification) and/or attributes of the Projection(s) to it. Each
@@ -429,7 +429,7 @@ from the same <a class="reference internal" href="Projection.html#psyneulink.cor
 <div class="section" id="inputport-variable-compatibility-and-constraints">
 <span id="inputport-compatability-and-constraints"></span><h4>InputPort <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>: Compatibility and Constraints<a class="headerlink" href="#inputport-variable-compatibility-and-constraints" title="Permalink to this headline">¶</a></h4>
 <p>The <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of an InputPort must be compatible with the item of its owner Mechanism’s
-<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> to which it is assigned (see <code class="xref any docutils literal"><span class="pre">Mechanism_Variable_and_InputPorts&gt;</span></code>). This may
+<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> to which it is assigned (see <code class="xref any docutils literal"><span class="pre">Mechanism_Variable_and_InputPorts</span></code>). This may
 have consequences that must be taken into account when <a class="reference internal" href="#inputport-projection-source-specification"><span class="std std-ref">specifying an InputPort by Components that project to it</span></a>.  These depend on the context in which the specification is made, and
 possibly the value of other specifications.  These considerations and how they are handled are described below,
 starting with constraints that are given the highest precedence:</p>
