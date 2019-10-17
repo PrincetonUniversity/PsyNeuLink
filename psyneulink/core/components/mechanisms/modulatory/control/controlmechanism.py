@@ -1863,10 +1863,11 @@ class ControlMechanism(ModulatoryMechanism_Base):
         self._update_output_ports(context=context,
                                    runtime_params=runtime_params,)
 
+    #FIX: 10/16/19 - USE _parse_port_spec INSTEAD?
     def _parse_monitor_for_control_tuple_spec(self, spec):
         if len(spec)==2: # 2-item tuple: (OutputPort, Mechanism))
             return spec[1].output_ports[spec[0]]
-        elif len(spec)==4: # 4-item tuple: (Mechanism, weights, exponents, matrix)
+        elif len(spec) in {3,4}: # 3 or 4-item tuple: (Mechanism, weights, exponents, <Projection>)
             return spec[0]
         return spec
 
