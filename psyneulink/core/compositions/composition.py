@@ -1133,9 +1133,9 @@ from psyneulink.core.globals.keywords import \
     CONTROL, CONTROLLER, CONTROL_SIGNAL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, \
     LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
-    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
+    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, MSE, NAME, NO_CLAMP, \
     ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
-    SAMPLE, SIMULATIONS, SOFT_CLAMP, TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
+    SAMPLE, SIMULATIONS, SOFT_CLAMP, SSE, TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
@@ -3428,6 +3428,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def add_linear_learning_pathway(self,
                                     pathway,
                                     learning_function,
+                                    loss_function=None,
                                     learning_rate=0.05,
                                     error_function=LinearCombination(),
                                     learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE):
@@ -3496,6 +3497,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if isinstance(learning_function, type) and issubclass(learning_function, BackPropagation):
             return self._create_backpropagation_learning_pathway(pathway,
+                                                                 loss_function,
                                                                  learning_rate,
                                                                  error_function,
                                                                  learning_update)
@@ -3627,7 +3629,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 learning_function=TDLearning,
                                                 learning_update=learning_update)
 
-    def add_backpropagation_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
+    def add_backpropagation_learning_pathway(self,
+                                             pathway,
+                                             learning_rate=0.05,
+                                             error_function=None,
+                                             loss_function:tc.enum(MSE,SSE)=MSE,
                                              learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER):
         """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Backpropagation`
 
@@ -3671,6 +3677,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return self.add_linear_learning_pathway(pathway,
                                                 learning_rate=learning_rate,
                                                 learning_function=BackPropagation,
+                                                loss_function=loss_function,
                                                 error_function=error_function,
                                                 learning_update=learning_update)
 
@@ -3886,7 +3893,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return target_mechanism, comparator_mechanism, learning_mechanism
 
-    def _create_backpropagation_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
+    def _create_backpropagation_learning_pathway(self, pathway, loss_function, learning_rate=0.05, error_function=None,
                                              learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER):
 
         # FIX: LEARNING CONSOLIDATION - Can get rid of this:
@@ -3935,6 +3942,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._create_terminal_backprop_learning_components(input_source,
                                                                        output_source,
                                                                        error_function,
+                                                                       loss_function,
                                                                        learned_projection,
                                                                        learning_rate,
                                                                        learning_update)
@@ -3988,6 +3996,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._create_terminal_backprop_learning_components(input_source,
                                                                    output_source,
                                                                    error_function,
+                                                                   loss_function,
                                                                    learned_projection,
                                                                    learning_rate,
                                                                    learning_update)
@@ -4046,6 +4055,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                       input_source,
                                                       output_source,
                                                       error_function,
+                                                      loss_function,
                                                       learned_projection,
                                                       learning_rate,
                                                       learning_update):
@@ -4077,7 +4087,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                               output_source.output_ports[0].value,
                                                               comparator_mechanism.output_ports[0].value],
                                             activation_derivative_fct=output_source.function.derivative,
-                                            learning_rate=learning_rate)
+                                            learning_rate=learning_rate,
+                                            loss_function=loss_function)
 
         learning_mechanism = LearningMechanism(function=learning_function,
                                                default_variable=[input_source.output_ports[0].value,
@@ -5691,16 +5702,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if output_fmt == 'pdf':
                 # G.format = 'svg'
                 G.view(self.name.replace(" ", "-"), cleanup=True, directory='show_graph OUTPUT/PDFS')
-    
+
             # Generate images for animation
             elif output_fmt == 'gif':
                 if self.active_item_rendered or INITIAL_FRAME in active_items:
                     self._generate_gifs(G, active_items, context)
-    
+
             # Return graph to show in jupyter
             elif output_fmt == 'jupyter':
                 return G
-    
+
             elif output_fmt == 'gv':
                 return G
         except:
