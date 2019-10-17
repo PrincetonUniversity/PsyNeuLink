@@ -917,7 +917,7 @@ class GradientOptimization(OptimizationFunction):
                     if self.owner:
                         owner_str = f' of {self.owner.name}'
                     raise OptimizationFunctionError(f"All items in {repr(SEARCH_SPACE)} arg for {self.name}{owner_str} "
-                                                    f"must be or resolve a 2-item list or tuple; this doesn't: {s}.")
+                                                    f"must be or resolve to a 2-item list or tuple; this doesn't: {s}.")
 
     @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, *args, context=None):

@@ -583,6 +583,8 @@ class AutodiffComposition(Composition):
         if not isinstance(self.loss_spec, str):
             return self.loss_spec
         elif loss_spec == 'mse':
+            return nn.MSELoss(reduction='mean')
+        elif loss_spec == 'sse':
             return nn.MSELoss(reduction='sum')
         elif loss_spec == 'crossentropy':
             return nn.CrossEntropyLoss(reduction='sum')
@@ -733,9 +735,7 @@ class AutodiffComposition(Composition):
 
         # backpropagate to compute gradients and perform learning update for parameters
         optimizer.zero_grad()
-        curr_loss = curr_loss / \
-                    num_inputs / \
-                    2
+        curr_loss = curr_loss / num_inputs
         printable = {}
         for component in curr_tensor_outputs.keys():
             printable[component] = curr_tensor_outputs[component].detach().numpy()

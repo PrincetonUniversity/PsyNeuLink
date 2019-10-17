@@ -262,14 +262,13 @@ should project to the InputPort. Each of these is described below:
         * **2-item tuple:** *(<value, Port specification, or list of Port specs>, <Projection specification>)* --
           this is a contracted form of the 4-item tuple described below;
 
-        * **4-item tuple:** *(<value, Port spec, or list of Port specs>, weight, exponent, Projection specification)*
-          -- this allows the specification of Port(s) that should project to the InputPort, together with a
-          specification of the InputPort's `weight <InputPort.weight>` and/or `exponent <InputPort.exponent>`
+        * **3 or 4-item tuple:** *(<value, Port spec, or list of Port specs>, weight, exponent, Projection
+          specification)* -- this allows the specification of Port(s) that should project to the InputPort, together
+          with a specification of the InputPort's `weight <InputPort.weight>` and/or `exponent <InputPort.exponent>`
           attributes of the InputPort, and (optionally) the Projection(s) to it.  This can be used to compactly
           specify a set of Ports that project the InputPort, while using the 4th item to determine its variable
           (e.g., using the matrix of the Projection specification) and/or attributes of the Projection(s) to it. Each
           tuple must have at least the following first three items (in the order listed), and can include the fourth:
-
 
             * **value, Port specification, or list of Port specifications** -- specifies either the `variable
               <InputPort.variable>` of the InputPort, or one or more Ports that should project to it.  The Port
@@ -319,7 +318,7 @@ InputPort `variable <InputPort.variable>`: Compatibility and Constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The `variable <InputPort.variable>` of an InputPort must be compatible with the item of its owner Mechanism's
-`variable <Mechanism_Base.variable>` to which it is assigned (see `Mechanism_Variable_and_InputPorts>`). This may
+`variable <Mechanism_Base.variable>` to which it is assigned (see `Mechanism_Variable_and_InputPorts`). This may
 have consequences that must be taken into account when `specifying an InputPort by Components that project to it
 <InputPort_Projection_Source_Specification>`.  These depend on the context in which the specification is made, and
 possibly the value of other specifications.  These considerations and how they are handled are described below,
