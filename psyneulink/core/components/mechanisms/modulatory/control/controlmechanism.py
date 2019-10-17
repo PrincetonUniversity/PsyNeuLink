@@ -1228,7 +1228,11 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 if isinstance(spec, MonitoredOutputPortTuple):
                     spec = spec.output_port
                 elif isinstance(spec, tuple):
-                    spec = self._parse_monitor_for_control_tuple_spec(spec)
+                    spec = _parse_port_spec(owner=self,
+                                             port_type=InputPort,
+                                             port_spec=spec,
+                                             context=context)
+                    spec = spec['params'][PROJECTIONS][0][0]
                 elif isinstance(spec, dict):
                     # If it is a dict, parse to validate that it is an InputPort specification dict
                     #    (for InputPort of ObjectiveMechanism to be assigned to the monitored_output_port)
@@ -1317,22 +1321,12 @@ class ControlMechanism(ModulatoryMechanism_Base):
             control = target_set[CONTROL]
             assert isinstance(control, list), \
                 f"PROGRAM ERROR: control arg {control} of {self.name} should have been converted to a list."
-            # # MODIFIED 9/26/19 OLD:
-            # from psyneulink.core.components.projections.projection import ProjectionError
-            # for ctl_spec in control:
-            #     # _parse_port_spec(port_type=ControlSignal, owner=self, port_spec=control_signal)
-            #     try:
-            #         _parse_port_spec(port_type=ControlSignal, owner=self, port_spec=ctl_spec)
-            #     except ProjectionError:
-            #         _parse_port_spec(port_type=GatingSignal, owner=self, port_spec=ctl_spec)
-            # MODIFIED 9/26/19 NEW:
             for ctl_spec in control:
                 ctl_spec = _parse_port_spec(port_type=ControlSignal, owner=self, port_spec=ctl_spec)
                 if not (isinstance(ctl_spec, ControlSignal)
                         or (isinstance(ctl_spec, dict) and ctl_spec[PORT_TYPE]==ControlSignal.__name__)):
                     raise ControlMechanismError(f"Invalid specification for '{CONTROL}' argument of {self.name}:"
                                                 f"({ctl_spec})")
-            # MODIFIED 9/26/19 END
 
     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
     def _instantiate_objective_mechanism(self, context=None):
@@ -1452,8 +1446,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
         elif self.monitor_for_control:
             from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
             for sender in convert_to_list(self.monitor_for_control):
-                if isinstance(sender, tuple):
-                    sender = self._parse_monitor_for_control_tuple_spec(sender)
                 self.aux_components.append(MappingProjection(sender=sender, receiver=self.input_ports[OUTCOME]))
 
     def _instantiate_output_ports(self, context=None):
@@ -1862,14 +1854,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
         self.parameters.value._set(value, context)
         self._update_output_ports(context=context,
                                    runtime_params=runtime_params,)
-
-    #FIX: 10/16/19 - USE _parse_port_spec INSTEAD?
-    def _parse_monitor_for_control_tuple_spec(self, spec):
-        if len(spec)==2: # 2-item tuple: (OutputPort, Mechanism))
-            return spec[1].output_ports[spec[0]]
-        elif len(spec) in {3,4}: # 3 or 4-item tuple: (Mechanism, weights, exponents, <Projection>)
-            return spec[0]
-        return spec
 
     @property
     def monitored_output_ports(self):
