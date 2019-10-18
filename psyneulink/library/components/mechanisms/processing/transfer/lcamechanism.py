@@ -720,16 +720,19 @@ class LCAMechanism(RecurrentTransferMechanism):
         # find the single numeric entry in previous_value
 
         single_value = self.function.get_previous_value(context)
+        #
+        # # indexing into a matrix doesn't reduce dimensionality
+        # if not isinstance(single_value, (np.matrix, str)):
+        #     while True:
+        #         try:
+        #             single_value = single_value[0]
+        #         except (IndexError, TypeError):
+        #             break
 
-        # indexing into a matrix doesn't reduce dimensionality
-        if not isinstance(single_value, (np.matrix, str)):
-            while True:
-                try:
-                    single_value = single_value[0]
-                except (IndexError, TypeError):
-                    break
+        # if abs(single_value) >= self.function.get_current_function_param(THRESHOLD, context):
 
-        if abs(single_value) >= self.function.get_current_function_param(THRESHOLD, context):
+        if any(self.function.get_previous_value(context) >=
+               self.function.get_current_function_param(THRESHOLD, context)):
             logger.info(
                 '{0} {1} has reached threshold {2}'.format(
                     type(self).__name__,
