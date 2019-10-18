@@ -146,7 +146,7 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import _
 from psyneulink.core.components.ports.outputport import PRIMARY, StandardOutputPorts
 from psyneulink.core.globals.keywords import \
     BETA, ENERGY, ENTROPY, FUNCTION, INITIALIZER, LCA_MECHANISM, NAME, NOISE, \
-    OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, RATE, RESULT, TIME_STEP_SIZE
+    OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, RATE, RESULT, THRESHOLD, TIME_STEP_SIZE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -718,11 +718,8 @@ class LCAMechanism(RecurrentTransferMechanism):
     @handle_external_context()
     def is_finished(self, context=None):
         # find the single numeric entry in previous_value
-        try:
-            single_value = self.function.get_previous_value(context)
-        except AttributeError:
-            # Analytical function so it is always finished after it is called
-            return True
+
+        single_value = self.function.get_previous_value(context)
 
         # indexing into a matrix doesn't reduce dimensionality
         if not isinstance(single_value, (np.matrix, str)):
@@ -732,10 +729,7 @@ class LCAMechanism(RecurrentTransferMechanism):
                 except (IndexError, TypeError):
                     break
 
-        if (
-            abs(single_value) >= self.function.get_current_function_param(THRESHOLD, context)
-            and isinstance(self.function, IntegratorFunction)
-        ):
+        if abs(single_value) >= self.function.get_current_function_param(THRESHOLD, context):
             logger.info(
                 '{0} {1} has reached threshold {2}'.format(
                     type(self).__name__,
