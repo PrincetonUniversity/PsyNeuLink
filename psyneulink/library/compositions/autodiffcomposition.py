@@ -795,7 +795,7 @@ class AutodiffComposition(Composition):
         if self.learning_enabled is True:
             if self.__generated_learning_run is None:
                 with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                    self.__generated_learning_run = ctx.gen_autodiffcomp_learning_run(self)
+                    self.__generated_learning_run = ctx.gen_composition_run(self, learning=self.learning_enabled)
             return self.__generated_learning_run
         if self.__generated_forward_run is None:
             with pnlvm.LLVMBuilderContext.get_global() as ctx:

@@ -276,125 +276,6 @@ class LLVMBuilderContext:
 
         self.inject_printf(builder,suffix,override_debug=override_debug)
 
-    def gen_autodiffcomp_learning_run(self, composition, simulation=False):
-        name = 'run_sim_wrap_' if simulation else 'run_wrap_'
-        name += composition.name
-        args = [self.get_state_struct_type(composition).as_pointer(),
-                self.get_param_struct_type(composition).as_pointer(),
-                self.get_data_struct_type(composition).as_pointer(),
-                self.get_input_struct_type(composition).as_pointer(),
-                self.get_output_struct_type(composition).as_pointer(),
-                self.int32_ty.as_pointer(),
-                self.int32_ty.as_pointer()]
-        builder = self.create_llvm_function(args, composition, name)
-        llvm_func = builder.function
-        for a in llvm_func.args:
-            a.attributes.add('noalias')
-
-        state, params, data, data_in, data_out, runs_ptr, inputs_ptr = llvm_func.args
-        # simulation does not care about the output
-        # it extracts results of the controller objective mechanism
-        if simulation:
-            data_out.attributes.remove('nonnull')
-
-        if not simulation and "const_data" in debug_env:
-            const_data = data.type.pointee(composition._get_data_initializer(None))
-            data = builder.alloca(data.type.pointee)
-            builder.store(const_data, data)
-
-        # Hardcode stateful parameters if set in the environment
-        if not simulation and "const_state" in debug_env:
-            const_state = state.type.pointee(composition._get_state_initializer(None))
-            state = builder.alloca(const_state.type, name="const_state_loc")
-            builder.store(const_state, state)
-
-        if not simulation and "const_input" in debug_env:
-            if not debug_env["const_input"]:
-                input_init = pnlvm._tupleize([[os.defaults.variable] for os in composition.input_CIM.input_ports])
-                print("Setting default input: ", input_init)
-            else:
-                input_init = ast.literal_eval(debug_env["const_input"])
-                print("Setting user input: ", input_init)
-
-            builder.store(data_in.type.pointee(input_init), data_in)
-            builder.store(inputs_ptr.type.pointee(1), inputs_ptr)
-
-        if "force_runs" in debug_env:
-            num = int(debug_env["force_runs"]) if debug_env["force_runs"] else 1
-            print("Forcing number of runs to: ", num)
-            runs_ptr = builder.alloca(runs_ptr.type.pointee)
-            builder.store(runs_ptr.type.pointee(num), runs_ptr)
-
-        # Allocate and initialize condition structure
-        cond_gen = ConditionGenerator(self, composition)
-        cond_type = cond_gen.get_condition_struct_type()
-        cond = builder.alloca(cond_type)
-        cond_init = cond_type(cond_gen.get_condition_initializer())
-        builder.store(cond_init, cond)
-
-        # Call training function
-        data_in_ptr = builder.gep(data_in, [self.int32_ty(0)])
-        exec_learning_f = self.get_llvm_function(composition)
-        builder.call(exec_learning_f, [state, params, data_in_ptr, data, cond])
-
-        iter_ptr = builder.alloca(self.int32_ty, name="iter_counter")
-        builder.store(self.int32_ty(0), iter_ptr)
-
-        loop_condition = builder.append_basic_block(name="run_loop_condition")
-        builder.branch(loop_condition)
-
-        # Generate a "while < count" loop
-        builder.position_at_end(loop_condition)
-        count = builder.load(iter_ptr)
-        runs = builder.load(runs_ptr)
-        run_cond = builder.icmp_unsigned('<', count, runs)
-
-        loop_body = builder.append_basic_block(name="run_loop_body")
-        exit_block = builder.append_basic_block(name="exit")
-        builder.cbranch(run_cond, loop_body, exit_block)
-
-        # Generate loop body
-        builder.position_at_end(loop_body)
-
-        # Current iteration
-        iters = builder.load(iter_ptr)
-
-        # Get the right input stimulus
-        input_idx = builder.urem(iters, builder.load(inputs_ptr))
-        data_in_ptr = builder.gep(data_in, [input_idx])
-        
-        # Call execution
-        composition.learning_enabled = False
-
-        if simulation:
-            exec_f = self.get_llvm_function(composition._llvm_simulation.name)
-        else:
-            exec_f = self.get_llvm_function(composition)
-        builder.call(exec_f, [state, params, data_in_ptr, data, cond])
-
-        composition.learning_enabled = True
-        if not simulation:
-            # Extract output_CIM result
-            idx = composition._get_node_index(composition.output_CIM)
-            result_ptr = builder.gep(data, [self.int32_ty(0), self.int32_ty(0), self.int32_ty(idx)])
-            output_ptr = builder.gep(data_out, [iters])
-            result = builder.load(result_ptr)
-            builder.store(result, output_ptr)
-
-        # Increment counter
-        iters = builder.add(iters, self.int32_ty(1))
-        builder.store(iters, iter_ptr)
-        builder.branch(loop_condition)
-
-        builder.position_at_end(exit_block)
-
-        # Store the number of executed iterations
-        builder.store(builder.load(iter_ptr), runs_ptr)
-
-        builder.ret_void()
-
-        return llvm_func
-
     @contextmanager
     def _gen_composition_exec_context(self, composition, simulation=False, suffix=""):
         cond_gen = ConditionGenerator(self, composition)
@@ -617,7 +498,7 @@ class LLVMBuilderContext:
 
         return builder.function
 
-    def gen_composition_run(self, composition, simulation=False):
+    def gen_composition_run(self, composition, simulation=False, learning=False):
         name = 'run_sim_wrap_' if simulation else 'run_wrap_'
         name += composition.name
         args = [self.get_state_struct_type(composition).as_pointer(),
@@ -673,16 +554,26 @@ class LLVMBuilderContext:
         cond_init = cond_type(cond_gen.get_condition_initializer())
         builder.store(cond_init, cond)
 
+        if learning:
+            # Call training function
+            data_in_ptr = builder.gep(data_in, [self.int32_ty(0)])
+            exec_learning_f = self.get_llvm_function(composition)
+            builder.call(exec_learning_f, [state, params, data_in_ptr, data, cond])
+
         with pnlvm.helpers.for_loop_zero_inc(builder, builder.load(runs_ptr), "run_loop") as (b, iters):
             # Get the right input stimulus
             input_idx = b.urem(iters, b.load(inputs_ptr))
             data_in_ptr = b.gep(data_in, [input_idx])
         
             # Call execution
+            if learning:
+                composition.learning_enabled = False
             if simulation:
                 exec_f = self.get_llvm_function(composition._llvm_simulation.name)
             else:
                 exec_f = self.get_llvm_function(composition)
+            if learning:
+                composition.learning_enabled = True
             b.call(exec_f, [state, params, data_in_ptr, data, cond])
 
             if not simulation:
