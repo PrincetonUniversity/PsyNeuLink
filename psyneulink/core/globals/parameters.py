@@ -442,9 +442,6 @@ class Defaults(ParametersTemplate):
 
     def __setattr__(self, attr, value):
         if (attr[:1] != '_'):
-            value = self._owner.parameters._parse(attr, value)
-            self._owner.parameters._validate(attr, value)
-
             param = getattr(self._owner.parameters, attr)
             param._inherited = False
             param.default_value = value
@@ -1108,7 +1105,7 @@ class Parameter(types.SimpleNamespace):
     def _set_default_value(self, value):
         self._validate(value)
 
-        super().__setattr__('default_value', value)
+        super().__setattr__('default_value', self._parse(value))
 
     def _set_history_max_length(self, value):
         if value < self.history_min_length:
