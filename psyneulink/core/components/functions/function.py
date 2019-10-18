@@ -81,7 +81,7 @@ If a Function has been assigned to another `Component`, then it also has an `own
 that refers to that Component.  The Function itself is assigned as the Component's
 `function <Component.function>` attribute.  Each of the Function's attributes is also assigned
 as an attribute of the `owner <Function_Base.owner>`, and those are each associated with with a
-`parameterState <ParameterState>` of the `owner <Function_Base.owner>`.  Projections to those parameterStates can be
+`parameterPort <ParameterPort>` of the `owner <Function_Base.owner>`.  Projections to those parameterPorts can be
 used by `ControlProjections <ControlProjection>` to modify the Function's parameters.
 
 
@@ -108,8 +108,8 @@ COMMENT
 Some classes of Functions also implement a pair of modulatory parameters: `multiplicative_param` and `additive_param`.
 Each of these is assigned the name of one of the function's parameters. These are used by `ModulatorySignals
 <ModulatorySignal>` to modulate the output of the function (see `figure <ModulatorySignal_Detail_Figure>`).  For
-example, they are used by `GatingSignals <GatingSignal>` to modulate the `function <State_Base.function>` of an
-`InputState` or `OutputState`, and thereby its `value <State_Base.value>`; and by the `ControlSignal(s) <ControlSignal>`
+example, they are used by `GatingSignals <GatingSignal>` to modulate the `function <Port_Base.function>` of an
+`InputPort` or `OutputPort`, and thereby its `value <Port_Base.value>`; and by the `ControlSignal(s) <ControlSignal>`
 of an `LCControlMechanism` to modulate the `multiplicative_param` of the `function <TransferMechanism.function>` of a
 `TransferMechanism`.
 
@@ -122,7 +122,7 @@ Execution
 Functions are executable objects that can be called directly.  More commonly, however, they are called when
 their `owner <Function_Base.owner>` is executed.  The parameters
 of the `function <Function_Base.function>` can be modified when it is executed, by assigning a
-`parameter specification dictionary <ParameterState_Specification>` to the **params** argument in the
+`parameter specification dictionary <ParameterPort_Specification>` to the **params** argument in the
 call to the `function <Function_Base.function>`.
 
 For `Mechanisms <Mechanism>`, this can also be done by specifying `runtime_params <Run_Runtime_Parameters>` in the `Run`
@@ -148,7 +148,7 @@ from psyneulink.core.components.shellclasses import Function, Mechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ARGUMENT_THERAPY_FUNCTION, EXAMPLE_FUNCTION_TYPE, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION,\
-    NAME, PARAMETER_STATE_PARAMS, FUNCTION_COMPONENT_CATEGORY, PREFERENCE_SET_NAME
+    NAME, PARAMETER_PORT_PARAMS, FUNCTION_COMPONENT_CATEGORY, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -386,7 +386,7 @@ class Function_Base(Function):
         specifies the format and a default value for the input to `function <Function>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -493,7 +493,7 @@ class Function_Base(Function):
 
         if self.initialization_status == ContextFlags.DEFERRED_INIT:
             self._assign_deferred_init_name(name, context)
-            self.init_args[NAME] = name
+            self._init_args[NAME] = name
             return
 
 
@@ -574,7 +574,7 @@ class Function_Base(Function):
                                 f"the current value of a function parameter. 'variable' is not a function parameter. "
                                 f"If looking for {self.name}'s default variable, try {self.name}.defaults.variable.")
         try:
-            return self.owner._parameter_states[param_name].parameters.value._get(context)
+            return self.owner._parameter_ports[param_name].parameters.value._get(context)
         except (AttributeError, TypeError):
             try:
                 return getattr(self.parameters, param_name)._get(context)
@@ -745,7 +745,7 @@ class ArgumentTherapy(Function_Base):
         specifies therapeutic consistency
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -806,7 +806,7 @@ class ArgumentTherapy(Function_Base):
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-                               PARAMETER_STATE_PARAMS: None
+                               PARAMETER_PORT_PARAMS: None
                                # PROPENSITY: Manner.CONTRARIAN,
                                # PERTINACITY:  10
                                })
@@ -908,7 +908,7 @@ class ArgumentTherapy(Function_Base):
            an assertion to which a therapeutic response is made.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 

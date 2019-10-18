@@ -8,7 +8,7 @@ def test_control_mechanism_assignment():
     """ControlMechanism assignment/replacement,  monitor_for_control, and control_signal specifications"""
 
     T1 = pnl.TransferMechanism(size=3, name='T-1')
-    T2 = pnl.TransferMechanism(function=psyneulink.core.components.functions.transferfunctions.Logistic, output_states=[{pnl.NAME: 'O-1'}], name='T-2')
+    T2 = pnl.TransferMechanism(function=psyneulink.core.components.functions.transferfunctions.Logistic, output_ports=[{pnl.NAME: 'O-1'}], name='T-2')
     T3 = pnl.TransferMechanism(function=psyneulink.core.components.functions.transferfunctions.Logistic, name='T-3')
     T4 = pnl.TransferMechanism(function=psyneulink.core.components.functions.transferfunctions.Logistic, name='T-4')
     P = pnl.Process(pathway=[T1, T2, T3, T4])
@@ -35,18 +35,18 @@ def test_control_mechanism_assignment():
 
     # Test direct assignment
     S.controller = C1
-    assert len(C1.monitored_output_states)==2
+    assert len(C1.monitored_output_ports)==2
     assert len(S.control_signals)==3
     assert S.controller.name == 'C-1'
 
 
-    # Test for adding a monitored_output_state and control_signal
+    # Test for adding a monitored_output_port and control_signal
     C2 = pnl.EVCControlMechanism(name='C-2',
-                                 objective_mechanism = [T3.output_states[pnl.RESULTS]],
+                                 objective_mechanism = [T3.output_ports[pnl.RESULTS]],
                                  control_signals=[(pnl.GAIN, T4)])
     # Test use of assign_as_controller method
     C2.assign_as_controller(S)
-    assert len(C2.monitored_output_states)==3
+    assert len(C2.monitored_output_ports)==3
     assert len(S.control_signals)==4
     assert S.controller.name == 'C-2'
 
@@ -64,11 +64,11 @@ def test_control_mechanism_assignment():
 #                 monitor_for_control=T_3,
 #                 control_signals=(pnl.SLOPE, T_2),
 #                 enable_controller=True)
-#     assert S.controller.objective_mechanism.input_state[0].path_afferents[0].sender.owner == T_1
-#     assert S.controller.objective_mechanism.input_state[1].path_afferents[0].sender.owner == T_2
-#     assert S.controller.objective_mechanism.input_state[2].path_afferents[0].sender.owner == T_3
-#     assert T_1.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == S.controller
-#     assert T_2.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == S.controller
+#     assert S.controller.objective_mechanism.input_port[0].path_afferents[0].sender.owner == T_1
+#     assert S.controller.objective_mechanism.input_port[1].path_afferents[0].sender.owner == T_2
+#     assert S.controller.objective_mechanism.input_port[2].path_afferents[0].sender.owner == T_3
+#     assert T_1.parameter_ports[pnl.SLOPE].mod_afferents[0].sender.owner == S.controller
+#     assert T_2.parameter_ports[pnl.SLOPE].mod_afferents[0].sender.owner == S.controller
 
 
 
@@ -81,9 +81,9 @@ def test_control_mechanism_assignment_additional():
                 monitor_for_control=[T_1],
                 control_signals=(pnl.SLOPE, T_2),
                 enable_controller=True)
-    assert S.controller.objective_mechanism.input_state.path_afferents[0].sender.owner == T_1
-    assert T_1.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == S.controller
-    assert T_2.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == S.controller
+    assert S.controller.objective_mechanism.input_port.path_afferents[0].sender.owner == T_1
+    assert T_1.parameter_ports[pnl.SLOPE].mod_afferents[0].sender.owner == S.controller
+    assert T_2.parameter_ports[pnl.SLOPE].mod_afferents[0].sender.owner == S.controller
 
 # def test_prediction_mechanism_assignment():
 #     """Tests prediction mechanism assignment and more tests for ObjectiveMechanism and ControlSignal assignments"""
@@ -108,7 +108,7 @@ def test_control_mechanism_assignment_additional():
 #                 monitor_for_control=T3,
 #                 enable_controller=True
 #                 )
-#     assert len(S.controller.objective_mechanism.input_states)==3
+#     assert len(S.controller.objective_mechanism.input_ports)==3
 #
 #     S.recordSimulationPref = True
 #

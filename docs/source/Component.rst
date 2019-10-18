@@ -7,7 +7,7 @@ Component
    *Subclasses:*
    Mechanisms <Mechanism>
    Projections <Projection>
-   States <State>
+   Ports <Port>
    Functions <Functions>
 
 .. automodule:: psyneulink.core.components.component

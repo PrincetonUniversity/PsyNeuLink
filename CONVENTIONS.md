@@ -26,10 +26,10 @@ Made up of two types of classes:
         - **LearningProjection**
         - **ControlProjection**
         - **GatingProjection**
-- *State*
-    - **InputState**
-    - **ParameterState**
-    - **OutputState**
+- *Port*
+    - **InputPort**
+    - **ParameterPort**
+    - **OutputPort**
     - *ModulatorySignal*
         - **LearningSignal**
         - **ControlSignal**
@@ -65,7 +65,7 @@ Extensions of Core objects
 - Component names always end in their type (e.g., TransferMechanism, LearningProjection)
   (the only exception is the DDM)
 - Components and Compositions should *always* be referred to in caps
-  (e.g., All Mechanisms have Projections; the receiver for a Projection is an InputState; etc.).
+  (e.g., All Mechanisms have Projections; the receiver for a Projection is an InputPort; etc.).
 
 #### Format:
 - class names:
@@ -233,8 +233,8 @@ Terminology used here:
         the module must be explicitly referenced (e.g., `ControlMechanism <ControlMechanism>`);
         [this appears to be redundant, but it is necessary]
     - conversely, for classes without subclasses, the title in the rst file is singular;
-        therefore, to refer to the plural of such a class (e.g., InputState),
-        the module must be explicitly referenced (e.g., `InputStates <InputState>`);
+        therefore, to refer to the plural of such a class (e.g., InputPort),
+        the module must be explicitly referenced (e.g., `InputStates <InputPort>`);
     - to flag references to sections that have not yet been documented (or labelled), 
         use the following construction: `section <LINK>` (so that <LINK> can be searched for replace these later).
  

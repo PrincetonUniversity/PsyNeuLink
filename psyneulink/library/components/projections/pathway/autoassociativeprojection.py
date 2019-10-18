@@ -64,7 +64,7 @@ Execution
 
 An AutoAssociativeProjection uses its `matrix <AutoAssociativeProjection.matrix>` parameter to transform the value of
 its `sender <AutoAssociativeProjection.sender>`, and provide the result as input for its
-`receiver <AutoAssociativeProjection.receiver>`, the primary input state of the RecurrentTransferMechanism.
+`receiver <AutoAssociativeProjection.receiver>`, the primary InputPort of the RecurrentTransferMechanism.
 
 .. note::
      During execution the AutoAssociativeProjection updates its `matrix <AutoAssociativeProjection.matrix> parameter
@@ -91,7 +91,7 @@ from psyneulink.core.components.functions.transferfunctions import LinearMatrix,
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import projection_keywords
 from psyneulink.core.components.shellclasses import Mechanism
-from psyneulink.core.components.states.outputstate import OutputState
+from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import AUTO_ASSOCIATIVE_PROJECTION, DEFAULT_MATRIX, HOLLOW_MATRIX, MATRIX
 from psyneulink.core.globals.parameters import Parameter
@@ -149,7 +149,8 @@ class AutoAssociativeProjection(MappingProjection):
         name=None,                                          \
         prefs=None)
 
-    Implements a MappingProjection that is self-recurrent on a `RecurrentTransferMechanism`; an AutoAssociativeProjection
+    Implements a MappingProjection that is self-recurrent on a `RecurrentTransferMechanism`; an
+    AutoAssociativeProjection
     represents connections between nodes in a single-layer recurrent network. It multiplies the output of the
     `RecurrentTransferMechanism` by a matrix, then presents the product as input to the `RecurrentTransferMechanism`.
 
@@ -170,14 +171,14 @@ class AutoAssociativeProjection(MappingProjection):
         simply specifies both the sender and receiver of the AutoAssociativeProjection. Setting owner=myMechanism is
         identical to setting sender=myMechanism and receiver=myMechanism.
 
-    sender : Optional[OutputState or Mechanism]
+    sender : Optional[OutputPort or Mechanism]
         specifies the source of the Projection's input. If a Mechanism is specified, its
-        `primary OutputState <OutputState_Primary>` will be used. If it is not specified, it will be assigned in
+        `primary OutputPort <OutputPort_Primary>` will be used. If it is not specified, it will be assigned in
         the context in which the Projection is used.
 
-    receiver : Optional[InputState or Mechanism]
+    receiver : Optional[InputPort or Mechanism]
         specifies the destination of the Projection's output.  If a Mechanism is specified, its
-        `primary InputState <InputState_Primary>` will be used. If it is not specified, it will be assigned in
+        `primary InputPort <InputPort_Primary>` will be used. If it is not specified, it will be assigned in
         the context in which the Projection is used.
 
     matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX
@@ -185,7 +186,7 @@ class AutoAssociativeProjection(MappingProjection):
         the value of the `sender <AutoAssociativeProjection.sender>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
         the Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default assignment (`LinearCombination`).  Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
@@ -204,10 +205,10 @@ class AutoAssociativeProjection(MappingProjection):
 
     componentType : AUTO_ASSOCIATIVE_PROJECTION
 
-    sender : OutputState
+    sender : OutputPort
         identifies the source of the Projection's input.
 
-    receiver: InputState
+    receiver: InputPort
         identifies the destination of the Projection.
 
     learning_mechanism : LearningMechanism
@@ -227,11 +228,11 @@ class AutoAssociativeProjection(MappingProjection):
         hetero is a single number, it means the off-diagonal terms are all the same.
 
     has_learning_projection : bool : None
-        identifies the `LearningProjection` assigned to the AutoAssociativeProjection's `MATRIX` `ParameterState
-        <ParameterState>`.
+        identifies the `LearningProjection` assigned to the AutoAssociativeProjection's `MATRIX` `ParameterPort
+        <ParameterPort>`.
 
     value : np.ndarray
-        Output of AutoAssociativeProjection, transmitted to `variable <InputState.variable>` of `receiver`.
+        Output of AutoAssociativeProjection, transmitted to `variable <InputPort.variable>` of `receiver`.
 
     name : str
         a string used for the name of the AutoAssociativeProjection (see `Registry <LINK>` for conventions used in
@@ -332,62 +333,62 @@ class AutoAssociativeProjection(MappingProjection):
 
     # def _update_auto_and_hetero(self, owner_mech=None, runtime_params=None, time_scale=TimeScale.TRIAL, context=None):
     #     if owner_mech is None:
-    #         if isinstance(self.sender, OutputState):
+    #         if isinstance(self.sender, OutputPort):
     #             owner_mech = self.sender.owner
     #         elif isinstance(self.sender, Mechanism):
     #             owner_mech = self.sender
     #         else:
-    #             raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
+    #             raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputPort: currently"
     #                                        " the sender is {}".
     #                                        format(self.__class__.__name__, self.name, self.sender))
-    #     if AUTO in owner_mech._parameter_states and HETERO in owner_mech._parameter_states:
-    #         owner_mech._parameter_states[AUTO].update(context=context, params=runtime_params, time_scale=time_scale)
-    #         owner_mech._parameter_states[HETERO].update(context=context, params=runtime_params, time_scale=time_scale)
+    #     if AUTO in owner_mech._parameter_ports and HETERO in owner_mech._parameter_ports:
+    #         owner_mech._parameter_ports[AUTO].update(context=context, params=runtime_params, time_scale=time_scale)
+    #         owner_mech._parameter_ports[HETERO].update(context=context, params=runtime_params, time_scale=time_scale)
     #
 
     # END OF COMMENTED OUT BY KAM 1/9/2018
 
     # NOTE 7/25/17 CW: Originally, this override was written because if the user set the 'auto' parameter on the
-        # recurrent mechanism, the parameter state wouldn't update until after the mechanism executed: since the system
+        # recurrent mechanism, the ParameterPort wouldn't update until after the mechanism executed: since the system
         # first runs the projection, then runs the mechanism, the projection initially uses the 'old' value. However,
         # this is commented out because this may in fact be the desired behavior.
         # Two possible solutions: allow control to be done on projections, or build a more general way to allow
         # projections to read parameters from mechanisms.
-    # def _update_parameter_states(self, runtime_params=None, context=None):
-    #     """Update this projection's owner mechanism's `auto` and `hetero` parameter states as well! The owner mechanism
-    #     should be a RecurrentTransferMechanism, which DOES NOT update its own `auto` and `hetero` parameter states during
-    #     its _update_parameter_states function (so that the ParameterState is not redundantly updated).
+    # def _update_parameter_ports(self, runtime_params=None, context=None):
+    #     """Update this projection's owner mechanism's `auto` and `hetero` parameter ports as well! The owner mechanism
+    #     should be a RecurrentTransferMechanism, which DOES NOT update its own `auto` and `hetero` parameter ports during
+    #     its _update_parameter_ports function (so that the ParameterPort is not redundantly updated).
     #     Thus, if you want to have an AutoAssociativeProjection on a mechanism that's not a RecurrentTransferMechanism,
     #     your mechanism must similarly exclude `auto` and `hetero` from updating.
     #     """
-    #     super()._update_parameter_states(runtime_params, context)
+    #     super()._update_parameter_ports(runtime_params, context)
     #
-    #     if isinstance(self.sender, OutputState):
+    #     if isinstance(self.sender, OutputPort):
     #         owner_mech = self.sender.owner
     #     elif isinstance(self.sender, Mechanism):
     #         owner_mech = self.sender
     #     else:
-    #         raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently the"
+    #         raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputPort: currently the"
     #                                    " sender is {}".
     #                                    format(self.__class__.__name__, self.name, self.sender))
     #
-    #     if AUTO in owner_mech._parameter_states and HETERO in owner_mech._parameter_states:
-    #         owner_mech._parameter_states[AUTO].update(context=context, params=runtime_params)
-    #         owner_mech._parameter_states[HETERO].update(context=context, params=runtime_params)
+    #     if AUTO in owner_mech._parameter_ports and HETERO in owner_mech._parameter_ports:
+    #         owner_mech._parameter_ports[AUTO].update(context=context, params=runtime_params)
+    #         owner_mech._parameter_ports[HETERO].update(context=context, params=runtime_params)
     #     else:
-    #         raise AutoAssociativeError("Auto or Hetero ParameterState not found in {0} \"{1}\"; here are names of the "
-    #                                    "current ParameterStates for {1}: {2}".format(owner_mech.__class__.__name__,
-    #                                    owner_mech.name, owner_mech._parameter_states.key_values))
+    #         raise AutoAssociativeError("Auto or Hetero ParameterPort not found in {0} \"{1}\"; here are names of the "
+    #                                    "current ParameterPorts for {1}: {2}".format(owner_mech.__class__.__name__,
+    #                                    owner_mech.name, owner_mech._parameter_ports.key_values))
 
     @property
     def owner_mech(self):
-        if isinstance(self.sender, OutputState):
+        if isinstance(self.sender, OutputPort):
             return self.sender.owner
         elif isinstance(self.sender, Mechanism):
             return self.sender
         else:
             raise AutoAssociativeError(
-                "The sender of the {} \'{}\' must be a Mechanism or OutputState: currently the sender is {}".format(
+                "The sender of the {} \'{}\' must be a Mechanism or OutputPort: currently the sender is {}".format(
                     self.__class__.__name__, self.name, self.sender
                 )
             )

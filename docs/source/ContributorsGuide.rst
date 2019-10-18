@@ -73,7 +73,7 @@ This is the general workflow for contributing to PsyNeuLink:
 Components Overview
 -------------------
 
-Most PsyNeuLink objects are `Components <Component>`. All `Functions <Function>`, `Mechanisms <Mechanism>`, `Projections <Projection>`, and `States <State>` are subclasses of Component. These subclasses use and override many functions from the Component class, so they are initialized and executed in similar ways.
+Most PsyNeuLink objects are `Components <Component>`. All `Functions <Function>`, `Mechanisms <Mechanism>`, `Projections <Projection>`, and `Ports <Port>` are subclasses of Component. These subclasses use and override many functions from the Component class, so they are initialized and executed in similar ways.
 
 The subclasses of Component should override Component's functions to implement their own functionality. However, function overrides must call the overridden function using `super()`, while passing the same arguments. For example, to instantiate a Projection's receiver after instantiating its function, the Projection_Base class overrides the `_instantiate_attributes_after_function` as follows::
 

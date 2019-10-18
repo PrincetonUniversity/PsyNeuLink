@@ -208,8 +208,8 @@ class MechExecution(FuncExecution):
 
     def execute(self, variable):
         # convert to 3d. we always assume that:
-        # a) the input is vector of input states
-        # b) input states take vector of projection outputs
+        # a) the input is vector of input ports
+        # b) input ports take vector of projection outputs
         # c) projection output is a vector (even 1 element vector)
         new_var = np.asfarray([np.atleast_2d(x) for x in variable])
         return super().execute(new_var)
@@ -382,7 +382,7 @@ class CompExecution(CUDAExecution):
         # All execute functions expect inputs to be 3rd param.
         c_input = self._bin_func.byref_arg_types[2]
 
-        # Read provided input data and separate each input state
+        # Read provided input data and separate each InputPort
         if len(self._execution_ids) > 1:
             assert len(self._execution_ids) == len(inputs)
             c_input = c_input * len(self._execution_ids)
@@ -400,9 +400,9 @@ class CompExecution(CUDAExecution):
         # This happens during node execution of nested compositions.
         if inputs is None and node is self._composition.input_CIM:
             # This assumes origin mechanisms are in the same order as
-            # CIM input states
-            origins = (n for n in self._composition.get_nodes_by_role(NodeRole.INPUT) for istate in n.input_states)
-            input_data = ([proj.parameters.value._get(context) for proj in state.all_afferents] for state in node.input_states)
+            # CIM input ports
+            origins = (n for n in self._composition.get_nodes_by_role(NodeRole.INPUT) for iport in n.input_ports)
+            input_data = ([proj.parameters.value._get(context) for proj in port.all_afferents] for port in node.input_ports)
             inputs = defaultdict(list)
             for n, d in zip(origins, input_data):
                 inputs[n].append(d[0])
@@ -503,13 +503,13 @@ class CompExecution(CUDAExecution):
         targets = autodiff_stimuli.get("targets", {})
         epochs = autodiff_stimuli.get("epochs", 0)
 
-        num_inputs = len(next(iter(inputs.values())))
+        num_trials = len(next(iter(inputs.values())))
 
         # autodiff_values keeps the ctype values on the stack, so it doesn't get gc'd
         autodiff_values = []
         def make_node_data(dictionary, node):
             values = dictionary[node]
-            assert len(values) == num_inputs
+            assert len(values) == num_trials
             dimensionality = len(values[0])
             values = np.asfarray(values)
             autodiff_values.append(values)
@@ -524,7 +524,7 @@ class CompExecution(CUDAExecution):
 
         autodiff_param_cty = self._bin_run_func.byref_arg_types[1]
         autodiff_stimuli_cty = autodiff_param_cty._fields_[3][1]
-        autodiff_stimuli_struct = (epochs, num_inputs,
+        autodiff_stimuli_struct = (epochs, num_trials,
                                    len(targets), tuple(target_struct_val),
                                    len(inputs), tuple(input_struct_val))
         autodiff_stimuli_struct = autodiff_stimuli_cty(*autodiff_stimuli_struct)

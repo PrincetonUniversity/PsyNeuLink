@@ -70,8 +70,8 @@ COMMENT:
 
         Among other things, this is used to determine the source of call of a constructor (until someone
             proposes/implements a better method!).  This is used in several ways, for example:
-            a) to determine whether an InputState or OutputState is being added as part of the construction process
-              (e.g., for LearningMechanism) or by the user from the command line (see Mechanism.add_states)
+            a) to determine whether an InputPort or OutputPort is being added as part of the construction process
+              (e.g., for LearningMechanism) or by the user from the command line (see Mechanism.add_ports)
 
 COMMENT
 
@@ -528,28 +528,28 @@ def _get_time(component, context):
     """
 
     from psyneulink.core.globals.context import time
-    from psyneulink.core.components.shellclasses import Mechanism, Projection, State
+    from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
 
     no_time = time(None, None, None, None)
 
     # Get mechanism to which Component being logged belongs
     if isinstance(component, Mechanism):
         ref_mech = component
-    elif isinstance(component, State):
+    elif isinstance(component, Port):
         if isinstance(component.owner, Mechanism):
             ref_mech = component.owner
         elif isinstance(component.owner, Projection):
             ref_mech = component.owner.receiver.owner
         else:
             raise ContextError("Logging currently does not support {} (only {}s, {}s, and {}s).".
-                           format(component.__class__.__name__,
-                                  Mechanism.__name__, State.__name__, Projection.__name__))
+                               format(component.__class__.__name__,
+                                      Mechanism.__name__, Port.__name__, Projection.__name__))
     elif isinstance(component, Projection):
         ref_mech = component.receiver.owner
     else:
         raise ContextError("Logging currently does not support {} (only {}s, {}s, and {}s).".
-                       format(component.__class__.__name__,
-                              Mechanism.__name__, State.__name__, Projection.__name__))
+                           format(component.__class__.__name__,
+                                  Mechanism.__name__, Port.__name__, Projection.__name__))
 
     # Get System in which it is being (or was last) executed (if any):
 

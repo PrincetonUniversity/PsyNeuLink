@@ -36,12 +36,12 @@ class TestLCControlMechanism:
         S.add_controller(LC)
 
 
-        for output_state in LC.output_states:
-            output_state.parameters.value.set(output_state.value * starting_value_LC, S, override=True)
+        for output_port in LC.output_ports:
+            output_port.parameters.value.set(output_port.value * starting_value_LC, S, override=True)
 
         LC.reinitialize_when = pnl.Never()
 
-        gain_created_by_LC_output_state_1 = []
+        gain_created_by_LC_output_port_1 = []
         mod_gain_assigned_to_A = []
         base_gain_assigned_to_A = []
         mod_gain_assigned_to_B = []
@@ -50,7 +50,7 @@ class TestLCControlMechanism:
         def report_trial(system):
             from psyneulink import parse_context
             context = parse_context(system)
-            gain_created_by_LC_output_state_1.append(LC.output_states[0].parameters.value.get(context))
+            gain_created_by_LC_output_port_1.append(LC.output_ports[0].parameters.value.get(context))
             mod_gain_assigned_to_A.append([A.get_mod_gain(system)])
             mod_gain_assigned_to_B.append([B.get_mod_gain(system)])
             base_gain_assigned_to_A.append(A.function.gain)
@@ -69,7 +69,7 @@ class TestLCControlMechanism:
             assert base_gain_assigned_to_B[i] == user_specified_gain
 
         # (3) LC output on trial n becomes gain of A and B on trial n + 1
-        assert np.allclose(mod_gain_assigned_to_A[1:], gain_created_by_LC_output_state_1[0:-1])
+        assert np.allclose(mod_gain_assigned_to_A[1:], gain_created_by_LC_output_port_1[0:-1])
 
         # (4) mechanisms A and B should always have the same gain values (b/c they are identical)
         assert np.allclose(mod_gain_assigned_to_A, mod_gain_assigned_to_B)
@@ -98,10 +98,10 @@ class TestLCControlMechanism:
 
         val = EX([10.0])
 
-        # LLVM returns combination of all output states so let's do that for
+        # LLVM returns combination of all output ports so let's do that for
         # Python as well
         if mode == 'Python':
-            val = [s.value for s in LC.output_states]
+            val = [s.value for s in LC.output_ports]
 
         benchmark(EX, [10.0])
 
@@ -123,8 +123,8 @@ class TestLCControlMechanism:
 
         assert len(LC.control_signals)==1
         assert len(LC.control_signals[0].efferents)==2
-        assert T_1.parameter_states[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
-        assert T_2.parameter_states[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
+        assert T_1.parameter_ports[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
+        assert T_2.parameter_ports[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
 
     def test_control_modulation(self):
         Tx = pnl.TransferMechanism(name='Tx')
@@ -143,7 +143,7 @@ class TestLCControlMechanism:
         from pprint import pprint
         pprint(S.execution_graph)
 
-        assert Tz.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == C
+        assert Tz.parameter_ports[pnl.SLOPE].mod_afferents[0].sender.owner == C
         result = S.run(inputs={Tx:[1,1], Ty:[4,4]})
         assert result == [[[4.], [4.]], [[4.], [4.]]]
 
@@ -154,9 +154,9 @@ class TestLCControlMechanism:
         Hidden_Layer_2 = pnl.TransferMechanism(name='Hidden Layer_2', function=pnl.Logistic, size=4)
         Output_Layer = pnl.TransferMechanism(name='Output Layer', function=pnl.Logistic, size=3)
     
-        Control_Mechanism = pnl.ControlMechanism(size=[1], control=[Hidden_Layer_1.input_state,
-                                                                    Hidden_Layer_2.input_state,
-                                                                    Output_Layer.input_state])
+        Control_Mechanism = pnl.ControlMechanism(size=[1], control=[Hidden_Layer_1.input_port,
+                                                                    Hidden_Layer_2.input_port,
+                                                                    Output_Layer.input_port])
     
         Input_Weights_matrix = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
         Middle_Weights_matrix = (np.arange(5 * 4).reshape((5, 4)) + 1) / (5 * 4)
@@ -181,7 +181,10 @@ class TestLCControlMechanism:
     
         pathway = [Input_Layer, Input_Weights, Hidden_Layer_1, Hidden_Layer_2, Output_Layer]
         comp = pnl.Composition()
-        learning_components = comp.add_backpropagation_learning_pathway(pathway=pathway)
+        learning_components = comp.add_backpropagation_learning_pathway(
+            pathway=pathway,
+            loss_function=None
+        )
         # c.add_linear_processing_pathway(pathway=z)
         comp.add_node(Control_Mechanism)
     
@@ -207,19 +210,19 @@ class TestLCControlMechanism:
         expected_results = [[0.96801676, 0.98304415, 0.99225722]]
         assert np.allclose(results, expected_results)
 
-    def test_control_of_all_input_states(self):
-        mech = pnl.ProcessingMechanism(input_states=['A','B','C'])
-        control_mech = pnl.ControlMechanism(control=mech.input_states)
+    def test_control_of_all_input_ports(self):
+        mech = pnl.ProcessingMechanism(input_ports=['A','B','C'])
+        control_mech = pnl.ControlMechanism(control=mech.input_ports)
         comp = pnl.Composition()
         comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
         results = comp.run(inputs={mech:[[2],[2],[2]], control_mech:[2]}, num_trials=2)
         np.allclose(results, [[4],[4],[4]])
 
-    def test_control_of_all_output_states(self):
-        mech = pnl.ProcessingMechanism(output_states=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 0)},
+    def test_control_of_all_output_ports(self):
+        mech = pnl.ProcessingMechanism(output_ports=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 0)},
                                                       {pnl.VARIABLE: (pnl.OWNER_VALUE, 0)},
                                                       {pnl.VARIABLE: (pnl.OWNER_VALUE, 0)}],)
-        control_mech = pnl.ControlMechanism(control=mech.output_states)
+        control_mech = pnl.ControlMechanism(control=mech.output_ports)
         comp = pnl.Composition()
         comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
         results = comp.run(inputs={mech:[[2]], control_mech:[3]}, num_trials=2)
@@ -246,27 +249,27 @@ class TestLCControlMechanism:
         comp.add_controller(c1)
         assert c1.control_signals[0].value == [10] # defaultControlAllocation should be assigned
                                                    # (as no default_allocation from pnl.ControlMechanism)
-        assert m1.parameter_states[pnl.SLOPE].value == [1]
+        assert m1.parameter_ports[pnl.SLOPE].value == [1]
         assert c1.control_signals[1].value == [2]      # default_allocation from pnl.ControlSignal (converted scalar)
-        assert m2.parameter_states[pnl.SLOPE].value == [1]
+        assert m2.parameter_ports[pnl.SLOPE].value == [1]
         assert c1.control_signals[2].value == [3]      # default_allocation from pnl.ControlSignal
-        assert m3.parameter_states[pnl.SLOPE].value == [1]
+        assert m3.parameter_ports[pnl.SLOPE].value == [1]
         result = comp.run(inputs={m1:[2],m2:[3],m3:[4]})
         assert np.allclose(result, [[20.], [6.], [12.]])
         assert c1.control_signals[0].value == [10]
-        assert m1.parameter_states[pnl.SLOPE].value == [10]
+        assert m1.parameter_ports[pnl.SLOPE].value == [10]
         assert c1.control_signals[1].value == [10]
-        assert m2.parameter_states[pnl.SLOPE].value == [2]
+        assert m2.parameter_ports[pnl.SLOPE].value == [2]
         assert c1.control_signals[2].value == [10]
-        assert m3.parameter_states[pnl.SLOPE].value == [3]
+        assert m3.parameter_ports[pnl.SLOPE].value == [3]
         result = comp.run(inputs={m1:[2],m2:[3],m3:[4]})
         assert np.allclose(result, [[20.], [30.], [40.]])
         assert c1.control_signals[0].value == [10]
-        assert m1.parameter_states[pnl.SLOPE].value == [10]
+        assert m1.parameter_ports[pnl.SLOPE].value == [10]
         assert c1.control_signals[1].value == [10]
-        assert m2.parameter_states[pnl.SLOPE].value == [10]
+        assert m2.parameter_ports[pnl.SLOPE].value == [10]
         assert c1.control_signals[2].value == [10]
-        assert m3.parameter_states[pnl.SLOPE].value == [10]
+        assert m3.parameter_ports[pnl.SLOPE].value == [10]
 
         # default_allocation *is* specified in constructor of pnl.ControlMechanism,
         #     so should be used unless specified in pnl.ControlSignal constructor
@@ -283,24 +286,24 @@ class TestLCControlMechanism:
         comp.add_nodes([m1,m2,m3])
         comp.add_controller(c2)
         assert c2.control_signals[0].value == [4]        # default_allocation from pnl.ControlMechanism assigned
-        assert m1.parameter_states[pnl.SLOPE].value == [10]  # has not yet received pnl.ControlSignal value
+        assert m1.parameter_ports[pnl.SLOPE].value == [10]  # has not yet received pnl.ControlSignal value
         assert c2.control_signals[1].value == [5]        # default_allocation from pnl.ControlSignal assigned (converted scalar)
-        assert m2.parameter_states[pnl.SLOPE].value == [10]
+        assert m2.parameter_ports[pnl.SLOPE].value == [10]
         assert c2.control_signals[2].value == [6]        # default_allocation from pnl.ControlSignal assigned
-        assert m3.parameter_states[pnl.SLOPE].value == [10]
+        assert m3.parameter_ports[pnl.SLOPE].value == [10]
         result = comp.run(inputs={m1:[2],m2:[3],m3:[4]})
         assert np.allclose(result, [[8.], [15.], [24.]])
         assert c2.control_signals[0].value == [10]
-        assert m1.parameter_states[pnl.SLOPE].value == [4]
+        assert m1.parameter_ports[pnl.SLOPE].value == [4]
         assert c2.control_signals[1].value == [10]
-        assert m2.parameter_states[pnl.SLOPE].value == [5]
+        assert m2.parameter_ports[pnl.SLOPE].value == [5]
         assert c2.control_signals[2].value == [10]
-        assert m3.parameter_states[pnl.SLOPE].value == [6]
+        assert m3.parameter_ports[pnl.SLOPE].value == [6]
         result = comp.run(inputs={m1:[2],m2:[3],m3:[4]})
         assert np.allclose(result, [[20.], [30.], [40.]])
         assert c2.control_signals[0].value == [10]
-        assert m1.parameter_states[pnl.SLOPE].value == [10]
+        assert m1.parameter_ports[pnl.SLOPE].value == [10]
         assert c2.control_signals[1].value == [10]
-        assert m2.parameter_states[pnl.SLOPE].value == [10]
+        assert m2.parameter_ports[pnl.SLOPE].value == [10]
         assert c2.control_signals[2].value == [10]
-        assert m3.parameter_states[pnl.SLOPE].value == [10]
+        assert m3.parameter_ports[pnl.SLOPE].value == [10]

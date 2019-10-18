@@ -14,8 +14,8 @@
 Overview
 --------
 
-A MappingProjection transmits the `value <OutputState.value>` of an `OutputState` of one `ProcessingMechanism
-<ProcessingMechanism>` (its `sender <MappingProjection.sender>`) to the `InputState` of another (its `receiver
+A MappingProjection transmits the `value <OutputPort.value>` of an `OutputPort` of one `ProcessingMechanism
+<ProcessingMechanism>` (its `sender <MappingProjection.sender>`) to the `InputPort` of another (its `receiver
 <MappingProjection.receiver>`). The default `function <MappingProjection.function>` for a MappingProjection is
 `LinearMatrix`, which uses the MappingProjection's `matrix <MappingProjection.matrix>` attribute to transform the
 value received from its `sender <MappingProjection.sender>` and provide the result to its `receiver
@@ -38,18 +38,18 @@ MappingProjections are also generated automatically in the following circumstanc
     have a Projection assigned between them (`AUTO_ASSIGN_MATRIX` is used as the `matrix <MappingProjection.matrix>`
     specification, which determines the appropriate matrix by context);
   ..
-  * by an `ObjectiveMechanism`, from each `OutputState` listed in its `monitored_output_states
-    <ObjectiveMechanism.monitored_output_states>` attribute to the corresponding `InputState` of the ObjectiveMechanism
+  * by an `ObjectiveMechanism`, from each `OutputPort` listed in its `monitored_output_ports
+    <ObjectiveMechanism.monitored_output_ports>` attribute to the corresponding `InputPort` of the ObjectiveMechanism
     (`AUTO_ASSIGN_MATRIX` is used as the `matrix <MappingProjection.matrix>` specification, which determines the
     appropriate matrix by context);
   ..
   * by a `LearningMechanism`, between it and the other components required to implement learning
     (see `LearningMechanism_Learning_Configurations` for details);
   ..
-  * by a `ControlMechanism <ControlMechanism>`, from the *OUTCOME* `OutputState` of the `ObjectiveMechanism` that `it
-    creates <ControlMechanism_ObjectiveMechanism>` to its *OUTCOME* `InputState`, and from the `OutputStates
-    <OutputState>` listed in the ObjectiveMechanism's `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
-    attribute to the ObjectiveMechanism's `primary InputState <InputState_Primary>` (as described above; an
+  * by a `ControlMechanism <ControlMechanism>`, from the *OUTCOME* `OutputPort` of the `ObjectiveMechanism` that `it
+    creates <ControlMechanism_ObjectiveMechanism>` to its *OUTCOME* `InputPort`, and from the `OutputPorts
+    <OutputPort>` listed in the ObjectiveMechanism's `monitored_output_ports <ObjectiveMechanism.monitored_output_ports>`
+    attribute to the ObjectiveMechanism's `primary InputPort <InputPort_Primary>` (as described above; an
     `IDENTITY_MATRIX` is used for all of these).
 
 .. _Mapping_Matrix_Specification:
@@ -73,7 +73,7 @@ following ways:
     or matrix rows) corresponds to the elements of the `sender <MappingProjection.sender>`, and the inner dimension
     (inner list items, array axis 1, or matrix columns) corresponds to the weighting of the contribution that a
     given `sender <MappingProjection.sender>` makes to the `receiver <MappingProjection.receiver>` (the number of which
-    must match the length of the receiver's `variable <InputState.variable>`).
+    must match the length of the receiver's `variable <InputPort.variable>`).
 
   .. _Matrix_Keywords:
 
@@ -103,13 +103,13 @@ A MappingProjection is specified for learning in any of the following ways:
     * in the **matrix** argument of the MappingProjection's constructor, using the `tuple format
       <MappingProjection_Tuple_Specification>` described above;
     ..
-    * specifying the MappingProjection (or its *MATRIX* `ParameterState`) as the `receiver
+    * specifying the MappingProjection (or its *MATRIX* `ParameterPort`) as the `receiver
       <LearningProjection.receiver>` of a `LearningProjection`;
     ..
-    * specifying the MappingProjection (or its *MATRIX* `ParameterState`) in the **projections** argument of
+    * specifying the MappingProjection (or its *MATRIX* `ParameterPort`) in the **projections** argument of
       the constructor for a `LearningSignal <LearningSignal_Specification>`
     ..
-    * specifying the MappingProjection (or its *MATRIX* `ParameterState`) in the **learning_signals** argument of
+    * specifying the MappingProjection (or its *MATRIX* `ParameterPort`) in the **learning_signals** argument of
       the constructor for a `LearningMechanism <LearningSignal_Specification>`
     ..
     * specifying a MappingProjection in the `pathway <Process.pathway>`  for a `Process`,
@@ -175,17 +175,17 @@ In addition to its `sender <MappingProjection.sender>`, `receiver <MappingProjec
     <MappingProjection.receiver>`), the dimensionality of the sender is the number of rows and of the receiver
     the number of columns.  More generally, the sender dimensionality is the number of outer dimensions (i.e.,
     starting with axis 0 of numpy array) equal to the number of dimensions of its `sender <MappingProjection.sender>`'s
-    `value <State_Base.value>`, and the receiver dimensionality is the number of inner dimensions equal to its
+    `value <Port_Base.value>`, and the receiver dimensionality is the number of inner dimensions equal to its
     `receiver <MappingProjection.receiver>`'s `variable <MappingProjection.variable>` (equal to the dimensionality of
     the matrix minus its sender dimensionality).
 
 
-.. _Mapping_Matrix_ParameterState:
+.. _Mapping_Matrix_ParameterPort:
 
-* *MATRIX* `ParameterState` - this receives any `LearningProjections <LearningProjection>` that are assigned to the
+* *MATRIX* `ParameterPort` - this receives any `LearningProjections <LearningProjection>` that are assigned to the
   MappingProjection (see `MappingProjection_Learning_Specification` above), and updates the current value of the
   MappingProjection's `matrix <MappingProjection.matrix>` parameter in response to `learning
-  <LearningMechanism>`.  The `function <ParameterState.function>` of a *MATRIX* ParameterState is an
+  <LearningMechanism>`.  The `function <ParameterPort.function>` of a *MATRIX* ParameterPort is an
   `AccumulatorIntegrator`, which accumulates the weight changes received from the LearningProjections
   that project to it (see `MappingProjection_Learning` below).  This can be replaced by any function that defines an
   *ADDITIVE_PARAM* `modulatory parameter <ModulatorySignal_Modulation>`), and that takes as its input an array or
@@ -195,15 +195,15 @@ In addition to its `sender <MappingProjection.sender>`, `receiver <MappingProjec
 
 *  `weight <MappingProjection.weight>` and `exponent <MappingProjection.exponent>` - applied to the `value
    <MappingProjection.value>` of the MappingProjection before it is combined with other MappingProjections
-   to the same `InputState` to determine its `value <InputState.value>` (see description under `Projection
+   to the same `InputPort` to determine its `value <InputPort.value>` (see description under `Projection
    <Projection_Weight_Exponent>` for additional details).
 
    .. note::
       The `weight <MappingProjection.weight>` and `exponent <MappingProjection.exponent>` attributes of a
-      MappingProjection are distinct from those of the `InputState` to which it projects.  It is also important
+      MappingProjection are distinct from those of the `InputPort` to which it projects.  It is also important
       to recognize that, as noted under `Projection <Projection_Weight_Exponent>`, they are not normalized,
-      and thus contribute to the magnitude of the InputState's `variable <InputState.variable>` and therefore its
-      relationship to that of other InputStates that may belong to the same Mechanism.
+      and thus contribute to the magnitude of the InputPort's `variable <InputPort.variable>` and therefore its
+      relationship to that of other InputPorts that may belong to the same Mechanism.
 
 
 .. _Mapping_Execution:
@@ -213,16 +213,16 @@ Execution
 
 A MappingProjection uses its `function <MappingProjection.function>` and `matrix <MappingProjection.matrix>`
 parameter to transform its `sender <MappingProjection.sender>` into a form suitable for the `variable
-<InputState.variable>` of its `receiver <MappingProjection.receiver>`.  A MappingProjection cannot be executed
-directly. It is executed when the `InputState` to which it projects (i.e., its `receiver
-<MappingProjection.receiver>`) is updated;  that occurs when the InputState's owner `Mechanism <Mechanism>` is executed.
-When executed, the MappingProjection's *MATRIX* `ParameterState` updates its `matrix <MappingProjection.matrix>`
-parameter based on any `LearningProjection(s)` it receives (listed in the ParameterState's `mod_afferents
-<ParameterState.mod_afferents>` attribute). This brings into effect any changes that occurred due to `learning
+<InputPort.variable>` of its `receiver <MappingProjection.receiver>`.  A MappingProjection cannot be executed
+directly. It is executed when the `InputPort` to which it projects (i.e., its `receiver
+<MappingProjection.receiver>`) is updated;  that occurs when the InputPort's owner `Mechanism <Mechanism>` is executed.
+When executed, the MappingProjection's *MATRIX* `ParameterPort` updates its `matrix <MappingProjection.matrix>`
+parameter based on any `LearningProjection(s)` it receives (listed in the ParameterPort's `mod_afferents
+<ParameterPort.mod_afferents>` attribute). This brings into effect any changes that occurred due to `learning
 <MappingProjection_Learning>`.  Since this does not occur until the Mechanism that receives the MappingProjection
 is executed (in accord with :ref:`Lazy Evaluation <LINK>`), any changes due to learning do not take effect, and are not
 observable (e.g., through inspection of the `matrix <MappingProjection.matrix>` attribute or the
-`value <ParameterState.value>` of its ParameterState) until the next `TRIAL` of execution (see :ref:`Lazy Evaluation`
+`value <ParameterPort.value>` of its ParameterPort) until the next `TRIAL` of execution (see :ref:`Lazy Evaluation`
 for an explanation of "lazy" updating).
 
 .. _MappingProjection_Learning:
@@ -231,27 +231,27 @@ for an explanation of "lazy" updating).
 ~~~~~~~~~~
 
 Learning modifies the `matrix <MappingProjection.matrix>` parameter of a MappingProjection, under the influence
-of one or more `LearningProjections <LearningProjection>` that project to its *MATRIX* `ParameterState`.
+of one or more `LearningProjections <LearningProjection>` that project to its *MATRIX* `ParameterPort`.
 This conforms to the general procedures for modulation used by `ModulatoryProjections <ModulatoryProjection>`
-A LearningProjection `modulates <LearningSignal_Modulation>` the `function <ParameterState.function>` of the
-*MATRIX* ParameterState, which is responsible for keeping a record of the value of the MappingProjection's matrix,
+A LearningProjection `modulates <LearningSignal_Modulation>` the `function <ParameterPort.function>` of the
+*MATRIX* ParameterPort, which is responsible for keeping a record of the value of the MappingProjection's matrix,
 and providing it to the MappingProjection's `function <MappingProjection.function>` (usually `LinearMatrix`).  By
-default, the function for the *MATRIX* ParameterState is an `AccumulatorIntegrator`.  A LearningProjection
+default, the function for the *MATRIX* ParameterPort is an `AccumulatorIntegrator`.  A LearningProjection
 modulates it by assigning the value of its `additive_param <AccumulatorIntegrator.additive_param>` (`increment
 <AccumulatorIntegrator.increment>`), which is added to its `previous_value <AccumulatorIntegrator.previous_value>`
 attribute each time it is executed. The result is that each time the MappingProjection is executed, and in turn
-executes its *MATRIX* ParameterState, the `weight changes <LearningProjection_Structure>` conveyed to the
+executes its *MATRIX* ParameterPort, the `weight changes <LearningProjection_Structure>` conveyed to the
 MappingProjection from any LearningProjection(s) are added to the record of the matrix kept by the *MATRIX*
-ParameterState's `AccumulatorIntegrator` function in its `previous_value <AccumulatorIntegrator.previous_value>`
+ParameterPort's `AccumulatorIntegrator` function in its `previous_value <AccumulatorIntegrator.previous_value>`
 attribute. This is then the value of the matrix used  by the MappingProjection's `LinearMatrix` function when it is
 executed.  It is important to note that the accumulated weight changes received by a MappingProjection from its
-LearningProjection(s) are stored by the *MATRIX* ParameterState's function, and not the MappingProjection's `matrix
+LearningProjection(s) are stored by the *MATRIX* ParameterPort's function, and not the MappingProjection's `matrix
 <MappingProjection.matrix>` parameter itself; the latter stores the original value of the matrix before learning (that
 is, its unmodulated value, conforming to the general protocol for `modulation <ModulatorySignal_Modulation>` in
 PsyNeuLink).  The most recent value of the matrix used by the MappingProjection is stored in the `value
-<ParameterState.value>` of its *MATRIX* ParameterState. As noted `above <Mapping_Execution>`, however, this does not
-reflect any changes due to learning on the current `TRIAL` of execution; those are assigned to the ParameterState's
-`value <ParameterState.value>` when it executes, which does not occur until the `Mechanism <Mechanism>` that receives
+<ParameterPort.value>` of its *MATRIX* ParameterPort. As noted `above <Mapping_Execution>`, however, this does not
+reflect any changes due to learning on the current `TRIAL` of execution; those are assigned to the ParameterPort's
+`value <ParameterPort.value>` when it executes, which does not occur until the `Mechanism <Mechanism>` that receives
 the MappingProjection is executed in the next `TRIAL` of execution (see :ref:`Lazy Evaluation <LINK>` for an explanation
 of "lazy" updating)
 
@@ -272,11 +272,11 @@ from psyneulink.core.components.functions.statefulfunctions.integratorfunctions 
 from psyneulink.core.components.functions.transferfunctions import LinearMatrix, get_matrix
 from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.core.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
-from psyneulink.core.components.states.outputstate import OutputState
+from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, CONTEXT, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, \
-    HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, \
-    OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, SYSTEM_INPUT_STATE, VALUE
+    HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_PORT, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, \
+    OUTPUT_PORT, PROCESS_INPUT_PORT, PROJECTION_SENDER, SYSTEM_INPUT_PORT, VALUE
 from psyneulink.core.globals.log import ContextFlags
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -303,7 +303,7 @@ def _mapping_projection_matrix_setter(value, owning_component=None, context=None
     owning_component.function.parameters.matrix.set(value, context)
     # KDM 11/13/18: not sure that below is correct to do here, probably is better to do this in a "reinitialize" type method
     # but this is needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models)
-    owning_component.parameter_states["matrix"].function.parameters.previous_value.set(value, context)
+    owning_component.parameter_ports["matrix"].function.parameters.previous_value.set(value, context)
 
     return value
 
@@ -326,15 +326,15 @@ class MappingProjection(PathwayProjection_Base):
     COMMENT:
         Description:
             The MappingProjection class is a type in the Projection category of Component.
-            It implements a Projection that takes the value of an OutputState of one Mechanism, transforms it as
-            necessary, and provides it to the inputState of another ProcessingMechanism.
-            It's function conveys (and possibly transforms) the OutputState.value of a sender
-                to the InputState.value of a receiver.
+            It implements a Projection that takes the value of an OutputPort of one Mechanism, transforms it as
+            necessary, and provides it to the inputPort of another ProcessingMechanism.
+            It's function conveys (and possibly transforms) the OutputPort.value of a sender
+                to the InputPort.value of a receiver.
 
             IMPLEMENTATION NOTE:
-                AUGMENT SO THAT SENDER CAN BE A Mechanism WITH MULTIPLE OUTPUT STATES, IN WHICH CASE:
-                    RECEIVER MUST EITHER BE A MECHANISM WITH SAME NUMBER OF INPUT STATES AS SENDER HAS OUTPUTSTATES
-                        (FOR WHICH SENDER OUTPUTSTATE IS MAPPED TO THE CORRESPONDING RECEIVER INPUT STATE
+                AUGMENT SO THAT SENDER CAN BE A Mechanism WITH MULTIPLE OUTPUTPORTS, IN WHICH CASE:
+                    RECEIVER MUST EITHER BE A MECHANISM WITH SAME NUMBER OF INPUTPORS AS SENDER HAS OutputPortS
+                        (FOR WHICH SENDER OutputPort IS MAPPED TO THE CORRESPONDING RECEIVER INPUTPORT
                             USING THE SAME MAPPING_PROJECTION MATRIX, OR AN ARRAY OF THEM)
                     OR BOTH MUST BE 1D ARRAYS (I.E., SINGLE VECTOR)
                     SHOULD BE CHECKED IN OVERRIDE OF _validate_variable
@@ -349,7 +349,7 @@ class MappingProjection(PathwayProjection_Base):
                                    FUNCTION_PARAMS: {
                                        # LinearMatrix.kwReceiver: receiver.value,
                                        LinearMatrix.MATRIX: LinearMatrix.DEFAULT_MATRIX},
-                                   PROJECTION_SENDER: INPUT_STATE, # Assigned to class ref in __init__ module
+                                   PROJECTION_SENDER: INPUT_PORT, # Assigned to class ref in __init__ module
                                    })
             + classPreference (PreferenceSet): MappingPreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
@@ -361,15 +361,15 @@ class MappingProjection(PathwayProjection_Base):
     Arguments
     ---------
 
-    sender : Optional[OutputState or Mechanism]
+    sender : Optional[OutputPort or Mechanism]
         specifies the source of the Projection's input. If a `Mechanism <Mechanism>` is specified, its
-        `primary OutputState <OutputState_Primary>` will be used. If it is not specified, it will be assigned in
+        `primary OutputPort <OutputPort_Primary>` will be used. If it is not specified, it will be assigned in
         the context in which the Projection is used, or its initialization will be `deferred
         <MappingProjection_Deferred_Initialization>`.
 
-    receiver: Optional[InputState or Mechanism]
+    receiver: Optional[InputPort or Mechanism]
         specifies the destination of the Projection's output.  If a `Mechanism <Mechanism>` is specified, its
-        `primary InputState <InputState_Primary>` will be used. If it is not specified, it will be assigned in
+        `primary InputPort <InputPort_Primary>` will be used. If it is not specified, it will be assigned in
         the context in which the Projection is used, or its initialization will be `deferred
         <MappingProjection_Deferred_Initialization>`.
 
@@ -388,11 +388,11 @@ class MappingProjection(PathwayProjection_Base):
 
     matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX
         the matrix used by `function <MappingProjection.function>` (default: `LinearCombination`) to transform the
-        value of the `sender <MappingProjection.sender>` into a form suitable for the `variable <InputState.variable>`
+        value of the `sender <MappingProjection.sender>` into a form suitable for the `variable <InputPort.variable>`
         of its `receiver <MappingProjection.receiver>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
         the Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default assignment (`LinearCombination`).  Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
@@ -400,7 +400,7 @@ class MappingProjection(PathwayProjection_Base):
     name : str : default see MappingProjection `name <MappingProjection.name>`
         specifies the name of the MappingProjection.
 
-    prefs : PreferenceSet or specification dict : default State.classPreferences
+    prefs : PreferenceSet or specification dict : default Port.classPreferences
         specifies the `PreferenceSet` for the MappingProjection; see `prefs <MappingProjection.prefs>` for details.
 
     Attributes
@@ -409,21 +409,21 @@ class MappingProjection(PathwayProjection_Base):
     componentType : MAPPING_PROJECTION
 
     variable : ndarray
-        input to MappingProjection, received from `value <OutputState.varlue>` of `sender <MappingProjection.sender>`.
+        input to MappingProjection, received from `value <OutputPort.varlue>` of `sender <MappingProjection.sender>`.
 
-    sender : OutputState
-        the `OutputState` of the `Mechanism <Mechanism>` that is the source of the Projection's input
+    sender : OutputPort
+        the `OutputPort` of the `Mechanism <Mechanism>` that is the source of the Projection's input
 
-    receiver: InputState
-        the `InputState` of the `Mechanism <Mechanism>` that is the destination of the Projection's output.
+    receiver: InputPort
+        the `InputPort` of the `Mechanism <Mechanism>` that is the destination of the Projection's output.
 
     matrix : 2d np.array
         the matrix used by `function <MappingProjection.function>` to transform the input from the MappingProjection's
         `sender <MappingProjection.sender>` into the value provided to its `receiver <MappingProjection.receiver>`.
 
     has_learning_projection : bool : None
-        identifies the `LearningProjection` assigned to the MappingProjection's `MATRIX` `ParameterState
-        <ParameterState>`.
+        identifies the `LearningProjection` assigned to the MappingProjection's `MATRIX` `ParameterPort
+        <ParameterPort>`.
 
     function : function
        determines function used to transform `variable <MappingProjection.variable>` into `value
@@ -434,19 +434,19 @@ class MappingProjection(PathwayProjection_Base):
         <MappingProjection.matrix>` when `learning <LearningMechanism>` is used.
 
     value : ndarray
-        output of MappingProjection, sent to `variable <InputState.variable>` of `receiver
+        output of MappingProjection, sent to `variable <InputPort.variable>` of `receiver
         <MappingProjection.receiver>`.
 
     weight : number
        multiplies `value <MappingProjection.value>` of the MappingProjection after applying `exponent
-       <MappingProjection.exponent>`, and before combining with any others that project to the same `InputState` to
-       determine that InputState's `variable <InputState.variable>` (see `description above
+       <MappingProjection.exponent>`, and before combining with any others that project to the same `InputPort` to
+       determine that InputPort's `variable <InputPort.variable>` (see `description above
        <Mapping_Weight_Exponent>` for details).
 
     exponent : number
         exponentiates the `value <MappingProjection.value>` of the MappingProjection, before applying `weight
         <MappingProjection.weight>`, and before combining it with any others that project to the same
-        `InputState` to determine that InputState's `variable <InputState.variable>` (see `description above
+        `InputPort` to determine that InputPort's `variable <InputPort.variable>` (see `description above
         <Mapping_Weight_Exponent>` for details).
 
     name : str
@@ -454,13 +454,13 @@ class MappingProjection(PathwayProjection_Base):
         it is appended with an indexed suffix, incremented for each MappingProjection with the same base name (see
         `Naming`). If the name is not specified in the **name** argument of its constructor, a default name is
         assigned using the following format:
-        'MappingProjection from <sender Mechanism>[<OutputState>] to <receiver Mechanism>[InputState]'
-        (for example, ``'MappingProjection from my_mech_1[OutputState-0] to my_mech2[InputState-0]'``).
+        'MappingProjection from <sender Mechanism>[<OutputPort>] to <receiver Mechanism>[InputPort]'
+        (for example, ``'MappingProjection from my_mech_1[OutputPort-0] to my_mech2[InputPort-0]'``).
         If either the `sender <MappingProjection.sender>` or `receiver <MappingProjection.receiver>` has not yet been
         assigned (the MappingProjection is in `deferred initialization <MappingProjection_Deferred_Initialization>`),
         then the parenthesized name of class is used in place of the unassigned attribute
         (for example, if the `sender <MappingProjection.sender>` has not yet been specified:
-        ``'MappingProjection from (OutputState-0) to my_mech2[InputState-0]'``).
+        ``'MappingProjection from (OutputPort-0) to my_mech2[InputPort-0]'``).
 
 
     prefs : PreferenceSet or specification dict
@@ -499,21 +499,21 @@ class MappingProjection(PathwayProjection_Base):
 
     @property
     def _loggable_items(self):
-        # States and afferent Projections are loggable for a Mechanism
-        #     - this allows the value of InputStates and OutputStates to be logged
+        # Ports and afferent Projections are loggable for a Mechanism
+        #     - this allows the value of InputPorts and OutputPorts to be logged
         #     - for MappingProjections, this logs the value of the Projection's matrix parameter
         #     - for ModulatoryProjections, this logs the value of the Projection
         # IMPLEMENTATION NOTE: this needs to be a property as that is expected by Log.loggable_items
-        return list(self.parameter_states)
+        return list(self.parameter_ports)
 
 
     class sockets:
-        sender=[OUTPUT_STATE, PROCESS_INPUT_STATE, SYSTEM_INPUT_STATE]
-        receiver=[INPUT_STATE]
+        sender=[OUTPUT_PORT, PROCESS_INPUT_PORT, SYSTEM_INPUT_PORT]
+        receiver=[INPUT_PORT]
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({FUNCTION: LinearMatrix,
-                               PROJECTION_SENDER: OutputState,
+                               PROJECTION_SENDER: OutputPort,
                                })
 
     @tc.typecheck
@@ -542,7 +542,7 @@ class MappingProjection(PathwayProjection_Base):
         self.learning_mechanism = None
         self.has_learning_projection = None
 
-        # If sender or receiver has not been assigned, defer init to State.instantiate_projection_to_state()
+        # If sender or receiver has not been assigned, defer init to Port.instantiate_projection_to_state()
         if sender is None or receiver is None:
             self.initialization_status = ContextFlags.DEFERRED_INIT
 
@@ -558,37 +558,37 @@ class MappingProjection(PathwayProjection_Base):
                          **kwargs)
 
         try:
-            self._parameter_states[MATRIX].function.reinitialize(context=context)
+            self._parameter_ports[MATRIX].function.reinitialize(context=context)
         except AttributeError:
             pass
 
-    def _instantiate_parameter_states(self, function=None, context=None):
+    def _instantiate_parameter_ports(self, function=None, context=None):
 
-        super()._instantiate_parameter_states(function=function, context=context)
+        super()._instantiate_parameter_ports(function=function, context=context)
 
         # FIX: UPDATE FOR LEARNING
         # FIX: UPDATE WITH MODULATION_MODS
         # FIX: MOVE THIS TO MappingProjection.__init__;
         # FIX: AS IT IS, OVER-WRITES USER ASSIGNMENT OF FUNCTION IN params dict FOR MappingProjection
-        matrix = get_matrix(self._parameter_states[MATRIX].value)
+        matrix = get_matrix(self._parameter_ports[MATRIX].value)
         initial_rate = matrix * 0.0
 
         # KDM 7/11/19: instead of simply setting the function, we need to reinstantiate to ensure
         # new defaults get set properly
-        self._parameter_states[MATRIX]._instantiate_function(
+        self._parameter_ports[MATRIX]._instantiate_function(
             function=AccumulatorIntegrator(
-                owner=self._parameter_states[MATRIX],
+                owner=self._parameter_ports[MATRIX],
                 default_variable=matrix,
                 initializer=matrix,
                 # rate=initial_rate
             ),
             context=context
         )
-        self._parameter_states[MATRIX]._instantiate_value(context)
-        self._parameter_states[MATRIX]._update_parameter_components(context)
+        self._parameter_ports[MATRIX]._instantiate_value(context)
+        self._parameter_ports[MATRIX]._update_parameter_components(context)
 
-        # # Assign ParameterState the same Log as the MappingProjection, so that its entries are accessible to Mechanisms
-        # self._parameter_states[MATRIX].log = self.log
+        # # Assign ParameterPort the same Log as the MappingProjection, so that its entries are accessible to Mechanisms
+        # self._parameter_ports[MATRIX].log = self.log
 
     def _instantiate_receiver(self, context=None):
         """Determine matrix needed to map from sender to receiver
@@ -627,7 +627,7 @@ class MappingProjection(PathwayProjection_Base):
             else:
                 self._matrix_spec = FULL_CONNECTIVITY_MATRIX
 
-        # Length of the output of the Projection doesn't match the length of the receiving input state
+        # Length of the output of the Projection doesn't match the length of the receiving InputPort
         #    so consider reshaping the matrix
         if mapping_output_len != receiver_len:
 
@@ -646,7 +646,7 @@ class MappingProjection(PathwayProjection_Base):
                 # if all(string in self.name for string in {'from', 'to'}):
 
                 raise ProjectionError("Width ({}) of the {} of \'{}{}\'{} "
-                                      "does not match the length of its \'{}\' InputState ({})".
+                                      "does not match the length of its \'{}\' InputPort ({})".
                                       format(mapping_output_len,
                                              VALUE,
                                              self.name,
@@ -658,7 +658,7 @@ class MappingProjection(PathwayProjection_Base):
             elif self._matrix_spec == IDENTITY_MATRIX or self._matrix_spec == HOLLOW_MATRIX:
                 # Identity matrix is not reshapable
                 raise ProjectionError("Output length ({}) of \'{}{}\' from {} to Mechanism \'{}\'"
-                                      " must equal length of it InputState ({}) to use {}".
+                                      " must equal length of it InputPort ({}) to use {}".
                                       format(mapping_output_len,
                                              self.name,
                                              projection_string,
@@ -671,7 +671,7 @@ class MappingProjection(PathwayProjection_Base):
                 self.reshapedWeightMatrix = True
                 if self.prefs.verbosePref:
                     print("Length ({}) of the output of {}{} does not match the length ({}) "
-                          "of the InputState for the receiver {}; the width of the matrix (number of columns); "
+                          "of the InputPort for the receiver {}; the width of the matrix (number of columns); "
                           "the width of the matrix (number of columns) will be adjusted to accomodate the receiver".
                           format(mapping_output_len,
                                  self.name,
@@ -688,7 +688,7 @@ class MappingProjection(PathwayProjection_Base):
 
     def _execute(self, variable=None, context=None, runtime_params=None):
 
-        self._update_parameter_states(context=context, runtime_params=runtime_params)
+        self._update_parameter_ports(context=context, runtime_params=runtime_params)
 
         value = super()._execute(
                 variable=variable,
@@ -734,8 +734,8 @@ class MappingProjection(PathwayProjection_Base):
     def logPref(self):
         return self.prefs.logPref
 
-    # Always assign matrix Parameter state the same logPref as the MappingProjection
+    # Always assign matrix ParameterPort the same logPref as the MappingProjection
     @logPref.setter
     def logPref(self, setting):
         self.prefs.logPref = setting
-        self.parameter_states[MATRIX].logPref = setting
+        self.parameter_ports[MATRIX].logPref = setting

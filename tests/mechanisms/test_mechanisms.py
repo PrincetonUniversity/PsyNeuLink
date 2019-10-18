@@ -22,11 +22,11 @@ class TestMechanism:
         assert T.function.defaults.variable == result_variable
         assert T.function.defaults.value == result_variable
 
-        assert T.input_state.defaults.variable == result_variable[0]
-        assert T.input_state.defaults.value == result_variable[0]
+        assert T.input_port.defaults.variable == result_variable[0]
+        assert T.input_port.defaults.value == result_variable[0]
 
-        assert T.input_state.function.defaults.variable == result_variable[0]
-        assert T.input_state.function.defaults.value == result_variable[0]
+        assert T.input_port.function.defaults.variable == result_variable[0]
+        assert T.input_port.function.defaults.value == result_variable[0]
 
     @pytest.mark.mechanism
     @pytest.mark.parametrize(

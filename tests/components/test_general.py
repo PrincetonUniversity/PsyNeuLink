@@ -10,7 +10,7 @@ from psyneulink.core.components.projections.pathway.pathwayprojection import Pat
     [
         pnl.Mechanism_Base,
         pnl.Function_Base,
-        pnl.State_Base,
+        pnl.Port_Base,
         ModulatoryProjection_Base,
         PathwayProjection_Base,
     ]

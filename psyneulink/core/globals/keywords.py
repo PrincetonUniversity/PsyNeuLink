@@ -25,7 +25,7 @@ https://princetonuniversity.github.io/PsyNeuLink/Keywords.html
 
 __all__ = [
     'ACCUMULATOR_INTEGRATOR', 'ACCUMULATOR_INTEGRATOR_FUNCTION',
-    'ADAPTIVE', 'ADAPTIVE_INTEGRATOR_FUNCTION', 'ADAPTIVE_MECHANISM', 'ADD_INPUT_STATE', 'ADD_OUTPUT_STATE',
+    'ADAPTIVE', 'ADAPTIVE_INTEGRATOR_FUNCTION', 'ADAPTIVE_MECHANISM', 'ADD_INPUT_PORT', 'ADD_OUTPUT_PORT',
     'ADDITIVE', 'ADDITIVE_PARAM', 'AFTER', 'ALL', 'ALLOCATION_SAMPLES', 'ANGLE',
     'ARGUMENT_THERAPY_FUNCTION', 'ARRANGEMENT', 'ASSERT', 'ASSIGN', 'ASSIGN_VALUE', 'AUTO','AUTO_ASSIGN_MATRIX',
     'AUTO_ASSOCIATIVE_PROJECTION', 'HAS_INITIALIZERS', 'AUTOASSOCIATIVE_LEARNING_MECHANISM',
@@ -57,7 +57,7 @@ __all__ = [
     'HARD_CLAMP', 'HEBBIAN_FUNCTION', 'HETERO', 'HIGH', 'HOLLOW_MATRIX', 'IDENTITY_MATRIX', 'INCREMENT', 'INDEX',
     'INIT_EXECUTE_METHOD_ONLY', 'INIT_FULL_EXECUTE_METHOD', 'INIT_FUNCTION_METHOD_ONLY', 'INITIAL_VALUES',
     'INITIALIZE_CYCLE', 'INITIALIZATION', 'INITIALIZED', 'INITIALIZER', 'INITIALIZING', 'INITIALIZATION_STATUS',
-    'INPUT', 'INPUT_LABELS_DICT', 'INPUT_STATE', 'INPUT_STATES', 'INPUT_STATE_PARAMS', 'INPUT_STATE_VARIABLES',
+    'INPUT', 'INPUT_LABELS_DICT', 'INPUT_PORT', 'INPUT_PORTS', 'INPUT_PORT_PARAMS', 'INPUT_PORT_VARIABLES',
     'INPUTS_DIM', 'INSTANTANEOUS_MODE_VALUE', 'INTEGRATION_TYPE', 'INTEGRATOR_FUNCTION', 'INTEGRATOR_FUNCTION',
     'INTEGRATOR_FUNCTION_TYPE', 'INTEGRATOR_MECHANISM', 'INTEGRATOR_MODE_VALUE', 'INTERCEPT', 'INTERNAL',
     'INTERNAL_ONLY', 'K_VALUE', 'KOHONEN_FUNCTION', 'KOHONEN_MECHANISM', 'KOHONEN_LEARNING_MECHANISM', 'KWTA_MECHANISM',
@@ -75,19 +75,19 @@ __all__ = [
     'METRIC', 'MIN_VAL', 'MODE', 'MODULATES','MODULATION', 'MODULATORY_PROJECTION', 'MODULATORY_SIGNAL',
     'MODULATORY_SIGNALS', 'MONITOR', 'MONITOR_FOR_CONTROL', 'MONITOR_FOR_LEARNING', 'MONITOR_FOR_MODULATION',
     'MODEL_SPEC_ID_GENERIC', 'MODEL_SPEC_ID_INPUT_PORTS', 'MODEL_SPEC_ID_OUTPUT_PORTS', 'MODEL_SPEC_ID_PSYNEULINK',
-    'MODEL_SPEC_ID_SENDER_MECH', 'MODEL_SPEC_ID_SENDER_STATE', 'MODEL_SPEC_ID_RECEIVER_MECH',
-    'MODEL_SPEC_ID_RECEIVER_STATE',
-    'MODEL_SPEC_ID_PARAMETER_SOURCE', 'MODEL_SPEC_ID_PARAMETER_VALUE', 'MODEL_SPEC_ID_TYPE',
+    'MODEL_SPEC_ID_SENDER_MECH', 'MODEL_SPEC_ID_SENDER_PORT', 'MODEL_SPEC_ID_RECEIVER_MECH',
+    'MODEL_SPEC_ID_RECEIVER_PORT',
+    'MODEL_SPEC_ID_PARAMETER_SOURCE', 'MODEL_SPEC_ID_PARAMETER_VALUE', 'MODEL_SPEC_ID_TYPE', 'MSE',
     'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM', 'MUTUAL_ENTROPY',
     'NAME', 'NEWEST',  'NODE', 'NodeRoles', 'NOISE', 'NORMAL_DIST_FUNCTION', 'NORMED_L0_SIMILARITY',
     'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT', 'OFF', 'OFFSET', 'OLDEST',
     'ON',  'ONLINE', 'OPERATION', 'OPTIMIZATION_FUNCTION_TYPE', 'ORIGIN','ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION',
     'OUTCOME', 'OUTCOME_FUNCTION', 'OUTPUT', 'OUTPUT_LABELS_DICT', 'OUTPUT_MEAN', 'OUTPUT_MEDIAN', 'OUTPUT_STD_DEV',
-    'OUTPUT_STATE', 'OUTPUT_STATE_PARAMS', 'output_state_spec_to_parameter_name', 'OUTPUT_STATES', 'OUTPUT_TYPE',
+    'OUTPUT_PORT', 'OUTPUT_PORT_PARAMS', 'output_port_spec_to_parameter_name', 'OUTPUT_PORTS', 'OUTPUT_TYPE',
     'OUTPUT_VARIANCE', 'OVERRIDE', 'OVERRIDE_PARAM', 'OVERWRITE',
     'OWNER', 'OWNER_EXECUTION_COUNT', 'OWNER_EXECUTION_TIME', 'OWNER_VALUE', 'OWNER_VARIABLE',
-    'PARAM_CLASS_DEFAULTS', 'PARAM_INSTANCE_DEFAULTS', 'PARAMETER_STATE', 'PARAMETER_STATE_PARAMS',
-    'PARAMETER_STATES', 'PARAMS', 'PARAMS_DICT', 'PARAMS_CURRENT', 'PATHWAY', 'PATHWAY_PROJECTION', 'PEARSON',
+    'PARAM_CLASS_DEFAULTS', 'PARAM_INSTANCE_DEFAULTS', 'PARAMETER_PORT', 'PARAMETER_PORT_PARAMS',
+    'PARAMETER_PORTS', 'PARAMS', 'PARAMS_DICT', 'PARAMS_CURRENT', 'PATHWAY', 'PATHWAY_PROJECTION', 'PEARSON',
     'PREDICTION_MECHANISM', 'PREDICTION_MECHANISMS', 'PREDICTION_MECHANISM_OUTPUT', 'PREDICTION_MECHANISM_PARAMS',
     'PREDICTION_MECHANISM_TYPE', 'PREFS_ARG', 'PREF_BASE_VALUE', 'PREF_CURRENT_VALUE', 'PREFERENCE_SET',
     'PREFERENCE_SET_NAME', 'PREF_LEVEL', 'PREFS', 'PREFS_OWNER', 'PREVIOUS_VALUE', 'PRIMARY', 'PROB', 'PROB_INDICATOR',
@@ -100,9 +100,9 @@ __all__ = [
     'RELU_FUNCTION', 'REST', 'RESULT', 'RESULTS', 'ROLES', 'RL_FUNCTION', 'RUN',
     'SAMPLE', 'SAVE_ALL_VALUES_AND_POLICIES', 'SCALAR', 'SCALE', 'SCHEDULER', 'SELF', 'SENDER',
     'SEPARATOR_BAR', 'SIMPLE', 'SIMPLE_INTEGRATOR_FUNCTION', 'SINGLETON', 'SIZE', 'SLOPE', 'SOFT_CLAMP',
-    'SOFTMAX_FUNCTION', 'SOURCE', 'STABILITY_FUNCTION', 'STANDARD_ARGS', 'STANDARD_DEVIATION', 'STANDARD_OUTPUT_STATES',
-    'STATE', 'STATE_COMPONENT_CATEGORY', 'STATE_CONTEXT', 'STATE_NAME', 'STATE_PARAMS', 'STATE_PREFS', 'STATE_TYPE',
-    'STATE_VALUE', 'STATES', 'SUBTRACTION', 'SUM',
+    'SOFTMAX_FUNCTION', 'SOURCE', 'SSE', 'STABILITY_FUNCTION', 'STANDARD_ARGS', 'STANDARD_DEVIATION', 'STANDARD_OUTPUT_PORTS',
+    'PORT', 'PORT_COMPONENT_CATEGORY', 'PORT_CONTEXT', 'Port_Name', 'Port_ParamS', 'PORT_PREFS', 'PORT_TYPE',
+    'port_value', 'PORTS', 'SUBTRACTION', 'SUM',
     'SYSTEM', 'SYSTEM_COMPONENT_CATEGORY', 'SYSTEM_DEFAULT_CONTROLLER', 'SYSTEM_INIT',
     'TARGET', 'TARGET_MECHANISM', 'TARGET_LABELS_DICT', 'TERMINAL', 'THRESHOLD', 'TIME', 'TIME_STEP_SIZE',
     'TIME_STEPS_DIM', 'TRAINING_SET', 'TRANSFER_FUNCTION_TYPE', 'TRANSFER_MECHANISM', 'TRANSFER_WITH_COSTS_FUNCTION',
@@ -496,7 +496,7 @@ FUNCTION_OUTPUT_TYPE_CONVERSION = "enable_output_type_conversion"  # Used in Fun
 SYSTEM_COMPONENT_CATEGORY = "System"
 PROCESS_COMPONENT_CATEGORY = "Process"
 MECHANISM_COMPONENT_CATEGORY = "Mechanism_Base"
-STATE_COMPONENT_CATEGORY = "State_Base"
+PORT_COMPONENT_CATEGORY = "Port_Base"
 PROJECTION_COMPONENT_CATEGORY = "Projection_Base"
 FUNCTION_COMPONENT_CATEGORY = "Function_Base"
 
@@ -512,12 +512,12 @@ GATING_MECHANISM = 'GatingMechanism'
 AUTOASSOCIATIVE_LEARNING_MECHANISM = 'AutoAssociativeLearningMechanism'
 KOHONEN_LEARNING_MECHANISM = 'KohonenLearningMechanism'
 
-# States:
-INPUT_STATE = "InputState"
-PROCESS_INPUT_STATE = "ProcessInputState"
-SYSTEM_INPUT_STATE = "SystemInputState"
-PARAMETER_STATE = "ParameterState"
-OUTPUT_STATE = "OutputState"
+# Ports:
+INPUT_PORT = "InputPort"
+PROCESS_INPUT_PORT = "ProcessInputPort"
+SYSTEM_INPUT_PORT = "SystemInputPort"
+PARAMETER_PORT = "ParameterPort"
+OUTPUT_PORT = "OutputPort"
 MODULATORY_SIGNAL = 'ModulatorySignal'
 LEARNING_SIGNAL = 'LearningSignal'
 CONTROL_SIGNAL = 'ControlSignal'
@@ -654,7 +654,7 @@ STABILITY_FUNCTION = 'Stability Function'
 DISTANCE_FUNCTION = 'Distance Function'
 
 # Interface Functions:
-STATE_MAP_FUNCTION = 'State Map Function'
+PORT_MAP_FUNCTION = 'Port Map Function'
 
 #endregion
 
@@ -716,21 +716,21 @@ MECHANISM_PARAM_VALUE = "Mechanism Parameter Value"                 # Used to sp
 MECHANISM_DEFAULTParams = "Mechanism Default Parameters"           # Used in mechanism specification dict
 CONDITION = 'condition'
 
-# Keywords for OUTPUT_STATE_VARIABLE dict:
+# Keywords for OUTPUT_PORT_VARIABLE dict:
 OWNER_VARIABLE = 'OWNER_VARIABLE'
 OWNER_VALUE = 'OWNER_VALUE'
 OWNER_EXECUTION_COUNT = 'EXECUTION_COUNT'
 OWNER_EXECUTION_TIME = 'EXECUTION_TIME'
-INPUT_STATE_VARIABLES = 'INPUT_STATE_VARIABLES'
+INPUT_PORT_VARIABLES = 'INPUT_PORT_VARIABLES'
 PARAMS_DICT = 'PARAMS_DICT'
 
 # this exists because keywords like OWNER_VALUE are set as properties
 # on Mechanisms, so you can't just change the string value to map
 # as you want - the property "value" will be overwritten then
-output_state_spec_to_parameter_name = {
+output_port_spec_to_parameter_name = {
     OWNER_VARIABLE: VARIABLE,
     OWNER_VALUE: VALUE,
-    INPUT_STATE_VARIABLES: 'input_state_variables',
+    INPUT_PORT_VARIABLES: 'input_port_variables',
     OWNER_EXECUTION_COUNT: 'execution_count',
     OWNER_EXECUTION_TIME: 'current_execution_time'
 }
@@ -764,8 +764,8 @@ K_VALUE = 'k_value'
 THRESHOLD = 'threshold'
 RATIO = 'ratio'
 
-STATE_VALUE = "State value"   # Used in State specification dict                                                #  to specify State value
-STATE_PARAMS = "State params" # Used in State specification dict
+port_value = "Port value"   # Used in Port specification dict                                                #  to specify Port value
+Port_ParamS = "Port params" # Used in Port specification dict
 
 #endregion
 
@@ -810,7 +810,7 @@ MAKE_DEFAULT_GATING_MECHANISM = "make_default_gating_mechanism"
 GATING_SIGNALS = 'gating_signals'
 GATING_SIGNAL_SPECS = 'GATING_SIGNAL_SPECS'
 GATE = 'GATE'
-GATED_STATES = 'GATED_STATES'
+GATED_PORTS = 'GATED_PORTS'
 GATING_PROJECTIONS = 'GatingProjections'
 GATING_ALLOCATION = 'gating_allocation'
 
@@ -822,41 +822,41 @@ MODULATED_PARAMETER_PREFIX = 'mod_'
 
 #endregion
 
-#region ----------------------------------------------    STATES  ------------------------------------------------------
+#region ----------------------------------------------    PORTS  ------------------------------------------------------
 
-STATE = "State"
-STATE_TYPE = "state_type"
-# These are used as keys in State specification dictionaries
-STATES = "STATES"
+PORT = "Port"
+PORT_TYPE = "port_type"
+# These are used as keys in Port specification dictionaries
+PORTS = "PORTS"
 MODULATES = "modulates"
-PROJECTIONS = "projections"  # Used to specify projection list to State DEPRECATED;  REPLACED BY CONNECTIONS
+PROJECTIONS = "projections"  # Used to specify projection list to Port DEPRECATED;  REPLACED BY CONNECTIONS
 CONNECTIONS = 'CONNECTIONS'
-STATE_NAME = "StateName"
-STATE_PREFS = "StatePrefs"
-STATE_CONTEXT = "StateContext"
-ADD_INPUT_STATE = 'AddNewInputState'     # Used by Mechanism._add_projection_to()
-ADD_OUTPUT_STATE = 'AddNewOutputState'   # Used by Mechanism._add_projection_from()
+Port_Name = "PortName"
+PORT_PREFS = "PortPrefs"
+PORT_CONTEXT = "PortContext"
+ADD_INPUT_PORT = 'AddNewInputPort'     # Used by Mechanism._add_projection_to()
+ADD_OUTPUT_PORT = 'AddNewOutputPort'   # Used by Mechanism._add_projection_from()
 FULL = 'FULL'
 OWNER = 'owner'
 REFERENCE_VALUE = 'reference_value'
 REFERENCE_VALUE_NAME = 'reference_value_name'
 
-# InputStates:
+# InputPorts:
 PRIMARY = 'Primary'
-INPUT_STATES = 'input_states'
-INPUT_STATE_PARAMS = 'input_state_params'
+INPUT_PORTS = 'input_ports'
+INPUT_PORT_PARAMS = 'input_port_params'
 WEIGHT = 'weight'
 EXPONENT = 'exponent'
 INTERNAL_ONLY = 'internal_only'
 
-# ParameterStates:
-PARAMETER_STATES = 'parameter_states'
-PARAMETER_STATE_PARAMS = 'parameter_state_params'
+# ParameterPorts:
+PARAMETER_PORTS = 'parameter_ports'
+PARAMETER_PORT_PARAMS = 'parameter_port_params'
 
-# OutputStates:
-OUTPUT_STATES = 'output_states'
-OUTPUT_STATE_PARAMS = 'output_states_params'
-STANDARD_OUTPUT_STATES = 'standard_output_states'
+# OutputPorts:
+OUTPUT_PORTS = 'output_ports'
+OUTPUT_PORT_PARAMS = 'output_ports_params'
+STANDARD_OUTPUT_PORTS = 'standard_output_ports'
 INDEX = 'index'       # For backward compatibility with INDEX and ASSIGN
 ASSIGN = 'assign'     # For backward compatibility with INDEX and ASSIGN
 CALCULATE = 'assign'  # For backward compatibility with CALCULATE
@@ -988,6 +988,9 @@ REWARD = 'reward'
 NETWORK = 'network'
 
 GAMMA = 'gamma'
+
+MSE = 'MSE'
+SSE = 'SSE'
 #endregion
 
 # model spec keywords
@@ -999,9 +1002,9 @@ MODEL_SPEC_ID_INPUT_PORTS = 'input_ports'
 MODEL_SPEC_ID_OUTPUT_PORTS = 'output_ports'
 
 MODEL_SPEC_ID_SENDER_MECH = 'sender'
-MODEL_SPEC_ID_SENDER_STATE = 'sender_port'
+MODEL_SPEC_ID_SENDER_PORT = 'sender_port'
 MODEL_SPEC_ID_RECEIVER_MECH = 'receiver'
-MODEL_SPEC_ID_RECEIVER_STATE = 'receiver_port'
+MODEL_SPEC_ID_RECEIVER_PORT = 'receiver_port'
 
 MODEL_SPEC_ID_PARAMETER_SOURCE = 'source'
 MODEL_SPEC_ID_PARAMETER_VALUE = 'value'

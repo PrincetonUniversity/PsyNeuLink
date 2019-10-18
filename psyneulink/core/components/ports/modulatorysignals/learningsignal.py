@@ -19,7 +19,7 @@ LearningSignal receives the value of a `learning_signal <LearningMechanism>` cal
 which it belongs, which in general is a matrix of weight changes to be made to the `matrix <MappingProjection>`
 parameter of the MappingProjection(s) being learned.  The LearningSignal assigns its `learning_signal
 <LearningSignal.learning_signal>` as the value of its LearningProjection(s), which convey it to the
-MappingProjections` *MATRIX* `ParameterState(s) <ParameterState>`, which in turn modify the matrix parameter(s) of
+MappingProjections` *MATRIX* `ParameterPort(s) <ParameterPort>`, which in turn modify the matrix parameter(s) of
 the MappingProjection(s) being learned.
 
 .. _LearningSignal_Creation:
@@ -31,7 +31,7 @@ A LearningSignal is created automatically whenever a `MappingProjection` is `spe
 <LearningMechanism_Creation>` and the Projection belongs to the same `Composition <Composition>` as the
 `LearningMechanism`. LearningSignals can also be specified in the **learning_signals** argument of the constructor
 for a `LearningMechanism`. Although a LearningSignal can be created directly using its constructor (or any of the
-other ways for `creating an OutputState <OutputStates_Creation>`), this is neither necessary nor advisable, as a
+other ways for `creating an OutputPort <OutputPorts_Creation>`), this is neither necessary nor advisable, as a
 LearningSignal has dedicated Components and requirements for configuration that must be met for it to function properly.
 
 .. _LearningSignal_Specification:
@@ -40,17 +40,17 @@ LearningSignal has dedicated Components and requirements for configuration that 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a LearningSignal is specified in the **learning_signals** argument of the constructor for a `LearningMechanism`,
-the `ParameterState(s) <ParameterState>` of the `MappingProjection(s) <MappingProjection>` being learned must be
+the `ParameterPort(s) <ParameterPort>` of the `MappingProjection(s) <MappingProjection>` being learned must be
 specified.  This can take any of the following forms:
 
   * an existing LearningSignal, or a reference to the class (in which case a default LearningSignal is created);
   ..
-  * a **ParameterState**, which must be for the `matrix <MappingProjection.matrix>` parameter of the
+  * a **ParameterPort**, which must be for the `matrix <MappingProjection.matrix>` parameter of the
     `MappingProjection` to be learned;
   ..
   * a **Projection**, which must be either a `LearningProjection`, or a `MappingProjection` to which the
     LearningSignal should send a `LearningProjection`.  In both cases, it is assumed that the LearningProjection
-    projects to the *MATRIX* `ParameterState` of a `MappingProjection`.
+    projects to the *MATRIX* `ParameterPort` of a `MappingProjection`.
   ..
   * a **tuple**, with the name of the parameter as its 1st item. and the Projection to which it belongs as the 2nd;
     note that this is a convenience format, which is simpler to use than a specification dictionary (see below),
@@ -87,8 +87,8 @@ attributes of the LearningSignal, as described below.
 When a LearningSignal is created, it can be assigned one or more `LearningProjections <LearningProjection>`,
 using either the **projections** argument of its constructor, or in an entry of a dictionary assigned to the
 **params** argument with the key *PROJECTIONS*.  These will be assigned to its `efferents
-<LearningSignal.efferents>` attribute.  See `State Projections <State_Projections>` for additional details
-concerning the specification of Projections when creating a State.
+<LearningSignal.efferents>` attribute.  See `Port Projections <Port_Projections>` for additional details
+concerning the specification of Projections when creating a Port.
 
 .. note::
    Although a LearningSignal can be assigned more than one `LearningProjection`, all of those Projections will convey
@@ -104,7 +104,7 @@ concerning the specification of Projections when creating a State.
 
 A LearningSignal has a `modulation <LearningSignal.modulation>` attribute that determines how the LearningSignal's
 `value <LearningSignal.value>` (i.e., its `learning_signal <LearningSignal.learning_signal>`) is used by the
-ParameterState(s) to which it projects to modify the `matrix <MappingProjection.matrix>` parameter(s) of their
+ParameterPort(s) to which it projects to modify the `matrix <MappingProjection.matrix>` parameter(s) of their
 MappingProjection(s) (see `ModulatorySignal Modulation <ModulatorySignal_Modulation>` for an explanation of how the
 `modulation <LearningSignal.modulation>` attribute is specified and used to modify the value of a parameter).  The
 default value is set to the value of the `modulation <LearningMechanism.modulation>` attribute of the
@@ -141,7 +141,7 @@ LearningMechanism's `learning_signal <LearningMechanism.learning_signal>` as its
 `function <LearningSignal.function>` can be assigned another `TransferFunction`, or any other function that takes a
 scalar, ndarray or matrix and returns a similar value.
 
-.. note:: The `index <OutputState.OutputState.index>` and `assign <OutputState.OutputState.assign>`
+.. note:: The `index <OutputPort.OutputPort.index>` and `assign <OutputPort.OutputPort.assign>`
         attributes of a LearningSignal are automatically assigned and should not be modified.
 
 
@@ -172,13 +172,13 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.functions.transferfunctions import Linear
-from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
-from psyneulink.core.components.states.outputstate import PRIMARY
-from psyneulink.core.components.states.state import State_Base
+from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
+from psyneulink.core.components.ports.outputport import PRIMARY
+from psyneulink.core.components.ports.port import Port_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    CONTEXT, LEARNED_PARAM, LEARNING_PROJECTION, LEARNING_SIGNAL, OUTPUT_STATE_PARAMS, \
-    PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER
+    CONTEXT, LEARNED_PARAM, LEARNING_PROJECTION, LEARNING_SIGNAL, OUTPUT_PORT_PARAMS, \
+    PARAMETER_PORT, PARAMETER_PORTS, PROJECTION_TYPE, RECEIVER
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -217,7 +217,7 @@ class LearningSignal(ModulatorySignal):
 
         Description
         -----------
-            The LearningSignal class is a subtype of the OutputState type in the State category of Component,
+            The LearningSignal class is a subtype of the OutputPort type in the Port category of Component,
             It is used as the sender for LearningProjections
             Its FUNCTION updates its value:
                 note:  currently, this is the identity function, that simply maps variable to self.value
@@ -231,9 +231,9 @@ class LearningSignal(ModulatorySignal):
         Class methods:
             function (executes function specified in params[FUNCTION];  default: Linear)
 
-        StateRegistry
+        PortRegistry
         -------------
-            All OutputStates are registered in StateRegistry, which maintains an entry for the subclass,
+            All OutputPorts are registered in PortRegistry, which maintains an entry for the subclass,
               a count for all instances of it, and a dictionary of those instances
     COMMENT
 
@@ -258,7 +258,7 @@ class LearningSignal(ModulatorySignal):
         the LearningSignal's `LearningProjection(s) <LearningProjection>` project.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter specification dictionary <ParameterState_Specification>` that can be used to specify the
+        a `parameter specification dictionary <ParameterPort_Specification>` that can be used to specify the
         parameters for the LearningSignal and/or a custom function and its parameters. Values specified for
         parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
@@ -271,7 +271,7 @@ class LearningSignal(ModulatorySignal):
         specifies the name of the LearningSignal; see LearningSignal `name <ModulatorySignal.name>` for additional
         details.
 
-    prefs : PreferenceSet or specification dict : default State.classPreferences
+    prefs : PreferenceSet or specification dict : default Port.classPreferences
         specifies the `PreferenceSet` for the LearningSignal; see `prefs <LearningSignal.prefs>` for details.
 
 
@@ -317,9 +317,9 @@ class LearningSignal(ModulatorySignal):
         name (see `name <ModulatorySignal.name>`).
 
         .. note::
-            Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
+            Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that Ports with
             the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
-            Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
+            Mechanism: Ports within a Mechanism with the same base name are appended an index in the order of their
             creation.
 
     prefs : PreferenceSet or specification dict
@@ -332,12 +332,12 @@ class LearningSignal(ModulatorySignal):
     #region CLASS ATTRIBUTES
 
     componentType = LEARNING_SIGNAL
-    paramsType = OUTPUT_STATE_PARAMS
+    paramsType = OUTPUT_PORT_PARAMS
 
-    stateAttributes = ModulatorySignal.stateAttributes
+    portAttributes = ModulatorySignal.portAttributes
 
-    connectsWith = [PARAMETER_STATE]
-    connectsWithAttribute = [PARAMETER_STATES]
+    connectsWith = [PARAMETER_PORT]
+    connectsWithAttribute = [PARAMETER_PORTS]
     projectionSocket = RECEIVER
     modulators = []
 
@@ -345,10 +345,10 @@ class LearningSignal(ModulatorySignal):
     # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     PREFERENCE_SET_NAME: 'OutputStateCustomClassPreferences',
+    #     PREFERENCE_SET_NAME: 'OutputPortCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
-    paramClassDefaults = State_Base.paramClassDefaults.copy()
+    paramClassDefaults = Port_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         PROJECTION_TYPE: LEARNING_PROJECTION,
         LEARNED_PARAM:None
@@ -401,8 +401,8 @@ class LearningSignal(ModulatorySignal):
 
         # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
-        # Consider adding self to owner.output_states here (and removing from LearningProjection._instantiate_sender)
-        #  (test for it, and create if necessary, as per OutputStates in LearningProjection._instantiate_sender),
+        # Consider adding self to owner.output_ports here (and removing from LearningProjection._instantiate_sender)
+        #  (test for it, and create if necessary, as per OutputPorts in LearningProjection._instantiate_sender),
 
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         super().__init__(owner=owner,
@@ -420,18 +420,18 @@ class LearningSignal(ModulatorySignal):
                          **kwargs)
 
     def _get_primary_state(self, projection):
-        return projection.parameter_state
+        return projection.parameter_port
 
     @property
     def learning_signal(self):
         return self.value
 
-    def _assign_default_state_name(self, context=None):
+    def _assign_default_port_Name(self, context=None):
         # Preserve LEARNING_SIGNAL as name of the first LearningSignal
         #    as documented, and as it is used by System._instantiate_learning_graph
         if self.name is self.componentName:
             return self.name
         # Otherwise, allow ModulatorySignal to construct default name as usual
         else:
-            super()._assign_default_state_name(context=context)
+            super()._assign_default_port_Name(context=context)
 

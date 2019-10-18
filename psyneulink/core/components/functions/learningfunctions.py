@@ -33,7 +33,8 @@ from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.component import ComponentError, function_type, method_type
 from psyneulink.core.globals.keywords import \
     CONTRASTIVE_HEBBIAN_FUNCTION, DEFAULT_VARIABLE, TDLEARNING_FUNCTION, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
-    KOHONEN_FUNCTION, GAUSSIAN, LINEAR, EXPONENTIAL, HEBBIAN_FUNCTION, RL_FUNCTION, BACKPROPAGATION_FUNCTION, MATRIX
+    KOHONEN_FUNCTION, GAUSSIAN, LINEAR, EXPONENTIAL, HEBBIAN_FUNCTION, RL_FUNCTION, BACKPROPAGATION_FUNCTION, MATRIX, \
+    MSE, SSE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import is_numeric, scalar_distance
@@ -236,7 +237,7 @@ class BayesGLM(LearningFunction):
         `numpy.random.gamma <https://docs.scipy.org/doc/numpy-1.15.0/reference/generated/numpy.random.gamma.html>`_.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -537,7 +538,7 @@ class BayesGLM(LearningFunction):
                each of which contains a scalar dependent variable for the corresponding predictor vector.
 
         params : Dict[param keyword: param value] : default None
-           a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+           a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
            arguments of the constructor.
 
@@ -662,7 +663,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
         from the one with the greatest value.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the function.
         Values specified for parameters in the dictionary override any assigned to those parameters in arguments
         of the constructor.
 
@@ -843,7 +844,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
            input pattern, array of activation values, and matrix used to calculate the weights changes.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the function.
             Values specified for parameters in the dictionary override any assigned to those parameters in arguments
             of the constructor.
 
@@ -939,7 +940,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         <Hebbian.learning_rate>` for details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the function.
         Values specified for parameters in the dictionary override any assigned to those parameters in arguments
         of the constructor.
 
@@ -1075,7 +1076,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
             array of activity values, the pairwise products of which are used to generate a weight change matrix.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the function.
             Values specified for parameters in the dictionary override any assigned to those parameters in arguments
             of the constructor.
 
@@ -1177,7 +1178,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
         `learning_rate <ContrastiveHebbian.learning_rate>` for details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the function.
         Values specified for parameters in the dictionary override any assigned to those parameters in arguments
         of the constructor.
 
@@ -1309,7 +1310,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
             array of activity values, the pairwise products of which are used to generate a weight change matrix.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the function.
             Values specified for parameters in the dictionary override any assigned to those parameters in arguments
             of the constructor.
 
@@ -1437,7 +1438,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         `owner <Function.owner>` belongs (see `learning_rate <Reinforcement.learning_rate>` for details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -1619,7 +1620,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
            (see `note <Reinforcement_Note>` above).
 
         params : Dict[param keyword: param value] : default None
-           a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+           a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
            arguments of the constructor.
 
@@ -1752,11 +1753,11 @@ class BackPropagation(LearningFunction):
     COMMENT
 
     COMMENT:
-    error_matrix : List, 2d array, np.matrix, ParameterState, or MappingProjection
+    error_matrix : List, 2d array, np.matrix, ParameterPort, or MappingProjection
         matrix, the output of which is used to calculate the `error_signal <BackPropagation.error_signal>`.
-        If it is specified as a ParameterState it must be one for the `matrix <MappingProjection.matrix>`
+        If it is specified as a ParameterPort it must be one for the `matrix <MappingProjection.matrix>`
         parameter of a `MappingProjection`;  if it is a MappingProjection, it must be one with a
-        MATRIX parameterState.
+        MATRIX parameterPort.
     COMMENT
 
     learning_rate : float : default default_learning_rate
@@ -1764,7 +1765,7 @@ class BackPropagation(LearningFunction):
         `owner <Function.owner>` belongs (see `learning_rate <BackPropagation.learning_rate>` for details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -1802,10 +1803,10 @@ class BackPropagation(LearningFunction):
         target (training signal) and the output of the last Mechanism in the sequence;
         same as 3rd item of `variable <BackPropagation.variable>`.
 
-    error_matrix : 2d array or ParameterState
+    error_matrix : 2d array or ParameterPort
         matrix, the input of which is `activation_output <BackPropagation.activation_output>` and the output of which
-        is used to calculate the `error_signal <BackPropagation.error_signal>`; if it is a `ParameterState`,
-        it refers to the MATRIX parameterState of the `MappingProjection` being learned.
+        is used to calculate the `error_signal <BackPropagation.error_signal>`; if it is a `ParameterPort`,
+        it refers to the MATRIX parameterPort of the `MappingProjection` being learned.
 
     learning_rate : float
         the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
@@ -1817,6 +1818,9 @@ class BackPropagation(LearningFunction):
 
     default_learning_rate : float
         the value used for the `learning_rate <BackPropagation.learning_rate>` if it is not otherwise specified.
+
+    loss_function : string : default 'MSE'
+        the operation to apply to the error signal before computing weight changes.
 
     owner : Component
         `Mechanism <Mechanism>` to which the Function belongs.
@@ -1873,9 +1877,17 @@ class BackPropagation(LearningFunction):
                     :default value: 1.0
                     :type: float
 
+                loss_function
+                    see `loss_function <BackPropagation.loss_function>`
+
+                    :default value: 'MSE'
+                    :type: string
+                    :read only: True
+
         """
         variable = Parameter(np.array([[0], [0], [0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         learning_rate = Parameter(1.0, modulable=True)
+        loss_function = Parameter(None, read_only=True)
 
         activation_input = Parameter([0], read_only=True, getter=_activation_input_getter)
         activation_output = Parameter([0], read_only=True, getter=_activation_output_getter)
@@ -1893,6 +1905,7 @@ class BackPropagation(LearningFunction):
                  activation_derivative_fct: tc.optional(tc.any(function_type, method_type)) = Logistic().derivative,
                  # learning_rate: tc.optional(parameter_spec) = None,
                  learning_rate=None,
+                 loss_function=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
@@ -1904,6 +1917,7 @@ class BackPropagation(LearningFunction):
         params = self._assign_args_to_param_dicts(activation_derivative_fct=activation_derivative_fct,
                                                   error_matrix=error_matrix,
                                                   learning_rate=learning_rate,
+                                                  loss_function=loss_function,
                                                   params=params)
 
         # self.return_val = ReturnVal(None, None)
@@ -1938,8 +1952,8 @@ class BackPropagation(LearningFunction):
 
         `error_matrix` argument must be one of the following
             - 2d list, np.ndarray or np.matrix
-            - ParameterState for one of the above
-            - MappingProjection with a parameterStates[MATRIX] for one of the above
+            - ParameterPort for one of the above
+            - MappingProjection with a parameterPorts[MATRIX] for one of the above
 
         Parse error_matrix specification and insure it is compatible with error_signal and activation_output
 
@@ -1949,7 +1963,7 @@ class BackPropagation(LearningFunction):
         Insure that length of activation_output matches the number of rows (sender elements) of error_matrix
            (since it will be compared against the *result* of the dot product of the error_matrix and error_signal
 
-        Note: error_matrix is left in the form in which it was specified so that, if it is a ParameterState
+        Note: error_matrix is left in the form in which it was specified so that, if it is a ParameterPort
               or MappingProjection, its current value can be accessed at runtime (i.e., it can be used as a "pointer")
         """
 
@@ -1970,27 +1984,27 @@ class BackPropagation(LearningFunction):
 
             error_matrix = target_set[ERROR_MATRIX]
 
-            from psyneulink.core.components.states.parameterstate import ParameterState
+            from psyneulink.core.components.ports.parameterport import ParameterPort
             from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-            if not isinstance(error_matrix, (list, np.ndarray, np.matrix, ParameterState, MappingProjection)):
+            if not isinstance(error_matrix, (list, np.ndarray, np.matrix, ParameterPort, MappingProjection)):
                 raise FunctionError("The {} arg for {} ({}) must be a list, 2d np.array, ParamaterState or "
                                     "MappingProjection".format(ERROR_MATRIX, self.__class__.__name__, error_matrix))
 
             if isinstance(error_matrix, MappingProjection):
                 try:
-                    error_matrix = error_matrix._parameter_states[MATRIX].value
-                    param_type_string = "MappingProjection's ParameterState"
+                    error_matrix = error_matrix._parameter_ports[MATRIX].value
+                    param_type_string = "MappingProjection's ParameterPort"
                 except KeyError:
                     raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "
                                         "paramaterState that has been assigned a 2d array or matrix".
                                         format(ERROR_MATRIX, self.__class__.__name__, error_matrix.shape, MATRIX))
 
-            elif isinstance(error_matrix, ParameterState):
+            elif isinstance(error_matrix, ParameterPort):
                 try:
                     error_matrix = error_matrix.value
-                    param_type_string = "ParameterState"
+                    param_type_string = "ParameterPort"
                 except KeyError:
-                    raise FunctionError("The value of the {} parameterState specified for the {} arg of {} ({}) "
+                    raise FunctionError("The value of the {} parameterPort specified for the {} arg of {} ({}) "
                                         "must be a 2d array or matrix".
                                         format(MATRIX, ERROR_MATRIX, self.__class__.__name__, error_matrix.shape))
 
@@ -2008,7 +2022,7 @@ class BackPropagation(LearningFunction):
                                     "must be a 2d array or matrix".
                                     format(param_type_string, ERROR_MATRIX, self.name, error_matrix))
 
-            # The length of the sender outputState.value (the error signal) must be the
+            # The length of the sender outputPort.value (the error signal) must be the
             #     same as the width (# columns) of the MappingProjection's weight matrix (# of receivers)
 
             # Validate that columns (number of receiver elements) of error_matrix equals length of error_signal
@@ -2042,14 +2056,14 @@ class BackPropagation(LearningFunction):
            `activation_output <BackPropagation.activation_output>` (1d array),
            `error_signal <BackPropagation.error_signal>` (1d array).
 
-        error_matrix : List, 2d array, np.matrix, ParameterState, or MappingProjection
+        error_matrix : List, 2d array, np.matrix, ParameterPort, or MappingProjection
             matrix of weights that were used to generate the `error_signal <BackPropagation.error_signal>` (3rd item
             of `variable <BackPropagation.variable>` from `activation_output <BackPropagation.activation_output>`;
             its dimensions must be the length of `activation_output <BackPropagation.activation_output>` (rows) x
             length of `error_signal <BackPropagation.error_signal>` (cols).
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -2099,7 +2113,14 @@ class BackPropagation(LearningFunction):
         activation_input = np.array(activation_input).reshape(len(activation_input), 1)
 
         # Derivative of error with respect to output activity (contribution of each output unit to the error above)
-        dE_dA = np.dot(error_matrix, self.get_current_function_param(ERROR_SIGNAL, context))
+        loss_function = self.parameters.loss_function.get(context)
+        if loss_function is MSE:
+            num_output_units = self.get_current_function_param(ERROR_SIGNAL, context).shape[0]
+            dE_dA = np.dot(error_matrix, self.get_current_function_param(ERROR_SIGNAL, context)) / num_output_units * 2
+        elif loss_function is SSE:
+            dE_dA = np.dot(error_matrix, self.get_current_function_param(ERROR_SIGNAL, context)) * 2
+        else:
+            dE_dA = np.dot(error_matrix, self.get_current_function_param(ERROR_SIGNAL, context))
 
         # Derivative of the output activity
         activation_output = self.get_current_function_param(ACTIVATION_OUTPUT, context)

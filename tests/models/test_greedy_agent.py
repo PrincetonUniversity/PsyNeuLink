@@ -9,8 +9,8 @@ from psyneulink.library.components.mechanisms.processing.objective.comparatormec
 from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.components.functions.optimizationfunctions import GridSearch, MINIMIZE
 from psyneulink.core.components.functions.transferfunctions import GaussianDistort
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.core.components.states.inputstate import SHADOW_INPUTS
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.components.ports.inputport import SHADOW_INPUTS
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.keywords import VARIANCE, NORMED_L0_SIMILARITY
 

@@ -100,10 +100,10 @@ def print_header(system):
 
 def show_target(context):
     print('\nColor Naming\n\tInput: {}\n\tTarget: {}'.
-          format(colors.input_states.get_values_as_lists(context), mySystem.targets))
+          format(colors.input_ports.get_values_as_lists(context), mySystem.targets))
     print('Wording Reading:\n\tInput: {}\n\tTarget: {}\n'.
           # format(word_reading_process.input, word_reading_process.target))
-          format(words.input_states.get_values_as_lists(context), mySystem.targets))
+          format(words.input_ports.get_values_as_lists(context), mySystem.targets))
     print('Response: \n', response.get_output_values(context)[0])
     print('Hidden-Output:')
     print(HO_Weights.get_mod_matrix(context))

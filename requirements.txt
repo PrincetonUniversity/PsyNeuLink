@@ -1,7 +1,11 @@
-toposort==1.4
+autograd
+dill
+elfi
+graphviz
+llvmlite
+matplotlib
 numpy
 pillow
+toposort==1.4
+torch; sys_platform != 'win32'
 typecheck-decorator==1.2
-llvmlite
-elfi
-dill

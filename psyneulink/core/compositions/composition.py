@@ -196,7 +196,7 @@ Running a Composition
 *Inputs*
 ========
 
-The `run <Composition.run>` method presents the inputs for each `TRIAL` to the input_states of the INPUT Nodes in the
+The `run <Composition.run>` method presents the inputs for each `TRIAL` to the input_ports of the INPUT Nodes in the
 `scope of execution <Composition_Scope_of_Execution>`. These input values are specified in the **inputs** argument of
 a Composition's `execute <Composition.execute>` or `run <Composition.run>` methods.
 
@@ -213,7 +213,7 @@ element of the list represents the input value to the key Node on trial i.
 .. _Composition_Run_Inputs_Fig_States:
 
 .. figure:: _static/input_spec_states.svg
-   :alt: Example input specifications with input states
+   :alt: Example input specifications with input ports
 
 
 Each input value must be compatible with the shape of the key `INPUT <NodeRole.INPUT>` Node's `external_input_values
@@ -243,9 +243,9 @@ though `some shorthand notations are allowed <Composition_Input_Specification_Ex
 
 .. note::
     A Node's `external_input_values <MechanismBase.external_input_values>` attribute is always a 2d list in which the
-    index i element is the value of the Node's index i `external_input_state <MechanismBase.external_input_states>`. In
+    index i element is the value of the Node's index i `external_input_port <MechanismBase.external_input_ports>`. In
     many cases, `external_input_values <MechanismBase.external_input_values>` is the same as `variable
-    <MechanismBase.variable>`. Keep in mind that any InputStates marked as "internal" are excluded from
+    <MechanismBase.variable>`. Keep in mind that any InputPorts marked as "internal" are excluded from
     `external_input_values <MechanismBase.external_input_values>`, and do not receive user-specified input values.
 
 If num_trials is not in use, the number of inputs provided determines the number of trials in the run. For example, if
@@ -307,7 +307,7 @@ values from trials 0 and 1 are used again on trials 5 and 6, respectively.
 For convenience, condensed versions of the input specification described above are also accepted in the following
 situations:
 
-* **Case 1: INPUT Node has only one input state**
+* **Case 1: INPUT Node has only one InputPort**
 +--------------------------+-------+------+------+------+------+
 | Trial #                  |0      |1     |2     |3     |4     |
 +--------------------------+-------+------+------+------+------+
@@ -331,13 +331,13 @@ Complete input specification:
 
         >>> comp.run(inputs=input_dictionary)
 
-Shorthand - drop the outer list on each input because **Mechanism a** only has one input state:
+Shorthand - drop the outer list on each input because **Mechanism a** only has one InputPort:
 
         >>> input_dictionary = {a: [[1.0], [2.0], [3.0], [4.0], [5.0]]}
 
         >>> comp.run(inputs=input_dictionary)
 
-Shorthand - drop the remaining list on each input because **Mechanism a**'s one input state's value is length 1:
+Shorthand - drop the remaining list on each input because **Mechanism a**'s one InputPort's value is length 1:
 
         >>> input_dictionary = {a: [1.0, 2.0, 3.0, 4.0, 5.0]}
 
@@ -573,47 +573,47 @@ Specyfing Parameters to Control
 A controller can also be specified for the System, in the **controller** argument of the `System`.  This can be an
 existing `ControlMechanism`, a constructor for one, or a class of ControlMechanism in which case a default
 instance of that class will be created.  If an existing ControlMechanism or the constructor for one is used, then
-the `OutputStates it monitors <ControlMechanism_ObjectiveMechanism>` and the `parameters it controls
+the `OutputPorts it monitors <ControlMechanism_ObjectiveMechanism>` and the `parameters it controls
 <ControlMechanism_Control_Signals>` can be specified using its `objective_mechanism
 <ControlMechanism.objective_mechanism>` and `control_signals <ControlMechanism.control_signals>`
 attributes, respectively.  In addition, these can be specified in the **monitor_for_control** and **control_signal**
 arguments of the `System`, as described below.
 
-* **monitor_for_control** argument -- used to specify OutputStates of Mechanisms in the System that should be
+* **monitor_for_control** argument -- used to specify OutputPorts of Mechanisms in the System that should be
   monitored by the `ObjectiveMechanism` associated with the System's `controller <System.controller>` (see
   `ControlMechanism_ObjectiveMechanism`);  these are used in addition to any specified for the ControlMechanism or
   its ObjectiveMechanism.  These can be specified in the **monitor_for_control** argument of the `System` using
-  any of the ways used to specify the *monitored_output_states* for an ObjectiveMechanism (see
+  any of the ways used to specify the *monitored_output_ports* for an ObjectiveMechanism (see
   `ObjectiveMechanism_Monitor`).  In addition, the **monitor_for_control** argument supports two
   other forms of specification:
 
-  * **string** -- must be the `name <OutputState.name>` of an `OutputState` of a `Mechanism <Mechanism>` in the System
-    (see third example under `System_Control_Examples`).  This can be used anywhere a reference to an OutputState can
-    ordinarily be used (e.g., in an `InputState tuple specification <InputState_Tuple_Specification>`). Any OutputState
+  * **string** -- must be the `name <OutputPort.name>` of an `OutputPort` of a `Mechanism <Mechanism>` in the System
+    (see third example under `System_Control_Examples`).  This can be used anywhere a reference to an OutputPort can
+    ordinarily be used (e.g., in an `InputPort tuple specification <InputPort_Tuple_Specification>`). Any OutputPort
     with a name matching the string will be monitored, including ones with the same name that belong to different
-    Mechanisms within the System. If an OutputState of a particular Mechanism is desired, and it shares its name with
-    other Mechanisms in the System, then it must be referenced explicitly (see `InputState specification
-    <InputState_Specification>`, and examples under `System_Control_Examples`).
+    Mechanisms within the System. If an OutputPort of a particular Mechanism is desired, and it shares its name with
+    other Mechanisms in the System, then it must be referenced explicitly (see `InputPort specification
+    <InputPort_Specification>`, and examples under `System_Control_Examples`).
   |
-  * **MonitoredOutputStatesOption** -- must be a value of `MonitoredOutputStatesOption`, and must appear alone or as a
+  * **MonitoredOutputPortsOption** -- must be a value of `MonitoredOutputPortsOption`, and must appear alone or as a
     single item in the list specifying the **monitor_for_control** argument;  any other specification(s) included in
-    the list will take precedence.  The MonitoredOutputStatesOption applies to all of the Mechanisms in the System
+    the list will take precedence.  The MonitoredOutputPortsOption applies to all of the Mechanisms in the System
     except its `controller <System.controller>` and `LearningMechanisms <LearningMechanism>`. The
-    *PRIMARY_OUTPUT_STATES* value specifies that the `primary OutputState <OutputState_Primary>` of every Mechanism be
-    monitored, whereas *ALL_OUTPUT_STATES* specifies that *every* OutputState of every Mechanism be monitored.
+    *PRIMARY_OUTPUT_PORTS* value specifies that the `primary OutputPort <OutputPort_Primary>` of every Mechanism be
+    monitored, whereas *ALL_OUTPUT_PORTS* specifies that *every* OutputPort of every Mechanism be monitored.
   |
-  The default for the **monitor_for_control** argument is *MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES*.
-  The OutputStates specified in the **monitor_for_control** argument are added to any already specified for the
+  The default for the **monitor_for_control** argument is *MonitoredOutputPortsOption.PRIMARY_OUTPUT_PORTS*.
+  The OutputPorts specified in the **monitor_for_control** argument are added to any already specified for the
   ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>`, and the full set is listed in
-  the ControlMechanism's `monitored_output_states <EVCControlMechanism.monitored_output_states>` attribute, and its
-  ObjectiveMechanism's `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute).
+  the ControlMechanism's `monitored_output_ports <EVCControlMechanism.monitored_output_ports>` attribute, and its
+  ObjectiveMechanism's `monitored_output_ports <ObjectiveMechanism.monitored_output_ports>` attribute).
 ..
 * **control_signals** argument -- used to specify the parameters of Components in the System to be controlled. These
   can be specified in any of the ways used to `specify ControlSignals <ControlMechanism_Control_Signals>` in the
   *control_signals* argument of a ControlMechanism. These are added to any `ControlSignals <ControlSignal>` that have
   already been specified for the `controller <System.controller>` (listed in its `control_signals
   <ControlMechanism.control_signals>` attribute), and any parameters that have directly been `specified for
-  control <ParameterState_Specification>` within the System (see `System_Control` below for additional details).
+  control <ParameterPort_Specification>` within the System (see `System_Control` below for additional details).
 COMMENT
 
 .. _Composition_Controller_Execution:
@@ -647,7 +647,7 @@ and recursively for all of the Component's `_dependent_components <Component._de
 
 - `_dependent_components <Component._dependent_components>` should be added to for any new Component that requires \
 other Components to function properly (beyond "standard" things like Component.function, \
-or Mechanism.input_states, as these are added in the proper classes' _dependent_components)
+or Mechanism.input_ports, as these are added in the proper classes' _dependent_components)
     - the intent is that with ``_dependent_components`` set properly, calling \
     ``obj._initialize_from_context(new_context, base_context)`` should be sufficient to run obj \
     under **new_context**
@@ -792,9 +792,9 @@ following Components, and assigns to them the `NodeRoles <NodeRole>` indicated:
     .. _COMPARATOR_MECHANISM:
     * *COMPARATOR_MECHANISM* `ComparatorMechanism` -- used to `calculate an error signal
       <ComparatorMechanism_Function>` for the sequence by comparing the value received by the ComparatorMechanism's
-      *SAMPLE* `InputState <ComparatorMechanism_Structure>` (from the `output <LearningMechanism_Activation_Output>` of
+      *SAMPLE* `InputPort <ComparatorMechanism_Structure>` (from the `output <LearningMechanism_Activation_Output>` of
       the last Processing Mechanism in the learning sequence) with the value received in the *COMPARATOR_MECHANISM*'s
-      *TARGET* `InputState <ComparatorMechanism_Structure>` (from the *TARGET_MECHANISM* generated by the method --
+      *TARGET* `InputPort <ComparatorMechanism_Structure>` (from the *TARGET_MECHANISM* generated by the method --
       see below); this is assigned the `NodeRole` `LEARNING` in the Composition.
     ..
     .. _TARGET_MECHANISM:
@@ -804,17 +804,17 @@ following Components, and assigns to them the `NodeRoles <NodeRole>` indicated:
       `NodeRoles <NodeRole>` `TARGET` and `LEARNING` in the Composition;
     ..
     * a MappingProjection that projects from the last ProcessingMechanism in the learning sequence to the *SAMPLE*
-      `InputState  <ComparatorMechanism_Structure>` of the *COMPARATOR_MECHANISM*;
+      `InputPort  <ComparatorMechanism_Structure>` of the *COMPARATOR_MECHANISM*;
     ..
-    * a MappingProjection that projects from the *TARGET_MECHANISM* to the *TARGET* `InputState
+    * a MappingProjection that projects from the *TARGET_MECHANISM* to the *TARGET* `InputPort
       <ComparatorMechanism_Structure>` of the *COMPARATOR_MECHANISM*;
     ..
     .. _LEARNING_MECHANISM:
     * a *LEARNING_MECHANISM* for each MappingProjection in the sequence, each of which calculates the `learning_signal
       <LearningMechanism.learning_signal>` used to modify the `matrix <MappingProjection.matrix>` parameter for the
       coresponding MappingProjection, along with a `LearningSignal` and `LearningProjection` that convey the
-      `learning_signal <LearningMechanism.learning_signal>` to the MappingProjection's *MATRIX* `ParameterState
-      <Mapping_Matrix_ParameterState>`;  depending on learning method, additional MappingProjections may be created to
+      `learning_signal <LearningMechanism.learning_signal>` to the MappingProjection's *MATRIX* `ParameterPort
+      <Mapping_Matrix_ParameterPort>`;  depending on learning method, additional MappingProjections may be created to
       and/or from the LearningMechanism -- see `LearningMechanism_Learning_Configurations` for details);
       these are assigned the `NodeRole` `LEARNING` in the Composition.
 
@@ -1001,74 +1001,85 @@ By default, Nodes are shown as ovals labeled by their `names <Mechanism.name>`, 
 <NodeRole.INPUT>` Mechanisms shown in green, its `OUTPUT <NodeRole.OUTPUT>` Mechanisms shown in red, and Projections
 shown as unlabeled arrows, as illustrated for the Composition in the example below:
 
-.. _System_show_graph_basic_figure:
+.. _Composition_show_graph_basic_figure:
 
-+-----------------------------------------------------------+-------------------------------------------+
-| >>> from psyneulink import *                              | .. figure:: _static/show_graph_basic.svg  |
-| >>> a = ProcessingMechanism(                              |                                           |
-|               name='A',                                   |                                           |
-| ...           size=3,                                     |                                           |
-| ...           output_states=[RESULTS, OUTPUT_MEAN]        |                                           |
-| ...           )                                           |                                           |
-| >>> b = ProcessingMechanism(                              |                                           |
-| ...           name='B',                                   |                                           |
-| ...           size=5                                      |                                           |
-| ...           )                                           |                                           |
-| >>> c = ProcessingMechanism(                              |                                           |
-| ...           name='C',                                   |                                           |
-| ...           size=2,                                     |                                           |
-| ...           function=Logistic(gain=pnl.CONTROL)         |                                           |
-| ...           )                                           |                                           |
-| >>> comp = Composition(                                   |                                           |
-| ...           name='Comp',                                |                                           |
-| ...           enable_controller=True                      |                                           |
-| ...           )                                           |                                           |
-| >>> comp.add_linear_processing_pathway([a,c])             |                                           |
-| >>> comp.add_linear_processing_pathway([b,c])             |                                           |
-| >>> ctlr = OptimizationControlMechanism(                  |                                           |
-| ...            name='Controller',                         |                                           |
-| ...            monitor_for_control=[(pnl.OUTPUT_MEAN, a)],|                                           |
-| ...            function=GridSearch,                       |                                           |
-| ...            control_signals=(GAIN, c),                 |                                           |
-| ...            agent_rep=comp                             |                                           |
-| ...            )                                          |                                           |
-| >>> comp.add_controller(ctlr)                             |                                           |
-+-----------------------------------------------------------+-------------------------------------------+
++-----------------------------------------------------------+----------------------------------------------------------+
+| >>> from psyneulink import *                              | .. figure:: _static/Composition_show_graph_basic_fig.svg |
+| >>> a = ProcessingMechanism(                              |                                                          |
+|               name='A',                                   |                                                          |
+| ...           size=3,                                     |                                                          |
+| ...           output_ports=[RESULTS, OUTPUT_MEAN]         |                                                          |
+| ...           )                                           |                                                          |
+| >>> b = ProcessingMechanism(                              |                                                          |
+| ...           name='B',                                   |                                                          |
+| ...           size=5                                      |                                                          |
+| ...           )                                           |                                                          |
+| >>> c = ProcessingMechanism(                              |                                                          |
+| ...           name='C',                                   |                                                          |
+| ...           size=2,                                     |                                                          |
+| ...           function=Logistic(gain=pnl.CONTROL)         |                                                          |
+| ...           )                                           |                                                          |
+| >>> comp = Composition(                                   |                                                          |
+| ...           name='Comp',                                |                                                          |
+| ...           enable_controller=True                      |                                                          |
+| ...           )                                           |                                                          |
+| >>> comp.add_linear_processing_pathway([a,c])             |                                                          |
+| >>> comp.add_linear_processing_pathway([b,c])             |                                                          |
+| >>> ctlr = OptimizationControlMechanism(                  |                                                          |
+| ...            name='Controller',                         |                                                          |
+| ...            monitor_for_control=[(pnl.OUTPUT_MEAN, a)],|                                                          |
+| ...            control_signals=(GAIN, c),                 |                                                          |
+| ...            agent_rep=comp                             |                                                          |
+| ...            )                                          |                                                          |
+| >>> comp.add_controller(ctlr)                             |                                                          |
++-----------------------------------------------------------+----------------------------------------------------------+
 
 Note that the Composition's `controller <Composition.controller>` is not shown by default.  However this
 can be shown, along with other information, using options in the Composition's `show_graph <Composition.show_graph>`
 method.  The figure below shows several examples.
 
-.. _System_show_graph_figure:
+.. _Composition_show_graph_options_figure:
 
 **Output of show_graph using different options**
 
-.. figure:: _static/show_graph_figure.svg
+.. figure:: _static/Composition_show_graph_options_fig.svg
    :alt: Composition graph examples
    :scale: 150 %
 
-   Displays of the Composition used in the `example above <System_show_graph_basic_figure>`, generated using various
+   Displays of the Composition in the `example above <Composition_show_graph_basic_figure>`, generated using various
    options of its `show_graph <Composition.show_graph>` method. **Panel A** shows the graph with its Projections labeled
    and Component dimensions displayed.  **Panel B** shows the `controller <Composition.controller>` for the
    Composition and its associated `ObjectiveMechanism` using the **show_controller** option (controller-related
    Components are displayed in blue by default).  **Panel C** adds the Composition's `CompositionInterfaceMechanisms
    <CompositionInterfaceMechanism>` using the **show_cim** option. **Panel D** shows a detailed view of the Mechanisms
-   using the **show_node_structure** option, that includes their `States <State>` and their `roles <NodeRole>` in the
-   Composition. **Panel E** show an even more detailed view using **show_node_structure** as well as **show_cim**.
+   using the **show_node_structure** option, that includes their `Ports <Port>` and their `roles <NodeRole>` in the
+   Composition. **Panel E** shows an even more detailed view using **show_node_structure** as well as **show_cim**.
 
-If a Composition has one ore more Compositions nested as Nodes within it, then these can be shown using the
-**show_nested** option. For example, if two Compositions identical to **comp** in the `example above
-<System_show_graph_basic_figure>` are added as the nodes of the linear processing pathway of a third* **comp** *,
-these can be shown as follows:
+If a Composition has one ore more Compositions nested as Nodes within it, these can be shown using the
+**show_nested** option. For example, the pathway in the script below contains a sequence of Mechanisms
+and nested Compositions in an outer Composition, ``comp``:
 
-        +-------------------------------------------+-------------------------------------------+
-        |    >>> comp.show_graph()                  | .. figure:: _static/nested.svg            |
-        +-------------------------------------------+-------------------------------------------+
-        |    >>> comp.show_graph(show_nested=True)  | .. figure:: _static/show_nested.svg       |
-        |                                           |                                           |
-        +-------------------------------------------+-------------------------------------------+
+.. _Composition_show_graph_show_nested_figure:
 
-
++------------------------------------------------------+---------------------------------------------------------------+
+| >>> mech_stim = ProcessingMechanism(name='STIMULUS') |.. figure:: _static/Composition_show_graph_show_nested_fig.svg |
+| >>> mech_A1 = ProcessingMechanism(name='A1')         |                                                               |
+| >>> mech_B1 = ProcessingMechanism(name='B1')         |                                                               |
+| >>> comp1 = Composition(name='comp1')                |                                                               |
+| >>> comp1.add_linear_processing_pathway([mech_A1,    |                                                               |
+| ...                                      mech_B1])   |                                                               |
+| >>> mech_A2 = ProcessingMechanism(name='A2')         |                                                               |
+| >>> mech_B2 = ProcessingMechanism(name='B2')         |                                                               |
+| >>> comp2 = Composition(name='comp2')                |                                                               |
+| >>> comp2.add_linear_processing_pathway([mech_A2,    |                                                               |
+| ...                                      mech_B2])   |                                                               |
+| >>> mech_resp = ProcessingMechanism(name='RESPONSE') |                                                               |
+| >>> comp = Composition()                             |                                                               |
+| >>> comp.add_linear_processing_pathway([mech_stim,   |                                                               |
+| ...                                     comp1, comp2,|                                                               |
+| ...                                     mech_resp])  |                                                               |
+| >>> comp.show_graph(show_nested=True)                |                                                               |
++------------------------------------------------------+---------------------------------------------------------------+
 
 .. _Composition_Class_Reference:
 
@@ -1091,7 +1102,7 @@ from PIL import Image
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.components.functions.function import is_function_type
-from psyneulink.core.components.functions.interfacefunctions import InterfaceStateMap
+from psyneulink.core.components.functions.interfacefunctions import InterfacePortMap
 from psyneulink.core.components.functions.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
@@ -1101,6 +1112,7 @@ from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.projection import DuplicateProjectionError
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -1109,14 +1121,21 @@ from psyneulink.core.components.projections.modulatory.controlprojection import 
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
-from psyneulink.core.components.states.state import State
-from psyneulink.core.components.states.inputstate import InputState, SHADOW_INPUTS
-from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.components.states.outputstate import OutputState
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.components.ports.port import Port
+from psyneulink.core.components.ports.inputport import InputPort, SHADOW_INPUTS
+from psyneulink.core.components.ports.parameterport import ParameterPort
+from psyneulink.core.components.ports.outputport import OutputPort
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import AFTER, ALL, BEFORE, BOLD, BOTH, COMPARATOR_MECHANISM, COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROLLER, CONTROL_SIGNAL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, SAMPLE, SIMULATIONS, SOFT_CLAMP, TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
+from psyneulink.core.globals.keywords import \
+    AFTER, ALL, BEFORE, BOLD, BOTH, COMPARATOR_MECHANISM, COMPONENT, COMPOSITION, CONDITIONS, \
+    CONTROL, CONTROLLER, CONTROL_SIGNAL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, \
+    LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
+    MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
+    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, MSE, NAME, NO_CLAMP, \
+    ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
+    SAMPLE, SIMULATIONS, SOFT_CLAMP, SSE, TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
@@ -1478,22 +1497,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         input_CIM : `CompositionInterfaceMechanism`
             mediates input values for the INPUT nodes of the Composition. If the Composition is nested, then the
-            input_CIM and its InputStates serve as proxies for the Composition itself in terms of afferent projections.
+            input_CIM and its InputPorts serve as proxies for the Composition itself in terms of afferent projections.
 
-        input_CIM_states : dict
-            a dictionary in which keys are InputStates of INPUT Nodes in a composition, and values are lists
-            containing two items: the corresponding InputState and OutputState on the input_CIM.
+        input_CIM_ports : dict
+            a dictionary in which keys are InputPorts of INPUT Nodes in a composition, and values are lists
+            containing two items: the corresponding InputPort and OutputPort on the input_CIM.
 
         afferents : ContentAddressableList
             a list of all of the `Projections <Projection>` to the Composition's `input_CIM`.
 
         output_CIM : `CompositionInterfaceMechanism`
             aggregates output values from the OUTPUT nodes of the Composition. If the Composition is nested, then the
-            output_CIM and its OutputStates serve as proxies for Composition itself in terms of efferent projections.
+            output_CIM and its OutputPorts serve as proxies for Composition itself in terms of efferent projections.
 
-        output_CIM_states : dict
-            a dictionary in which keys are OutputStates of OUTPUT Nodes in a composition, and values are lists
-            containing two items: the corresponding InputState and OutputState on the input_CIM.
+        output_CIM_ports : dict
+            a dictionary in which keys are OutputPorts of OUTPUT Nodes in a composition, and values are lists
+            containing two items: the corresponding InputPort and OutputPort on the input_CIM.
 
         efferents : ContentAddressableList
             a list of all of the `Projections <Projection>` from the Composition's `output_CIM`.
@@ -1504,7 +1523,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         shadows : dict
             a dictionary in which the keys are all in the Composition and the values are lists of any Nodes that
-            `shadow <InputState_Shadow_Inputs>` the original Node's input.
+            `shadow <InputPort_Shadow_Inputs>` the original Node's input.
 
         controller : OptimizationControlMechanism
             identifies the `OptimizationControlMechanism` used as the Composition's controller
@@ -1659,9 +1678,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                         composition=self)
         self.parameter_CIM = CompositionInterfaceMechanism(name=self.name + " Parameter_CIM",
                                                         composition=self)
-        self.input_CIM_states = {}
-        self.output_CIM_states = {}
-        self.parameter_CIM_states = {}
+        self.input_CIM_ports = {}
+        self.output_CIM_ports = {}
+        self.parameter_CIM_ports = {}
 
         self.shadows = {}
 
@@ -1734,8 +1753,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @property
     def scheduler(self):
         """
-            A default `Scheduler` automatically generated by the Composition, used for the
-            (`processing <System_Execution_Processing>` phase of execution.
+            A default `Scheduler` automatically generated by the Composition, and used for its execution
+            when it is `run <Composition_Run>`.
 
             :getter: Returns the default scheduler, and builds it if it needs updating since the last access.
         """
@@ -1794,7 +1813,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._check_feedback(scheduler=scheduler, context=context)
         self._determine_node_roles(context=context)
-        self._create_CIM_states(context=context)
+        self._create_CIM_ports(context=context)
         self._update_shadow_projections(context=context)
         self._check_for_projection_assignments(context=context)
         self.needs_update_graph = False
@@ -1980,20 +1999,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for required_role in required_roles:
                 self.add_required_node_role(node, required_role)
 
-        # Add projections to node from sender of any shadowed InputStates
-        for input_state in node.input_states:
-            if hasattr(input_state, SHADOW_INPUTS) and input_state.shadow_inputs is not None:
-                for proj in input_state.shadow_inputs.path_afferents:
+        # Add projections to node from sender of any shadowed InputPorts
+        for input_port in node.input_ports:
+            if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
+                for proj in input_port.shadow_inputs.path_afferents:
                     sender = proj.sender
                     if sender.owner != self.input_CIM:
-                        self.add_projection(projection=MappingProjection(sender=proj.sender, receiver=input_state),
+                        self.add_projection(projection=MappingProjection(sender=proj.sender, receiver=input_port),
                                             sender=proj.sender.owner,
                                             receiver=node)
 
         # Add ControlSignals to controller and ControlProjections
-        #     to any parameter_states specified for control in node's constructor
+        #     to any parameter_ports specified for control in node's constructor
         if self.controller:
-            deferred_init_control_specs = node._get_parameter_state_deferred_init_control_specs()
+            deferred_init_control_specs = node._get_parameter_port_deferred_init_control_specs()
             if deferred_init_control_specs:
                 self.controller._remove_default_control_signal(type=CONTROL_SIGNAL)
                 for ctl_sig_spec in deferred_init_control_specs:
@@ -2290,85 +2309,85 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.nodes_to_roles[node].remove(role)
 
     tc.typecheck
-    def _create_CIM_states(self, context=None):
+    def _create_CIM_ports(self, context=None):
         """
-            - remove the default InputState and OutputState from the CIMs if this is the first time that real
-              InputStates and OutputStates are being added to the CIMs
+            - remove the default InputPort and OutputPort from the CIMs if this is the first time that real
+              InputPorts and OutputPorts are being added to the CIMs
 
-            - create a corresponding InputState and OutputState on the `input_CIM <Composition.input_CIM>` for each
-              InputState of each INPUT node. Connect the OutputState on the input_CIM to the INPUT node's corresponding
-              InputState via a standard MappingProjection.
+            - create a corresponding InputPort and OutputPort on the `input_CIM <Composition.input_CIM>` for each
+              InputPort of each INPUT node. Connect the OutputPort on the input_CIM to the INPUT node's corresponding
+              InputPort via a standard MappingProjection.
 
-            - create a corresponding InputState and OutputState on the `output_CIM <Composition.output_CIM>` for each
-              OutputState of each OUTPUT node. Connect the OUTPUT node's OutputState to the output_CIM's corresponding
-              InputState via a standard MappingProjection.
+            - create a corresponding InputPort and OutputPort on the `output_CIM <Composition.output_CIM>` for each
+              OutputPort of each OUTPUT node. Connect the OUTPUT node's OutputPort to the output_CIM's corresponding
+              InputPort via a standard MappingProjection.
 
             - build two dictionaries:
 
-                (1) input_CIM_states = { INPUT Node InputState: (InputCIM InputState, InputCIM OutputState) }
+                (1) input_CIM_ports = { INPUT Node InputPort: (InputCIM InputPort, InputCIM OutputPort) }
 
-                (2) output_CIM_states = { OUTPUT Node OutputState: (OutputCIM InputState, OutputCIM OutputState) }
+                (2) output_CIM_ports = { OUTPUT Node OutputPort: (OutputCIM InputPort, OutputCIM OutputPort) }
 
             - if the Node has any shadows, create the appropriate projections as needed.
 
-            - delete all of the above for any node States which were previously, but are no longer, classified as
+            - delete all of the above for any node Ports which were previously, but are no longer, classified as
               INPUT/OUTPUT
 
-            - if composition has a controller, remove default InputState and OutputState of all nested compositions'
+            - if composition has a controller, remove default InputPort and OutputPort of all nested compositions'
               `parameter CIMs <Composition.parameter_CIM>` which contain nodes that will be modulated and whose default
-              states have not already been removed
+              ports have not already been removed
 
             - delete afferents of compositions' parameter CIMs if their sender is no longer the controller of any of
               the composition's parent compositions
 
-            - create a corresponding InputState and ControlSignal on the `parameter_CIM <Composition.parameter_CIM>` for
+            - create a corresponding InputPort and ControlSignal on the `parameter_CIM <Composition.parameter_CIM>` for
               each parameter modulated by the controller
 
-            - instantiate and activate projections from ControlSignals of controller to corresponding InputStates
+            - instantiate and activate projections from ControlSignals of controller to corresponding InputPorts
               of nested compositions' `parameter_CIMs <Composition.parameter_CIM>`
         """
 
         if not self.input_CIM.connected_to_composition:
-            self.input_CIM.input_states.remove(self.input_CIM.input_state)
-            self.input_CIM.output_states.remove(self.input_CIM.output_state)
+            self.input_CIM.input_ports.remove(self.input_CIM.input_port)
+            self.input_CIM.output_ports.remove(self.input_CIM.output_port)
             self.input_CIM.connected_to_composition = True
 
         if not self.output_CIM.connected_to_composition:
-            self.output_CIM.input_states.remove(self.output_CIM.input_state)
-            self.output_CIM.output_states.remove(self.output_CIM.output_state)
+            self.output_CIM.input_ports.remove(self.output_CIM.input_port)
+            self.output_CIM.output_ports.remove(self.output_CIM.output_port)
             self.output_CIM.connected_to_composition = True
 
-        current_input_node_input_states = set()
+        current_input_node_input_ports = set()
 
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
         for node in input_nodes:
 
-            for input_state in node.external_input_states:
-                # add it to our set of current input states
-                current_input_node_input_states.add(input_state)
+            for input_port in node.external_input_ports:
+                # add it to our set of current input ports
+                current_input_node_input_ports.add(input_port)
 
-                # if there is not a corresponding CIM output state, add one
-                if input_state not in set(self.input_CIM_states.keys()):
-                    interface_input_state = InputState(owner=self.input_CIM,
-                                                       variable=input_state.defaults.value,
-                                                       reference_value=input_state.defaults.value,
-                                                       name="INPUT_CIM_" + node.name + "_" + input_state.name)
+                # if there is not a corresponding CIM OutputPort, add one
+                if input_port not in set(self.input_CIM_ports.keys()):
+                    interface_input_port = InputPort(owner=self.input_CIM,
+                                                      variable=input_port.defaults.value,
+                                                      reference_value=input_port.defaults.value,
+                                                      name="INPUT_CIM_" + node.name + "_" + input_port.name)
 
-                    interface_output_state = OutputState(owner=self.input_CIM,
-                                                         variable=OWNER_VALUE,
-                                                         default_variable=self.input_CIM.defaults.variable,
-                                                         function=InterfaceStateMap(
-                                                             corresponding_input_state=interface_input_state),
-                                                         name="INPUT_CIM_" + node.name + "_" + input_state.name)
+                    interface_output_port = OutputPort(owner=self.input_CIM,
+                                                        variable=OWNER_VALUE,
+                                                        default_variable=self.input_CIM.defaults.variable,
+                                                        function=InterfacePortMap(
+                                                             corresponding_input_port=interface_input_port),
+                                                        name="INPUT_CIM_" + node.name + "_" + input_port.name)
 
-                    self.input_CIM_states[input_state] = [interface_input_state, interface_output_state]
+                    self.input_CIM_ports[input_port] = [interface_input_port, interface_output_port]
 
-                    projection = MappingProjection(sender=interface_output_state,
-                                                   receiver=input_state,
+                    projection = MappingProjection(sender=interface_output_port,
+                                                   receiver=input_port,
                                                    matrix=IDENTITY_MATRIX,
-                                                   name="(" + interface_output_state.name + ") to ("
-                                                        + input_state.owner.name + "-" + input_state.name + ")")
+                                                   name="(" + interface_output_port.name + ") to ("
+                                                        + input_port.owner.name + "-" + input_port.name + ")")
                     projection._activate_for_compositions(self)
 
                     if isinstance(node, Composition):
@@ -2377,69 +2396,69 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         new_shadow_projections = {}
 
         # for any entirely new shadow_projections, create a MappingProjection object and add to projections
-        for output_state, input_state in new_shadow_projections:
-            if new_shadow_projections[(output_state, input_state)] is None:
-                shadow_projection = MappingProjection(sender=output_state,
-                                                      receiver=input_state,
-                                                      name="(" + output_state.name + ") to ("
-                                                           + input_state.owner.name + "-" + input_state.name + ")")
+        for output_port, input_port in new_shadow_projections:
+            if new_shadow_projections[(output_port, input_port)] is None:
+                shadow_projection = MappingProjection(sender=output_port,
+                                                      receiver=input_port,
+                                                      name="(" + output_port.name + ") to ("
+                                                           + input_port.owner.name + "-" + input_port.name + ")")
                 shadow_projection._activate_for_compositions(self)
 
-        sends_to_input_states = set(self.input_CIM_states.keys())
+        sends_to_input_ports = set(self.input_CIM_ports.keys())
 
-        # For any states still registered on the CIM that does not map to a corresponding INPUT node I.S.:
-        for input_state in sends_to_input_states.difference(current_input_node_input_states):
-            for projection in input_state.path_afferents:
-                if projection.sender == self.input_CIM_states[input_state][1]:
+        # For any ports still registered on the CIM that does not map to a corresponding INPUT node I.S.:
+        for input_port in sends_to_input_ports.difference(current_input_node_input_ports):
+            for projection in input_port.path_afferents:
+                if projection.sender == self.input_CIM_ports[input_port][1]:
                     # remove the corresponding projection from the INPUT node's path afferents
-                    input_state.path_afferents.remove(projection)
+                    input_port.path_afferents.remove(projection)
 
                     # projection.receiver.efferents.remove(projection)
                     # Bug? ^^ projection is not in receiver.efferents??
                     if projection.receiver.owner in self.shadows and len(self.shadows[projection.receiver.owner]) > 0:
                         for shadow in self.shadows[projection.receiver.owner]:
-                            for shadow_input_state in shadow.input_states:
-                                for shadow_projection in shadow_input_state.path_afferents:
-                                    if shadow_projection.sender == self.input_CIM_states[input_state][1]:
-                                        shadow_input_state.path_afferents.remove(shadow_projection)
+                            for shadow_input_port in shadow.input_ports:
+                                for shadow_projection in shadow_input_port.path_afferents:
+                                    if shadow_projection.sender == self.input_CIM_ports[input_port][1]:
+                                        shadow_input_port.path_afferents.remove(shadow_projection)
 
-            # remove the CIM input and output states associated with this INPUT node input state
-            self.input_CIM.input_states.remove(self.input_CIM_states[input_state][0])
-            self.input_CIM.output_states.remove(self.input_CIM_states[input_state][1])
+            # remove the CIM input and output ports associated with this INPUT node InputPort
+            self.input_CIM.input_ports.remove(self.input_CIM_ports[input_port][0])
+            self.input_CIM.output_ports.remove(self.input_CIM_ports[input_port][1])
 
-            # and from the dictionary of CIM output state/input state pairs
-            del self.input_CIM_states[input_state]
+            # and from the dictionary of CIM OutputPort/InputPort pairs
+            del self.input_CIM_ports[input_port]
 
         # OUTPUT CIMS
         # loop over all OUTPUT nodes
-        current_output_node_output_states = set()
+        current_output_node_output_ports = set()
         for node in self.get_nodes_by_role(NodeRole.OUTPUT):
-            for output_state in node.output_states:
-                current_output_node_output_states.add(output_state)
-                # if there is not a corresponding CIM output state, add one
-                if output_state not in set(self.output_CIM_states.keys()):
+            for output_port in node.output_ports:
+                current_output_node_output_ports.add(output_port)
+                # if there is not a corresponding CIM OutputPort, add one
+                if output_port not in set(self.output_CIM_ports.keys()):
 
-                    interface_input_state = InputState(owner=self.output_CIM,
-                                                       variable=output_state.defaults.value,
-                                                       reference_value=output_state.defaults.value,
-                                                       name="OUTPUT_CIM_" + node.name + "_" + output_state.name)
+                    interface_input_port = InputPort(owner=self.output_CIM,
+                                                      variable=output_port.defaults.value,
+                                                      reference_value=output_port.defaults.value,
+                                                      name="OUTPUT_CIM_" + node.name + "_" + output_port.name)
 
-                    interface_output_state = OutputState(
+                    interface_output_port = OutputPort(
                         owner=self.output_CIM,
                         variable=OWNER_VALUE,
-                        function=InterfaceStateMap(corresponding_input_state=interface_input_state),
-                        reference_value=output_state.defaults.value,
-                        name="OUTPUT_CIM_" + node.name + "_" + output_state.name)
+                        function=InterfacePortMap(corresponding_input_port=interface_input_port),
+                        reference_value=output_port.defaults.value,
+                        name="OUTPUT_CIM_" + node.name + "_" + output_port.name)
 
-                    self.output_CIM_states[output_state] = [interface_input_state, interface_output_state]
+                    self.output_CIM_ports[output_port] = [interface_input_port, interface_output_port]
 
-                    proj_name = "(" + output_state.name + ") to (" + interface_input_state.name + ")"
+                    proj_name = "(" + output_port.name + ") to (" + interface_input_port.name + ")"
 
                     proj = MappingProjection(
-                        sender=output_state,
-                        receiver=interface_input_state,
-                        # FIX:  This fails if OutputStates don't all have the same dimensionality (number of axes);
-                        #       see example in test_output_states/TestOutputStates
+                        sender=output_port,
+                        receiver=interface_input_port,
+                        # FIX:  This fails if OutputPorts don't all have the same dimensionality (number of axes);
+                        #       see example in test_output_ports/TestOutputPorts
                         matrix=IDENTITY_MATRIX,
                         name=proj_name
                     )
@@ -2447,12 +2466,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if isinstance(node, Composition):
                         proj._activate_for_compositions(node)
 
-        previous_output_node_output_states = set(self.output_CIM_states.keys())
-        for output_state in previous_output_node_output_states.difference(current_output_node_output_states):
-            # remove the CIM input and output states associated with this Terminal Node output state
-            self.output_CIM.remove_states(self.output_CIM_states[output_state][0])
-            self.output_CIM.remove_states(self.output_CIM_states[output_state][1])
-            del self.output_CIM_states[output_state]
+        previous_output_node_output_ports = set(self.output_CIM_ports.keys())
+        for output_port in previous_output_node_output_ports.difference(current_output_node_output_ports):
+            # remove the CIM input and output ports associated with this Terminal Node OutputPort
+            self.output_CIM.remove_ports(self.output_CIM_ports[output_port][0])
+            self.output_CIM.remove_ports(self.output_CIM_ports[output_port][1])
+            del self.output_CIM_ports[output_port]
 
         # PARAMETER CIMS
         if self.controller:
@@ -2460,14 +2479,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             nested_nodes = dict(self._get_nested_nodes())
             nested_comps = self._get_nested_compositions()
             for comp in nested_comps:
-                for state in comp.parameter_CIM.input_states:
-                    for afferent in state.all_afferents:
+                for port in comp.parameter_CIM.input_ports:
+                    for afferent in port.all_afferents:
                         if not comp in afferent.sender.owner.composition._get_nested_compositions():
-                            del state._afferents_info[afferent]
-                            if afferent in state.path_afferents:
-                                state.path_afferents.remove(afferent)
-                            if afferent in state.mod_afferents:
-                                state.mod_afferents.remove(afferent)
+                            del port._afferents_info[afferent]
+                            if afferent in port.path_afferents:
+                                port.path_afferents.remove(afferent)
+                            if afferent in port.mod_afferents:
+                                port.mod_afferents.remove(afferent)
 
             for modulatory_signal in controller.control_signals:
                 for projection in modulatory_signal.projections:
@@ -2476,29 +2495,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if mech in nested_nodes:
                         comp = nested_nodes[mech]
                         pcim = comp.parameter_CIM
-                        pcim_states = comp.parameter_CIM_states
-                        if receiver not in pcim_states:
+                        pcIM_ports = comp.parameter_CIM_ports
+                        if receiver not in pcIM_ports:
                             if not pcim.connected_to_composition:
-                                pcim.input_states.remove(pcim.input_state)
-                                pcim.output_states.remove(pcim.output_state)
+                                pcim.input_ports.remove(pcim.input_port)
+                                pcim.output_ports.remove(pcim.output_port)
                                 pcim.connected_to_composition = True
                             modulation = modulatory_signal.owner.modulation
-                            input_state = InputState(
+                            input_port = InputPort(
                                 owner = pcim,
                             )
                             control_signal = ControlSignal(
                                 owner = pcim,
                                 modulation = modulation,
                                 variable = OWNER_VALUE,
-                                function = InterfaceStateMap(
-                                    corresponding_input_state = input_state
+                                function = InterfacePortMap(
+                                    corresponding_input_port = input_port
                                 ),
                                 modulates = receiver,
                                 name = 'PARAMETER_CIM_' + mech.name + "_" + receiver.name
                             )
                             for projection in control_signal.projections:
                                 projection._activate_for_compositions(comp)
-                            pcim_states[receiver] = (modulatory_signal, input_state)
+                            pcIM_ports[receiver] = (modulatory_signal, input_port)
 
             for comp in nested_comps:
                 pcim = comp.parameter_CIM
@@ -2508,23 +2527,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         connected_to_controller = True
                 if not connected_to_controller:
                     for efferent in controller.efferents:
-                        if efferent.receiver in pcim_states:
+                        if efferent.receiver in pcIM_ports:
                             input_projection = MappingProjection(
                                 sender = efferent.sender,
-                                receiver = pcim_states[efferent.receiver][1]
+                                receiver = pcIM_ports[efferent.receiver][1]
                             )
                             input_projection._activate_for_compositions(comp)
 
-    def _get_nested_node_CIM_state(self,
+    def _get_nested_node_CIM_port(self,
                                    node: Mechanism,
-                                   node_state: tc.any(InputState, OutputState),
+                                   node_state: tc.any(InputPort, OutputPort),
                                    role: tc.enum(NodeRole.INPUT, NodeRole.OUTPUT)
                                    ):
         """Check for node in nested Composition
-        Return relevant state of relevant CIM if found and nested Composition in which it was found, else (None, None)
+        Return relevant port of relevant CIM if found and nested Composition in which it was found, else (None, None)
         """
 
-        nested_comp = CIM_state_for_nested_node = CIM = None
+        nested_comp = CIM_port_for_nested_node = CIM = None
 
         nested_comps = [c for c in self.nodes if isinstance(c, Composition)]
         for nc in nested_comps:
@@ -2536,28 +2555,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                   NodeRole.__name__, repr(role)))
                 # With the current implementation, there should never be multiple nested compositions that contain the
                 # same mechanism -- because all nested compositions are passed the same execution ID
-                # if CIM_state_for_nested_node:
+                # if CIM_port_for_nested_node:
                 #     warnings.warn("{} found with {} of {} in more than one nested {} of {}; "
                 #                   "only first one found (in {}) will be used".
                 #                   format(node.name, NodeRole.__name__, repr(role),
                 #                          Composition.__name__, self.name, nested_comp.name))
                 #     continue
 
-                if isinstance(node_state, InputState):
-                    CIM_state_for_nested_node = nc.input_CIM_states[node_state][0]
+                if isinstance(node_state, InputPort):
+                    CIM_port_for_nested_node = nc.input_CIM_ports[node_state][0]
                     CIM = nc.input_CIM
-                elif isinstance(node_state, OutputState):
-                    CIM_state_for_nested_node = nc.output_CIM_states[node_state][1]
+                elif isinstance(node_state, OutputPort):
+                    CIM_port_for_nested_node = nc.output_CIM_ports[node_state][1]
                     CIM = nc.output_CIM
                 else:
-                    # IMPLEMENTATION NOTE:  Place marker for future implementation of ParameterState handling
+                    # IMPLEMENTATION NOTE:  Place marker for future implementation of ParameterPort handling
                     #                       However, typecheck above should have caught this
                     assert False
 
                 nested_comp = nc
                 break
 
-        return CIM_state_for_nested_node, CIM_state_for_nested_node, nested_comp, CIM
+        return CIM_port_for_nested_node, CIM_port_for_nested_node, nested_comp, CIM
 
     def _update_shadows_dict(self, node):
         # Create an empty entry for this node in the Composition's "shadows" dict
@@ -2568,9 +2587,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         nested_nodes = dict(self._get_nested_nodes())
         # If this node is shadowing another node, then add it to that node's entry in the Composition's "shadows" dict
         # If the node it's shadowing is a nested node, add it to the entry for the composition it's nested in.
-        for input_state in node.input_states:
-            if hasattr(input_state, SHADOW_INPUTS) and input_state.shadow_inputs is not None:
-                owner = input_state.shadow_inputs.owner
+        for input_port in node.input_ports:
+            if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
+                owner = input_port.shadow_inputs.owner
                 if owner in nested_nodes:
                     owner = nested_nodes[owner]
                 if node not in self.shadows[owner]:
@@ -2658,11 +2677,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         COMMENT:
         IMPLEMENTATION NOTE:
-            Duplicates are determined by the **States** to which they project, not the Mechanisms (to allow
-            multiple Projections to exist between the same pair of Mechanisms using different States).
+            Duplicates are determined by the **Ports** to which they project, not the Mechanisms (to allow
+            multiple Projections to exist between the same pair of Mechanisms using different Ports).
             -
             If an already instantiated Projection is passed to add_projection and is a duplicate of an existing one,
-            it is detected and suppresed, with a warning, in State._instantiate_projections_to_state.
+            it is detected and suppresed, with a warning, in Port._instantiate_projections_to_port.
             -
             If a Projection with deferred_init status is a duplicate, it is fully suppressed here,
             as these are generated by add_linear_processing_pathway if the pathway overlaps with an existing one,
@@ -2672,13 +2691,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Arguments
         ---------
 
-        sender : Mechanism, Composition, or OutputState
+        sender : Mechanism, Composition, or OutputPort
             the sender of **projection**
 
         projection : Projection, matrix
             the projection to add
 
-        receiver : Mechanism, Composition, or InputState
+        receiver : Mechanism, Composition, or InputPort
             the receiver of **projection**
 
         feedback : bool
@@ -2711,11 +2730,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                receiver=receiver,
                                                                in_composition=False)
             if existing_projections:
-                if isinstance(sender, State):
+                if isinstance(sender, Port):
                     sender_check = sender.owner
                 else:
                     sender_check = sender
-                if isinstance(receiver, State):
+                if isinstance(receiver, Port):
                     receiver_check = receiver.owner
                 else:
                     receiver_check = receiver
@@ -2723,18 +2742,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                          (not isinstance(receiver_check, CompositionInterfaceMechanism) and receiver_check not in self.nodes):
                     for proj in existing_projections:
                         self.remove_projection(proj)
-                        for state in receiver_check.input_states + \
-                            sender_check.output_states:
-                            if proj in state.afferents_info:
-                                del state.afferents_info[proj]
-                            if proj in state.projections:
-                                state.projections.remove(proj)
-                            if proj in state.path_afferents:
-                                state.path_afferents.remove(proj)
-                            if proj in state.mod_afferents:
-                                state.mod_afferents.remove(proj)
-                            if proj in state.efferents:
-                                state.efferents.remove(proj)
+                        for port in receiver_check.input_ports + \
+                            sender_check.output_ports:
+                            if proj in port.afferents_info:
+                                del port.afferents_info[proj]
+                            if proj in port.projections:
+                                port.projections.remove(proj)
+                            if proj in port.path_afferents:
+                                port.path_afferents.remove(proj)
+                            if proj in port.mod_afferents:
+                                port.mod_afferents.remove(proj)
+                            if proj in port.efferents:
+                                port.efferents.remove(proj)
                 else:
                 #  Need to do stuff at end, so can't just return
                     if self.prefs.verbosePref:
@@ -2757,15 +2776,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Parse sender and receiver specs
         sender, sender_mechanism, graph_sender, nested_compositions = self._parse_sender_spec(projection, sender)
-        receiver, receiver_mechanism, graph_receiver, receiver_input_state, nested_compositions, learning_projection = \
+        receiver, receiver_mechanism, graph_receiver, receiver_input_port, nested_compositions, learning_projection = \
             self._parse_receiver_spec(projection, receiver, sender, learning_projection)
 
         # If Deferred init
         if projection.initialization_status == ContextFlags.DEFERRED_INIT:
-            # If sender or receiver are State specs, use those;  otherwise, use graph node (Mechanism or Composition)
-            if not isinstance(sender, OutputState):
+            # If sender or receiver are Port specs, use those;  otherwise, use graph node (Mechanism or Composition)
+            if not isinstance(sender, OutputPort):
                 sender = sender_mechanism
-            if not isinstance(receiver, InputState):
+            if not isinstance(receiver, InputPort):
                 receiver = receiver_mechanism
             # Check if Projection to be initialized already exists in the current Composition;
             #    if so, mark as existing_projections and skip
@@ -2774,8 +2793,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 return
             else:
                 # Initialize Projection
-                projection.init_args['sender'] = sender
-                projection.init_args['receiver'] = receiver
+                projection._init_args['sender'] = sender
+                projection._init_args['receiver'] = receiver
                 try:
                     projection._deferred_init()
                 except DuplicateProjectionError:
@@ -2821,15 +2840,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Note: do all of the following even if Projection is a existing_projections,
         #   as these conditions shoud apply to the exisiting one (and it won't hurt to try again if they do)
 
-        # Create "shadow" projections to any input states that are meant to shadow this projection's receiver
+        # Create "shadow" projections to any input ports that are meant to shadow this projection's receiver
         # (note: do this even if there is a duplciate and they are not allowed, as still want to shadow that projection)
         if receiver_mechanism in self.shadows and len(self.shadows[receiver_mechanism]) > 0:
             for shadow in self.shadows[receiver_mechanism]:
-                for input_state in shadow.input_states:
-                    if input_state.shadow_inputs is not None:
-                        if input_state.shadow_inputs.owner == receiver:
+                for input_port in shadow.input_ports:
+                    if input_port.shadow_inputs is not None:
+                        if input_port.shadow_inputs.owner == receiver:
                             # TBI: Copy the projection type/matrix value of the projection that is being shadowed
-                            self.add_projection(MappingProjection(sender=sender, receiver=input_state),
+                            self.add_projection(MappingProjection(sender=sender, receiver=input_port),
                                                 sender_mechanism, shadow)
         if feedback:
             self.feedback_senders.add(sender_mechanism)
@@ -2888,7 +2907,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _parse_sender_spec(self, projection, sender):
 
-        # if a sender was not passed, check for a sender OutputState stored on the Projection object
+        # if a sender was not passed, check for a sender OutputPort stored on the Projection object
         if sender is None:
             if hasattr(projection, "sender"):
                 sender = projection.sender.owner
@@ -2898,41 +2917,41 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        "either on the Projection or in the call to Composition.add_projection(). ")
 
         # initialize all receiver-related variables
-        graph_sender = sender_mechanism = sender_output_state = sender
+        graph_sender = sender_mechanism = sender_output_port = sender
 
         nested_compositions = []
         if isinstance(sender, Mechanism):
-            # Mechanism spec -- update sender_output_state to reference primary OutputState
-            sender_output_state = sender.output_state
+            # Mechanism spec -- update sender_output_port to reference primary OutputPort
+            sender_output_port = sender.output_port
 
-        elif isinstance(sender, OutputState):
-            # InputState spec -- update sender_mechanism and graph_sender to reference owner Mechanism
+        elif isinstance(sender, OutputPort):
+            # InputPort spec -- update sender_mechanism and graph_sender to reference owner Mechanism
             sender_mechanism = graph_sender = sender.owner
 
         elif isinstance(sender, Composition):
-            # Nested Composition Spec -- update sender_mechanism to CIM; sender_output_state to CIM's primary O.S.
+            # Nested Composition Spec -- update sender_mechanism to CIM; sender_output_port to CIM's primary O.S.
             sender_mechanism = sender.output_CIM
-            sender_output_state = sender_mechanism.output_state
+            sender_output_port = sender_mechanism.output_port
             nested_compositions.append(sender)
 
         else:
             raise CompositionError("sender arg ({}) of call to add_projection method of {} is not a {}, {} or {}".
                                    format(sender, self.name,
-                                          Mechanism.__name__, OutputState.__name__, Composition.__name__))
+                                          Mechanism.__name__, OutputPort.__name__, Composition.__name__))
 
         if (not isinstance(sender_mechanism, CompositionInterfaceMechanism)
                 and not isinstance(sender, Composition)
                 and sender_mechanism not in self.nodes):
-            if isinstance(sender, State):
+            if isinstance(sender, Port):
                 sender_name = sender.full_name
             else:
                 sender_name = sender.name
 
             # if the sender is IN a nested Composition AND sender is an OUTPUT Node
             # then use the corresponding CIM on the nested comp as the sender going forward
-            sender, sender_output_state, graph_sender, sender_mechanism = \
-                self._get_nested_node_CIM_state(sender_mechanism,
-                                                sender_output_state,
+            sender, sender_output_port, graph_sender, sender_mechanism = \
+                self._get_nested_node_CIM_port(sender_mechanism,
+                                                sender_output_port,
                                                 NodeRole.OUTPUT)
             nested_compositions.append(graph_sender)
             if sender is None:
@@ -2956,7 +2975,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         receiver_arg = receiver
 
-        # if a receiver was not passed, check for a receiver InputState stored on the Projection object
+        # if a receiver was not passed, check for a receiver InputPort stored on the Projection object
         if receiver is None:
             if hasattr(projection, "receiver"):
                 receiver = projection.receiver.owner
@@ -2966,42 +2985,42 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        " is missing a receiver specification. ".format(projection.name))
 
         # initialize all receiver-related variables
-        graph_receiver = receiver_mechanism = receiver_input_state = receiver
+        graph_receiver = receiver_mechanism = receiver_input_port = receiver
 
         nested_compositions = []
         if isinstance(receiver, Mechanism):
-            # Mechanism spec -- update receiver_input_state to reference primary InputState
-            receiver_input_state = receiver.input_state
+            # Mechanism spec -- update receiver_input_port to reference primary InputPort
+            receiver_input_port = receiver.input_port
 
-        elif isinstance(receiver, (InputState, ParameterState)):
-            # InputState spec -- update receiver_mechanism and graph_receiver to reference owner Mechanism
+        elif isinstance(receiver, (InputPort, ParameterPort)):
+            # InputPort spec -- update receiver_mechanism and graph_receiver to reference owner Mechanism
             receiver_mechanism = graph_receiver = receiver.owner
 
-        elif isinstance(sender, (ControlSignal, ControlMechanism)) and isinstance(receiver, ParameterState):
-            # ParameterState spec -- update receiver_mechanism and graph_receiver to reference owner Mechanism
+        elif isinstance(sender, (ControlSignal, ControlMechanism)) and isinstance(receiver, ParameterPort):
+            # ParameterPort spec -- update receiver_mechanism and graph_receiver to reference owner Mechanism
             receiver_mechanism = graph_receiver = receiver.owner
 
         elif isinstance(receiver, Composition):
-            # Nested Composition Spec -- update receiver_mechanism to CIM; receiver_input_state to CIM's primary I.S.
+            # Nested Composition Spec -- update receiver_mechanism to CIM; receiver_input_port to CIM's primary I.S.
             receiver_mechanism = receiver.input_CIM
-            receiver_input_state = receiver_mechanism.input_state
+            receiver_input_port = receiver_mechanism.input_port
             nested_compositions.append(receiver)
 
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
         elif isinstance(receiver, AutoAssociativeProjection):
             receiver_mechanism = receiver.owner_mech
-            receiver_input_state = receiver_mechanism.input_state
+            receiver_input_port = receiver_mechanism.input_port
             learning_projection = True
 
         elif isinstance(sender, LearningMechanism):
             receiver_mechanism = receiver.receiver.owner
-            receiver_input_state = receiver_mechanism.input_state
+            receiver_input_port = receiver_mechanism.input_port
             learning_projection = True
 
         else:
             raise CompositionError(f"receiver arg ({receiver_arg}) of call to add_projection method of {self.name} "
-                                   f"is not a {Mechanism.__name__}, {InputState.__name__} or {Composition.__name__}.")
+                                   f"is not a {Mechanism.__name__}, {InputPort.__name__} or {Composition.__name__}.")
 
         if (not isinstance(receiver_mechanism, CompositionInterfaceMechanism)
                 and not isinstance(receiver, Composition)
@@ -3010,15 +3029,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # if the receiver is IN a nested Composition AND receiver is an INPUT Node
             # then use the corresponding CIM on the nested comp as the receiver going forward
-            receiver, receiver_input_state, graph_receiver, receiver_mechanism = \
-                self._get_nested_node_CIM_state(receiver_mechanism, receiver_input_state, NodeRole.INPUT)
+            receiver, receiver_input_port, graph_receiver, receiver_mechanism = \
+                self._get_nested_node_CIM_port(receiver_mechanism, receiver_input_port, NodeRole.INPUT)
 
             nested_compositions.append(graph_receiver)
             # Otherwise, there was a mistake in the spec
             if receiver is None:
                 # raise CompositionError(f"receiver arg ({repr(receiver_arg)}) in call to add_projection method of "
                 #                        f"{self.name} is not in it or any of its nested {Composition.__name__}s.")
-                if isinstance(receiver_arg, State):
+                if isinstance(receiver_arg, Port):
                     receiver_str = f"{receiver_arg} of {receiver_arg.owner}"
                 else:
                     receiver_str = f"{receiver_arg}"
@@ -3026,33 +3045,33 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        f"{sender.name}, is not in {self.name} or any {Composition.__name__}s nested "
                                        f"within it.")
 
-        return receiver, receiver_mechanism, graph_receiver, receiver_input_state, \
+        return receiver, receiver_mechanism, graph_receiver, receiver_input_port, \
                nested_compositions, learning_projection
 
-    def _get_original_senders(self, input_state, projections):
+    def _get_original_senders(self, input_port, projections):
         original_senders = set()
         for original_projection in projections:
             if original_projection in self.projections:
                 original_senders.add(original_projection.sender)
                 correct_sender = original_projection.sender
                 shadow_found = False
-                for shadow_projection in input_state.path_afferents:
+                for shadow_projection in input_port.path_afferents:
                     if shadow_projection.sender == correct_sender:
                         shadow_found = True
                         break
                 if not shadow_found:
                     # TBI - Shadow projection type? Matrix value?
                     new_projection = MappingProjection(sender=correct_sender,
-                                                       receiver=input_state)
-                    self.add_projection(new_projection, sender=correct_sender, receiver=input_state)
+                                                       receiver=input_port)
+                    self.add_projection(new_projection, sender=correct_sender, receiver=input_port)
         return original_senders
 
     def _update_shadow_projections(self, context=None):
         for node in self.nodes:
-            for input_state in node.input_states:
-                if input_state.shadow_inputs:
-                    original_senders = self._get_original_senders(input_state, input_state.shadow_inputs.path_afferents)
-                    for shadow_projection in input_state.path_afferents:
+            for input_port in node.input_ports:
+                if input_port.shadow_inputs:
+                    original_senders = self._get_original_senders(input_port, input_port.shadow_inputs.path_afferents)
+                    for shadow_projection in input_port.path_afferents:
                         if shadow_projection.sender not in original_senders:
                             self.remove_projection(shadow_projection)
 
@@ -3061,9 +3080,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._add_node_role(node, NodeRole.INTERNAL)
 
     def _check_for_projection_assignments(self, context=None):
-        """Check that all Projections and States with require_projection_in_composition attribute are configured.
+        """Check that all Projections and Ports with require_projection_in_composition attribute are configured.
 
-        Validate that all InputStates with require_projection_in_composition == True have an afferent Projection.
+        Validate that all InputPorts with require_projection_in_composition == True have an afferent Projection.
         Validate that all OuputStates with require_projection_in_composition == True have an efferent Projection.
         Validate that all Projections have senders and receivers.
         """
@@ -3073,13 +3092,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if isinstance(node, Projection):
                 projections.append(node)
                 continue
-            for input_state in node.input_states:
-                if input_state.require_projection_in_composition and not input_state.path_afferents:
-                    warnings.warn(f'{InputState.__name__} ({input_state.name}) of {node.name} '
+            for input_port in node.input_ports:
+                if input_port.require_projection_in_composition and not input_port.path_afferents:
+                    warnings.warn(f'{InputPort.__name__} ({input_port.name}) of {node.name} '
                                   f'doesn\'t have any afferent {Projection.__name__}s')
-            for output_state in node.output_states:
-                if output_state.require_projection_in_composition and not output_state.efferents:
-                    warnings.warn(f'{OutputState.__name__} ({output_state.name}) of {node.name} '
+            for output_port in node.output_ports:
+                if output_port.require_projection_in_composition and not output_port.efferents:
+                    warnings.warn(f'{OutputPort.__name__} ({output_port.name}) of {node.name} '
                                   f'doesn\'t have any efferent {Projection.__name__}s')
 
         for projection in projections:
@@ -3107,13 +3126,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             receiver = projection.receiver
         else:
             if isinstance(sender, Mechanism):
-                sender = sender.output_state
+                sender = sender.output_port
             elif isinstance(sender, Composition):
-                sender = sender.output_CIM.output_state
+                sender = sender.output_CIM.output_port
             if isinstance(receiver, Mechanism):
-                receiver = receiver.input_state
+                receiver = receiver.input_port
             elif isinstance(receiver, Composition):
-                receiver = receiver.input_CIM.input_state
+                receiver = receiver.input_CIM.input_port
         existing_projections = [proj for proj in sender.efferents if proj.receiver is receiver]
         existing_projections_in_composition = [proj for proj in existing_projections if proj in self.projections]
         assert len(existing_projections_in_composition) <= 1, \
@@ -3235,8 +3254,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Add sequence of Mechanisms or Compositions possibly with intercolated Projections
 
         A `MappingProjection` is created for each contiguous pair of `Mechanisms <Mechanism>` and/or Compositions
-        in the **pathway** argument, from the `primary OutputState <OutputState_Primary>` of the first one to the
-        `primary InputState <InputState_Primary>` of the second.
+        in the **pathway** argument, from the `primary OutputPort <OutputPort_Primary>` of the first one to the
+        `primary InputPort <InputPort_Primary>` of the second.
 
         Tuples (Mechanism, `NodeRoles <NodeRole>`) can be used to assign `required_roles
         <Composition.add_node.required_roles>` to Mechanisms.
@@ -3409,6 +3428,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def add_linear_learning_pathway(self,
                                     pathway,
                                     learning_function,
+                                    loss_function=None,
                                     learning_rate=0.05,
                                     error_function=LinearCombination(),
                                     learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE):
@@ -3477,6 +3497,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if isinstance(learning_function, type) and issubclass(learning_function, BackPropagation):
             return self._create_backpropagation_learning_pathway(pathway,
+                                                                 loss_function,
                                                                  learning_rate,
                                                                  error_function,
                                                                  learning_update)
@@ -3608,7 +3629,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 learning_function=TDLearning,
                                                 learning_update=learning_update)
 
-    def add_backpropagation_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
+    def add_backpropagation_learning_pathway(self,
+                                             pathway,
+                                             learning_rate=0.05,
+                                             error_function=None,
+                                             loss_function:tc.enum(MSE,SSE)=MSE,
                                              learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER):
         """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Backpropagation`
 
@@ -3652,6 +3677,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return self.add_linear_learning_pathway(pathway,
                                                 learning_rate=learning_rate,
                                                 learning_function=BackPropagation,
+                                                loss_function=loss_function,
                                                 error_function=error_function,
                                                 learning_update=learning_update)
 
@@ -3661,13 +3687,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # - Determine and pass error_sources (aka previous_learning_mechanism) (for bp)
     # - construct and pass in the learning_function
     # - do the following for last LearningMechanism in sequence:
-    #   learning_mechanism.output_states[ERROR_SIGNAL].parameters.require_projection_in_composition._set(False,
+    #   learning_mechanism.output_ports[ERROR_SIGNAL].parameters.require_projection_in_composition._set(False,
     #                                                                                                    override=True)
     #
     # Create_backprop... should pass error_function (handled by kwargs below)
     # Check for existence of Learning mechanism (or do this in creation method?);  if one exists, compare its
-    #    ERROR_SIGNAL input_states with error_sources and update/add any needed, as well as corresponding
-    #    error_matrices (from their learned_projections) -- do so using LearningMechanism's add_states method);
+    #    ERROR_SIGNAL input_ports with error_sources and update/add any needed, as well as corresponding
+    #    error_matrices (from their learned_projections) -- do so using LearningMechanism's add_ports method);
     #    create projections from each
     # Move creation of LearningProjections and learning-related projections (MappingProjections) here
     # ?Do add_nodes and add_projections here or in Learning-type-specific creation methods
@@ -3700,9 +3726,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # ONLY DO THIS IF ONE DOESN'T ALREADY EXIST (?pass in argument determing this?)
         learning_mechanism = LearningMechanism(function=learning_function,
-                                               default_variable=[sender_activity_source.output_states[0].value,
-                                                                 receiver_activity_source.output_states[0].value,
-                                                                 error_sources.output_states[0].value],
+                                               default_variable=[sender_activity_source.output_ports[0].value,
+                                                                 receiver_activity_source.output_ports[0].value,
+                                                                 error_sources.output_ports[0].value],
                                                error_sources=error_sources,
                                                learning_enabled=learning_update,
                                                in_composition=True,
@@ -3747,16 +3773,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                        target={NAME: TARGET,
                                                                VARIABLE: [0.]},
                                                        function=error_function,
-                                                       output_states=[OUTCOME, MSE])
+                                                       output_ports=[OUTCOME, MSE])
             learning_mechanism = LearningMechanism(
                                     function=learning_function(
-                                                         default_variable=[input_source.output_states[0].value,
-                                                                           output_source.output_states[0].value,
-                                                                           comparator_mechanism.output_states[0].value],
+                                                         default_variable=[input_source.output_ports[0].value,
+                                                                           output_source.output_ports[0].value,
+                                                                           comparator_mechanism.output_ports[0].value],
                                                          learning_rate=learning_rate),
-                                    default_variable=[input_source.output_states[0].value,
-                                                      output_source.output_states[0].value,
-                                                      comparator_mechanism.output_states[0].value],
+                                    default_variable=[input_source.output_ports[0].value,
+                                                      output_source.output_ports[0].value,
+                                                      comparator_mechanism.output_ports[0].value],
                                     error_sources=comparator_mechanism,
                                     learning_enabled=learning_update,
                                     in_composition=True,
@@ -3766,7 +3792,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    f"({learning_function}) must be a class of {LearningFunction.__name__} or a "
                                    f"learning-compatible function")
 
-        learning_mechanism.output_states[ERROR_SIGNAL].parameters.require_projection_in_composition._set(False,
+        learning_mechanism.output_ports[ERROR_SIGNAL].parameters.require_projection_in_composition._set(False,
                                                                                                          override=True)
         self.enable_learning = True
         return target_mechanism, comparator_mechanism, learning_mechanism
@@ -3776,22 +3802,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # FIX 5/29/19 [JDC]:  INTEGRATE WITH _get_back_prop_error_sources (RIGHT NOW, ONLY CALLED FOR TERMINAL SEQUENCE)
         try:
-            sample_projection = MappingProjection(sender=output_source, receiver=comparator.input_states[SAMPLE])
+            sample_projection = MappingProjection(sender=output_source, receiver=comparator.input_ports[SAMPLE])
         except DuplicateProjectionError:
             sample_projection = [p for p in output_source.efferents
-                                 if p in comparator.input_states[SAMPLE].path_afferents]
+                                 if p in comparator.input_ports[SAMPLE].path_afferents]
         try:
-            target_projection = MappingProjection(sender=target, receiver=comparator.input_states[TARGET])
+            target_projection = MappingProjection(sender=target, receiver=comparator.input_ports[TARGET])
         except DuplicateProjectionError:
             target_projection = [p for p in target.efferents
-                                 if p in comparator.input_states[TARGET].path_afferents]
-        act_in_projection = MappingProjection(sender=input_source.output_states[0],
-                                              receiver=learning_mechanism.input_states[ACTIVATION_INPUT_INDEX])
-        act_out_projection = MappingProjection(sender=output_source.output_states[0],
-                                               receiver=learning_mechanism.input_states[ACTIVATION_OUTPUT_INDEX])
-        # FIX CROSS_PATHWAYS 7/28/19 [JDC]: THIS MAY NEED TO USE ADD_STATES (SINCE ONE MAY EXIST; CONSTRUCT TEST FOR IT)
-        error_signal_projection = MappingProjection(sender=comparator.output_states[OUTCOME],
-                                                    receiver=learning_mechanism.input_states[ERROR_SIGNAL_INDEX])
+                                 if p in comparator.input_ports[TARGET].path_afferents]
+        act_in_projection = MappingProjection(sender=input_source.output_ports[0],
+                                              receiver=learning_mechanism.input_ports[ACTIVATION_INPUT_INDEX])
+        act_out_projection = MappingProjection(sender=output_source.output_ports[0],
+                                               receiver=learning_mechanism.input_ports[ACTIVATION_OUTPUT_INDEX])
+        # FIX CROSS_PATHWAYS 7/28/19 [JDC]: THIS MAY NEED TO USE add_ports (SINCE ONE MAY EXIST; CONSTRUCT TEST FOR IT)
+        error_signal_projection = MappingProjection(sender=comparator.output_ports[OUTCOME],
+                                                    receiver=learning_mechanism.input_ports[ERROR_SIGNAL_INDEX])
         return [target_projection, sample_projection, error_signal_projection, act_out_projection, act_in_projection]
 
     def _create_learning_projection(self, learning_mechanism, learned_projection):
@@ -3799,7 +3825,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         learning_projection = LearningProjection(name="Learning Projection",
                                                  sender=learning_mechanism.learning_signals[0],
-                                                 receiver=learned_projection.parameter_states["matrix"])
+                                                 receiver=learned_projection.parameter_ports["matrix"])
 
         learned_projection.has_learning_projection = True
 
@@ -3821,16 +3847,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                    target={NAME: TARGET,
                                                            VARIABLE: [0.]},
                                                    function=error_function,
-                                                   output_states=[OUTCOME, MSE])
+                                                   output_ports=[OUTCOME, MSE])
 
         learning_mechanism = \
-            LearningMechanism(function=Reinforcement(default_variable=[input_source.output_states[0].value,
-                                                                       output_source.output_states[0].value,
-                                                                       comparator_mechanism.output_states[0].value],
+            LearningMechanism(function=Reinforcement(default_variable=[input_source.output_ports[0].value,
+                                                                       output_source.output_ports[0].value,
+                                                                       comparator_mechanism.output_ports[0].value],
                                                      learning_rate=learning_rate),
-                              default_variable=[input_source.output_states[0].value,
-                                                output_source.output_states[0].value,
-                                                comparator_mechanism.output_states[0].value],
+                              default_variable=[input_source.output_ports[0].value,
+                                                output_source.output_ports[0].value,
+                                                comparator_mechanism.output_ports[0].value],
                               error_sources=comparator_mechanism,
                               learning_enabled=learning_update,
                               in_composition=True,
@@ -3857,9 +3883,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                         function=PredictionErrorDeltaFunction(gamma=1.0))
 
         learning_mechanism = LearningMechanism(function=TDLearning(learning_rate=learning_rate),
-                                               default_variable=[input_source.output_states[0].defaults.value,
-                                                                 output_source.output_states[0].defaults.value,
-                                                                 comparator_mechanism.output_states[0].defaults.value],
+                                               default_variable=[input_source.output_ports[0].defaults.value,
+                                                                 output_source.output_ports[0].defaults.value,
+                                                                 comparator_mechanism.output_ports[0].defaults.value],
                                                error_sources=comparator_mechanism,
                                                learning_enabled=learning_update,
                                                in_composition=True,
@@ -3867,7 +3893,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return target_mechanism, comparator_mechanism, learning_mechanism
 
-    def _create_backpropagation_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
+    def _create_backpropagation_learning_pathway(self, pathway, loss_function, learning_rate=0.05, error_function=None,
                                              learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER):
 
         # FIX: LEARNING CONSOLIDATION - Can get rid of this:
@@ -3904,7 +3930,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # If learned_projection already has a LearningProjection (due to pathway overlap),
             #    use those terminal sequence components
             if (learned_projection.has_learning_projection
-                    and any([lp for lp in learned_projection.parameter_states[MATRIX].mod_afferents
+                    and any([lp for lp in learned_projection.parameter_ports[MATRIX].mod_afferents
                              if lp in self.projections])):
                 target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
                 comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
@@ -3916,6 +3942,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._create_terminal_backprop_learning_components(input_source,
                                                                        output_source,
                                                                        error_function,
+                                                                       loss_function,
                                                                        learned_projection,
                                                                        learning_rate,
                                                                        learning_update)
@@ -3946,21 +3973,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            and p.receiver.owner in self.get_nodes_by_role(NodeRole.LEARNING))),
                                       None)
                 if old_comparator:
-                    old_target = next((p.sender.owner for p in old_comparator.input_states[TARGET].path_afferents
+                    old_target = next((p.sender.owner for p in old_comparator.input_ports[TARGET].path_afferents
                                        if p.sender.owner in self.get_nodes_by_role(NodeRole.TARGET)),
                                       None)
                     self.remove_nodes([old_comparator, old_target])
                     # FIX CROSSING_PATHWAYS [JDC]: MAKE THE FOLLOWING A METHOD?
-                    # Collect InputStates that received error_signal projections from the old_comparator
+                    # Collect InputPorts that received error_signal projections from the old_comparator
                     #    and delete after old_comparator has been deleted
-                    #    (i.e., after those InputStates have been vacated)
-                    old_error_signal_input_states = []
-                    for error_projection in old_comparator.output_state.efferents:
-                        old_error_signal_input_states.append(error_projection.receiver)
+                    #    (i.e., after those InputPorts have been vacated)
+                    old_error_signal_input_ports = []
+                    for error_projection in old_comparator.output_port.efferents:
+                        old_error_signal_input_ports.append(error_projection.receiver)
                     Mechanism_Base._delete_mechanism(old_comparator)
                     Mechanism_Base._delete_mechanism(old_target)
-                    for input_state in old_error_signal_input_states:
-                        input_state.owner.remove_states(input_state)
+                    for input_port in old_error_signal_input_ports:
+                        input_port.owner.remove_ports(input_port)
                     del self._terminal_backprop_sequences[pathway_mech]
                     del self.required_node_roles[self.required_node_roles.index((pathway_mech, NodeRole.OUTPUT))]
 
@@ -3969,6 +3996,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._create_terminal_backprop_learning_components(input_source,
                                                                    output_source,
                                                                    error_function,
+                                                                   loss_function,
                                                                    learned_projection,
                                                                    learning_rate,
                                                                    learning_update)
@@ -4004,12 +4032,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.add_projections(projections)
 
         # Suppress "no efferent connections" warning for:
-        #    - error_signal OutputState of last LearningMechanism in sequence
+        #    - error_signal OutputPort of last LearningMechanism in sequence
         #    - comparator
-        learning_mechanisms[-1].output_states[ERROR_SIGNAL].parameters.require_projection_in_composition.set(False,
+        learning_mechanisms[-1].output_ports[ERROR_SIGNAL].parameters.require_projection_in_composition.set(False,
                                                                                                              override=True)
         if comparator:
-            for s in comparator.output_states:
+            for s in comparator.output_ports:
                 s.parameters.require_projection_in_composition.set(False,
                                                                    override=True)
 
@@ -4027,6 +4055,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                       input_source,
                                                       output_source,
                                                       error_function,
+                                                      loss_function,
                                                       learned_projection,
                                                       learning_rate,
                                                       learning_update):
@@ -4044,26 +4073,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Otherwise, create new ones
         except KeyError:
             target_mechanism = ProcessingMechanism(name='Target',
-                                                   default_variable=output_source.output_states[0].value)
+                                                   default_variable=output_source.output_ports[0].value)
             comparator_mechanism = ComparatorMechanism(name='Comparator',
                                                        target={NAME: TARGET,
-                                                               VARIABLE: target_mechanism.output_states[0].value},
+                                                               VARIABLE: target_mechanism.output_ports[0].value},
                                                        sample={NAME: SAMPLE,
-                                                               VARIABLE: output_source.output_states[0].value,
+                                                               VARIABLE: output_source.output_ports[0].value,
                                                                WEIGHT: -1},
                                                        function=error_function,
-                                                       output_states=[OUTCOME, MSE])
+                                                       output_ports=[OUTCOME, MSE])
 
-        learning_function = BackPropagation(default_variable=[input_source.output_states[0].value,
-                                                              output_source.output_states[0].value,
-                                                              comparator_mechanism.output_states[0].value],
+        learning_function = BackPropagation(default_variable=[input_source.output_ports[0].value,
+                                                              output_source.output_ports[0].value,
+                                                              comparator_mechanism.output_ports[0].value],
                                             activation_derivative_fct=output_source.function.derivative,
-                                            learning_rate=learning_rate)
+                                            learning_rate=learning_rate,
+                                            loss_function=loss_function)
 
         learning_mechanism = LearningMechanism(function=learning_function,
-                                               default_variable=[input_source.output_states[0].value,
-                                                                 output_source.output_states[0].value,
-                                                                 comparator_mechanism.output_states[0].value],
+                                               default_variable=[input_source.output_ports[0].value,
+                                                                 output_source.output_ports[0].value,
+                                                                 comparator_mechanism.output_ports[0].value],
                                                error_sources=comparator_mechanism,
                                                learning_enabled=learning_update,
                                                in_composition=True,
@@ -4097,7 +4127,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Get existing LearningMechanism if one exists (i.e., if this is a crossing point with another pathway)
         learning_mechanism = \
-            next((lp.receiver.owner for lp in learned_projection.parameter_states[MATRIX].mod_afferents
+            next((lp.receiver.owner for lp in learned_projection.parameter_ports[MATRIX].mod_afferents
                   if isinstance(lp, LearningProjection)),
                  None)
 
@@ -4112,19 +4142,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    they will be created (using error_sources) when, and determined after learning_mechanism is created below
         else:
             error_sources, error_projections = self._get_back_prop_error_sources(output_source)
-            error_signal_template = [error_source.output_states[ERROR_SIGNAL].value for error_source in error_sources]
-            default_variable = [input_source.output_states[0].value,
-                                output_source.output_states[0].value] + error_signal_template
+            error_signal_template = [error_source.output_ports[ERROR_SIGNAL].value for error_source in error_sources]
+            default_variable = [input_source.output_ports[0].value,
+                                output_source.output_ports[0].value] + error_signal_template
 
-            learning_function = BackPropagation(default_variable=[input_source.output_states[0].value,
-                                                                  output_source.output_states[0].value,
+            learning_function = BackPropagation(default_variable=[input_source.output_ports[0].value,
+                                                                  output_source.output_ports[0].value,
                                                                   error_signal_template[0]],
                                                 activation_derivative_fct=output_source.function.derivative,
                                                 learning_rate=learning_rate)
 
             learning_mechanism = LearningMechanism(function=learning_function,
-                                                   # default_variable=[input_source.output_states[0].value,
-                                                   #                   output_source.output_states[0].value,
+                                                   # default_variable=[input_source.output_ports[0].value,
+                                                   #                   output_source.output_ports[0].value,
                                                    #                   error_signal_template],
                                                    default_variable=default_variable,
                                                    error_sources=error_sources,
@@ -4132,19 +4162,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                    in_composition=True,
                                                    name="Learning Mechanism for " + learned_projection.name)
 
-            # Create MappingProjections from ERROR_SIGNAL OutputState of each error_source
-            #    to corresponding error_input_states
+            # Create MappingProjections from ERROR_SIGNAL OutputPort of each error_source
+            #    to corresponding error_input_ports
             for i, error_source in enumerate(error_sources):
                 error_projection = MappingProjection(sender=error_source,
-                                                     receiver=learning_mechanism.error_signal_input_states[i])
+                                                     receiver=learning_mechanism.error_signal_input_ports[i])
                 error_projections.append(error_projection)
 
         self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING)
 
-        act_in_projection = MappingProjection(sender=input_source.output_states[0],
-                                              receiver=learning_mechanism.input_states[0])
-        act_out_projection = MappingProjection(sender=output_source.output_states[0],
-                                               receiver=learning_mechanism.input_states[1])
+        act_in_projection = MappingProjection(sender=input_source.output_ports[0],
+                                              receiver=learning_mechanism.input_ports[0])
+        act_out_projection = MappingProjection(sender=output_source.output_ports[0],
+                                               receiver=learning_mechanism.input_ports[1])
         self.add_projections([act_in_projection, act_out_projection] + error_projections)
 
         learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
@@ -4163,9 +4193,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     all efferentprojections of ProcessingMechanism that projects to ACTIVATION_OUTPUT of LearningMechanism
         #     - check validity of existing error_signal projections with respect to those and, if possible,
         #       their correspondence with error_matrices
-        #     - check if any ERROR_SIGNAL input_states are empty (vacated by terminal sequence elements deleted in
+        #     - check if any ERROR_SIGNAL input_ports are empty (vacated by terminal sequence elements deleted in
         #       add_projection)
-        #     - call add_states method on LearningMechanism to add new ERROR_SIGNAL input_state to its input_states
+        #     - call add_ports method on LearningMechanism to add new ERROR_SIGNAL input_port to its input_ports
         #       and error_matrix to its self.error_matrices attribute
         #     - add new error_signal projection
         """Add any LearningMechanisms associated with efferent projection from receiver_activity_mech"""
@@ -4178,7 +4208,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                              and p.has_learning_projection
                              and p in self.projections)]:
             # Then get any LearningProjections to that efferent that are in current Composition
-            for learning_projection in [mod_aff for mod_aff in efferent.parameter_states[MATRIX].mod_afferents
+            for learning_projection in [mod_aff for mod_aff in efferent.parameter_ports[MATRIX].mod_afferents
                                         if (isinstance(mod_aff, LearningProjection) and mod_aff in self.projections)]:
                 error_source = learning_projection.sender.owner
                 if (error_source not in self.nodes  # error_source is not in the Composition
@@ -4190,21 +4220,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     continue  # ignore the error_source
                 error_sources.append(error_source)
 
-                # If learning_mech was passed in, add error_source to its list of error_signal_input_states
+                # If learning_mech was passed in, add error_source to its list of error_signal_input_ports
                 if learning_mech:
-                    # FIX: REPLACE WITH learning_mech._add_error_signal_input_state ONCE IMPLEMENTED
-                    error_signal_input_state = next((e for e in learning_mech.error_signal_input_states
+                    # FIX: REPLACE WITH learning_mech._add_error_signal_input_port ONCE IMPLEMENTED
+                    error_signal_input_port = next((e for e in learning_mech.error_signal_input_ports
                                                      if not e.path_afferents), None)
-                    if error_signal_input_state is None:
-                        error_signal_input_state = learning_mech.add_states(
-                                                            InputState(projections=error_source.output_states[ERROR_SIGNAL],
-                                                                       name=ERROR_SIGNAL,
-                                                                       context=Context(source=ContextFlags.METHOD)),
+                    if error_signal_input_port is None:
+                        error_signal_input_port = learning_mech.add_ports(
+                                                            InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
+                                                                      name=ERROR_SIGNAL,
+                                                                      context=Context(source=ContextFlags.METHOD)),
                                                             context=Context(source=ContextFlags.METHOD))
                     # Create Projection here so that don't have to worry about determining correct
-                    #    error_signal_input_state of learning_mech in _create_non_terminal_backprop_learning_components
-                    error_projections.append(MappingProjection(sender=error_source.output_states[ERROR_SIGNAL],
-                                                               receiver=error_signal_input_state))
+                    #    error_signal_input_port of learning_mech in _create_non_terminal_backprop_learning_components
+                    error_projections.append(MappingProjection(sender=error_source.output_ports[ERROR_SIGNAL],
+                                                               receiver=error_signal_input_port))
 
         # Return error_sources so they can be used to create a new LearningMechanism if needed
         # Return error_projections created to existing learning_mech
@@ -4224,7 +4254,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                              and p.has_learning_projection
                              and p in self.projections)]:
             # Then any LearningProjections to that efferent that are in current Composition
-            for learning_projection in [mod_aff for mod_aff in efferent.parameter_states[MATRIX].mod_afferents
+            for learning_projection in [mod_aff for mod_aff in efferent.parameter_ports[MATRIX].mod_afferents
                                         if (isinstance(mod_aff, LearningProjection) and mod_aff in self.projections)]:
                 error_source = learning_projection.sender.owner
                 if (error_source in learning_mech.error_sources
@@ -4232,26 +4262,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         and learning_mech in [p.receiver.owner for p in error_source.efferents]):
                     continue
                 error_sources.append(error_source)
-                # FIX: REPLACE WITH learning_mech._add_error_signal_input_state ONCE IMPLEMENTED
-                error_signal_input_state = next((e for e in learning_mech.error_signal_input_states
+                # FIX: REPLACE WITH learning_mech._add_error_signal_input_port ONCE IMPLEMENTED
+                error_signal_input_port = next((e for e in learning_mech.error_signal_input_ports
                                                  if not e.path_afferents), None)
-                if error_signal_input_state is None:
-                    error_signal_input_state = learning_mech.add_states(
-                                                        InputState(projections=error_source.output_states[ERROR_SIGNAL],
-                                                                   name=ERROR_SIGNAL,
-                                                                   context=Context(source=ContextFlags.METHOD)),
+                if error_signal_input_port is None:
+                    error_signal_input_port = learning_mech.add_ports(
+                                                        InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
+                                                                  name=ERROR_SIGNAL,
+                                                                  context=Context(source=ContextFlags.METHOD)),
                                                         context=Context(source=ContextFlags.METHOD))
                 # DOES THE ABOVE GENERATE A PROJECTION?  IF SO, JUST GET AND RETURN THAT;  ELSE DO THE FOLLOWING:
-                error_projections.append(MappingProjection(sender=error_source.output_states[ERROR_SIGNAL],
-                                                           receiver=error_signal_input_state))
+                error_projections.append(MappingProjection(sender=error_source.output_ports[ERROR_SIGNAL],
+                                                           receiver=error_signal_input_port))
         return error_projections
         #  2) For non-terminal sequences, determine # of error_signals coming from LearningMechanisms associated with
         #     all efferentprojections of ProcessingMechanism that projects to ACTIVATION_OUTPUT of LearningMechanism
         #     - check validity of existing error_signal projections with respect to those and, if possible,
         #       their correspondence with error_matrices
-        #     - check if any ERROR_SIGNAL input_states are empty (vacated by terminal sequence elements deleted in
+        #     - check if any ERROR_SIGNAL input_ports are empty (vacated by terminal sequence elements deleted in
         #       add_projection)
-        #     - call add_states method on LearningMechanism to add new ERROR_SIGNAL input_state to its input_states
+        #     - call add_ports method on LearningMechanism to add new ERROR_SIGNAL input_port to its input_ports
         #       and error_matrix to its self.error_matrices attribute
         #     - add new error_signal projection
 
@@ -4263,18 +4293,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                              and hasattr(p, 'has_learning_projection')
                              and p.has_learning_projection)]:
             # For each LearningProjection to that afferent, if its LearningMechanism doesn't already receiver
-            for learning_projection in [lp for lp in afferent.parameter_states[MATRIX].mod_afferents
+            for learning_projection in [lp for lp in afferent.parameter_ports[MATRIX].mod_afferents
                                         if (isinstance(lp, LearningProjection)
                                             and error_source not in lp.sender.owner.error_sources)]:
                 dependent_learning_mech = learning_projection.sender.owner
-                error_signal_input_state = dependent_learning_mech.add_states(
-                                                    InputState(projections=error_source.output_states[ERROR_SIGNAL],
-                                                               name=ERROR_SIGNAL,
-                                                               context=Context(source=ContextFlags.METHOD)),
+                error_signal_input_port = dependent_learning_mech.add_ports(
+                                                    InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
+                                                              name=ERROR_SIGNAL,
+                                                              context=Context(source=ContextFlags.METHOD)),
                                                     context=Context(source=ContextFlags.METHOD))
-                projections.append(error_signal_input_state[0].path_afferents[0])
-                # projections.append(MappingProjection(sender=error_source.output_states[ERROR_SIGNAL],
-                #                                      receiver=error_signal_input_state[0]))
+                projections.append(error_signal_input_port[0].path_afferents[0])
+                # projections.append(MappingProjection(sender=error_source.output_ports[ERROR_SIGNAL],
+                #                                      receiver=error_signal_input_port[0]))
         return projections
 
 
@@ -4328,34 +4358,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._update_shadows_dict(controller)
 
         # INSTANTIATE SHADOW_INPUT PROJECTIONS
-        # Skip controller's first (OUTCOME) input_state (that receives the Projection from its objective_mechanism
+        # Skip controller's first (OUTCOME) input_port (that receives the Projection from its objective_mechanism
         input_cims=[self.input_CIM] + [comp.input_CIM for comp in self._get_nested_compositions()]
-        # For the rest of the controller's input_states if they are marked as receiving SHADOW_INPUTS,
-        #    instantiate the shadowing Projection to them from the sender to the shadowed InputState
-        for input_state in controller.input_states[1:]:
-            if hasattr(input_state, SHADOW_INPUTS) and input_state.shadow_inputs is not None:
-                for proj in input_state.shadow_inputs.path_afferents:
+        # For the rest of the controller's input_ports if they are marked as receiving SHADOW_INPUTS,
+        #    instantiate the shadowing Projection to them from the sender to the shadowed InputPort
+        for input_port in controller.input_ports[1:]:
+            if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
+                for proj in input_port.shadow_inputs.path_afferents:
                     sender = proj.sender
                     if sender.owner not in input_cims:
-                        self.add_projection(projection=MappingProjection(sender=sender, receiver=input_state),
+                        self.add_projection(projection=MappingProjection(sender=sender, receiver=input_port),
                                             sender=sender.owner,
                                             receiver=controller)
                         shadow_proj._activate_for_compositions(self)
                     else:
                         try:
-                            shadow_proj = MappingProjection(sender=proj.sender, receiver=input_state)
+                            shadow_proj = MappingProjection(sender=proj.sender, receiver=input_port)
                             shadow_proj._activate_for_compositions(self)
                         except DuplicateProjectionError:
                             pass
-            for proj in input_state.path_afferents:
+            for proj in input_port.path_afferents:
                 proj._activate_for_compositions(self)
 
         # Check whether controller has input, and if not then disable
-        if not (isinstance(self.controller.input_states, ContentAddressableList)
-                and self.controller.input_states):
+        if not (isinstance(self.controller.input_ports, ContentAddressableList)
+                and self.controller.input_ports):
             # If controller was enabled, warn that it has been disabled
             if self.enable_controller:
-                warnings.warn(f"{self.controller.name} for {self.name} has no input_states, "
+                warnings.warn(f"{self.controller.name} for {self.name} has no input_ports, "
                               f"so controller will be disabled.")
             self.enable_controller = False
             return
@@ -4365,10 +4395,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Get rid of default ControlSignal if it has no ControlProjections
         controller._remove_default_control_signal(type=CONTROL_SIGNAL)
 
-        # Add any ControlSignals specified for ParameterStates of nodes already in the Composition
+        # Add any ControlSignals specified for ParameterPorts of nodes already in the Composition
         control_signal_specs = self._get_control_signals_for_composition()
         for ctl_sig_spec in control_signal_specs:
-            # FIX: 9/14/19: THIS SHOULD BE HANDLED IN _instantiate_projection_to_state
+            # FIX: 9/14/19: THIS SHOULD BE HANDLED IN _instantiate_projection_to_port
             #               CALLED FROM _instantiate_control_signal
             #               SHOULD TRAP THAT ERROR AND GENERATE CONTEXT-APPROPRIATE ERROR MESSAGE
             # Don't add any that are already on the ControlMechanism
@@ -4387,7 +4417,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Return list of ControlSignals specified by nodes in the Composition
 
         Generate list of control signal specifications
-            from ParameterStates of Mechanisms that have been specified for control.
+            from ParameterPorts of Mechanisms that have been specified for control.
         The specifications can be:
             ControlProjections (with deferred_init())
             # FIX: 9/14/19 - THIS SHOULD ALREADY HAVE BEEN PARSED INTO ControlProjection WITH DEFFERRED_INIT:
@@ -4406,22 +4436,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if node.controller:
                     control_signal_specs.append(node._get_control_signals_for_composition())
             elif isinstance(node, Mechanism):
-                control_signal_specs.extend(node._get_parameter_state_deferred_init_control_specs())
+                control_signal_specs.extend(node._get_parameter_port_deferred_init_control_specs())
         return control_signal_specs
 
     def _build_predicted_inputs_dict(self, predicted_input):
         inputs = {}
-        # ASSUMPTION: input_states[0] is NOT a feature and input_states[1:] are features
-        # If this is not a good assumption, we need another way to look up the feature InputStates
-        # of the OCM and know which InputState maps to which predicted_input value
+        # ASSUMPTION: input_ports[0] is NOT a feature and input_ports[1:] are features
+        # If this is not a good assumption, we need another way to look up the feature InputPorts
+        # of the OCM and know which InputPort maps to which predicted_input value
 
         nested_nodes = dict(self._get_nested_nodes())
-        for j in range(len(self.controller.input_states) - 1):
-            input_state = self.controller.input_states[j + 1]
-            if hasattr(input_state, SHADOW_INPUTS) and input_state.shadow_inputs is not None:
-                owner = input_state.shadow_inputs.owner
+        for j in range(len(self.controller.input_ports) - 1):
+            input_port = self.controller.input_ports[j + 1]
+            if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
+                owner = input_port.shadow_inputs.owner
                 if not owner in nested_nodes:
-                    inputs[input_state.shadow_inputs.owner] = predicted_input[j]
+                    inputs[input_port.shadow_inputs.owner] = predicted_input[j]
                 else:
                     comp = nested_nodes[owner]
                     if not comp in inputs:
@@ -4521,9 +4551,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except AttributeError:
                 self.parameters.simulation_results._set([self.get_output_values(context)], base_context)
 
-        # Update input states in order to get correct value for "outcome" (from objective mech)
-        self.controller._update_input_states(context, runtime_params)
-        outcome = self.controller.input_state.parameters.value._get(context)
+        # Update input ports in order to get correct value for "outcome" (from objective mech)
+        self.controller._update_input_ports(context, runtime_params)
+        outcome = self.controller.input_port.parameters.value._get(context)
 
         if outcome is None:
             net_outcome = 0.0
@@ -4547,10 +4577,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
                                                             STATE_FUNCTION_PARAMS, ROLES, ALL))=False,
                    show_nested:tc.optional(tc.any(bool,dict,tc.enum(ALL)))=ALL,
-                   show_controller:bool=False,
+                   show_controller:tc.any(bool, tc.enum(AGENT_REP))=False,
                    show_cim:bool=False,
                    show_learning:bool=False,
                    show_headers:bool=True,
+                   show_types:bool=False,
                    show_dimensions:bool=False,
                    show_projection_labels:bool=False,
                    direction:tc.enum('BT', 'TB', 'LR', 'RL')='BT',
@@ -4578,6 +4609,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            show_cim=False,                    \
            show_learning=False,               \
            show_headers=True,                 \
+           show_types=False,                  \
            show_dimensions=False,             \
            show_projection_labels=False,      \
            direction='BT',                    \
@@ -4606,34 +4638,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         show_node_structure : bool, VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS, STATE_FUNCTION_PARAMS, ROLES, \
         or ALL : default False
-            show a detailed representation of each `Mechanism` in the graph, including its `States <State>`;  can
+            show a detailed representation of each `Mechanism` in the graph, including its `Ports <Port>`;  can
             have any of the following settings alone or in a list:
 
-            * `True` -- show States of Mechanism, but not information about the `value
-              <Component.value>` or `function <Component.function>` of the Mechanism or its States.
+            * `True` -- show Ports of Mechanism, but not information about the `value
+              <Component.value>` or `function <Component.function>` of the Mechanism or its Ports.
 
             * *VALUES* -- show the `value <Mechanism_Base.value>` of the Mechanism and the `value
-              <State_Base.value>` of each of its States.
+              <Port_Base.value>` of each of its Ports.
 
             * *LABELS* -- show the `value <Mechanism_Base.value>` of the Mechanism and the `value
-              <State_Base.value>` of each of its States, using any labels for the values of InputStates and
-              OutputStates specified in the Mechanism's `input_labels_dict <Mechanism.input_labels_dict>` and
+              <Port_Base.value>` of each of its Ports, using any labels for the values of InputPorts and
+              OutputPorts specified in the Mechanism's `input_labels_dict <Mechanism.input_labels_dict>` and
               `output_labels_dict <Mechanism.output_labels_dict>`, respectively.
 
             * *FUNCTIONS* -- show the `function <Mechanism_Base.function>` of the Mechanism and the `function
-              <State_Base.function>` of its InputStates and OutputStates.
+              <Port_Base.function>` of its InputPorts and OutputPorts.
 
             * *MECH_FUNCTION_PARAMS_* -- show the parameters of the `function <Mechanism_Base.function>` for each
               Mechanism in the Composition (only applies if *FUNCTIONS* is True).
 
             * *STATE_FUNCTION_PARAMS_* -- show the parameters of the `function <Mechanism_Base.function>` for each
-              State of each Mechanism in the Composition (only applies if *FUNCTIONS* is True).
+              Port of each Mechanism in the Composition (only applies if *FUNCTIONS* is True).
 
             * *ROLES* -- show the `role <Composition.NodeRoles>` of the Mechanism in the Composition
               (but not any of the other information;  use *ALL* to show ROLES with other information).
 
             * *ALL* -- shows the role, `function <Component.function>`, and `value <Component.value>` of the
-              Mechanisms in the `Composition` and their `States <State>` (using labels for
+              Mechanisms in the `Composition` and their `Ports <Port>` (using labels for
               the values, if specified -- see above), including parameters for all functions.
 
         show_nested : bool | dict : default ALL
@@ -4642,9 +4674,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             passes all arguments specified for the main Composition to the nested one(s);  True uses the default
             values of show_graph args for the nested Composition(s).
 
-        show_controller :  bool : default False
-            specifies whether or not to show the Composition's controller and associated ObjectiveMechanism;
-            these are displayed in the color specified for **controller_color**.
+        show_controller :  bool or AGENT_REP : default False
+            specifies whether or not to show the Composition's `controller <Composition.controller>` and associated
+            `objective_mechanism <ControlMechanism.objective_mechanism>` if it has one.  If the controller is an
+            OptimizationControlMechanism and it has an `agent_rep <OptimizationControlMechanism>`, then specifying
+            *AGENT_REP* will also show that.  All of these items are displayed in the color specified for
+            **controller_color**.
 
         show_cim : bool : default False
             specifies whether or not to show the Composition's input and out CompositionInterfaceMechanisms (CIMs)
@@ -4664,6 +4699,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies whether or not to show headers in the subfields of a Mechanism's node;  only takes effect if
             **show_node_structure** is specified (see above).
 
+        show_types : bool : default False
+            specifies whether or not to show type (class) of `Mechanism <Mechanism>` in each node label.
+
         show_dimensions : bool : default False
             specifies whether or not to show dimensions for the `variable <Component.variable>` and `value
             <Component.value>` of each Component in the graph (and/or MappingProjections when show_learning
@@ -4671,9 +4709,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             * *MECHANISMS* -- shows `Mechanism` input and output dimensions.  Input dimensions are shown in parentheses
               below the name of the Mechanism; each number represents the dimension of the `variable
-              <InputState.variable>` for each `InputState` of the Mechanism; Output dimensions are shown above
-              the name of the Mechanism; each number represents the dimension for `value <OutputState.value>` of each
-              of `OutputState` of the Mechanism.
+              <InputPort.variable>` for each `InputPort` of the Mechanism; Output dimensions are shown above
+              the name of the Mechanism; each number represents the dimension for `value <OutputPort.value>` of each
+              of `OutputPort` of the Mechanism.
 
             * *PROJECTIONS* -- shows `MappingProjection` `matrix <MappingProjection.matrix>` dimensions.  Each is
               shown in (<dim>x<dim>...) format;  for standard 2x2 "weight" matrix, the first entry is the number of
@@ -4890,7 +4928,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     rcvr_penwidth = str(default_width)
 
                 # Implement rcvr node
-                rcvr_label = self._get_graph_node_label(rcvr, show_dimensions)
+                rcvr_label = self._get_graph_node_label(rcvr,
+                                                        show_types,
+                                                        show_dimensions)
 
                 if show_node_structure and isinstance(rcvr, Mechanism):
                     g.node(rcvr_label,
@@ -4908,8 +4948,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # MODIFIED 5/29/19 OLD: [JDC] SEEMS TO BE HANDLED BY ADDITION OF CALL TO _assign_incoming_edges BELOW
                 # # handle auto-recurrent projections
-                # for input_state in rcvr.input_states:
-                #     for proj in input_state.path_afferents:
+                # for input_port in rcvr.input_ports:
+                #     for proj in input_port.path_afferents:
                 #         if proj.sender.owner is not rcvr:
                 #             continue
                 #         if show_node_structure:
@@ -4979,7 +5019,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     assert False, '_assignm_cim_components called with node that is not input_CIM or output_CIM'
 
                 # Assign lablel
-                cim_label = self._get_graph_node_label(cim, show_dimensions)
+                cim_label = self._get_graph_node_label(cim, show_types, show_dimensions)
 
                 if show_node_structure:
                     g.node(cim_label,
@@ -5001,8 +5041,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Projections from input_CIM to INPUT nodes
                 if cim is self.input_CIM:
 
-                    for output_state in self.input_CIM.output_states:
-                        projs = output_state.efferents
+                    for output_port in self.input_CIM.output_ports:
+                        projs = output_port.efferents
                         for proj in projs:
                             input_mech = proj.receiver.owner
                             if input_mech is self.controller:
@@ -5018,12 +5058,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                        format(self.name, input_mech,
                                                               NodeRole.INPUT.name, NodeRole.INPUT.name.lower()))
                             # Construct edge name
-                            input_mech_label = self._get_graph_node_label(input_mech, show_dimensions)
+                            input_mech_label = self._get_graph_node_label(input_mech,
+                                                                          show_types,
+                                                                          show_dimensions)
                             if show_node_structure:
                                 cim_proj_label = '{}:{}-{}'. \
-                                    format(cim_label, OutputState.__name__, proj.sender.name)
+                                    format(cim_label, OutputPort.__name__, proj.sender.name)
                                 proc_mech_rcvr_label = '{}:{}-{}'. \
-                                    format(input_mech_label, InputState.__name__, proj.receiver.name)
+                                    format(input_mech_label, InputPort.__name__, proj.receiver.name)
                             else:
                                 cim_proj_label = cim_label
                                 proc_mech_rcvr_label = input_mech_label
@@ -5040,7 +5082,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 proj_color = default_node_color
                                 proj_width = str(default_width)
                             if show_projection_labels:
-                                label = self._get_graph_node_label(proj, show_dimensions)
+                                label = self._get_graph_node_label(proj, show_types, show_dimensions)
                             else:
                                 label = ''
                             g.edge(cim_proj_label, proc_mech_rcvr_label, label=label,
@@ -5049,8 +5091,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Projections from OUTPUT nodes to output_CIM
                 if cim is self.output_CIM:
                     # Construct edge name
-                    for input_state in self.output_CIM.input_states:
-                        projs = input_state.path_afferents
+                    for input_port in self.output_CIM.input_ports:
+                        projs = input_port.path_afferents
                         for proj in projs:
                             # Validate the Projection is from an OUTPUT node
                             output_mech = proj.sender.owner
@@ -5060,13 +5102,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                        format(self.name, output_mech,
                                                               NodeRole.OUTPUT.name, NodeRole.OUTPUT.name.lower()))
                             # Construct edge name
-                            output_mech_label = self._get_graph_node_label(output_mech, show_dimensions)
+                            output_mech_label = self._get_graph_node_label(output_mech,
+                                                                           show_types,
+                                                                           show_dimensions)
                             if show_node_structure:
                                 cim_proj_label = '{}:{}'. \
                                     format(cim_label, cim._get_port_name(proj.receiver))
                                 proc_mech_sndr_label = '{}:{}'.\
                                     format(output_mech_label, output_mech._get_port_name(proj.sender))
-                                    # format(output_mech_label, OutputState.__name__, proj.sender.name)
+                                    # format(output_mech_label, OutputPort.__name__, proj.sender.name)
                             else:
                                 cim_proj_label = cim_label
                                 proc_mech_sndr_label = output_mech_label
@@ -5083,7 +5127,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 proj_color = default_node_color
                                 proj_width = str(default_width)
                             if show_projection_labels:
-                                label = self._get_graph_node_label(proj, show_dimensions)
+                                label = self._get_graph_node_label(proj, show_types, show_dimensions)
                             else:
                                 label = ''
                             g.edge(proc_mech_sndr_label, cim_proj_label, label=label,
@@ -5111,7 +5155,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Assign controller node
             node_shape = mechanism_shape
-            ctlr_label = self._get_graph_node_label(controller, show_dimensions)
+            ctlr_label = self._get_graph_node_label(controller, show_types, show_dimensions)
             if show_node_structure:
                 g.node(ctlr_label,
                        controller._show_structure(**node_struct_args, node_border=ctlr_width,
@@ -5129,7 +5173,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # outgoing edges (from controller to ProcessingMechanisms)
             for control_signal in controller.control_signals:
                 for ctl_proj in control_signal.efferents:
-                    proc_mech_label = self._get_graph_node_label(ctl_proj.receiver.owner, show_dimensions)
+                    proc_mech_label = self._get_graph_node_label(ctl_proj.receiver.owner, show_types, show_dimensions)
                     if controller in active_items:
                         if active_color is BOLD:
                             ctl_proj_color = controller_color
@@ -5161,7 +5205,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # If controller has objective_mechanism, assign its node and Projections
             if controller.objective_mechanism:
                 # get projection from ObjectiveMechanism to ControlMechanism
-                objmech_ctlr_proj = controller.input_state.path_afferents[0]
+                objmech_ctlr_proj = controller.input_port.path_afferents[0]
                 if controller in active_items:
                     if active_color is BOLD:
                         objmech_ctlr_proj_color = controller_color
@@ -5186,10 +5230,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     objmech_color = controller_color
                     objmech_width = str(default_width)
 
-                objmech_label = self._get_graph_node_label(objmech, show_dimensions)
+                objmech_label = self._get_graph_node_label(objmech, show_types, show_dimensions)
                 if show_node_structure:
                     if objmech in self.scheduler.conditions:
-                        condition = self.scheduler.conditions[obj_mech]
+                        condition = self.scheduler.conditions[objmech]
                     else:
                         condition = None
                     g.node(objmech_label,
@@ -5219,8 +5263,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        color=objmech_ctlr_proj_color, penwidth=objmech_ctlr_proj_width)
 
                 # incoming edges (from monitored mechs to objective mechanism)
-                for input_state in objmech.input_states:
-                    for projection in input_state.path_afferents:
+                for input_port in objmech.input_ports:
+                    for projection in input_port.path_afferents:
                         if objmech in active_items:
                             if active_color is BOLD:
                                 proj_color = controller_color
@@ -5232,12 +5276,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             proj_color = controller_color
                             proj_width = str(default_width)
                         if show_node_structure:
-                            sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions) + \
+                            sndr_proj_label = self._get_graph_node_label(projection.sender.owner,
+                                                                         show_types,
+                                                                         show_dimensions) + \
                                               ':' + objmech._get_port_name(projection.sender)
-                            objmech_proj_label = objmech_label + ':' + objmech._get_port_name(input_state)
+                            objmech_proj_label = objmech_label + ':' + objmech._get_port_name(input_port)
                         else:
-                            sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions)
-                            objmech_proj_label = self._get_graph_node_label(objmech, show_dimensions)
+                            sndr_proj_label = self._get_graph_node_label(projection.sender.owner,
+                                                                         show_types,
+                                                                         show_dimensions)
+                            objmech_proj_label = self._get_graph_node_label(objmech,
+                                                                            show_types,
+                                                                            show_dimensions)
                         if show_projection_labels:
                             edge_label = projection.name
                         else:
@@ -5246,7 +5296,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                color=proj_color, penwidth=proj_width)
 
             # If controller has an agent_rep, assign its node and edges (not Projections per se)
-            if hasattr(controller, 'agent_rep') and controller.agent_rep:
+            if hasattr(controller, 'agent_rep') and controller.agent_rep and show_controller==AGENT_REP :
                 # get agent_rep
                 agent_rep = controller.agent_rep
                 # controller is active, treat
@@ -5262,7 +5312,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     agent_rep_width = str(default_width)
 
                 # agent_rep node
-                agent_rep_label = self._get_graph_node_label(agent_rep, show_dimensions)
+                agent_rep_label = self._get_graph_node_label(agent_rep, show_types, show_dimensions)
                 g.node(agent_rep_label,
                         color=agent_rep_color, penwidth=agent_rep_width, shape=agent_rep_shape,
                         rank=control_rank)
@@ -5273,7 +5323,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # get any other incoming edges to controller (i.e., other than from ObjectiveMechanism)
             senders = set()
-            for i in controller.input_states[1:]:
+            for i in controller.input_ports[1:]:
                 for p in i.path_afferents:
                     senders.add(p.sender.owner)
             _assign_incoming_edges(g, controller, ctlr_label, senders, proj_color=ctl_proj_color)
@@ -5292,7 +5342,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     return
 
                 # Get rcvr info
-                rcvr_label = self._get_graph_node_label(rcvr, show_dimensions)
+                rcvr_label = self._get_graph_node_label(rcvr, show_types, show_dimensions)
                 if rcvr in active_items:
                     if active_color is BOLD:
                         rcvr_color = learning_color
@@ -5362,16 +5412,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 learning_proj_color = learning_color
                 learning_proj_width = str(default_width)
-            sndrs = proj._parameter_states['matrix'].mod_afferents # GET ALL LearningProjections to proj
+            sndrs = proj._parameter_ports['matrix'].mod_afferents # GET ALL LearningProjections to proj
             for sndr in sndrs:
-                sndr_label = self._get_graph_node_label(sndr.sender.owner, show_dimensions)
-                rcvr_label = self._get_graph_node_label(proj, show_dimensions)
+                sndr_label = self._get_graph_node_label(sndr.sender.owner, show_types, show_dimensions)
+                rcvr_label = self._get_graph_node_label(proj, show_types, show_dimensions)
                 if show_projection_labels:
-                    edge_label = proj._parameter_states['matrix'].mod_afferents[0].name
+                    edge_label = proj._parameter_ports['matrix'].mod_afferents[0].name
                 else:
                     edge_label = ''
                 if show_node_structure:
-                    G.edge(sndr_label + ':' + OutputState.__name__ + '-' + 'LearningSignal',
+                    G.edge(sndr_label + ':' + OutputPort.__name__ + '-' + 'LearningSignal',
                            rcvr_label,
                            label=edge_label,
                            color=learning_proj_color, penwidth=learning_proj_width)
@@ -5389,11 +5439,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for sndr in senders:
 
                 # Set sndr info
-                sndr_label = self._get_graph_node_label(sndr, show_dimensions)
+                sndr_label = self._get_graph_node_label(sndr, show_types, show_dimensions)
 
-                # Iterate through all Projections from all OutputStates of sndr
-                for output_state in sndr.output_states:
-                    for proj in output_state.efferents:
+                # Iterate through all Projections from all OutputPorts of sndr
+                for output_port in sndr.output_ports:
+                    for proj in output_port.efferents:
 
                         # Skip any projections to ObjectiveMechanism for controller
                         #   (those are handled in _assign_control_components)
@@ -5416,7 +5466,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             except AttributeError:
                                 has_learning = None
 
-                            edge_label = self._get_graph_node_label(proj, show_dimensions)
+                            edge_label = self._get_graph_node_label(proj, show_types, show_dimensions)
                             is_learning_component = rcvr in self.learning_components or sndr in self.learning_components
 
                             # Check if Projection or its receiver is active
@@ -5516,23 +5566,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 'show_functions': any(key in show_node_structure for key in {FUNCTIONS, ALL}),
                                 'show_mech_function_params': any(key in show_node_structure
                                                                  for key in {MECH_FUNCTION_PARAMS, ALL}),
-                                'show_state_function_params': any(key in show_node_structure
+                                'show_port_function_params': any(key in show_node_structure
                                                                   for key in {STATE_FUNCTION_PARAMS, ALL}),
                                 'show_values': any(key in show_node_structure for key in {VALUES, ALL}),
                                 'use_labels': any(key in show_node_structure for key in {LABELS, ALL}),
                                 'show_headers': show_headers,
-                                'output_fmt': 'struct'}
+                                'output_fmt': 'struct',
+                                'context':context}
         else:
             node_struct_args = {'composition': self,
                                 'show_roles': show_node_structure in {ROLES, ALL},
                                 'show_conditions': show_node_structure in {CONDITIONS, ALL},
                                 'show_functions': show_node_structure in {FUNCTIONS, ALL},
                                 'show_mech_function_params': show_node_structure in {MECH_FUNCTION_PARAMS, ALL},
-                                'show_state_function_params': show_node_structure in {STATE_FUNCTION_PARAMS, ALL},
+                                'show_port_function_params': show_node_structure in {STATE_FUNCTION_PARAMS, ALL},
                                 'show_values': show_node_structure in {VALUES, LABELS, ALL},
                                 'use_labels': show_node_structure in {LABELS, ALL},
                                 'show_headers': show_headers,
-                                'output_fmt': 'struct'}
+                                'output_fmt': 'struct',
+                                'context': context}
 
         # DEFAULT ATTRIBUTES ----------------------------------------------------------------
 
@@ -5646,37 +5698,41 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # GENERATE OUTPUT ---------------------------------------------------------------------
 
         # Show as pdf
-        if output_fmt == 'pdf':
-            # G.format = 'svg'
-            G.view(self.name.replace(" ", "-"), cleanup=True, directory='show_graph OUTPUT/PDFS')
+        try:
+            if output_fmt == 'pdf':
+                # G.format = 'svg'
+                G.view(self.name.replace(" ", "-"), cleanup=True, directory='show_graph OUTPUT/PDFS')
 
-        # Generate images for animation
-        elif output_fmt == 'gif':
-            if self.active_item_rendered or INITIAL_FRAME in active_items:
-                self._generate_gifs(G, active_items, context)
+            # Generate images for animation
+            elif output_fmt == 'gif':
+                if self.active_item_rendered or INITIAL_FRAME in active_items:
+                    self._generate_gifs(G, active_items, context)
 
-        # Return graph to show in jupyter
-        elif output_fmt == 'jupyter':
-            return G
+            # Return graph to show in jupyter
+            elif output_fmt == 'jupyter':
+                return G
 
-        elif output_fmt == 'gv':
-            return G
+            elif output_fmt == 'gv':
+                return G
+        except:
+            raise CompositionError(f"Problem displaying graph for {self.name}")
 
     @tc.typecheck
     def _show_structure(self,
-                       # direction = 'BT',
-                       show_functions:bool=False,
-                       show_values:bool=False,
-                       use_labels:bool=False,
-                       show_headers:bool=False,
-                       show_roles:bool=False,
-                       show_conditions:bool=False,
-                       system=None,
-                       composition=None,
-                       condition:tc.optional(Condition)=None,
-                       compact_cim:tc.optional(tc.enum(INPUT, OUTPUT))=None,
-                       output_fmt:tc.enum('pdf','struct')='pdf'
-                       ):
+                        # direction = 'BT',
+                        show_functions:bool=False,
+                        show_values:bool=False,
+                        use_labels:bool=False,
+                        show_headers:bool=False,
+                        show_roles:bool=False,
+                        show_conditions:bool=False,
+                        system=None,
+                        composition=None,
+                        condition:tc.optional(Condition)=None,
+                        compact_cim:tc.optional(tc.enum(INPUT, OUTPUT))=None,
+                        output_fmt:tc.enum('pdf','struct')='pdf',
+                        context=None
+                        ):
         """Generate a detailed display of a the structure of a Mechanism.
 
         .. note::
@@ -5691,25 +5747,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         ---------
 
         show_functions : bool : default False
-            show the `function <Component.function>` of the Mechanism and each of its States.
+            show the `function <Component.function>` of the Mechanism and each of its Ports.
 
         show_mech_function_params : bool : default False
             show the parameters of the Mechanism's `function <Component.function>` if **show_functions** is True.
 
-        show_state_function_params : bool : default False
-            show parameters for the `function <Component.function>` of the Mechanism's States if **show_functions** is
+        show_port_function_params : bool : default False
+            show parameters for the `function <Component.function>` of the Mechanism's Ports if **show_functions** is
             True).
 
         show_values : bool : default False
-            show the `value <Component.value>` of the Mechanism and each of its States (prefixed by "=").
+            show the `value <Component.value>` of the Mechanism and each of its Ports (prefixed by "=").
 
         use_labels : bool : default False
             use labels for values if **show_values** is `True`; labels must be specified in the `input_labels_dict
-            <Mechanism.input_labels_dict>` (for InputState values) and `output_labels_dict
-            <Mechanism.output_labels_dict>` (for OutputState values); otherwise it is ignored.
+            <Mechanism.input_labels_dict>` (for InputPort values) and `output_labels_dict
+            <Mechanism.output_labels_dict>` (for OutputPort values); otherwise it is ignored.
 
         show_headers : bool : default False
-            show the Mechanism, InputState, ParameterState and OutputState headers.
+            show the Mechanism, InputPort, ParameterPort and OutputPort headers.
 
         show_roles : bool : default False
             show the `roles <Composition.NodeRoles>` of each Mechanism in the `Composition`.
@@ -5726,7 +5782,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if this is not specified, the **show_roles** argument is ignored.
 
         compact_cim : *INPUT* or *OUTUPT* : default None
-            specifies whether to suppress InputState fields for input_CIM and OutputState fields for output_CIM.
+            specifies whether to suppress InputPort fields for input_CIM and OutputPort fields for output_CIM.
 
         output_fmt : keyword : default 'pdf'
             'pdf': generate and open a pdf with the visualization;\n
@@ -5741,11 +5797,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         pipe = r' | '
         close_bracket = r'}'
         mechanism_header = r'COMPOSITION:\n'
-        input_states_header = r'______CIMINPUTSTATES______\n' \
+        input_ports_header = r'______CIMInputPortS______\n' \
                               r'/\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ' \
                               r'\ \ \ \ \ \ \ \ \ \ \\'
-        output_states_header = r'\\______\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ______/' \
-                               r'\nCIMOUTPUTSTATES'
+        output_ports_header = r'\\______\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ______/' \
+                               r'\nCIMOutputPortS'
 
         def mech_string(mech):
             """Return string with name of mechanism possibly with function and/or value
@@ -5783,27 +5839,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return mech_name + mech_role + mech_function + mech_value
 
         from psyneulink.core.globals.utilities import ContentAddressableList
-        def states_string(state_list: ContentAddressableList,
-                          state_type,
+        def states_string(port_list: ContentAddressableList,
+                          port_type,
                           include_function: bool = False,
                           include_value: bool = False,
                           use_label: bool = False):
-            """Return string with name of states in ContentAddressableList with functions and/or values as specified"""
+            """Return string with name of ports in ContentAddressableList with functions and/or values as specified"""
             states = open_bracket
-            for i, state in enumerate(state_list):
+            for i, port in enumerate(port_list):
                 if i:
                     states += pipe
                 function = ''
                 if include_function:
-                    function = r'\n({})'.format(state.function.__class__.__name__)
+                    function = r'\n({})'.format(port.function.__class__.__name__)
                 value = ''
                 if include_value:
                     if use_label:
-                        value = r'\n={}'.format(state.label)
+                        value = r'\n={}'.format(port.label)
                     else:
-                        value = r'\n={}'.format(state.value)
-                states += r'<{0}-{1}> {1}{2}{3}'.format(state_type.__name__,
-                                                        state.name,
+                        value = r'\n={}'.format(port.value)
+                states += r'<{0}-{1}> {1}{2}{3}'.format(port_type.__name__,
+                                                        port.name,
                                                         function,
                                                         value)
             states += close_bracket
@@ -5812,47 +5868,47 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Construct Mechanism specification
         mech = mech_string(self)
 
-        # Construct InputStates specification
-        if len(self.input_states) and compact_cim is not INPUT:
+        # Construct InputPorts specification
+        if len(self.input_ports) and compact_cim is not INPUT:
             if show_headers:
-                input_states = input_states_header + pipe + states_string(self.input_states,
-                                                                          InputState,
+                input_ports = input_ports_header + pipe + states_string(self.input_ports,
+                                                                          InputPort,
                                                                           include_function=show_functions,
                                                                           include_value=show_values,
                                                                           use_label=use_labels)
             else:
-                input_states = states_string(self.input_states,
-                                             InputState,
+                input_ports = states_string(self.input_ports,
+                                             InputPort,
                                              include_function=show_functions,
                                              include_value=show_values,
                                              use_label=use_labels)
-            input_states = pipe + input_states
+            input_ports = pipe + input_ports
         else:
-            input_states = ''
+            input_ports = ''
 
-        # Construct OutputStates specification
-        if len(self.output_states) and compact_cim is not OUTPUT:
+        # Construct OutputPorts specification
+        if len(self.output_ports) and compact_cim is not OUTPUT:
             if show_headers:
-                output_states = states_string(self.output_states,
-                                              OutputState,
+                output_ports = states_string(self.output_ports,
+                                              OutputPort,
                                               include_function=show_functions,
                                               include_value=show_values,
-                                              use_label=use_labels) + pipe + output_states_header
+                                              use_label=use_labels) + pipe + output_ports_header
             else:
-                output_states = states_string(self.output_states,
-                                              OutputState,
+                output_ports = states_string(self.output_ports,
+                                              OutputPort,
                                               include_function=show_functions,
                                               include_value=show_values,
                                               use_label=use_labels)
 
-            output_states = output_states + pipe
+            output_ports = output_ports + pipe
         else:
-            output_states = ''
+            output_ports = ''
 
         m_node_struct = open_bracket + \
-                        output_states + \
+                        output_ports + \
                         open_bracket + mech + close_bracket + \
-                        input_states + \
+                        input_ports + \
                         close_bracket
 
         if output_fmt == 'struct':
@@ -5873,18 +5929,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif output_fmt == 'jupyter':
             return m
 
-    def _get_graph_node_label(self, item, show_dimensions=None):
+    def _get_graph_node_label(self, item, show_types=None, show_dimensions=None):
         if not isinstance(item, (Mechanism, Composition, Projection)):
             raise CompositionError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
         # TBI Show Dimensions
         name = item.name
 
+        if show_types:
+            name = item.name+'\n('+item.__class__.__name__+')'
+
         if show_dimensions in {ALL, MECHANISMS} and isinstance(item, Mechanism):
-            input_str = "in ({})".format(",".join(str(input_state.socket_width)
-                                                  for input_state in item.input_states))
-            output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_state.value)))
-                                                    for output_state in item.output_states))
-            return "{}\n{}\n{}".format(output_str, name, input_str)
+            input_str = "in ({})".format(",".join(str(input_port.socket_width)
+                                                  for input_port in item.input_ports))
+            output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_port.value)))
+                                                    for output_port in item.output_ports))
+            return f"{output_str}\n{name}\n{input_str}"
         if show_dimensions in {ALL, PROJECTIONS} and isinstance(item, Projection):
             # MappingProjections use matrix
             if isinstance(item, MappingProjection):
@@ -6626,10 +6685,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If self is a nested composition, its input CIM will obtain its value in one of two ways,
         # depending on whether or not it is being executed within a simulation.
         # If it is a simulation, then we need to use the _assign_values_to_input_CIM method, which parses the inputs
-        # argument of the execute method into a suitable shape for the input states of the input_CIM.
+        # argument of the execute method into a suitable shape for the input ports of the input_CIM.
         # If it is not a simulation, we can simply execute the input CIM.
         #
-        # If self is an unnested composition, we must update the input states for any input nodes that are Compositions.
+        # If self is an unnested composition, we must update the input ports for any input nodes that are Compositions.
         # This is done to update the variable for their input CIMs, which allows the _adjust_execution_stimuli
         # method to properly validate input for those nodes.
         # -DS
@@ -6836,8 +6895,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             if hasattr(node, "recurrent_projection"):
                                 node.recurrent_projection.sender.parameters.value._set([0.0], context)
                         elif node in no_clamp_inputs:
-                            for input_state in node.input_states:
-                                self.input_CIM_states[input_state][1].parameters.value._set(0.0, context)
+                            for input_port in node.input_ports:
+                                self.input_CIM_ports[input_port][1].parameters.value._set(0.0, context)
 
                 # EXECUTE A MECHANISM ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -6862,7 +6921,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if self.enable_learning:
                         projections = set(self.projections).intersection(set(node.path_afferents))
                         if any([p for p in projections if
-                                any([a for a in p.parameter_states[MATRIX].mod_afferents
+                                any([a for a in p.parameter_ports[MATRIX].mod_afferents
                                      if (hasattr(a, 'learning_enabled') and a.learning_enabled in {True, ONLINE})])]):
                             context.replace_flag(ContextFlags.PROCESSING, ContextFlags.LEARNING)
 
@@ -6872,8 +6931,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         if node is not self.controller:
                             if nested and node in self.get_nodes_by_role(NodeRole.INPUT):
-                                for state in node.input_states:
-                                    state._update(context=context)
+                                for port in node.input_ports:
+                                    port._update(context=context)
                             node.execute(
                                 context=context,
                                 runtime_params=execution_runtime_params,
@@ -6915,7 +6974,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             data = _comp_ex.extract_frozen_node_output(srnode)
                             for i, v in enumerate(data):
                                 # This sets frozen values
-                                srnode.output_states[i].parameters.value._set(v, context, skip_history=True,
+                                srnode.output_ports[i].parameters.value._set(v, context, skip_history=True,
                                                                              skip_log=True)
 
                     # Pass outer context to nested Composition
@@ -6953,7 +7012,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         _comp_ex.insert_node_output(node, ret)
                         for i, v in enumerate(ret):
                             # Set current output. This will be stored to "new_values" below
-                            node.output_CIM.output_states[i].parameters.value._set(v, context, skip_history=True,
+                            node.output_CIM.output_ports[i].parameters.value._set(v, context, skip_history=True,
                                                                                   skip_log=True)
 
                 # ANIMATE node ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -6968,22 +7027,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if node in input_nodes:
                     if clamp_input:
                         if node in pulse_clamp_inputs:
-                            for input_state in node.input_states:
+                            for input_port in node.input_ports:
                                 # clamp = None --> "turn off" input node
-                                self.input_CIM_states[input_state][1].parameters.value._set(0, context)
+                                self.input_CIM_ports[input_port][1].parameters.value._set(0, context)
 
                 # Store new value generated by node,
                 #    then set back to frozen value for use by other nodes in execution_set
                 new_values[node] = node.get_output_values(context)
-                for i in range(len(node.output_states)):
-                    node.output_states[i].parameters.value._set(frozen_values[node][i], context,
+                for i in range(len(node.output_ports)):
+                    node.output_ports[i].parameters.value._set(frozen_values[node][i], context,
                                                                skip_history=True, skip_log=True)
 
 
             # Set all nodes to new values
             for node in next_execution_set:
-                for i in range(len(node.output_states)):
-                    node.output_states[i].parameters.value._set(new_values[node][i], context,
+                for i in range(len(node.output_ports)):
+                    node.output_ports[i].parameters.value._set(new_values[node][i], context,
                                                                skip_history=True, skip_log=True)
 
             if call_after_time_step:
@@ -6996,9 +7055,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             context.add_flag(ContextFlags.LEARNING)
             for projection in [p for p in self.projections if
                                hasattr(p, 'has_learning_projection') and p.has_learning_projection]:
-                matrix_parameter_state = projection.parameter_states[MATRIX]
-                if any([lp for lp in matrix_parameter_state.mod_afferents if lp.learning_enabled == AFTER]):
-                    matrix_parameter_state._update(context=context)
+                matrix_parameter_port = projection.parameter_ports[MATRIX]
+                if any([lp for lp in matrix_parameter_port.mod_afferents if lp.learning_enabled == AFTER]):
+                    matrix_parameter_port._update(context=context)
             context.remove_flag(ContextFlags.LEARNING)
 
         if call_after_pass:
@@ -7054,8 +7113,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         context.remove_flag(ContextFlags.PROCESSING)
 
         output_values = []
-        for state in self.output_CIM.output_states:
-            output_values.append(state.parameters.value._get(context))
+        for port in self.output_CIM.output_ports:
+            output_values.append(port.parameters.value._get(context))
 
         return output_values
 
@@ -7092,10 +7151,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return All(*cond)
 
     def _input_matches_variable(self, input_value, var):
-        # input_value states are uniform
+        # input_value ports are uniform
         if np.shape(np.atleast_2d(input_value)) == np.shape(var):
             return "homogeneous"
-        # input_value states have different lengths
+        # input_value ports have different lengths
         elif len(np.shape(var)) == 1 and isinstance(var[0], (list, np.ndarray)):
             for i in range(len(input_value)):
                 if len(input_value[i]) != len(var[i]):
@@ -7147,40 +7206,40 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     translated_stimulus_dict = {}
 
                     # first time through the stimulus dictionary, assemble a dictionary in which the keys are input CIM
-                    # InputStates and the values are lists containing the first input value
+                    # InputPorts and the values are lists containing the first input value
                     for nested_input_node, values in adjusted_stimulus_dict.items():
                         first_value = values[0]
                         for i in range(len(first_value)):
-                            input_state = nested_input_node.external_input_states[i]
-                            input_cim_input_state = node.input_CIM_states[input_state][0]
-                            translated_stimulus_dict[input_cim_input_state] = [first_value[i]]
+                            input_port = nested_input_node.external_input_ports[i]
+                            input_cim_input_port = node.input_CIM_ports[input_port][0]
+                            translated_stimulus_dict[input_cim_input_port] = [first_value[i]]
                             # then loop through the stimulus dictionary again for each remaining trial
                             for trial in range(1, num_trials):
-                                translated_stimulus_dict[input_cim_input_state].append(values[trial][i])
+                                translated_stimulus_dict[input_cim_input_port].append(values[trial][i])
 
                     adjusted_stimulus_list = []
                     for trial in range(num_trials):
                         trial_adjusted_stimulus_list = []
-                        for state in node.external_input_states:
-                            trial_adjusted_stimulus_list.append(translated_stimulus_dict[state][trial])
+                        for port in node.external_input_ports:
+                            trial_adjusted_stimulus_list.append(translated_stimulus_dict[port][trial])
                         adjusted_stimulus_list.append(trial_adjusted_stimulus_list)
                     stimuli[node] = adjusted_stimulus_list
                     stim_list = adjusted_stimulus_list  # ADDED CW 12/21/18: This line fixed a bug, but it might be a hack
 
-            # excludes any input states marked "internal_only" (usually recurrent)
+            # excludes any input ports marked "internal_only" (usually recurrent)
             # KDM 3/29/19: changed to use defaults equivalent of node.external_input_values
-            input_must_match = [input_state.defaults.value for input_state in node.input_states
-                                if not input_state.internal_only]
+            input_must_match = [input_port.defaults.value for input_port in node.input_ports
+                                if not input_port.internal_only]
 
             if input_must_match == []:
-                # all input states are internal_only
+                # all input ports are internal_only
                 continue
 
             check_spec_type = self._input_matches_variable(stim_list, input_must_match)
             # If a node provided a single input, wrap it in one more list in order to represent trials
             if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
                 if check_spec_type == "homogeneous":
-                    # np.atleast_2d will catch any single-input states specified without an outer list
+                    # np.atleast_2d will catch any single-input ports specified without an outer list
                     # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
                     adjusted_stimuli[node] = [np.atleast_2d(stim_list)]
                 else:
@@ -7199,11 +7258,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         # for "functionality" but rather a hack for user clarity
                         if "KWTA" in str(type(node)):
                             err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros (or other values)" \
-                                                " to represent the outside stimulus for the inhibition input state, and " \
+                                                " to represent the outside stimulus for the inhibition InputPort, and " \
                                                 "for systems, put your inputs"
                         raise RunError(err_msg)
                     elif check_spec_type == "homogeneous":
-                        # np.atleast_2d will catch any single-input states specified without an outer list
+                        # np.atleast_2d will catch any single-input ports specified without an outer list
                         # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
                         adjusted_stimuli[node].append(np.atleast_2d(stim))
                     else:
@@ -7239,7 +7298,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # If a node provided a single input, wrap it in one more list in order to represent trials
             if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
                 if check_spec_type == "homogeneous":
-                    # np.atleast_2d will catch any single-input states specified without an outer list
+                    # np.atleast_2d will catch any single-input ports specified without an outer list
                     # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
                     adjusted_stimuli[node] = np.atleast_2d(stimulus)
                 else:
@@ -7251,24 +7310,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _assign_values_to_input_CIM(self, inputs, context=None):
         """
-            Assign values from input dictionary to the InputStates of the Input CIM, then execute the Input CIM
+            Assign values from input dictionary to the InputPorts of the Input CIM, then execute the Input CIM
 
         """
 
         build_CIM_input = []
 
-        for input_state in self.input_CIM.input_states:
-            # "input_state" is an InputState on the input CIM
+        for input_port in self.input_CIM.input_ports:
+            # "input_port" is an InputPort on the input CIM
 
-            for key in self.input_CIM_states:
-                # "key" is an InputState on an origin Node of the Composition
-                if self.input_CIM_states[key][0] == input_state:
-                    origin_input_state = key
+            for key in self.input_CIM_ports:
+                # "key" is an InputPort on an origin Node of the Composition
+                if self.input_CIM_ports[key][0] == input_port:
+                    origin_input_port = key
                     origin_node = key.owner
-                    index = origin_node.input_states.index(origin_input_state)
+                    index = origin_node.input_ports.index(origin_input_port)
 
                     if isinstance(origin_node, CompositionInterfaceMechanism):
-                        index = origin_node.input_states.index(origin_input_state)
+                        index = origin_node.input_ports.index(origin_input_port)
                         origin_node = origin_node.composition
 
                     if origin_node in inputs:
@@ -7376,7 +7435,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return (tuple(mech_params), tuple(proj_params))
 
     def _get_flattened_controller_output(self, context):
-        controller_data = [os.parameters.value._get(context) for os in self.controller.output_states]
+        controller_data = [os.parameters.value._get(context) for os in self.controller.output_ports]
         # This is an ugly hack to remove 2d arrays
         try:
             controller_data = [[c[0][0]] for c in controller_data]
@@ -7385,7 +7444,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return controller_data
 
     def _get_data_initializer(self, context=None):
-        output = [(os.parameters.value.get(context) for os in m.output_states) for m in self._all_nodes]
+        output = [(os.parameters.value.get(context) for os in m.output_ports) for m in self._all_nodes]
         data = [output]
         for node in self.nodes:
             nested_data = node._get_data_initializer(context=context) \
@@ -7511,31 +7570,31 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     par_idx = self.nodes.index(comp)
 
                 output_s = proj.sender
-                assert output_s in par_mech.output_states
-                output_state_idx = par_mech.output_states.index(output_s)
+                assert output_s in par_mech.output_ports
+                output_port_idx = par_mech.output_ports.index(output_s)
                 proj_in = builder.gep(data_in, [ctx.int32_ty(0),
                                                 ctx.int32_ty(0),
                                                 ctx.int32_ty(par_idx),
-                                                ctx.int32_ty(output_state_idx)])
+                                                ctx.int32_ty(output_port_idx)])
 
                 # Get location of projection output (in mechanism's input structure
-                rec_state = proj.receiver
-                assert rec_state.owner is node or rec_state.owner is node.input_CIM
+                rec_port = proj.receiver
+                assert rec_port.owner is node or rec_port.owner is node.input_CIM
                 indices = [0]
-                if proj in rec_state.owner.path_afferents:
-                    rec_state_idx = rec_state.owner.input_states.index(rec_state)
+                if proj in rec_port.owner.path_afferents:
+                    rec_port_idx = rec_port.owner.input_ports.index(rec_port)
 
-                    assert proj in rec_state.pathway_projections
-                    projection_idx = rec_state.pathway_projections.index(proj)
+                    assert proj in rec_port.pathway_projections
+                    projection_idx = rec_port.pathway_projections.index(proj)
 
                     # Adjust for AutoAssociative projections
                     for i in range(projection_idx):
-                        if isinstance(rec_state.pathway_projections[i], AutoAssociativeProjection):
+                        if isinstance(rec_port.pathway_projections[i], AutoAssociativeProjection):
                             projection_idx -= 1
-                    indices.extend([rec_state_idx, projection_idx])
-                elif proj in rec_state.owner.mod_afferents:
-                    projection_idx = rec_state.owner.mod_afferents.index(proj)
-                    indices.extend([len(rec_state.owner.input_states), projection_idx])
+                    indices.extend([rec_port_idx, projection_idx])
+                elif proj in rec_port.owner.mod_afferents:
+                    projection_idx = rec_port.owner.mod_afferents.index(proj)
+                    indices.extend([len(rec_port.owner.input_ports), projection_idx])
                 else:
                     assert False, "Projection neither pathway nor modulatory"
 
@@ -7660,35 +7719,35 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # ******************************************************************************************************************
 
     @property
-    def input_states(self):
-        """Returns all InputStates that belong to the Input CompositionInterfaceMechanism"""
-        return self.input_CIM.input_states
+    def input_ports(self):
+        """Returns all InputPorts that belong to the Input CompositionInterfaceMechanism"""
+        return self.input_CIM.input_ports
 
     @property
-    def output_states(self):
-        """Returns all OutputStates that belong to the Output CompositionInterfaceMechanism"""
-        return self.output_CIM.output_states
+    def output_ports(self):
+        """Returns all OutputPorts that belong to the Output CompositionInterfaceMechanism"""
+        return self.output_CIM.output_ports
 
     @property
     def output_values(self):
-        """Returns values of all OutputStates that belong to the Output CompositionInterfaceMechanism"""
+        """Returns values of all OutputPorts that belong to the Output CompositionInterfaceMechanism"""
         return self.get_output_values()
 
     def get_output_values(self, context=None):
-        return [output_state.parameters.value.get(context) for output_state in self.output_CIM.output_states]
+        return [output_port.parameters.value.get(context) for output_port in self.output_CIM.output_ports]
 
     @property
-    def input_state(self):
-        """Returns the index 0 InputState that belongs to the Input CompositionInterfaceMechanism"""
-        return self.input_CIM.input_states[0]
+    def input_port(self):
+        """Returns the index 0 InputPort that belongs to the Input CompositionInterfaceMechanism"""
+        return self.input_CIM.input_ports[0]
 
     @property
     def input_values(self):
-        """Returns values of all InputStates that belong to the Input CompositionInterfaceMechanism"""
+        """Returns values of all InputPorts that belong to the Input CompositionInterfaceMechanism"""
         return self.get_input_values()
 
     def get_input_values(self, context=None):
-        return [input_state.parameters.value.get(context) for input_state in self.input_CIM.input_states]
+        return [input_port.parameters.value.get(context) for input_port in self.input_CIM.input_ports]
 
     @property
     def runs_simulations(self):
@@ -7698,31 +7757,31 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def simulation_results(self):
         return self.parameters.simulation_results.get(self.default_execution_id)
 
-    #  For now, external_input_states == input_states and external_input_values == input_values
+    #  For now, external_input_ports == input_ports and external_input_values == input_values
     #  They could be different in the future depending on new features (ex. if we introduce recurrent compositions)
     #  Useful to have this property for treating Compositions the same as Mechanisms in run & execute
     @property
-    def external_input_states(self):
-        """Returns all external InputStates that belong to the Input CompositionInterfaceMechanism"""
+    def external_input_ports(self):
+        """Returns all external InputPorts that belong to the Input CompositionInterfaceMechanism"""
         try:
-            return [input_state for input_state in self.input_CIM.input_states if not input_state.internal_only]
+            return [input_port for input_port in self.input_CIM.input_ports if not input_port.internal_only]
         except (TypeError, AttributeError):
             return None
 
     @property
     def external_input_values(self):
-        """Returns values of all external InputStates that belong to the Input CompositionInterfaceMechanism"""
+        """Returns values of all external InputPorts that belong to the Input CompositionInterfaceMechanism"""
         try:
-            return [input_state.value for input_state in self.input_CIM.input_states if not input_state.internal_only]
+            return [input_port.value for input_port in self.input_CIM.input_ports if not input_port.internal_only]
         except (TypeError, AttributeError):
             return None
 
     @property
     def default_external_input_values(self):
-        """Returns the default values of all external InputStates that belong to the Input CompositionInterfaceMechanism"""
+        """Returns the default values of all external InputPorts that belong to the Input CompositionInterfaceMechanism"""
         try:
-            return [input_state.defaults.value for input_state in self.input_CIM.input_states if
-                    not input_state.internal_only]
+            return [input_port.defaults.value for input_port in self.input_CIM.input_ports if
+                    not input_port.internal_only]
         except (TypeError, AttributeError):
             return None
 
@@ -7750,9 +7809,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return stateful_nodes
 
     @property
-    def output_state(self):
-        """Returns the index 0 OutputState that belongs to the Output CompositionInterfaceMechanism"""
-        return self.output_CIM.output_states[0]
+    def output_port(self):
+        """Returns the index 0 OutputPort that belongs to the Output CompositionInterfaceMechanism"""
+        return self.output_CIM.output_ports[0]
 
     @property
     def class_parameters(self):

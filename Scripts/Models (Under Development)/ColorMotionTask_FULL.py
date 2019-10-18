@@ -126,7 +126,7 @@ decision = DDM(name='Decision',
                        noise=0.5,
                        t0=0.2,
                        threshold=0.45),
-               output_states=[DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD, DDM_OUTPUT.RESPONSE_TIME],
+               output_ports=[DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD, DDM_OUTPUT.RESPONSE_TIME],
                )
 
 c = Composition(name='ColorMotion Task')

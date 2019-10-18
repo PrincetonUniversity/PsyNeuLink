@@ -67,7 +67,7 @@ reward = pnl.TransferMechanism(name='Reward', size=2)
 task_decision = pnl.DDM(
     name='Task Decision',
     # function=pnl.NavarroAndFuss,
-    output_states=[
+    output_ports=[
         pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
         pnl.DDM_OUTPUT.PROBABILITY_LOWER_THRESHOLD
     ]
@@ -94,14 +94,14 @@ c.add_projection(sender=word_task, receiver=task_decision)
 
 lvoc = pnl.OptimizationControlMechanism(
     name='LVOC ControlMechanism',
-    features=[color_stim.input_state, word_stim.input_state],
+    features=[color_stim.input_port, word_stim.input_port],
     # features={pnl.SHADOW_EXTERNAL_INPUTS: [color_stim, word_stim]},
     objective_mechanism=pnl.ObjectiveMechanism(
         name='LVOC ObjectiveMechanism',
-        monitor=[task_decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD],
-                 task_decision.output_states[pnl.PROBABILITY_LOWER_THRESHOLD],
+        monitor=[task_decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
+                 task_decision.output_ports[pnl.PROBABILITY_LOWER_THRESHOLD],
                  reward],
-        # monitored_output_states=[task_decision, reward],
+        # monitored_output_ports=[task_decision, reward],
         function=objective_function
     ),
     agent_rep=pnl.RegressionCFA(
@@ -162,7 +162,7 @@ for i in range(3): # testing for three subjects, 200 trials per subject
     # start_time = time.time()
 
     def print_weights():
-        print("OUTCOME = ", lvoc.objective_mechanism.output_states[pnl.OUTCOME].value)
+        print("OUTCOME = ", lvoc.objective_mechanism.output_ports[pnl.OUTCOME].value)
         print("WEIGHTS = ", lvoc.agent_rep.parameters.regression_weights.get(i)) 
         print("LVOC VALUE = ", lvoc.value)
     # duration = timeit.timeit(c.run(inputs=input_dict, context=i), number=1) #number=2
@@ -172,7 +172,7 @@ for i in range(3): # testing for three subjects, 200 trials per subject
     # duration = time.time() - start_time
     # print('PREDICTION WEIGHTS T2', lvoc.agent_rep.parameters.regression_weights.get(i))
     # print("WEIGHTS = ", lvoc.agent_rep.parameters.regression_weights.get(i)) 
-    # print("OUTCOME = ", lvoc.objective_mechanism.output_states[pnl.OUTCOME].value)
+    # print("OUTCOME = ", lvoc.objective_mechanism.output_ports[pnl.OUTCOME].value)
     # print('LVOC Log\n')
     # print(lvoc.log.csv)
     # print('Task Decision Log\n')

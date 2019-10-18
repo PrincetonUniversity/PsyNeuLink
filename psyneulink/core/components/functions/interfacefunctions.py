@@ -11,7 +11,7 @@
 
 """
 
-* InterfaceStateMap
+* InterfacePortMap
 
 """
 
@@ -21,13 +21,13 @@ import typecheck as tc
 from psyneulink.core.components.functions.function import Function_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    FUNCTION_OUTPUT_TYPE_CONVERSION, PARAMETER_STATE_PARAMS, STATE_MAP_FUNCTION, TRANSFER_FUNCTION_TYPE, \
+    FUNCTION_OUTPUT_TYPE_CONVERSION, PARAMETER_PORT_PARAMS, PORT_MAP_FUNCTION, TRANSFER_FUNCTION_TYPE, \
     PREFERENCE_SET_NAME
 from psyneulink.core.globals.preferences.basepreferenceset import \
     PreferenceEntry, PreferenceLevel, is_pref_set, REPORT_OUTPUT_PREF
 
 
-__all__ = ['InterfaceFunction', 'InterfaceStateMap']
+__all__ = ['InterfaceFunction', 'InterfacePortMap']
 
 class InterfaceFunction(Function_Base):
     """Simple functions for CompositionInterfaceMechanisms
@@ -35,7 +35,7 @@ class InterfaceFunction(Function_Base):
     componentType = TRANSFER_FUNCTION_TYPE
 
 
-class InterfaceStateMap(InterfaceFunction):
+class InterfacePortMap(InterfaceFunction):
     """
     Identity(                \
              default_variable, \
@@ -47,7 +47,7 @@ class InterfaceStateMap(InterfaceFunction):
 
     .. _Identity:
 
-    Returns `variable <InterfaceStateMap.variable>`.
+    Returns `variable <InterfacePortMap.variable>`.
 
     Arguments
     ---------
@@ -56,7 +56,7 @@ class InterfaceStateMap(InterfaceFunction):
         specifies a template for the value to be transformed.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -88,7 +88,7 @@ class InterfaceStateMap(InterfaceFunction):
         <LINK>` for details).
     """
 
-    componentName = STATE_MAP_FUNCTION
+    componentName = PORT_MAP_FUNCTION
 
     classPreferences = {
         PREFERENCE_SET_NAME: 'LinearClassPreferences',
@@ -98,19 +98,19 @@ class InterfaceStateMap(InterfaceFunction):
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         FUNCTION_OUTPUT_TYPE_CONVERSION: True,
-        PARAMETER_STATE_PARAMS: None
+        PARAMETER_PORT_PARAMS: None
     })
 
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 corresponding_input_state=None,
+                 corresponding_input_port=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(corresponding_input_state=corresponding_input_state,
+        params = self._assign_args_to_param_dicts(corresponding_input_port=corresponding_input_port,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -129,9 +129,9 @@ class InterfaceStateMap(InterfaceFunction):
 
     ):
         """
-        Return: The item of `value <InterfaceStateMap.value>` whose index corresponds to the index of
-        `corresponding_input_state <InterfaceStateMap.corresponding_input_state>` in `input_states
-        <InterfaceStateMap.input_states>`
+        Return: The item of `value <InterfacePortMap.value>` whose index corresponds to the index of
+        `corresponding_input_port <InterfacePortMap.corresponding_input_port>` in `input_ports
+        <InterfacePortMap.input_ports>`
 
         Arguments
         ---------
@@ -139,11 +139,11 @@ class InterfaceStateMap(InterfaceFunction):
         variable : number or np.array : default class_defaults.variable
            a single value or array to be transformed.
 
-        corresponding_input_state : InputState : default None
-            the InputState on the owner CompositionInterfaceMechanism to which this OutputState corresponds
+        corresponding_input_port : InputPort : default None
+            the InputPort on the owner CompositionInterfaceMechanism to which this OutputPort corresponds
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -151,18 +151,18 @@ class InterfaceStateMap(InterfaceFunction):
         Returns
         -------
 
-        The item of `value <InterfaceStateMap.value>` whose index corresponds to the index of
-        `corresponding_input_state <InterfaceStateMap.corresponding_input_state>` in `input_states
-        <InterfaceStateMap.input_states>`
+        The item of `value <InterfacePortMap.value>` whose index corresponds to the index of
+        `corresponding_input_port <InterfacePortMap.corresponding_input_port>` in `input_ports
+        <InterfacePortMap.input_ports>`
 
         """
-        index = self.corresponding_input_state.position_in_mechanism
+        index = self.corresponding_input_port.position_in_mechanism
 
-        if self.corresponding_input_state.owner.parameters.value._get(context) is not None:
+        if self.corresponding_input_port.owner.parameters.value._get(context) is not None:
 
-            # If CIM's variable does not match its value, then a new pair of states was added since the last execution
-            if not np.shape(self.corresponding_input_state.owner.get_input_values(context)) == np.shape(self.corresponding_input_state.owner.parameters.value._get(context)):
-                return self.corresponding_input_state.owner.defaults.variable[index]
+            # If CIM's variable does not match its value, then a new pair of ports was added since the last execution
+            if not np.shape(self.corresponding_input_port.owner.get_input_values(context)) == np.shape(self.corresponding_input_port.owner.parameters.value._get(context)):
+                return self.corresponding_input_port.owner.defaults.variable[index]
 
             # If the variable is 1D (e.g. [0. , 0.], NOT [[0. , 0.]]), and the index is 0, then return whole variable
             # np.atleast_2d fails in cases like var = [[0., 0.], [0.]] (transforms it to [[[0., 0.], [0.]]])
@@ -171,7 +171,7 @@ class InterfaceStateMap(InterfaceFunction):
                     return variable
             return variable[index]
         # CIM value = None, use CIM's default variable instead
-        return self.corresponding_input_state.owner.defaults.variable[index]
+        return self.corresponding_input_port.owner.defaults.variable[index]
 
     def _get_input_struct_type(self, ctx):
         #FIXME: Workaround for CompositionInterfaceMechanism that
@@ -182,7 +182,7 @@ class InterfaceStateMap(InterfaceFunction):
         return ctx.get_input_struct_type(super())
 
     def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out):
-        index = self.corresponding_input_state.position_in_mechanism
+        index = self.corresponding_input_port.position_in_mechanism
         val = builder.load(builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(index)]))
         builder.store(val, arg_out)
         return builder

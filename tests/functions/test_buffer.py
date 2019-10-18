@@ -145,7 +145,7 @@ class TestBuffer():
 
         result = system.run(inputs={P: [[1.0], [2.0], [3.0], [4.0], [5.0]]},
                             call_after_trial=assemble_full_result)
-        # only returns index 0 item of the deque on each trial  (output state value)
+        # only returns index 0 item of the deque on each trial  (OutputPort value)
         assert np.allclose(np.asfarray(result), [[[0.0]], [[0.0]], [[1.0]], [[2.0]], [[3.0]]])
 
         # stores full mechanism value (full deque) on each trial

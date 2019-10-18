@@ -21,7 +21,7 @@ words_input_layer = pnl.TransferMechanism(size=2,
 #   Task layer, tasks: ('name the color', 'read the word')
 task_layer = pnl.TransferMechanism(size=2,
                                    function=psyneulink.core.components.functions.transferfunctions.Logistic(
-                                       gain=(1.0, pnl.ControlProjection(  # receiver= response_layer.output_states[1],
+                                       gain=(1.0, pnl.ControlProjection(  # receiver= response_layer.output_ports[1],
                                            # 'DECISION_ENERGY'
                                            # modulation=pnl.ModulationParam.OVERRIDE,#what to implement here
                                        ))),
@@ -69,7 +69,7 @@ words_hidden_layer = pnl.TransferMechanism(size=2,
 response_layer = pnl.RecurrentTransferMechanism(size=2,  #Recurrent
                                                 function=psyneulink.core.components.functions.transferfunctions.Logistic,  #pnl.Stability(matrix=np.matrix([[0.0, -1.0], [-1.0, 0.0]])),
                                                 name='RESPONSE',
-                                                output_states = [pnl.RECURRENT_OUTPUT.RESULT,
+                                                output_ports = [pnl.RECURRENT_OUTPUT.RESULT,
                                           {pnl.NAME: 'DECISION_ENERGY',
                                           pnl.VARIABLE: (pnl.OWNER_VALUE,0),
                                            pnl.FUNCTION: psyneulink.core.components.functions.objectivefunctions
@@ -167,7 +167,7 @@ my_Stroop = pnl.System(processes=[colors_process,
                        monitor_for_control=[response_layer],
                        enable_controller=True,
                          # objective_mechanism =pnl.ObjectiveMechanism(default_variable=[0.0, 0.0],
-                         #                                             monitored_output_states=[response_layer.output_states[0]],
+                         #                                             monitored_output_ports=[response_layer.output_ports[0]],
                          #                                             function=pnl.Linear(default_variable= [0.0, 0.0]),
                           #                                            name="Objective Mechanism"),
                        # monitor_for_control=
@@ -182,8 +182,8 @@ my_Stroop = pnl.System(processes=[colors_process,
 #   CREATE THRESHOLD FUNCTION
 # first value of DDM's value is DECISION_VARIABLE
 def pass_threshold(mech1, thresh):
-    results1 = mech1.output_states.values[0][0] #red response
-    results2 = mech1.output_states.values[0][1] #red response
+    results1 = mech1.output_ports.values[0][0] #red response
+    results2 = mech1.output_ports.values[0][1] #red response
     print(results1)
     print(results2)
     if results1  >= thresh or results2 >= thresh:

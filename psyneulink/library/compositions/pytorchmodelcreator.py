@@ -75,7 +75,7 @@ class PytorchModelCreator(torch.nn.Module):
                         value = torch.tensor(component.parameters.value._get(context)[0], device=self.device)
                 else:
                     input_length = len(
-                        component.input_states[0].parameters.value.get(None))
+                        component.input_ports[0].parameters.value.get(None))
                     value = torch.zeros(
                         input_length, device=self.device).double()
 
@@ -84,7 +84,7 @@ class PytorchModelCreator(torch.nn.Module):
                     # if not copying parameters from psyneulink, set up pytorch biases for node
                     if not param_init_from_pnl:
                         input_length = len(
-                            component.input_states[0].parameters.value.get(None))
+                            component.input_ports[0].parameters.value.get(None))
                         biases = nn.Parameter(torch.zeros(
                             input_length, device=self.device).double())
                         self.params.append(biases)
@@ -481,7 +481,7 @@ class PytorchModelCreator(torch.nn.Module):
             if isinstance(a.type, pnlvm.ir.PointerType):
                 a.attributes.add('noalias')
 
-        model_context, model_params, model_input, model_output, optim_struct, input_struct_ptr, target_struct_ptr, input_idx = llvm_func.args[:len(args)]
+        model_context, model_params, model_input, model_output, optim_struct, input_struct_ptr, target_struct_ptr, trial_num = llvm_func.args[:len(args)]
         # setup useful mappings
         input_nodes = composition.get_nodes_by_role(NodeRole.INPUT)
         output_nodes = composition.get_nodes_by_role(NodeRole.OUTPUT)
@@ -504,7 +504,7 @@ class PytorchModelCreator(torch.nn.Module):
         for node in input_nodes:
             node_idx = composition._get_node_index(node)
             node_input_array_ptr = builder.gep(node_input_arrays[node],
-                                               [input_idx, ctx.int32_ty(0)])
+                                               [trial_num, ctx.int32_ty(0)])
             node_model_input = builder.gep(model_input,[ctx.int32_ty(0), ctx.int32_ty(node_idx)])
             self._gen_inject_vec_copy(ctx, builder, node_input_array_ptr, node_model_input)
 
@@ -515,7 +515,7 @@ class PytorchModelCreator(torch.nn.Module):
             ctx, builder, model_context, model_params, model_input, model_output, store_z_values=True)
         # 3) compute errors
 
-        ctx.inject_printf(builder, "\tCOMPUTE ERR FOR INPUT %d\n", input_idx)
+        ctx.inject_printf(builder, "\tCOMPUTE ERR FOR INPUT %d\n", trial_num)
 
         error_dict = {}
         backprop_queue = deque()
@@ -548,7 +548,7 @@ class PytorchModelCreator(torch.nn.Module):
                 # We handle output layer here
                 # compute  dC/da = a_l - y(x) (TODO: Allow other cost functions! This only applies to MSE)
                 node_target = builder.gep(node_target_arrays[node], [
-                                            input_idx, ctx.int32_ty(0)])
+                                            trial_num, ctx.int32_ty(0)])
                 node_output = self._get_output_value_ptr(ctx,builder,model_output,node_idx)
 
                 tmp_loss = loss._gen_inject_lossfunc_call(ctx, builder, loss_fn, node_output, node_target)
@@ -633,7 +633,7 @@ class PytorchModelCreator(torch.nn.Module):
 
         epochs = builder.load(builder.gep(autodiff_stimuli_struct, [
                               ctx.int32_ty(0), ctx.int32_ty(0)]))
-        num_inputs = builder.load(builder.gep(autodiff_stimuli_struct, [
+        num_trials = builder.load(builder.gep(autodiff_stimuli_struct, [
             ctx.int32_ty(0), ctx.int32_ty(1)]))
 
         num_target_structs = builder.load(builder.gep(
@@ -696,13 +696,13 @@ class PytorchModelCreator(torch.nn.Module):
         optimizer_zero_grad = ctx.get_llvm_function(optimizer.zero_grad(ctx).name)
         with pnlvm.helpers.for_loop_zero_inc(builder, epochs, "epoch_loop") as (b1, epoch_idx):
             ctx.inject_printf(builder, "\033[0;32mEPOCH %d\033[0m\n", epoch_idx)
-            with pnlvm.helpers.for_loop_zero_inc(b1, num_inputs, "input_loop") as (b2, input_idx):
-                ctx.inject_printf(b2, "\n\033[0;31mINPUT %d\033[0m\n", input_idx)
-                ctx.inject_printf(b2, "OPTIMIZER ZERO GRAD %d\n", input_idx)
+            with pnlvm.helpers.for_loop_zero_inc(b1, num_trials, "input_loop") as (b2, trial_num):
+                ctx.inject_printf(b2, "\n\033[0;31mINPUT %d\033[0m\n", trial_num)
+                ctx.inject_printf(b2, "OPTIMIZER ZERO GRAD %d\n", trial_num)
                 b2.call(optimizer_zero_grad,[optimizer_struct,model_params])
-                ctx.inject_printf(b2, "BACKPROP %d\n", input_idx)
-                b2.call(backprop,[model_context, model_params, model_input, model_output, optimizer_struct, input_struct_ptr, target_struct_ptr, input_idx])
-                ctx.inject_printf(b2, "OPTIMIZER STEP %d\n", input_idx)
+                ctx.inject_printf(b2, "BACKPROP %d\n", trial_num)
+                b2.call(backprop,[model_context, model_params, model_input, model_output, optimizer_struct, input_struct_ptr, target_struct_ptr, trial_num])
+                ctx.inject_printf(b2, "OPTIMIZER STEP %d\n", trial_num)
                 b2.call(optimizer_step,[optimizer_struct,model_params])
 
     def _get_output_value_ptr(self, ctx, builder, arg_out, index):
@@ -730,7 +730,7 @@ class PytorchModelCreator(torch.nn.Module):
                 # forward computation if we do not have origin node
                 else:
                     value = torch.zeros(
-                        len(component.input_states[0].defaults.value), device=self.device).double()
+                        len(component.input_ports[0].defaults.value), device=self.device).double()
                     for input_node, weights in afferents.items():
                         if input_node.component in current_exec_set:
                             input_value = frozen_values[input_node.component]
@@ -786,7 +786,7 @@ class PytorchModelCreator(torch.nn.Module):
             detached_value = value.detach().cpu().numpy()
             component.parameters.value._set(
                 detached_value, context, skip_history=True, skip_log=True)
-            component.output_state.parameters.value._set(
+            component.output_port.parameters.value._set(
                 detached_value, context, skip_history=True, skip_log=True)
 
     @handle_external_context()

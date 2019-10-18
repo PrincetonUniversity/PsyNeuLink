@@ -15,7 +15,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_
 from psyneulink.core.compositions.composition import Composition
 
 def test_gating_with_composition():
-    """Tests same configuration as control of InputState in tests/mechansims/test_identicalness_of_control_and_gating
+    """Tests same configuration as control of InputPort in tests/mechansims/test_identicalness_of_control_and_gating
     """
     Input_Layer = TransferMechanism(name='Input Layer', function=Logistic, size=2)
     Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1', function=Logistic, size=5)
@@ -45,7 +45,8 @@ def test_gating_with_composition():
 
     pathway = [Input_Layer, Input_Weights, Hidden_Layer_1, Hidden_Layer_2, Output_Layer]
     comp = Composition()
-    learning_components = comp.add_backpropagation_learning_pathway(pathway=pathway)
+    learning_components = comp.add_backpropagation_learning_pathway(pathway=pathway,
+                                                                    loss_function=None)
     # c.add_linear_processing_pathway(pathway=z)
     comp.add_node(Gating_Mechanism)
 
@@ -126,10 +127,10 @@ def test_gating_with_UDF_with_composition():
         default_variable=[0, 0, 0],
         function=psyneulink.core.components.functions.transferfunctions.Linear,
         # function=pnl.Logistic,
-        # output_states={pnl.NAME: 'RESULTS USING UDF',
+        # output_ports={pnl.NAME: 'RESULTS USING UDF',
         #                pnl.VARIABLE: [(pnl.OWNER_VALUE,0), pnl.TIME_STEP],
         #                pnl.FUNCTION: my_sinusoidal_fct}
-        output_states={
+        output_ports={
             pnl.NAME: 'RESULTS USING UDF',
             # pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
             pnl.FUNCTION: psyneulink.core.components.functions.transferfunctions.Linear(slope=pnl.GATING)
@@ -140,7 +141,7 @@ def test_gating_with_UDF_with_composition():
         size=[1],
         gating_signals=[
             # Output_Layer
-            Output_Layer.output_state,
+            Output_Layer.output_port,
         ]
     )
 

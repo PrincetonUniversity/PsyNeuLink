@@ -22,7 +22,7 @@ def test_EVC():
         name='Input',
     )
     Reward = TransferMechanism(
-        output_states=[RESULT, OUTPUT_MEAN, OUTPUT_VARIANCE],
+        output_ports=[RESULT, OUTPUT_MEAN, OUTPUT_VARIANCE],
         name='Reward'
     )
     Decision = DDM(
@@ -49,7 +49,7 @@ def test_EVC():
             starting_point=(0),
             t0=0.45
         ),
-        output_states=[
+        output_ports=[
             DECISION_VARIABLE,
             RESPONSE_TIME,
             PROBABILITY_UPPER_THRESHOLD
@@ -60,15 +60,15 @@ def test_EVC():
     Input.prefs.paramValidationPref = False
     Reward.prefs.paramValidationPref = False
     Decision.prefs.paramValidationPref = False
-    Decision.input_state.prefs.paramValidationPref = False
+    Decision.input_port.prefs.paramValidationPref = False
     for mech in [Input, Reward, Decision]:
         mech.function.prefs.paramValidationPref = False
-        for os in mech.output_states:
+        for os in mech.output_ports:
             os.prefs.paramValidationPref = False
-        for instate in mech.input_states:
-            instate.prefs.paramValidationPref = False
-        for pstate in mech._parameter_states:
-            pstate.prefs.paramValidationPref = False
+        for inport in mech.input_ports:
+            inport.prefs.paramValidationPref = False
+        for pport in mech._parameter_ports:
+            pport.prefs.paramValidationPref = False
 
     # Processes:
     TaskExecutionProcess = Process(
@@ -260,7 +260,7 @@ def test_EVC_gratton():
         ),
         prefs=mechanism_prefs,
         name='Decision',
-        output_states=[
+        output_ports=[
             DECISION_VARIABLE,
             RESPONSE_TIME,
             PROBABILITY_UPPER_THRESHOLD
@@ -346,7 +346,7 @@ def test_EVC_gratton():
         if 'Reward' in mech.name:
             print(mech.name)
             mech.function.rate = 1.0
-            # mySystem.controller.prediction_mechanisms[mech].parameterStates['rate'].base_value = 1.0
+            # mySystem.controller.prediction_mechanisms[mech].parameterPorts['rate'].base_value = 1.0
 
     print('new rate of integration mechanisms before System execution:')
     # for mech in mySystem.controller.prediction_mechanisms.keys():
@@ -485,7 +485,7 @@ def test_laming_validation_specify_control_signals():
     )
     Reward = TransferMechanism(
         name='Reward',
-        output_states=[RESULT, OUTPUT_MEAN, OUTPUT_VARIANCE]
+        output_ports=[RESULT, OUTPUT_MEAN, OUTPUT_VARIANCE]
     )
     Decision = DDM(
         function=DriftDiffusionAnalytical(
@@ -495,7 +495,7 @@ def test_laming_validation_specify_control_signals():
             starting_point=0,
             t0=0.45
         ),
-        output_states=[
+        output_ports=[
             DECISION_VARIABLE,
             RESPONSE_TIME,
             PROBABILITY_UPPER_THRESHOLD
@@ -628,7 +628,7 @@ def test_stateful_mechanism_in_simulation():
         integrator_mode=True,
     )
     Reward = TransferMechanism(
-        output_states=[RESULT, OUTPUT_MEAN, OUTPUT_VARIANCE],
+        output_ports=[RESULT, OUTPUT_MEAN, OUTPUT_VARIANCE],
         name='Reward'
     )
     Decision = DDM(
@@ -655,7 +655,7 @@ def test_stateful_mechanism_in_simulation():
             starting_point=(0),
             t0=0.45
         ),
-        output_states=[
+        output_ports=[
             DECISION_VARIABLE,
             RESPONSE_TIME,
             PROBABILITY_UPPER_THRESHOLD

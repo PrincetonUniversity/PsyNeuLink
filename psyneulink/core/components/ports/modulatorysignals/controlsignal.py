@@ -17,8 +17,8 @@ A ControlSignal is a type of `ModulatorySignal <ModulatorySignal>` that is speci
 `Components <Component>`. A ControlSignal receives an `allocation <ControlSignal.allocation>` value from the
 ControlMechanism to which it belongs, and uses that to compute an `intensity` (also referred to as a `control_signal`)
 that is assigned as the `value <ControlProjection.ControlProjection.value>` of its ControlProjections. Each
-ControlProjection conveys its value to the `ParameterState` for the parameter it controls, which uses that value to
-`modulate <ModulatorySignal_Modulation>` the `value <ParameterState.value>` of the parameter.  A ControlSignal also
+ControlProjection conveys its value to the `ParameterPort` for the parameter it controls, which uses that value to
+`modulate <ModulatorySignal_Modulation>` the `value <ParameterPort.value>` of the parameter.  A ControlSignal also
 calculates a `cost`, based on its `intensity` and/or its time course, that may be used by the ControlMechanism to
 adapt the ControlSignal's `allocation <ControlSignal.allocation>` in subsequent executions.
 
@@ -30,9 +30,9 @@ Creating a ControlSignal
 A ControlSignal is created automatically whenever the parameter of a Mechanism or of its function is `specified for
 control <ControlMechanism_Control_Signals>`.  ControlSignals can also be specified in the **control_signals** argument
 of the constructor for a `ControlMechanism <ControlMechanism>`, as well as in the `specification of the parameter
-<ParameterState_Specification>` that the ControlSignal is intended to modulate (also see `Modualory Specificadtion
-<ParameterState_Modulatory_Specification>`.  Although a ControlSignal can also be  created on its own using its
-constructor (or any of the other ways for `creating an OutputState <OutputStates_Creation>`), this is usually not
+<ParameterPort_Specification>` that the ControlSignal is intended to modulate (also see `Modualory Specificadtion
+<ParameterPort_Modulatory_Specification>`.  Although a ControlSignal can also be  created on its own using its
+constructor (or any of the other ways for `creating an OutputPort <OutputPorts_Creation>`), this is usually not
 necessary nor is it advisable, as a ControlSignal has dedicated components and requirements for configuration that
 must be met for it to function properly.
 
@@ -44,21 +44,21 @@ must be met for it to function properly.
 When a ControlSignal is specified in the **control_signals** argument of the constructor for a `ControlMechanism
 <ControlMechanism>`, the parameter(s) to be controlled must be specified.  If other attributes of the ControlSignal
 need to be specified (e.g., one or more of its `cost functions <ControlSignal_Costs>`), then the Constructor for the
-ControlSignal can be used or a `state specification dictionary <State_Specification>`, in which the parameter(s) to be
+ControlSignal can be used or a `port specification dictionary <Port_Specification>`, in which the parameter(s) to be
 controlled in the **projections** argument or *PROJECTIONS* entry, respectively, using any of the forms below.
 For convenience, the parameters can also be specified on their own in the **control_signals** argument of the
 ControlMechanism's constructor, in which case a default ControlSignal will be created for each.  In all cases, any
 of the following can be use to specify the parameter(s) to be controlled:
 
-  * **ParameterState** (or list of them) -- for the Mechanism(s) to which the parameter(s) belong;
+  * **ParameterPort** (or list of them) -- for the Mechanism(s) to which the parameter(s) belong;
   ..
   * **2-item tuple:** *(parameter name or list of them>, <Mechanism>)* -- the 1st item must be the name of the
     parameter (or list of parameter names), and the 2nd item the Mechanism to which it (they) belong(s); this is a
     convenience format, that is simpler to use than a specification dictionary (see above), but precludes
     specification of any `parameters <ControlSignal_Structure>` for the ControlSignal.
 
-  * **specification dictionary** -- this is an abbreviated form of `state specification dictionary
-    <State_Specification>`, in which the parameter(s) to be controlled can be specified in either of the two
+  * **specification dictionary** -- this is an abbreviated form of `port specification dictionary
+    <Port_Specification>`, in which the parameter(s) to be controlled can be specified in either of the two
     following ways:
 
     * for controlling a single parameter, the dictionary can have the following two entries:
@@ -73,7 +73,7 @@ of the following can be use to specify the parameter(s) to be controlled:
 
         * <str>:list
             the string used as the key specifies the name to be used for the ControlSignal,
-            and each item of the list must be a `specification of a parameter <ParameterState_Specification>` to be
+            and each item of the list must be a `specification of a parameter <ParameterPort_Specification>` to be
             controlled by the ControlSignal (and that will receive a `ControlProjection` from it).
   ..
 
@@ -83,7 +83,7 @@ Structure
 ---------
 
 A ControlSignal is owned by an `ControlMechanism <ControlMechanism>`, and controls the parameters of one or more
-Components by modulating the `function <ParameterState.function>` of the `ParameterState` that determines the value
+Components by modulating the `function <ParameterPort.function>` of the `ParameterPort` that determines the value
 of each of the parameters that it control.  Its operation is governed by several attributes of the ControlSignal,
 that are described below.
 
@@ -95,14 +95,14 @@ that are described below.
 When a ControlSignal is created, it can be assigned one or more `ControlProjections <ControlProjection>`, using either
 the **projections** argument of its constructor, or in an entry of a dictionary assigned to the **params** argument
 with the key *PROJECTIONS*.  These will be assigned to its `efferents  <ControlSignal.efferents>` attribute.  See
-`State Projections <State_Projections>` for additional details concerning the specification of Projections when
-creating a State.
+`Port Projections <Port_Projections>` for additional details concerning the specification of Projections when
+creating a Port.
 
 .. note::
    Although a ControlSignal can be assigned more than one `ControlProjection`, all of those Projections will receive
    the same `value <ControlProjection.value>` (based on the `intensity` of that ControlSignal), and use the same
    form of `modulation <ControlSignal_Modulation>`.  Thus, for them to be meaningful, they should project to
-   ParameterStates for parameters that are meaningfully related to one another (for example, the threshold parameter
+   ParameterPorts for parameters that are meaningfully related to one another (for example, the threshold parameter
    of multiple `DDM` Mechanisms).
 
 .. _ControlSignal_Modulation:
@@ -111,9 +111,9 @@ creating a State.
 ~~~~~~~~~~~~
 
 A ControlSignal has a `modulation <GatingSignal.modulation>` attribute that determines how its ControlSignal's
-`value <ControlSignal.value>` is used by the States to which it projects to modify their `value <State_Base.value>` \\s
+`value <ControlSignal.value>` is used by the Ports to which it projects to modify their `value <Port_Base.value>` \\s
 (see `ModulatorySignal_Modulation` for an explanation of how the `modulation <ControlSignal.modulation>`  attribute is
-specified and used to modulate the `value <State_Base.value>` of a State). The `modulation <ControlSignal.modulation>`
+specified and used to modulate the `value <Port_Base.value>` of a Port). The `modulation <ControlSignal.modulation>`
 attribute can be specified in the **modulation** argument of the constructor for a ControlSignal, or in a specification
 dictionary as described `above <ControlSignal_Specification>`. The value must be a value of `ModulationParam`;  if it
 is not specified, its default is the value of the `modulation <ControlMechanism.modulation>` attribute of the
@@ -192,7 +192,7 @@ the enabled cost components are summed, however this can be modified by specifyi
     disabled for a ControlSignal, it cannot be re-enabled using `toggle_cost_function`.
     COMMENT
 
-.. note:: The `index <OutputState.OutputState.index>` and `assign <OutputState.OutputState.assign>`
+.. note:: The `index <OutputPort.OutputPort.index>` and `assign <OutputPort.OutputPort.assign>`
         attributes of a ControlSignal are automatically assigned and should not be modified.
 
 .. _ControlSignal_Execution:
@@ -204,12 +204,12 @@ A ControlSignal cannot be executed directly.  It is executed whenever the `Contr
 which it belongs is executed.  When this occurs, the ControlMechanism provides the ControlSignal with an `allocation
 <ControlSignal.allocation>`, that is used by its `function <ControlSignal.function>` to compute its `intensity` for
 that `TRIAL`.  The `intensity` is used by the ControlSignal's `ControlProjections <ControlProjection>` to set the
-`value <ParameterState.value>` \\(s) of the `ParameterState(s) <ParameterState>` to which the ControlSignal projects.
+`value <ParameterPort.value>` \\(s) of the `ParameterPort(s) <ParameterPort>` to which the ControlSignal projects.
 
-Recall that the ParameterState value is referenced anywhere that the controlled parameter is used in computation, and
-that it does not update until the component to which the ParameterState belongs executes. If the distinction between the
+Recall that the ParameterPort value is referenced anywhere that the controlled parameter is used in computation, and
+that it does not update until the component to which the ParameterPort belongs executes. If the distinction between the
 base value stored in the parameter attribute (i.e. MyTransferMech.function.gain) and the value of the
-ParameterState is unfamiliar, see `Parameter State documentation <ParameterState>` for more details, or see
+ParameterPort is unfamiliar, see `Parameter Port documentation <ParameterPort>` for more details, or see
 `ModulatorySignal_Modulation` for a detailed description of how modulation operates.
 
 The ControlSignal's `intensity` is also used  by its `cost functions <ControlSignal_Costs>` to compute its `cost`
@@ -234,14 +234,14 @@ ControlSignal to the `bias <Logistic.gain>` parameter of the `Logistic` Function
     >>> my_mech = TransferMechanism(function=Logistic(bias=(1.0, ControlSignal)))
 
 Note that the ControlSignal is specified by it class.  This will create a default ControlSignal,
-with a ControlProjection that projects to the TransferMechanism's `ParameterState` for the `bias <Logistic.bias>`
+with a ControlProjection that projects to the TransferMechanism's `ParameterPort` for the `bias <Logistic.bias>`
 parameter of its `Logistic` Function.  The default value of a ControlSignal's `modulation <ControlSignal.modulation>`
 attribute is *MULTIPLICATIVE*, so that it will multiply the value of the `bias <Logistic.bias>` parameter.
 When the TransferMechanism executes, the Logistic Function will use the value of the ControlSignal as its
 bias parameter.
 
 *Specify attributes of a ControlSignal*.  Ordinarily, ControlSignals modify the *MULTIPLICATIVE_PARAM* of a
-ParameterState's `function <ParameterState.function>` to modulate the parameter's value.
+ParameterPort's `function <ParameterPort.function>` to modulate the parameter's value.
 In the example below, this is changed by specifying the `modulation <ControlSignal.modulation>` attribute of a
 `ControlSignal` for the `Logistic` Function of the `TransferMechanism`.  It is changed so that the value of the
 ControlSignal adds to, rather than multiplies, the value of the `gain <Logistic.gain>` parameter of the Logistic
@@ -263,10 +263,10 @@ COMMENT:
 
     my_mech_A = TransferMechanism(function=Logistic)
     my_mech_B = TransferMechanism(function=Linear,
-                                 output_states=[RESULT, OUTPUT_MEAN])
+                                 output_ports=[RESULT, OUTPUT_MEAN])
 
-    my_ocm = OptimizationControlMechanism(monitor_for_control=[my_mech_A.output_states[RESULT],
-                                                               my_mech_B.output_states[OUTPUT_MEAN]],
+    my_ocm = OptimizationControlMechanism(monitor_for_control=[my_mech_A.output_ports[RESULT],
+                                                               my_mech_B.output_ports[OUTPUT_MEAN]],
                                           control_signals=[(GAIN, my_mech_A),
                                                            {NAME: INTERCEPT,
                                                             MECHANISM: my_mech_B,
@@ -279,14 +279,14 @@ the `gain <Logistic.gain>` parameter of the `Logistic` function for ``my_mech_A`
 
     >>> my_mech_A = TransferMechanism(function=Logistic)
     >>> my_mech_B = TransferMechanism(function=Linear,
-    ...                                   output_states=[RESULT, OUTPUT_MEAN])
+    ...                                   output_ports=[RESULT, OUTPUT_MEAN])
 
     >>> process_a = Process(pathway=[my_mech_A])
     >>> process_b = Process(pathway=[my_mech_B])
 
     >>> my_system = System(processes=[process_a, process_b],
-    ...                        monitor_for_control=[my_mech_A.output_states[RESULTS],
-    ...                                             my_mech_B.output_states[OUTPUT_MEAN]],
+    ...                        monitor_for_control=[my_mech_A.output_ports[RESULTS],
+    ...                                             my_mech_B.output_ports[OUTPUT_MEAN]],
     ...                        control_signals=[(GAIN, my_mech_A),
     ...                                         {NAME: INTERCEPT,
     ...                                          MECHANISM: my_mech_B,
@@ -316,16 +316,16 @@ from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
 from psyneulink.core.components.functions.transferfunctions import Exponential, Linear, CostFunctions
-from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
-from psyneulink.core.components.states.outputstate import SEQUENTIAL, _output_state_variable_getter
-from psyneulink.core.components.states.state import State_Base
+from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
+from psyneulink.core.components.ports.outputport import SEQUENTIAL, _output_port_variable_getter
+from psyneulink.core.components.ports.port import Port_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     ALLOCATION_SAMPLES, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, \
-    INPUT_STATE, INPUT_STATES, \
-    OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, \
-    PARAMETER_STATE, PARAMETER_STATES, \
+    INPUT_PORT, INPUT_PORTS, \
+    OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, \
+    PARAMETER_PORT, PARAMETER_PORTS, \
     PROJECTION_TYPE, RECEIVER, SUM
 from psyneulink.core.globals.parameters import Parameter, get_validator_by_function, get_validator_by_type_only
 from psyneulink.core.globals.sampleiterator import is_sample_spec
@@ -421,7 +421,7 @@ class ControlSignal(ModulatorySignal):
 
         Description
         -----------
-            The ControlSignal class is a subtype of the OutputState type in the State category of Component,
+            The ControlSignal class is a subtype of the OutputPort type in the Port category of Component,
             It is used as the sender for ControlProjections
             Its FUNCTION updates its value:
                 note:  currently, this is the identity function, that simply maps variable to self.value
@@ -435,9 +435,9 @@ class ControlSignal(ModulatorySignal):
         Class methods:
             function (executes function specified in params[FUNCTION];  default: Linear)
 
-        StateRegistry
+        PortRegistry
         -------------
-            All OutputStates are registered in StateRegistry, which maintains an entry for the subclass,
+            All OutputPorts are registered in PortRegistry, which maintains an entry for the subclass,
               a count for all instances of it, and a dictionary of those instances
     COMMENT
 
@@ -494,7 +494,7 @@ class ControlSignal(ModulatorySignal):
         details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
         the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
 
@@ -502,7 +502,7 @@ class ControlSignal(ModulatorySignal):
         specifies the name of the ControlSignal; see ControlSignal `name <ModulatorySignal.name>` for additional
         details.
 
-    prefs : PreferenceSet or specification dict : default State.classPreferences
+    prefs : PreferenceSet or specification dict : default Port.classPreferences
         specifies the `PreferenceSet` for the ControlSignal; see `prefs <ControlSignal.prefs>` for details.
 
 
@@ -609,9 +609,9 @@ class ControlSignal(ModulatorySignal):
         is assigned (see `name <ModulatorySignal.name>`).
 
         .. note::
-            Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
+            Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that Ports with
             the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
-            Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
+            Mechanism: Ports within a Mechanism with the same base name are appended an index in the order of their
             creation.
 
     prefs : PreferenceSet or specification dict
@@ -624,7 +624,7 @@ class ControlSignal(ModulatorySignal):
     #region CLASS ATTRIBUTES
 
     componentType = CONTROL_SIGNAL
-    paramsType = OUTPUT_STATE_PARAMS
+    paramsType = OUTPUT_PORT_PARAMS
 
     class Parameters(ModulatorySignal.Parameters):
         """
@@ -711,7 +711,7 @@ class ControlSignal(ModulatorySignal):
         variable = Parameter(
             np.array([defaultControlAllocation]),
             aliases='allocation',
-            getter=_output_state_variable_getter,
+            getter=_output_port_variable_getter,
             pnl_internal=True, constructor_argument='default_variable'
         )
 
@@ -749,15 +749,15 @@ class ControlSignal(ModulatorySignal):
         # construction?
         # _validate_modulation = get_validator_by_function(_is_modulation_param)
 
-    stateAttributes = ModulatorySignal.stateAttributes | {ALLOCATION_SAMPLES,
+    portAttributes = ModulatorySignal.portAttributes | {ALLOCATION_SAMPLES,
                                                           COST_OPTIONS,
                                                           INTENSITY_COST_FUNCTION,
                                                           ADJUSTMENT_COST_FUNCTION,
                                                           DURATION_COST_FUNCTION,
                                                           COMBINE_COSTS_FUNCTION}
 
-    connectsWith = [PARAMETER_STATE, INPUT_STATE, OUTPUT_STATE]
-    connectsWithAttribute = [PARAMETER_STATES, INPUT_STATES, OUTPUT_STATES]
+    connectsWith = [PARAMETER_PORT, INPUT_PORT, OUTPUT_PORT]
+    connectsWithAttribute = [PARAMETER_PORTS, INPUT_PORTS, OUTPUT_PORTS]
     projectionSocket = RECEIVER
     modulators = []
 
@@ -765,11 +765,11 @@ class ControlSignal(ModulatorySignal):
     # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     PREFERENCE_SET_NAME: 'OutputStateCustomClassPreferences',
+    #     PREFERENCE_SET_NAME: 'OutputPortCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
-    paramClassDefaults = State_Base.paramClassDefaults.copy()
-    # paramClassDefaults = OutputState.paramClassDefaults.copy()
+    paramClassDefaults = Port_Base.paramClassDefaults.copy()
+    # paramClassDefaults = OutputPort.paramClassDefaults.copy()
     paramClassDefaults.update({
         PROJECTION_TYPE: CONTROL_PROJECTION,
         CONTROLLED_PARAMS:None
@@ -783,12 +783,12 @@ class ControlSignal(ModulatorySignal):
                  default_allocation=None,
                  size=None,
                  index=None,
-                 function=Linear(),
+                 function=Linear,
                  cost_options:tc.optional(tc.any(CostFunctions, list))=None,
                  intensity_cost_function:(is_function_type)=Exponential,
                  adjustment_cost_function:tc.optional(is_function_type)=Linear,
                  duration_cost_function:tc.optional(is_function_type)=SimpleIntegrator,
-                 combine_costs_function:tc.optional(is_function_type)=Reduce(operation=SUM),
+                 combine_costs_function:tc.optional(is_function_type)=Reduce,
                  allocation_samples=Parameters.allocation_samples.default_value,
                  modulation:tc.optional(str)=None,
                  modulates=None,
@@ -811,7 +811,7 @@ class ControlSignal(ModulatorySignal):
         if params and ALLOCATION_SAMPLES in params and params[ALLOCATION_SAMPLES] is not None:
             allocation_samples = params[ALLOCATION_SAMPLES]
 
-        # Note index and assign are not used by ControlSignal, but included here for consistency with OutputState
+        # Note index and assign are not used by ControlSignal, but included here for consistency with OutputPort
         # If index has not been specified, but the owner has, control_allocation has been determined, so use that
         index = index or SEQUENTIAL
 
@@ -827,8 +827,8 @@ class ControlSignal(ModulatorySignal):
 
         # FIX: ??MOVE THIS TO _validate_params OR ANOTHER _instantiate METHOD??
         # IMPLEMENTATION NOTE:
-        # Consider adding self to owner.output_states here (and removing from ControlProjection._instantiate_sender)
-        #  (test for it, and create if necessary, as per OutputStates in ControlProjection._instantiate_sender),
+        # Consider adding self to owner.output_ports here (and removing from ControlProjection._instantiate_sender)
+        #  (test for it, and create if necessary, as per OutputPorts in ControlProjection._instantiate_sender),
 
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         super().__init__(owner=owner,
@@ -993,7 +993,7 @@ class ControlSignal(ModulatorySignal):
         for cost_function_name in costFunctionNames:
             self.paramsCurrent[cost_function_name.replace('fct','function')] = getattr(self.function,cost_function_name)
 
-    def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
+    def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
         """Get ControlSignal specified for a parameter or in a 'control_signals' argument
 
         Tuple specification can be:
@@ -1007,27 +1007,27 @@ class ControlSignal(ModulatorySignal):
         from psyneulink.core.globals.keywords import PROJECTIONS
 
         params_dict = {}
-        state_spec = state_specific_spec
+        port_spec = port_specific_spec
 
-        if isinstance(state_specific_spec, dict):
-            return None, state_specific_spec
+        if isinstance(port_specific_spec, dict):
+            return None, port_specific_spec
 
-        elif isinstance(state_specific_spec, tuple):
+        elif isinstance(port_specific_spec, tuple):
 
-            state_spec = None
-            params_dict[PROJECTIONS] = _parse_connection_specs(connectee_state_type=self,
+            port_spec = None
+            params_dict[PROJECTIONS] = _parse_connection_specs(connectee_port_type=self,
                                                                owner=owner,
-                                                               connections=state_specific_spec)
-        elif state_specific_spec is not None:
+                                                               connections=port_specific_spec)
+        elif port_specific_spec is not None:
             raise ControlSignalError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
-                                  format(self.__class__.__name__, state_specific_spec))
+                                  format(self.__class__.__name__, port_specific_spec))
 
         if params_dict[PROJECTIONS] is None:
             raise ControlSignalError("PROGRAM ERROR: No entry found in {} params dict for {} "
                                      "with specification of parameter's Mechanism or ControlProjection(s) to it".
                                         format(CONTROL_SIGNAL, owner.name))
 
-        return state_spec, params_dict
+        return port_spec, params_dict
 
     def _update(self, context=None, params=None):
         """Update value (intensity) and costs

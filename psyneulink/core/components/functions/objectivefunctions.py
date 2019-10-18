@@ -45,7 +45,7 @@ __all__ = ['ObjectiveFunction', 'Stability', 'Distance', 'Energy', 'Entropy']
 
 
 class ObjectiveFunction(Function_Base):
-    """Abstract class of `Function` used for evaluating states.
+    """Abstract class of `Function` used for evaluating ports.
     """
 
     componentType = OBJECTIVE_FUNCTION_TYPE
@@ -121,7 +121,7 @@ class Stability(ObjectiveFunction):
         specifies whether to normalize the stability value by the length of `variable <Stability.variable>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -161,7 +161,7 @@ class Stability(ObjectiveFunction):
         if `True`, result of stability calculation is normalized by the length of `variable <Stability.variable>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -261,11 +261,11 @@ class Stability(ObjectiveFunction):
 
         `matrix <Stability.matrix>` argument must be one of the following
             - 2d list, np.ndarray or np.matrix
-            - ParameterState for one of the above
-            - MappingProjection with a parameterStates[MATRIX] for one of the above
+            - ParameterPort for one of the above
+            - MappingProjection with a parameterPorts[MATRIX] for one of the above
 
         Parse matrix specification to insure it resolves to a square matrix
-        (but leave in the form in which it was specified so that, if it is a ParameterState or MappingProjection,
+        (but leave in the form in which it was specified so that, if it is a ParameterPort or MappingProjection,
          its current value can be accessed at runtime (i.e., it can be used as a "pointer")
         """
 
@@ -273,7 +273,7 @@ class Stability(ObjectiveFunction):
         if MATRIX in target_set:
 
             from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-            from psyneulink.core.components.states.parameterstate import ParameterState
+            from psyneulink.core.components.ports.parameterport import ParameterPort
 
             matrix = target_set[MATRIX]
 
@@ -282,19 +282,19 @@ class Stability(ObjectiveFunction):
 
             if isinstance(matrix, MappingProjection):
                 try:
-                    matrix = matrix._parameter_states[MATRIX].value
-                    param_type_string = "MappingProjection's ParameterState"
+                    matrix = matrix._parameter_ports[MATRIX].value
+                    param_type_string = "MappingProjection's ParameterPort"
                 except KeyError:
                     raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "
-                                        "ParameterState that has been assigned a 2d array or matrix".
+                                        "ParameterPort that has been assigned a 2d array or matrix".
                                         format(MATRIX, self.name, matrix.shape, MATRIX))
 
-            elif isinstance(matrix, ParameterState):
+            elif isinstance(matrix, ParameterPort):
                 try:
                     matrix = matrix.value
-                    param_type_string = "ParameterState"
+                    param_type_string = "ParameterPort"
                 except KeyError:
-                    raise FunctionError("The value of the {} parameterState specified for the {} arg of {} ({}) "
+                    raise FunctionError("The value of the {} parameterPort specified for the {} arg of {} ({}) "
                                         "must be a 2d array or matrix".
                                         format(MATRIX, MATRIX, self.name, matrix.shape))
 
@@ -335,7 +335,7 @@ class Stability(ObjectiveFunction):
 
         """
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-        from psyneulink.core.components.states.parameterstate import ParameterState
+        from psyneulink.core.components.ports.parameterport import ParameterPort
 
         # this mirrors the transformation in _function
         # it is a hack, and a general solution should be found
@@ -348,8 +348,8 @@ class Stability(ObjectiveFunction):
         matrix = self.parameters.matrix._get(context)
 
         if isinstance(matrix, MappingProjection):
-            matrix = matrix._parameter_states[MATRIX]
-        elif isinstance(matrix, ParameterState):
+            matrix = matrix._parameter_ports[MATRIX]
+        elif isinstance(matrix, ParameterPort):
             pass
         else:
             matrix = get_matrix(matrix, size, size)
@@ -372,7 +372,7 @@ class Stability(ObjectiveFunction):
 
     def _update_default_variable(self, new_default_variable, context):
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-        from psyneulink.core.components.states.parameterstate import ParameterState
+        from psyneulink.core.components.ports.parameterport import ParameterPort
 
         # this mirrors the transformation in _function
         # it is a hack, and a general solution should be found
@@ -384,8 +384,8 @@ class Stability(ObjectiveFunction):
         matrix = self.parameters.matrix._get(context)
 
         if isinstance(matrix, MappingProjection):
-            matrix = matrix._parameter_states[MATRIX]
-        elif isinstance(matrix, ParameterState):
+            matrix = matrix._parameter_ports[MATRIX]
+        elif isinstance(matrix, ParameterPort):
             pass
         else:
             matrix = get_matrix(self.defaults.matrix, size, size)
@@ -511,7 +511,7 @@ class Energy(Stability):
         specifies whether to normalize the energy value by the length of `variable <Stability.variable>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -547,7 +547,7 @@ class Energy(Stability):
         if `True`, result of energy calculation is normalized by the length of `variable <Energy.variable>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -619,7 +619,7 @@ class Entropy(Stability):
         specifies whether to normalize the entropy value by the length of `variable <Stability.variable>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -655,7 +655,7 @@ class Entropy(Stability):
         if `True`, result of entropy calculation is normalized by the length of `variable <Entropy.variable>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -716,7 +716,7 @@ class Distance(ObjectiveFunction):
         specifies whether to normalize the distance by the length of `variable <Distance.variable>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -743,7 +743,7 @@ class Distance(ObjectiveFunction):
         determines whether the distance is normalized by the length of `variable <Distance.variable>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -1190,7 +1190,7 @@ class Distance(ObjectiveFunction):
             result = -np.sum(v1 * v2) / 2
 
         else:
-            assert False, '{} not recognized in {}'.format(repr(METRIC), self.__class__.__name__)
+            assert False, '{} not a recognized metric in {}'.format(self.metric, self.__class__.__name__)
 
         if self.normalize and not self.metric in {MAX_ABS_DIFF, CORRELATION}:
             if self.metric is ENERGY:

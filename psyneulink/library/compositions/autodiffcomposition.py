@@ -583,6 +583,8 @@ class AutodiffComposition(Composition):
         if not isinstance(self.loss_spec, str):
             return self.loss_spec
         elif loss_spec == 'mse':
+            return nn.MSELoss(reduction='mean')
+        elif loss_spec == 'sse':
             return nn.MSELoss(reduction='sum')
         elif loss_spec == 'crossentropy':
             return nn.CrossEntropyLoss(reduction='sum')
@@ -722,9 +724,9 @@ class AutodiffComposition(Composition):
             # save outputs of model if this is final epoch or if using early stopping
             if patience is not None or curr_epoch == total_epochs - 1:
                 curr_output_list = []
-                for input_state in self.output_CIM.input_states:
-                    assert (len(input_state.all_afferents) == 1)  # CW 12/05/18, this assert may eventually be outdated
-                    component = input_state.all_afferents[0].sender.owner
+                for input_port in self.output_CIM.input_ports:
+                    assert (len(input_port.all_afferents) == 1)  # CW 12/05/18, this assert may eventually be outdated
+                    component = input_port.all_afferents[0].sender.owner
                     curr_output_list.append(curr_tensor_outputs[component].detach().cpu().numpy().copy())
                 outputs.append(curr_output_list)
                 # outputs.extend(curr_output_list)
@@ -733,9 +735,7 @@ class AutodiffComposition(Composition):
 
         # backpropagate to compute gradients and perform learning update for parameters
         optimizer.zero_grad()
-        curr_loss = curr_loss / \
-                    num_inputs / \
-                    2
+        curr_loss = curr_loss / num_inputs
         printable = {}
         for component in curr_tensor_outputs.keys():
             printable[component] = curr_tensor_outputs[component].detach().numpy()
@@ -795,7 +795,7 @@ class AutodiffComposition(Composition):
         if self.learning_enabled is True:
             if self.__generated_learning_run is None:
                 with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                    self.__generated_learning_run = ctx.gen_composition_run(self)
+                    self.__generated_learning_run = ctx.gen_autodiffcomp_learning_run(self)
             return self.__generated_learning_run
         if self.__generated_forward_run is None:
             with pnlvm.LLVMBuilderContext.get_global() as ctx:
@@ -1090,35 +1090,7 @@ class AutodiffComposition(Composition):
                                                     runtime_params=runtime_params,
                                                     )
                 self.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
-                # HACK: manually call forward function to get final outputs
-                results = []
-                self.learning_enabled = False
-                input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
-                forward_inputs = inputs["inputs"]
-                for input_num in range(0,len(forward_inputs[input_nodes[0]])):
-                    curr_input_dict = {}
-                    for node in input_nodes:
-                        curr_input_dict[node] = [forward_inputs[node][input_num]]
-                    results.append(self.run(
-                        inputs=curr_input_dict,
-                        scheduler=scheduler,
-                        termination_processing=termination_processing,
-                        context=context,
-                        num_trials=num_trials,
-                        call_before_time_step=call_before_time_step,
-                        call_after_time_step=call_after_time_step,
-                        call_before_pass=call_before_pass,
-                        call_after_pass=call_after_pass,
-                        call_before_trial=call_before_trial,
-                        call_after_trial=call_after_trial,
-                        clamp_input=clamp_input,
-                        bin_execute=bin_execute,
-                        initial_values=initial_values,
-                        reinitialize_values=reinitialize_values,
-                        runtime_params=runtime_params,
-                    ))
-                self.learning_enabled = True
-                results = [results]
+                results = [self.parameters.results._get(context)]
             else:
                 self._analyze_graph()
                 self._initialize_from_context(context, base_context=Context(execution_id=None), override=False)
@@ -1198,12 +1170,12 @@ class AutodiffComposition(Composition):
                                                "Autodiff Compositions can only be Linear, Logistic, or ReLU."
                                                .format(node.component.function, node.component, self.name))
 
-            # raise error if a node has more than one input state
-            if len(node.component.input_states) > 1:
-                raise AutodiffCompositionError("Mechanism {0} of {1} has more than one input state. Autodiff "
-                                               "Compositions only allow mechanisms to have one input state. The "
-                                               "dimensionality of this state's value will become the dimensionality of "
-                                               "the tensor representing the state's mechanism in the underlying "
+            # raise error if a node has more than one InputPort
+            if len(node.component.input_ports) > 1:
+                raise AutodiffCompositionError("Mechanism {0} of {1} has more than one InputPort. Autodiff "
+                                               "Compositions only allow mechanisms to have one InputPort. The "
+                                               "dimensionality of this port's value will become the dimensionality of "
+                                               "the tensor representing the port's mechanism in the underlying "
                                                "Pytorch model."
                                                .format(node.component, self.name))
 
@@ -1257,7 +1229,7 @@ class AutodiffComposition(Composition):
         mech_param_type_list = (ctx.get_param_struct_type(m) if (m is self.input_CIM or m is self.output_CIM)
                                 else pnlvm.ir.LiteralStructType([]) for m in self._all_nodes)
 
-        proj_param_type_list = (ctx.get_param_struct_type(p) if (p.sender in self.input_CIM.input_states or p.receiver in self.output_CIM.input_states)
+        proj_param_type_list = (ctx.get_param_struct_type(p) if (p.sender in self.input_CIM.input_ports or p.receiver in self.output_CIM.input_ports)
                                 else pnlvm.ir.LiteralStructType([]) for p in self.projections)
 
         self._build_pytorch_representation(self.default_execution_id)
@@ -1298,7 +1270,7 @@ class AutodiffComposition(Composition):
 
         mech_params = (_parameterize_node(m)
                        for m in self._all_nodes if m is not self.controller or not simulation)
-        proj_params = (tuple(p._get_param_initializer(context)) if (p.sender in self.input_CIM.input_states or p.receiver in self.output_CIM.input_states)
+        proj_params = (tuple(p._get_param_initializer(context)) if (p.sender in self.input_CIM.input_ports or p.receiver in self.output_CIM.input_ports)
                        else tuple() for p in self.projections)
         self._build_pytorch_representation(self.default_execution_id)
         model = self.parameters.pytorch_representation.get(self.default_execution_id)

@@ -96,8 +96,8 @@ standard `RecurrentTransferMechanism` would implement the `AdaptiveIntegrator` a
 2. its `matrix <LCAMechanism.matrix>` consisting of `self_excitation <LCAMechanism.self_excitation>` and `competition <LCAMechanism.competition>`
 off diagonal.
 
-In addition to its `primary OutputState <OutputState_Primary>` (which contains the current value of the
-elements of the LCAMechanism) and the OutputStates of a RecurrentTransferMechanism, it has two additional OutputStates:
+In addition to its `primary OutputPort <OutputPort_Primary>` (which contains the current value of the
+elements of the LCAMechanism) and the OutputPorts of a RecurrentTransferMechanism, it has two additional OutputPorts:
 
 - `MAX_VS_NEXT <LCAMechanism.LCAMechanism_OUTPUT.MAX_VS_NEXT>`
 - `MAX_VS_AVG <MAX_VS_AVG>`
@@ -105,7 +105,7 @@ elements of the LCAMechanism) and the OutputStates of a RecurrentTransferMechani
 Both are two element arrays that track the element of the LCAMechanism with the currently highest value relative
 to the value of the others.
 
-The two elements of the `MAX_VS_NEXT` OutputState contain, respectively, the index of the
+The two elements of the `MAX_VS_NEXT` OutputPort contain, respectively, the index of the
 LCAMechanism element with the greatest value, and the difference between its value and the next highest one. `MAX_VS_AVG`
 contains the index of the LCAMechanism element with the greatest value, and the difference between its value and the average
 of all the others.
@@ -144,7 +144,7 @@ from psyneulink.core.components.functions.selectionfunctions import max_vs_avg, 
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import LeakyCompetingIntegrator
 from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
-from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutputStates
+from psyneulink.core.components.ports.outputport import PRIMARY, StandardOutputPorts
 from psyneulink.core.globals.keywords import BETA, ENERGY, ENTROPY, FUNCTION, INITIALIZER, LCA_MECHANISM, NAME, NOISE, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, RATE, RESULT, TIME_STEP_SIZE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags
@@ -161,12 +161,12 @@ class LCAError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-# This is a convenience class that provides list of standard_output_state names in IDE
+# This is a convenience class that provides list of standard_output_port names in IDE
 class LCAMechanism_OUTPUT():
         """
-            .. _LCAMechanism_Standard_OutputStates:
+            .. _LCAMechanism_Standard_OutputPorts:
 
-            `Standard OutputStates <OutputState_Standard>` for `LCAMechanism`:
+            `Standard OutputPorts <OutputPort_Standard>` for `LCAMechanism`:
 
             .. _LCAMechanism_RESULT
 
@@ -222,12 +222,12 @@ class LCAMechanism_OUTPUT():
         MAX_VS_NEXT=MAX_VS_NEXT
         MAX_VS_AVG=MAX_VS_AVG
 # THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
-# for item in [item[NAME] for item in DDM_standard_output_states]:
+# for item in [item[NAME] for item in DDM_standard_output_ports]:
 #     setattr(DDM_OUTPUT.__class__, item, item)
 
 
     # THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
-    # for item in [item[NAME] for item in DDM_standard_output_states]:
+    # for item in [item[NAME] for item in DDM_standard_output_ports]:
     #     setattr(DDM_OUTPUT.__class__, item, item)
 
 
@@ -276,7 +276,7 @@ class LCAMechanism(RecurrentTransferMechanism):
         specifies the input to the Mechanism to use if none is provided in a call to its
         `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method;
         also serves as a template to specify the length of `variable <TransferMechanism.variable>` for
-        `function <TransferMechanism.function>`, and the `primary OutputState <OutputState_Primary>`
+        `function <TransferMechanism.function>`, and the `primary OutputPort <OutputPort_Primary>`
         of the Mechanism.
 
     size : int, list or np.ndarray of ints
@@ -336,7 +336,7 @@ class LCAMechanism(RecurrentTransferMechanism):
 
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
         the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
 
@@ -382,8 +382,8 @@ class LCAMechanism(RecurrentTransferMechanism):
         `LeakyCompetingIntegrator function  <LeakyCompetingIntegrator>` computes.
 
     recurrent_projection : MappingProjection
-        a `MappingProjection` that projects from the Mechanism's `primary OutputState <OutputState_Primary>`
-        back to it `primary inputState <Mechanism_InputStates>`.
+        a `MappingProjection` that projects from the Mechanism's `primary OutputPort <OutputPort_Primary>`
+        back to it `primary inputPort <Mechanism_InputPorts>`.
 
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS
         determines the starting value for time-averaged input
@@ -447,11 +447,11 @@ class LCAMechanism(RecurrentTransferMechanism):
         CORRECTED:
         value : 1d np.array
             the output of `function <LCAMechanism.function>`;  also assigned to :keyword:`value` of the TRANSFER_RESULT
-            OutputState and the first item of :keyword:`output_values`.
+            OutputPort and the first item of :keyword:`output_values`.
     COMMENT
 
-    output_states : ContentAddressableList[OutputState]
-        contains the following `OutputStates <OutputState>`:
+    output_ports : ContentAddressableList[OutputPort]
+        contains the following `OutputPorts <OutputPort>`:
         * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function <TransferMechanism.function>`;
         * `TRANSFER_MEAN`, the :keyword:`value` of which is the mean of the result;
         * `TRANSFER_VARIANCE`, the :keyword:`value` of which is the variance of the result;
@@ -470,13 +470,13 @@ class LCAMechanism(RecurrentTransferMechanism):
 
     output_values : List[array(float64), float, float]
         a list with the following items:
-        * **result** of the `function <LCAMechanism.function>` calculation (value of TRANSFER_RESULT OutputState);
-        * **mean** of the result (:keyword:`value` of TRANSFER_MEAN OutputState)
-        * **variance** of the result (:keyword:`value` of TRANSFER_VARIANCE OutputState);
-        * **energy** of the result (:keyword:`value` of ENERGY OutputState);
-        * **entropy** of the result (if the ENTROPY OutputState is present);
-        * **max_vs_next** of the result (:keyword:`value` of MAX_VS_NEXT OutputState);
-        * **max_vs_avg** of the result (:keyword:`value` of MAX_VS_AVG OutputState).
+        * **result** of the `function <LCAMechanism.function>` calculation (value of TRANSFER_RESULT OutputPort);
+        * **mean** of the result (:keyword:`value` of TRANSFER_MEAN OutputPort)
+        * **variance** of the result (:keyword:`value` of TRANSFER_VARIANCE OutputPort);
+        * **energy** of the result (:keyword:`value` of ENERGY OutputPort);
+        * **entropy** of the result (if the ENTROPY OutputPort is present);
+        * **max_vs_next** of the result (:keyword:`value` of MAX_VS_NEXT OutputPort);
+        * **max_vs_avg** of the result (:keyword:`value` of MAX_VS_AVG OutputPort).
 
     name : str
         the name of the LCAMechanism Mechanism; if it is not specified in the **name** argument of the constructor, a
@@ -560,10 +560,10 @@ class LCAMechanism(RecurrentTransferMechanism):
         initial_value = None
         integrator_mode = Parameter(True, setter=_integrator_mode_setter)
 
-    # paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_NEXT})
-    # paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_AVG})
-    standard_output_states = RecurrentTransferMechanism.standard_output_states.copy()
-    standard_output_states.extend([{NAME:MAX_VS_NEXT,
+    # paramClassDefaults[OUTPUT_PORTS].append({NAME:MAX_VS_NEXT})
+    # paramClassDefaults[OUTPUT_PORTS].append({NAME:MAX_VS_AVG})
+    standard_output_ports = RecurrentTransferMechanism.standard_output_ports.copy()
+    standard_output_ports.extend([{NAME:MAX_VS_NEXT,
                                     FUNCTION:max_vs_next},
                                    {NAME:MAX_VS_AVG,
                                     FUNCTION:max_vs_avg}])
@@ -572,7 +572,7 @@ class LCAMechanism(RecurrentTransferMechanism):
     def __init__(self,
                  default_variable=None,
                  size:tc.optional(tc.any(int, list, np.array))=None,
-                 input_states:tc.optional(tc.any(list, dict))=None,
+                 input_ports:tc.optional(tc.any(list, dict))=None,
                  matrix=None,
                  function=Logistic,
                  initial_value=None,
@@ -584,7 +584,7 @@ class LCAMechanism(RecurrentTransferMechanism):
                  integrator_mode=True,
                  time_step_size=0.1,
                  clip=None,
-                 output_states:tc.optional(tc.any(str, Iterable))=RESULT,
+                 output_ports:tc.optional(tc.any(str, Iterable))=RESULT,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -592,11 +592,11 @@ class LCAMechanism(RecurrentTransferMechanism):
         """Instantiate LCAMechanism
         """
 
-        # Default output_states is specified in constructor as a string rather than a list
+        # Default output_ports is specified in constructor as a string rather than a list
         # to avoid "gotcha" associated with mutable default arguments
         # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
-        if output_states is None or output_states is RESULT:
-            output_states = [RESULT]
+        if output_ports is None or output_ports is RESULT:
+            output_ports = [RESULT]
 
         if matrix is not None:
             warnings.warn("Matrix arg for LCAMechanism is not used; matrix was assigned using self_excitation and competition "
@@ -621,24 +621,24 @@ class LCAMechanism(RecurrentTransferMechanism):
         integrator_function = LeakyCompetingIntegrator
 
         # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(input_states=input_states,
+        params = self._assign_args_to_param_dicts(input_ports=input_ports,
                                                   leak=leak,
                                                   self_excitation=self_excitation,
                                                   hetero=hetero,
                                                   competition=competition,
                                                   integrator_mode=integrator_mode,
                                                   time_step_size=time_step_size,
-                                                  output_states=output_states,
+                                                  output_ports=output_ports,
                                                   params=params)
 
-        if not isinstance(self.standard_output_states, StandardOutputStates):
-            self.standard_output_states = StandardOutputStates(self,
-                                                               self.standard_output_states,
+        if not isinstance(self.standard_output_ports, StandardOutputPorts):
+            self.standard_output_ports = StandardOutputPorts(self,
+                                                               self.standard_output_ports,
                                                                indices=PRIMARY)
 
         super().__init__(default_variable=default_variable,
                          size=size,
-                         input_states=input_states,
+                         input_ports=input_ports,
                          auto=self_excitation,
                          hetero=hetero,
                          function=function,
@@ -646,7 +646,7 @@ class LCAMechanism(RecurrentTransferMechanism):
                          initial_value=initial_value,
                          noise=noise,
                          clip=clip,
-                         output_states=output_states,
+                         output_ports=output_ports,
                          params=params,
                          name=name,
                          prefs=prefs,

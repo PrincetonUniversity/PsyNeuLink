@@ -93,7 +93,7 @@ greedy_action_mech = ComparatorMechanism(name='ACTION',sample=player_obs,target=
 
 # ControlMechanism
 Panicky_control_mech = ControlMechanism(objective_mechanism=ObjectiveMechanism(function=choose_closer_agent_function,
-                                                                               monitored_output_states=[player_obs,
+                                                                               monitored_output_ports=[player_obs,
                                                                                                         predator_obs,
                                                                                                         prey_obs]),
                                         function = control_allocation_function,

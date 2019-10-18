@@ -36,24 +36,24 @@ def test_reinforcement():
         target=0,
     )
 
-    # print ('reward prediction weights: \n', action_selection.input_states[0].path_afferents[0].matrix)
-    # print ('targetMechanism weights: \n', action_selection.output_states.sendsToProjections[0].matrix)
+    # print ('reward prediction weights: \n', action_selection.input_ports[0].path_afferents[0].matrix)
+    # print ('targetMechanism weights: \n', action_selection.output_ports.sendsToProjections[0].matrix)
 
     reward_values = [10, 10, 10]
 
     # Must initialize reward (won't be used, but needed for declaration of lambda function)
-    action_selection.output_state.value = [0, 0, 1]
+    action_selection.output_port.value = [0, 0, 1]
     # Get reward value for selected action)
-    reward = lambda: [reward_values[int(np.nonzero(action_selection.output_state.value)[0])]]
+    reward = lambda: [reward_values[int(np.nonzero(action_selection.output_port.value)[0])]]
 
     def print_header(system):
         print("\n\n**** TRIAL: ", system.scheduler.clock.simple_time)
 
     def show_weights():
-        print('Reward prediction weights: \n', action_selection.input_states[0].path_afferents[0].get_mod_matrix(s))
+        print('Reward prediction weights: \n', action_selection.input_ports[0].path_afferents[0].get_mod_matrix(s))
         print('\nAction selected:  {}; predicted reward: {}'.format(
-            np.nonzero(action_selection.output_state.value)[0][0],
-            action_selection.output_state.value[np.nonzero(action_selection.output_state.value)[0][0]],
+            np.nonzero(action_selection.output_port.value)[0][0],
+            action_selection.output_port.value[np.nonzero(action_selection.output_port.value)[0][0]],
         ))
 
     input_list = {input_layer: [[1, 1, 1]]}
@@ -85,7 +85,7 @@ def test_reinforcement():
     mech_objective_action = s.mechanisms[2]
     mech_learning_input_to_action = s.mechanisms[3]
 
-    reward_prediction_weights = action_selection.input_states[0].path_afferents[0]
+    reward_prediction_weights = action_selection.input_ports[0].path_afferents[0]
 
     expected_output = [
         (input_layer.get_output_values(s), [np.array([1., 1., 1.])]),
@@ -124,7 +124,7 @@ def test_reinforcement_fixed_targets():
 
     action_selection = pnl.DDM(input_format=pnl.ARRAY,
                                function=pnl.DriftDiffusionAnalytical(),
-                               output_states=[pnl.SELECTED_INPUT_ARRAY],
+                               output_ports=[pnl.SELECTED_INPUT_ARRAY],
                                name='DDM')
 
     p = Process(pathway=[input_layer, action_selection],

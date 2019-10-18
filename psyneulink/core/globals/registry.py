@@ -13,7 +13,11 @@ import re
 
 from collections import defaultdict, namedtuple
 
-from psyneulink.core.globals.keywords import CONTROL_PROJECTION, DDM_MECHANISM, GATING_SIGNAL, INPUT_STATE, MAPPING_PROJECTION, OUTPUT_STATE, PARAMETER_STATE, FUNCTION_COMPONENT_CATEGORY, COMPONENT_PREFERENCE_SET, MECHANISM_COMPONENT_CATEGORY, PREFERENCE_SET, PROCESS_COMPONENT_CATEGORY, PROJECTION_COMPONENT_CATEGORY, STATE_COMPONENT_CATEGORY, SYSTEM_COMPONENT_CATEGORY
+from psyneulink.core.globals.keywords import \
+    CONTROL_PROJECTION, DDM_MECHANISM, GATING_SIGNAL, INPUT_PORT, MAPPING_PROJECTION, OUTPUT_PORT, \
+    FUNCTION_COMPONENT_CATEGORY, COMPONENT_PREFERENCE_SET, MECHANISM_COMPONENT_CATEGORY, \
+    PARAMETER_PORT, PREFERENCE_SET, PROCESS_COMPONENT_CATEGORY, PROJECTION_COMPONENT_CATEGORY, \
+    PORT_COMPONENT_CATEGORY, SYSTEM_COMPONENT_CATEGORY
 
 __all__ = [
     'RegistryError',
@@ -32,10 +36,10 @@ RegistryVerbosePrefs = {
     SYSTEM_COMPONENT_CATEGORY: DEFAULT_REGISTRY_VERBOSITY,
     PROCESS_COMPONENT_CATEGORY: DEFAULT_REGISTRY_VERBOSITY,
     MECHANISM_COMPONENT_CATEGORY: DEFAULT_REGISTRY_VERBOSITY,
-    STATE_COMPONENT_CATEGORY: DEFAULT_REGISTRY_VERBOSITY,
-    INPUT_STATE: DEFAULT_REGISTRY_VERBOSITY,
-    PARAMETER_STATE: DEFAULT_REGISTRY_VERBOSITY,
-    OUTPUT_STATE: DEFAULT_REGISTRY_VERBOSITY,
+    PORT_COMPONENT_CATEGORY: DEFAULT_REGISTRY_VERBOSITY,
+    INPUT_PORT: DEFAULT_REGISTRY_VERBOSITY,
+    PARAMETER_PORT: DEFAULT_REGISTRY_VERBOSITY,
+    OUTPUT_PORT: DEFAULT_REGISTRY_VERBOSITY,
     GATING_SIGNAL: DEFAULT_REGISTRY_VERBOSITY,
     DDM_MECHANISM: DEFAULT_REGISTRY_VERBOSITY,
     PROJECTION_COMPONENT_CATEGORY: DEFAULT_REGISTRY_VERBOSITY,
@@ -114,12 +118,12 @@ def register_category(entry,
     COMMENT
     """
 
-    # IMPLEMENTATION NOTE:  Move to State when that is implemented as ABC
+    # IMPLEMENTATION NOTE:  Move to Port when that is implemented as ABC
     import inspect
-    from psyneulink.core.components.states.state import State, State_Base
-    if inspect.isclass(entry) and issubclass(entry, State) and not entry == State_Base:
+    from psyneulink.core.components.ports.port import Port, Port_Base
+    if inspect.isclass(entry) and issubclass(entry, Port) and not entry == Port_Base:
         try:
-           entry.stateAttributes
+           entry.portAttributes
         except AttributeError:
             raise RegistryError("PROGRAM ERROR: {} must implement a stateSpecificParams attribute".
                                 format(entry.__name__))
@@ -291,7 +295,7 @@ def remove_instance_from_registry(registry, category, name=None, component=None)
                 name = n
 
     try:
-        clear_registry(registry_entry.instanceDict[name]._stateRegistry)
+        clear_registry(registry_entry.instanceDict[name]._portRegistry)
     except (AttributeError):
         pass
 
