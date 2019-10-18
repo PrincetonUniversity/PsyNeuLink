@@ -32,7 +32,7 @@ from psyneulink.core.components.functions.function import Function_Base, Functio
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, DIST_FUNCTION_TYPE, BETA, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_ANALYTICAL_FUNCTION, \
     EXPONENTIAL_DIST_FUNCTION, GAMMA_DIST_FUNCTION, HIGH, LOW, MULTIPLICATIVE_PARAM, NOISE, NORMAL_DIST_FUNCTION, \
-    SCALE, STANDARD_DEVIATION, UNIFORM_DIST_FUNCTION, WALD_DIST_FUNCTION
+    SCALE, STANDARD_DEVIATION, THRESHOLD, UNIFORM_DIST_FUNCTION, WALD_DIST_FUNCTION
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.utilities import parameter_spec
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -41,7 +41,7 @@ from psyneulink.core.globals.parameters import Parameter
 
 __all__ = [
     'DistributionFunction', 'DRIFT_RATE', 'DRIFT_RATE_VARIABILITY', 'DriftDiffusionAnalytical', 'ExponentialDist',
-    'GammaDist', 'NON_DECISION_TIME', 'NormalDist', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY', 'THRESHOLD',
+    'GammaDist', 'NON_DECISION_TIME', 'NormalDist', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY',
     'THRESHOLD_VARIABILITY', 'UniformDist', 'UniformToNormalDist', 'WaldDist',
 ]
 
@@ -818,7 +818,6 @@ class WaldDist(DistributionFunction):
 # Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()
 DRIFT_RATE = 'drift_rate'
 DRIFT_RATE_VARIABILITY = 'DDM_DriftRateVariability'
-THRESHOLD = 'threshold'
 THRESHOLD_VARIABILITY = 'DDM_ThresholdRateVariability'
 STARTING_POINT = 'starting_point'
 STARTING_POINT_VARIABILITY = "DDM_StartingPointVariability"
