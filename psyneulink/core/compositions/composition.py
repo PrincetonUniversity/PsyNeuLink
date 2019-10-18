@@ -7456,7 +7456,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         node_list = list(self._all_nodes)
         return node_list.index(node)
 
-    def _get_node_wrapper(self, node, simulation=False):
+    def _get_node_wrapper(self, node):
         if node not in self.__generated_node_wrappers:
             class node_wrapper():
                 def __init__(self, node, gen_f):
@@ -7513,9 +7513,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self._compilation_data.ptx_execution._get(context) is None:
             self._compilation_data.ptx_execution._set(pnlvm.CompExecution(self, [context.execution_id]), context)
 
-    def __gen_node_wrapper(self, node, simulation=False):
-        assert node is not self.controller or simulation is False
-        name = 'comp_sim_wrap_' if simulation else 'comp_wrap_'
+    def __gen_node_wrapper(self, node):
+        name = 'comp_wrap_'
         is_mech = isinstance(node, Mechanism)
 
         with pnlvm.LLVMBuilderContext.get_global() as ctx:

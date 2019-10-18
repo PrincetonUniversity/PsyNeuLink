@@ -428,7 +428,7 @@ class LLVMBuilderContext:
         else:
             data = data_arg
 
-        output_cim_w = composition._get_node_wrapper(composition.output_CIM, simulation)
+        output_cim_w = composition._get_node_wrapper(composition.output_CIM)
         output_cim_f = self.get_llvm_function(output_cim_w)
         builder.block.name = "invoke_" + output_cim_f.name
         builder.call(output_cim_f, [context, params, comp_in, data, data])
@@ -480,7 +480,7 @@ class LLVMBuilderContext:
             data = data_arg
         
         # Call input CIM
-        input_cim_w = composition._get_node_wrapper(composition.input_CIM, simulation)
+        input_cim_w = composition._get_node_wrapper(composition.input_CIM)
         input_cim_f = self.get_llvm_function(input_cim_w)
 
         builder.call(input_cim_f, [context, params, comp_in, data, data])
@@ -503,7 +503,7 @@ class LLVMBuilderContext:
         builder.call(pytorch_forward_func,[model_context,model_params,model_input,model_output])
         
         # Call output CIM
-        output_cim_w = composition._get_node_wrapper(composition.output_CIM, simulation)
+        output_cim_w = composition._get_node_wrapper(composition.output_CIM)
         output_cim_f = self.get_llvm_function(output_cim_w)
         builder.block.name = "invoke_" + output_cim_f.name
         builder.call(output_cim_f, [context, params, comp_in, data, data])
@@ -551,14 +551,14 @@ class LLVMBuilderContext:
             data = data_arg
 
         # Call input CIM
-        input_cim_w = composition._get_node_wrapper(composition.input_CIM, simulation)
+        input_cim_w = composition._get_node_wrapper(composition.input_CIM)
         input_cim_f = self.get_llvm_function(input_cim_w)
         builder.call(input_cim_f, [state, params, comp_in, data, data])
 
         if simulation is False and composition.enable_controller and \
            composition.controller_mode == BEFORE:
             assert composition.controller is not None
-            controller = composition._get_node_wrapper(composition.controller, simulation)
+            controller = composition._get_node_wrapper(composition.controller)
             controller_f = self.get_llvm_function(controller)
             builder.call(controller_f, [state, params, comp_in, data, data])
 
@@ -611,7 +611,7 @@ class LLVMBuilderContext:
             run_set_mech_ptr = builder.gep(run_set_ptr, [zero, self.int32_ty(idx)])
             mech_cond = builder.load(run_set_mech_ptr, name="mech_" + mech.name + "_should_run")
             with builder.if_then(mech_cond):
-                mech_w = composition._get_node_wrapper(mech, simulation)
+                mech_w = composition._get_node_wrapper(mech)
                 mech_f = self.get_llvm_function(mech_w)
                 builder.block.name = "invoke_" + mech_f.name
                 # Wrappers do proper indexing of all structures
@@ -662,12 +662,12 @@ class LLVMBuilderContext:
         if simulation is False and composition.enable_controller and \
            composition.controller_mode == AFTER:
             assert composition.controller is not None
-            controller = composition._get_node_wrapper(composition.controller, simulation)
+            controller = composition._get_node_wrapper(composition.controller)
             controller_f = self.get_llvm_function(controller)
             builder.call(controller_f, [state, params, comp_in, data, data])
 
         # Call output CIM
-        output_cim_w = composition._get_node_wrapper(composition.output_CIM, simulation)
+        output_cim_w = composition._get_node_wrapper(composition.output_CIM)
         output_cim_f = self.get_llvm_function(output_cim_w)
         builder.block.name = "invoke_" + output_cim_f.name
         builder.call(output_cim_f, [state, params, comp_in, data, data])
