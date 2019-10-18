@@ -175,7 +175,7 @@ class TestNaming:
         C2 = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS:[D1.parameter_ports[
                                                                          psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE],
                                                                      D1.parameter_ports[
-                                                                         psyneulink.core.components.functions.distributionfunctions.THRESHOLD]]}])
+                                                                         psyneulink.core.globals.keywords.THRESHOLD]]}])
         assert C2.control_signals[0].name == 'D1[drift_rate, threshold] ControlSignal'
         assert C2.control_signals[0].efferents[0].name == 'ControlProjection for D1[drift_rate]'
         assert C2.control_signals[0].efferents[1].name == 'ControlProjection for D1[threshold]'

@@ -453,7 +453,7 @@ class LCAMechanism(RecurrentTransferMechanism):
     threshold : float or None
         determines the `value <LCAMechanism.value>` at which the Mechanism's `is_finished` attribute is set to True.
         If it is None, it is never set to True.  If it is a float, then whenver any element of the Mechanism's 
-        `value <LCAMechanism.value>` exceeds thhreshold, `is_finished` is set to True. 
+        `value <LCAMechanism.value>` exceeds threshold, `is_finished` is set to True.
 
     clip : list [float, float] : default None (Optional)
         specifies the allowable range for the result of `function <LCAMechanism.function>`
