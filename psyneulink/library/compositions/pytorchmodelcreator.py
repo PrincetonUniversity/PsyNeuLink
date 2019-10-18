@@ -622,7 +622,7 @@ class PytorchModelCreator(torch.nn.Module):
 
         return builder.function
 
-    def _gen_llvm_training_function_body(self, ctx, builder, context, params, comp_in, data_arg, cond):
+    def _gen_llvm_training_function_body(self, ctx, builder, context, params, comp_in, data):
         # 1) Setup autodiff learning stuff
         # if "ref_pass" not in debug_env:
         #    raise Exception("ref_pass must be enabled in debug!")
@@ -647,19 +647,6 @@ class PytorchModelCreator(torch.nn.Module):
         # Get pointer to the first element
         input_struct_ptr = builder.gep(
             autodiff_stimuli_struct, [ctx.int32_ty(0), ctx.int32_ty(5), ctx.int32_ty(0)])
-
-        if "const_params" in debug_env:
-            const_params = params.type.pointee(
-                composition._get_param_initializer(None))
-            params = builder.alloca(const_params.type, name="const_params_loc")
-            builder.store(const_params, params)
-
-        if "alloca_data" in debug_env:
-            data = builder.alloca(data_arg.type.pointee)
-            data_vals = builder.load(data_arg)
-            builder.store(data_vals, data)
-        else:
-            data = data_arg
 
         input_cim_idx = composition._get_node_index(composition.input_CIM)
         model_context = context

@@ -442,9 +442,8 @@ class LLVMBuilderContext:
         with self._gen_composition_exec_context(composition, simulation, "_learning") as (builder, data, cond_gen):
             state, params, comp_in, _, cond = builder.function.args
         
-            pytorch_model._gen_llvm_training_function_body(self, builder,
-                                                           state, params,
-                                                           comp_in, data, cond)
+            pytorch_model._gen_llvm_training_function_body(self, builder, state,
+                                                           params, comp_in, data)
             # Call output CIM
             output_cim_w = composition._get_node_wrapper(composition.output_CIM)
             output_cim_f = self.get_llvm_function(output_cim_w)
