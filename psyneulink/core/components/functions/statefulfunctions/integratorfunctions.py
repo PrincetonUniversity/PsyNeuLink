@@ -35,15 +35,16 @@ import typecheck as tc
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function_Base, FunctionError
-from psyneulink.core.components.functions.distributionfunctions import DistributionFunction, THRESHOLD
+from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
 from psyneulink.core.components.functions.statefulfunctions.statefulfunction import StatefulFunction
 from psyneulink.core.globals.keywords import \
     ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ADDITIVE_PARAM, \
-    DECAY, DEFAULT_VARIABLE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, FITZHUGHNAGUMO_INTEGRATOR_FUNCTION, FUNCTION, \
+    DECAY, DEFAULT_VARIABLE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DUAL_ADAPTIVE_INTEGRATOR_FUNCTION, \
+    FITZHUGHNAGUMO_INTEGRATOR_FUNCTION, FUNCTION, \
     INCREMENT, INITIALIZER, INPUT_PORTS, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, \
     INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LEAKY_COMPETING_INTEGRATOR_FUNCTION, \
     MULTIPLICATIVE_PARAM, NOISE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_PORTS, PRODUCT, \
-    RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, DUAL_ADAPTIVE_INTEGRATOR_FUNCTION
+    RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, THRESHOLD
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import parameter_spec, all_within_range, iscompatible
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context

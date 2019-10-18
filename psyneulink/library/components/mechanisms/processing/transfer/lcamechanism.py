@@ -719,7 +719,7 @@ class LCAMechanism(RecurrentTransferMechanism):
     def is_finished(self, context=None):
         # find the single numeric entry in previous_value
 
-        single_value = self.function.get_previous_value(context)
+        # single_value = self.function.get_previous_value(context)
         #
         # # indexing into a matrix doesn't reduce dimensionality
         # if not isinstance(single_value, (np.matrix, str)):
@@ -731,7 +731,7 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         # if abs(single_value) >= self.function.get_current_function_param(THRESHOLD, context):
 
-        if any(self.function.get_previous_value(context) >=
+        if any(self.function.parameters.value.get(context) >=
                self.function.get_current_function_param(THRESHOLD, context)):
             logger.info(
                 '{0} {1} has reached threshold {2}'.format(
