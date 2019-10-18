@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Preferences &mdash; PsyNeuLink 0.6.0.3 documentation</title>
+  <title>Preferences &mdash; PsyNeuLink 0.7.0.0+1.g9b4c27f documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3',
+              VERSION:'0.7.0.0+1.g9b4c27f',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.6.0.3
+                0.7.0.0+1
               </div>
             
           
@@ -188,7 +188,7 @@
 <li><dl class="first docutils">
 <dt>CATEGORY: category-level default settings:</dt>
 <dd>Mechanism.classPreferences
-State.classPreferences
+Port.classPreferences
 Projection.classPreferences
 Function.classPreferences</dd>
 </dl>
@@ -199,10 +199,10 @@ Function.classPreferences</dd>
 <dt>MechanismTypes:</dt>
 <dd>ControlMechanism.classPreferences
 ProcessingMechanism.classPreferences</dd>
-<dt>State types:</dt>
-<dd>InputState.classPreferences
-ParameterState.classPreferences
-OutputState.classPreferences</dd>
+<dt>Port types:</dt>
+<dd>InputPort.classPreferences
+ParameterPort.classPreferences
+OutputPort.classPreferences</dd>
 <dt>Projection types:</dt>
 <dd>ControlProjection.classPreferences
 MappingProjection.classPreferences</dd>
@@ -542,7 +542,7 @@ Every class in the Component hierarchy is assigned a PreferenceLevel:</p>
 <blockquote>
 <div><ul class="simple">
 <li>System:  reserved for the Component class</li>
-<li>Category: primary function subclasses (e.g., Process, Mechanism, State, Projection, Function)</li>
+<li>Category: primary function subclasses (e.g., Process, Mechanism, Port, Projection, Function)</li>
 <li>Type: Category subclasses (e.g., MappingProjection and ControlProjection subclasses of Projection, Function subclasses)</li>
 <li>Instance: an instance of an object of any class</li>
 </ul>

@@ -272,8 +272,8 @@ for node in Bidirectional_Stroop.mechanisms:
 #
 #
 # def pass_threshold(response_layer, thresh):
-#     results1 = response_layer.output_states.values[0][0]  # red response
-#     results2 = response_layer.output_states.values[0][1]  # green response
+#     results1 = response_layer.output_ports.values[0][0]  # red response
+#     results2 = response_layer.output_ports.values[0][1]  # green response
 #     if results1 >= thresh or results2 >= thresh:
 #         return True
 #     return False

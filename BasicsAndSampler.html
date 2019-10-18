@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Sampler &mdash; PsyNeuLink 0.6.0.3 documentation</title>
+  <title>Basics and Sampler &mdash; PsyNeuLink 0.7.0.0+1.g9b4c27f documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3',
+              VERSION:'0.7.0.0+1.g9b4c27f',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.3
+                0.7.0.0+1
               </div>
             
           
@@ -496,7 +496,7 @@ conflict in the <code class="docutils literal"><span class="pre">output</span></
     <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">End of trial </span><span class="si">{t}</span><span class="s1">:&#39;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="se">\t\t\t\t</span><span class="s1">color  word&#39;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">task:</span><span class="se">\t\t</span><span class="si">{task.value[0]}</span><span class="s1">&#39;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">task gain:</span><span class="se">\t</span><span class="s1">   </span><span class="si">{task.parameter_states[GAIN].value}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">task gain:</span><span class="se">\t</span><span class="s1">   </span><span class="si">{task.parameter_ports[GAIN].value}</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="se">\t\t\t\t</span><span class="s1">red   green&#39;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">output:</span><span class="se">\t\t</span><span class="si">{output.value[0]}</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">decision:</span><span class="se">\t</span><span class="si">{decision.value[0]}{decision.value[1]}</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -672,7 +672,7 @@ learning components is described below.</p>
 including unsupervised forms (such as <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.Hebbian" title="psyneulink.core.components.functions.learningfunctions.Hebbian"><code class="xref any py py-class docutils literal"><span class="pre">Hebbian</span></code></a>) and supervised forms (such as reinforcment learning and
 backpropagation). LearningMechanisms take as their input a target and/or an error signal, provided by a
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the source of the error signal (either a ComparatorMechanism or another LearningMechanism).
-LearningMechanisms use <code class="xref any docutils literal"><span class="pre">LearningSignals</span></code> (a type of <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>) to send a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> to the
+LearningMechanisms use <code class="xref any docutils literal"><span class="pre">LearningSignals</span></code> (a type of <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>) to send a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> to the
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that is being learned.  The type of learning implemented by a LearningMechanism is determined by
 the class of <a class="reference internal" href="LearningFunctions.html"><span class="doc">LearningFunction</span></a> assigned as its <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.function" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  In some
 cases (such as multilayered backpropagation networks), configuration of the LearningMechanisms and corresponding

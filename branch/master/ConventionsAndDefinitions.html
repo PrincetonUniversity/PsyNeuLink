@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Conventions and Definitions &mdash; PsyNeuLink 0.6.0.3 documentation</title>
+  <title>Conventions and Definitions &mdash; PsyNeuLink 0.7.0.0+1.g9b4c27f documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3',
+              VERSION:'0.7.0.0+1.g9b4c27f',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.6.0.3
+                0.7.0.0+1
               </div>
             
           
@@ -293,37 +293,37 @@ MappingProjection.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><a class="reference internal" href="State.html"><span class="doc">States</span></a></dt>
-<dd>A State is an object that belongs to a Mechanism, and that it is used to represent it input(s), parameter(s)
-of its function, or its output(s).   There are three types of States, one for each type of representation,
+<dt><a class="reference internal" href="Port.html"><span class="doc">Ports</span></a></dt>
+<dd>A Port is an object that belongs to a Mechanism, and that it is used to represent it input(s), parameter(s)
+of its function, or its output(s).   There are three types of Ports, one for each type of representation,
 each of which can receive and/or send a combination of PathwayProjections and/or ModulatoryProjections
 (see <code class="xref any docutils literal"><span class="pre">ModulatorySignal_Anatomy_Figure</span></code>):<ul class="last">
 <li><dl class="first docutils">
-<dt><a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a></dt>
+<dt><a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a></dt>
 <dd>Represents a set of inputs to the Mechanism.
 Receives one or more afferent PathwayProjections to a Mechanism, combines them using its
 <code class="xref any docutils literal"><span class="pre">function</span></code>, and assigns the result (its <code class="xref any docutils literal"><span class="pre">value</span></code>)as an item of the Mechanism’s
-<code class="xref any docutils literal"><span class="pre">variable</span></code>.    It can also receive one or more <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">modulatory projections</span></a> (<a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> or <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a>), that modify the parameter(s) of the State’s
-function, and thereby the State’s <code class="xref any docutils literal"><span class="pre">value</span></code>.</dd>
+<code class="xref any docutils literal"><span class="pre">variable</span></code>.    It can also receive one or more <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">modulatory projections</span></a> (<a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> or <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a>), that modify the parameter(s) of the Port’s
+function, and thereby the Port’s <code class="xref any docutils literal"><span class="pre">value</span></code>.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a></dt>
+<dt><a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a></dt>
 <dd>Represents a parameter of the Mechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code>.  Takes the assigned value of the
-parameter as the <code class="xref any docutils literal"><span class="pre">variable</span></code> for the State’s <code class="xref any docutils literal"><span class="pre">function</span></code>, and assigns the result
+parameter as the <code class="xref any docutils literal"><span class="pre">variable</span></code> for the Port’s <code class="xref any docutils literal"><span class="pre">function</span></code>, and assigns the result
 as the value of the parameter of the Mechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code> that is used when the Mechanism
 executes.  It can also receive one or more modulatory <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>,
-that modify the parameter(s) of the State’s function, and thereby the value of the parameter of the Mechanism’s
+that modify the parameter(s) of the Port’s function, and thereby the value of the parameter of the Mechanism’s
 <code class="xref any docutils literal"><span class="pre">function</span></code>.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a></dt>
+<dt><a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a></dt>
 <dd>Represents an output of the Mechanism.
-Takes an item of the Mechanism’s <code class="xref any docutils literal"><span class="pre">value</span></code> as the <code class="xref any docutils literal"><span class="pre">variable</span></code> for the State’s
-<code class="xref any docutils literal"><span class="pre">function</span></code>, assigns the result as the State’s <a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState.value" title="psyneulink.core.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, and provides that
-to one or more efferent PathwayProjections.  It can also receive one or more <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">modulatory projections</span></a> (<a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> or <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a>), that modify the parameter(s) of the State’s
-function, and thereby the State’s <code class="xref any docutils literal"><span class="pre">value</span></code>.</dd>
+Takes an item of the Mechanism’s <code class="xref any docutils literal"><span class="pre">value</span></code> as the <code class="xref any docutils literal"><span class="pre">variable</span></code> for the Port’s
+<code class="xref any docutils literal"><span class="pre">function</span></code>, assigns the result as the Port’s <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, and provides that
+to one or more efferent PathwayProjections.  It can also receive one or more <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">modulatory projections</span></a> (<a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> or <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a>), that modify the parameter(s) of the Port’s
+function, and thereby the Port’s <code class="xref any docutils literal"><span class="pre">value</span></code>.</dd>
 </dl>
 </li>
 </ul>

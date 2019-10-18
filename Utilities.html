@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Utilities &mdash; PsyNeuLink 0.6.0.3 documentation</title>
+  <title>Utilities &mdash; PsyNeuLink 0.7.0.0+1.g9b4c27f documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3',
+              VERSION:'0.7.0.0+1.g9b4c27f',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.6.0.3
+                0.7.0.0+1
               </div>
             
           
@@ -288,17 +288,17 @@ Notes:
 <dd><p>Implements dict-like list, that can be keyed by a specified attribute of the <a class="reference internal" href="Component.html"><span class="doc">Compoments</span></a> in its
 entries.</p>
 <p>The key with which it is created is also assigned as a property of the class, that returns a list
-with the keyed attribute of its entries.  For example, the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_states" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> attribute
-of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> is a ContentAddressableList of the Mechanism’s <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>, keyed by their
-names.  Therefore, <code class="docutils literal"><span class="pre">my_mech.output_states.names</span></code> returns the names of all of the Mechanism’s OutputStates:</p>
+with the keyed attribute of its entries.  For example, the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a> attribute
+of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> is a ContentAddressableList of the Mechanism’s <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>, keyed by their
+names.  Therefore, <code class="docutils literal"><span class="pre">my_mech.output_ports.names</span></code> returns the names of all of the Mechanism’s OutputPorts:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">()</span><span class="o">.</span><span class="n">output_states</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">()</span><span class="o">.</span><span class="n">output_ports</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
 <span class="go">[&#39;DECISION_VARIABLE&#39;, &#39;RESPONSE_TIME&#39;]</span>
 </pre></div>
 </div>
 <p>The keyed attribute can also be used to access an item of the list.  For examples:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">()</span><span class="o">.</span><span class="n">output_states</span><span class="p">[</span><span class="s1">&#39;DECISION_VARIABLE&#39;</span><span class="p">])</span>
-<span class="go">(OutputState DECISION_VARIABLE)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">()</span><span class="o">.</span><span class="n">output_ports</span><span class="p">[</span><span class="s1">&#39;DECISION_VARIABLE&#39;</span><span class="p">])</span>
+<span class="go">(OutputPort DECISION_VARIABLE)</span>
 </pre></div>
 </div>
 <dl class="docutils">
@@ -339,7 +339,7 @@ Lists are used (instead of a dict or OrderedDict) since:</p>
 <div><ul class="simple">
 <li><dl class="first docutils">
 <dt>ordering is in many instances convenient, and in some critical (e.g., for consistent mapping from</dt>
-<dd>collections of states to other variables, such as lists of their values);</dd>
+<dd>collections of ports to other variables, such as lists of their values);</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
@@ -349,7 +349,7 @@ accessing by key/name less critical;</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt>the number of states in a collection for a given Mechanism is likely to be small so that, even when</dt>
+<dt>the number of ports in a collection for a given Mechanism is likely to be small so that, even when</dt>
 <dd>accessed by key/name, the inefficiencies of searching a list are likely to be inconsequential.</dd>
 </dl>
 </li>
@@ -937,7 +937,7 @@ an array of booleans instead of a single boolean for ==</p>
 
 <dl class="function">
 <dt id="psyneulink.core.globals.utilities.tensor_power">
-<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">tensor_power</code><span class="sig-paren">(</span><em>items</em>, <em>levels: &lt;typecheck.framework.optional object at 0x1183707b8&gt; = None</em>, <em>flat=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.tensor_power" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">tensor_power</code><span class="sig-paren">(</span><em>items</em>, <em>levels: &lt;typecheck.framework.optional object at 0x10ca92320&gt; = None</em>, <em>flat=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.tensor_power" title="Permalink to this definition">¶</a></dt>
 <dd><p>return tensor product for all members of powerset of items</p>
 <p>levels specifies a range of set levels to return;  1=first order terms, 2=2nd order terms, etc.
 if None, all terms will be returned</p>

@@ -1,0 +1,744 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>InputPort &mdash; PsyNeuLink 0.7.0.0+1.g9b4c27f documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'./',
+              VERSION:'0.7.0.0+1.g9b4c27f',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ParameterPort" href="ParameterPort.html" />
+    <link rel="prev" title="Ports" href="Port.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PsyNeuLink
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.7.0.0+1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
+<li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="Port.html">Ports</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">InputPort</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ParameterPort.html">ParameterPort</a></li>
+<li class="toctree-l4"><a class="reference internal" href="OutputPort.html">OutputPort</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignals</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="Functions.html">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Composition.html">Compositions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Core.html">Core</a> &raquo;</li>
+        
+          <li><a href="Component.html">Component</a> &raquo;</li>
+        
+          <li><a href="Port.html">Ports</a> &raquo;</li>
+        
+      <li>InputPort</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/InputPort.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-psyneulink.core.components.ports.inputport">
+<span id="inputport"></span><h1>InputPort<a class="headerlink" href="#module-psyneulink.core.components.ports.inputport" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>The purpose of an InputPort is to receive and combine inputs to a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, allow them to be modified, and provide
+them to the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>. An InputPort receives input to a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>
+provided by the <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> to that Mechanism from others in a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> or <a class="reference internal" href="System.html"><span class="doc">System</span></a>.  If the
+InputPort belongs to an <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.ORIGIN" title="psyneulink.core.globals.utilities.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism (see <a class="reference internal" href="Mechanism.html#mechanism-role-in-processes-and-systems"><span class="std std-ref">role of Mechanisms in Processes and Systems</span></a>), then it receives the input specified when that Process or System is
+<a class="reference internal" href="Run.html"><span class="doc">run</span></a>.  The <code class="xref any docutils literal"><span class="pre">PathwayProjections</span></code> received by an InputPort are listed in its <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.path_afferents" title="psyneulink.core.components.ports.inputport.InputPort.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a>, and its <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> in its <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.mod_afferents" title="psyneulink.core.components.ports.inputport.InputPort.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute.  Its <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.function" title="psyneulink.core.components.ports.inputport.InputPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> combines the values received from its
+PathWayProjections, modifies the combined value according to value(s) any ModulatoryProjections it receives, and
+provides the result to the assigned item of its owner Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and
+<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_values" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_values"><code class="xref any py py-attr docutils literal"><span class="pre">input_values</span></code></a> attributes (see <code class="xref any docutils literal"><span class="pre">below</span></code> and <a class="reference internal" href="Mechanism.html#mechanism-inputports"><span class="std std-ref">Mechanism InputPorts</span></a>
+for additional details about the role of InputPorts in Mechanisms, and their assignment to the items of a Mechanism’s
+<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute).</p>
+</div>
+<div class="section" id="creating-an-inputport">
+<span id="inputport-creation"></span><h2>Creating an InputPort<a class="headerlink" href="#creating-an-inputport" title="Permalink to this headline">¶</a></h2>
+<p>An InputPort can be created by calling its constructor, but in general this is not necessary as a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> can
+usually automatically create the InputPort(s) it needs when it is created.  For example, if the Mechanism is
+being created within the <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.pathway" title="psyneulink.core.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>, its InputPort is created and  assigned as the
+<a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the  preceding Mechanism in the <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.pathway" title="psyneulink.core.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>.  InputPorts can also be specified in the <strong>input_ports</strong> argument of a Mechanism’s
+constructor (see <a class="reference internal" href="#inputport-specification"><span class="std std-ref">below</span></a>).</p>
+<p>The <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of an InputPort can be specified using the <strong>variable</strong> or <strong>size</strong> arguments of
+its constructor.  It can also be specified using the <strong>projections</strong> argument, if neither <strong>variable</strong> nor <strong>size</strong> is
+specified.  The <strong>projections</strong> argument is used to <a class="reference internal" href="Port.html#port-projections"><span class="std std-ref">specify Projections</span></a> to the InputPort. If
+neither the <strong>variable</strong> nor <strong>size</strong> arguments is specified, then the value of the <a class="reference internal" href="Projection.html"><span class="doc">Projections(s)</span></a> or
+their <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>s (all of which must be the same length) is used to determine the <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of the InputPort.</p>
+<p>If an InputPort is created using its constructor, and a Mechanism is specified in the <strong>owner</strong> argument,
+it is automatically assigned to that Mechanism.  Note that its <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (generally determined
+by the size of its <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> – see <a class="reference internal" href="#inputport-variable-and-value"><span class="std std-ref">below</span></a>) must
+be compatible (in number and type of elements) with the item of its owner’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> to
+which it is assigned (see <a class="reference internal" href="#inputport-variable-and-value"><span class="std std-ref">below</span></a> and <a class="reference internal" href="Mechanism.html#mechanism-variable-and-inputports"><span class="std std-ref">Mechanism</span></a>).
+If the <strong>owner</strong> argument is not specified, <a class="reference internal" href="Port.html#port-deferred-initialization"><span class="std std-ref">initialization</span></a> is deferred.</p>
+<div class="section" id="owner-assignment-and-deferred-initialization">
+<span id="inputport-deferred-initialization"></span><h3><em>Owner Assignment and Deferred Initialization</em><a class="headerlink" href="#owner-assignment-and-deferred-initialization" title="Permalink to this headline">¶</a></h3>
+<p>An InputPort must be owned by a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>.  When InputPort is specified in the constructor for a
+Mechanism (see <a class="reference internal" href="#inputport-specification"><span class="std std-ref">below</span></a>), it is automatically assigned to that Mechanism as its owner. If
+the InputPort is created on its own, its <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.owner" title="psyneulink.core.components.ports.inputport.InputPort.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> can specified in the <strong>owner</strong>  argument of its
+constructor, in which case it is assigned to that Mechanism. If its <strong>owner</strong> argument is not specified, its
+initialization is <a class="reference internal" href="Port.html#port-deferred-initialization"><span class="std std-ref">deferred</span></a> until
+the InputPort is assigned to a Mechanism using the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_ports"><code class="xref any py py-meth docutils literal"><span class="pre">add_ports</span></code></a> method.</p>
+</div>
+<div class="section" id="primary-inputport">
+<span id="inputport-primary"></span><h3><em>Primary InputPort</em><a class="headerlink" href="#primary-inputport" title="Permalink to this headline">¶</a></h3>
+<p>Every Mechanism has at least one InputPort, referred to as its <em>primary InputPort</em>.  If InputPorts are not
+<a class="reference internal" href="#inputport-specification"><span class="std std-ref">explicitly specified</span></a> for a Mechanism, a primary InputPort is automatically created
+and assigned to its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_port" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_port"><code class="xref any py py-attr docutils literal"><span class="pre">input_port</span></code></a> attribute (note the singular), and also to the first
+entry of the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal"><span class="pre">input_ports</span></code></a> attribute (note the plural).  The <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the primary InputPort is assigned as the first (and often only) item of the Mechanism’s
+<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_values" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_values"><code class="xref any py py-attr docutils literal"><span class="pre">input_values</span></code></a> attributes.</p>
+</div>
+<div class="section" id="inputport-specification">
+<span id="id1"></span><h3><em>InputPort Specification</em><a class="headerlink" href="#inputport-specification" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="specifying-inputports-when-a-mechanism-is-created">
+<h4>Specifying InputPorts when a Mechanism is created<a class="headerlink" href="#specifying-inputports-when-a-mechanism-is-created" title="Permalink to this headline">¶</a></h4>
+<p>InputPorts can be specified for a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> when it is created, in the <strong>input_ports</strong> argument of the
+Mechanism’s constructor (see <a class="reference internal" href="Port.html#port-constructor-argument-examples"><span class="std std-ref">examples</span></a> in Port), or in an <em>INPUT_PORTS</em> entry
+of a parameter dictionary assigned to the constructor’s <strong>params</strong> argument.  The latter takes precedence over the
+former (that is, if an <em>INPUT_PORTS</em> entry is included in the parameter dictionary, any specified in the
+<strong>input_ports</strong> argument are ignored).</p>
+<blockquote>
+<div><div class="admonition note" id="inputport-replace-default-note">
+<p class="first admonition-title">Note</p>
+<p class="last">Assigning InputPorts to a Mechanism in its constructor <strong>replaces</strong> any that are automatically generated for
+that Mechanism (i.e., those that it creates for itself by default).  If any of those are needed, they must be
+explicitly specified in the list assigned to the <strong>input_ports</strong> argument, or the <em>INPUT_PORTS</em> entry of the
+parameter dictionary in the <strong>params</strong> argument.  The number of InputPorts specified must also be equal to
+the number of items in the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute.</p>
+</div>
+</div></blockquote>
+<div class="section" id="inputport-s-variable-value-and-mechanism-s-variable">
+<span id="inputport-variable-and-value"></span><h5><em>InputPort’s</em> <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> <em>and Mechanism’s</em> <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a><a class="headerlink" href="#inputport-s-variable-value-and-mechanism-s-variable" title="Permalink to this headline">¶</a></h5>
+<p>Each InputPort specified in the <strong>input_ports</strong> argument of a Mechanism’s constructor must correspond to an item of
+the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute (see <a class="reference internal" href="Mechanism.html#mechanism-variable-and-inputports"><span class="std std-ref">Mechanism</span></a>),
+and the <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the InputPort must be compatible with that item (that is, have the same number
+and type of elements).  By default, this is also true of the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute,
+since the default <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.function" title="psyneulink.core.components.ports.inputport.InputPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for an InputPort is a <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>, the purpose of which
+is to combine the inputs it receives and possibly modify the combined value (under the influence of any
+<a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> it receives), but <strong>not mutate its form</strong>. Therefore, under most
+circumstances, both the <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of an InputPort and its <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> should
+match the item of its owner’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> to which the InputPort is assigned.</p>
+<p>The format of an InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> can be specified in a variety of ways.  The most
+straightforward is in the <strong>variable</strong> argument of its constructor.  More commonly, however, it is determined by
+the context in which it is being created, such as the specification for its owner Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> or for the InputPort in the Mechanism’s <strong>input_ports</strong> argument (see <a class="reference internal" href="#inputport-forms-of-specification"><span class="std std-ref">below</span></a> and <a class="reference internal" href="Mechanism.html#mechanism-inputport-specification"><span class="std std-ref">Mechanism InputPort specification</span></a>
+for details).</p>
+</div>
+</div>
+<div class="section" id="adding-inputports-to-a-mechanism-after-it-is-created">
+<h4>Adding InputPorts to a Mechanism after it is created<a class="headerlink" href="#adding-inputports-to-a-mechanism-after-it-is-created" title="Permalink to this headline">¶</a></h4>
+<p>InputPorts can also be <strong>added</strong> to a Mechanism, either by creating the InputPort on its own, and specifying the
+Mechanism in the InputPort’s <strong>owner</strong> argument, or by using the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_ports"><code class="xref any py py-meth docutils literal"><span class="pre">add_ports</span></code></a>
+method (see <a class="reference internal" href="Port.html#port-create-port-examples"><span class="std std-ref">examples</span></a> in Port).</p>
+<blockquote>
+<div><div class="admonition note" id="inputport-add-port-note">
+<p class="first admonition-title">Note</p>
+<p class="last">Adding InputPorts <em>does not replace</em> any that the Mechanism generates by default;  rather they are added to the
+Mechanism, and appended to the list of InputPorts in its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal"><span class="pre">input_ports</span></code></a> attribute.
+Importantly, the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute is extended with items that
+correspond to the <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute of each added InputPort.  This may affect the
+relationship of the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> to its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, as well as the number of its <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a> (see <a class="reference internal" href="Mechanism.html#mechanism-add-inputports-note"><span class="std std-ref">note</span></a>).</p>
+</div>
+</div></blockquote>
+<p>If the name of an InputPort added to a Mechanism is the same as one that already exists, its name is suffixed with a
+numerical index (incremented for each InputPort with that name; see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a>), and the InputPort is added to the
+list (that is, it will <em>not</em> replace ones that already exist).</p>
+</div>
+<div class="section" id="forms-of-specification">
+<span id="inputport-forms-of-specification"></span><h4>Forms of Specification<a class="headerlink" href="#forms-of-specification" title="Permalink to this headline">¶</a></h4>
+<p>InputPorts can be specified in a variety of ways, that fall into three broad categories:  specifying an InputPort
+directly; use of a <a class="reference internal" href="Port.html#port-specification"><span class="std std-ref">Port specification dictionary</span></a>; or by specifying one or more Components that
+should project to the InputPort. Each of these is described below:</p>
+<blockquote>
+<div><p id="inputport-direct-specification"><strong>Direct Specification of an InputPort</strong></p>
+<ul class="simple">
+<li>existing <strong>InputPort object</strong> or the name of one – If this is used to specify an InputPort in the
+constructor for a Mechanism, its <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> must be compatible with the corresponding item of
+the owner Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> (see <a class="reference internal" href="Mechanism.html#mechanism-inputport-specification"><span class="std std-ref">Mechanism InputPort specification</span></a> and <a class="reference internal" href="#inputport-compatability-and-constraints"><span class="std std-ref">InputPort variable: Compatibility and Constraints</span></a> below).  If the InputPort
+belongs to another Mechanism, then an InputPort is created along with Projections(s) that <a class="reference internal" href="#inputport-shadow-inputs"><span class="std std-ref">shadow the inputs</span></a> to the specified InputPort.</li>
+</ul>
+<ul class="simple">
+<li><strong>InputPort class</strong>, <strong>keyword</strong> <em>INPUT_PORT</em>, or a <strong>string</strong> – this creates a default InputPort; if used
+to specify an InputPort in the constructor for a Mechanism, the item of the owner Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> to which the InputPort is assigned is used as the format for the InputPort`s
+<a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>; otherwise, the default for the InputPort is used.  If a string is specified,
+it is used as the <code class="xref any docutils literal"><span class="pre">name</span></code> of the InputPort (see <a class="reference internal" href="Port.html#port-constructor-argument-examples"><span class="std std-ref">example</span></a>).</li>
+</ul>
+<ul class="simple" id="inputport-specification-by-value">
+<li><strong>value</strong> – this creates a default InputPort using the specified value as the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>; if used to specify an InputPort in the constructor for a Mechanism, the format must be
+compatible with the corresponding item of the owner Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> (see
+<a class="reference internal" href="Mechanism.html#mechanism-inputport-specification"><span class="std std-ref">Mechanism InputPort specification</span></a>, <a class="reference internal" href="Port.html#port-value-spec-example"><span class="std std-ref">example</span></a>, and discussion <a class="reference internal" href="#inputport-compatability-and-constraints"><span class="std std-ref">below</span></a>).</li>
+</ul>
+<p id="inputport-specification-dictionary"><strong>InputPort Specification Dictionary</strong></p>
+<ul>
+<li><p class="first"><strong>InputPort specification dictionary</strong> – this can be used to specify the attributes of an InputPort, using
+any of the entries that can be included in a <a class="reference internal" href="Port.html#port-specification"><span class="std std-ref">Port specification dictionary</span></a> (see
+<a class="reference internal" href="Port.html#port-specification-dictionary-examples"><span class="std std-ref">examples</span></a> in Port).  If the dictionary is used to specify an
+InputPort in the constructor for a Mechanism, and it includes a <em>VARIABLE</em> and/or <em>VALUE</em> or entry, the value
+must be compatible with the item of the owner Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> to which the
+InputPort is assigned (see <a class="reference internal" href="Mechanism.html#mechanism-inputport-specification"><span class="std std-ref">Mechanism InputPort specification</span></a>).</p>
+<p>The <em>PROJECTIONS</em> entry can include specifications for one or more Ports, Mechanisms and/or Projections that
+should project to the InputPort (including both <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> and/or
+<a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a>; however, this may be constrained by or have consequences for the
+InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> (see <a class="reference internal" href="#inputport-compatability-and-constraints"><span class="std std-ref">InputPort variable: Compatibility and Constraints</span></a>).</p>
+<p>In addition to the standard entries of a <a class="reference internal" href="Port.html#port-specification"><span class="std std-ref">Port specification dictionary</span></a>, the dictionary
+can also include either or both of the following entries specific to InputPorts:</p>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt><em>WEIGHT</em>:&lt;number&gt;</dt>
+<dd>the value must be an integer or float, and is assigned as the value of the InputPort’s <code class="xref any docutils literal"><span class="pre">weight</span></code> attribute (see <a class="reference internal" href="#inputport-weights-and-exponents"><span class="std std-ref">weight and exponent</span></a>);
+this takes precedence over any specification in the <strong>weight</strong> argument of the InputPort’s constructor.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><em>EXPONENT</em>:&lt;number&gt;</dt>
+<dd>the value must be an integer or float, and is assigned as the value of the InputPort’s <code class="xref any docutils literal"><span class="pre">exponent</span></code> attribute (see <a class="reference internal" href="#inputport-weights-and-exponents"><span class="std std-ref">weight and exponent</span></a>);
+this takes precedence over any specification in the <strong>exponent</strong> argument of the InputPort’s constructor.</dd>
+</dl>
+</li>
+</ul>
+</li>
+</ul>
+<p id="inputport-projection-source-specification"><strong>Specification of an InputPort by Components that Project to It</strong></p>
+<p>An InputPort can also be specified by specifying one or more Ports, Mechanisms or Projections that should project
+to it, as described below.  Specifying an InputPort in this way creates both the InputPort and any of the
+specified or implied Projection(s) to it (if they don’t already exist). <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>
+are assigned to the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.path_afferents" title="psyneulink.core.components.ports.inputport.InputPort.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a> attribute, and <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> to its <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.mod_afferents" title="psyneulink.core.components.ports.inputport.InputPort.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute. Any of the following can be used
+to specify an InputPort by the Components that projection to it (see <a class="reference internal" href="#inputport-compatability-and-constraints"><span class="std std-ref">below</span></a> for an explanation of the relationship between the <a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of these
+Components and the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>):</p>
+<ul class="simple">
+<li><strong>OutputPort, GatingSignal, Mechanism, or list with any of these</strong> – creates an InputPort with Projection(s)
+to it from the specified Port(s) or Mechanism(s).  For each Mechanism specified, its <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> (or GatingSignal) is used.</li>
+</ul>
+<ul class="simple">
+<li><strong>Projection</strong> – any form of <a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">Projection specification</span></a> can be
+used;  creates an InputPort and assigns it as the Projection’s <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</li>
+</ul>
+<ul id="inputport-tuple-specification">
+<li><p class="first"><strong>InputPort specification tuples</strong> – these are convenience formats that can be used to compactly specify an
+InputPort and Projections to it any of the following ways:</p>
+<blockquote>
+<div><ul id="inputport-port-mechanism-tuple">
+<li><p class="first"><strong>2-item tuple:</strong> <em>(&lt;Port name or list of Port names&gt;, &lt;Mechanism&gt;)</em> – 1st item must be the name of an
+<a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> or <a class="reference internal" href="ModulatorySignal.html"><span class="doc">Modulatory Signals</span></a>, or a list of such names, and the 2nd item must be the Mechanism to
+which they all belong.  Projections of the relevant types are created for each of the specified Ports
+(see <a class="reference internal" href="Port.html#port-2-item-tuple"><span class="std std-ref">Port 2-item tuple</span></a> for additional details).</p>
+</li>
+<li><p class="first"><strong>2-item tuple:</strong> <em>(&lt;value, Port specification, or list of Port specs&gt;, &lt;Projection specification&gt;)</em> –
+this is a contracted form of the 4-item tuple described below;</p>
+</li>
+<li><p class="first"><strong>3 or 4-item tuple:</strong> <em>(&lt;value, Port spec, or list of Port specs&gt;, weight, exponent, Projection
+specification)</em> – this allows the specification of Port(s) that should project to the InputPort, together
+with a specification of the InputPort’s <code class="xref any docutils literal"><span class="pre">weight</span></code> and/or <code class="xref any docutils literal"><span class="pre">exponent</span></code>
+attributes of the InputPort, and (optionally) the Projection(s) to it.  This can be used to compactly
+specify a set of Ports that project the InputPort, while using the 4th item to determine its variable
+(e.g., using the matrix of the Projection specification) and/or attributes of the Projection(s) to it. Each
+tuple must have at least the following first three items (in the order listed), and can include the fourth:</p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>value, Port specification, or list of Port specifications</strong> – specifies either the <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of the InputPort, or one or more Ports that should project to it.  The Port
+specification(s) can be a (Port name, Mechanism) tuple (see above), and/or include Mechanisms (in which
+case their <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">OutputPort</span></code> is used.  All of the Port specifications must be
+consistent with (that is, their <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> must be compatible with the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.variable" title="psyneulink.core.components.projections.projection.Projection_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of) the Projection specified in the fourth item if that is included;</li>
+<li><strong>weight</strong> – must be an integer or a float; multiplies the <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the InputPort
+before it is combined with others by the Mechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code> (see
+ObjectiveMechanism for <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-weights-and-exponents-example"><span class="std std-ref">examples</span></a>);</li>
+<li><strong>exponent</strong> – must be an integer or float; exponentiates the <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the
+InputPort before it is combined with others by the ObjectiveMechanism’s <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (see ObjectiveMechanism for <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-weights-and-exponents-example"><span class="std std-ref">examples</span></a>);</li>
+<li><strong>Projection specification</strong> (optional) – <a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">specifies a Projection</span></a> that
+must be compatible with the Port specification(s) in the 1st item; if there is more than one Port
+specified, and the Projection specification is used, all of the Ports
+must be of the same type (i.e.,either OutputPorts or GatingSignals), and the <a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">Projection
+Specification</span></a> cannot be an instantiated Projection (since a
+Projection cannot be assigned more than one <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>).</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<ul id="inputport-shadow-inputs">
+<li><p class="first"><strong>InputPorts of Mechanisms to shadow</strong> – either of the following can be used to create InputPorts that
+receive the same inputs as (“shadow”) the ones specified:</p>
+<ul class="simple">
+<li><em>InputPort or [InputPort, …]</em> – each InputPort must belong to an existing Mechanism; creates a new
+InputPort for each one specified, along with Projections to it that parallel those of the one specified
+(see below).</li>
+<li><em>{SHADOW_INPUTS: &lt;InputPort or Mechanism or [&lt;InputPort or Mechanism&gt;,…]&gt;}</em> – any InputPorts specified
+must belong to an existing Mechanism;  creates a new InputPort for each one specified, and for each of the
+InputPorts belonging to any Mechanisms specified, along with Projections to them that parallel those of the
+one(s) specified (see below).</li>
+</ul>
+<p>For each InputPort specified, and all of the InputPorts belonging to any Mechanisms specified, a new InputPort
+is created along with Projections to it that parallel those received by the corresponding InputPort in the
+list.  In other words, for each InputPort specified, a new one is created that receives exactly the same inputs
+from the same <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">senders</span></code></a> as the ones specified.</p>
+</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="inputport-variable-compatibility-and-constraints">
+<span id="inputport-compatability-and-constraints"></span><h4>InputPort <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>: Compatibility and Constraints<a class="headerlink" href="#inputport-variable-compatibility-and-constraints" title="Permalink to this headline">¶</a></h4>
+<p>The <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of an InputPort must be compatible with the item of its owner Mechanism’s
+<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> to which it is assigned (see <code class="xref any docutils literal"><span class="pre">Mechanism_Variable_and_InputPorts</span></code>). This may
+have consequences that must be taken into account when <a class="reference internal" href="#inputport-projection-source-specification"><span class="std std-ref">specifying an InputPort by Components that project to it</span></a>.  These depend on the context in which the specification is made, and
+possibly the value of other specifications.  These considerations and how they are handled are described below,
+starting with constraints that are given the highest precedence:</p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>InputPort is</strong> <a class="reference internal" href="Mechanism.html#mechanism-inputport-specification"><span class="std std-ref">specified in a Mechanism's constructor</span></a> and the</li>
+</ul>
+<blockquote>
+<div><strong>default_variable</strong> argument for the Mechanism is also specified – the item of the variable to which the
+<a class="reference internal" href="Mechanism.html#mechanism-variable-and-inputports"><span class="std std-ref">InputPort is assigned</span></a> is used to determine the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span> <span class="pre">must</span></code></a>.  Any other specifications of the InputPort relevant to its <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
+must be compatible with this (for example, <a class="reference internal" href="#inputport-specification-by-value"><span class="std std-ref">specifying it by value</span></a> or by a
+<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> or <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> that projects to it (see <a class="reference internal" href="#inputport-projection-source-specification"><span class="std std-ref">above</span></a>).</div></blockquote>
+<ul class="simple">
+<li><strong>InputPort is specified on its own</strong>, or the <strong>default_variable</strong> argument of its Mechanism’s constructor
+is not specified – any direct specification of the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is used to
+determine its format (e.g., <a class="reference internal" href="#inputport-specification-by-value"><span class="std std-ref">specifying it by value</span></a>, or a <em>VARIABLE</em> entry
+in an <a class="reference internal" href="#inputport-specification-dictionary"><span class="std std-ref">InputPort specification dictionary</span></a>.  In this case, the value of any
+<a class="reference internal" href="#inputport-projection-source-specification"><span class="std std-ref">Components used to specify the InputPort</span></a> that are relevant to its
+<a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> must be compatible with it (see below).</li>
+</ul>
+<ul class="simple">
+<li>If the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is not constrained by any of the conditions above,
+then its format is determined by the <a class="reference internal" href="#inputport-projection-source-specification"><span class="std std-ref">specification of Components that project to it</span></a>:<ul>
+<li><strong>More than one Component is specified with the same :ref:`value` format</strong> – that format is used to determine
+the format of the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
+<li><strong>More than one Component is specified with different :ref:`value` formats</strong> – the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is determined by item of the default <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for
+the class of its owner Mechanism.</li>
+<li><strong>A single Component is specified</strong> – its <span class="xref std std-ref">value</span> is used to determine the format of the InputPort’s
+<a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;  if the Component is a(n):<ul>
+<li><strong>MappingProjection</strong> – can be specified by its class, an existing MappingProjection, or a matrix:<ul>
+<li><a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> <strong>class</strong> – a default value is used both the for the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and the Projection’s <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (since the Projection’s
+<a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> is unspecified, its <a class="reference internal" href="Projection.html#projection-deferred-initialization"><span class="std std-ref">initialization is deferred</span></a>.</li>
+<li><strong>Existing MappingProjection</strong> – then its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> determines the
+InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
+<li><a class="reference internal" href="MappingProjection.html#mapping-matrix-specification"><span class="std std-ref">Matrix specification</span></a> – its receiver dimensionality determines the format
+of the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>. For a standard 2d “weight” matrix (i.e., one that maps
+a 1d array from its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> to a 1d array of its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>), the receiver dimensionality is its outer dimension (axis 1, or its number of
+columns).  However, if the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> has more than one dimension, then the
+dimensionality of the receiver (used for the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>) is the
+dimensionality of the matrix minus the dimensionality of the sender’s <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
+(see <code class="xref any docutils literal"><span class="pre">matrix</span> <span class="pre">dimensionality</span></code>).</li>
+</ul>
+</li>
+<li><strong>OutputPort or ProcessingMechanism</strong> – the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the OutputPort (if it is a
+Mechanism, then its <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a>) determines the format of the InputPort’s
+<a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, and a MappingProjection is created from the OutputPort to the InputPort
+using an <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.MatrixKeywords.IDENTITY_MATRIX" title="psyneulink.core.globals.keywords.MatrixKeywords.IDENTITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">IDENTITY_MATRIX</span></code></a>.  If the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is constrained (as in some
+of the cases above), then a <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX" title="psyneulink.core.globals.keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code></a> is used which maps the shape of the OutputPort’s <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> to that of the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
+<li><strong>GatingProjection, GatingSignal or GatingMechanism</strong> – any of these can be used to specify an InputPort;
+their <a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> does not need to be compatible with the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, however
+it does have to be compatible with the <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">modulatory parameter</span></a> of the InputPort’s
+<a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.function" title="psyneulink.core.components.ports.inputport.InputPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+</div>
+<div class="section" id="structure">
+<span id="inputport-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p>Every InputPort is owned by a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>. It can receive one or more <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> from other Mechanisms, as well as from the Process or System to which its owner belongs (if it
+is the <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.ORIGIN" title="psyneulink.core.globals.utilities.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism for that Process or System).  It has the following attributes, that includes ones specific
+to, and that can be used to customize the InputPort:</p>
+<ul class="simple">
+<li><a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.projections" title="psyneulink.core.components.ports.outputport.OutputPort.projections"><code class="xref any py py-attr docutils literal"><span class="pre">projections</span></code></a> – all of the <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> received by the InputPort.</li>
+</ul>
+<ul class="simple" id="inputport-afferent-projections">
+<li><a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.path_afferents" title="psyneulink.core.components.ports.inputport.InputPort.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a> – <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> that project to the
+InputPort, the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.value" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>s of which are combined by the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.function" title="psyneulink.core.components.ports.inputport.InputPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, possibly modified by its <code class="xref any docutils literal"><span class="pre">mod_afferents</span></code>, and assigned to the
+corresponding item of the owner Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
+</ul>
+<ul class="simple">
+<li><code class="xref any docutils literal"><span class="pre">mod_afferents</span></code> – <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> that project to the InputPort,
+the <a class="reference internal" href="GatingProjection.html#psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.value" title="psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of which can modify the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (see the
+descriptions of Modulation under <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">ModulatorySignals</span></a> and <a class="reference internal" href="GatingSignal.html#gatingsignal-modulation"><span class="std std-ref">GatingSignals</span></a> for additional details).  If the InputPort receives more than one GatingProjection,
+their values are combined before they are used to modify the <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of InputPort.</li>
+</ul>
+<ul class="simple" id="inputport-variable">
+<li><a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> – serves as the template for the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the
+<a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> received by the InputPort:  each must be compatible with (that is, match both the
+number and type of elements of) the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>. In general, this must also be
+compatible with the item of the owner Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> to which the InputPort is
+assigned (see <a class="reference internal" href="#inputport-variable-and-value"><span class="std std-ref">above</span></a> and <a class="reference internal" href="Mechanism.html#mechanism-inputport-specification"><span class="std std-ref">Mechanism InputPort
+specification</span></a>).</li>
+</ul>
+<ul class="simple" id="inputport-function">
+<li><a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.function" title="psyneulink.core.components.ports.inputport.InputPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> – combines the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of all of the
+<a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> received by the InputPort, and assigns the result to the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute.  The default function is <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> that performs an elementwise (Hadamard)
+sums the values. However, the parameters of the <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.function" title="psyneulink.core.components.ports.inputport.InputPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> –&nbsp;and thus the <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the InputPort – can be modified by any <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> received by
+the InputPort (listed in its <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.mod_afferents" title="psyneulink.core.components.ports.inputport.InputPort.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute.  A custom function can also be
+specified, so long as it generates a result that is compatible with the item of the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> to which the <a class="reference internal" href="Mechanism.html#mechanism-inputports"><span class="std std-ref">InputPort is assigned</span></a>.</li>
+</ul>
+<ul class="simple" id="inputport-value">
+<li><a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> – the result returned by its <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.function" title="psyneulink.core.components.ports.inputport.InputPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>,
+after aggregating the value of the <a class="reference internal" href="PathwayProjection.html"><span class="doc">PathProjections</span></a> it receives, possibly modified by any
+<a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> received by the InputPort. It must be compatible with the
+item of the owner Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> to which the <a class="reference internal" href="Mechanism.html#mechanism-inputports"><span class="std std-ref">InputPort has been assigned</span></a> (see <a class="reference internal" href="#inputport-variable-and-value"><span class="std std-ref">above</span></a> and <a class="reference internal" href="Mechanism.html#mechanism-inputport-specification"><span class="std std-ref">Mechanism InputPort specification</span></a>).</li>
+</ul>
+<ul class="simple" id="inputport-weights-and-exponents">
+<li><code class="xref any docutils literal"><span class="pre">weight</span></code> and <code class="xref any docutils literal"><span class="pre">exponent</span></code> – these can be used by the Mechanism to which the
+InputPort belongs when that combines the <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>s of its Ports (e.g., an ObjectiveMechanism
+uses the weights and exponents assigned to its InputPorts to determine how the values it monitors are combined by
+its <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">function</span></a>).  The value of each must be an integer or float, and the default is 1 for both.</li>
+</ul>
+</div>
+<div class="section" id="execution">
+<span id="inputport-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>An InputPort cannot be executed directly.  It is executed when the Mechanism to which it belongs is executed.
+When this occurs, the InputPort executes any <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> it receives, calls its <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.function" title="psyneulink.core.components.ports.inputport.InputPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to combines the values received from any <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> it receives
+(listed in its its <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.path_afferents" title="psyneulink.core.components.ports.inputport.InputPort.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a> attribute) and modulate them in response to any
+<a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> (listed in its <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.mod_afferents" title="psyneulink.core.components.ports.inputport.InputPort.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute),
+and then assigns the result to the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute. This, in turn, is assigned to
+the item of the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_values" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_values"><code class="xref any py py-attr docutils literal"><span class="pre">input_values</span></code></a>
+attributes  corresponding to that InputPort (see <a class="reference internal" href="Mechanism.html#mechanism-variable-and-inputports"><span class="std std-ref">Mechanism Variable and InputPorts</span></a> for additional details).</p>
+</div>
+<div class="section" id="class-reference">
+<span id="inputport-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="psyneulink.core.components.ports.inputport.InputPort">
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.ports.inputport.</code><code class="descname">InputPort</code><span class="sig-paren">(</span><em>owner=None</em>, <em>variable=None</em>, <em>size=None</em>, <em>function=LinearCombination(operation=SUM)</em>, <em>combine=None</em>, <em>projections=None</em>, <em>weight=None</em>, <em>exponent=None</em>, <em>internal_only=False</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass of <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> that calculates and represents the input to a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> from one or more
+<a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjections</span></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>owner</strong> (<em>Mechanism</em>) – the Mechanism to which the InputPort belongs;  it must be specified or determinable from the context in which
+the InputPort is created.</li>
+<li><strong>reference_value</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray</em>) – the value of the item of the owner Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute to which
+the InputPort is assigned; used as the template for the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute.</li>
+<li><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray</em>) – specifies the template for the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute.</li>
+<li><strong>size</strong> (<em>int</em><em>, </em><em>list</em><em> or </em><em>np.ndarray of ints</em>) – specifies variable as array(s) of zeros if <strong>variable</strong> is not passed as an argument;
+if <strong>variable</strong> is specified, it takes precedence over the specification of <strong>size</strong>.</li>
+<li><strong>function</strong> (<em>Function</em><em> or </em><em>method : default LinearCombination</em><em>(</em><em>operation=SUM</em><em>)</em>) – specifies the function applied to the variable. The default value combines the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">values</span></code></a> of the <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> received by the InputPort.  Any function
+can be assigned, however:  a) it must produce a result that has the same format (number and type of elements)
+as the item of its owner Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> to which the InputPort has been
+assigned;  b) if it is not a CombinationFunction, it may produce unpredictable results if the InputPort
+receives more than one Projection (see <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.function" title="psyneulink.core.components.ports.inputport.InputPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</li>
+<li><strong>combine</strong> (<em>SUM</em><em> or </em><em>PRODUCT : default None</em>) – specifies the <strong>operation</strong> argument used by the default <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function, which determines how the
+<code class="xref any docutils literal"><span class="pre">value</span></code> of the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.projections" title="psyneulink.core.components.ports.inputport.InputPort.projections"><code class="xref any py py-attr docutils literal"><span class="pre">projections</span></code></a> are combined.  This is a
+convenience argument, that allows the <strong>operation</strong> to be specified without having to specify the
+LinearCombination function; it assumes that LinearCombination (the default) is used as the InputPort’s function
+– if it conflicts with a specification of <strong>function</strong> an error is generated.</li>
+<li><strong>projections</strong> (<em>list of Projection specifications</em>) – specifies the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection(s)</span></a> and/or <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection(s)</span></a> to be
+received by the InputPort, and that are listed in its <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.path_afferents" title="psyneulink.core.components.ports.inputport.InputPort.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a> and
+<a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.mod_afferents" title="psyneulink.core.components.ports.inputport.InputPort.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attributes, respectively (see
+<a class="reference internal" href="#inputport-compatability-and-constraints"><span class="std std-ref">InputPort variable: Compatibility and Constraints</span></a> for additional details).  If <strong>projections</strong> but neither
+<strong>variable</strong> nor <strong>size</strong> are specified, then the <code class="xref any docutils literal"><span class="pre">value</span></code> of the Projection(s) or their
+<a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">senders</span></code></a> specified in <strong>projections</strong> argument are used to determine the InputPort’s
+<a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
+<li><strong>weight</strong> (<em>number : default 1</em>) – specifies the value of the <code class="xref any docutils literal"><span class="pre">weight</span></code> attribute of the InputPort.</li>
+<li><strong>exponent</strong> (<em>number : default 1</em>) – specifies the value of the <code class="xref any docutils literal"><span class="pre">exponent</span></code> attribute of the InputPort.</li>
+<li><strong>internal_only</strong> (<em>bool : False</em>) – specifies whether external input is required by the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.owner" title="psyneulink.core.components.ports.inputport.InputPort.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> if its <a class="reference internal" href="Mechanism.html#mechanism-role-in-processes-and-systems"><span class="std std-ref">role</span></a> is <em>EXTERNAL_INPUT</em>  (see <code class="xref any docutils literal"><span class="pre">internal_only</span></code>
+for details).</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
+the InputPort or its function, and/or a custom function and its parameters. Values specified for parameters in
+the dictionary override any assigned to those parameters in arguments of the constructor.</li>
+<li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the InputPort; see InputPort <code class="xref any docutils literal"><span class="pre">name</span></code> for details.</li>
+<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Port.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the InputPort; see <code class="xref any docutils literal"><span class="pre">prefs</span></code> for details.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="psyneulink.core.components.ports.inputport.InputPort.owner">
+<code class="descname">owner</code><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Mechanism</em> – the Mechanism to which the InputPort belongs.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.ports.inputport.InputPort.path_afferents">
+<code class="descname">path_afferents</code><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort.path_afferents" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[MappingProjection]</em> – <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> that project to the InputPort
+(i.e., for which it is a <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.ports.inputport.InputPort.mod_afferents">
+<code class="descname">mod_afferents</code><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort.mod_afferents" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[GatingProjection]</em> – <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> that project to the InputPort.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.ports.inputport.InputPort.projections">
+<code class="descname">projections</code><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort.projections" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[Projection]</em> – all of the <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> received by the InputPort.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.ports.inputport.InputPort.variable">
+<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>value, list or np.ndarray</em> – the template for the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each Projection that the InputPort receives,
+each of which must match the format (number and types of elements) of the InputPort’s
+<a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.  If neither the <strong>variable</strong> or <strong>size</strong> argument is specified, and
+<strong>projections</strong> is specified, then <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is assigned the <code class="xref any docutils literal"><span class="pre">value</span></code> of the Projection(s) or its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.ports.inputport.InputPort.function">
+<code class="descname">function</code><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Function</em> – If it is a <code class="xref any docutils literal"><span class="pre">CombinationFunction</span></code>, it combines the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">values</span></code></a> of the <a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjections</span></a> (e.g., <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>) received by the InputPort  (listed in
+its <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.path_afferents" title="psyneulink.core.components.ports.inputport.InputPort.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a> attribute), under the possible influence of
+<a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> received by the InputPort (listed in its <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.mod_afferents" title="psyneulink.core.components.ports.inputport.InputPort.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute). The result is assigned to the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute. For example, the default (<a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> with <em>SUM</em> as it <strong>operation</strong>)
+performs an element-wise (Hadamard) sum of its Projection <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">values</span></code></a>, and assigns to
+<a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> an array that is of the same length as each of the Projection <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">values</span></code></a>.  If the InputPort receives only one Projection, then any other function can be
+applied and it will generate a value that is the same length as the Projection’s <code class="xref any docutils literal"><span class="pre">value</span></code>.
+However, if the InputPort receives more than one Projection and uses a function other than a
+CombinationFunction, a warning is generated and only the <code class="xref any docutils literal"><span class="pre">value</span></code> of the first Projection
+list in <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.path_afferents" title="psyneulink.core.components.ports.inputport.InputPort.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a> is used by the function, which may generate unexpected
+results when executing the Mechanism or Composition to which it belongs.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.ports.inputport.InputPort.value">
+<code class="descname">value</code><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>value or ndarray</em> – the output of the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.function" title="psyneulink.core.components.ports.inputport.InputPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, that is assigned to an item of the owner
+Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute.</p>
+</dd></dl>
+
+<dl class="docutils">
+<dt>label <span class="classifier-delimiter">:</span> <span class="classifier">string or number</span></dt>
+<dd>the string label that represents the current <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the InputPort, according to the
+owner mechanism’s <code class="xref any docutils literal"><span class="pre">input_labels_dict</span></code>. If the current <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
+of the InputPort does not have a corresponding label, then the numeric <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> is returned.</dd>
+<dt>weight <span class="classifier-delimiter">:</span> <span class="classifier">number</span></dt>
+<dd>see <a class="reference internal" href="#inputport-weights-and-exponents"><span class="std std-ref">weight and exponent</span></a> for description.</dd>
+<dt>exponent <span class="classifier-delimiter">:</span> <span class="classifier">number</span></dt>
+<dd>see <a class="reference internal" href="#inputport-weights-and-exponents"><span class="std std-ref">weight and exponent</span></a> for description.</dd>
+<dt>internal_only <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>determines whether input is required for this InputPort from <a class="reference internal" href="Run.html"><span class="doc">Run</span></a> or another <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> when the
+InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.owner" title="psyneulink.core.components.ports.inputport.InputPort.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> is executed, and its <a class="reference internal" href="Mechanism.html#mechanism-role-in-processes-and-systems"><span class="std std-ref">role</span></a>
+is designated as <em>EXTERNAL_INPUT</em>;  if <code class="xref any docutils literal"><span class="pre">True</span></code>, external input is <em>not</em> required or allowed;  otherwise,
+external input is required.</dd>
+<dt>name <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd><p class="first">the name of the InputPort; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
+assigned by the InputPortRegistry of the Mechanism to which the InputPort belongs.  Note that some Mechanisms
+automatically create one or more non-default InputPorts, that have pre-specified names.  However, if any
+InputPorts are specified in the <strong>input_ports</strong> argument of the Mechanism’s constructor, those replace those
+InputPorts (see <a class="reference internal" href="Mechanism.html#mechanism-default-port-suppression-note"><span class="std std-ref">note</span></a>), and <a class="reference internal" href="Naming.html"><span class="doc">standard naming conventions</span></a>
+apply to the InputPorts specified, as well as any that are added to the Mechanism once it is created.</p>
+<div class="last admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Unlike other PsyNeuLink components, Port names are “scoped” within a Mechanism, meaning that Ports with
+the same name are permitted in different Mechanisms.  However, they are <em>not</em> permitted in the same
+Mechanism: Ports within a Mechanism with the same base name are appended an index in the order of their
+creation.</p>
+</div>
+</dd>
+<dt>prefs <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span></dt>
+<dd>the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the InputPort; if it is not specified in the <strong>prefs</strong> argument of the
+constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="ParameterPort.html" class="btn btn-neutral float-right" title="ParameterPort" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="Port.html" class="btn btn-neutral float-left" title="Ports" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

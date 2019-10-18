@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Run &mdash; PsyNeuLink 0.6.0.3 documentation</title>
+  <title>Run &mdash; PsyNeuLink 0.7.0.0+1.g9b4c27f documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3',
+              VERSION:'0.7.0.0+1.g9b4c27f',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.3
+                0.7.0.0+1
               </div>
             
           
@@ -236,7 +236,7 @@ occurs in the <code class="xref any docutils literal"><span class="pre">None</sp
 <ul class="simple">
 <li>The parameter values for any execution context can be copied into another execution context by using Component._initialize_from_context, which when called on a Component copies the values for all its parameters and recursively for all of the Component’s <code class="xref any docutils literal"><span class="pre">_dependent_components</span></code></li>
 <li><dl class="first docutils">
-<dt><code class="xref any docutils literal"><span class="pre">_dependent_components</span></code> should be added to for any new Component that requires other Components to function properly (beyond “standard” things like Component.function, or Mechanism.input_states, as these are added in the proper classes’ _dependent_components)</dt>
+<dt><code class="xref any docutils literal"><span class="pre">_dependent_components</span></code> should be added to for any new Component that requires other Components to function properly (beyond “standard” things like Component.function, or Mechanism.input_ports, as these are added in the proper classes’ _dependent_components)</dt>
 <dd><ul class="first last">
 <li>the intent is that with <code class="docutils literal"><span class="pre">_dependent_components</span></code> set properly, calling     <code class="docutils literal"><span class="pre">obj._initialize_from_context(new_context,</span> <span class="pre">base_context)</span></code> should be sufficient to run obj     under <strong>new_context</strong></li>
 <li>a good example of a “nonstandard” override is <code class="xref any docutils literal"><span class="pre">OptimizationControlMechanism._dependent_components</span></code></li>
@@ -259,13 +259,13 @@ with <a class="reference internal" href="Condition.html"><span class="doc">Condi
 </div>
 <div class="section" id="inputs">
 <span id="composition-run-inputs"></span><h2><em>Inputs</em><a class="headerlink" href="#inputs" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> function presents the inputs for each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> to the input_states of the relevant Mechanisms in
+<p>The <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> function presents the inputs for each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> to the input_ports of the relevant Mechanisms in
 the <a class="reference internal" href="#run-scope-of-execution"><span class="std std-ref">scope of execution</span></a>. These are specified in the <strong>inputs</strong> argument of a Component’s
 <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method.</p>
 <p>Inputs are specified in a Python dictionary where the keys are <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.ORIGIN" title="psyneulink.core.globals.utilities.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms, and the values are lists in which
 the i-th element represents the input value to the Mechanism on trial i. Each input value must be compatible with the
 shape of the mechanism’s <code class="xref any docutils literal"><span class="pre">external_input_values</span></code>. This means that the inputs to
-an origin mechanism are usually specified by a list of 2d lists/arrays, though <a class="reference internal" href="#input-specification-examples"><span class="std std-ref">some shorthand notations are allowed</span></a>. Any InputStates that are not represented in <code class="xref any docutils literal"><span class="pre">external_input_values</span></code> will not receive a user-specified input value.</p>
+an origin mechanism are usually specified by a list of 2d lists/arrays, though <a class="reference internal" href="#input-specification-examples"><span class="std std-ref">some shorthand notations are allowed</span></a>. Any InputPorts that are not represented in <code class="xref any docutils literal"><span class="pre">external_input_values</span></code> will not receive a user-specified input value.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span>
@@ -288,13 +288,13 @@ an origin mechanism are usually specified by a list of 2d lists/arrays, though <
 </pre></div>
 </div>
 <div class="figure" id="composition-run-inputs-fig-states">
-<img alt="Example input specifications with input states" src="_images/input_spec_states.svg" /></div>
+<img alt="Example input specifications with input ports" src="_images/input_spec_states.svg" /></div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Keep in mind that a mechanism’s <code class="xref any docutils literal"><span class="pre">external_input_values</span></code> attribute contains
-the concatenation of the values of its external InputStates. Any InputStates marked as “internal”, such as
-InputStates that receive recurrent Projections, are excluded from this value. A mechanism’s <code class="xref any docutils literal"><span class="pre">external_input_values</span></code> attribute is always a 2d list in which the index i element is the value of
-the Mechanism’s index i InputState. In many cases, <code class="xref any docutils literal"><span class="pre">external_input_values</span></code> is
+the concatenation of the values of its external InputPorts. Any InputPorts marked as “internal”, such as
+InputPorts that receive recurrent Projections, are excluded from this value. A mechanism’s <code class="xref any docutils literal"><span class="pre">external_input_values</span></code> attribute is always a 2d list in which the index i element is the value of
+the Mechanism’s index i InputPort. In many cases, <code class="xref any docutils literal"><span class="pre">external_input_values</span></code> is
 the same as <code class="xref any docutils literal"><span class="pre">variable</span></code></p>
 </div>
 <p>The number of inputs specified <strong>must</strong> be the same for all origin mechanisms in the system. In other words, all of the
@@ -394,7 +394,7 @@ items in the list of inputs will be used on trial 5 and trial 6, respectively.</
 <p id="input-specification-examples">For convenience, condensed versions of the input specification described above are also accepted in the following
 situations:</p>
 <ul class="simple">
-<li><strong>Case 1: Origin mechanism has only one input state</strong></li>
+<li><strong>Case 1: Origin mechanism has only one InputPort</strong></li>
 </ul>
 <table border="1" class="docutils">
 <colgroup>
@@ -437,13 +437,13 @@ situations:</p>
 <span class="n">s</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_dictionary</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Shorthand - drop the outer list on each input because <strong>Mechanism a</strong> only has one input state:</p>
+<p>Shorthand - drop the outer list on each input because <strong>Mechanism a</strong> only has one InputPort:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">input_dictionary</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">3.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">4.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">5.0</span><span class="p">]]}</span>
 
 <span class="n">s</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_dictionary</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Shorthand - drop the remaining list on each input because <strong>Mechanism a</strong>’s one input state’s value is length 1:</p>
+<p>Shorthand - drop the remaining list on each input because <strong>Mechanism a</strong>’s one InputPort’s value is length 1:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">input_dictionary</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">]}</span>
 
 <span class="n">s</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_dictionary</span><span class="p">)</span>
@@ -704,7 +704,7 @@ The TARGET and SAMPLE values for a particular <a class="reference internal" href
 <p>The standard format for specifying targets is a Python dictionary where the keys are the last mechanism of each learning
 sequence, and the values are lists in which the i-th element represents the target value for that learning sequence on
 trial i. There must be the same number of keys in the target specification dictionary as there are <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanisms
-in the system. Each target value must be compatible with the shape of the <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism’s TARGET <a class="reference internal" href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_states" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input</span> <span class="pre">state</span></code></a>. This means that for a given key (which is always the last mechanism of the
+in the system. Each target value must be compatible with the shape of the <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism’s TARGET <a class="reference internal" href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_ports" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_ports"><code class="xref any py py-attr docutils literal"><span class="pre">InputPort</span></code></a>. This means that for a given key (which is always the last mechanism of the
 learning sequence) in the target specification dictionary, the value is usually a list of 1d lists/arrays.</p>
 <p>The number of targets specified for each Mechanism must equal the number specified for the <strong>inputs</strong> argument;  as
 with <strong>inputs</strong>, if the number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> s specified is greater than the number of inputs (and targets), then the
@@ -763,7 +763,7 @@ containing <strong>Mechanism c</strong></td>
 <img alt="Example of dictionary format of target specification" src="_images/target_spec_dictionary.svg" /></div>
 <p>Alternatively, the value for a given key (last mechanism in the learning sequence) in the target specification
 dictionary may be a function. The output of that function must be compatible with the shape of the <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism’s
-TARGET <a class="reference internal" href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_states" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input</span> <span class="pre">state</span></code></a>. The function will be executed at the start of the learning
+TARGET <a class="reference internal" href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_ports" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_ports"><code class="xref any py py-attr docutils literal"><span class="pre">InputPort</span></code></a>. The function will be executed at the start of the learning
 portion of each trial. This format allows targets to be constructed programmatically, in response
 to computations made during the run.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;a&quot;</span><span class="p">)</span>
@@ -898,11 +898,11 @@ alternate parameter values to be used only during this <a class="reference inter
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>&lt;obj&gt;.results</strong> – list of the values, for each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, of the OutputStates for a Mechanism run directly,
-or of the OutputStates of the <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TERMINAL" title="psyneulink.core.globals.utilities.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanisms for the Process or System run.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>&lt;obj&gt;.results</strong> – list of the values, for each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, of the OutputPorts for a Mechanism run directly,
+or of the OutputPorts of the <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TERMINAL" title="psyneulink.core.globals.utilities.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanisms for the Process or System run.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">List[<a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState.value" title="psyneulink.core.components.states.outputstate.OutputState.value">OutputState.value</a>]</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">List[<a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value">OutputPort.value</a>]</p>
 </td>
 </tr>
 </tbody>

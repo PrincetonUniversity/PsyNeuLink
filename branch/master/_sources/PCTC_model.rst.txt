@@ -42,7 +42,7 @@ The model is built as the bidirectional Stroop model by Cohen & Huston (1994): s
 layers (color & word), and task information (color naming or word reading) are connected with each other with
 bidirectional weights. The response layer receives input weights from both hidden layers, but does not project back to
 these the two hidden layers. This is different to the previous Cohen & Huston (1994) model).
-Conflict is computed on the output state of the task layer, and projected from the task layer to the response layer.
+Conflict is computed on the OutPort of the task layer, and projected from the task layer to the response layer.
 If task conflict exists, prevents the response layer from a fast response.
 The conflict projection is the main difference from the Kalanthroff et al., (2018) model to the Cohen & Huston (1994)
 model. A graph of the model is shown below.
@@ -71,29 +71,29 @@ value, the other one set to zero), and assigned a `Linear` function with **slope
 **COLOR HIDDEN LAYER**: a `RecurrentTransferMechanism` with **size**\ =2 (one element for each of the two colors, and
 assigned a `Logistic` function with **gain**\ =4.0 and **bias**\ =1.0. The **integrator_mode**\ =\ `True`
 and **smoothing_factor**\ =0.03. Both units receive mutually inhibitory weights (**hetero**\ =-2). A python function that
-sets the output of the `Logistic` function to 0 when it receives 0 as an input is specified on the `output_states`. It
+sets the output of the `Logistic` function to 0 when it receives 0 as an input is specified on the `output_ports`. It
 simply subtracts 0.018 from the output of a logistic function and if this leads to a value below 0,
 outputs a 0 as a minimum value.
 
 **WORD HIDDEN LAYER**: a `RecurrentTransferMechanism` with **size**\ =2 (one element for each of the two words, and
 assigned a `Logistic` function with **gain**\ =4.0 and **bias**\ =1.0. The **integrator_mode**\ =\ `True`
 and **smoothing_factor**\ =0.03. Both units receive mutually inhibitory weights (**hetero**\ =-2). A python function that
-sets the output of the `Logistic` function to 0 when it receives 0 as an input is specified on the `output_states`. It
+sets the output of the `Logistic` function to 0 when it receives 0 as an input is specified on the `output_ports`. It
 simply subtracts 0.018 from the output of a logistic function and if this leads to a value below 0,
 outputs a 0 as a minimum value.
 
 **TASK DEMAND LAYER**: a `RecurrentTransferMechanism` with **size**\ =2 (one element for each of the two tasks, and
 assigned a `Logistic` function with **gain**\ =4.0 and **bias**\ =1.0. The **integrator_mode**\ =\ `True`
 and **smoothing_factor**\ =0.03. Both units receive mutually inhibitory weights (**hetero**\ =-2). A python function that
-sets the output of the `Logistic` function to 0 when it receives 0 as an input is specified on the `output_states`. It
+sets the output of the `Logistic` function to 0 when it receives 0 as an input is specified on the `output_ports`. It
 simply subtracts 0.018 from the output of a logistic function and if this leads to a value below 0,
-outputs a 0 as a minimum value. A second output state is specified that computes the conflict between the two task
+outputs a 0 as a minimum value. A second OutputPort is specified that computes the conflict between the two task
 units.
 
 **WORD HIDDEN LAYER**: a `RecurrentTransferMechanism` with **size**\ =2 (one element for each of the two responses, and
 assigned a `Logistic` function with **gain**\ =4.0 and **bias**\ =1.0. The **integrator_mode**\ =\ `True`
 and **smoothing_factor**\ =0.03. Both units receive mutually inhibitory weights (**hetero**\ =-2). A python function that
-sets the output of the `Logistic` function to 0 when it receives 0 as an input is specified on the `output_states`. It
+sets the output of the `Logistic` function to 0 when it receives 0 as an input is specified on the `output_ports`. It
 simply subtracts 0.018 from the output of a logistic function and if this leads to a value below 0,
 outputs a 0 as a minimum value.
 
@@ -109,7 +109,7 @@ The *COLOR HIDDEN LAYER* with a numpy array with a value of 1.5 on the diagonal 
 elements.
 The *WORD HIDDEN LAYER* with a numpy array with a value of 2.5 on the diagonal elements and 0.0 on the off-diagonal
 elements.
-The *TASK LAYER* with a numpy array with a value of length 2 with both elements set to -1. The second output state
+The *TASK LAYER* with a numpy array with a value of length 2 with both elements set to -1. The second OutputPort
 of the *TASK LAYER* is specified as the sender and the *RESPONSE LAYER* is specified as the receiver.
 
 Execution

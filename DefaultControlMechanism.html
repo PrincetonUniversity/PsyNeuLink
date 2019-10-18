@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DefaultControlMechanism &mdash; PsyNeuLink 0.6.0.3 documentation</title>
+  <title>DefaultControlMechanism &mdash; PsyNeuLink 0.7.0.0+1.g9b4c27f documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.3',
+              VERSION:'0.7.0.0+1.g9b4c27f',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.6.0.3
+                0.7.0.0+1
               </div>
             
           
@@ -167,7 +167,7 @@
 <span id="defaultcontrolmechanism"></span><h1>DefaultControlMechanism<a class="headerlink" href="#module-psyneulink.core.components.mechanisms.modulatory.control.defaultcontrolmechanism" title="Permalink to this headline">¶</a></h1>
 <p>The DefaultControlMechanism is created for a <a class="reference internal" href="System.html"><span class="doc">System</span></a> if no other controller type is specified. The
 DefaultControlMechanism creates an <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> for each <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> it is assigned, and uses
-<code class="xref any docutils literal"><span class="pre">defaultControlAllocation</span></code> as the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.value" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> for the ControlSignal.  By default,
+<code class="xref any docutils literal"><span class="pre">defaultControlAllocation</span></code> as the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.value" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> for the ControlSignal.  By default,
 <code class="xref any docutils literal"><span class="pre">defaultControlAllocation</span></code> =  1, so that ControlProjections from the DefaultControlMechanism have no effect on their
 parameters.  However, it can be used to uniformly control the parameters that receive ControlProjections from it,
 by manually changing the value of <code class="xref any docutils literal"><span class="pre">defaultControlAllocation</span></code>.  See <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> for additional
