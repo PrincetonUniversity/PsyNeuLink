@@ -423,7 +423,6 @@ class PytorchModelCreator(torch.nn.Module):
                         ctx.inject_printf(builder,f"COMPILED FORWARD {input_node} -> {component}\n")
                         input_node_idx = self._composition._get_node_index(
                             input_node)
-                        # frozen_values[input_node.component]
                         input_value = self._get_output_value_ptr(
                             ctx, builder, arg_out, input_node_idx)
 
@@ -439,7 +438,6 @@ class PytorchModelCreator(torch.nn.Module):
                             self._gen_inject_vec_add(ctx, builder, weighted_inp, value, value)
 
                     cmp_arg = value
-
                 # Apply Activation Func to values
                 if store_z_values is True:
                     z_values[component] = self._gen_inject_vec_copy(ctx, builder, cmp_arg)
