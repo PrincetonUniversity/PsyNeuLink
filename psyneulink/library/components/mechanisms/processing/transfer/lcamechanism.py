@@ -346,11 +346,12 @@ class LCAMechanism(RecurrentTransferMechanism):
         specifes the value at which the Mechanism's `is_finished` attribute is set to True (see `threshold
         <LCAMechanism.threshold>` for more details).
 
-    use_for_threshold : VALUE, MAX_VS_NEXT, MAX_VS_AVG, str, or int : default VALUE
-        specifies the value that is compared with threshold to determine when `is_finished` is True
-        (see <LCAMechanism.use_for_threshold>` for more details).  If *MAX_VS_NEXT* or *MAX_VS_AVG* is specified
-        (see XXX);  if it is a str or an int, then the OutputPort specified by that name or index, respectively,
-        is used; if one corresponding to that specification does not exist, an error is generated.
+    threshold_criterion : VALUE, MAX_VS_NEXT, MAX_VS_AVG, str, or int : default VALUE
+        specifies the criterion that is used to evaluate whether the threshold has been reached. If *MAX_VS_NEXT* or
+        *MAX_VS_AVG* is specified the length of the LCAMCechanism's `value <LCAMechanism.value>` must be at least 2.
+        If a str or int is specified then an `output_port <LCAMechanism>` with the corresponding name (str) or index
+        (int) must exist; otherwise, an error is generated (see `theshold_criterion
+        <LCAMechanism.threshold_criterion>` for additional details).
 
     clip : list [float, float] : default None (Optional)
         specifies the allowable range for the result of `function <LCAMechanism.function>` the item in index 0 specifies 
@@ -462,17 +463,17 @@ class LCAMechanism(RecurrentTransferMechanism):
     threshold : float or None
         determines the `value <LCAMechanism.value>` at which the Mechanism's `is_finished` attribute is set to True.
         If threshold is None, `is_finished` is never set to True.  If it is a float, then the value specified by
-        `use_for_threshold <LCAMechanism.use_for_threshold>` is compared against threshold, and `is_finished` is
+        `threshold_criterion <LCAMechanism.threshold_criterion>` is compared against threshold, and `is_finished` is
         set to True when that value exceeds theshold.
 
-    use_for_threshold : VALUE, MAX_VS_NEXT, MAX_VS_AVG, str, or int : default VALUE
-        determines the value that is compared with threshold to determine when `is_finished` is True. If *VALUE*
-        is specified, `is_finished` is set to True if any element of the LCAMechanism's `value <LCAMechanism.value>`
-        exceeds the value of `threshold <LCAMechanism.threshold>`.  If it is set to *MAX_VS_NEXT* or *MAX_VS_AVG*,
-        then `is_finished` is set to True when the `value <OutputPort.value>` of the corresponding OutputPort (see
-        `MAX_VS_NEXT <LCAMechanism_MAX_VS_NEXT>` or `MAX_VS_AVG <LCAMechanism_MAX_VS_AVG>`, respectively),
-        exceeds the value of `threshold <LCAMechanism.threshold>`.  If use_for_threshold is a str or an int, then the
-        OutputPort specified by that name or index, respectively, is used.
+    threshold_criterion : VALUE, MAX_VS_NEXT, MAX_VS_AVG, str, or int : default VALUE
+        determines the criterion that is used to evaluate whether the threshlod has been reached, at which point
+        `is_finished` is set to True.  If *VALUE* is specified, this occurs when any element of the  LCAMechanism's
+        `value <LCAMechanism.value>` exceeds the value of `threshold <LCAMechanism.threshold>`;  if it is set to
+        *MAX_VS_NEXT* or *MAX_VS_AVG*, then it occurs when the `value <OutputPort.value>` of the corresponding
+        OutputPort (see `MAX_VS_NEXT <LCAMechanism_MAX_VS_NEXT>` or `MAX_VS_AVG <LCAMechanism_MAX_VS_AVG>`,
+        respectively) exceeds the value of `threshold <LCAMechanism.threshold>`; and if threshold_criterion is a
+        str or an int, then the OutputPort specified by that name or index, respectively is used.
 
     clip : list [float, float] : default None (Optional)
         specifies the allowable range for the result of `function <LCAMechanism.function>`
@@ -594,8 +595,8 @@ class LCAMechanism(RecurrentTransferMechanism):
                 threshold
                     see `threshold <LCAMechanism.threshold>`
 
-                use_for_threshold
-                    see `use_for_threshold <LCAMechanism.use_for_threshold>`
+                threshold_criterion
+                    see `threshold_criterion <LCAMechanism.threshold_criterion>`
 
                     :default value: None
                     :type: float
@@ -609,20 +610,11 @@ class LCAMechanism(RecurrentTransferMechanism):
         competition = Parameter(1.0, modulable=True)
         time_step_size = Parameter(0.1, modulable=True)
         threshold = Parameter(None, modulable=True)
-        use_for_threshold = Parameter(VALUE, modulable=False)
+        threshold_criterion = Parameter(VALUE, modulable=False)
 
         initial_value = None
         integrator_mode = Parameter(True, setter=_integrator_mode_setter)
 
-        # def _validate_use_for_threshold(self, use_for_threshold):
-        #     if isinstance(use_for_threshold, int):
-        #         assert True
-        #         return None
-        #     else:
-        #         return 'not one of {0}'.format(options)
-
-    # paramClassDefaults[OUTPUT_PORTS].append({NAME:MAX_VS_NEXT})
-    # paramClassDefaults[OUTPUT_PORTS].append({NAME:MAX_VS_AVG})
     standard_output_ports = RecurrentTransferMechanism.standard_output_ports.copy()
     standard_output_ports.extend([{NAME:MAX_VS_NEXT,
                                     FUNCTION:max_vs_next},
@@ -645,7 +637,7 @@ class LCAMechanism(RecurrentTransferMechanism):
                  integrator_mode=True,
                  time_step_size=0.1,
                  threshold:tc.optional(float)=None,
-                 use_for_threshold:tc.any(tc.enum(VALUE, MAX_VS_NEXT, MAX_VS_AVG), str, int)=VALUE,
+                 threshold_criterion:tc.any(tc.enum(VALUE, MAX_VS_NEXT, MAX_VS_AVG), str, int)=VALUE,
                  clip=None,
                  output_ports:tc.optional(tc.any(str, Iterable))=RESULT,
                  params=None,
@@ -692,7 +684,7 @@ class LCAMechanism(RecurrentTransferMechanism):
                                                   integrator_mode=integrator_mode,
                                                   time_step_size=time_step_size,
                                                   threshold=threshold,
-                                                  use_for_threshold=use_for_threshold,
+                                                  threshold_criterion=threshold_criterion,
                                                   output_ports=output_ports,
                                                   params=params)
 
@@ -719,28 +711,28 @@ class LCAMechanism(RecurrentTransferMechanism):
 
     def _instantiate_output_ports(self, context=None):
 
-        use_for_threshold = self.parameters.use_for_threshold._get(context)
+        threshold_criterion = self.parameters.threshold_criterion._get(context)
         value = self.parameters.value._get(context)
 
-        if use_for_threshold in {MAX_VS_NEXT, MAX_VS_AVG}:
+        if threshold_criterion in {MAX_VS_NEXT, MAX_VS_AVG}:
             if len(value[0]) < 2:
                 raise LCAError(f"Use of 'MAX_VS_NEXT' or 'MAX_VS_AVG' as specification for " 
-                               f"'use_for_threshold' arg of {self.name} requires that its "
+                               f"'threshold_criterion' arg of {self.name} requires that its "
                                f"{VALUE} have a length of 2 or greater (it is currently {len(value[0])}).")
-            self.output_ports.append(use_for_threshold)
+            self.output_ports.append(threshold_criterion)
 
         super()._instantiate_output_ports(context=context)
 
-        if use_for_threshold != VALUE:
+        if threshold_criterion != VALUE:
             try:
-                self.output_ports[use_for_threshold]
+                self.output_ports[threshold_criterion]
             except IndexError:
-                if isinstance(use_for_threshold, int):
+                if isinstance(threshold_criterion, int):
                     index_str = 'index'
                 else:
                     index_str = 'name'
                 raise LCAError(f"{self.name} does not have an {repr(OUTPUT_PORT)} with the {index_str} of "
-                               f"{repr(use_for_threshold)} specified in its 'use_for_threshold' arg.")
+                               f"{repr(threshold_criterion)} specified in its 'threshold_criterion' arg.")
 
     def _get_integrated_function_input(self, function_variable, initial_value, noise, context):
 
@@ -767,7 +759,6 @@ class LCAMechanism(RecurrentTransferMechanism):
                 RATE: leak,
                 TIME_STEP_SIZE: time_step_size
             },
-
         )
 
         return current_input
@@ -778,12 +769,12 @@ class LCAMechanism(RecurrentTransferMechanism):
         threshold = self.parameters.threshold._get(context)
 
         if threshold:
-            use_for_threshold = self.parameters.use_for_threshold._get(context)
+            threshold_criterion = self.parameters.threshold_criterion._get(context)
 
-            if use_for_threshold == VALUE:
+            if threshold_criterion == VALUE:
                 finished = any(self.function.parameters.value._get(context)[0] >= threshold)
             else:
-                finished = (self.output_ports[use_for_threshold].parameters.value._get(context) >= threshold)
+                finished = (self.output_ports[threshold_criterion].parameters.value._get(context) >= threshold)
 
             if finished:
                 logger.info(
