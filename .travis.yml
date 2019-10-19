@@ -70,6 +70,11 @@ before_install:
   - python --version
   - pip install -U pip
   - pip --version
+  - |
+    # Install undeclared dependencies
+    if [ "x$EXTRA_PIP" != "x" ]; then
+      pip install $EXTRA_PIP
+    fi
 
 install:
   - pip install coveralls
