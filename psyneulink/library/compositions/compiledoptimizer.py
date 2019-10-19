@@ -300,7 +300,7 @@ class SGDOptimizer(Optimizer):
     def initialize_optimizer_struct(self, ctx, builder, optim_struct):
         pass
 
-    # steps the adam optimizer (methodology: https://arxiv.org/pdf/1412.6980.pdf )
+    # steps the sgd optimizer (methodology: https://arxiv.org/pdf/1412.6980.pdf )
     def step(self, ctx):
         name = self._composition.name+"_SGD_STEP"
         # try:
@@ -332,7 +332,7 @@ class SGDOptimizer(Optimizer):
             
             multiplied_delta_w = self._pytorch_model._gen_inject_mat_scalar_mult(ctx, builder, delta_w_ptr, lr)
             self._pytorch_model._gen_inject_mat_sub(ctx, builder, weights_llvmlite, multiplied_delta_w, weights_llvmlite)
-
+                
         builder.ret_void()
 
         return llvm_func
