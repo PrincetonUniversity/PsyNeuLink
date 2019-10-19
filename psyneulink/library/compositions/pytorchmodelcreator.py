@@ -58,10 +58,7 @@ class PytorchModelCreator(torch.nn.Module):
         self._composition = composition
 
         for i, current_exec_set in enumerate(self.execution_sets):
-            # SKG: We have to add a counter to map components to an internal int id (for bin execute purposes, since there is no concept of a 'dict' in llvm)
-            id_map_ct = 0
             for component in current_exec_set:
-                id_map_ct += 1
 
                 value = None  # the node's (its mechanism's) value
                 biases = None  # the node's bias parameters
