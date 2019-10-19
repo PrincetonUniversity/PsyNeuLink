@@ -824,7 +824,7 @@ class PytorchModelCreator(torch.nn.Module):
             one = ctx.float_ty(1)
             exp = ctx.get_llvm_function("__pnl_builtin_exp")
             def modify_value(x):
-                arg = builder.fsub(x, bias)
+                arg = builder.fadd(x, bias)
                 arg = builder.fmul(gain, arg)
                 arg = builder.fadd(arg, offset)
 
@@ -894,7 +894,7 @@ class PytorchModelCreator(torch.nn.Module):
             exp = ctx.get_llvm_function("__pnl_builtin_exp")
 
             def modify_value(x):
-                arg = builder.fsub(x, bias)
+                arg = builder.fadd(x, bias)
                 arg = builder.fmul(gain, arg)
                 arg = builder.fadd(arg, offset)
 
