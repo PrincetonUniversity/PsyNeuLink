@@ -266,6 +266,7 @@ class LCAMechanism(RecurrentTransferMechanism):
         integrator_mode = True             \
         time_step_size = 0.1               \
         threshold = None                   \
+        threshold_criterion = VALUE        \
         clip=[float:min, float:max],       \
         params=None,                       \
         name=None,                         \
@@ -278,8 +279,8 @@ class LCAMechanism(RecurrentTransferMechanism):
     1. its `integrator_function <LCAMechanism.integrator_function>`, which implements the `LeakyCompetingIntegrator`
        (where *rate* = *leak*)
 
-    2. its `matrix <LCAMechanism.matrix>` consisting of `self_excitation <LCAMechanism.self_excitation>` and
-       `competition <LCAMechanism.competition>` off diagonal.
+    2. its `matrix <LCAMechanism.matrix>`, consisting of `self_excitation <LCAMechanism.self_excitation>` (diagonal)
+       and `competition <LCAMechanism.competition>` (off diagonal) components.
 
     COMMENT:
         Description
@@ -616,7 +617,7 @@ class LCAMechanism(RecurrentTransferMechanism):
                  function=Logistic,
                  initial_value=None,
                  leak=0.5,
-                 competition=None,
+                 competition=1.0,
                  hetero=None,
                  self_excitation=None,
                  noise=0.0,
@@ -640,8 +641,8 @@ class LCAMechanism(RecurrentTransferMechanism):
             output_ports = [RESULT]
 
         if matrix is not None:
-            warnings.warn("Matrix arg for LCAMechanism is not used; matrix was assigned using self_excitation and competition "
-                          "args")
+            warnings.warn("Matrix arg for LCAMechanism is not used; "
+                          "matrix was assigned using self_excitation and competition args")
         # matrix = np.full((size[0], size[0]), -inhibition) * get_matrix(HOLLOW_MATRIX,size[0],size[0])
 
         if competition is not None and hetero is not None:
