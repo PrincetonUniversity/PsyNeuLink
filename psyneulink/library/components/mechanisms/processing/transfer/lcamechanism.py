@@ -711,7 +711,7 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         if threshold_criterion != VALUE:
             try:
-                self.output_ports[threshold_criterion]
+                self.output_ports[threshold_criterion].parameters.require_projection_in_composition._set(False, context)
             except IndexError:
                 if isinstance(threshold_criterion, int):
                     index_str = 'index'

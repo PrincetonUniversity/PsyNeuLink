@@ -3099,7 +3099,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for output_port in node.output_ports:
                 if output_port.require_projection_in_composition and not output_port.efferents:
                     warnings.warn(f'{OutputPort.__name__} ({output_port.name}) of {node.name} '
-                                  f'doesn\'t have any efferent {Projection.__name__}s')
+                                  f'doesn\'t have any efferent {Projection.__name__}s in {self.name}')
 
         for projection in projections:
             if not projection.sender:
