@@ -10,6 +10,7 @@ from psyneulink.core.components.system import System
 from psyneulink.core.scheduling.condition import Never, WhenFinished
 from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism import \
     LCAMechanism, MAX_VS_AVG, MAX_VS_NEXT
+from psyneulink.core.globals.keywords import RESULT
 
 class TestLCA:
     def test_LCAMechanism_length_1(self):
@@ -140,7 +141,7 @@ class TestLCA:
         result = comp.run(inputs={m:[1,0.5,0]})
         assert np.allclose(result, [[0.52200799, 0.41310248, 0.31228985]])
 
-    def LCAMechanism_threshold_with_max_vs_avg(self):
+    def test_LCAMechanism_threshold_with_max_vs_avg(self):
         m = LCAMechanism(size=3, threshold=0.1, threshold_criterion=MAX_VS_AVG)
         r = ProcessingMechanism(size=3)
         comp = Composition()
@@ -148,6 +149,25 @@ class TestLCA:
         comp.scheduler.add_condition(r, WhenFinished(m))
         result = comp.run(inputs={m:[1,0.5,0]})
         assert np.allclose(result, [[0.5100369 , 0.43776452, 0.36808511]])
+
+    def test_LCAMechanism_threshold_with_str(self):
+        m = LCAMechanism(size=2, threshold=0.7, threshold_criterion='MY_OUTPUT_PORT',
+                         output_ports=[RESULT, 'MY_OUTPUT_PORT'])
+        r = ProcessingMechanism(size=2)
+        comp = Composition()
+        comp.add_linear_processing_pathway([m,r])
+        comp.scheduler.add_condition(r, WhenFinished(m))
+        result = comp.run(inputs={m:[1,0]})
+        assert np.allclose(result, [[0.71463572, 0.28536428]])
+
+    def test_LCAMechanism_threshold_with_int(self):
+        m = LCAMechanism(size=2, threshold=0.7, threshold_criterion=1, output_ports=[RESULT, 'MY_OUTPUT_PORT'])
+        r = ProcessingMechanism(size=2)
+        comp = Composition()
+        comp.add_linear_processing_pathway([m,r])
+        comp.scheduler.add_condition(r, WhenFinished(m))
+        result = comp.run(inputs={m:[1,0]})
+        assert np.allclose(result, [[0.71463572, 0.28536428]])
 
 class TestLCAReinitialize:
 
