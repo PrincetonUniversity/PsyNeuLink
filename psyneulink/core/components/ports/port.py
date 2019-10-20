@@ -2307,8 +2307,16 @@ class Port_Base(Port):
 
             # Replace base param with the modulation value
             if name is not None:
-                f_mod_param_ptr = ctx.get_param_ptr(self.function, builder, f_params, name)
-                builder.store(builder.load(f_mod_ptr), f_mod_param_ptr)
+                f_mod_param_ptr = ctx.get_param_ptr(self.function,
+                                                    builder, f_params, name)
+                if f_mod_param_ptr.type != f_mod_ptr.type:
+                    warnings.warn("Shape mismatch between modulation and modulated parameter: {} vs. {}".format(
+                                  afferent.defaults.value,
+                                  getattr(self.function.parameters, name).get(None)))
+                    param_val = pnlvm.helpers.load_extract_scalar_array_one(builder, f_mod_ptr)
+                else:
+                    param_val = builder.load(f_mod_ptr)
+                builder.store(param_val, f_mod_param_ptr)
 
         # OutputPort returns 1D array even for scalar functions
         if arg_out.type != state_f.args[3].type:
