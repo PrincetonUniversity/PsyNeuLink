@@ -691,11 +691,16 @@ class LCAMechanism(RecurrentTransferMechanism):
                          prefs=prefs,
                          **kwargs)
 
-        # Do this here so that name of the object (assigned by super) can be used in the warning message
+        # Do these here so that name of the object (assigned by super) can be used in the warning messages
         if matrix is not None:
             warnings.warn(f"The 'matrix' arg was specified for {self.name} but will not be used; "
                           f"the matrix for an {self.__class__.__name__} is specified using "
                           f"the 'self_excitation' and 'competition' args.")
+
+        if competition < 0:
+            warnings.warn(f"The 'competition' arg specified for {self.name} is a negative value ({competition}); "
+                          f"note that this will result in a matrix that has positive off-diagonal elements "
+                          f"since 'competition' is assumed to specify the magnitude of inhibition.")
 
     def _instantiate_output_ports(self, context=None):
 
