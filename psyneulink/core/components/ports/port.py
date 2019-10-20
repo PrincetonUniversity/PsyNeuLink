@@ -2286,11 +2286,10 @@ class Port_Base(Port):
         for idx, afferent in enumerate(self.mod_afferents):
             # The first input is function data input
             # Modulatory projections are ordered after that
-            # FIXME: It's expected to be a single element array,
-            #        so why is the parameter below a scalar?
 
             # Get the modulation value
-            f_mod_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(idx + 1), ctx.int32_ty(0)])
+            f_mod_ptr = builder.gep(arg_in, [ctx.int32_ty(0),
+                                             ctx.int32_ty(idx + 1)])
 
             # Get name of the modulated parameter
             if afferent.sender.modulation is MULTIPLICATIVE:
@@ -2301,8 +2300,7 @@ class Port_Base(Port):
                 name = None
             elif afferent.sender.modulation is OVERRIDE:
                 # Directly store the value in the output array
-                output_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-                builder.store(builder.load(f_mod_ptr), output_ptr)
+                builder.store(builder.load(f_mod_ptr), arg_out)
                 return builder
             else:
                 assert False, "Unsupported modulation parameter: {}".format(afferent.sender.modulation)
