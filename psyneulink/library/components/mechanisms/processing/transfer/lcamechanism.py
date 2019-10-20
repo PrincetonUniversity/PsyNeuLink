@@ -96,29 +96,33 @@ The key distinguishing features of an LCAMechanism are:
 2. its `matrix <LCAMechanism.matrix>` consisting of `self_excitation <LCAMechanism.self_excitation>` and `competition
 <LCAMechanism.competition>` off diagonal.
 
-In addition to its `primary OutputPort <OutputPort_Primary>` (which contains the current value of the
-elements of the LCAMechanism) and the OutputPorts of a RecurrentTransferMechanism, it has available two additional
-`Standard OutputPorts <OutputPort_Standard>`:
+In addition to its `primary OutputPort <OutputPort_Primary>` (which contains the current `value <Mechanism_Base.value>`
+of the LCAMechanism), it has available the `StandardOutputPorts of a RecurrentTransferMechanism
+<RecurrentTransferMechanism_Standard_OutputPorts>`, it has two additional `Standard OutputPorts <OutputPort_Standard>`:
 
     - `MAX_VS_NEXT <LCAMechanism_MAX_VS_NEXT>`
 
     - `MAX_VS_AVG <LCAMechanism_MAX_VS_AVG>`
 
-Both are two element arrays that track the element of the LCAMechanism with the currently highest value relative
-to the value of the others.
-
+COMMENT:
 The two elements of the `MAX_VS_NEXT <LCAMechanism_MAX_VS_NEXT>` OutputPort contain, respectively, the index of the
 LCAMechanism element with the greatest value, and the difference between its value and the next highest one.
 `MAX_VS_AVG <LCAMechanism_MAX_VS_AVG>` contains the index of the LCAMechanism element with the greatest value,
 and the difference between its  value and the average of all the others.
+COMMENT
+The `value <OutputPort.value>` of the `MAX_VS_NEXT <LCAMechanism_MAX_VS_NEXT>` OutputPort contains the difference
+between the two elements of the LCAMechanism’s `value <Mechanism_Base.value>` with the highest values, and the `value
+<OutputPort.value>` of the `MAX_VS_AVG <LCAMechanism_MAX_VS_AVG>` OutputPort contains the difference between the
+element with the highest value and the average of all the others.
 
-For an LCAMechanism with only two elements, `MAX_VS_NEXT <LCAMechanism_MAX_VS_NEXT>` implements a close approximation
-of the `threshold <DDM.threshold>` parameter of a `DDM` (see `Usher & McClelland,
-2001; <http://psycnet.apa.org/?&fa=main.doiLanding&doi=10.1037/0033-295X.108.3.550>`_ and
-`Bogacz et al (2006) <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_). For an LCAMechanism with more than two
-elements, `MAX_VS_NEXT <LCAMechanism_MAX_VS_NEXT>` and `MAX_VS_AVG <LCAMechanism_MAX_VS_AVG>` implement threshold
-approximations with  different properties (see `McMillen & Holmes,
-2006 <http://www.sciencedirect.com/science/article/pii/S0022249605000891>`_).
+For an LCAMechanism with *exactly* two elements, `MAX_VS_NEXT <LCAMechanism_MAX_VS_NEXT>` implements a close
+approximation of the `threshold <DriftDiffusionIntegrator.threshold>` parameter of the `DriftDiffusionIntegrator`
+Function used by a `DDM` (see `Usher & McClelland, 2001;
+<http://psycnet.apa.org/?&fa=main.doiLanding&doi=10.1037/0033-295X.108.3.550>`_ and `Bogacz et al (2006)
+<https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_). For an LCAMechanism with more than two elements, `MAX_VS_NEXT
+<LCAMechanism_MAX_VS_NEXT>` and `MAX_VS_AVG <LCAMechanism_MAX_VS_AVG>` implement threshold approximations with
+different properties (see `McMillen & Holmes, 2006
+<http://www.sciencedirect.com/science/article/pii/S0022249605000891>`_).
 
 .. _LCAMechanism_Execution:
 
@@ -176,8 +180,10 @@ class LCAMechanism_OUTPUT():
         """
             .. _LCAMechanism_Standard_OutputPorts:
 
-            `Standard OutputPorts <OutputPort_Standard>` for LCAMechanism:
+            An LCAMechanism has the following `Standard OutputPorts <OutputPort_Standard>` in addition to those of a
+            `RecurrentTransferMechanism <RecurrentTransferMechanism_Standard_OutputPorts>`:
 
+            COMMENT:
             .. _LCAMechanism_RESULT:
 
             *RESULT* : 1d np.array
@@ -204,6 +210,7 @@ class LCAMechanism_OUTPUT():
             *ENTROPY* : float
                 the entropy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,
                 calculated using the `Stability` Function using the `ENTROPY <CROSS_ENTROPY>` metric.
+            COMMENT
 
             .. _LCAMechanism_MAX_VS_NEXT:
 
@@ -226,7 +233,7 @@ class LCAMechanism_OUTPUT():
                 other elements
                 COMMENT
                 the difference between the element of the LCAMechanism's `value <Mechanism_Base.value>`
-                and the average of the value of all of the other elements.
+                and the average of all of the other elements.
 
         """
         RESULT=RESULT

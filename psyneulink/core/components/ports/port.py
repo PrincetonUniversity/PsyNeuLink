@@ -26,19 +26,19 @@ used to send ModulatoryProjections), as summarized in the table below:
    +-------------------+----------------------+-----------------------+-----------------+------------------------------+
    | *Port Type*       | *Owner*              |      *Description*    | *Modulated by*  |       *Specification*        |
    +===================+======================+=======================+=================+==============================+
-   | `InputPort`       |  `Mechanism          |receives input from    | `GatingSignal`  |`InputPort` constructor;      |
-   |                   |  <Mechanism>`        |`MappingProjection`    |                 |`Mechanism <Mechanism>`       |
+   | `InputPort`       |  `Mechanism          |receives input from    |`ControlSignal`  |`InputPort` constructor;      |
+   |                   |  <Mechanism>`        |`MappingProjection`    |or `GatingSignal`|`Mechanism <Mechanism>`       |
    |                   |                      |                       |                 |constructor or its            |
    |                   |                      |                       |                 |`add_ports` method            |
    +-------------------+----------------------+-----------------------+-----------------+------------------------------+
-   |`ParameterPort`    |  `Mechanism          |represents parameter   | `LearningSignal`|Implicitly whenever a         |
-   |                   |  <Mechanism>` or     |value for a `Component | and/or          |parameter value is            |
-   |                   |  `Projection         |<Component>`           | `ControlSignal` |`specified                    |
+   |`ParameterPort`    |  `Mechanism          |represents parameter   |`ControlSignal`  |Implicitly whenever a         |
+   |                   |  <Mechanism>` or     |value for a `Component |and/or           |parameter value is            |
+   |                   |  `Projection         |<Component>`           |`LearningSignal` |`specified                    |
    |                   |  <Projection>`       |or its `function       |                 |<ParameterPort_Specification>`|
    |                   |                      |<Component.function>`  |                 |                              |
    +-------------------+----------------------+-----------------------+-----------------+------------------------------+
-   | `OutputPort`      |  `Mechanism          |provides output to     | `GatingSignal`  |`OutputPort` constructor;     |
-   |                   |  <Mechanism>`        |`MappingProjection`    |                 |`Mechanism <Mechanism>`       |
+   | `OutputPort`      |  `Mechanism          |provides output to     |`ControlSignal`  |`OutputPort` constructor;     |
+   |                   |  <Mechanism>`        |`MappingProjection`    |or `GatingSignal`|`Mechanism <Mechanism>`       |
    |                   |                      |                       |                 |constructor or its            |
    |                   |                      |                       |                 |`add_ports` method            |
    +-------------------+----------------------+-----------------------+-----------------+------------------------------+
