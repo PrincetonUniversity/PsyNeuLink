@@ -1125,6 +1125,10 @@ class OptimizationControlMechanism(ControlMechanism):
                 idx = ctx.int32_ty(i)
                 sample_ptr = builder.gep(allocation_sample, [ctx.int32_ty(0), idx])
                 sample_dst = builder.gep(ocm_out, [ctx.int32_ty(0), idx, ctx.int32_ty(0)])
+                if sample_ptr.type != sample_dst.type:
+                    assert len(sample_dst.type.pointee) == 1
+                    sample_dst = builder.gep(sample_dst, [ctx.int32_ty(0),
+                                                          ctx.int32_ty(0)])
                 builder.store(builder.load(sample_ptr), sample_dst)
 
             # Construct input

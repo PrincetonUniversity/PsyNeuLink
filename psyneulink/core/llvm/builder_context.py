@@ -560,7 +560,8 @@ class LLVMBuilderContext:
             exec_learning_f = self.get_llvm_function(composition)
             builder.call(exec_learning_f, [state, params, data_in_ptr, data, cond])
 
-        with pnlvm.helpers.for_loop_zero_inc(builder, builder.load(runs_ptr), "run_loop") as (b, iters):
+        runs = builder.load(runs_ptr, "runs")
+        with pnlvm.helpers.for_loop_zero_inc(builder, runs, "run_loop") as (b, iters):
             # Get the right input stimulus
             input_idx = b.urem(iters, b.load(inputs_ptr))
             data_in_ptr = b.gep(data_in, [input_idx])
