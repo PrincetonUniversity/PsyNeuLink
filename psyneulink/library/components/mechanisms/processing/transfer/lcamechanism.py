@@ -175,6 +175,7 @@ class LCAError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
+
 # This is a convenience class that provides list of standard_output_port names in IDE
 class LCAMechanism_OUTPUT():
         """
