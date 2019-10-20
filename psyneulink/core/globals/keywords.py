@@ -333,6 +333,7 @@ CORRELATION = 'correlation'
 COSINE = 'cosine'
 PEARSON = 'Pearson'
 ENTROPY = 'cross-entropy'
+# ENTROPY = 'entropy'
 CROSS_ENTROPY = 'cross-entropy'
 ENERGY = 'energy'
 
@@ -340,10 +341,6 @@ DISTANCE_METRICS = DistanceMetrics()
 DISTANCE_METRICS_SET = DISTANCE_METRICS._set()
 DISTANCE_METRICS_VALUES = DISTANCE_METRICS._values()
 DISTANCE_METRICS_NAMES = DISTANCE_METRICS._names()
-
-ENERGY = 'energy'
-ENTROPY = 'entropy'
-
 
 # **********************************************************************************************************************
 # ******************************************    CONSTANTS  *************************************************************
@@ -750,11 +747,11 @@ ERROR = 'ERROR'
 
 RESULTS = 'RESULTS'
 RESULT = 'RESULT'
+MECHANISM_VALUE = 'MECHANISM_VALUE'
 OUTPUT_MEAN = 'OUTPUT_MEAN'
 OUTPUT_MEDIAN = 'OUTPUT_MEDIAN'
 OUTPUT_VARIANCE = 'OUTPUT_VARIANCE'
 OUTPUT_STD_DEV = 'OUTPUT_STD_DEV'
-MECHANISM_VALUE = 'MECHANISM_VALUE'
 SIZE = 'size'
 K_VALUE = 'k_value'
 THRESHOLD = 'threshold'
