@@ -311,30 +311,30 @@ class LCAMechanism(RecurrentTransferMechanism):
         COMMENT
 
     leak : value : default 0.5
-        specifies the `rate <LeakyCompetingIntegrator.rate>` on the `LeakyCompetingIntegrator function 
-        <LeakyCompetingIntegrator>`, which scales the contribution of the `LeakyCompetingIntegrator's 
-        <LeakyCompetingIntegrator>` `previous_value <LeakyCompetingIntegrator.previous_value>` to the accumulation of 
-        the `LeakyCompetingIntegrator's value <LeakyCompetingIntegrator.value>` (:math:`x_{i}`) on each time step. 
-        See `LeakyCompetingIntegrator <LeakyCompetingIntegrator>` for more details on what the 
+        specifies the `rate <LeakyCompetingIntegrator.rate>` on the `LeakyCompetingIntegrator function
+        <LeakyCompetingIntegrator>`, which scales the contribution of the `LeakyCompetingIntegrator's
+        <LeakyCompetingIntegrator>` `previous_value <LeakyCompetingIntegrator.previous_value>` to the accumulation of
+        the `LeakyCompetingIntegrator's value <LeakyCompetingIntegrator.value>` (:math:`x_{i}`) on each time step.
+        See `LeakyCompetingIntegrator <LeakyCompetingIntegrator>` for more details on what the
         `LeakyCompetingIntegrator function  <LeakyCompetingIntegrator>` computes.
 
     competition : value : default 1.0
         specifies the magnitude of the off-diagonal terms in the LCAMechanism's recurrent projection, thereby scaling
         the contributions of the competing unit (all :math:`f(x)_{j}` where :math:`j \\neq i`) to the accumulation of
-        the `LeakyCompetingIntegrator's value <LeakyCompetingIntegrator.value>` (:math:`x_{i}`) on each time step 
-        (see `LeakyCompetingIntegrator <LeakyCompetingIntegrator>` for more details on what the 
+        the `LeakyCompetingIntegrator's value <LeakyCompetingIntegrator.value>` (:math:`x_{i}`) on each time step
+        (see `LeakyCompetingIntegrator <LeakyCompetingIntegrator>` for more details on what the
         `LeakyCompetingIntegrator function  <LeakyCompetingIntegrator>` computes).
 
     self_excitation : value : default 0.0
-        specifies the diagonal terms in the LCAMechanism's recurrent projection, thereby scaling the contributions of 
-        each unit's own recurrent value (:math:`f(x)_{i}`) to the accumulation of the `LeakyCompetingIntegrator's 
-        value <LeakyCompetingIntegrator.value>` (:math:`x_{i}`) on each time step. See `LeakyCompetingIntegrator 
-        <LeakyCompetingIntegrator>` for more details on what the `LeakyCompetingIntegrator function  
+        specifies the diagonal terms in the LCAMechanism's recurrent projection, thereby scaling the contributions of
+        each unit's own recurrent value (:math:`f(x)_{i}`) to the accumulation of the `LeakyCompetingIntegrator's
+        value <LeakyCompetingIntegrator.value>` (:math:`x_{i}`) on each time step. See `LeakyCompetingIntegrator
+        <LeakyCompetingIntegrator>` for more details on what the `LeakyCompetingIntegrator function
         <LeakyCompetingIntegrator>` computes.
 
     noise : float or function : default 0.0
-        specifies value added to the result of the `function <LCAMechanism.function>` or to the result of 
-        `integrator_function <LCAMechanism.integrator_function>`, depending on whether `integrator_mode 
+        specifies value added to the result of the `function <LCAMechanism.function>` or to the result of
+        `integrator_function <LCAMechanism.integrator_function>`, depending on whether `integrator_mode
         <LCAMechanism.integrator_mode>` is True or False (see `noise <LCAMechanism.noise>` for more details).
 
     integrator_mode : boolean : default True
@@ -342,9 +342,9 @@ class LCAMechanism(RecurrentTransferMechanism):
         (see `integrator_mode <LCAMechanism.integrator_mode>` for more details).
 
     time_step_size : float : default 0.1
-        specifies the time_step_size used by the mechanism's `integrator_function <LCAMechanism.integrator_function>`. 
+        specifies the time_step_size used by the mechanism's `integrator_function <LCAMechanism.integrator_function>`.
         (see `integrator_mode <LCAMechanism.integrator_mode>` for more details).
-        
+
     threshold : float or None : default None
         specifes the value at which the Mechanism's `is_finished` attribute is set to True (see `threshold
         <LCAMechanism.threshold>` for more details).
@@ -357,9 +357,9 @@ class LCAMechanism(RecurrentTransferMechanism):
         <LCAMechanism.threshold_criterion>` for additional details).
 
     clip : list [float, float] : default None (Optional)
-        specifies the allowable range for the result of `function <LCAMechanism.function>` the item in index 0 specifies 
+        specifies the allowable range for the result of `function <LCAMechanism.function>` the item in index 0 specifies
         the minimum allowable value of the result, and the item in index 1 specifies the maximum allowable value; any
-        element of the result that exceeds the specified minimum or maximum value is set to the value of `clip 
+        element of the result that exceeds the specified minimum or maximum value is set to the value of `clip
         <LCAMechanism.clip>` that it exceeds.
 
     params : Dict[param keyword: param value] : default None
@@ -371,7 +371,7 @@ class LCAMechanism(RecurrentTransferMechanism):
         specifies the name of the LCAMechanism Mechanism.
 
     prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the LCAMechanism Mechanism (see `prefs <LCAMechanism Mechanism.prefs>` for 
+        specifies the `PreferenceSet` for the LCAMechanism Mechanism (see `prefs <LCAMechanism Mechanism.prefs>` for
         details).
 
     context : str : default ''componentType+INITIALIZNG''
@@ -466,9 +466,9 @@ class LCAMechanism(RecurrentTransferMechanism):
             then the noise will simply be an offset that remains the same across all executions.
 
     time_step_size : float : default 0.1
-        determines the time_step_size used by the Mechanism's `integrator_function <LCAMechanism.integrator_function>`. 
+        determines the time_step_size used by the Mechanism's `integrator_function <LCAMechanism.integrator_function>`.
         (see `integrator_mode <LCAMechanism.integrator_mode>` for more details).
-        
+
     threshold : float or None
         determines the `value <Mechanism_Base.value>` at which the Mechanism's `is_finished` attribute is set to True.
         If threshold is None, `is_finished` is never set to True.  If it is a float, then the value specified by
@@ -483,6 +483,15 @@ class LCAMechanism(RecurrentTransferMechanism):
         `value <OutputPort.value>` of the corresponding OutputPort exceeds the value of `threshold
         <LCAMechanism.threshold>`; and if threshold_criterion is a str or an int, then the OutputPort specified by
         that name or index, respectively is used.
+
+    time_step_size : float : default 0.1
+        determines the time_step_size used by the Mechanism's `integrator_function <LCAMechanism.integrator_function>`.
+        (see `integrator_mode <LCAMechanism.integrator_mode>` for more details).
+
+    threshold : float or None
+        determines the `value <LCAMechanism.value>` at which the Mechanism's `is_finished` attribute is set to True.
+        If it is None, it is never set to True.  If it is a float, then whenver any element of the Mechanism's
+        `value <LCAMechanism.value>` exceeds threshold, `is_finished` is set to True.
 
     clip : list [float, float] : default None (Optional)
         specifies the allowable range for the result of `function <LCAMechanism.function>`
