@@ -640,11 +640,6 @@ class LCAMechanism(RecurrentTransferMechanism):
         if output_ports is None or output_ports is RESULT:
             output_ports = [RESULT]
 
-        if matrix is not None:
-            warnings.warn("Matrix arg for LCAMechanism is not used; "
-                          "matrix was assigned using self_excitation and competition args")
-        # matrix = np.full((size[0], size[0]), -inhibition) * get_matrix(HOLLOW_MATRIX,size[0],size[0])
-
         if competition is not None and hetero is not None:
             if competition != -1.0 * hetero:
                 raise LCAError(
@@ -695,6 +690,12 @@ class LCAMechanism(RecurrentTransferMechanism):
                          name=name,
                          prefs=prefs,
                          **kwargs)
+
+        # Do this here so that name of the object (assigned by super) can be used in the warning message
+        if matrix is not None:
+            warnings.warn(f"The 'matrix' arg was specified for {self.name} but will not be used; "
+                          f"the matrix for an {self.__class__.__name__} is specified using "
+                          f"the 'self_excitation' and 'competition' args.")
 
     def _instantiate_output_ports(self, context=None):
 

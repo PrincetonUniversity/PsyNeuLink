@@ -64,8 +64,7 @@ class TestLCA:
 
     def test_LCAMechanism_length_2(self):
 
-        T = TransferMechanism(function=Linear(slope=1.0),
-                              size=2)
+        T = TransferMechanism(function=Linear(slope=1.0), size=2)
         L = LCAMechanism(function=Linear(slope=2.0),
                          size=2,
                          self_excitation=3.0,
