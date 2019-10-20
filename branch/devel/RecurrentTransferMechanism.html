@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>RecurrentTransferMechanism &mdash; PsyNeuLink 0.7.0.0+15.g22d3a21 documentation</title>
+  <title>RecurrentTransferMechanism &mdash; PsyNeuLink 0.7.0.0+16.gabf7cea documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.0.0+15.g22d3a21',
+              VERSION:'0.7.0.0+16.gabf7cea',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.7.0.0+15
+                0.7.0.0+16
               </div>
             
           
@@ -302,30 +302,28 @@ RecurrentTransferMechanism executes.</p>
 <dl class="class">
 <dt id="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RECURRENT_OUTPUT">
 <em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.</code><code class="descname">RECURRENT_OUTPUT</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RECURRENT_OUTPUT" title="Permalink to this definition">¶</a></dt>
-<dd><p id="recurrenttransfermechanism-standard-outputports"><a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPorts</span></a> for
-<a class="reference internal" href="#"><span class="doc">RecurrentTransferMechanism</span></a></p>
-<dl class="docutils">
+<dd><p id="recurrenttransfermechanism-standard-outputports"><a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPorts</span></a> for <a class="reference internal" href="#"><span class="doc">RecurrentTransferMechanism</span></a>:</p>
+<dl class="docutils" id="recurrent-transfer-result">
 <dt><em>RESULT</em> <span class="classifier-delimiter">:</span> <span class="classifier">1d np.array</span></dt>
-<dd>the result of the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.function" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
-of the Mechanism</dd>
+<dd>the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</dd>
 </dl>
-<dl class="docutils">
+<dl class="docutils" id="lcamechanism-mean">
 <dt><em>OUTPUT_MEAN</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
-<dd>the mean of the result</dd>
+<dd>the mean of the elements in the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>;.</dd>
+</dl>
+<dl class="docutils" id="lcamechanism-variance">
 <dt><em>OUTPUT_VARIANCE</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
-<dd>the variance of the result</dd>
+<dd>the variance of the elements in the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>;.</dd>
 </dl>
-<dl class="docutils">
+<dl class="docutils" id="lcamechanism-energy">
 <dt><em>ENERGY</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
-<dd>the energy of the result, which is calculated using the <code class="xref any docutils literal"><span class="pre">Stability</span>
-<span class="pre">Function</span></code> with the <code class="docutils literal"><span class="pre">ENERGY</span></code> metric</dd>
+<dd>the energy of the elements in the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>,
+calculated using the <a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Stability" title="psyneulink.core.components.functions.objectivefunctions.Stability"><code class="xref any py py-class docutils literal"><span class="pre">Stability</span></code></a> Function using the <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics.ENERGY" title="psyneulink.core.globals.keywords.DistanceMetrics.ENERGY"><code class="xref any py py-attr docutils literal"><span class="pre">ENERGY</span></code></a> metric.</dd>
 </dl>
-<dl class="docutils">
+<dl class="docutils" id="lcamechanism-entropy">
 <dt><em>ENTROPY</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
-<dd>The entropy of the result, which is calculated using the <code class="xref any docutils literal"><span class="pre">Stability</span>
-<span class="pre">Function</span></code> with the ENTROPY metric
-(Note: this is only present if the Mechanism’s <a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is bounded
-between 0 and 1 (e.g. the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function)).</dd>
+<dd>the entropy of the elements in the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>,
+calculated using the <a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Stability" title="psyneulink.core.components.functions.objectivefunctions.Stability"><code class="xref any py py-class docutils literal"><span class="pre">Stability</span></code></a> Function using the <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics.CROSS_ENTROPY" title="psyneulink.core.globals.keywords.DistanceMetrics.CROSS_ENTROPY"><code class="xref any py py-attr docutils literal"><span class="pre">ENTROPY</span></code></a> metric.</dd>
 </dl>
 </dd></dl>
 
@@ -697,7 +695,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 </table>
 <dl class="method">
 <dt id="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.configure_learning">
-<code class="descname">configure_learning</code><span class="sig-paren">(</span><em>learning_function: &lt;typecheck.framework.optional object at 0x11ab21550&gt; = None</em>, <em>learning_rate: &lt;typecheck.framework.optional object at 0x11ab215f8&gt; = None</em>, <em>learning_condition: &lt;typecheck.tc_predicates.any object at 0x11ab21748&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.configure_learning" title="Permalink to this definition">¶</a></dt>
+<code class="descname">configure_learning</code><span class="sig-paren">(</span><em>learning_function: &lt;typecheck.framework.optional object at 0x1158f95c0&gt; = None</em>, <em>learning_rate: &lt;typecheck.framework.optional object at 0x1158f9668&gt; = None</em>, <em>learning_condition: &lt;typecheck.tc_predicates.any object at 0x1158f97b8&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.configure_learning" title="Permalink to this definition">¶</a></dt>
 <dd><p>Provide user-accessible-interface to _instantiate_learning_mechanism</p>
 <p>Configure RecurrentTransferMechanism for learning. Creates the following Components:</p>
 <ul class="simple">

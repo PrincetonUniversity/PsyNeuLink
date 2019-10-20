@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCAMechanism &mdash; PsyNeuLink 0.7.0.0+15.g22d3a21 documentation</title>
+  <title>LCAMechanism &mdash; PsyNeuLink 0.7.0.0+16.gabf7cea documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.0.0+15.g22d3a21',
+              VERSION:'0.7.0.0+16.gabf7cea',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.7.0.0+15
+                0.7.0.0+16
               </div>
             
           
@@ -238,28 +238,21 @@ first execution, <em>initial_value</em> sets previous_value.</p>
 <p>1. its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.integrator_function" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a>, which implements the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">LeakyCompetingIntegrator</span></code></a>.
 (Note that a standard <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> would implement the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AdaptiveIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AdaptiveIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">AdaptiveIntegrator</span></code></a> as its <code class="xref any docutils literal"><span class="pre">integrator_function</span></code>)</p>
 <p>2. its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.matrix" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> consisting of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation"><code class="xref any py py-attr docutils literal"><span class="pre">self_excitation</span></code></a> and <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.competition" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.competition"><code class="xref any py py-attr docutils literal"><span class="pre">competition</span></code></a> off diagonal.</p>
-<p>In addition to its <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> (which contains the current value of the
-elements of the LCAMechanism) and the OutputPorts of a RecurrentTransferMechanism, it has available two additional
-<a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPorts</span></a>:</p>
+<p>In addition to its <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> (which contains the current <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
+of the LCAMechanism), it has available the <a class="reference internal" href="RecurrentTransferMechanism.html#recurrenttransfermechanism-standard-outputports"><span class="std std-ref">StandardOutputPorts of a RecurrentTransferMechanism</span></a>, it has two additional <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPorts</span></a>:</p>
 <blockquote>
 <div><ul class="simple">
 <li><a class="reference internal" href="#lcamechanism-max-vs-next"><span class="std std-ref">MAX_VS_NEXT</span></a></li>
 <li><a class="reference internal" href="#lcamechanism-max-vs-avg"><span class="std std-ref">MAX_VS_AVG</span></a></li>
 </ul>
 </div></blockquote>
-<p>Both are two element arrays that track the element of the LCAMechanism with the currently highest value relative
-to the value of the others.</p>
-<p>The two elements of the <a class="reference internal" href="#lcamechanism-max-vs-next"><span class="std std-ref">MAX_VS_NEXT</span></a> OutputPort contain, respectively, the index of the
-LCAMechanism element with the greatest value, and the difference between its value and the next highest one.
-<a class="reference internal" href="#lcamechanism-max-vs-avg"><span class="std std-ref">MAX_VS_AVG</span></a> contains the index of the LCAMechanism element with the greatest value,
-and the difference between its  value and the average of all the others.</p>
-<p>For an LCAMechanism with only two elements, <a class="reference internal" href="#lcamechanism-max-vs-next"><span class="std std-ref">MAX_VS_NEXT</span></a> implements a close approximation
-of the <code class="xref any docutils literal"><span class="pre">threshold</span></code> parameter of a <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a> (see <a class="reference external" href="http://psycnet.apa.org/?&amp;fa=main.doiLanding&amp;doi=10.1037/0033-295X.108.3.550">Usher &amp; McClelland,
-2001;</a> and
-<a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/17014301">Bogacz et al (2006)</a>). For an LCAMechanism with more than two
-elements, <a class="reference internal" href="#lcamechanism-max-vs-next"><span class="std std-ref">MAX_VS_NEXT</span></a> and <a class="reference internal" href="#lcamechanism-max-vs-avg"><span class="std std-ref">MAX_VS_AVG</span></a> implement threshold
-approximations with  different properties (see <a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S0022249605000891">McMillen &amp; Holmes,
-2006</a>).</p>
+<p>The <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the <a class="reference internal" href="#lcamechanism-max-vs-next"><span class="std std-ref">MAX_VS_NEXT</span></a> OutputPort contains the difference
+between the two elements of the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> with the highest values, and the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the <a class="reference internal" href="#lcamechanism-max-vs-avg"><span class="std std-ref">MAX_VS_AVG</span></a> OutputPort contains the difference between the
+element with the highest value and the average of all the others.</p>
+<p>For an LCAMechanism with <em>exactly</em> two elements, <a class="reference internal" href="#lcamechanism-max-vs-next"><span class="std std-ref">MAX_VS_NEXT</span></a> implements a close
+approximation of the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator.threshold" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> parameter of the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">DriftDiffusionIntegrator</span></code></a>
+Function used by a <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a> (see <a class="reference external" href="http://psycnet.apa.org/?&amp;fa=main.doiLanding&amp;doi=10.1037/0033-295X.108.3.550">Usher &amp; McClelland, 2001;</a> and <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/17014301">Bogacz et al (2006)</a>). For an LCAMechanism with more than two elements, <a class="reference internal" href="#lcamechanism-max-vs-next"><span class="std std-ref">MAX_VS_NEXT</span></a> and <a class="reference internal" href="#lcamechanism-max-vs-avg"><span class="std std-ref">MAX_VS_AVG</span></a> implement threshold approximations with
+different properties (see <a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S0022249605000891">McMillen &amp; Holmes, 2006</a>).</p>
 </div>
 <div class="section" id="execution">
 <span id="lcamechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
@@ -269,14 +262,14 @@ approximations with  different properties (see <a class="reference external" hre
 <span id="lcamechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism">
-<em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.</code><code class="descname">LCAMechanism</code><span class="sig-paren">(</span><em>                                  default_variable=None,                     size=None,                                 function=Logistic,                         initial_value=None,                        leak=0.5,                                  competition=1.0,                           self_excitation=0.0,                       noise=0.0,                                 integrator_mode = True                     time_step_size = 0.1                       threshold = None                           clip=[float:min, float:max],               params=None,                               name=None,                                 prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.</code><code class="descname">LCAMechanism</code><span class="sig-paren">(</span><em>                                  default_variable=None,                     size=None,                                 function=Logistic,                         initial_value=None,                        leak=0.5,                                  competition=1.0,                           self_excitation=0.0,                       noise=0.0,                                 integrator_mode = True                     time_step_size = 0.1                       threshold = None                           threshold_criterion = VALUE                clip=[float:min, float:max],               params=None,                               name=None,                                 prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> that implements a Leaky Competitive Accumulator.</p>
 <p>The key distinguishing features of an LCAMechanism are:</p>
 <ol class="arabic simple">
 <li>its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.integrator_function" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a>, which implements the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">LeakyCompetingIntegrator</span></code></a>
 (where <em>rate</em> = <em>leak</em>)</li>
-<li>its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.matrix" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> consisting of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation"><code class="xref any py py-attr docutils literal"><span class="pre">self_excitation</span></code></a> and
-<a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.competition" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.competition"><code class="xref any py py-attr docutils literal"><span class="pre">competition</span></code></a> off diagonal.</li>
+<li>its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.matrix" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>, consisting of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation"><code class="xref any py py-attr docutils literal"><span class="pre">self_excitation</span></code></a> (diagonal)
+and <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.competition" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.competition"><code class="xref any py py-attr docutils literal"><span class="pre">competition</span></code></a> (off diagonal) components.</li>
 </ol>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -518,29 +511,8 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 <dl class="class">
 <dt id="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism_OUTPUT">
 <em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.</code><code class="descname">LCAMechanism_OUTPUT</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism_OUTPUT" title="Permalink to this definition">¶</a></dt>
-<dd><p id="lcamechanism-standard-outputports"><a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPorts</span></a> for LCAMechanism:</p>
-<dl class="docutils" id="lcamechanism-result">
-<dt><em>RESULT</em> <span class="classifier-delimiter">:</span> <span class="classifier">1d np.array</span></dt>
-<dd>the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</dd>
-</dl>
-<dl class="docutils" id="lcamechanism-mean">
-<dt><em>OUTPUT_MEAN</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
-<dd>the mean of the elements in the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>;.</dd>
-</dl>
-<dl class="docutils" id="lcamechanism-variance">
-<dt><em>OUTPUT_VARIANCE</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
-<dd>the variance of the elements in the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>;.</dd>
-</dl>
-<dl class="docutils" id="lcamechanism-energy">
-<dt><em>ENERGY</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
-<dd>the energy of the elements in the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>,
-calculated using the <a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Stability" title="psyneulink.core.components.functions.objectivefunctions.Stability"><code class="xref any py py-class docutils literal"><span class="pre">Stability</span></code></a> Function using the <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics.ENERGY" title="psyneulink.core.globals.keywords.DistanceMetrics.ENERGY"><code class="xref any py py-attr docutils literal"><span class="pre">ENERGY</span></code></a> metric.</dd>
-</dl>
-<dl class="docutils" id="lcamechanism-entropy">
-<dt><em>ENTROPY</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
-<dd>the entropy of the elements in the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>,
-calculated using the <a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Stability" title="psyneulink.core.components.functions.objectivefunctions.Stability"><code class="xref any py py-class docutils literal"><span class="pre">Stability</span></code></a> Function using the <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics.CROSS_ENTROPY" title="psyneulink.core.globals.keywords.DistanceMetrics.CROSS_ENTROPY"><code class="xref any py py-attr docutils literal"><span class="pre">ENTROPY</span></code></a> metric.</dd>
-</dl>
+<dd><p id="lcamechanism-standard-outputports">An LCAMechanism has the following <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPorts</span></a> in addition to those of a
+<a class="reference internal" href="RecurrentTransferMechanism.html#recurrenttransfermechanism-standard-outputports"><span class="std std-ref">RecurrentTransferMechanism</span></a>:</p>
 <dl class="docutils" id="lcamechanism-max-vs-next">
 <dt><em>MAX_VS_NEXT</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
 <dd>the difference between the two elements of the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
@@ -549,7 +521,7 @@ with the highest values.</dd>
 <dl class="docutils" id="lcamechanism-max-vs-avg">
 <dt><em>MAX_VS_AVG</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
 <dd>the difference between the element of the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
-and the average of the value of all of the other elements.</dd>
+and the average of all of the other elements.</dd>
 </dl>
 </dd></dl>
 
