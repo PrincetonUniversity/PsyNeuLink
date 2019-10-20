@@ -22,9 +22,12 @@ Sections
 Overview
 --------
 The DDM Mechanism implements the "Drift Diffusion Model" (also know as the Diffusion Decision, Accumulation to Bound,
-Linear IntegratorFunction, and Wiener Process First Passage Time Model [REFS]). This corresponds to a continuous version
-of the sequential probability ratio test (SPRT [REF]), that is the statistically optimal procedure for two alternative
-forced choice (TAFC) decision making ([REF]).
+Linear IntegratorFunction, and `First Passage Time Model <https://en.wikipedia.org/wiki/First-hitting-time_model>`_
+for a `Wiener Process <https://en.wikipedia.org/wiki/Wiener_process>`_. This corresponds to a continuous version
+of the `sequential probability ratio test (SPRT) <https://en.wikipedia.org/wiki/Sequential_probability_ratio_test>`_,
+that is the statistically optimal procedure for `two alternative forced choice (TAFC) decision making
+<https://en.wikipedia.org/wiki/Two-alternative_forced_choice>`_ (see `drift-diffusion model
+<https://en.wikipedia.org/wiki/Two-alternative_forced_choice#Drift-diffusion_model>`_ in partciular).
 
 The DDM Mechanism may be constructed with a choice of several functions that fall into to general categories: analytic
 solutions and path integration (see `DDM_Modes` below for more about these options.)
