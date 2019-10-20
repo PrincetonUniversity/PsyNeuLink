@@ -461,7 +461,7 @@ class TRANSFER_OUTPUT():
 
 # THE FOLLOWING WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
 # for item in [item[NAME] for item in DDM_standard_output_ports]:
-#     setattr(DDM_OUTPUT.__class__, item, item)
+#     setattr(TRANSFER_OUTPUT.__class__, item, item)
 
 class TransferError(Exception):
     def __init__(self, error_value):
