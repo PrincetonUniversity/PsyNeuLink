@@ -162,7 +162,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferMechanism
 
-__all__ = ['LCAMechanism', 'LCAMechanism_OUTPUT', 'LCAError']
+__all__ = ['LCAMechanism', 'LCAMechanism_OUTPUT', 'LCAError', 'MAX_VS_NEXT', 'MAX_VS_AVG']
 
 
 logger = logging.getLogger(__name__)
@@ -174,6 +174,10 @@ class LCAError(Exception):
 
     def __str__(self):
         return repr(self.error_value)
+
+
+MAX_VS_NEXT = 'MAX_VS_NEXT'
+MAX_VS_AVG = 'MAX_VS_AVG'
 
 
 # This is a convenience class that provides list of standard_output_port names in IDE

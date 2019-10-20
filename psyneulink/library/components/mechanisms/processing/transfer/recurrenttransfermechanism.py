@@ -200,8 +200,10 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import PRIMARY, StandardOutputPorts
 from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.ports.port import _instantiate_port
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_PORT, MATRIX, MAX_ABS_DIFF, NAME, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT
+from psyneulink.core.globals.context import handle_external_context
+from psyneulink.core.globals.keywords import \
+    AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_PORT, MATRIX, MAX_ABS_DIFF, NAME, \
+    OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, RECURRENT_TRANSFER_MECHANISM, RESULT
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.registry import register_instance, remove_instance_from_registry
@@ -236,6 +238,11 @@ class RecurrentTransferError(Exception):
 
     def __str__(self):
         return repr(self.error_value)
+
+
+ENERGY = 'ENERGY'
+ENTROPY = 'ENTROPY'
+
 
 # This is a convenience class that provides list of standard_output_port names in IDE
 class RECURRENT_OUTPUT():
