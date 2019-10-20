@@ -133,9 +133,6 @@ class TestLCA:
 
     def test_LCAMechanism_threshold_with_max_vs_next(self):
         m = LCAMechanism(size=3, threshold=0.1, threshold_criterion=MAX_VS_NEXT)
-        # m = LCAMechanism(size=3, threshold=0.1, threshold_criterion=MAX_VS_NEXT)
-        # m = LCAMechanism(size=3, threshold=0.1, matrix = [[0,-1,-1],[-1,0,-1],[0,0,-1]],
-        #                                                    threshold_criterion=MAX_VS_NEXT)
         r = ProcessingMechanism(size=3)
         comp = Composition()
         comp.add_linear_processing_pathway([m,r])
