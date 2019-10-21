@@ -541,12 +541,6 @@ class LLVMBuilderContext:
             builder.store(data_in.type.pointee(input_init), data_in)
             builder.store(inputs_ptr.type.pointee(1), inputs_ptr)
 
-        if "force_runs" in debug_env:
-            num = int(debug_env["force_runs"]) if debug_env["force_runs"] else 1
-            print("Forcing number of runs to: ", num)
-            runs_ptr = builder.alloca(runs_ptr.type.pointee)
-            builder.store(runs_ptr.type.pointee(num), runs_ptr)
-
         # Allocate and initialize condition structure
         cond_gen = ConditionGenerator(self, composition)
         cond_type = cond_gen.get_condition_struct_type()
