@@ -48,10 +48,9 @@ def test_basic(func, variable, params, expected, benchmark):
     benchmark.group = GROUP_PREFIX + func.componentName
     f(variable)
     f(variable)
-    res = benchmark(f, variable)
-    # This is rather hacky. it might break with pytest benchmark update
-    iterations = 3 if benchmark.disabled else benchmark.stats.stats.rounds + 2
-    assert np.allclose(res, expected(f.initializer, variable, iterations, **params))
+    res = f(variable)
+    assert np.allclose(res, expected(f.initializer, variable, 3, **params))
+    benchmark(f, variable)
 
 
 @pytest.mark.llvm
@@ -65,10 +64,9 @@ def test_llvm(func, variable, params, expected, benchmark):
     m = pnlvm.execution.FuncExecution(f)
     m.execute(variable)
     m.execute(variable)
-    res = benchmark(m.execute, variable)
-    # This is rather hacky. it might break with pytest benchmark update
-    iterations = 3 if benchmark.disabled else benchmark.stats.stats.rounds + 2
-    assert np.allclose(res, expected(f.initializer, variable, iterations, **params))
+    res = m.execute(variable)
+    assert np.allclose(res, expected(f.initializer, variable, 3, **params))
+    benchmark(m.execute, variable)
 
 @pytest.mark.llvm
 @pytest.mark.cuda
@@ -82,10 +80,9 @@ def test_ptx_cuda(func, variable, params, expected, benchmark):
     m = pnlvm.execution.FuncExecution(f)
     m.cuda_execute(variable)
     m.cuda_execute(variable)
-    res = benchmark(m.cuda_execute, variable)
-    # This is rather hacky. it might break with pytest benchmark update
-    iterations = 3 if benchmark.disabled else benchmark.stats.stats.rounds + 2
-    assert np.allclose(res, expected(f.initializer, variable, iterations, **params))
+    res = m.cuda_execute(variable)
+    assert np.allclose(res, expected(f.initializer, variable, 3, **params))
+    benchmark(m.cuda_execute, variable)
 
 def test_integrator_function_no_default_variable_and_params_len_more_than_1():
     I = AdaptiveIntegrator(rate=[.1, .2, .3])
