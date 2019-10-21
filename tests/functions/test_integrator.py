@@ -16,6 +16,12 @@ RAND0_1 = np.random.random()
 RAND2 = np.random.rand()
 RAND3 = np.random.rand()
 
+def SimpleIntFun(init, value, iterations, rate, noise, offset, **kwargs):
+    val = np.full_like(value, init)
+    for i in range(iterations):
+        val = val + (rate * value) + noise + offset
+    return val
+
 def AdaptiveIntFun(init, value, iterations, rate, noise, offset, **kwargs):
     val = np.full_like(value, init)
     for i in range(iterations):
@@ -27,6 +33,10 @@ test_data = [
     (Functions.AdaptiveIntegrator, test_var, {'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}, AdaptiveIntFun),
     (Functions.AdaptiveIntegrator, test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':RAND2, 'offset':RAND3}, AdaptiveIntFun),
     (Functions.AdaptiveIntegrator, test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}, AdaptiveIntFun),
+    (Functions.SimpleIntegrator, test_var, {'rate':RAND0_1, 'noise':RAND2, 'offset':RAND3}, SimpleIntFun),
+    (Functions.SimpleIntegrator, test_var, {'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}, SimpleIntFun),
+    (Functions.SimpleIntegrator, test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':RAND2, 'offset':RAND3}, SimpleIntFun),
+    (Functions.SimpleIntegrator, test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}, SimpleIntFun),
 ]
 
 # use list, naming function produces ugly names
@@ -35,6 +45,10 @@ names = [
     "AdaptiveIntegrator Noise Array",
     "AdaptiveIntegrator Initializer",
     "AdaptiveIntegrator Initializer Noise Array",
+    "SimpleIntegrator",
+    "SimpleIntegrator Noise Array",
+    "SimpleIntegrator Initializer",
+    "SimpleIntegrator Initializer Noise Array",
 ]
 
 GROUP_PREFIX="IntegratorFunction "
