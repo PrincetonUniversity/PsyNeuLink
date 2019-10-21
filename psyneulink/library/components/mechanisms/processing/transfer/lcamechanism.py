@@ -778,4 +778,6 @@ class LCAMechanism(RecurrentTransferMechanism):
                     )
                 )
                 return True
-        return False
+            return False
+
+        return True

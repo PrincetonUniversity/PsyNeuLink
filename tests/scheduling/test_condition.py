@@ -676,6 +676,9 @@ class TestCondition:
         termination_conds[TimeScale.TRIAL] = WhenFinishedAny()
         output = []
         i = 0
+        A._is_finished = False
+        B._is_finished = False
+        C._is_finished = False
         for step in sched.run(termination_conds=termination_conds):
             if i == 3:
                 A._is_finished = True
@@ -761,6 +764,10 @@ class TestCondition:
         termination_conds[TimeScale.TRIAL] = WhenFinishedAll()
         output = []
         i = 0
+        A._is_finished = False
+        B._is_finished = False
+        C._is_finished = False
+
         for step in sched.run(termination_conds=termination_conds):
             if i == 3:
                 A._is_finished = True
