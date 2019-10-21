@@ -379,6 +379,13 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 
         return builder
 
+    def _gen_llvm_load_param(self, ctx, builder, params, index, param):
+        param_p = ctx.get_param_ptr(self, builder, params, param)
+        if isinstance(param_p.type.pointee, pnlvm.ir.ArrayType) and param_p.type.pointee.count > 1:
+            param_p = builder.gep(param_p, [ctx.int32_ty(0), index])
+        return pnlvm.helpers.load_extract_scalar_array_one(builder, param_p)
+
+
 
 # *********************************************** INTEGRATOR FUNCTIONS *************************************************
 
@@ -887,19 +894,9 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         return self.convert_output_type(adjusted_value)
 
     def _gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
-        rate_p = ctx.get_param_ptr(self, builder, params, RATE)
-        offset_p = ctx.get_param_ptr(self, builder, params, OFFSET)
-        noise_p = ctx.get_param_ptr(self, builder, params, NOISE)
-
-        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_p)
-
-        if isinstance(rate_p.type.pointee, pnlvm.ir.ArrayType) and rate_p.type.pointee.count > 1:
-            rate_p = builder.gep(rate_p, [ctx.int32_ty(0), index])
-        rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_p)
-
-        if isinstance(noise_p.type.pointee, pnlvm.ir.ArrayType) and noise_p.type.pointee.count > 1:
-            noise_p = builder.gep(noise_p, [ctx.int32_ty(0), index])
-        noise = pnlvm.helpers.load_extract_scalar_array_one(builder, noise_p)
+        rate = self._gen_llvm_load_param(ctx, builder, params, index, RATE)
+        noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE)
+        offset = self._gen_llvm_load_param(ctx, builder, params, index, OFFSET)
 
         # Get the only context member -- previous value
         prev_ptr = ctx.get_state_ptr(self, builder, state, "previous_value")
@@ -1169,19 +1166,9 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
             raise FunctionError(rate_value_msg.format(rate, self.name))
 
     def _gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
-        rate_p = ctx.get_param_ptr(self, builder, params, RATE)
-        offset_p = ctx.get_param_ptr(self, builder, params, OFFSET)
-        noise_p = ctx.get_param_ptr(self, builder, params, NOISE)
-
-        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_p)
-
-        if isinstance(rate_p.type.pointee, pnlvm.ir.ArrayType) and rate_p.type.pointee.count > 1:
-            rate_p = builder.gep(rate_p, [ctx.int32_ty(0), index])
-        rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_p)
-
-        if isinstance(noise_p.type.pointee, pnlvm.ir.ArrayType) and noise_p.type.pointee.count > 1:
-            noise_p = builder.gep(noise_p, [ctx.int32_ty(0), index])
-        noise = pnlvm.helpers.load_extract_scalar_array_one(builder, noise_p)
+        rate = self._gen_llvm_load_param(ctx, builder, params, index, RATE)
+        noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE)
+        offset = self._gen_llvm_load_param(ctx, builder, params, index, OFFSET)
 
         # Get the only context member -- previous value
         prev_ptr = ctx.get_state_ptr(self, builder, state, "previous_value")
