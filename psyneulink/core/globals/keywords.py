@@ -268,11 +268,11 @@ class DistanceMetrics:
         :math:`d = \\max(|a_1-a_2|)`
 
     DIFFERENCE
-        (can also be referenced as L0)\n
+        (can also be referenced as *L0*)\n
         :math:`d = \\sum\\limits^{len}(|a_1-a_2|)`
 
     EUCLIDEAN
-        (can also be referenced as L1)\n
+        (can also be referenced as *L1*)\n
         :math:`d = \\sum\\limits^{len}\\sqrt{(a_1-a_2)^2}`
 
     COSINE
@@ -282,12 +282,8 @@ class DistanceMetrics:
         :math:`d = 1 - \\left|\\frac{\\sum\\limits^{len}(a_1-\\bar{a}_1)(a_2-\\bar{a}_2)}{(len-1)\\sigma_{a_1}\\sigma_{
         a_2}}\\right|`
 
-    COMMENT:
-    PEARSON
-        <Description>
-    COMMENT
-
-    ENTROPY and CROSS_ENTROPY
+    CROSS_ENTROPY
+        (can also be referenced as *ENTROPY*)\n
         :math:`d = \\sum\\limits^{len}a_1log(a_2)`
 
     ENERGY:

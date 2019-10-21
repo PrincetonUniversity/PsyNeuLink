@@ -1237,6 +1237,14 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     param = [param]
             except AttributeError:
                 pass
+            try:
+                # Modulated parameters change shape to array
+                modulations = (p.sender.modulation for p in self.owner.mod_afferents)
+                modulated_params = [getattr(self.parameters, m).source.name for m in modulations]
+                if p.name in modulated_params:
+                    param = [param]
+            except AttributeError:
+                pass
             if not np.isscalar(param) and param is not None:
                 if p.name == 'matrix': # Flatten matrix
                     param = np.asfarray(param).flatten().tolist()
