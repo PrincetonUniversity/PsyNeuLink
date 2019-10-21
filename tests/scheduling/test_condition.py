@@ -604,176 +604,6 @@ class TestCondition:
         ]
         assert output == pytest.helpers.setify_expected_output(expected_output)
 
-    def test_WhenFinishedAny_1(self):
-        comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        A._is_finished = True
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        B._is_finished = True
-        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
-        for m in [A, B, C]:
-            comp.add_node(m)
-        comp.add_projection(MappingProjection(), A, C)
-        comp.add_projection(MappingProjection(), B, C)
-        sched = Scheduler(composition=comp)
-
-        sched.add_condition(A, EveryNPasses(1))
-        sched.add_condition(B, EveryNPasses(1))
-        sched.add_condition(C, WhenFinishedAny(A, B))
-
-        termination_conds = {}
-        termination_conds[TimeScale.RUN] = AfterNTrials(1)
-        termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 1)
-        output = list(sched.run(termination_conds=termination_conds))
-        expected_output = [
-            set([A, B]), C
-        ]
-        assert output == pytest.helpers.setify_expected_output(expected_output)
-
-    def test_WhenFinishedAny_2(self):
-        comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        A._is_finished = False
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        B._is_finished = True
-        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
-        for m in [A, B, C]:
-            comp.add_node(m)
-        comp.add_projection(MappingProjection(), A, C)
-        comp.add_projection(MappingProjection(), B, C)
-        sched = Scheduler(composition=comp)
-
-        sched.add_condition(A, EveryNPasses(1))
-        sched.add_condition(B, EveryNPasses(1))
-        sched.add_condition(C, WhenFinishedAny(A, B))
-
-        termination_conds = {}
-        termination_conds[TimeScale.RUN] = AfterNTrials(1)
-        termination_conds[TimeScale.TRIAL] = AfterNCalls(A, 5)
-        output = list(sched.run(termination_conds=termination_conds))
-        expected_output = [
-            set([A, B]), C, set([A, B]), C, set([A, B]), C, set([A, B]), C, set([A, B])
-        ]
-        assert output == pytest.helpers.setify_expected_output(expected_output)
-
-    def test_WhenFinishedAny_noargs(self):
-        comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
-        for m in [A, B, C]:
-            comp.add_node(m)
-        comp.add_projection(MappingProjection(), A, C)
-        comp.add_projection(MappingProjection(), B, C)
-        sched = Scheduler(composition=comp)
-
-        sched.add_condition(A, Always())
-        sched.add_condition(B, Always())
-        sched.add_condition(C, Always())
-
-        termination_conds = {}
-        termination_conds[TimeScale.RUN] = AfterNTrials(1)
-        termination_conds[TimeScale.TRIAL] = WhenFinishedAny()
-        output = []
-        i = 0
-        for step in sched.run(termination_conds=termination_conds):
-            if i == 3:
-                A._is_finished = True
-                B._is_finished = True
-            if i == 4:
-                C._is_finished = True
-            output.append(step)
-            i += 1
-        expected_output = [
-            set([A, B]), C, set([A, B]), C,
-        ]
-        assert output == pytest.helpers.setify_expected_output(expected_output)
-
-    def test_WhenFinishedAll_1(self):
-        comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        A._is_finished = True
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        B._is_finished = True
-        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
-        for m in [A, B, C]:
-            comp.add_node(m)
-        comp.add_projection(MappingProjection(), A, C)
-        comp.add_projection(MappingProjection(), B, C)
-        sched = Scheduler(composition=comp)
-
-        sched.add_condition(A, EveryNPasses(1))
-        sched.add_condition(B, EveryNPasses(1))
-        sched.add_condition(C, WhenFinishedAll(A, B))
-
-        termination_conds = {}
-        termination_conds[TimeScale.RUN] = AfterNTrials(1)
-        termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 1)
-        output = list(sched.run(termination_conds=termination_conds))
-        expected_output = [
-            set([A, B]), C
-        ]
-        assert output == pytest.helpers.setify_expected_output(expected_output)
-
-    def test_WhenFinishedAll_2(self):
-        comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        A._is_finished = False
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        B._is_finished = True
-        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
-        for m in [A, B, C]:
-            comp.add_node(m)
-        comp.add_projection(MappingProjection(), A, C)
-        comp.add_projection(MappingProjection(), B, C)
-        sched = Scheduler(composition=comp)
-
-        sched.add_condition(A, EveryNPasses(1))
-        sched.add_condition(B, EveryNPasses(1))
-        sched.add_condition(C, WhenFinishedAll(A, B))
-
-        termination_conds = {}
-        termination_conds[TimeScale.RUN] = AfterNTrials(1)
-        termination_conds[TimeScale.TRIAL] = AfterNCalls(A, 5)
-        output = list(sched.run(termination_conds=termination_conds))
-        expected_output = [
-            set([A, B]), set([A, B]), set([A, B]), set([A, B]), set([A, B]),
-        ]
-        assert output == pytest.helpers.setify_expected_output(expected_output)
-
-    def test_WhenFinishedAll_noargs(self):
-        comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
-        for m in [A, B, C]:
-            comp.add_node(m)
-        comp.add_projection(MappingProjection(), A, C)
-        comp.add_projection(MappingProjection(), B, C)
-        sched = Scheduler(composition=comp)
-
-        sched.add_condition(A, Always())
-        sched.add_condition(B, Always())
-        sched.add_condition(C, Always())
-
-        termination_conds = {}
-        termination_conds[TimeScale.RUN] = AfterNTrials(1)
-        termination_conds[TimeScale.TRIAL] = WhenFinishedAll()
-        output = []
-        i = 0
-        for step in sched.run(termination_conds=termination_conds):
-            if i == 3:
-                A._is_finished = True
-                B._is_finished = True
-            if i == 4:
-                C._is_finished = True
-            output.append(step)
-            i += 1
-        expected_output = [
-            set([A, B]), C, set([A, B]), C, set([A, B]),
-        ]
-        assert output == pytest.helpers.setify_expected_output(expected_output)
-
     def test_AfterNCallsCombined(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
@@ -846,5 +676,185 @@ class TestCondition:
 
         expected_output = [
             A, A, B, A, A, B, C
+        ]
+        assert output == pytest.helpers.setify_expected_output(expected_output)
+
+
+class TestWhenFinished:
+
+    @classmethod
+    def setup_class(self):
+        self.orig_is_finished = TransferMechanism.is_finished
+        TransferMechanism._is_finished = True
+        TransferMechanism.is_finished = lambda self, context: self._is_finished
+
+    @classmethod
+    def teardown_class(self):
+        del TransferMechanism._is_finished
+        TransferMechanism.is_finished = self.orig_is_finished
+
+    def test_WhenFinishedAny_1(self):
+        comp = Composition()
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
+        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+        for m in [A, B, C]:
+            comp.add_node(m)
+        comp.add_projection(MappingProjection(), A, C)
+        comp.add_projection(MappingProjection(), B, C)
+        sched = Scheduler(composition=comp)
+
+        sched.add_condition(A, EveryNPasses(1))
+        sched.add_condition(B, EveryNPasses(1))
+        sched.add_condition(C, WhenFinishedAny(A, B))
+
+        termination_conds = {}
+        termination_conds[TimeScale.RUN] = AfterNTrials(1)
+        termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 1)
+        output = list(sched.run(termination_conds=termination_conds))
+        expected_output = [
+            set([A, B]), C
+        ]
+        assert output == pytest.helpers.setify_expected_output(expected_output)
+
+    def test_WhenFinishedAny_2(self):
+        comp = Composition()
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+        A._is_finished = False
+        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
+        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+        for m in [A, B, C]:
+            comp.add_node(m)
+        comp.add_projection(MappingProjection(), A, C)
+        comp.add_projection(MappingProjection(), B, C)
+        sched = Scheduler(composition=comp)
+
+        sched.add_condition(A, EveryNPasses(1))
+        sched.add_condition(B, EveryNPasses(1))
+        sched.add_condition(C, WhenFinishedAny(A, B))
+
+        termination_conds = {}
+        termination_conds[TimeScale.RUN] = AfterNTrials(1)
+        termination_conds[TimeScale.TRIAL] = AfterNCalls(A, 5)
+        output = list(sched.run(termination_conds=termination_conds))
+        expected_output = [
+            set([A, B]), C, set([A, B]), C, set([A, B]), C, set([A, B]), C, set([A, B])
+        ]
+        assert output == pytest.helpers.setify_expected_output(expected_output)
+
+    def test_WhenFinishedAny_noargs(self):
+        comp = Composition()
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
+        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+        for m in [A, B, C]:
+            m._is_finished = False
+            comp.add_node(m)
+        comp.add_projection(MappingProjection(), A, C)
+        comp.add_projection(MappingProjection(), B, C)
+        sched = Scheduler(composition=comp)
+
+        sched.add_condition(A, Always())
+        sched.add_condition(B, Always())
+        sched.add_condition(C, Always())
+
+        termination_conds = {}
+        termination_conds[TimeScale.RUN] = AfterNTrials(1)
+        termination_conds[TimeScale.TRIAL] = WhenFinishedAny()
+        output = []
+        i = 0
+        for step in sched.run(termination_conds=termination_conds):
+            if i == 3:
+                A._is_finished = True
+                B._is_finished = True
+            if i == 4:
+                C._is_finished = True
+            output.append(step)
+            i += 1
+        expected_output = [
+            set([A, B]), C, set([A, B]), C,
+        ]
+        assert output == pytest.helpers.setify_expected_output(expected_output)
+
+    def test_WhenFinishedAll_1(self):
+        comp = Composition()
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
+        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+        for m in [A, B, C]:
+            comp.add_node(m)
+        comp.add_projection(MappingProjection(), A, C)
+        comp.add_projection(MappingProjection(), B, C)
+        sched = Scheduler(composition=comp)
+
+        sched.add_condition(A, EveryNPasses(1))
+        sched.add_condition(B, EveryNPasses(1))
+        sched.add_condition(C, WhenFinishedAll(A, B))
+
+        termination_conds = {}
+        termination_conds[TimeScale.RUN] = AfterNTrials(1)
+        termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 1)
+        output = list(sched.run(termination_conds=termination_conds))
+        expected_output = [
+            set([A, B]), C
+        ]
+        assert output == pytest.helpers.setify_expected_output(expected_output)
+
+    def test_WhenFinishedAll_2(self):
+        comp = Composition()
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+        A._is_finished = False
+        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
+        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+        for m in [A, B, C]:
+            comp.add_node(m)
+        comp.add_projection(MappingProjection(), A, C)
+        comp.add_projection(MappingProjection(), B, C)
+        sched = Scheduler(composition=comp)
+
+        sched.add_condition(A, EveryNPasses(1))
+        sched.add_condition(B, EveryNPasses(1))
+        sched.add_condition(C, WhenFinishedAll(A, B))
+
+        termination_conds = {}
+        termination_conds[TimeScale.RUN] = AfterNTrials(1)
+        termination_conds[TimeScale.TRIAL] = AfterNCalls(A, 5)
+        output = list(sched.run(termination_conds=termination_conds))
+        expected_output = [
+            set([A, B]), set([A, B]), set([A, B]), set([A, B]), set([A, B]),
+        ]
+        assert output == pytest.helpers.setify_expected_output(expected_output)
+
+    def test_WhenFinishedAll_noargs(self):
+        comp = Composition()
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
+        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+        for m in [A, B, C]:
+            m._is_finished = False
+            comp.add_node(m)
+        comp.add_projection(MappingProjection(), A, C)
+        comp.add_projection(MappingProjection(), B, C)
+        sched = Scheduler(composition=comp)
+
+        sched.add_condition(A, Always())
+        sched.add_condition(B, Always())
+        sched.add_condition(C, Always())
+
+        termination_conds = {}
+        termination_conds[TimeScale.RUN] = AfterNTrials(1)
+        termination_conds[TimeScale.TRIAL] = WhenFinishedAll()
+        output = []
+        i = 0
+        for step in sched.run(termination_conds=termination_conds):
+            if i == 3:
+                A._is_finished = True
+                B._is_finished = True
+            if i == 4:
+                C._is_finished = True
+            output.append(step)
+            i += 1
+        expected_output = [
+            set([A, B]), C, set([A, B]), C, set([A, B]),
         ]
         assert output == pytest.helpers.setify_expected_output(expected_output)

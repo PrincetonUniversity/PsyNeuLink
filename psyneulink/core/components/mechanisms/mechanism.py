@@ -1503,7 +1503,6 @@ class Mechanism_Base(Mechanism):
 
         # IMPLEMENT **kwargs (PER Port)
 
-        self._is_finished = False
         self.processes = ReadOnlyOrderedDict() # Note: use _add_process method to add item to processes property
         self.systems = ReadOnlyOrderedDict() # Note: use _add_system method to add item to systems property
         self.aux_components = []
@@ -3527,7 +3526,7 @@ class Mechanism_Base(Mechanism):
             `Component-based Conditions <Conditions_Component_Based>` to predicate the execution of one or more other
             Components on the Mechanism.
         """
-        return self._is_finished
+        return True
 
     @property
     def input_port(self):
