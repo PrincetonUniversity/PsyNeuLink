@@ -30,20 +30,21 @@ that define the shapes of the items stored in its memory.
 Structure
 ---------
 
-An EpisodicMemoryMechanism has at least one `InputPorts <InputPort>`, its *CONTENT_INPUT* and,
+An EpisodicMemoryMechanism has at least one `InputPort <InputPort>`, its *CONTENT_INPUT* and,
 optionally, an *ASSOC_INPUT* InputPort (if its *assoc_size* is specified and is not 0) that represent
 an item to store;  a `function <EpisodicMemoryMechanism.function>` that stores and retrieves content-assoc pairs from its
-memory; and at least one `OutputPorts <OutputPort>`, *CONTENT_OUTPUT*, as well as a 2nd, *CONTENT_OUTPUT* if it has
+memory; and at least one `OutputPort <OutputPort>`, *CONTENT_OUTPUT*, as well as a 2nd, *CONTENT_OUTPUT* if it has
 an *ASSOC_INPUT* InputPort, that represent a retrieved item. The default function is a `ContentAddressableMemory` that
 implements a simple form of content-addressable memory, but a custom function can be specified, so long as it meets the
 following requirements:
 
-    * It must accept a 2d array as its first argument, the first item of which is the content and the second the associate.
-    ..
+    * It must accept a 2d array as its first argument, the first item of which is the content and the second the
+      associate.
+
     * It must return a 2d array, the first item of which is the retrieved content and the second of which is the
-    assoc with which it is associated in the `function <EpisodicMemoryMechanism.function>`\\'s `memory
-    <EpisodicMemoryMechanism.memory>`.
-    ..
+      assoc with which it is associated in the `function <EpisodicMemoryMechanism.function>`\\'s `memory
+      <EpisodicMemoryMechanism.memory>`.
+
     * It may also implement a memory attribute;  if it does, it can be accessed by the EpisodicMemoryMechanism's
       `memory <EpisodicMemoryMechanism.memory>` attribute.
 
@@ -59,17 +60,17 @@ the following operations:
       if no retrieval is made, appropriately shaped zero-valued arrays are assigned to the `value
       <OutputPort.value>` of the *CONTENT_OUTPUT* and, if specified, it *ASSOC_OUTPUT* OutputPorts.
     ..
-    * stores the `value <InputPort.value>` of its *CONTENT_INPUT* and, if specified, *ASSOC_INPUT* `InputPorts
-    <InputPort>` in its memory.
+    * stores the `value <InputPort.value>` of its *CONTENT_INPUT* and, if specified, *ASSOC_INPUT* `InputPort
+      <InputPort>` in its memory.
     ..
     * assigns the value of the retrieved item's content in the EpisodicMemoryMechanism's  *CONTENT_OUTPUT*
-    `OutputPort`, and the value of the assoc of the retrieved item in the *ASSOC_OUTPUT* OutputPort.
+      `OutputPort`, and the value of the assoc of the retrieved item in the *ASSOC_OUTPUT* OutputPort.
 
     .. note::
          The order of storage and retieval is determined by the function.
 
-         The value of the content of the item retrieved from memory (and stored in *CONTENT_OUTPUT*) may be different than the
-         `value <InputPort.value>` of *CONTENT* used to retrieve the item.
+         The value of the content of the item retrieved from memory (and stored in *CONTENT_OUTPUT*)
+         may be different than the `value <InputPort.value>` of *CONTENT* used to retrieve the item.
 
          If no retrieval is made, appropriately shaped zero-valued arrays are assigned as the `value
          <OutputPort.value>` of the *CONTENT_OUTPUT* and, if specified, *ASSOC_OUTPUT* OutputPorts.

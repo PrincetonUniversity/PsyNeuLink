@@ -242,9 +242,9 @@ class RECURRENT_OUTPUT():
     """
         .. _RecurrentTransferMechanism_Standard_OutputPorts:
 
-        `Standard OutputPorts <OutputPort_Standard>` for
-        `RecurrentTransferMechanism`
+        `Standard OutputPorts <OutputPort_Standard>` for `RecurrentTransferMechanism`:
 
+        COMMENT:
         .. TRANSFER_RESULT:
 
         *RESULT* : 1d np.array
@@ -272,6 +272,35 @@ class RECURRENT_OUTPUT():
             Function <Function.Stability.function>` with the ENTROPY metric
             (Note: this is only present if the Mechanism's `function` is bounded
             between 0 and 1 (e.g. the `Logistic` Function)).
+        COMMENT
+
+        .. _RECURRENT_TRANSFER_RESULT:
+
+        *RESULT* : 1d np.array
+            the LCAMechanism's `value <Mechanism_Base.value>`.
+
+        .. _LCAMechanism_MEAN:
+
+        *OUTPUT_MEAN* : float
+            the mean of the elements in the LCAMechanism's `value <Mechanism_Base.value>`;.
+
+        .. _LCAMechanism_VARIANCE:
+
+        *OUTPUT_VARIANCE* : float
+            the variance of the elements in the LCAMechanism's `value <Mechanism_Base.value>`;.
+
+        .. _LCAMechanism_ENERGY:
+
+        *ENERGY* : float
+            the energy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,
+            calculated using the `Stability` Function using the `ENERGY` metric.
+
+        .. _LCAMechanism_ENTROPY:
+
+        *ENTROPY* : float
+            the entropy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,
+            calculated using the `Stability` Function using the `ENTROPY <CROSS_ENTROPY>` metric.
+
         """
     RESULT=RESULT
     MEAN=OUTPUT_MEAN

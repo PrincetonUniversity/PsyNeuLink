@@ -120,6 +120,7 @@ class LLVMBinaryFunction:
         self.cuda_call(*wrap_args)
 
     @staticmethod
+    @functools.lru_cache(maxsize=32)
     def from_obj(obj):
         name = LLVMBuilderContext.get_global().gen_llvm_function(obj).name
         return LLVMBinaryFunction.get(name)
@@ -173,7 +174,9 @@ def cleanup():
     _modules.clear()
     _compiled_modules.clear()
     _all_modules.clear()
+
     LLVMBinaryFunction.get.cache_clear()
+    LLVMBinaryFunction.from_obj.cache_clear()
     init_builtins()
 
 

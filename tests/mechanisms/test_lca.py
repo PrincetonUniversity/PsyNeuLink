@@ -2,11 +2,15 @@ import numpy as np
 import pytest
 
 from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.system import System
-from psyneulink.core.scheduling.condition import Never
-from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism import LCAMechanism
+from psyneulink.core.scheduling.condition import Never, WhenFinished
+from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism import \
+    LCAMechanism, MAX_VS_AVG, MAX_VS_NEXT
+from psyneulink.core.globals.keywords import RESULT
 
 class TestLCA:
     def test_LCAMechanism_length_1(self):
@@ -17,8 +21,8 @@ class TestLCA:
                          leak=0.5,
                          competition=1.0,  #  competition does not matter because we only have one unit
                          time_step_size=0.1)
-        P = Process(pathway=[T, L])
-        S = System(processes=[P])
+        C = Composition()
+        C.add_linear_processing_pathway([T,L])
         L.reinitialize_when = Never()
         #  - - - - - - - Equations to be executed  - - - - - - -
 
@@ -35,9 +39,9 @@ class TestLCA:
 
         results=[]
         def record_execution():
-            results.append(L.parameters.value.get(S)[0][0])
+            results.append(L.parameters.value.get(C)[0][0])
 
-        S.run(inputs={T: [1.0]},
+        C.run(inputs={T: [1.0]},
               num_trials=3,
               call_after_trial=record_execution)
 
@@ -58,11 +62,9 @@ class TestLCA:
 
         assert np.allclose(results, [0.2, 0.53, 1.0745])
 
-
     def test_LCAMechanism_length_2(self):
 
-        T = TransferMechanism(function=Linear(slope=1.0),
-                              size=2)
+        T = TransferMechanism(function=Linear(slope=1.0), size=2)
         L = LCAMechanism(function=Linear(slope=2.0),
                          size=2,
                          self_excitation=3.0,
@@ -70,8 +72,8 @@ class TestLCA:
                          competition=1.0,
                          time_step_size=0.1)
 
-        P = Process(pathway=[T, L])
-        S = System(processes=[P])
+        C = Composition()
+        C.add_linear_processing_pathway([T,L])
         L.reinitialize_when = Never()
         #  - - - - - - - Equations to be executed  - - - - - - -
 
@@ -88,9 +90,9 @@ class TestLCA:
 
         results=[]
         def record_execution():
-            results.append(L.parameters.value.get(S)[0])
+            results.append(L.parameters.value.get(C)[0])
 
-        S.run(inputs={T: [1.0, 2.0]},
+        C.run(inputs={T: [1.0, 2.0]},
               num_trials=3,
               call_after_trial=record_execution)
 
@@ -119,6 +121,52 @@ class TestLCA:
         # f(new_transfer_input_2) = 0.9965 * 2.0 = 1.463
 
         assert np.allclose(results, [[0.2, 0.4], [0.45, 1.02], [0.7385, 1.993]])
+
+    def test_LCAMechanism_threshold(self):
+        m = LCAMechanism(size=2, threshold=0.7)
+        r = ProcessingMechanism(size=2)
+        comp = Composition()
+        comp.add_linear_processing_pathway([m,r])
+        comp.scheduler.add_condition(r, WhenFinished(m))
+        result = comp.run(inputs={m:[1,0]})
+        assert np.allclose(result, [[0.71463572, 0.28536428]])
+
+    def test_LCAMechanism_threshold_with_max_vs_next(self):
+        m = LCAMechanism(size=3, threshold=0.1, threshold_criterion=MAX_VS_NEXT)
+        r = ProcessingMechanism(size=3)
+        comp = Composition()
+        comp.add_linear_processing_pathway([m,r])
+        comp.scheduler.add_condition(r, WhenFinished(m))
+        result = comp.run(inputs={m:[1,0.5,0]})
+        assert np.allclose(result, [[0.52200799, 0.41310248, 0.31228985]])
+
+    def test_LCAMechanism_threshold_with_max_vs_avg(self):
+        m = LCAMechanism(size=3, threshold=0.1, threshold_criterion=MAX_VS_AVG)
+        r = ProcessingMechanism(size=3)
+        comp = Composition()
+        comp.add_linear_processing_pathway([m,r])
+        comp.scheduler.add_condition(r, WhenFinished(m))
+        result = comp.run(inputs={m:[1,0.5,0]})
+        assert np.allclose(result, [[0.5100369 , 0.43776452, 0.36808511]])
+
+    def test_LCAMechanism_threshold_with_str(self):
+        m = LCAMechanism(size=2, threshold=0.7, threshold_criterion='MY_OUTPUT_PORT',
+                         output_ports=[RESULT, 'MY_OUTPUT_PORT'])
+        r = ProcessingMechanism(size=2)
+        comp = Composition()
+        comp.add_linear_processing_pathway([m,r])
+        comp.scheduler.add_condition(r, WhenFinished(m))
+        result = comp.run(inputs={m:[1,0]})
+        assert np.allclose(result, [[0.71463572, 0.28536428]])
+
+    def test_LCAMechanism_threshold_with_int(self):
+        m = LCAMechanism(size=2, threshold=0.7, threshold_criterion=1, output_ports=[RESULT, 'MY_OUTPUT_PORT'])
+        r = ProcessingMechanism(size=2)
+        comp = Composition()
+        comp.add_linear_processing_pathway([m,r])
+        comp.scheduler.add_condition(r, WhenFinished(m))
+        result = comp.run(inputs={m:[1,0]})
+        assert np.allclose(result, [[0.71463572, 0.28536428]])
 
 class TestLCAReinitialize:
 

@@ -17,8 +17,6 @@ class Loss():
         return builder.call(bin_func, [builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(0)]),
                                        ctx.int32_ty(len(value.type.pointee)),
                                        builder.gep(target, [ctx.int32_ty(0), ctx.int32_ty(0)])])
-# Class that is used to represent a compiled optimizer - aims to reimplement the logic of torch.optimizer in the form of llvmlite compileable code
-
 
 class MSELoss(Loss):
     """Implements compiled MSE Loss"""

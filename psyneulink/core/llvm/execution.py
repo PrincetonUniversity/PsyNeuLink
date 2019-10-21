@@ -501,15 +501,15 @@ class CompExecution(CUDAExecution):
     def _initialize_autodiff_param_struct(self, autodiff_stimuli):
         inputs = autodiff_stimuli.get("inputs", {})
         targets = autodiff_stimuli.get("targets", {})
-        epochs = autodiff_stimuli.get("epochs", 0)
+        epochs = autodiff_stimuli.get("epochs", 1)
 
-        num_inputs = len(next(iter(inputs.values())))
+        num_trials = len(next(iter(inputs.values())))
 
         # autodiff_values keeps the ctype values on the stack, so it doesn't get gc'd
         autodiff_values = []
         def make_node_data(dictionary, node):
             values = dictionary[node]
-            assert len(values) == num_inputs
+            assert len(values) == num_trials
             dimensionality = len(values[0])
             values = np.asfarray(values)
             autodiff_values.append(values)
@@ -524,7 +524,7 @@ class CompExecution(CUDAExecution):
 
         autodiff_param_cty = self._bin_run_func.byref_arg_types[1]
         autodiff_stimuli_cty = autodiff_param_cty._fields_[3][1]
-        autodiff_stimuli_struct = (epochs, num_inputs,
+        autodiff_stimuli_struct = (epochs, num_trials,
                                    len(targets), tuple(target_struct_val),
                                    len(inputs), tuple(input_struct_val))
         autodiff_stimuli_struct = autodiff_stimuli_cty(*autodiff_stimuli_struct)
@@ -534,7 +534,7 @@ class CompExecution(CUDAExecution):
 
         return autodiff_values
 
-    def run(self, inputs, runs, num_input_sets, autodiff_stimuli={"targets" : {}, "epochs": 0}):
+    def run(self, inputs, runs, num_input_sets, autodiff_stimuli={"targets" : {}, "epochs": 1}):
         inputs = self._get_run_input_struct(inputs, num_input_sets)
         # Special casing for autodiff
         if hasattr(self._composition,"learning_enabled") and self._composition.learning_enabled is True:

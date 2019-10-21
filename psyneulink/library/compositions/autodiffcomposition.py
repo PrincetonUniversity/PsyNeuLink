@@ -583,6 +583,8 @@ class AutodiffComposition(Composition):
         if not isinstance(self.loss_spec, str):
             return self.loss_spec
         elif loss_spec == 'mse':
+            return nn.MSELoss(reduction='mean')
+        elif loss_spec == 'sse':
             return nn.MSELoss(reduction='sum')
         elif loss_spec == 'crossentropy':
             return nn.CrossEntropyLoss(reduction='sum')
@@ -733,9 +735,7 @@ class AutodiffComposition(Composition):
 
         # backpropagate to compute gradients and perform learning update for parameters
         optimizer.zero_grad()
-        curr_loss = curr_loss / \
-                    num_inputs / \
-                    2
+        curr_loss = curr_loss / num_inputs
         printable = {}
         for component in curr_tensor_outputs.keys():
             printable[component] = curr_tensor_outputs[component].detach().numpy()
@@ -795,7 +795,7 @@ class AutodiffComposition(Composition):
         if self.learning_enabled is True:
             if self.__generated_learning_run is None:
                 with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                    self.__generated_learning_run = ctx.gen_composition_run(self)
+                    self.__generated_learning_run = ctx.gen_composition_run(self, learning=self.learning_enabled)
             return self.__generated_learning_run
         if self.__generated_forward_run is None:
             with pnlvm.LLVMBuilderContext.get_global() as ctx:
@@ -1090,35 +1090,7 @@ class AutodiffComposition(Composition):
                                                     runtime_params=runtime_params,
                                                     )
                 self.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
-                # HACK: manually call forward function to get final outputs
-                results = []
-                self.learning_enabled = False
-                input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
-                forward_inputs = inputs["inputs"]
-                for input_num in range(0,len(forward_inputs[input_nodes[0]])):
-                    curr_input_dict = {}
-                    for node in input_nodes:
-                        curr_input_dict[node] = [forward_inputs[node][input_num]]
-                    results.append(self.run(
-                        inputs=curr_input_dict,
-                        scheduler=scheduler,
-                        termination_processing=termination_processing,
-                        context=context,
-                        num_trials=num_trials,
-                        call_before_time_step=call_before_time_step,
-                        call_after_time_step=call_after_time_step,
-                        call_before_pass=call_before_pass,
-                        call_after_pass=call_after_pass,
-                        call_before_trial=call_before_trial,
-                        call_after_trial=call_after_trial,
-                        clamp_input=clamp_input,
-                        bin_execute=bin_execute,
-                        initial_values=initial_values,
-                        reinitialize_values=reinitialize_values,
-                        runtime_params=runtime_params,
-                    ))
-                self.learning_enabled = True
-                results = [results]
+                results = [self.parameters.results._get(context)]
             else:
                 self._analyze_graph()
                 self._initialize_from_context(context, base_context=Context(execution_id=None), override=False)

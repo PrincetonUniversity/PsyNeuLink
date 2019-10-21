@@ -77,7 +77,7 @@ __all__ = [
     'MODEL_SPEC_ID_GENERIC', 'MODEL_SPEC_ID_INPUT_PORTS', 'MODEL_SPEC_ID_OUTPUT_PORTS', 'MODEL_SPEC_ID_PSYNEULINK',
     'MODEL_SPEC_ID_SENDER_MECH', 'MODEL_SPEC_ID_SENDER_PORT', 'MODEL_SPEC_ID_RECEIVER_MECH',
     'MODEL_SPEC_ID_RECEIVER_PORT',
-    'MODEL_SPEC_ID_PARAMETER_SOURCE', 'MODEL_SPEC_ID_PARAMETER_VALUE', 'MODEL_SPEC_ID_TYPE',
+    'MODEL_SPEC_ID_PARAMETER_SOURCE', 'MODEL_SPEC_ID_PARAMETER_VALUE', 'MODEL_SPEC_ID_TYPE', 'MSE',
     'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM', 'MUTUAL_ENTROPY',
     'NAME', 'NEWEST',  'NODE', 'NodeRoles', 'NOISE', 'NORMAL_DIST_FUNCTION', 'NORMED_L0_SIMILARITY',
     'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT', 'OFF', 'OFFSET', 'OLDEST',
@@ -100,7 +100,7 @@ __all__ = [
     'RELU_FUNCTION', 'REST', 'RESULT', 'RESULTS', 'ROLES', 'RL_FUNCTION', 'RUN',
     'SAMPLE', 'SAVE_ALL_VALUES_AND_POLICIES', 'SCALAR', 'SCALE', 'SCHEDULER', 'SELF', 'SENDER',
     'SEPARATOR_BAR', 'SIMPLE', 'SIMPLE_INTEGRATOR_FUNCTION', 'SINGLETON', 'SIZE', 'SLOPE', 'SOFT_CLAMP',
-    'SOFTMAX_FUNCTION', 'SOURCE', 'STABILITY_FUNCTION', 'STANDARD_ARGS', 'STANDARD_DEVIATION', 'STANDARD_OUTPUT_PORTS',
+    'SOFTMAX_FUNCTION', 'SOURCE', 'SSE', 'STABILITY_FUNCTION', 'STANDARD_ARGS', 'STANDARD_DEVIATION', 'STANDARD_OUTPUT_PORTS',
     'PORT', 'PORT_COMPONENT_CATEGORY', 'PORT_CONTEXT', 'Port_Name', 'Port_ParamS', 'PORT_PREFS', 'PORT_TYPE',
     'port_value', 'PORTS', 'SUBTRACTION', 'SUM',
     'SYSTEM', 'SYSTEM_COMPONENT_CATEGORY', 'SYSTEM_DEFAULT_CONTROLLER', 'SYSTEM_INIT',
@@ -268,11 +268,11 @@ class DistanceMetrics:
         :math:`d = \\max(|a_1-a_2|)`
 
     DIFFERENCE
-        (can also be referenced as L0)\n
+        (can also be referenced as *L0*)\n
         :math:`d = \\sum\\limits^{len}(|a_1-a_2|)`
 
     EUCLIDEAN
-        (can also be referenced as L1)\n
+        (can also be referenced as *L1*)\n
         :math:`d = \\sum\\limits^{len}\\sqrt{(a_1-a_2)^2}`
 
     COSINE
@@ -282,12 +282,8 @@ class DistanceMetrics:
         :math:`d = 1 - \\left|\\frac{\\sum\\limits^{len}(a_1-\\bar{a}_1)(a_2-\\bar{a}_2)}{(len-1)\\sigma_{a_1}\\sigma_{
         a_2}}\\right|`
 
-    COMMENT:
-    PEARSON
-        <Description>
-    COMMENT
-
-    ENTROPY and CROSS_ENTROPY
+    CROSS_ENTROPY
+        (can also be referenced as *ENTROPY*)\n
         :math:`d = \\sum\\limits^{len}a_1log(a_2)`
 
     ENERGY:
@@ -988,6 +984,9 @@ REWARD = 'reward'
 NETWORK = 'network'
 
 GAMMA = 'gamma'
+
+MSE = 'MSE'
+SSE = 'SSE'
 #endregion
 
 # model spec keywords

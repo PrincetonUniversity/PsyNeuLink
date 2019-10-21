@@ -4753,7 +4753,8 @@ class System(System_Base):
                                 'show_values':any(key in show_mechanism_structure for key in {VALUES, ALL}),
                                 'use_labels':any(key in show_mechanism_structure for key in {LABELS, ALL}),
                                 'show_headers':show_headers,
-                                'output_fmt':'struct'}
+                                'output_fmt':'struct',
+                                'context':context}
         else:
             mech_struct_args = {'composition':self,
                                 'show_roles':show_mechanism_structure in {ROLES, ALL},
@@ -4761,7 +4762,8 @@ class System(System_Base):
                                 'show_values':show_mechanism_structure in {VALUES, LABELS, ALL},
                                 'use_labels':show_mechanism_structure in {LABELS, ALL},
                                 'show_headers':show_headers,
-                                'output_fmt':'struct'}
+                                'output_fmt':'struct',
+                                'context':context}
 
         default_node_color = 'black'
         mechanism_shape = 'oval'

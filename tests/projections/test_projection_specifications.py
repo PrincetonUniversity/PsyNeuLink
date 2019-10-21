@@ -58,7 +58,7 @@ class TestProjectionSpecificationFormats:
         C = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS: [M.parameter_ports[
                                                                          psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE],
                                                                      M.parameter_ports[
-                                                                         psyneulink.core.components.functions.distributionfunctions.THRESHOLD]]}])
+                                                                         psyneulink.core.globals.keywords.THRESHOLD]]}])
         G = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS: [M.output_ports[pnl.DECISION_VARIABLE],
                                                                      M.output_ports[pnl.RESPONSE_TIME]]}])
         assert len(C.control_signals)==1
@@ -66,7 +66,7 @@ class TestProjectionSpecificationFormats:
         assert M.parameter_ports[
                    psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE].mod_afferents[0] == C.control_signals[0].efferents[0]
         assert M.parameter_ports[
-                   psyneulink.core.components.functions.distributionfunctions.THRESHOLD].mod_afferents[0] == C.control_signals[0].efferents[1]
+                   psyneulink.core.globals.keywords.THRESHOLD].mod_afferents[0] == C.control_signals[0].efferents[1]
         assert len(G.gating_signals)==1
         assert len(G.gating_signals[0].efferents)==2
         assert M.output_ports[pnl.DECISION_VARIABLE].mod_afferents[0]==G.gating_signals[0].efferents[0]
@@ -78,7 +78,7 @@ class TestProjectionSpecificationFormats:
         C = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[M.parameter_ports[
                                                                            psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE],
                                                                        M.parameter_ports[
-                                                                           psyneulink.core.components.functions.distributionfunctions.THRESHOLD]]}])
+                                                                           psyneulink.core.globals.keywords.THRESHOLD]]}])
         G = pnl.GatingMechanism(gating_signals=[{'DDM_OUTPUT_GATE':[M.output_ports[pnl.DECISION_VARIABLE],
                                                                     M.output_ports[pnl.RESPONSE_TIME]]}])
         assert len(C.control_signals)==1
@@ -87,7 +87,7 @@ class TestProjectionSpecificationFormats:
         assert M.parameter_ports[
                    psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE].mod_afferents[0] == C.control_signals[0].efferents[0]
         assert M.parameter_ports[
-                   psyneulink.core.components.functions.distributionfunctions.THRESHOLD].mod_afferents[0] == C.control_signals[0].efferents[1]
+                   psyneulink.core.globals.keywords.THRESHOLD].mod_afferents[0] == C.control_signals[0].efferents[1]
         assert len(G.gating_signals)==1
         assert G.gating_signals[0].name=='DDM_OUTPUT_GATE'
         assert len(G.gating_signals[0].efferents)==2
@@ -101,7 +101,7 @@ class TestProjectionSpecificationFormats:
                                                    pnl.PARAMETER_PORTS: [
                                                        psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE,
 
-                                                       psyneulink.core.components.functions.distributionfunctions.THRESHOLD]}])
+                                                       psyneulink.core.globals.keywords.THRESHOLD]}])
         G = pnl.GatingMechanism(gating_signals=[{pnl.MECHANISM: M,
                                                  pnl.OUTPUT_PORTS: [pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME]}])
         assert len(C.control_signals)==1
@@ -109,7 +109,7 @@ class TestProjectionSpecificationFormats:
         assert M.parameter_ports[
                    psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE].mod_afferents[0] == C.control_signals[0].efferents[0]
         assert M.parameter_ports[
-                   psyneulink.core.components.functions.distributionfunctions.THRESHOLD].mod_afferents[0] == C.control_signals[0].efferents[1]
+                   psyneulink.core.globals.keywords.THRESHOLD].mod_afferents[0] == C.control_signals[0].efferents[1]
         assert len(G.gating_signals)==1
         assert len(G.gating_signals[0].efferents)==2
         assert M.output_ports[pnl.DECISION_VARIABLE].mod_afferents[0]==G.gating_signals[0].efferents[0]
@@ -174,7 +174,7 @@ class TestProjectionSpecificationFormats:
         # List of names
         C = pnl.ControlMechanism(control_signals=[([
                                                        psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE,
-                                                       psyneulink.core.components.functions.distributionfunctions.THRESHOLD], D)])
+                                                       psyneulink.core.globals.keywords.THRESHOLD], D)])
         assert C.control_signals[0].name == 'D[drift_rate, threshold] ControlSignal'
         assert C.control_signals[0].efferents[0].receiver.name == 'drift_rate'
         assert C.control_signals[0].efferents[1].receiver.name == 'threshold'
@@ -189,7 +189,7 @@ class TestProjectionSpecificationFormats:
         assert D.parameter_ports[
                    psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE].mod_afferents[0].sender == C.control_signals[0]
         assert D.parameter_ports[
-                   psyneulink.core.components.functions.distributionfunctions.THRESHOLD].mod_afferents[0].sender == C.control_signals[1]
+                   psyneulink.core.globals.keywords.THRESHOLD].mod_afferents[0].sender == C.control_signals[1]
 
     def test_2_item_tuple_from_gating_signal_to_output_ports(self):
 
