@@ -745,7 +745,10 @@ class TestTrainingCorrectness:
                                       'targets': targets_dict,
                                       'epochs': eps}, bin_execute=mode)
 
-    def test_pytorch_equivalence_with_autodiff_composition(self):
+    @pytest.mark.parametrize("mode", ["Python",
+                                pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                ])
+    def test_pytorch_equivalence_with_autodiff_composition(self,mode):
         iSs = np.array(
             [np.array([0.47360805, 0.8009108, 0.5204775, 0.53737324, 0.7586156,
                     0.1059076, 0.9025985, 0.44994998, 0.61306345, 0.75068617,
@@ -903,11 +906,13 @@ class TestTrainingCorrectness:
         mnet.run(
             inputs=input_set,
             minibatch_size=1,
+            bin_execute=mode
         )
         mnet.learning_enabled = False
 
         mnet.run(
-            inputs=input_set
+            inputs=input_set,
+            bin_execute=mode
         )
 
         output = np.array(mnet.parameters.results.get(mnet)[-15:]).reshape(225)
