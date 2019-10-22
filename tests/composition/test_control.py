@@ -1314,7 +1314,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
     @pytest.mark.control
     @pytest.mark.composition
-    @pytest.mark.benchmark
+    @pytest.mark.benchmark(group="Model Based OCM")
     @pytest.mark.parametrize("mode", ["Python",
                                       pytest.param("LLVM", marks=pytest.mark.llvm),
                                       pytest.param("LLVMExec", marks=pytest.mark.llvm),
@@ -1355,7 +1355,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
     @pytest.mark.control
     @pytest.mark.composition
-    @pytest.mark.benchmark
+    @pytest.mark.benchmark(group="Model Based OCM")
     @pytest.mark.parametrize("mode", ["Python",
                                       pytest.param("LLVM", marks=pytest.mark.llvm),
                                       pytest.param("LLVMExec", marks=pytest.mark.llvm),
