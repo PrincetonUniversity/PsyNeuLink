@@ -7860,5 +7860,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             yield n
         yield self.input_CIM
         yield self.output_CIM
+        yield self.parameter_CIM
         if self.controller:
             yield self.controller
