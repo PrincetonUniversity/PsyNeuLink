@@ -2517,6 +2517,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             )
                             for projection in control_signal.projections:
                                 projection._activate_for_compositions(comp)
+                            for projection in receiver.mod_afferents:
+                                if projection.sender.owner == controller:
+                                    receiver.mod_afferents.remove(projection)
                             pcIM_ports[receiver] = (modulatory_signal, input_port)
 
             for comp in nested_comps:

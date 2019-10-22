@@ -489,7 +489,7 @@ class TestControlMechanisms:
         ocomp = pnl.Composition(name='ocomp', controller_mode=pnl.BEFORE)
         ia = pnl.TransferMechanism(name='ia')
         ib = pnl.ProcessingMechanism(name='ib',
-                                     function=lambda x: abs(x - 75))
+                                     function=lambda x: abs(x - 70))
         icomp = pnl.Composition(name='icomp', controller_mode=pnl.BEFORE)
         ocomp.add_node(oa, required_roles=pnl.NodeRole.INPUT)
         ocomp.add_node(ob)
@@ -543,7 +543,7 @@ class TestControlMechanisms:
                                                                                      num=5))])
         )
         results = ocomp.run([5])
-        assert np.allclose(results, [[0]])
+        assert np.allclose(results, [[5]])
         return ocomp
 
     def test_two_tier_ocm(self):
