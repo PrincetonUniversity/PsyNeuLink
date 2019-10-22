@@ -94,8 +94,8 @@ model.show_graph(show_nested=ALL, show_node_structure=ALL, show_cim=True)
 
 num_trials = 2
 
-stimuli = {stim_in:np.array([1]*stim_size),
-           context_in: np.array([10]*context_size),
+stimuli = {stim_in:np.array([1] * stim_size),
+           context_in: np.array([10] * context_size),
            reward_in:np.array([1])}
 
 print(model.run(inputs=stimuli))

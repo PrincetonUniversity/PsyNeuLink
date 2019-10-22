@@ -1077,7 +1077,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
             if not valid:
                 raise FunctionError("Value of {} arg passed to {} ({}) "
                                     "does not match the value expected for specified {} ({})".
-                                    format(repr('output'), self.__class__.__name__+'.'+'derivative', output,
+                                    format(repr('output'), self.__class__.__name__ + '.' + 'derivative', output,
                                            repr('input'), input))
 
         gain = self.get_current_function_param(GAIN, context)
@@ -1340,7 +1340,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         #   (since np.exp doesn't work)
         # result = 1. / (1 + np.tanh(-gain * (variable - bias) + offset))
         from math import e
-        exponent = -2*(gain * (variable + bias - x_0) + offset)
+        exponent = -2 * (gain * (variable + bias - x_0) + offset)
         result = (1 - e**exponent)/ (1 + e**exponent)
 
         return self.convert_output_type(result)
@@ -1370,7 +1370,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         scale = self.get_current_function_param(SCALE, context)
 
         from math import e
-        return gain*scale / ((1 + e**(-2*(gain*(input+bias-x_0)+offset))) / (2 * e**(-gain*(input+bias-x_0)+offset)))**2
+        return gain * scale / ((1 + e**(-2 * (gain * (input + bias - x_0) + offset))) / (2 * e**(-gain * (input + bias - x_0) + offset)))**2
 
 
 # **********************************************************************************************************************
@@ -1536,7 +1536,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         # KAM modified 2/15/19 to match https://en.wikipedia.org/wiki/Rectifier_(neural_networks)#Leaky_ReLUs
         x = gain * (variable - bias)
-        result = np.maximum(x, leak*x)
+        result = np.maximum(x, leak * x)
 
         return self.convert_output_type(result)
 
@@ -1585,7 +1585,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         leak = self.get_current_function_param(LEAK, context)
 
         if (input > 0): return gain
-        else: return gain*leak
+        else: return gain * leak
 
 
 # **********************************************************************************************************************
@@ -1821,7 +1821,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         offset = self.get_current_function_param(OFFSET, context)
 
         from math import e, pi, sqrt
-        gaussian = e**(-(variable-bias)**2/(2*standard_deviation**2)) / sqrt(2*pi*standard_deviation)
+        gaussian = e**(-(variable - bias)**2 / (2 * standard_deviation**2)) / sqrt(2 * pi * standard_deviation)
         result = scale * gaussian + offset
 
         return self.convert_output_type(result)
@@ -1850,8 +1850,8 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         bias = self.get_current_function_param(BIAS, context)
 
         from math import e, pi, sqrt
-        adjusted_input = input-bias
-        result = (-adjusted_input * e**(-(adjusted_input**2/(2*sigma**2)))) / sqrt(2*pi*sigma**3)
+        adjusted_input = input - bias
+        result = (-adjusted_input * e**(-(adjusted_input**2 / (2 * sigma**2)))) / sqrt(2 * pi * sigma**3)
 
         return self.convert_output_type(result)
 
@@ -2102,7 +2102,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         random_state = self.get_current_function_param('random_state', context)
 
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
-        result = scale * random_state.normal(variable+bias, variance) + offset
+        result = scale * random_state.normal(variable + bias, variance) + offset
 
         return self.convert_output_type(result)
 
@@ -3154,13 +3154,13 @@ def get_matrix(specification, rows=1, cols=1, context=None):
         if rows != cols:
             raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
                                 format(rows, cols, specification))
-        return 1-np.identity(rows)
+        return 1 - np.identity(rows)
 
     if specification == INVERSE_HOLLOW_MATRIX:
         if rows != cols:
             raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
                                 format(rows, cols, specification))
-        return (1-np.identity(rows)) * -1
+        return (1 - np.identity(rows)) * -1
 
     if specification == RANDOM_CONNECTIVITY_MATRIX:
         return np.random.rand(rows, cols)

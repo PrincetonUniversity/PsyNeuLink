@@ -521,7 +521,7 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
 
         if not self.parameters.variable._user_specified:
             # Reshape variable.default_value to match maximum index specified in arrangement
-            self.parameters.variable.default_value = np.zeros((max(self._indices)+1,1))
+            self.parameters.variable.default_value = np.zeros((max(self._indices) + 1, 1))
 
         super()._instantiate_attributes_before_function(function, context)
 

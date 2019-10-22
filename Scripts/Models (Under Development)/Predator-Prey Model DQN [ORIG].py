@@ -144,8 +144,8 @@ def objective_function(variable):
     prey_veridical = variable[2]
     actual_action = variable[3]
     optimal_action = ddqn_veridical_action(player_veridical, predator_veridical, prey_veridical)
-    d = difference([optimal_action, actual_action])/4
-    return 1-d
+    d = difference([optimal_action, actual_action]) / 4
+    return 1 - d
 
 ocm = OptimizationControlMechanism(features={SHADOW_INPUTS:[player_percept, predator_percept, prey_percept]},
                                    agent_rep=agent_comp, # Use Composition itself (i.e., fully "model-based" evaluation)
@@ -219,7 +219,7 @@ def main():
                                          context=context,
                                          bin_execute=BIN_EXECUTE,
                                          )
-            action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
+            action = np.where(run_results[0] == 0, 0, run_results[0] / np.abs(run_results[0]))
             # action = np.squeeze(np.where(greedy_action_mech.value==0,0,
             #                              greedy_action_mech.value[0]/np.abs(greedy_action_mech.value[0])))
             observation, reward, done, _ = ddqn_agent.env.step(action)

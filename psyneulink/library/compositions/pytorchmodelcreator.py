@@ -133,7 +133,7 @@ class PytorchModelCreator(torch.nn.Module):
 
     # defines input type
     def _get_input_struct_type(self, ctx):  # Test case: {[1 x [2 x double]]}
-        input_ty = [None]*len(self.execution_sets[0])
+        input_ty = [None] * len(self.execution_sets[0])
         for component in self.execution_sets[0]:
             component_id = self._composition._get_node_index(component)
             input_ty[component_id] = ctx.convert_python_struct_to_llvm_ir(
@@ -152,14 +152,14 @@ class PytorchModelCreator(torch.nn.Module):
     # The efferent id map is needed for weights because we must start from index 0, so each node keeps track of its efferents by iterating them
     def _get_param_struct_type(self, ctx):
 
-        param_list = [None]*len(self._composition.nodes)
+        param_list = [None] * len(self._composition.nodes)
         for (node, forward_info) in self.component_to_forward_info.items():
 
             node_idx = self._composition._get_node_index(node)
 
             # 1) setup weights
             afferents = forward_info[3]
-            weight_array = [None]*len(afferents)
+            weight_array = [None] * len(afferents)
             for (afferent_vertex, weights) in afferents.items():
                 afferent_node = afferent_vertex.component
                 afferent_index = self._get_afferent_node_index(node,afferent_node)
@@ -186,14 +186,14 @@ class PytorchModelCreator(torch.nn.Module):
 
     def _get_param_initializer(self):
         if self._cached_param_list is None:
-            param_list = [None]*len(self._composition.nodes)
+            param_list = [None] * len(self._composition.nodes)
             for (node, forward_info) in self.component_to_forward_info.items():
 
                 node_idx = self._composition._get_node_index(node)
 
                 # 1) initialize weights
                 afferents = forward_info[3]
-                weight_array = [None]*len(afferents)
+                weight_array = [None] * len(afferents)
                 for (afferent_vertex, weights) in afferents.items():
                     afferent_node = afferent_vertex.component
                     afferent_index = self._get_afferent_node_index(node,afferent_node)
@@ -233,7 +233,7 @@ class PytorchModelCreator(torch.nn.Module):
                     ctx.get_input_struct_type(self).as_pointer(),
                     ctx.get_data_struct_type(self).as_pointer()
                     ]
-            builder = ctx.create_llvm_function(args+extra_args, self, name)
+            builder = ctx.create_llvm_function(args + extra_args, self, name)
             llvm_func = builder.function
 
             context, params, arg_in, arg_out = llvm_func.args[:len(args)]
@@ -469,8 +469,8 @@ class PytorchModelCreator(torch.nn.Module):
                 learning_targets.as_pointer(),  # targets
                 ctx.int32_ty  # input idx
                 ]
-        name = self._composition.name+"_training_backprop"
-        builder = ctx.create_llvm_function(args+extra_args, self, name)
+        name = self._composition.name + "_training_backprop"
+        builder = ctx.create_llvm_function(args + extra_args, self, name)
         llvm_func = builder.function
         for a in llvm_func.args:
             if isinstance(a.type, pnlvm.ir.PointerType):
@@ -802,7 +802,7 @@ class PytorchModelCreator(torch.nn.Module):
     @handle_external_context()
     def bin_function_creator(self, ctx, node, context=None):
         # first try to get cached func
-        name = node.name+"_"+node.function.name
+        name = node.name + "_" + node.function.name
         try:
             llvm_func = ctx.get_llvm_function(name)
             return llvm_func
@@ -873,7 +873,7 @@ class PytorchModelCreator(torch.nn.Module):
     @handle_external_context()
     def bin_function_derivative_creator(self, ctx, node, context=None):
         # first try to get cached func
-        name = node.name+"_"+node.function.name+"_derivative"
+        name = node.name + "_" + node.function.name + "_derivative"
         try:
             llvm_func = ctx.get_llvm_function(name)
             return llvm_func

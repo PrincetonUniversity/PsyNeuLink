@@ -2455,7 +2455,7 @@ def _instantiate_port_list(owner,
     # INSTANTIATE EACH PORT
 
     ports = ContentAddressableList(component_type=Port_Base,
-                                    name=owner.name+' ContentAddressableList of ' + port_Param_identifier)
+                                   name=owner.name + ' ContentAddressableList of ' + port_Param_identifier)
     # For each port, pass port_spec and the corresponding item of reference_value to _instantiate_port
 
     if not isinstance(port_types, list):
@@ -2669,7 +2669,7 @@ def _parse_port_type(owner, port_spec):
         # Port keyword
         if port_spec in port_type_keywords:
             import sys
-            return getattr(sys.modules['PsyNeuLink.Components.Ports.'+port_spec], port_spec)
+            return getattr(sys.modules['PsyNeuLink.Components.Ports.' + port_spec], port_spec)
 
         # Try as name of Port
         for port_attr in [INPUT_PORTS, PARAMETER_PORTS, OUTPUT_PORTS]:

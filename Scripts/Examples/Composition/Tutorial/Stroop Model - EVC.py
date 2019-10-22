@@ -126,9 +126,9 @@ task.reinitialize_when=AtPass(n=0)
 # task.reinitialize_when=AtTrialStart()
 
 num_trials = 2
-stimuli = {color_input:[red]*num_trials,
-           word_input:[green]*num_trials,
-           task_input:[color]*num_trials}
+stimuli = {color_input:[red] * num_trials,
+           word_input:[green] * num_trials,
+           task_input:[color] * num_trials}
 Stroop_model.run(inputs=stimuli,
                  # animate=True,
                  animate={'show_controller':True,

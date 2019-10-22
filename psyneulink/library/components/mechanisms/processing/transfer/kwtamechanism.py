@@ -678,7 +678,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
                 raise KWTAError("k value ({}) is greater than the length of the first input ({}) for KWTAMechanism mechanism {}".
                                 format(k, current_input[0], self.name))
             else:
-                final_diff = sorted_diffs[k] * ratio + sorted_diffs[k-1] * (1 - ratio)
+                final_diff = sorted_diffs[k] * ratio + sorted_diffs[k - 1] * (1 - ratio)
 
         if inhibition_only and final_diff > 0:
             final_diff = 0

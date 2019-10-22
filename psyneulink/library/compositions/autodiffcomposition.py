@@ -719,7 +719,7 @@ class AutodiffComposition(Composition):
                 new_loss = self.loss(curr_tensor_outputs[component], curr_tensor_targets[component])
                 curr_loss += new_loss
             # save average loss across all output neurons on current trial
-            curr_losses[t] = curr_loss[0].item()/num_inputs
+            curr_losses[t] = curr_loss[0].item() / num_inputs
 
             # save outputs of model if this is final epoch or if using early stopping
             if patience is not None or curr_epoch == total_epochs - 1:
@@ -875,7 +875,7 @@ class AutodiffComposition(Composition):
                         minibatch['targets'][k].append(v[trial_num])
                     minibatch_results = []
                     if len(list(minibatch['inputs'].values())[0]) == minibatch_size or \
-                            trial_num == num_trials-1:
+                            trial_num == num_trials - 1:
                         if call_before_minibatch:
                             call_before_minibatch()
                         output = self.autodiff_training(minibatch['inputs'],
@@ -892,7 +892,7 @@ class AutodiffComposition(Composition):
                             minibatch['inputs'][k] = []
                         for k, v in inputs['targets'].items():
                             minibatch['targets'][k] = []
-                        if current_epoch == autodiff_epochs-1:
+                        if current_epoch == autodiff_epochs - 1:
                             results.extend(output)
 
             context.add_flag(ContextFlags.PROCESSING)
