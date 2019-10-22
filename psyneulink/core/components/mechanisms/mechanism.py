@@ -2406,12 +2406,12 @@ class Mechanism_Base(Mechanism):
 
         # IMPLEMENTATION NOTE: use value as buffer variable until it has been fully processed
         #                      to avoid multiple calls to (and potential log entries for) self.value property
-        value = self._execute(
-            variable=variable,
-            context=context,
-            runtime_params=runtime_params,
-
-        )
+        while True:
+            value = self._execute(variable=variable,
+                                  context=context,
+                                  runtime_params=runtime_params)
+            if self.is_finished:
+                break
 
         # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
         #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN

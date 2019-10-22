@@ -442,6 +442,7 @@ class TestLinear:
 
         output = []
         i = 0
+        A._is_finished = False
         for step in sched.run(termination_conds=termination_conds):
             if i == 3:
                 A._is_finished = True
@@ -779,6 +780,7 @@ class TestBranching:
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 1)
         output = []
         i = 0
+        A._is_finished = False
         for step in sched.run(termination_conds=termination_conds):
             if i == 3:
                 A._is_finished = True
@@ -811,6 +813,7 @@ class TestBranching:
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 1)
         output = []
         i = 0
+        A._is_finished = False
         for step in sched.run(termination_conds=termination_conds):
             if i == 10:
                 A._is_finished = True
