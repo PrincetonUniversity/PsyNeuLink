@@ -282,7 +282,7 @@ following two informational attributes:
 
 .. _Component_Num_Executions_In_Call:
 
-* **num_executions_in_call** -- contains the number of times the Component has executed in the current (or last) call
+* **num_executions_until_finished** -- contains the number of times the Component has executed in the current (or last) call
   to its `execute <Component.execute>` method.  Note that this is distinct from the `execution_count
   <Comopnent.execution_count>` attribute, that contains the total number of times the Component has executed in its
   "life."
@@ -290,9 +290,9 @@ following two informational attributes:
 .. _Component_Max_Executions:
 
 * **max_executions_until_finished** -- determines the maximum number of executions allowed in a single call to its `execute
-  <Component.execute>` method (i.e., `num_executions_in_call <Component.num_executions_in_call>`), when
+  <Component.execute>` method (i.e., `num_executions_until_finished <Component.num_executions_until_finished>`), when
   `execute_until_finished <Component.execute_until_finished>` is True;  if it is exceeded, a warning message is
-  generated.  Note that this only pertains to `num_executions_in_call <Component.num_executions_in_call>` (i.e.,
+  generated.  Note that this only pertains to `num_executions_until_finished <Component.num_executions_until_finished>` (i.e.,
   the number of times it is executed in a given call to the Component's `execute <Component.execute>` method),
   and not its `execution_count <Component.execution_count>`, which is the total number of times the Component
   has executed in its "life", that can be unlimited.
@@ -861,8 +861,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     execute_until_finished : bool
         see `execute_until_finished <Component_Execute_Until_Finished>`
 
-    num_executions_in_call : int
-        see `num_executions_in_call <Component_Num_Executions_In_Call>`
+    num_executions_until_finished : int
+        see `num_executions_until_finished <Component_Num_Executions_In_Call>`
 
     max_executions_until_finished : bool
         see `max_executions_until_finished <Component_Max_Executions>`
@@ -960,8 +960,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     :default value: True
                     :type: bool
 
-                num_executions_in_call
-                    see `num_executions_in_call <Component.num_executions_in_call>`
+                num_executions_until_finished
+                    see `num_executions_until_finished <Component.num_executions_until_finished>`
 
                     :default value: 0
                     :type: int
@@ -986,7 +986,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                                     fallback_default=True,
                                     pnl_internal=True)
         execute_until_finished = True
-        num_executions_in_call = Parameter(0, read_only=True)
+        num_executions_until_finished = Parameter(0, read_only=True)
         max_executions_until_finished = Parameter(1000, modulable=False)
 
         def _parse_variable(self, variable):

@@ -2380,7 +2380,7 @@ class Mechanism_Base(Mechanism):
 
         # EXECUTE MECHANISM
 
-        self.parameters.num_executions_in_call._set(0, override=True, context=context)
+        self.parameters.num_executions_until_finished._set(0, override=True, context=context)
         while True:
 
             # UPDATE VARIABLE and InputPort(S)
@@ -2441,14 +2441,14 @@ class Mechanism_Base(Mechanism):
             self._update_output_ports(context=context, runtime_params=runtime_params)
 
             # MANAGE MAX_EXECUTIONS_UNTIL_FINISHED AND DETERMINE WHETHER TO BREAK
-            num_executions = self.parameters.num_executions_in_call._get(context)
+            num_executions = self.parameters.num_executions_until_finished._get(context)
             max_executions = self.parameters.max_executions_until_finished._get(context)
 
             if  num_executions >= max_executions:
                 warnings.warn(f"Maximum number of executions ({max_executions}) reached for {self.name}.")
                 break
 
-            self.parameters.num_executions_in_call._set(num_executions+1, override=True, context=context)
+            self.parameters.num_executions_until_finished._set(num_executions+1, override=True, context=context)
 
             if self.is_finished(context) or not self.parameters.execute_until_finished._get(context):
                 # self._is_finished = True
