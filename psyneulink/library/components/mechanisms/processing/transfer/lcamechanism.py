@@ -765,7 +765,7 @@ class LCAMechanism(RecurrentTransferMechanism):
             threshold_criterion = self.parameters.threshold_criterion._get(context)
 
             if threshold_criterion == VALUE:
-                finished = any(self.function.parameters.value._get(context)[0] >= threshold)
+                finished = any(self.parameters.value._get(context)[0] >= threshold)
             else:
                 finished = any(self.output_ports[threshold_criterion].parameters.value._get(context) >= threshold)
 

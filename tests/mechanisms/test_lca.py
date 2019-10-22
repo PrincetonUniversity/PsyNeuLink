@@ -63,6 +63,8 @@ class TestLCA:
         assert np.allclose(results, [0.2, 0.53, 1.0745])
 
     def test_LCAMechanism_length_2(self):
+        # Note: since the LCAMechanism's threshold is not specified in this test, each execution only updates
+        #       the Mechanism once.
 
         T = TransferMechanism(function=Linear(slope=1.0), size=2)
         L = LCAMechanism(function=Linear(slope=2.0),
@@ -122,50 +124,71 @@ class TestLCA:
 
         assert np.allclose(results, [[0.2, 0.4], [0.45, 1.02], [0.7385, 1.993]])
 
-    def test_LCAMechanism_threshold(self):
-        m = LCAMechanism(size=2, threshold=0.7)
-        r = ProcessingMechanism(size=2)
+    def test_equivalance_of_threshold_and_when_finished_condition(self):
+        # Note: This tests the equivalence of results when the threshold is specified (in which case a single
+        #       call to execution should loop until it reaches threshold) and when it is not specified by
+        #       a condition is added to the scheduler that it execute until its is_finished method is True.
+        lca_until_thresh = LCAMechanism(size=2, threshold=0.7) # Note: , execute_to_threshold=True by default
+        response = ProcessingMechanism(size=2)
         comp = Composition()
-        comp.add_linear_processing_pathway([m,r])
-        comp.scheduler.add_condition(r, WhenFinished(m))
-        result = comp.run(inputs={m:[1,0]})
+        comp.add_linear_processing_pathway([lca_until_thresh,response])
+        comp.scheduler.add_condition(response, WhenFinished(lca_until_thresh))
+        result1 = comp.run(inputs={lca_until_thresh:[1,0]})
+
+        lca_single_step = LCAMechanism(size=2, threshold=0.7, execute_until_finished=False)
+        comp2 = Composition()
+        response2 = ProcessingMechanism(size=2)
+        comp2.add_linear_processing_pathway([lca_single_step,response2])
+        comp2.scheduler.add_condition(response2, WhenFinished(lca_single_step))
+        result2 = comp2.run(inputs={lca_single_step:[1,0]})
+        assert np.allclose(result1, result2)
+
+    def test_LCAMechanism_threshold(self):
+        # Note: In this test and the following ones, since the LCAMechanism's threshold is specified
+        #       it executes until the it reaches threshold.
+        lca = LCAMechanism(size=2, threshold=0.7)
+        comp = Composition()
+        comp.add_node(lca)
+        result = comp.run(inputs={lca:[1,0]})
         assert np.allclose(result, [[0.71463572, 0.28536428]])
 
     def test_LCAMechanism_threshold_with_max_vs_next(self):
-        m = LCAMechanism(size=3, threshold=0.1, threshold_criterion=MAX_VS_NEXT)
-        r = ProcessingMechanism(size=3)
+        lca = LCAMechanism(size=3, threshold=0.1, threshold_criterion=MAX_VS_NEXT)
+        response = ProcessingMechanism(size=3)
         comp = Composition()
-        comp.add_linear_processing_pathway([m,r])
-        comp.scheduler.add_condition(r, WhenFinished(m))
-        result = comp.run(inputs={m:[1,0.5,0]})
+        comp.add_linear_processing_pathway([lca,response])
+        comp.scheduler.add_condition(response, WhenFinished(lca))
+        # comp.add_node(lca)
+        result = comp.run(inputs={lca:[1,0.5,0]})
         assert np.allclose(result, [[0.52200799, 0.41310248, 0.31228985]])
+        # assert np.allclose(result, [[0.5, 0.39960759, 0.30699604]])
 
     def test_LCAMechanism_threshold_with_max_vs_avg(self):
-        m = LCAMechanism(size=3, threshold=0.1, threshold_criterion=MAX_VS_AVG)
-        r = ProcessingMechanism(size=3)
+        lca = LCAMechanism(size=3, threshold=0.1, threshold_criterion=MAX_VS_AVG)
+        response = ProcessingMechanism(size=3)
         comp = Composition()
-        comp.add_linear_processing_pathway([m,r])
-        comp.scheduler.add_condition(r, WhenFinished(m))
-        result = comp.run(inputs={m:[1,0.5,0]})
+        comp.add_linear_processing_pathway([lca,response])
+        comp.scheduler.add_condition(response, WhenFinished(lca))
+        result = comp.run(inputs={lca:[1,0.5,0]})
         assert np.allclose(result, [[0.5100369 , 0.43776452, 0.36808511]])
 
     def test_LCAMechanism_threshold_with_str(self):
-        m = LCAMechanism(size=2, threshold=0.7, threshold_criterion='MY_OUTPUT_PORT',
+        lca = LCAMechanism(size=2, threshold=0.7, threshold_criterion='MY_OUTPUT_PORT',
                          output_ports=[RESULT, 'MY_OUTPUT_PORT'])
-        r = ProcessingMechanism(size=2)
+        response = ProcessingMechanism(size=2)
         comp = Composition()
-        comp.add_linear_processing_pathway([m,r])
-        comp.scheduler.add_condition(r, WhenFinished(m))
-        result = comp.run(inputs={m:[1,0]})
+        comp.add_linear_processing_pathway([lca,response])
+        comp.scheduler.add_condition(response, WhenFinished(lca))
+        result = comp.run(inputs={lca:[1,0]})
         assert np.allclose(result, [[0.71463572, 0.28536428]])
 
     def test_LCAMechanism_threshold_with_int(self):
-        m = LCAMechanism(size=2, threshold=0.7, threshold_criterion=1, output_ports=[RESULT, 'MY_OUTPUT_PORT'])
-        r = ProcessingMechanism(size=2)
+        lca = LCAMechanism(size=2, threshold=0.7, threshold_criterion=1, output_ports=[RESULT, 'MY_OUTPUT_PORT'])
+        response = ProcessingMechanism(size=2)
         comp = Composition()
-        comp.add_linear_processing_pathway([m,r])
-        comp.scheduler.add_condition(r, WhenFinished(m))
-        result = comp.run(inputs={m:[1,0]})
+        comp.add_linear_processing_pathway([lca,response])
+        comp.scheduler.add_condition(response, WhenFinished(lca))
+        result = comp.run(inputs={lca:[1,0]})
         assert np.allclose(result, [[0.71463572, 0.28536428]])
 
 class TestLCAReinitialize:

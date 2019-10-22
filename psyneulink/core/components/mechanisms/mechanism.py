@@ -2378,66 +2378,81 @@ class Mechanism_Base(Mechanism):
 
         self._update_previous_value(context)
 
-        # UPDATE VARIABLE and InputPort(S)
+        # EXECUTE MECHANISM
 
-        # Executing or simulating Process, System or Composition, so get input by updating input_ports
-
-        if (input is None
-            and (context.execution_phase is not ContextFlags.IDLE)
-            and (self.input_port.path_afferents != [])):
-            variable = self._update_input_ports(context=context, runtime_params=runtime_params)
-
-        # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_ports
-        else:
-            if context.source & ContextFlags.COMMAND_LINE:
-                context.execution_phase = ContextFlags.PROCESSING
-            if input is None:
-                input = self.defaults.variable
-            #     FIX:  this input value is sent to input CIMs when compositions are nested
-            #           variable should be based on afferent projections
-            variable = self._get_variable_from_input(input, context)
-
-        self.parameters.variable._set(variable, context=context)
-
-        # UPDATE PARAMETERPORT(S)
-        self._update_parameter_ports(context=context, runtime_params=runtime_params)
-
-        # EXECUTE MECHNISM BY CALLING SUBCLASS _execute method AND ASSIGN RESULT TO self.value
-
-        # IMPLEMENTATION NOTE: use value as buffer variable until it has been fully processed
-        #                      to avoid multiple calls to (and potential log entries for) self.value property
+        self.parameters.num_executions_in_call._set(0, override=True, context=context)
         while True:
+
+            # UPDATE VARIABLE and InputPort(S)
+            # Executing or simulating Process, System or Composition, so get input by updating input_ports
+            if (input is None
+                and (context.execution_phase is not ContextFlags.IDLE)
+                and (self.input_port.path_afferents != [])):
+                variable = self._update_input_ports(context=context, runtime_params=runtime_params)
+
+            # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_ports
+            else:
+                if context.source & ContextFlags.COMMAND_LINE:
+                    context.execution_phase = ContextFlags.PROCESSING
+                if input is None:
+                    input = self.defaults.variable
+                #     FIX:  this input value is sent to input CIMs when compositions are nested
+                #           variable should be based on afferent projections
+                variable = self._get_variable_from_input(input, context)
+
+            self.parameters.variable._set(variable, context=context)
+
+            # UPDATE PARAMETERPORT(S)
+            self._update_parameter_ports(context=context, runtime_params=runtime_params)
+
+            # EXECUTE MECHNISM BY CALLING SUBCLASS _execute method AND ASSIGN RESULT TO self.value
+
+            # IMPLEMENTATION NOTE: use value as buffer variable until it has been fully processed
+            #                      to avoid multiple calls to (and potential log entries for) self.value property
+
             value = self._execute(variable=variable,
                                   context=context,
                                   runtime_params=runtime_params)
-            if self.is_finished:
+
+            # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
+            #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
+            #                       ARRAY OF LENGTH 2), np.array (AS WELL AS np.atleast_2d) GENERATES A ValueError
+            if (isinstance(value, list) and
+                (all(isinstance(item, np.ndarray) for item in value) and
+                    all(
+                            all(item.shape[i]==value[0].shape[0]
+                                for i in range(len(item.shape)))
+                            for item in value))):
+                    pass
+            else:
+                converted_to_2d = np.atleast_2d(value)
+                # If return_value is a list of heterogenous elements, return as is
+                #     (satisfies requirement that return_value be an array of possibly multidimensional values)
+                if converted_to_2d.dtype == object:
+                    pass
+                # Otherwise, return value converted to 2d np.array
+                else:
+                    # return converted_to_2d
+                    value = converted_to_2d
+
+            self.parameters.value._set(value, context=context)
+
+            # UPDATE OUTPUTPORT(S)
+            self._update_output_ports(context=context, runtime_params=runtime_params)
+
+            # MANAGE MAX_EXECUTIONS_UNTIL_FINISHED AND DETERMINE WHETHER TO BREAK
+            num_executions = self.parameters.num_executions_in_call._get(context)
+            max_executions = self.parameters.max_executions_until_finished._get(context)
+
+            if  num_executions >= max_executions:
+                warnings.warn(f"Maximum number of executions ({max_executions}) reached for {self.name}.")
                 break
 
-        # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
-        #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
-        #                       ARRAY OF LENGTH 2), np.array (AS WELL AS np.atleast_2d) GENERATES A ValueError
-        if (isinstance(value, list) and
-            (all(isinstance(item, np.ndarray) for item in value) and
-                all(
-                        all(item.shape[i]==value[0].shape[0]
-                            for i in range(len(item.shape)))
-                        for item in value))):
-                pass
-        else:
-            converted_to_2d = np.atleast_2d(value)
-            # If return_value is a list of heterogenous elements, return as is
-            #     (satisfies requirement that return_value be an array of possibly multidimensional values)
-            if converted_to_2d.dtype == object:
-                pass
-            # Otherwise, return value converted to 2d np.array
-            else:
-                # return converted_to_2d
-                value = converted_to_2d
+            self.parameters.num_executions_in_call._set(num_executions+1, override=True, context=context)
 
-        self.parameters.value._set(value, context=context)
-
-        # UPDATE OUTPUTPORT(S)
-        self._update_output_ports(context=context, runtime_params=runtime_params)
+            if self.is_finished(context) or not self.parameters.execute_until_finished._get(context):
+                # self._is_finished = True
+                break
 
         # REPORT EXECUTION
         if self.prefs.reportOutputPref and (context.execution_phase & ContextFlags.PROCESSING | ContextFlags.LEARNING):
@@ -2447,6 +2462,7 @@ class Mechanism_Base(Mechanism):
                 self.output_port.parameters.value._get(context),
                 context=context
             )
+
         return value
 
     def run(
