@@ -7,7 +7,7 @@ X=[[1,1,1],[1,0,1],[0,1,1],[0,0,1]]
 AND_labels_pnl=[[1],[0],[0],[0]]
 OR_labels_pnl= [[1],[1],[1],[0]]
 XOR_labels_pnl=[[0],[1],[1],[0]]
-rat=int(trials/4)
+rat = int(trials / 4)
 
 #Specify which label set you would like to use.
 labels=XOR_labels_pnl

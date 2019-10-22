@@ -501,7 +501,7 @@ class CompExecution(CUDAExecution):
     def _initialize_autodiff_param_struct(self, autodiff_stimuli):
         inputs = autodiff_stimuli.get("inputs", {})
         targets = autodiff_stimuli.get("targets", {})
-        epochs = autodiff_stimuli.get("epochs", 0)
+        epochs = autodiff_stimuli.get("epochs", 1)
 
         num_trials = len(next(iter(inputs.values())))
 
@@ -534,7 +534,7 @@ class CompExecution(CUDAExecution):
 
         return autodiff_values
 
-    def run(self, inputs, runs, num_input_sets, autodiff_stimuli={"targets" : {}, "epochs": 0}):
+    def run(self, inputs, runs, num_input_sets, autodiff_stimuli={"targets" : {}, "epochs": 1}):
         inputs = self._get_run_input_struct(inputs, num_input_sets)
         # Special casing for autodiff
         if hasattr(self._composition,"learning_enabled") and self._composition.learning_enabled is True:

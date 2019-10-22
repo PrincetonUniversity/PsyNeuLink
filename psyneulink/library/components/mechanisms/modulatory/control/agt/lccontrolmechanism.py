@@ -708,7 +708,7 @@ class LCControlMechanism(ControlMechanism):
                  initial_v_FitzHughNagumo=0.0,
                  time_step_size_FitzHughNagumo=0.05,
                  t_0_FitzHughNagumo=0.0,
-                 a_v_FitzHughNagumo=-1/3,
+                 a_v_FitzHughNagumo=-1 / 3,
                  b_v_FitzHughNagumo=0.0,
                  c_v_FitzHughNagumo=1.0,
                  d_v_FitzHughNagumo=0.0,

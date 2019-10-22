@@ -332,7 +332,7 @@ class AGTControlMechanism(ControlMechanism):
             prefs=prefs,
         )
 
-        self.objective_mechanism.name = self.name+'_ObjectiveMechanism'
+        self.objective_mechanism.name = self.name + '_ObjectiveMechanism'
         self.objective_mechanism._role = CONTROL
 
     def _validate_params(self, request_set, target_set=None, context=None):

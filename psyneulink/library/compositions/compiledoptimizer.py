@@ -14,7 +14,7 @@ class Optimizer():
 
     # gets the type of the delta_w struct
     def _get_delta_w_struct_type(self, ctx):
-        delta_w = [None]*len(self._composition.nodes)
+        delta_w = [None] * len(self._composition.nodes)
         for node in self._composition.nodes:
             node_idx = self._composition._get_node_index(node)
             afferent_nodes = self._pytorch_model._get_afferent_nodes(node)
@@ -59,7 +59,7 @@ class Optimizer():
         builder.store(grad_struct.type.pointee(None),grad_struct)
 
     def zero_grad(self, ctx):
-        name = self._composition.name+"_ZERO_GRAD"
+        name = self._composition.name + "_ZERO_GRAD"
         # try:
         #     llvm_func = ctx.get_llvm_function(name)
         #     return llvm_func
@@ -133,7 +133,7 @@ class AdamOptimizer(Optimizer):
 
     # steps the adam optimizer (methodology: https://arxiv.org/pdf/1412.6980.pdf )
     def step(self, ctx):
-        name = self._composition.name+"_ADAM_STEP"
+        name = self._composition.name + "_ADAM_STEP"
         # try:
         #     llvm_func = ctx.get_llvm_function(name)
         #     return llvm_func
@@ -300,9 +300,9 @@ class SGDOptimizer(Optimizer):
     def initialize_optimizer_struct(self, ctx, builder, optim_struct):
         pass
 
-    # steps the adam optimizer (methodology: https://arxiv.org/pdf/1412.6980.pdf )
+    # steps the sgd optimizer (methodology: https://arxiv.org/pdf/1412.6980.pdf )
     def step(self, ctx):
-        name = self._composition.name+"_SGD_STEP"
+        name = self._composition.name + "_SGD_STEP"
         # try:
         #     llvm_func = ctx.get_llvm_function(name)
         #     return llvm_func
@@ -332,7 +332,7 @@ class SGDOptimizer(Optimizer):
             
             multiplied_delta_w = self._pytorch_model._gen_inject_mat_scalar_mult(ctx, builder, delta_w_ptr, lr)
             self._pytorch_model._gen_inject_mat_sub(ctx, builder, weights_llvmlite, multiplied_delta_w, weights_llvmlite)
-
+                
         builder.ret_void()
 
         return llvm_func

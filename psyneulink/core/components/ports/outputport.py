@@ -1675,7 +1675,8 @@ class StandardOutputPorts():
                 index = port[VARIABLE]
             else:
                 continue
-            setattr(self.owner.__class__, port[NAME]+'_INDEX', make_readonly_property(index, name=port[NAME] + '_INDEX'))
+            setattr(self.owner.__class__, port[NAME] + '_INDEX',
+                    make_readonly_property(index, name=port[NAME] + '_INDEX'))
 
         return dict_list
 

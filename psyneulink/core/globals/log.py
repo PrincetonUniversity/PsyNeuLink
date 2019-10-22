@@ -1136,7 +1136,7 @@ class Log:
             # header = header + value_spacer + VALUE.capitalize()
 
         print("\nLog for {0}:".format(self.owner.name))
-        print('\n'+header+'\n')
+        print('\n' + header + '\n')
 
         # Sort for consistency of reporting
         # entry_names_sorted = sorted(self.logged_entries.keys())
@@ -1169,13 +1169,13 @@ class Log:
                         if options.CONTEXT & option_flags:
                             context = repr(context)
                             if len(context) > context_width:
-                                context = context[:context_width-3] + "..."
+                                context = context[:context_width - 3] + "..."
                             data_str = data_str + context.ljust(context_width, spacer)
 
                         if options.VALUE & option_flags:
                             value = str(value).replace('\n',',')
                             if len(value) > value_width:
-                                value = value[:value_width-3].rstrip() + "..."
+                                value = value[:value_width - 3].rstrip() + "..."
                             format_str = "{{:2.{0}}}".format(value_width)
                             data_str = data_str + value_spacer + format_str.format(value).ljust(value_width)
 
@@ -1597,7 +1597,7 @@ class Log:
             time_step_increments.append(chain)
         for i in range(1, len(time_values)):
             update_tuple = list(time_values[i])
-            update_tuple[2] = update_tuple[2] + time_step_increments[i - 1]*0.01
+            update_tuple[2] = update_tuple[2] + time_step_increments[i - 1] * 0.01
             mod_time_values[i] = tuple(update_tuple)
         return mod_time_values
 

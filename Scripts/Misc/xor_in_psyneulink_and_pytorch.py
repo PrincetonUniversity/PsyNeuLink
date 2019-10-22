@@ -75,14 +75,14 @@ xor_out = pnl.TransferMechanism(name='output_layer',
 # projection that takes the signal from the input layer and transforms it to get an input for
 # the hidden layer (the xor_hid mechanism)
 hid_map = pnl.MappingProjection(name='input_to_hidden',
-                            matrix=np.random.randn(2,10)*0.1,
+                            matrix=np.random.randn(2,10) * 0.1,
                             sender=xor_in,
                             receiver=xor_hid)
 
 # projection that takes the signal from the hidden layer and transforms it to get an input for
 # the output layer (the xor_out mechanism)
 out_map = pnl.MappingProjection(name='hidden_to_output',
-                            matrix=np.random.randn(10,1)*0.1,
+                            matrix=np.random.randn(10,1) * 0.1,
                             sender=xor_hid,
                             receiver=xor_out)
 
@@ -142,12 +142,12 @@ xor_out = pnl.TransferMechanism(name='xor_out',
                                 function=pnl.core.components.functions.transferfunctions.Logistic())
 
 hid_map = pnl.MappingProjection(name='input_to_hidden',
-                            matrix=np.random.randn(2,10)*0.1,
+                            matrix=np.random.randn(2,10) * 0.1,
                             sender=xor_in,
                             receiver=xor_hid)
 
 out_map = pnl.MappingProjection(name='hidden_to_output',
-                            matrix=np.random.randn(10,1)*0.1,
+                            matrix=np.random.randn(10,1) * 0.1,
                             sender=xor_hid,
                             receiver=xor_out)
 
@@ -209,10 +209,10 @@ class Pytorch_XOR(torch.nn.Module):
         # (vs floats for ex.)
 
         # this parameter object corresponds to the hid_map projection in the system above
-        self.pt_hid_map = nn.Parameter(torch.randn(2,10).double()*0.1)
+        self.pt_hid_map = nn.Parameter(torch.randn(2,10).double() * 0.1)
 
         # and this one to the out_map projection
-        self.pt_out_map = nn.Parameter(torch.randn(10,1).double()*0.1)
+        self.pt_out_map = nn.Parameter(torch.randn(10,1).double() * 0.1)
 
         # uncomment the following to define bias parameters:
         # self.pt_hid_bias = nn.Parameter(torch.randn(10)*0.1)

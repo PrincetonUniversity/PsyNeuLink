@@ -404,7 +404,7 @@ class PreferenceSet(object):
         else:
             print("Attempt to assign PreferenceSet {0} of {1} an invalid PreferenceLevel ({2});"
                   " level will remain set to {3}".format(self.name, self.owner.name, setting,
-                                                         self._level.__class__.__name__+'.'+self._level.name))
+                                                         self._level.__class__.__name__ + '.' + self._level.name))
 
 # FIX: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -636,7 +636,7 @@ class PreferenceSet(object):
                                          format(candidate_log_class.__name__,
                                                 candidate_log_class.__module__,
                                                 log_entry_attribute,
-                                                LogEntry.__module__+"."+LogEntry.__name__,))
+                                                LogEntry.__module__ + "." + LogEntry.__name__,))
             else:
                 if OK:
                     continue
@@ -649,7 +649,7 @@ class PreferenceSet(object):
                                              format(log_entry_attribute,
                                                     candidate_log_class.__name__,
                                                     candidate_log_entry_value,
-                                                    LogEntry.__module__+"."+LogEntry.__name__,
+                                                    LogEntry.__module__ + "." + LogEntry.__name__,
                                                     global_log_entry_value))
 
     def get_pref_setting_for_level(self, pref_ivar_name, requested_level=None):
@@ -733,10 +733,10 @@ class PreferenceSet(object):
 #                         from Utilities import get_modulationOperation_name
                         err_msg = ("{0} not found at {1}; replaced with value ({2}) from next lower level ({3})".
                                    format(pref_ivar_name,
-                                          requested_level.__class__.__name__+'.'+requested_level.name,
+                                          requested_level.__class__.__name__ + '.' + requested_level.name,
                                           # get_modulationOperation_name(pref_value),
                                           pref_value,
-                                          pref_entry.level.__class__.__name__+'.'+pref_entry.level.name))
+                                          pref_entry.level.__class__.__name__ + '.' + pref_entry.level.name))
                         return pref_value, err_msg
                 else:
                     # If classPreferences for level have not yet been assigned as PreferenceSet, assign them
@@ -809,7 +809,7 @@ class PreferenceSet(object):
                 pref_info_table = pref_info_table +("- {0} {1} {2} {3}\n".format(pref_name[1:].ljust(35,'.'),
                                                                            base_value_str.strip('"\'').ljust(35,'.'),
                                                                            current_value_str.strip('"\'').ljust(35,'.'),
-                                                                           level.__class__.__name__+'.'+level.name))
+                                                                           level.__class__.__name__ + '.' + level.name))
 
 
         # Header info
