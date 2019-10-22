@@ -825,7 +825,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
                  default_variable=None,
                  rate: parameter_spec = 1.0,
                  noise=0.0,
-                 offset=None,
+                 offset=0.0,
                  initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -873,8 +873,6 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         rate = np.array(self.get_current_function_param(RATE, context)).astype(float)
 
         offset = self.get_current_function_param(OFFSET, context)
-        if offset is None:
-            offset = 0.0
 
         # execute noise if it is a function
         noise = self._try_execute_param(self.get_current_function_param(NOISE, context), variable)
