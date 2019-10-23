@@ -474,41 +474,63 @@ class BayesGLM(LearningFunction):
 
         return super()._handle_default_variable(default_variable=default_variable, size=size)
 
-    def initialize_priors(self):
+    def initialize_priors(self, context):
         """Set the prior parameters (`mu_prior <BayesGLM.mu_prior>`, `Lamba_prior <BayesGLM.Lambda_prior>`,
         `gamma_shape_prior <BayesGLM.gamma_shape_prior>`, and `gamma_size_prior <BayesGLM.gamma_size_prior>`)
         to their initial (_0) values, and assign current (_n) values to the priors
         """
 
-        variable = np.array(self.defaults.variable)
+        # variable = np.array(self.defaults.variable)
         variable = self.defaults.variable
         if np.array(variable).dtype != object:
             variable = np.atleast_2d(variable)
 
+        mu_0 = self.parameters.mu_0._get(context) or self.mu_0
+        sigma_0 = self.parameters.sigma_0._get(context) or self.sigma_0
+        gamma_shape_0 = self.parameters.gamma_shape_0._get(context) or self.gamma_shape_0
+        gamma_size_0 = self.parameters.gamma_size_0._get(context) or self.gamma_size_0
+
+        Lambda_prior = self.parameters.Lambda_prior
+        Lambda_n = self.parameters.Lambda_n
+        mu_prior = self.parameters.mu_prior
+        mu_n = self.parameters.mu_n
+        gamma_shape_n = self.parameters.gamma_shape_n
+        gamma_shape_prior = self.parameters.gamma_shape_prior
+        gamma_size_n = self.parameters.gamma_size_n
+        gamma_size_prior = self.parameters.gamma_size_prior
+
+
+
         n = len(variable[0])
 
-        if isinstance(self.mu_0, (int, float)):
-            self.mu_prior = np.full((n, 1),self.mu_0)
+        if isinstance(mu_0, (int, float)):
+            mu_prior._set(np.full((n, 1),mu_0), context)
         else:
-            if len(self.mu_0) != n:
+            if len(mu_0) != n:
                 raise FunctionError("Length of mu_0 ({}) does not match number of predictors ({})".
-                                    format(len(self.mu_0), n))
-            self.mu_prior = np.array(self.mu_0).reshape(len(self._mu_0),1)
+                                    format(len(mu_0), n))
+            mu_prior._set(np.array(mu_0.reshape(len(mu_0),1), context))
 
-        if isinstance(self.sigma_0, (int, float)):
-            Lambda_0 = (1 / (self.sigma_0 ** 2)) * np.eye(n)
+        if isinstance(sigma_0, (int, float)):
+            Lambda_0 = (1 / (sigma_0 ** 2)) * np.eye(n)
         else:
-            if len(self.sigma_0) != n:
-                raise FunctionError("Length of sigma_0 ({}) does not match number of predictors ({})".
-                                    format(len(self.sigma_0), n))
-            Lambda_0 = (1 / (np.array(self.sigma_0) ** 2)) * np.eye(n)
-        self.Lambda_prior = Lambda_0
+            if len(sigma_0) != n:
+                raise FunctionError(f"Length of sigma_0 ({len(sigma_0)}) does not match number of predictors ({n}).")
+            Lambda_0 = (1 / (np.array(sigma_0) ** 2)) * np.eye(n)
+        Lambda_prior._set(Lambda_0, context)
 
         # before we see any data, the posterior is the prior
-        self.mu_n = self.mu_prior
-        self.Lambda_n = self.Lambda_prior
-        self.gamma_shape_n = self.gamma_shape_0
-        self.gamma_size_n = self.gamma_size_0
+        # # MODIFIED 10/22/19 OLD:
+        # self.mu_n = self.mu_prior
+        # self.Lambda_n = self.Lambda_prior
+        # self.gamma_shape_n = self.gamma_shape_0
+        # self.gamma_size_n = self.gamma_size_0
+        # MODIFIED 10/22/19 NEW: [JDC]
+        mu_n._set(mu_prior._get(context), context)
+        Lambda_n._set(Lambda_prior._get(context), context)
+        gamma_shape_n._set(gamma_shape_0, context)
+        gamma_size_n._set(gamma_size_0, context)
+        # MODIFIED 10/22/19 END
 
     @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, *args, context=None):
@@ -517,7 +539,7 @@ class BayesGLM(LearningFunction):
         if DEFAULT_VARIABLE in args[0]:
             self.defaults.variable = np.array([np.zeros_like(args[0][DEFAULT_VARIABLE][0]),
                                                         np.zeros_like(args[0][DEFAULT_VARIABLE][1])])
-            self.initialize_priors()
+            self.initialize_priors(context)
 
     def _function(
         self,
@@ -551,7 +573,7 @@ class BayesGLM(LearningFunction):
         """
 
         if self.is_initializing:
-            self.initialize_priors()
+            self.initialize_priors(context)
 
         # # MODIFIED 10/26/18 OLD:
         # # If variable passed during execution does not match default assigned during initialization,
@@ -564,12 +586,13 @@ class BayesGLM(LearningFunction):
         # Today's prior is yesterday's posterior
         Lambda_prior = self.get_current_function_param('Lambda_n', context)
         mu_prior = self.get_current_function_param('mu_n', context)
-        # # MODIFIED 6/3/19 OLD: [JDC]: THE FOLLOWING ARE YOTAM'S ADDITION (NOT in FALK's CODE)
-        # gamma_shape_prior = self.get_current_function_param('gamma_shape_n', context)
-        # gamma_size_prior = self.get_current_function_param('gamma_size_n', context)
-        # MODIFIED 6/3/19 NEW:
-        gamma_shape_prior = self.parameters.gamma_shape_n.default_value
-        gamma_size_prior = self.parameters.gamma_size_n.default_value
+
+        # MODIFIED 6/3/19 OLD: [JDC]: THE FOLLOWING ARE YOTAM'S ADDITION (NOT in FALK's CODE)
+        gamma_shape_prior = self.get_current_function_param('gamma_shape_n', context)
+        gamma_size_prior = self.get_current_function_param('gamma_size_n', context)
+        # # MODIFIED 6/3/19 NEW:
+        # gamma_shape_prior = self.parameters.gamma_shape_n.default_value
+        # gamma_size_prior = self.parameters.gamma_size_n.default_value
         # MODIFIED 6/3/19 END
 
 

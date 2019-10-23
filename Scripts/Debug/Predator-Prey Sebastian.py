@@ -269,8 +269,8 @@ def main():
                                                  reward_input_mech:[reward]},
                                          context=context,
                                          bin_execute=BIN_EXECUTE,
-                                         animate={'show_controller':True,
-                                                  'show_cim':True}
+                                         # animate={'show_controller':True,
+                                         #          'show_cim':True}
                                          )
             agent_action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
 
