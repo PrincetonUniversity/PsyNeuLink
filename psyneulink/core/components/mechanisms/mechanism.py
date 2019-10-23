@@ -3536,15 +3536,6 @@ class Mechanism_Base(Mechanism):
                                  format(Mechanism.__name__, system, System.__name__))
         self.systems.__additem__(system, role)
 
-    def is_finished(self, context=None):
-        """
-            set by a Mechanism to signal completion of its `execution <Mechanism_Execution>` in a `trial`; used by
-            `Component-based Conditions <Conditions_Component_Based>` to predicate the execution of one or more other
-            Components on the Mechanism.
-        """
-        # return self._is_finished
-        return True
-
     @property
     def input_port(self):
         return self.input_ports[0]

@@ -954,6 +954,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     :type: int
                     :read only: True
 
+                is_finished
+                    see `is_finished <Component.is_finished>`
+                    :default value: True
+                    :type: bool
+
                 execute_until_finished
                     see `execute_until_finished <Component.execute_until_finished>`
 
@@ -985,6 +990,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                                     stateful=False,
                                     fallback_default=True,
                                     pnl_internal=True)
+        is_finished_flag = Parameter(True, loggable=False, stateful=True, pnl_internal=True)
         execute_until_finished = True
         num_executions_until_finished = Parameter(0, read_only=True)
         max_executions_until_finished = Parameter(1000, modulable=False)
@@ -3133,6 +3139,18 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         self.most_recent_context = context
         return value
+
+    # MODIFIED 10/22/19 NEW:
+    def is_finished(self, context=None):
+        """
+            set by a Component to signal completion of its `execution <Component_Execution>` in a `trial`; used by
+            `Component-based Conditions <Conditions_Component_Based>` to predicate the execution of one or more other
+            Components on a Component.
+        """
+        # return self._is_finished
+        return self.is_finished_flag
+        # return self.parameters._is_finished._get(context)
+        # return True
 
     def _parse_param_port_sources(self):
         try:

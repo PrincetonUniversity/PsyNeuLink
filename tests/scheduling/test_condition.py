@@ -633,9 +633,9 @@ class TestCondition:
     def test_WhenFinishedAny_2(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        A._is_finished = False
+        A.is_finished_flag = False
         B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        B._is_finished = True
+        B.is_finished_flag = True
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
             comp.add_node(m)
@@ -676,15 +676,15 @@ class TestCondition:
         termination_conds[TimeScale.TRIAL] = WhenFinishedAny()
         output = []
         i = 0
-        A._is_finished = False
-        B._is_finished = False
-        C._is_finished = False
+        A.is_finished_flag = False
+        B.is_finished_flag = False
+        C.is_finished_flag = False
         for step in sched.run(termination_conds=termination_conds):
             if i == 3:
-                A._is_finished = True
-                B._is_finished = True
+                A.is_finished_flag = True
+                B.is_finished_flag = True
             if i == 4:
-                C._is_finished = True
+                C.is_finished_flag = True
             output.append(step)
             i += 1
         expected_output = [
@@ -721,9 +721,9 @@ class TestCondition:
     def test_WhenFinishedAll_2(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        A._is_finished = False
+        A.is_finished_flag = False
         B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        B._is_finished = True
+        B.is_finished_flag = True
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
             comp.add_node(m)
@@ -764,16 +764,16 @@ class TestCondition:
         termination_conds[TimeScale.TRIAL] = WhenFinishedAll()
         output = []
         i = 0
-        A._is_finished = False
-        B._is_finished = False
-        C._is_finished = False
+        A.is_finished_flag = False
+        B.is_finished_flag = False
+        C.is_finished_flag = False
 
         for step in sched.run(termination_conds=termination_conds):
             if i == 3:
-                A._is_finished = True
-                B._is_finished = True
+                A.is_finished_flag = True
+                B.is_finished_flag = True
             if i == 4:
-                C._is_finished = True
+                C.is_finished_flag = True
             output.append(step)
             i += 1
         expected_output = [
