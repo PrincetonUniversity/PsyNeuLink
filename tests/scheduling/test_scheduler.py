@@ -442,10 +442,10 @@ class TestLinear:
 
         output = []
         i = 0
-        A._is_finished = False
+        A.is_finished_flag = False
         for step in sched.run(termination_conds=termination_conds):
             if i == 3:
-                A._is_finished = True
+                A.is_finished_flag = True
             output.append(step)
             i += 1
 
@@ -455,7 +455,7 @@ class TestLinear:
     def test_9b(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
-        A._is_finished = False
+        A.is_finished_flag = False
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         for m in [A, B]:
             comp.add_node(m)
@@ -477,7 +477,7 @@ class TestLinear:
     def test_10(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
-        A._is_finished = True
+        A.is_finished_flag = True
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
 
         for m in [A, B]:
@@ -500,7 +500,7 @@ class TestLinear:
     def test_10b(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
-        A._is_finished = False
+        A.is_finished_flag = False
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
 
         for m in [A, B]:
@@ -523,7 +523,7 @@ class TestLinear:
     def test_10c(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
-        A._is_finished = True
+        A.is_finished_flag = True
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
 
         for m in [A, B]:
@@ -546,7 +546,7 @@ class TestLinear:
     def test_10d(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
-        A._is_finished = False
+        A.is_finished_flag = False
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
 
         for m in [A, B]:
@@ -780,10 +780,10 @@ class TestBranching:
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 1)
         output = []
         i = 0
-        A._is_finished = False
+        A.is_finished_flag = False
         for step in sched.run(termination_conds=termination_conds):
             if i == 3:
-                A._is_finished = True
+                A.is_finished_flag = True
             output.append(step)
             i += 1
 
@@ -813,10 +813,10 @@ class TestBranching:
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 1)
         output = []
         i = 0
-        A._is_finished = False
+        A.is_finished_flag = False
         for step in sched.run(termination_conds=termination_conds):
             if i == 10:
-                A._is_finished = True
+                A.is_finished_flag = True
             output.append(step)
             i += 1
 
