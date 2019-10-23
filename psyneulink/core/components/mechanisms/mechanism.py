@@ -2638,19 +2638,14 @@ class Mechanism_Base(Mechanism):
         pass
 
     def _get_output_struct_type(self, ctx):
-        output_type_list = []
-        for port in self.output_ports:
-            output_type_list.append(ctx.get_output_struct_type(port))
+        output_type_list = (ctx.get_output_struct_type(port) for port in self.output_ports)
         return pnlvm.ir.LiteralStructType(output_type_list)
 
     def _get_input_struct_type(self, ctx):
-        input_type_list = []
-        for port in self.input_ports:
-            # Extract the non-modulation portion of InputPort input struct
-            input_type_list.append(ctx.get_input_struct_type(port).elements[0])
-        mod_input_type_list = []
-        for proj in self.mod_afferents:
-            mod_input_type_list.append(ctx.get_output_struct_type(proj))
+        # Extract the non-modulation portion of InputPort input struct
+        input_type_list = [ctx.get_input_struct_type(port).elements[0] for port in self.input_ports]
+        # Get modulatory inputs
+        mod_input_type_list = [ctx.get_output_struct_type(proj) for proj in self.mod_afferents]
         if len(mod_input_type_list) > 0:
             input_type_list.append(pnlvm.ir.LiteralStructType(mod_input_type_list))
         return pnlvm.ir.LiteralStructType(input_type_list)
@@ -2686,9 +2681,7 @@ class Mechanism_Base(Mechanism):
     def _get_state_initializer(self, context):
         ports_state_init = self._get_ports_state_initializer(context)
         function_state_init = self._get_function_state_initializer(context)
-        state_init_list = [ports_state_init, function_state_init]
-
-        return tuple(state_init_list)
+        return (ports_state_init, function_state_init)
 
     def _gen_llvm_ports(self, ctx, builder, ports,
                         get_output_ptr, fill_input_data,
