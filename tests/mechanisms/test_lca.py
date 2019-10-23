@@ -125,14 +125,15 @@ class TestLCA:
         assert np.allclose(results, [[0.2, 0.4], [0.45, 1.02], [0.7385, 1.993]])
 
     def test_equivalance_of_threshold_and_when_finished_condition(self):
-        # Note: This tests the equivalence of results when the threshold is specified (in which case a single
-        #       call to execution should loop until it reaches threshold) and when it is not specified by
-        #       a condition is added to the scheduler that it execute until its is_finished method is True.
+        # Note: This tests the equivalence of results when execute_until_finished is True for the LCAMechanism
+        #       (by default) and the call to execution loops until it reaches threshold (1st test); vs. when
+        #       execute_until_finished is False and a condition is added to the scheduler that causes the
+        #       LCAMechanism it to execute until it reaches threshold (2nd test).
+
         lca_until_thresh = LCAMechanism(size=2, threshold=0.7) # Note: , execute_to_threshold=True by default
         response = ProcessingMechanism(size=2)
         comp = Composition()
-        comp.add_linear_processing_pathway([lca_until_thresh,response])
-        comp.scheduler.add_condition(response, WhenFinished(lca_until_thresh))
+        comp.add_linear_processing_pathway([lca_until_thresh, response])
         result1 = comp.run(inputs={lca_until_thresh:[1,0]})
 
         lca_single_step = LCAMechanism(size=2, threshold=0.7, execute_until_finished=False)
