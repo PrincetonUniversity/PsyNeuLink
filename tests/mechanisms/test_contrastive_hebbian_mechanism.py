@@ -217,9 +217,10 @@ class TestContrastiveHebbian:
 
         c = pnl.Composition()
         c.add_linear_processing_pathway([m,o])
-        ms = pnl.Scheduler(composition=c)
-        ms.add_condition(o, pnl.WhenFinished(m))
-        c.scheduler=ms
+        c.scheduler.add_condition(o, pnl.WhenFinished(m))
+
+        c.show_graph(show_learning=pnl.ALL)
+
         results = c.run(inputs={m:[2,2]}, num_trials=4)
 
         np.testing.assert_allclose(results, [[[2.671875]],

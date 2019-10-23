@@ -28,7 +28,7 @@ __all__ = [
     'ADAPTIVE', 'ADAPTIVE_INTEGRATOR_FUNCTION', 'ADAPTIVE_MECHANISM', 'ADD_INPUT_PORT', 'ADD_OUTPUT_PORT',
     'ADDITIVE', 'ADDITIVE_PARAM', 'AFTER', 'ALL', 'ALLOCATION_SAMPLES', 'ANGLE',
     'ARGUMENT_THERAPY_FUNCTION', 'ARRANGEMENT', 'ASSERT', 'ASSIGN', 'ASSIGN_VALUE', 'AUTO','AUTO_ASSIGN_MATRIX',
-    'AUTO_ASSOCIATIVE_PROJECTION', 'HAS_INITIALIZERS', 'AUTOASSOCIATIVE_LEARNING_MECHANISM',
+    'AUTO_ASSOCIATIVE_PROJECTION', 'HAS_INITIALIZERS', 'AUTOASSOCIATIVE_LEARNING', 'AUTOASSOCIATIVE_LEARNING_MECHANISM',
     'BACKPROPAGATION_FUNCTION', 'BEFORE', 'BETA', 'BIAS', 'BOLD', 'BOTH', 'BOUNDS', 'BUFFER_FUNCTION',
     'CHANGED', 'CLAMP_INPUT', 'COMBINATION_FUNCTION_TYPE', 'COMBINE', 'COMBINE_MEANS_FUNCTION',
     'COMBINE_OUTCOME_AND_COST_FUNCTION', 'COMMAND_LINE', 'COMPARATOR_MECHANISM', 'COMPONENT', 'COMPONENT_INIT',
@@ -120,59 +120,74 @@ class NodeRoles:
     ----------
 
     ORIGIN
-        A `ProcessingMechanism <ProcessingMechanism>` that is the first Mechanism of a `Process` and/or `System`,
-        and that receives the input to the Process or System when it is :ref:`executed or run <Run>`.  A Process may
-        have only one `ORIGIN` Mechanism, but a System may have many.  Note that the `ORIGIN`
-        Mechanism of a Process is not necessarily an `ORIGIN` of the System to which it belongs, as it may receive
-        `Projections <Projection>` from other Processes in the System. The `ORIGIN` Mechanisms of a Process or
-        System are listed in its :keyword:`origin_mechanisms` attribute, and can be displayed using its :keyword:`show`
-        method.  For additional details about `ORIGIN` Mechanisms in Processes, see
+        A `ProcessingMechanism <ProcessingMechanism>` that is the first Mechanism of a `Composition`,
+        and that receives the input to the Composition when it is :ref:`executed or run <Run>`.
+        A Composition may have more than one `ORIGIN` Mechanism.
+        COMMENT:
+        ADD VERSION FOR COMPOSITION
+        For additional details about `ORIGIN` Mechanisms in Processes, see
         `Process Mechanisms <Process_Mechanisms>` and `Process Input and Output <Process_Input_And_Output>`;
         and for Systems see `System Mechanisms <System_Mechanisms>` and
         `System Input and Initialization <System_Execution_Input_And_Initialization>`.
+        COMMENT
 
     INTERNAL
         A `ProcessingMechanism <ProcessingMechanism>` that is not designated as having any other status.
 
     CYCLE
         A `ProcessingMechanism <ProcessingMechanism>` that is *not* an `ORIGIN` Mechanism, and receives a `Projection
-        <Projection>` that closes a recurrent loop in a `Process` and/or `System`.  If it is an `ORIGIN` Mechanism, then
+        <Projection>` that closes a recurrent loop in a `Composition`.  If it is an `ORIGIN` Mechanism, then
         it is simply designated as such (since it will be assigned input and therefore be initialized in any event).
 
     INITIALIZE_CYCLE
         A `ProcessingMechanism <ProcessingMechanism>` that is the `sender <Projection_Base.sender>` of a
-        `Projection <Projection>` that closes a loop in a `Process` or `System`, and that is not an `ORIGIN` Mechanism
+        `Projection <Projection>` that closes a loop in a `Composition`, and that is not an `ORIGIN` Mechanism
         (since in that case it will be initialized in any event). An `initial value  <Run_InitialValues>` can be
-        assigned to such Mechanisms, that will be used to initialize the Process or System when it is first run.  For
-        additional information, see `Run <Run_Initial_Values>`, `System Mechanisms <System_Mechanisms>` and
+        assigned to such Mechanisms, that will be used to initialize the Composition when it is first run.  For
+        additional information, see `Run <Run_Initial_Values>`.
+        COMMENT:
+        ADD VERSION FOR COMPOSITION
+        `System Mechanisms <System_Mechanisms>` and
         `System Input and Initialization <System_Execution_Input_And_Initialization>`.
+        COMMENT
 
     TERMINAL
-        A `ProcessingMechanism <ProcessingMechanism>` that is the last Mechanism of a `Process` and/or `System`, and
-        that provides the output to the Process or System when it is `executed or run <Run>`.  A Process may
-        have only one `TERMINAL` Mechanism, but a System may have many.  Note that the `TERMINAL`
+        A `ProcessingMechanism <ProcessingMechanism>` that is the last Mechanism of a `Composition`.
+        A Composition may have more than one `TERMINAL` Mechanism .
+        COMMENT:
+        ADD VERSION FOR COMPOSITION
+        Note that the `TERMINAL`
         Mechanism of a process is not necessarily a `TERMINAL` Mechanism of the System to which it belongs,
         as it may send projections to other processes in the System (see `example
         <LearningProjection_Output_vs_Terminal_Figure>`).  The `TERMINAL` Mechanisms of a Process or System are listed in
         its :keyword:`terminalMechanisms` attribute, and can be displayed using its :keyword:`show` method.  For
         additional details about `TERMINAL` Mechanisms in Processes, see `Process_Mechanisms` and
         `Process_Input_And_Output`; and for Systems see `System_Mechanisms`.
+        COMMENT
 
     SINGLETON
-        A `ProcessingMechanism <ProcessingMechanism>` that is the only Mechanism in a `Process` and/or `System`.
+        A `ProcessingMechanism <ProcessingMechanism>` that is the only Mechanism in a `Composition`.
         It can serve the functions of an `ORIGIN` and/or a `TERMINAL` Mechanism.
 
     LEARNING
-        A `LearningMechanism <LearningMechanism>` in a `Process` and/or `System`.
+        A `LearningMechanism <LearningMechanism>` in a `Composition`.
+
+    AUTOASSOCIATIVE_LEARNING
+        An `AutoassociativeLearningMechanism` in a `Composition`.
 
     TARGET
-        A `ComparatorMechanism` of a `Process` and/or `System` configured for learning that receives a target value
+        A `ProcessingMechanism` that receives the target for a learning sequence.
+        COMMENT:
+        ADD VERSION FOR COMPOSITION
+        A `ComparatorMechanism` of a `Composition` configured for learning that receives a target value
         from its `execute <ComparatorMechanism.ComparatorMechanism.execute>` or
-        `run <ComparatorMechanism.ComparatorMechanism.execute>` method.  It is usually (but not necessarily)
-        associated with the `TERMINAL` Mechanism of the Process or System. The `TARGET` Mechanisms of a Process or
+        `run <ComparatorMechanism.ComparatorMechanism.execute>` method.
+        It is usually (but not necessarily)
+        associated with the `TERMINAL` Mechanism of the Composition. The `TARGET` Mechanisms of a Process or
         System are listed in its :keyword:`target_nodes` attribute, and can be displayed using its
         :keyword:`show` method.  For additional details, see `TARGET Mechanisms <LearningMechanism_Targets>`,
         `learning sequence <Process_Learning_Sequence>`, and specifying `target values <Run_Targets>`.
+        COMMENT
 
 
     """
@@ -184,6 +199,7 @@ class NodeRoles:
         self.TERMINAL = TERMINAL
         self.SINGLETON = SINGLETON
         self.LEARNING = LEARNING
+        self.AUTOASSOCIATIVE_LEARNING = AUTOASSOCIATIVE_LEARNING
         self.TARGET = TARGET
 
 NODE = 'NODE'
@@ -749,6 +765,7 @@ INITIALIZE_CYCLE = 'INITIALIZE_CYCLE'
 TERMINAL = 'TERMINAL'
 SINGLETON = 'ORIGIN AND TERMINAL'
 LEARNING = 'LEARNING'
+AUTOASSOCIATIVE_LEARNING = 'AUTOASSOCIATIVE_LEARNING'
 SAMPLE = 'SAMPLE'
 TARGET = 'TARGET'
 ERROR = 'ERROR'
