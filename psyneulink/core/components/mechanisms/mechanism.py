@@ -2379,11 +2379,12 @@ class Mechanism_Base(Mechanism):
 
         # EXECUTE MECHANISM
 
-        self.parameters.num_executions_until_finished._set(0, override=True, context=context)
+        if self.parameters.is_finished_flag._get(context) is True:
+            self.parameters.num_executions_until_finished._set(0, override=True, context=context)
         while True:
 
-            # UPDATE VARIABLE and InputPort(S)
-            # Executing or simulating Process, System or Composition, so get input by updating input_ports
+            # UPDATE VARIABLE and InputPort(s)
+            # Executing or simulating Composition, so get input by updating input_ports
             if (input is None
                 and (context.execution_phase is not ContextFlags.IDLE)
                 and (self.input_port.path_afferents != [])):
@@ -2450,8 +2451,9 @@ class Mechanism_Base(Mechanism):
             self.parameters.num_executions_until_finished._set(num_executions+1, override=True, context=context)
 
             if self.is_finished(context) or not self.parameters.execute_until_finished._get(context):
-                # self._is_finished = True
+                self.parameters.is_finished_flag._set(True, context)
                 break
+            self.parameters.is_finished_flag._set(False, context)
 
         # REPORT EXECUTION
         if self.prefs.reportOutputPref and (context.execution_phase & ContextFlags.PROCESSING | ContextFlags.LEARNING):
