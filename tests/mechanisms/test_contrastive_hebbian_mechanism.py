@@ -209,18 +209,18 @@ class TestContrastiveHebbian:
         m.configure_learning()
         m.reinitialize_when=pnl.Never()
 
-        s = pnl.sys(m,o)
-        ms = pnl.Scheduler(system=s)
-        ms.add_condition(o, pnl.WhenFinished(m))
-        s.scheduler=ms
-        results = s.run(inputs=[2,2], num_trials=4)
-
-        # c = pnl.Composition()
-        # c.add_linear_processing_pathway([m,o])
-        # ms = pnl.Scheduler(composition=c)
+        # s = pnl.sys(m,o)
+        # ms = pnl.Scheduler(system=s)
         # ms.add_condition(o, pnl.WhenFinished(m))
-        # c.scheduler=ms
-        # results = c.run(inputs={m:[2,2]}, num_trials=4)
+        # s.scheduler=ms
+        # results = s.run(inputs=[2,2], num_trials=4)
+
+        c = pnl.Composition()
+        c.add_linear_processing_pathway([m,o])
+        ms = pnl.Scheduler(composition=c)
+        ms.add_condition(o, pnl.WhenFinished(m))
+        c.scheduler=ms
+        results = c.run(inputs={m:[2,2]}, num_trials=4)
 
         np.testing.assert_allclose(results, [[[2.671875]],
                                              [[2.84093837]],
