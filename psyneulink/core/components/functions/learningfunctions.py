@@ -495,11 +495,7 @@ class BayesGLM(LearningFunction):
         mu_prior = self.parameters.mu_prior
         mu_n = self.parameters.mu_n
         gamma_shape_n = self.parameters.gamma_shape_n
-        gamma_shape_prior = self.parameters.gamma_shape_prior
         gamma_size_n = self.parameters.gamma_size_n
-        gamma_size_prior = self.parameters.gamma_size_prior
-
-
 
         n = len(variable[0])
 
