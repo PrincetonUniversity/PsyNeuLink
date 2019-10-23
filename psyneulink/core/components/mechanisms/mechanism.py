@@ -3543,7 +3543,8 @@ class Mechanism_Base(Mechanism):
             `Component-based Conditions <Conditions_Component_Based>` to predicate the execution of one or more other
             Components on the Mechanism.
         """
-        return self._is_finished
+        # return self._is_finished
+        return True
 
     @property
     def input_port(self):
