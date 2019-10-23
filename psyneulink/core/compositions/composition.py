@@ -2197,15 +2197,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.scheduler.consideration_queue:
             self._analyze_consideration_queue(self.scheduler.consideration_queue, objective_mechanism)
 
-        # Enforce general rules about roles
+        # A ControlMechanism should not be the TERMINAL node of a Composition
+        #    (unless it is specifed as a required_role, in which case it is reassigned below)
         for node in self.nodes:
-
-            # Insure any LearningMechanisms are assigned NodeRole.LEARNING
-            if isinstance(node, AutoAssociativeLearningMechanism):
-                self.nodes_to_roles[node].add(NodeRole.AUTOASSOCIATIVE_LEARNING)
-
-            # A ControlMechanism should not be the TERMINAL node of a Composition
-            #    (unless it is specifed as a required_role, in which case it is reassigned below)
             if isinstance(node, ControlMechanism):
                 if NodeRole.TERMINAL in self.nodes_to_roles[node]:
                     self.nodes_to_roles[node].remove(NodeRole.TERMINAL)
@@ -2242,7 +2236,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 output_nodes_copy = nodes.copy()
                 for node in output_nodes_copy:
                     if (NodeRole.LEARNING in self.nodes_to_roles[node]
-                            or isinstance(node, AutoAssociativeLearningMechanism)
+                            or NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[node]
                             or isinstance(node, ControlMechanism)
                             or (isinstance(node, ObjectiveMechanism) and node._role == CONTROL)):
                         nodes.remove(node)
@@ -2251,9 +2245,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # FIX: ADD COMMENT HERE
                 # terminal_nodes = [[n for n in self.nodes if not NodeRole.LEARNING in self.nodes_to_roles[n]][-1]]
                 output_nodes = list([items for items in self.scheduler.consideration_queue
-                                       if any([item for item in items
-                                               if (not NodeRole.LEARNING in self.nodes_to_roles[item]
-                                                   and not NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[item])
+                                     if any([item for item in items
+                                               if (not NodeRole.LEARNING in self.nodes_to_roles[item] and
+                                                   not NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[item])
                                                ])])[-1]
             else:
                 output_nodes = self.get_nodes_by_role(NodeRole.TERMINAL)
@@ -2272,8 +2266,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     #    note: get copy of the consideration_set, as don't want to modify one actually used by scheduler
                     output_nodes = list([items for items in self.scheduler.consideration_queue
                                            if any([item for item in items if
-                                                   (not NodeRole.LEARNING in self.nodes_to_roles[item]
-                                                    and not NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[item]
+                                                   (not NodeRole.LEARNING in self.nodes_to_roles[item] and
+                                                    not NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[item]
                                                     and not isinstance(item, ControlMechanism)
                                                     and not (isinstance(item, ObjectiveMechanism)
                                                              and item._role == CONTROL))
@@ -2293,7 +2287,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     for node in self.nodes:
                         if (not node.efferents
                                 and not NodeRole.LEARNING in self.nodes_to_roles[node]
-                                and not isinstance(node, AutoAssociativeLearningMechanism)
+                                and not NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[node]
                                 and not isinstance(node, ControlMechanism)):
                             output_nodes.add(node)
                 except IndexError:
