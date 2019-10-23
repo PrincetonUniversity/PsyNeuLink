@@ -1733,6 +1733,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.controller_condition = controller_condition
         self.controller_condition.owner = self.controller
 
+        self._update_parameter_components()
+
         self.initialization_status = ContextFlags.INITIALIZED
 
     def __repr__(self):
