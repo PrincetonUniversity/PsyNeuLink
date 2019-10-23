@@ -1164,6 +1164,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         self.target_end = self.target_start + self.target_size
         size = self.recurrent_size
 
+        self.execute_until_finished = False
+
         default_variable = [np.zeros(input_size), np.zeros(self.recurrent_size)]
         # Set InputPort sizes in _instantiate_input_ports,
         #    so that there is no conflict with parsing of Mechanism's size
@@ -1348,15 +1350,14 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         if current_termination_condition is CONVERGENCE:
             self.parameters.convergence_criterion._set(
-                self.parameters.current_termination_criterion._get(context),
-                context
-            )
-            self.parameters.phase_terminated._set(self.is_converged(np.atleast_2d(current_activity), context), context)
+                    self.parameters.current_termination_criterion._get(context),context)
+            self.parameters.phase_terminated._set(
+                    self.is_converged(np.atleast_2d(current_activity), context), context)
         elif current_termination_condition is COUNT:
             self.parameters.phase_terminated._set(
-                (self.parameters.phase_execution_count._get(context) == self.parameters.current_termination_criterion._get(context)),
-                context
-            )
+                (self.parameters.phase_execution_count._get(context) ==
+                 self.parameters.current_termination_criterion._get(context)),
+                context)
         else:
             raise ContrastiveHebbianError(
                 "Unrecognized {} specification ({}) in execution of {} of {}".format(
