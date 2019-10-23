@@ -7437,15 +7437,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         proj_params = (tuple(p._get_param_initializer(context)) for p in self.projections)
         return (tuple(mech_params), tuple(proj_params))
 
-    def _get_flattened_controller_output(self, context):
-        controller_data = [os.parameters.value._get(context) for os in self.controller.output_ports]
-        # This is an ugly hack to remove 2d arrays
-        try:
-            controller_data = [[c[0][0]] for c in controller_data]
-        except:
-            pass
-        return controller_data
-
     def _get_data_initializer(self, context=None):
         output = [(os.parameters.value.get(context) for os in m.output_ports) for m in self._all_nodes]
         data = [output]
