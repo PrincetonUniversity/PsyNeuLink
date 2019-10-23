@@ -958,12 +958,12 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                     :default value: None
                     :type:
 
-                is_finished_
-                    see `is_finished_ <ContrastiveHebbianMechanism.is_finished_>`
-
-                    :default value: False
-                    :type: bool
-                    :read only: True
+                # is_finished_
+                #     see `is_finished_ <ContrastiveHebbianMechanism.is_finished_>`
+                #
+                #     :default value: False
+                #     :type: bool
+                #     :read only: True
 
                 learning_function
                     see `learning_function <ContrastiveHebbianMechanism.learning_function>`
@@ -1079,7 +1079,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         target_activity = Parameter(None, read_only=True, getter=_CHM_target_activity_getter)
 
         execution_phase = Parameter(None, read_only=True)
-        is_finished_ = Parameter(False, read_only=True)
+        # is_finished_ = Parameter(False, read_only=True)
 
         minus_phase_termination_criterion = Parameter(0.01, modulable=True)
         plus_phase_termination_criterion = Parameter(0.01, modulable=True)
@@ -1227,6 +1227,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                          prefs=prefs,
                          **kwargs)
 
+
     def _validate_params(self, request_set, target_set=None, context=None):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
@@ -1313,13 +1314,15 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             self.parameters.current_termination_condition._set(self.minus_phase_termination_condition, context)
             self.parameters.phase_execution_count._set(0, context)
 
-        if self.parameters.is_finished_._get(context):
+        if self.parameters.is_finished_flag._get(context):
+        # if self.parameters.is_finished_._get(context):
             # If current execution follows completion of a previous trial,
             #    zero activity for input from recurrent projection so that
             #    input does not contain residual activity of previous trial
             variable[RECURRENT_INDEX] = self.input_ports[RECURRENT].socket_template
 
-        self.parameters.is_finished_._set(False, context)
+        # self.parameters.is_finished_._set(False, context)
+        self.parameters.is_finished_flag._set(False, context)
 
         # Need to store this, as it will be updated in call to super
         previous_value = self.parameters.previous_value._get(context)
@@ -1373,7 +1376,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 # self.current_activity = self.plus_phase_activity
                 self.parameters.current_activity._set(current_activity, context)
                 # self.execution_phase = None
-                self.parameters.is_finished_._set(True, context)
+                # self.parameters.is_finished_._set(True, context)
+                self.parameters.is_finished_flag._set(True, context)
 
             # Otherwise, prepare for start of plus phase on next execution
             else:
@@ -1456,6 +1460,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     def recurrent_activity(self):
         return self.current_activity
 
-    def is_finished(self, context=None):
-        # is a method, to be compatible with scheduling
-        return self.parameters.is_finished_.get(context)
+    # def is_finished(self, context=None):
+    #     # is a method, to be compatible with scheduling
+    #     return self.parameters.is_finished_.get(context)
