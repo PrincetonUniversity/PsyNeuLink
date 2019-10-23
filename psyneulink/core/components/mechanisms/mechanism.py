@@ -2367,21 +2367,22 @@ class Mechanism_Base(Mechanism):
                 )
                 return np.atleast_2d(return_value)
 
-        # FIX: ??MAKE CONDITIONAL ON self.prefs.paramValidationPref??
-        # VALIDATE InputPort(S) AND RUNTIME PARAMS
-        self._check_args(
-            params=runtime_params,
-            target_set=runtime_params,
-            context=context,
-        )
-
-        self._update_previous_value(context)
-
         # EXECUTE MECHANISM
 
         if self.parameters.is_finished_flag._get(context) is True:
             self.parameters.num_executions_until_finished._set(0, override=True, context=context)
         while True:
+
+            # FIX: ??MAKE CONDITIONAL ON self.prefs.paramValidationPref??
+            # VALIDATE InputPort(S) AND RUNTIME PARAMS
+            self._check_args(
+                params=runtime_params,
+                target_set=runtime_params,
+                context=context,
+            )
+
+            self._update_previous_value(context)
+
 
             # UPDATE VARIABLE and InputPort(s)
             # Executing or simulating Composition, so get input by updating input_ports

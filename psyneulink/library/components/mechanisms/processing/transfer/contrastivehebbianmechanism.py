@@ -1164,8 +1164,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         self.target_end = self.target_start + self.target_size
         size = self.recurrent_size
 
-        self.execute_until_finished = False
-
         default_variable = [np.zeros(input_size), np.zeros(self.recurrent_size)]
         # Set InputPort sizes in _instantiate_input_ports,
         #    so that there is no conflict with parsing of Mechanism's size
