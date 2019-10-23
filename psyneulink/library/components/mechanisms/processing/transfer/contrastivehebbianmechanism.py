@@ -1359,14 +1359,11 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  self.parameters.current_termination_criterion._get(context)),
                 context)
         else:
-            raise ContrastiveHebbianError(
-                "Unrecognized {} specification ({}) in execution of {} of {}".format(
-                    repr('current_termination_condition'),
-                    current_termination_condition,
-                    repr('PLUS_PHASE') if self.parameters.execution_phase._get(context) is PLUS_PHASE else repr('MINUS_PHASE'),
-                    self.name
-                )
-            )
+            phase_str = repr('PLUS_PHASE') if self.parameters.execution_phase._get(context) is PLUS_PHASE \
+                                           else repr('MINUS_PHASE')
+            raise ContrastiveHebbianError(f"Unrecognized {repr('current_termination_condition')} specification "
+                                          f"({current_termination_condition}) in execution of {phase_str} of "
+                                          f"{self.name}.")
 
         if self.parameters.phase_terminated._get(context):
             # Terminate if this is the end of the plus phase, prepare for next trial
