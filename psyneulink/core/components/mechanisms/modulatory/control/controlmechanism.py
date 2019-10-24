@@ -308,7 +308,7 @@ This can be specified in either of two ways:
 
 *On a ControlMechanism itself*
 
-The parameters controlled by a ControlMechanism can be specified in the **control_signals** argument of its constructor;
+The parameters controlled by a ControlMechanism can be specified in the **control** argument of its constructor;
 the argument must be a `specification for one more ControlSignals <ControlSignal_Specification>`.  The parameter to
 be controlled must belong to a Component in the same `Composition` as the ControlMechanism when it is added to the
 Composition, or an error will occur.
@@ -382,7 +382,7 @@ different items in `control_allocation` as their `variable <ControlSignal.variab
 
 The OutputPorts of a ControlMechanism are `ControlSignals <ControlSignal>` (listed in its `control_signals
 <ControlMechanism.control_signals>` attribute). It has a `ControlSignal` for each parameter specified in the
-**control_signals** argument of its constructor, that sends a `ControlProjection` to the `ParameterPort` for the
+**control** argument of its constructor, that sends a `ControlProjection` to the `ParameterPort` for the
 corresponding parameter.  The ControlSignals are listed in the `control_signals <ControlMechanism.control_signals>`
 attribute;  since they are a type of `OutputPort`, they are also listed in the ControlMechanism's `output_ports
 <ControlMechanism.output_ports>` attribute. The parameters modulated by a ControlMechanism's ControlSignals can be
@@ -741,8 +741,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
                    the System calls its _get_control_signals_for_system() method which returns all of the parameters
                        that have been specified for control within the System, assigns them a ControlSignal
                        (with a ControlProjection to the ParameterPort for the parameter), and assigns the
-                       ControlSignals (alogn with any specified in the **control_signals** argument of the System's
-                       constructor) to the **control_signals** argument of the ControlMechanism's constructor
+                       ControlSignals (alogn with any specified in the **control** argument of the System's
+                       constructor) to the **control** argument of the ControlMechanism's constructor
 
             OBJECTIVE_MECHANISM param determines which Ports will be monitored.
                 specifies the OutputPorts of the terminal Mechanisms in the System to be monitored by ControlMechanism
@@ -792,7 +792,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         which the **default_allocation** was not specified in its constructor (see default_allocation
         <ControlMechanism.default_allocation>` for additional details).
 
-    control_signals : ControlSignal specification or List[ControlSignal specification, ...]
+    control : ControlSignal specification or List[ControlSignal specification, ...]
         specifies the parameters to be controlled by the ControlMechanism; a `ControlSignal` is created for each
         (see `ControlSignal_Specification` for details of specification).
 
@@ -932,7 +932,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
         result of the ControlMechanism's `compute_net_outcome <ControlMechanism.compute_net_outcome>` function.
 
     control_projections : List[ControlProjection]
-        list of `ControlProjections <ControlProjection>`, one for each `ControlSignal` in `control_signals`.
+        list of `ControlProjections <ControlProjection>` that project from the ControlMechanism's `control_signals
+        <ControlMechanism.control_signals>`.
 
     modulation : ModulationParam
         the default form of modulation used by the ControlMechanism's `ControlSignals <GatingSignal>`,
