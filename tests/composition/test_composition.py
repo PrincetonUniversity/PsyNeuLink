@@ -576,6 +576,7 @@ class TestAnalyzeGraph:
         # disable controller
         comp.enable_controller = False
         comp._analyze_graph()
+        comp.show_graph(show_controller=pnl.ALL)
         assert comp.controller.objective_mechanism in comp.get_nodes_by_role(NodeRole.OUTPUT)
         assert B not in comp.get_nodes_by_role(NodeRole.OUTPUT)
 

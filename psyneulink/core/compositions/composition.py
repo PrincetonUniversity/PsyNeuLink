@@ -2232,7 +2232,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # - if there are no TERMINAL nodes either, then the last node added to the Composition becomes the OUTPUT node.
         if not self.get_nodes_by_role(NodeRole.OUTPUT):
 
-            # FIX: 10/24/19: NOW MISSES controller.objective_mechanism in test_con troller_objecgtive_mech_not_terminal
+            # FIX: 10/24/19: NOW MISSES controller.objective_mechanism in test_controller_objective_mech_not_terminal
             def remove_learning_and_control_nodes(nodes):
                 output_nodes_copy = nodes.copy()
                 for node in output_nodes_copy:
