@@ -11,8 +11,9 @@ from double_dqn import DoubleDQNAgent
 MPI_IMPLEMENTATION = True
 RENDER = True
 PNL_COMPILE = False
-RUN = True
-SHOW_GRAPH = False
+RUN = False
+SHOW_GRAPH = True
+ANIMATE = True
 MODEL_PATH = '../../../double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
 
 # Switch for determining actual action taken in each step
@@ -209,7 +210,8 @@ if SHOW_GRAPH:
     #                       show_node_structure=ALL,
     #                       show_headers=True,
     #                       )
-
+if ANIMATE:
+    ANIMATE = {'show_controller':True, 'show_cim':True}
 
 # *********************************************************************************************************************
 # ******************************************   RUN SIMULATION  ********************************************************
@@ -269,8 +271,7 @@ def main():
                                                  reward_input_mech:[reward]},
                                          context=context,
                                          bin_execute=BIN_EXECUTE,
-                                         animate={'show_controller':True,
-                                                  'show_cim':True}
+                                         animate=ANIMATE
                                          )
             agent_action = np.where(run_results[0] == 0, 0, run_results[0] / np.abs(run_results[0]))
 
