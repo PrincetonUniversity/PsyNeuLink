@@ -5350,9 +5350,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #    (i.e., allow TARGET node to continue to be marked as an INPUT node)
             learning_components = [node for node in self.learning_components
                                    if not NodeRole.INPUT in self.nodes_to_roles[node]]
-            learning_components.extend([node for node in self.nodes if
-                                        NodeRole.AUTOASSOCIATIVE_LEARNING in
-                                        self.nodes_to_roles[node]])
+            # learning_components.extend([node for node in self.nodes if
+            #                             NodeRole.AUTOASSOCIATIVE_LEARNING in
+            #                             self.nodes_to_roles[node]])
 
             for rcvr in learning_components:
                 # if rcvr is Projection, skip (handled in _assign_processing_components)
@@ -7851,7 +7851,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def learning_components(self):
-        return [node for node in self.nodes if NodeRole.LEARNING in self.nodes_to_roles[node]]
+        return [node for node in self.nodes if (NodeRole.LEARNING in self.nodes_to_roles[node] or
+                                                NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[node])]
 
     @property
     def learned_components(self):

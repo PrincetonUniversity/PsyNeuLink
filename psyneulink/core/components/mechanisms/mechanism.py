@@ -2375,11 +2375,7 @@ class Mechanism_Base(Mechanism):
 
             # FIX: ??MAKE CONDITIONAL ON self.prefs.paramValidationPref??
             # VALIDATE InputPort(S) AND RUNTIME PARAMS
-            self._check_args(
-                params=runtime_params,
-                target_set=runtime_params,
-                context=context,
-            )
+            self._check_args(params=runtime_params, target_set=runtime_params, context=context)
 
             self._update_previous_value(context)
 
