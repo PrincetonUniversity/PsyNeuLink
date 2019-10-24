@@ -2191,9 +2191,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node_role_pair in self.required_node_roles:
             self._add_node_role(node_role_pair[0], node_role_pair[1])
 
-        # FIX: 10/24/19 MODIFY TO REMOVE CONTROLLER COMPONENTS EVEN WHEN CONTROL IS DISABLED
         objective_mechanism = None
-        if self.controller and self.enable_controller and self.controller.objective_mechanism:
+        # # MODIFIED 10/24/19 OLD:
+        # if self.controller and self.enable_controller and self.controller.objective_mechanism:
+        # MODIFIED 10/24/19 NEW:
+        if self.controller and self.controller.objective_mechanism:
+        # MODIFIED 10/24/19 END
             objective_mechanism = self.controller.objective_mechanism
             self._add_node_role(objective_mechanism, NodeRole.CONTROLLER_OBJECTIVE)
 
