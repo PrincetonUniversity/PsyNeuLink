@@ -1145,6 +1145,7 @@ from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, PreferenceSet, _assign_prefs
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
+from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism, MSE
 from psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism import PredictionErrorMechanism
@@ -2230,15 +2231,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # - if there are LearningMechanisms, OUTPUT node is the last non-learning-related node.
         # - if there are no TERMINAL nodes either, then the last node added to the Composition becomes the OUTPUT node.
         if not self.get_nodes_by_role(NodeRole.OUTPUT):
-            if self.get_nodes_by_role(NodeRole.LEARNING):
+
+            def remove_learning_and_control_nodes(nodes):
+                output_nodes_copy = nodes.copy()
+                for node in output_nodes_copy:
+                    if (NodeRole.LEARNING in self.nodes_to_roles[node]
+                            or NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[node]
+                            or isinstance(node, ControlMechanism)
+                            or (isinstance(node, ObjectiveMechanism) and node._role == CONTROL)):
+                        nodes.remove(node)
+
+            if self.get_nodes_by_role(NodeRole.LEARNING) or self.get_nodes_by_role(NodeRole.AUTOASSOCIATIVE_LEARNING):
                 # FIX: ADD COMMENT HERE
                 # terminal_nodes = [[n for n in self.nodes if not NodeRole.LEARNING in self.nodes_to_roles[n]][-1]]
                 output_nodes = list([items for items in self.scheduler.consideration_queue
-                                       if any([item for item in items
-                                               if not NodeRole.LEARNING in self.nodes_to_roles[item]])])[-1]
+                                     if any([item for item in items
+                                               if (not NodeRole.LEARNING in self.nodes_to_roles[item] and
+                                                   not NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[item])
+                                               ])])[-1]
             else:
                 output_nodes = self.get_nodes_by_role(NodeRole.TERMINAL)
-            if not output_nodes:
+
+            if output_nodes:
+                remove_learning_and_control_nodes(output_nodes)
+            else:
                 try:
                     # Assign TERMINAL role to nodes that are last in the scheduler's consideration queue that are:
                     #    - not used for Learning;
@@ -2250,7 +2266,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     #    note: get copy of the consideration_set, as don't want to modify one actually used by scheduler
                     output_nodes = list([items for items in self.scheduler.consideration_queue
                                            if any([item for item in items if
-                                                   (not NodeRole.LEARNING in self.nodes_to_roles[item]
+                                                   (not NodeRole.LEARNING in self.nodes_to_roles[item] and
+                                                    not NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[item]
                                                     and not isinstance(item, ControlMechanism)
                                                     and not (isinstance(item, ObjectiveMechanism)
                                                              and item._role == CONTROL))
@@ -2259,12 +2276,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # Next, remove any learning-related nodes, ControlMechanism(s) or control-related
                     #    ObjectiveMechanism(s) that may have "snuck in" (i.e., happen to be in the set)
-                    output_nodes_copy = output_nodes.copy()
-                    for node in output_nodes_copy:
-                        if (NodeRole.LEARNING in self.nodes_to_roles[node]
-                                or isinstance(node, ControlMechanism)
-                                or (isinstance(node, ObjectiveMechanism) and node._role == CONTROL)):
-                            output_nodes.remove(node)
+                    remove_learning_and_control_nodes(output_nodes)
 
                     # Then, add any nodes that are not learning-related or a ControlMechanism,
                     #    and that have *no* efferent Projections
@@ -2275,6 +2287,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     for node in self.nodes:
                         if (not node.efferents
                                 and not NodeRole.LEARNING in self.nodes_to_roles[node]
+                                and not NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[node]
                                 and not isinstance(node, ControlMechanism)):
                             output_nodes.add(node)
                 except IndexError:
@@ -4818,7 +4831,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # If rcvr is a learning component and not an INPUT node,
             #    break and handle in _assign_learning_components()
             #    (node: this allows TARGET node for learning to remain marked as an INPUT node)
-            if NodeRole.LEARNING in self.nodes_to_roles[rcvr] and not NodeRole.INPUT in self.nodes_to_roles[rcvr]:
+            if ((NodeRole.LEARNING in self.nodes_to_roles[rcvr]
+                 or NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[rcvr])
+                    and not NodeRole.INPUT in self.nodes_to_roles[rcvr]):
                 return
 
             # If rcvr is ObjectiveMechanism for Composition's controller,
@@ -5335,6 +5350,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #    (i.e., allow TARGET node to continue to be marked as an INPUT node)
             learning_components = [node for node in self.learning_components
                                    if not NodeRole.INPUT in self.nodes_to_roles[node]]
+            learning_components.extend([node for node in self.nodes if
+                                        NodeRole.AUTOASSOCIATIVE_LEARNING in
+                                        self.nodes_to_roles[node]])
 
             for rcvr in learning_components:
                 # if rcvr is Projection, skip (handled in _assign_processing_components)
@@ -5483,7 +5501,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 self.active_item_rendered = True
 
                             # Projection to or from a LearningMechanism
-                            elif (NodeRole.LEARNING in self.nodes_to_roles[rcvr]):
+                            elif (NodeRole.LEARNING in self.nodes_to_roles[rcvr]
+                                  or NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[rcvr]):
                                 proj_color = learning_color
                                 proj_width = str(default_width)
 

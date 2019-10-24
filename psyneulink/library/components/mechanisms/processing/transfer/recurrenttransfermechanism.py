@@ -201,12 +201,14 @@ from psyneulink.core.components.ports.outputport import PRIMARY, StandardOutputP
 from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.ports.port import _instantiate_port
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_PORT, MATRIX, MAX_ABS_DIFF, NAME, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT
+from psyneulink.core.globals.keywords import \
+    AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_PORT, MATRIX, MAX_ABS_DIFF, NAME, \
+    OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, RECURRENT_TRANSFER_MECHANISM, RESULT
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.registry import register_instance, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
-from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
+from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec, NodeRole
 from psyneulink.core.scheduling.condition import Condition, TimeScale, WhenFinished
 from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection, get_auto_matrix, get_hetero_matrix
@@ -1474,7 +1476,11 @@ class RecurrentTransferMechanism(TransferMechanism):
         # (via aux_components attr)
 
         learning_mechanism.condition = learning_condition
+        # MODIFIED 10/23/19 OLD:
         self.aux_components.append(learning_mechanism)
+        # # MODIFIED 10/23/19 NEW:
+        # self.aux_components.append((learning_mechanism, NodeRole.AUTOASSOCIATIVE_LEARNING))
+        # MODIFIED 10/23/19 END
         # Instantiate Projection from Mechanism's output to LearningMechanism
         mproj = MappingProjection(sender=activity_vector,
                           receiver=learning_mechanism.input_ports[ACTIVATION_INPUT],
