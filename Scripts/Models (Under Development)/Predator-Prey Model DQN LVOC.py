@@ -259,7 +259,7 @@ def main():
                                          context=context,
                                          bin_execute=BIN_EXECUTE,
                                          )
-            agent_action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
+            agent_action = np.where(run_results[0] == 0, 0, run_results[0] / np.abs(run_results[0]))
             
             def print_controller():
 

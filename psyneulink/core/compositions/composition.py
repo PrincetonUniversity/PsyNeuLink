@@ -1107,7 +1107,8 @@ from psyneulink.core.components.functions.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import OptimizationControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
+    OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
@@ -1145,10 +1146,10 @@ from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, PreferenceSet, _assign_prefs
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
-from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism, MSE
-from psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism import PredictionErrorMechanism
+from psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism import \
+    PredictionErrorMechanism
 
 __all__ = [
 
@@ -1734,6 +1735,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.controller_condition = controller_condition
         self.controller_condition.owner = self.controller
 
+        self._update_parameter_components()
+
         self.initialization_status = ContextFlags.INITIALIZED
 
     def __repr__(self):
@@ -2233,6 +2236,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if not self.get_nodes_by_role(NodeRole.OUTPUT):
 
             # FIX: 10/24/19: NOW MISSES controller.objective_mechanism in test_controller_objective_mech_not_terminal
+            #                 if controller_enabled = False
             def remove_learning_and_control_nodes(nodes):
                 output_nodes_copy = nodes.copy()
                 for node in output_nodes_copy:
@@ -2289,7 +2293,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if (not node.efferents
                                 and not NodeRole.LEARNING in self.nodes_to_roles[node]
                                 and not NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[node]
-                                and not isinstance(node, ControlMechanism)):
+                                and not isinstance(node, ControlMechanism)
+                                and not (isinstance(node, ObjectiveMechanism) and node._role == CONTROL)
+                        ):
                             output_nodes.add(node)
                 except IndexError:
                     output_nodes = []
@@ -2531,6 +2537,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             )
                             for projection in control_signal.projections:
                                 projection._activate_for_compositions(comp)
+                            for projection in receiver.mod_afferents:
+                                if projection.sender.owner == controller:
+                                    receiver.mod_afferents.remove(projection)
                             pcIM_ports[receiver] = (modulatory_signal, input_port)
 
             for comp in nested_comps:
@@ -2752,12 +2761,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     receiver_check = receiver.owner
                 else:
                     receiver_check = receiver
-                if (not isinstance(sender_check, CompositionInterfaceMechanism) and sender_check not in self.nodes) or \
-                         (not isinstance(receiver_check, CompositionInterfaceMechanism) and receiver_check not in self.nodes):
+                if ((not isinstance(sender_check, CompositionInterfaceMechanism) and sender_check not in self.nodes)
+                        or (not isinstance(receiver_check, CompositionInterfaceMechanism)
+                            and receiver_check not in self.nodes)):
                     for proj in existing_projections:
                         self.remove_projection(proj)
-                        for port in receiver_check.input_ports + \
-                            sender_check.output_ports:
+                        for port in receiver_check.input_ports + sender_check.output_ports:
                             if proj in port.afferents_info:
                                 del port.afferents_info[proj]
                             if proj in port.projections:
@@ -3336,8 +3345,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     or (isinstance(item, ObjectiveMechanism) and item._role == CONTROL)):
                 items_to_delete.append(item)
                 # Delete any projections to the ControlMechanism or ObjectiveMechanism specified in pathway
-                if i>0 and is_spec(pathway[i-1],PROJECTION):
-                    items_to_delete.append(pathway[i-1])
+                if i>0 and is_spec(pathway[i - 1],PROJECTION):
+                    items_to_delete.append(pathway[i - 1])
         for item in items_to_delete:
             if isinstance(item, ControlMechanism):
                 arg_name = f'in the {repr(MONITOR_FOR_CONTROL)} of its constructor'
@@ -3357,7 +3366,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # if the current item is a Node
             if is_spec(pathway[c], NODE):
-                if is_spec(pathway[c-1], NODE):
+                if is_spec(pathway[c - 1], NODE):
                     # if the previous item was also a node, add a MappingProjection between them
                     proj = self.add_projection(sender=pathway[c - 1],
                                                receiver=pathway[c])
@@ -3376,8 +3385,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     proj = pathway[c]
                     feedback = False
-                sender = pathway[c-1]
-                receiver = pathway[c+1]
+                sender = pathway[c - 1]
+                receiver = pathway[c + 1]
                 if isinstance(sender, (Mechanism, Composition)) \
                         and isinstance(receiver, (Mechanism, Composition)):
                     try:
@@ -3432,7 +3441,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         explicit_pathway = [nodes[0]]
         for i in range(len(projections)):
             explicit_pathway.append(projections[i])
-            explicit_pathway.append(nodes[i+1])
+            explicit_pathway.append(nodes[i + 1])
 
         return explicit_pathway
 
@@ -3960,7 +3969,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                        learned_projection,
                                                                        learning_rate,
                                                                        learning_update)
-            sequence_end = path_length-3
+            sequence_end = path_length - 3
 
         # # FIX: ALTERNATIVE IS TO TEST WHETHER IT PROJECTIONS TO ANY MECHANISMS WITH LEARNING ROLE
         # Otherwise, if output_source already projects to a LearningMechanism, integrate with existing sequence
@@ -3973,7 +3982,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
             target = None
             comparator = None
-            sequence_end = path_length-1
+            sequence_end = path_length - 1
 
         # Otherwise create terminal_sequence for the sequence,
         #    and eliminate existing terminal_sequences previously created for Mechanisms now in the pathway
@@ -4019,7 +4028,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                 COMPARATOR_MECHANISM: comparator}
             self.add_required_node_role(pathway[-1], NodeRole.OUTPUT)
 
-            sequence_end = path_length-3
+            sequence_end = path_length - 3
 
         # loop backwards through the rest of the pathway to create and connect
         # the remaining learning mechanisms
@@ -4027,8 +4036,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         learned_projections = [learned_projection]
         for i in range(sequence_end, 1, -2):
             # set variables for this iteration
-            input_source = processing_pathway[i-2]
-            learned_projection = processing_pathway[i-1]
+            input_source = processing_pathway[i - 2]
+            learned_projection = processing_pathway[i - 1]
             output_source = processing_pathway[i]
 
             learning_mechanism = self._create_non_terminal_backprop_learning_components(input_source,
@@ -4815,7 +4824,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # Use default args for nested Composition
                     args = output_fmt_arg
                 nested_comp_graph = rcvr.show_graph(**args)
-                nested_comp_graph.name = "cluster_"+rcvr.name
+                nested_comp_graph.name = "cluster_" + rcvr.name
                 rcvr_label = rcvr.name
                 # if rcvr in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER):
                 #     nested_comp_graph.attr(color=feedback_color)
@@ -5466,8 +5475,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         # Skip any projections to ObjectiveMechanism for controller
                         #   (those are handled in _assign_control_components)
-                        if (self.controller
-                                and proj.receiver.owner is self.controller.objective_mechanism):
+                        if (self.controller and
+                                proj.receiver.owner in {self.controller, self.controller.objective_mechanism}):
                             continue
 
                         # Only consider Projections to the rcvr
@@ -5956,7 +5965,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         name = item.name
 
         if show_types:
-            name = item.name+'\n('+item.__class__.__name__+')'
+            name = item.name + '\n(' + item.__class__.__name__ + ')'
 
         if show_dimensions in {ALL, MECHANISMS} and isinstance(item, Mechanism):
             input_str = "in ({})".format(",".join(str(input_port.socket_width)
@@ -6551,7 +6560,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     format='GIF',
                                     save_all=True,
                                     append_images=self._animation[1:],
-                                    duration=self._image_duration*1000,
+                                    duration=self._image_duration * 1000,
                                     loop=0)
             # print(f'\nSaved movie for {self.name} in {self._animation_directory}/{self._movie_filename}')
             print(f"\nSaved movie for '{self.name}' in '{self._movie_filename}'")

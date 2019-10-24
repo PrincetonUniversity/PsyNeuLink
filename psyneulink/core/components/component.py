@@ -1536,7 +1536,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
             # If name was assigned, "[DEFERRED INITIALIZATION]" was appended to it, so remove it
             if DEFERRED_INITIALIZATION in self.name:
-                self.name = self.name.replace("["+DEFERRED_INITIALIZATION+"]","")
+                self.name = self.name.replace("[" + DEFERRED_INITIALIZATION + "]", "")
             # Otherwise, allow class to replace std default name with class-specific one if it has a method for doing so
             else:
                 self._assign_default_name()
@@ -3030,7 +3030,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     def _instantiate_attributes_after_function(self, context=None):
         if hasattr(self, "_parameter_ports"):
             for param_port in self._parameter_ports:
-                setattr(self.__class__, "mod_"+param_port.name, make_property_mod(param_port.name))
+                setattr(self.__class__, "mod_" + param_port.name, make_property_mod(param_port.name))
                 setattr(self.__class__, "get_mod_" + param_port.name, make_stateful_getter_mod(param_port.name))
 
     def _instantiate_value(self, context=None):
@@ -3161,7 +3161,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             pass
 
     def _increment_execution_count(self, count=1):
-        self.parameters.execution_count.set(self.execution_count+count, override=True)
+        self.parameters.execution_count.set(self.execution_count + count, override=True)
         return self.execution_count
 
     @property
@@ -3681,12 +3681,13 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             self.__parameter_components = set()
             return self.__parameter_components
 
-    def _update_parameter_components(self, context):
+    @handle_external_context()
+    def _update_parameter_components(self, context=None):
         # store all Components in Parameters to be used in
         # _dependent_components for _initialize_from_context
         for p in self.parameters:
             try:
-                param_value = p.get(context)
+                param_value = p._get(context)
                 if isinstance(param_value, Component):
                     self._parameter_components.add(param_value)
             # ControlMechanism and GatingMechanism have Parameters that only

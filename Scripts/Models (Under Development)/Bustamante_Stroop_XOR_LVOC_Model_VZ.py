@@ -68,7 +68,7 @@ def objective_function(v):
         reward = reward_upper
     else:
         reward = reward_lower
-    reward -= (.44*v[3])
+    reward -= (.44 * v[3])
 
     # TEST PRINT:
     print(v, reward)
@@ -153,7 +153,7 @@ lvoc = pnl.OptimizationControlMechanism(
             step_size=2, #1
             # Note: Falk used 10 in the denom below, but indexed sample numbers from 1;
             #       but sample_num passed to _follow_gradient is indexed from 0, so use 11 below
-            annealing_function=lambda x, y: x / np.sqrt(11+y),
+            annealing_function=lambda x, y: x / np.sqrt(11 + y),
             max_iterations=100
             # save_samples=True,
             # save_values=True,
@@ -235,7 +235,7 @@ for i in range(num_subj):
           )
 
     print('\n')
-    print('Subject: ', i+1)
+    print('Subject: ', i + 1)
     print('--------------------')
     print('ControlSignal variables: ', [sig.parameters.variable.get(i) for sig in lvoc.control_signals])
     print('ControlSignal values: ', [sig.parameters.value.get(i) for sig in lvoc.control_signals])

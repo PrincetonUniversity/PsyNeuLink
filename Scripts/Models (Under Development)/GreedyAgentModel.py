@@ -85,10 +85,10 @@ def main():
                                              bin_execute=BIN_EXECUTE
                                              )
                 run_results[0] = np.array(run_results[0])
-                action= np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
+                action= np.where(run_results[0] == 0, 0, run_results[0] / np.abs(run_results[0]))
             else:
                 run_results = observation[prey_coord_idx] - observation[player_coord_idx]
-                action= np.where(run_results==0,0,run_results/np.abs(run_results))
+                action= np.where(run_results == 0, 0, run_results / np.abs(run_results))
 
             observation, reward, done, _ = env.step(action)
             steps +=1

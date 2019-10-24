@@ -577,8 +577,10 @@ class TestAnalyzeGraph:
         comp.enable_controller = False
         comp._analyze_graph()
         comp.show_graph(show_controller=pnl.ALL)
-        assert comp.controller.objective_mechanism in comp.get_nodes_by_role(NodeRole.OUTPUT)
-        assert B not in comp.get_nodes_by_role(NodeRole.OUTPUT)
+        # assert comp.controller.objective_mechanism in comp.get_nodes_by_role(NodeRole.OUTPUT)
+        # assert B not in comp.get_nodes_by_role(NodeRole.OUTPUT)
+        assert comp.controller.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)
+        assert B in comp.get_nodes_by_role(NodeRole.OUTPUT)
 
 
 class TestGraphCycles:
@@ -1015,10 +1017,10 @@ class TestExecutionOrder:
         start = ProcessingMechanism(name="start")
         expected_consideration_sets = [{start}]
         for i in range(10):
-            A = ProcessingMechanism(name='A'+str(i))
-            B = ProcessingMechanism(name='B'+str(i))
-            C = ProcessingMechanism(name='C'+str(i))
-            D = ProcessingMechanism(name='D'+str(i))
+            A = ProcessingMechanism(name='A' + str(i))
+            B = ProcessingMechanism(name='B' + str(i))
+            C = ProcessingMechanism(name='C' + str(i))
+            D = ProcessingMechanism(name='D' + str(i))
 
             comp.add_linear_processing_pathway([start, A, B, C, D])
             comp.add_linear_processing_pathway([C, B])

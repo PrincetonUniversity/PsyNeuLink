@@ -228,7 +228,7 @@ def testtrialtype(test_trial_input, initialize_trial_input, ntrials, condition):
     print('\n\n{}'.format(condition))
     for trial in range(ntrials):
         print('.', end='', flush=True)
-        if not ((trial+1) % 10):
+        if not ((trial + 1) % 10):
             print('  ', end='', flush=True)
         # run system once (with integrator mode off and no noise for hidden units) with only task so asymptotes
         colors_hidden_layer.integrator_mode = False

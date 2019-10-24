@@ -89,9 +89,9 @@ control.log.set_log_conditions(VALUE)
 
 task.initial_value = [0.5,0.5]
 num_trials = 5
-stimuli = {color_input:[red]*num_trials,
-           word_input:[green]*num_trials,
-           task_input:[color]*num_trials}
+stimuli = {color_input:[red] * num_trials,
+           word_input:[green] * num_trials,
+           task_input:[color] * num_trials}
 # Stroop_model.run(inputs=stimuli,
 #                  animate={'show_controller':True,
 #                           # 'show_cim':True
