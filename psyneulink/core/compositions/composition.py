@@ -4975,37 +4975,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            rank=rcvr_rank,
                            penwidth=rcvr_penwidth)
 
-                # MODIFIED 5/29/19 OLD: [JDC] SEEMS TO BE HANDLED BY ADDITION OF CALL TO _assign_incoming_edges BELOW
-                # # handle auto-recurrent projections
-                # for input_port in rcvr.input_ports:
-                #     for proj in input_port.path_afferents:
-                #         if proj.sender.owner is not rcvr:
-                #             continue
-                #         if show_node_structure:
-                #             sndr_proj_label = '{}:{}'.format(rcvr_label, rcvr._get_port_name(proj.sender))
-                #             proc_mech_rcvr_label = '{}:{}'.format(rcvr_label, rcvr._get_port_name(proj.receiver))
-                #         else:
-                #             sndr_proj_label = proc_mech_rcvr_label = rcvr_label
-                #         if show_projection_labels:
-                #             edge_label = self._get_graph_node_label(proj, show_dimensions)
-                #         else:
-                #             edge_label = ''
-                #
-                #         # show projection as edge
-                #         if proj.sender in active_items:
-                #             if active_color is BOLD:
-                #                 proj_color = default_node_color
-                #             else:
-                #                 proj_color = active_color
-                #             proj_width = str(default_width + active_thicker_by)
-                #             self.active_item_rendered = True
-                #         else:
-                #             proj_color = default_node_color
-                #             proj_width = str(default_width)
-                #         g.edge(sndr_proj_label, proc_mech_rcvr_label, label=edge_label,
-                #                color=proj_color, penwidth=proj_width)
-                # # MODIFIED 5/29/19 END
-
             # Implement sender edges
             sndrs = processing_graph[rcvr]
             _assign_incoming_edges(g, rcvr, rcvr_label, sndrs)
@@ -5651,7 +5620,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 'fontname': 'arial',
                 'shape': 'record',
                 'color': default_node_color,
-                'penwidth': str(default_width)
+                'penwidth': str(default_width),
             },
             edge_attr={
                 'fontsize': '10',

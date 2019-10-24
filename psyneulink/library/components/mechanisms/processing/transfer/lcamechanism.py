@@ -38,7 +38,8 @@ off-diagonal.
 When all of the following conditions are true:
 
 - The `LCAMechanism` mechanism has two elements
-- The value of its `competition <LCAMechanism.competition>` parameter is equal to its `leak <LCAMechanism.leak>` parameter
+- The value of its `competition <LCAMechanism.competition>` parameter is equal to its `leak <LCAMechanism.leak>`
+  parameter
 - `Competition <LCAMechanism.competition>` and `leak <LCAMechanism.leak>` are of sufficient magnitude
 
 then the `LCAMechanism` implements a close approximation of a `DDM` Mechanism (see `Usher & McClelland, 2001;
@@ -53,12 +54,14 @@ Creating an LCAMechanism
 An LCAMechanism can be created directly by calling its constructor.
 
 The self-excitatory and mutually-inhibitory connections are implemented as a recurrent `MappingProjection`
-with a `matrix <LCAMechanism.matrix>` in which the diagonal consists of uniform weights specified by **self_excitation** and the
-off-diagonal consists of uniform weights specified by the *negative* of the **competition** argument.
+with a `matrix <LCAMechanism.matrix>` in which the diagonal consists of uniform weights specified by
+**self_excitation** and the off-diagonal consists of uniform weights specified by the *negative* of the
+**competition** argument.
 
-The *noise*, *leak*, *initial_value*, and *time_step_size* arguments are used to implement the `LeakyCompetingIntegrator`
-as the `LCAMechanism.integrator_function <LCAMechanism.integrator_function>` of the mechanism. *integrator_mode* determines whether the
-`LCAMechanism.integrator_function <LCAMechanism.integrator_function>` will execute.
+The *noise*, *leak*, *initial_value*, and *time_step_size* arguments are used to implement the
+`LeakyCompetingIntegrator` as the `LCAMechanism.integrator_function <LCAMechanism.integrator_function>` of the
+mechanism. *integrator_mode* determines whether the `LCAMechanism.integrator_function
+<LCAMechanism.integrator_function>` will execute.
 
 **When integrator_mode is set to True:**
 
@@ -67,14 +70,14 @@ the variable of the mechanism is first passed into the following equation:
 .. math::
     leak \\cdot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
 
-The result of the integrator function above is then passed into the `mechanism's function <LCAMechanism.function>`. Note that on the
-first execution, *initial_value* sets previous_value.
+The result of the integrator function above is then passed into the `mechanism's function <LCAMechanism.function>`.
+Note that on the first execution, *initial_value* sets previous_value.
 
 **When integrator_mode is set to False:**
 
 The variable of the mechanism is passed into the `function of the mechanism <LCAMechanism.function>`. The mechanism's
-`integrator_function <LCAMechanism.integrator_function>` is skipped entirely, and all related arguments (*noise*, *leak*,
-*initial_value*, and *time_step_size*) are ignored.
+`integrator_function <LCAMechanism.integrator_function>` is skipped entirely, and all related arguments (*noise*,
+*leak*, *initial_value*, and *time_step_size*) are ignored.
 
 COMMENT:
 The default format of its `variable <LCAMechanism.variable>`, and default values of its `inhibition
@@ -758,10 +761,15 @@ class LCAMechanism(RecurrentTransferMechanism):
 
     @handle_external_context()
     def is_finished(self, context=None):
+        """"Returns True when value of Mechanism reaches threhsold or if threshold is None.
+
+        Note:  if threshold is None, implements single update (cycle) per call to _execute method
+               (equivalent to setting Component.execute_until_finished = False)
+        """
 
         threshold = self.parameters.threshold._get(context)
 
-        if threshold:
+        if threshold is not None:
             threshold_criterion = self.parameters.threshold_criterion._get(context)
 
             if threshold_criterion == VALUE:
