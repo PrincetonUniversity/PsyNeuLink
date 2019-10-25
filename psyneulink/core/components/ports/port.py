@@ -2279,7 +2279,7 @@ class Port_Base(Port):
         f_params = builder.alloca(state_f.args[0].type.pointee)
         builder.store(builder.load(base_params), f_params)
 
-        # FIXME: is this always true, by design?
+        # FIXME: Handle and combine multiple afferents
         assert len(self.mod_afferents) <= 1
 
         # Apply modulation
