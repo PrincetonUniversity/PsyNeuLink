@@ -761,7 +761,7 @@ class LCAMechanism(RecurrentTransferMechanism):
 
     @handle_external_context()
     def is_finished(self, context=None):
-        """"Returns True when value of Mechanism reaches threhsold or if threshold is None.
+        """Returns True when value of Mechanism reaches threhsold or if threshold is None.
 
         Note:  if threshold is None, implements single update (cycle) per call to _execute method
                (equivalent to setting Component.execute_until_finished = False)

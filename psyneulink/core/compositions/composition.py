@@ -3372,8 +3372,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if is_spec(pathway[c], NODE):
                 if is_spec(pathway[c - 1], NODE):
                     # if the previous item was also a node, add a MappingProjection between them
-                    proj = self.add_projection(sender=pathway[c - 1],
-                                               receiver=pathway[c])
+                    if isinstance(pathway[c - 1], tuple):
+                        sender = pathway[c - 1][0]
+                    else:
+                        sender = pathway[c - 1]
+                    if isinstance(pathway[c], tuple):
+                        receiver = pathway[c][0]
+                    else:
+                        receiver = pathway[c]
+                    proj = self.add_projection(sender=sender,
+                                               receiver=receiver)
                     if proj:
                         projections.append(proj)
 
