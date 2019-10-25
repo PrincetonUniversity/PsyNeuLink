@@ -985,6 +985,12 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                     :default value: `ContrastiveHebbian`
                     :type: `Function`
 
+                max_passes
+                    see `max_passes <TransferMechanism.max_passes>`
+
+                    :default value: 1000
+                    :type: int
+
                 minus_phase_activity
                     see `minus_phase_activity <ContrastiveHebbianMechanism.minus_phase_activity>`
 
@@ -1091,6 +1097,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         minus_phase_termination_condition = Parameter(CONVERGENCE, stateful=False, loggable=False)
         plus_phase_termination_condition = Parameter(CONVERGENCE, stateful=False, loggable=False)
         learning_function = Parameter(ContrastiveHebbian, stateful=False, loggable=False)
+        max_passes = Parameter(1000, stateful=False)
 
         output_activity = Parameter(None, read_only=True, getter=_CHM_output_activity_getter)
         input_activity = Parameter(None, read_only=True, getter=_CHM_input_activity_getter)
@@ -1214,6 +1221,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                                   plus_phase_termination_threshold=plus_phase_termination_threshold,
                                                   phase_convergence_function=phase_convergence_function,
                                                   phase_convergence_threshold=minus_phase_termination_threshold,
+                                                  max_passes=max_passes,
                                                   continuous=continuous,
                                                   clamp=clamp,
                                                   input_ports=input_ports,
@@ -1235,7 +1243,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                          integrator_mode=integrator_mode,
                          integration_rate=integration_rate,
                          clip=clip,
-                         max_passes=max_passes,
                          enable_learning=enable_learning,
                          learning_rate=learning_rate,
                          learning_function=learning_function,

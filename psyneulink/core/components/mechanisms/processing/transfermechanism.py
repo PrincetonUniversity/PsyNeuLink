@@ -346,6 +346,7 @@ Class Reference
 import inspect
 import numbers
 import warnings
+import logging
 
 from collections.abc import Iterable
 
@@ -369,10 +370,12 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort, PRIMARY, StandardOutputPorts, standard_output_ports
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    FUNCTION, INITIALIZER, INSTANTANEOUS_MODE_VALUE, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, \
-    NAME, NOISE, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, OWNER_VALUE, \
+    EQUAL, FUNCTION, GREATER_THAN, GREATER_THAN_OR_EQUAL, INITIALIZER, INSTANTANEOUS_MODE_VALUE, \
+    LESS_THAN, LESS_THAN_OR_EQUAL, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, \
+    NAME, NOISE, NOT_EQUAL, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, OWNER_VALUE, \
     PROB, RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, \
     VARIABLE
+
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -397,6 +400,9 @@ Transfer_DEFAULT_GAIN = 1
 Transfer_DEFAULT_BIAS = 0
 Transfer_DEFAULT_OFFSET = 0
 # Transfer_DEFAULT_RANGE = np.array([])
+
+logger = logging.getLogger(__name__)
+
 
 # This is a convenience class that provides list of standard_output_port names in IDE
 class TRANSFER_OUTPUT():
@@ -509,7 +515,6 @@ class TransferMechanism(ProcessingMechanism_Base):
     clip=[float:min, float:max],                                                  \
     termination_function=Distance(metric=DIFFERENCE),                             \
     termination_threshold=None,                                                   \
-    max_passes=None,                                                              \
     output_ports=RESULTS                                                         \
     params=None,                                                                  \
     name=None,                                                                    \
@@ -617,6 +622,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         value; any element of the result that exceeds the specified minimum or maximum value is set to the value of
         `clip <TransferMechanism.clip>` that it exceeds.
 
+    COMMENT:
     termination_function : function : default Distance(metric=DIFFERENCE)
         specifies the function that calculates `delta <TransferMechanism.delta>`, and determines when `is_converged
         <TransferMechanism.is_converged>` is `True`.
@@ -624,13 +630,24 @@ class TransferMechanism(ProcessingMechanism_Base):
     termination_threshold : float : default 0.01
         specifies the value of `delta <TransferMechanism.delta>` at which `is_converged
         <TransferMechanism.is_converged>` is `True`.
-
-    COMMENT:
-    max_passes : int : default 1000
-        specifies maximum number of executions (`passes <TimeScale.PASS>`) that can occur in a trial before reaching
-        the `termination_threshold <RecurrentTransferMechanism.termination_threshold>`, after which an error occurs;
-        if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
     COMMENT
+
+    termination_metric : function : default Distance(metric=DIFFERENCE)
+        specifies metric used to determine when execution of TransferMechanism is complete if `execute_until_finished
+        <Component.execute_until_finished>` is True.  Must take two arguments (the first of  which must be an array,
+        and the second of which can be an array but may be None) and return either another array or a scalar;  see
+        `termination_metric <TransferMechanism.termination_metric>` for additional details.
+
+    termination_threshold : float : default 0.01
+        specifies value against which `termination_metric <TransferMechanism.termination_metric>` is compared to
+        determine when execution of TransferMechanism is complete; see `termination_metric
+        <TransferMechanism.termination_metric>` for additional details.
+
+    termination_comparator : comparator keyword : default LESS_THAN_OR_EQUAL
+        specifies how `termination_metric <TransferMechanism.termination_metric>` is compared with
+        `termination_threshold <TransferMechanism.termination_threshold>` to determine when execution of
+        TransferMechanism is complete; see `termination_metric <TransferMechanism.termination_metric>`
+        for additional details.
 
     output_ports : str, list or np.ndarray : default RESULTS
         specifies the OutputPorts for the TransferMechanism; by default, one is created for each InputPort
@@ -769,25 +786,31 @@ class TransferMechanism(ProcessingMechanism_Base):
            <TransferMechanism.integrator_function>`.
 
     delta : scalar
-        value returned by `termination_function <TransferMechanism.termination_function>`;  used to determined
+        value returned by `termination_metric <TransferMechanism.termination_metric>`;  used to determined
         when `is_converged <TransferMechanism.is_converged>` is `True`.
 
+    COMMENT:
     is_converged : bool
         `True` if `delta <TransferMechanism.delta>` is less than or equal to `termination_threshold
         <TransferMechanism.termination_threshold>`.
+    COMMENT
 
-    termination_function : function
-        compares `value <TransferMechanism.value>` with `previous_value <TransferMechanism.previous_value>`;
-        result is used to determine when `is_converged <TransferMechanism.is_converged>` is `True`.
+    termination_metric : function
+        used to determine when execution of the TransferMechanism is complete (i.e., `is_finished` is True), if
+        `execute_until_finished <Component.execute_until_finished>` is True.  Is passed the `value
+        <TransferMechanism.value>` and `previous_value <TransferMechanism.previous_value>` of the TransferMechanism;
+        its result is compared with `termination_threshold <TransferMechanism.termination_threshold>` using
+        `TransferMechanism.termination_comparator`, the result of which is used as the value of `is_finished`.
 
     termination_threshold : float
-        determines the value of `delta <TransferMechanism.delta>` at which `is_converged
-        <TransferMechanism.is_converged>` is `True`.
+        value with which `termination_metric <TransferMechanism.termination_metric>` is compared to determine when
+        execution of TransferMechanism is complete if `execute_until_finished <Component.execute_until_finished>`
+        is True.
 
-    max_passes : int or None
-        determines maximum number of executions (`passes <TimeScale.PASS>`) that can occur in a trial before reaching
-        the `termination_threshold <TransferMechanism.termination_threshold>`, after which an error occurs;
-        if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
+    termination_comparator : Comparator
+        used to compare `termination_metric <TransferMechanism.termination_metric>` with `termination_threshold
+        <TransferMechanism.termination_threshold>` to determine when execution of TransferMechanism is complete if
+        `execute_until_finished <Component.execute_until_finished>` is True.
 
     output_ports : *ContentAddressableList[OutputPort]*
         list of Mechanism's `OutputPorts <OutputPorts>`; by default there is one OutputPort for each InputPort,
@@ -848,8 +871,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                     :default value: 0.01
                     :type: float
 
-                termination_function
-                    see `termination_function <TransferMechanism.termination_function>`
+                termination_metric
+                    see `termination_metric <TransferMechanism.termination_metric>`
 
                     :default value: `Distance`
                     :type: `Function`
@@ -885,12 +908,6 @@ class TransferMechanism(ProcessingMechanism_Base):
                     :default value: False
                     :type: bool
 
-                max_passes
-                    see `max_passes <TransferMechanism.max_passes>`
-
-                    :default value: 1000
-                    :type: int
-
                 noise
                     see `noise <TransferMechanism.noise>`
 
@@ -921,9 +938,9 @@ class TransferMechanism(ProcessingMechanism_Base):
         on_resume_integrator_mode = Parameter(INSTANTANEOUS_MODE_VALUE, stateful=False, loggable=False)
         clip = None
         noise = Parameter(0.0, modulable=True)
+        termination_metric = Parameter(Distance, stateful=False, loggable=False)
         termination_threshold = Parameter(0.01, modulable=True)
-        termination_function = Parameter(Distance, stateful=False, loggable=False)
-        max_passes = Parameter(1000, stateful=False)
+        termination_comparator = Parameter(LESS_THAN, modulable=False)
 
         def _validate_integrator_mode(self, integrator_mode):
             if not isinstance(integrator_mode, bool):
@@ -942,9 +959,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                  on_resume_integrator_mode=INSTANTANEOUS_MODE_VALUE,
                  noise=0.0,
                  clip=None,
-                 termination_function=None,
+                 termination_metric=None,
                  termination_threshold:float=0.01,
-                 max_passes:tc.optional(int)=1000,
                  output_ports:tc.optional(tc.any(str, Iterable))=RESULTS,
                  params=None,
                  name=None,
@@ -970,9 +986,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   integration_rate=integration_rate,
                                                   integrator_mode=integrator_mode,
                                                   clip=clip,
-                                                  termination_function=termination_function,
+                                                  termination_metric=termination_metric,
                                                   termination_threshold=termination_threshold,
-                                                  max_passes=max_passes,
                                                   params=params)
         self.on_resume_integrator_mode = on_resume_integrator_mode
         # self.integrator_function = None
@@ -1561,3 +1576,31 @@ class TransferMechanism(ProcessingMechanism_Base):
     #     else:
     #         return None
     # MODIFIED 10/24/19 END
+
+    @handle_external_context()
+    def is_finished(self, context=None):
+        """"Returns True when value of Mechanism reaches threhsold or if threshold is None.
+
+        Note:  if threshold is None, implements single update (cycle) per call to _execute method
+               (equivalent to setting Component.execute_until_finished = False)
+        """
+
+        threshold = self.parameters.threshold._get(context)
+
+        if threshold is not None:
+            threshold_criterion = self.parameters.threshold_criterion._get(context)
+
+            if threshold_criterion == VALUE:
+                threshold_criterion = RESULT
+            if any(self.output_ports[threshold_criterion].parameters.value._get(context) >= threshold):
+                logger.info(
+                    '{0} {1} has reached threshold {2}'.format(
+                        type(self).__name__,
+                        self.name,
+                        self.function.get_current_function_param(THRESHOLD, context)
+                    )
+                )
+                return True
+            return False
+
+        return True

@@ -384,7 +384,6 @@ class RecurrentTransferMechanism(TransferMechanism):
     clip=[float:min, float:max],                        \
     termination_function=Distance(metric=MAX_ABS_DIFF), \
     termination_threshold=None,                         \
-    max_passes=None,                                    \
     enable_learning=False,                              \
     learning_rate=None,                                 \
     learning_function=Hebbian,                          \
@@ -552,11 +551,6 @@ class RecurrentTransferMechanism(TransferMechanism):
     termination_threshold : float : default 0.01
         specifies the value of `delta <RecurrentTransferMechanism.delta>` at which `is_converged
         <RecurrentTransferMechanism.is_converged>` is `True`.
-
-    max_passes : int : default 1000
-        specifies maximum number of executions (`passes <TimeScale.PASS>`) that can occur in a trial before reaching
-        the `termination_threshold <RecurrentTransferMechanism.termination_threshold>`, after which an error occurs;
-        if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
 
     enable_learning : boolean : default False
         specifies whether the Mechanism should be configured for learning;  if it is not (the default), then learning
@@ -763,11 +757,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         determines the value of `delta <RecurrentTransferMechanism.delta>` at which `is_converged
         <RecurrentTransferMechanism.is_converged>` is `True`.
 
-    max_passes : int or None
-        determines maximum number of executions (`passes <TimeScale.PASS>`) that can occur in a trial before reaching
-        the `termination_threshold <RecurrentTransferMechanism.termination_threshold>`, after which an error occurs;
-        if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
-
     learning_enabled : bool : default False
         indicates whether learning has been enabled for the RecurrentTransferMechanism.  It is set to `True` if
         `learning is specified <Recurrent_Transfer_Learning>` at the time of construction (i.e., if the
@@ -971,7 +960,6 @@ class RecurrentTransferMechanism(TransferMechanism):
                  clip=None,
                  termination_function:tc.any(is_function_type)=Distance(metric=MAX_ABS_DIFF),
                  termination_threshold:float=0.01,
-                 max_passes:tc.optional(int)=1000,
                  enable_learning:bool=False,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function: tc.any(is_function_type) = Hebbian,
@@ -1036,7 +1024,6 @@ class RecurrentTransferMechanism(TransferMechanism):
                          clip=clip,
                          termination_function=termination_function,
                          termination_threshold=termination_threshold,
-                         max_passes=max_passes,
                          output_ports=output_ports,
                          params=params,
                          name=name,
