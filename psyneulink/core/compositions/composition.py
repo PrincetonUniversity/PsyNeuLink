@@ -2516,6 +2516,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 name = 'PARAMETER_CIM_' + mech.name + "_" + receiver.name
                             )
                             for projection in control_signal.projections:
+                                projection._activate_for_compositions(self)
                                 projection._activate_for_compositions(comp)
                             for projection in receiver.mod_afferents:
                                 if projection.sender.owner == controller:
@@ -2535,6 +2536,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 sender = efferent.sender,
                                 receiver = pcIM_ports[efferent.receiver][1]
                             )
+                            input_projection._activate_for_compositions(self)
                             input_projection._activate_for_compositions(comp)
 
     def _get_nested_node_CIM_port(self,
