@@ -2445,7 +2445,7 @@ class Mechanism_Base(Mechanism):
                 warnings.warn(f"Maximum number of executions ({max_executions}) reached for {self.name}.")
                 break
 
-            self.parameters.num_executions_until_finished._set(num_executions+1, override=True, context=context)
+            self.parameters.num_executions_until_finished._set(num_executions + 1, override=True, context=context)
 
             if self.is_finished(context) or not self.parameters.execute_until_finished._get(context):
                 self.parameters.is_finished_flag._set(True, context)
