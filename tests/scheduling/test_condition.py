@@ -786,43 +786,6 @@ class TestWhenFinished:
         ]
         assert output == pytest.helpers.setify_expected_output(expected_output)
 
-    def test_WhenFinishedAll_noargs(self):
-        comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
-        for m in [A, B, C]:
-            comp.add_node(m)
-        comp.add_projection(MappingProjection(), A, C)
-        comp.add_projection(MappingProjection(), B, C)
-        sched = Scheduler(composition=comp)
-
-        sched.add_condition(A, Always())
-        sched.add_condition(B, Always())
-        sched.add_condition(C, Always())
-
-        termination_conds = {}
-        termination_conds[TimeScale.RUN] = AfterNTrials(1)
-        termination_conds[TimeScale.TRIAL] = WhenFinishedAll()
-        output = []
-        i = 0
-        A.is_finished_flag = False
-        B.is_finished_flag = False
-        C.is_finished_flag = False
-
-        for step in sched.run(termination_conds=termination_conds):
-            if i == 3:
-                A.is_finished_flag = True
-                B.is_finished_flag = True
-            if i == 4:
-                C.is_finished_flag = True
-            output.append(step)
-            i += 1
-        expected_output = [
-            set([A, B]), C, set([A, B]), C, set([A, B]),
-        ]
-        assert output == pytest.helpers.setify_expected_output(expected_output)
-
     def test_WhenFinishedAll_1(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
@@ -869,5 +832,42 @@ class TestWhenFinished:
         output = list(sched.run(termination_conds=termination_conds))
         expected_output = [
             set([A, B]), set([A, B]), set([A, B]), set([A, B]), set([A, B]),
+        ]
+        assert output == pytest.helpers.setify_expected_output(expected_output)
+
+    def test_WhenFinishedAll_noargs(self):
+        comp = Composition()
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
+        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+        for m in [A, B, C]:
+            comp.add_node(m)
+        comp.add_projection(MappingProjection(), A, C)
+        comp.add_projection(MappingProjection(), B, C)
+        sched = Scheduler(composition=comp)
+
+        sched.add_condition(A, Always())
+        sched.add_condition(B, Always())
+        sched.add_condition(C, Always())
+
+        termination_conds = {}
+        termination_conds[TimeScale.RUN] = AfterNTrials(1)
+        termination_conds[TimeScale.TRIAL] = WhenFinishedAll()
+        output = []
+        i = 0
+        A.is_finished_flag = False
+        B.is_finished_flag = False
+        C.is_finished_flag = False
+
+        for step in sched.run(termination_conds=termination_conds):
+            if i == 3:
+                A.is_finished_flag = True
+                B.is_finished_flag = True
+            if i == 4:
+                C.is_finished_flag = True
+            output.append(step)
+            i += 1
+        expected_output = [
+            set([A, B]), C, set([A, B]), C, set([A, B]),
         ]
         assert output == pytest.helpers.setify_expected_output(expected_output)
