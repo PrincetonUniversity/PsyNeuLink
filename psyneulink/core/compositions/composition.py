@@ -2257,7 +2257,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                      if any([item for item in items
                                                if (not NodeRole.LEARNING in self.nodes_to_roles[item] and
                                                    not NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[item])
-                                               ])])[-1]
+                                               ])])[-1].copy()
             else:
                 output_nodes = self.get_nodes_by_role(NodeRole.TERMINAL)
 
