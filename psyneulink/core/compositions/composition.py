@@ -7611,7 +7611,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             m_out = builder.gep(data_out, [zero, zero, idx])
             if is_mech:
                 call_args = [m_params, m_context, m_in, m_out]
-                if node is self.controller:
+                if len(m_function.args) > 4:
+                    assert node is self.controller
                     call_args += [params, context, data_in]
                 builder.call(m_function, call_args)
             else:
