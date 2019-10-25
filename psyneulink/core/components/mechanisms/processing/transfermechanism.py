@@ -507,8 +507,8 @@ class TransferMechanism(ProcessingMechanism_Base):
     integration_rate=0.5,                                                         \
     noise=0.0,                                                                    \
     clip=[float:min, float:max],                                                  \
-    convergence_function=Distance(metric=DIFFERENCE),                             \
-    convergence_criterion=None,                                                   \
+    termination_function=Distance(metric=DIFFERENCE),                             \
+    termination_threshold=None,                                                   \
     max_passes=None,                                                              \
     output_ports=RESULTS                                                         \
     params=None,                                                                  \
@@ -617,17 +617,17 @@ class TransferMechanism(ProcessingMechanism_Base):
         value; any element of the result that exceeds the specified minimum or maximum value is set to the value of
         `clip <TransferMechanism.clip>` that it exceeds.
 
-    convergence_function : function : default Distance(metric=DIFFERENCE)
+    termination_function : function : default Distance(metric=DIFFERENCE)
         specifies the function that calculates `delta <TransferMechanism.delta>`, and determines when `is_converged
         <TransferMechanism.is_converged>` is `True`.
 
-    convergence_criterion : float : default 0.01
+    termination_threshold : float : default 0.01
         specifies the value of `delta <TransferMechanism.delta>` at which `is_converged
         <TransferMechanism.is_converged>` is `True`.
 
     max_passes : int : default 1000
         specifies maximum number of executions (`passes <TimeScale.PASS>`) that can occur in a trial before reaching
-        the `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>`, after which an error occurs;
+        the `termination_threshold <RecurrentTransferMechanism.termination_threshold>`, after which an error occurs;
         if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
 
     output_ports : str, list or np.ndarray : default RESULTS
@@ -767,24 +767,24 @@ class TransferMechanism(ProcessingMechanism_Base):
            <TransferMechanism.integrator_function>`.
 
     delta : scalar
-        value returned by `convergence_function <TransferMechanism.convergence_function>`;  used to determined
+        value returned by `termination_function <TransferMechanism.termination_function>`;  used to determined
         when `is_converged <TransferMechanism.is_converged>` is `True`.
 
     is_converged : bool
-        `True` if `delta <TransferMechanism.delta>` is less than or equal to `convergence_criterion
-        <TransferMechanism.convergence_criterion>`.
+        `True` if `delta <TransferMechanism.delta>` is less than or equal to `termination_threshold
+        <TransferMechanism.termination_threshold>`.
 
-    convergence_function : function
+    termination_function : function
         compares `value <TransferMechanism.value>` with `previous_value <TransferMechanism.previous_value>`;
         result is used to determine when `is_converged <TransferMechanism.is_converged>` is `True`.
 
-    convergence_criterion : float
+    termination_threshold : float
         determines the value of `delta <TransferMechanism.delta>` at which `is_converged
         <TransferMechanism.is_converged>` is `True`.
 
     max_passes : int or None
         determines maximum number of executions (`passes <TimeScale.PASS>`) that can occur in a trial before reaching
-        the `convergence_criterion <TransferMechanism.convergence_criterion>`, after which an error occurs;
+        the `termination_threshold <TransferMechanism.termination_threshold>`, after which an error occurs;
         if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
 
     output_ports : *ContentAddressableList[OutputPort]*
@@ -840,14 +840,14 @@ class TransferMechanism(ProcessingMechanism_Base):
                     :default value: None
                     :type:
 
-                convergence_criterion
-                    see `convergence_criterion <TransferMechanism.convergence_criterion>`
+                termination_threshold
+                    see `termination_threshold <TransferMechanism.termination_threshold>`
 
                     :default value: 0.01
                     :type: float
 
-                convergence_function
-                    see `convergence_function <TransferMechanism.convergence_function>`
+                termination_function
+                    see `termination_function <TransferMechanism.termination_function>`
 
                     :default value: `Distance`
                     :type: `Function`
@@ -919,8 +919,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         on_resume_integrator_mode = Parameter(INSTANTANEOUS_MODE_VALUE, stateful=False, loggable=False)
         clip = None
         noise = Parameter(0.0, modulable=True)
-        convergence_criterion = Parameter(0.01, modulable=True)
-        convergence_function = Parameter(Distance, stateful=False, loggable=False)
+        termination_threshold = Parameter(0.01, modulable=True)
+        termination_function = Parameter(Distance, stateful=False, loggable=False)
         max_passes = Parameter(1000, stateful=False)
 
         def _validate_integrator_mode(self, integrator_mode):
@@ -940,8 +940,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                  on_resume_integrator_mode=INSTANTANEOUS_MODE_VALUE,
                  noise=0.0,
                  clip=None,
-                 convergence_function=None,
-                 convergence_criterion:float=0.01,
+                 termination_function=None,
+                 termination_threshold:float=0.01,
                  max_passes:tc.optional(int)=1000,
                  output_ports:tc.optional(tc.any(str, Iterable))=RESULTS,
                  params=None,
@@ -968,8 +968,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   integration_rate=integration_rate,
                                                   integrator_mode=integrator_mode,
                                                   clip=clip,
-                                                  convergence_function=convergence_function,
-                                                  convergence_criterion=convergence_criterion,
+                                                  termination_function=termination_function,
+                                                  termination_threshold=termination_threshold,
                                                   max_passes=max_passes,
                                                   params=params)
         self.on_resume_integrator_mode = on_resume_integrator_mode
@@ -1479,7 +1479,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                 )
         value = self._clip_result(clip, value)
 
-        # Used by update_previous_value, convergence_function and delta
+        # Used by update_previous_value, termination_function and delta
         # self.parameters.value._set(np.atleast_2d(value), context, skip_history=True, skip_log=True)
 
         return value
@@ -1538,22 +1538,22 @@ class TransferMechanism(ProcessingMechanism_Base):
     def delta(self, value=NotImplemented, context=None):
         if value is NotImplemented:
             value = self.parameters.value._get(context)
-        return self.convergence_function([value[0], self.parameters.previous_value._get(context)[0]])
+        return self.termination_function([value[0], self.parameters.previous_value._get(context)[0]])
 
     @handle_external_context()
     def is_converged(self, value=NotImplemented, context=None):
         # Check for convergence
         if (
-            self.convergence_criterion is not None
+            self.termination_threshold is not None
             and self.parameters.previous_value._get(context) is not None
             and self.initialization_status != ContextFlags.INITIALIZING
         ):
-            if self.delta(value, context) <= self.convergence_criterion:
+            if self.delta(value, context) <= self.termination_threshold:
                 return True
             elif self.get_current_execution_time(context).pass_ >= self.max_passes:
                 raise TransferError("Maximum number of executions ({}) has occurred before reaching "
-                                    "convergence_criterion ({}) for {} in trial {} of run {}".
-                                    format(self.max_passes, self.convergence_criterion, self.name,
+                                    "termination_threshold ({}) for {} in trial {} of run {}".
+                                    format(self.max_passes, self.termination_threshold, self.name,
                                            self.get_current_execution_time(context).trial, self.get_current_execution_time(context).run))
             else:
                 return False

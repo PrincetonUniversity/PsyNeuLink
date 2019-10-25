@@ -150,10 +150,10 @@ Also like a `TransferMechanism`, the function used to integrate its input before
 RecurrentTransferMechanism.function` (when `integrator_mode <RecurrentTransferMechanism.integrator_mode>` is `True`)
 can be specified in the **integrator_function** argument of its constructor.
 
-If a `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>` is specified, then on each execution
-the `convergence_function <RecurrentTransferMechanism.convergence_function>` is evaluated, and execution in the current
-`trial` continues until the result returned is less than or equal to the `convergence_criterion
-<RecurrentTransferMechanism.convergence_criterion>` or the number of executions reaches `max_passes
+If a `termination_threshold <RecurrentTransferMechanism.termination_threshold>` is specified, then on each execution
+the `termination_function <RecurrentTransferMechanism.termination_function>` is evaluated, and execution in the current
+`trial` continues until the result returned is less than or equal to the `termination_threshold
+<RecurrentTransferMechanism.termination_threshold>` or the number of executions reaches `max_passes
 <RecurrentTransferMechanism.max_passes>` (if it is specified).
 
 If it has been `configured for learning <Recurrent_Transfer_Learning>` and is executed as part of a `System`,
@@ -382,8 +382,8 @@ class RecurrentTransferMechanism(TransferMechanism):
     integration_rate=0.5,                               \
     noise=0.0,                                          \
     clip=[float:min, float:max],                        \
-    convergence_function=Distance(metric=MAX_ABS_DIFF), \
-    convergence_criterion=None,                         \
+    termination_function=Distance(metric=MAX_ABS_DIFF), \
+    termination_threshold=None,                         \
     max_passes=None,                                    \
     enable_learning=False,                              \
     learning_rate=None,                                 \
@@ -545,17 +545,17 @@ class RecurrentTransferMechanism(TransferMechanism):
         allowable value; any element of the result that exceeds the specified minimum or maximum value is set to the
         value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
 
-    convergence_function : function : default Distance(metric=MAX_ABS_DIFF)
+    termination_function : function : default Distance(metric=MAX_ABS_DIFF)
         specifies the function that calculates `delta <RecurrentTransferMechanism.delta>`, and determines when
         `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
 
-    convergence_criterion : float : default 0.01
+    termination_threshold : float : default 0.01
         specifies the value of `delta <RecurrentTransferMechanism.delta>` at which `is_converged
         <RecurrentTransferMechanism.is_converged>` is `True`.
 
     max_passes : int : default 1000
         specifies maximum number of executions (`passes <TimeScale.PASS>`) that can occur in a trial before reaching
-        the `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>`, after which an error occurs;
+        the `termination_threshold <RecurrentTransferMechanism.termination_threshold>`, after which an error occurs;
         if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
 
     enable_learning : boolean : default False
@@ -583,7 +583,7 @@ class RecurrentTransferMechanism(TransferMechanism):
          every execution of the RecurrentTransferMechanism;  this is equivalent to assigning no `Condition`
        ..
        * *CONVERGENCE:* `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` is executed whenever the
-         the `convergence_criterion` is satisfied;  this is equivalent to a WhenFinished(``rec_mech``) `Condition`
+         the `termination_threshold` is satisfied;  this is equivalent to a WhenFinished(``rec_mech``) `Condition`
          in which ``rec_mech`` is the RecurrentTransferMechanism.
 
        See `learning_condition <RecurrentTransferMechanism.learning_condition>` for additional details.
@@ -747,25 +747,25 @@ class RecurrentTransferMechanism(TransferMechanism):
            <RecurrentTransferMechanism.integrator_function>`.
 
     delta : scalar
-        value returned by `convergence_function <RecurrentTransferMechanism.convergence_function>`;  used to determined
+        value returned by `termination_function <RecurrentTransferMechanism.termination_function>`;  used to determined
         when `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
 
     is_converged : bool
-        `True` if `delta <RecurrentTransferMechanism.delta>` is less than or equal to `convergence_criterion
-        <RecurrentTransferMechanism.convergence_criterion>`.
+        `True` if `delta <RecurrentTransferMechanism.delta>` is less than or equal to `termination_threshold
+        <RecurrentTransferMechanism.termination_threshold>`.
 
-    convergence_function : function
+    termination_function : function
         compares `value <RecurrentTransferMechanism.value>` with `previous_value
         <RecurrentTransferMechanism.previous_value>`; result is used to determine when `is_converged
         <RecurrentTransferMechanism.is_converged>` is `True`.
 
-    convergence_criterion : float
+    termination_threshold : float
         determines the value of `delta <RecurrentTransferMechanism.delta>` at which `is_converged
         <RecurrentTransferMechanism.is_converged>` is `True`.
 
     max_passes : int or None
         determines maximum number of executions (`passes <TimeScale.PASS>`) that can occur in a trial before reaching
-        the `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>`, after which an error occurs;
+        the `termination_threshold <RecurrentTransferMechanism.termination_threshold>`, after which an error occurs;
         if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
 
     learning_enabled : bool : default False
@@ -873,8 +873,8 @@ class RecurrentTransferMechanism(TransferMechanism):
                     :default value: `LinearCombination`
                     :type: `Function`
 
-                convergence_function
-                    see `convergence_function <RecurrentTransferMechanism.convergence_function>`
+                termination_function
+                    see `termination_function <RecurrentTransferMechanism.termination_function>`
 
                     :default value: `Distance`(metric=max_abs_diff)
                     :type: `Function`
@@ -939,7 +939,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         hetero = Parameter(0, modulable=True)
         combination_function = LinearCombination
         integration_rate = Parameter(0.5, modulable=True)
-        convergence_function = Distance(metric=MAX_ABS_DIFF)
+        termination_function = Distance(metric=MAX_ABS_DIFF)
         noise = Parameter(0.0, modulable=True)
         smoothing_factor = Parameter(0.5, modulable=True)
         enable_learning = False
@@ -969,8 +969,8 @@ class RecurrentTransferMechanism(TransferMechanism):
                  integration_rate: is_numeric_or_none=0.5,
                  noise=0.0,
                  clip=None,
-                 convergence_function:tc.any(is_function_type)=Distance(metric=MAX_ABS_DIFF),
-                 convergence_criterion:float=0.01,
+                 termination_function:tc.any(is_function_type)=Distance(metric=MAX_ABS_DIFF),
+                 termination_threshold:float=0.01,
                  max_passes:tc.optional(int)=1000,
                  enable_learning:bool=False,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
@@ -1034,8 +1034,8 @@ class RecurrentTransferMechanism(TransferMechanism):
                          integrator_mode=integrator_mode,
                          integration_rate=integration_rate,
                          clip=clip,
-                         convergence_function=convergence_function,
-                         convergence_criterion=convergence_criterion,
+                         termination_function=termination_function,
+                         termination_threshold=termination_threshold,
                          max_passes=max_passes,
                          output_ports=output_ports,
                          params=params,
