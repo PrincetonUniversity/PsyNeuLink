@@ -120,7 +120,7 @@ argument of the LCControlMechanism's constructor.
    explicitly specified as `CombineMeans`, then `LinearCombination` will be used for the ObjectiveMechanism's `function
    <ObjectiveMechanism.function>`.  To insure that `CombineMeans` is used, it must be specified explicitly in the
    **function** argument of the constructor for the ObjectiveMechanism (for an example of a similar condition
-   for an EVCControlMechanism see 1st example under `System_Control_Examples`).
+   see example under `ControlMechanism_ObjectiveMechanism_Function`).
 
 The ObjectiveFunction is listed in the LCControlMechanism's `objective_mechanism
 <LCControlMechanism.objective_mechanism>` attribute.  The OutputPorts it monitors are listed in the
@@ -254,8 +254,8 @@ Execution
 ---------
 
 An LCControlMechanism executes within a `Composition` at a point specified in the Composition's `Scheduler` or, if it
-is the `controller <System>` for a `Composition`, after all of the other Mechanisms in the Composition have `executed
-<Composition_Run>` in a `TRIAL`. It's `function <LCControlMechanism.function>` takes the `value
+is the `controller <Composition.controller>` for a `Composition`, after all of the other Mechanisms in the Composition
+have `executed <Composition_Run>` in a `TRIAL`. It's `function <LCControlMechanism.function>` takes the `value
 <InputPort.value>` of the LCControlMechanism's `primary InputPort <InputPort_Primary>` as its input, and generates a
 response -- under the influence of its `mode <FitzHughNagumoIntegrator.mode>` parameter -- that is assigned as the
 `allocation <LCControlSignal.allocation>` of its `ControlSignals <ControlSignal>`.  The latter are used by its

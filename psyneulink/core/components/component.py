@@ -353,41 +353,40 @@ The following attributes control and provide information about the execution of 
         Currently, only Mechanisms reinitialize when their reinitialize_when Conditions are satisfied. Other types of
         Components do not reinitialize.
 
-* **is_finished
+.. _Component_Is_Finished:
+
+* **is_finished** -- method that determines whether execution of the Component is complete for a `TRIAL`;  it is only
+  used if `execute_until_finished <Component_Execute_Until_Finished>` is True.
 
 .. _Component_Execute_Until_Finished:
 
-* **execute_until_finished** -- determines whether Component exexcutes until its `is_finished` method returns True.
-  The default `is_finished` method of the Component class always returns True, so that the Compnoent executes just once
-  per call to its `execute <Component.execute>` method.  However, if the Component's class implemnents its own
-  `is_finished` method (e.g., `RecurrentTransferMechanism`) then, on a single call to its `execute <Component.execute>`
-  method, it will continue to execute until either its `is_finished` method returns true or the number of executions
-  exceeds `max_executions_before_finished <Component_Max_Executions_Before_Finished>`.
+* **execute_until_finished** -- determines whether Component executes until its `is_finished` method returns True.  If
+  it is False, then the Component executes only once per call to its `execute <Component.execute>` method,  irrespective
+  of its `is_finished` method;  if it is True then, depending on how its class implements and handles its
+  `is_finished` method, the Component may execute more than once per call to its `execute <Component.execute>` method.
 
 .. _Component_Num_Executions_Before_Finished:
 
-* **num_executions_before_finished** -- contains the number of times the Component has executed in the current (or last)
-  call to its `execute <Component.execute>` method.  Note that this is distinct from the `execution_count
-  <Comopnent.execution_count>` attribute, that contains the total number of times the Component has executed in its
-  "life."
+* **num_executions_before_finished** -- contains the number of times the Component has executed prior to finishing
+  (and since it last finished);  depending upon the class, these may all be within a single call to the Component's
+  `execute <Component.execute>` method, or extend over several calls.  Note that this is distinct from the
+  `execution_count <Comopnent.execution_count>` attribute, that contains the total number of times the Component
+  has executed in its "life."
 
 .. _Component_Max_Executions_Before_Finished:
 
-* **max_executions_before_finished** -- determines the maximum number of executions allowed in a single call to its
-  `execute <Component.execute>` method (i.e., `num_executions_before_finished
-  <Component.num_executions_before_finished>`), when `execute_until_finished <Component.execute_until_finished>` is
-  True;  if it is exceeded, a warning message is generated.  Note that this only pertains to
-  `num_executions_before_finished <Component_Num_Executions_Before_Finished>` (i.e., the number of times it is
-  executed in a given call to the Component's `execute <Component.execute>` method), and not its `execution_count
-  <Component_Execution_Count>`, which is the total number of times the Component has executed in its "life",
-  that can be unlimited.
+* **max_executions_before_finished** -- determines the maximum number of executions allowed before finishing
+  (i.e., the maxmium allowable value of `num_executions_before_finished <Component.num_executions_before_finished>`).
+  If it is exceeded, a warning message is generated.  Note that this only pertains to `num_executions_before_finished
+  <Component_Num_Executions_Before_Finished>`, and not its `execution_count <Component_Execution_Count>`, which can be
+  unlimited.
 
 .. _Component_Execution_Count:
 
-* **execution_count** -- maintains a record of the number of times a Component has executed since it was construted,
-  *excluding* the executions carried out during initialization and validation, but including all other executions,
-  whether they are of the Component on its own are as part of a `Composition`, and irresective of the `context
-  <Context>` in which they are occur. The value can be changed "manually" or programmatically by assigning an integer
+* **execution_count** -- maintains a record of the number of times a Component has executed since it was constructed,
+  *excluding*  executions carried out during initialization and validation, but including all others whether they are
+  of the Component on its own are as part of a `Composition`, and irresective of the `context <Context>` in which
+  they are occur. The value can be changed "manually" or programmatically by assigning an integer
   value directly to the attribute.  Note that this is the distinct from the `num_executions_before_finished
   <Component_Num_Executions_Before_Finished>` attribute.
 
@@ -961,7 +960,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
                 is_finished_flag
                     internal parameter used by some Component types to track previous status of is_finished() method,
-                    or to set status reported by the is_finished() method (see
+                    or to set the status reported by the is_finished (see `is_finished <Component_Is_Finished>`
 
                     :default value: True
                     :type: bool
@@ -3141,17 +3140,13 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         self.most_recent_context = context
         return value
 
-    # MODIFIED 10/22/19 NEW:
     def is_finished(self, context=None):
         """
             set by a Component to signal completion of its `execution <Component_Execution>` in a `trial`; used by
             `Component-based Conditions <Conditions_Component_Based>` to predicate the execution of one or more other
             Components on a Component.
         """
-        # return self._is_finished
         return self.is_finished_flag
-        # return self.parameters._is_finished._get(context)
-        # return True
 
     def _parse_param_port_sources(self):
         try:

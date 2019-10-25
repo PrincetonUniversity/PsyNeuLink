@@ -773,11 +773,8 @@ class LCAMechanism(RecurrentTransferMechanism):
             threshold_criterion = self.parameters.threshold_criterion._get(context)
 
             if threshold_criterion == VALUE:
-                finished = any(self.parameters.value._get(context)[0] >= threshold)
-            else:
-                finished = any(self.output_ports[threshold_criterion].parameters.value._get(context) >= threshold)
-
-            if finished:
+                threshold_criterion = RESULT
+            if any(self.output_ports[threshold_criterion].parameters.value._get(context) >= threshold):
                 logger.info(
                     '{0} {1} has reached threshold {2}'.format(
                         type(self).__name__,
