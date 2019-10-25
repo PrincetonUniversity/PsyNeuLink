@@ -52,8 +52,8 @@ class TestContrastiveHebbian:
                 enable_learning=True,
                 function=psyneulink.core.components.functions.transferfunctions.Linear,
                 learning_function=psyneulink.core.components.functions.learningfunctions.Hebbian,
-                minus_phase_termination_criterion=.01,
-                plus_phase_termination_criterion=.01,
+                minus_phase_termination_threshold=.01,
+                plus_phase_termination_threshold=.01,
                 # auto=0,
                 hetero=np.full((size,size),0.0)
         )
@@ -118,8 +118,8 @@ class TestContrastiveHebbian:
                 integrator_mode=True,
                 integration_rate=0.2,
                 learning_function=psyneulink.core.components.functions.learningfunctions.Hebbian,
-                minus_phase_termination_criterion=.01,
-                plus_phase_termination_criterion=.01,
+                minus_phase_termination_threshold=.01,
+                plus_phase_termination_threshold=.01,
                 # auto=0,
                 hetero=np.full((size,size),0.0)
         )

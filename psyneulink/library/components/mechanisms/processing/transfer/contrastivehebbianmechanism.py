@@ -51,7 +51,7 @@ details).
 
 A ContrastiveHebbianMechanism `executes in two phases <ContrastiveHebbian_Execution>`, and has
 **minus_phase_termination_condition** and **plus_phase_termination_condition** arguments, and corresponding
-**minus_phase_termination_criterion** and **plus_phase_termination_criterion** arguments, that determine when the
+**minus_phase_termination_threshold** and **plus_phase_termination_threshold** arguments, that determine when the
 respective phases of execution are terminated.  Other parameters can also be configured that influence processing (see
 `ContrastiveHebbian_Execution`).
 
@@ -260,7 +260,7 @@ it is *HARD_CLAMP* they are used to replace the corresponding fields of *RECURRE
 is `True`) and then its `function <ContrastiveHebbianMechanism.function>`.
 
 If the termination condition for either phase is specified as *CONVERGENCE*, it uses the Mechanism's
-`termination_function <ContrastiveHebbianMechanism.termination_function>`, together with the convergence criterion
+`termination_function <ContrastiveHebbianMechanism.termination_function>`, together with the convergence threshold
 for that phase, to determine when execution of that phase terminates.  If
 `max_passes <ContrastiveHebbianMechanism.max_passes>` is specified, and the number of executions in either phase
 reaches that value, an error is generated.  Otherwise, once a trial of execution is complete (i.e, after completion
@@ -312,12 +312,15 @@ from psyneulink.core.components.functions.statefulfunctions.integratorfunctions 
 from psyneulink.core.components.functions.transferfunctions import Linear, get_matrix
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.ports.outputport import PRIMARY, StandardOutputPorts
-from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONTRASTIVE_HEBBIAN_MECHANISM, COUNT, FUNCTION, HARD_CLAMP, HOLLOW_MATRIX, MAX_ABS_DIFF, NAME, SIZE, SOFT_CLAMP, TARGET, VARIABLE
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.globals.keywords import \
+    CONTRASTIVE_HEBBIAN_MECHANISM, COUNT, FUNCTION, HARD_CLAMP, HOLLOW_MATRIX, MAX_ABS_DIFF, NAME, \
+    SIZE, SOFT_CLAMP, TARGET, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
-from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import CONVERGENCE, RECURRENT, RECURRENT_INDEX, RecurrentTransferMechanism
+from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
+    CONVERGENCE, RECURRENT, RECURRENT_INDEX, RecurrentTransferMechanism
 
 __all__ = [
     'ContrastiveHebbianError', 'ContrastiveHebbianMechanism', 'CONTRASTIVE_HEBBIAN_OUTPUT',
@@ -449,16 +452,16 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 integration_rate=0.5,                               \
                 clip=[float:min, float:max],                        \
                 minus_phase_termination_condition = CONVERGENCE,    \
-                minus_phase_termination_criterion=.01,              \
+                minus_phase_termination_threshold=.01,              \
                 plus_phase_termination_condition = CONVERGENCE,     \
-                plus_phase_termination_criterion=.01,               \
+                plus_phase_termination_threshold=.01,               \
                 termination_function=Distance(metric=MAX_ABS_DIFF), \
                 max_passes=None,                                    \
                 enable_learning=False,                              \
                 learning_rate=None,                                 \
                 learning_function=ContrastiveHebbian,               \
-                additional_input_ports=None,                       \
-                additional_output_ports=None,                      \
+                additional_input_ports=None,                        \
+                additional_output_ports=None,                       \
                 params=None,                                        \
                 name=None,                                          \
                 prefs=None)
@@ -557,7 +560,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         execution (see `minus_phase_termination_condition
         <ContrastiveHebbianMechanism.minus_phase_termination_condition>` for additional details).
 
-    minus_phase_termination_criterion : float : default 0.01
+    minus_phase_termination_threshold : float : default 0.01
         specifies the value of `delta <ContrastiveHebbianMechanism.delta>`
         used to determine when the `minus_phase <ContrastiveHebbian_Minus_Phase>` completes.
 
@@ -566,12 +569,12 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         execution (see `plus_phase_termination_condition <ContrastiveHebbianMechanism.plus_phase_termination_condition>`
         for additional details).
 
-    plus_phase_termination_criterion : float : default 0.01
+    plus_phase_termination_threshold : float : default 0.01
         specifies the value of `delta <ContrastiveHebbianMechanism.delta>`
         used to determine when the `plus_phase <ContrastiveHebbian_Plus_Phase>` completes.
 
     termination_function : function : default Distance(metric=MAX_ABS_DIFF)
-        specifies the function that determines when a `phase of execution <ContrastiveHebbian_Execution>` complete
+        specifies the function that determines when a `phase of execution <ContrastiveHebbian_Execution>` is complete
         if the termination condition for that phase is specified as *CONVERGENCE*, by comparing `current_activity
         <ContrastiveHebbianMechanism.current_activity>` with the `previous_value
         <ContrastiveHebbianMechanism.previous_value>` of the Mechanism;  can be any function that takes two 1d arrays
@@ -581,8 +584,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     max_passes : int : default 1000
         specifies maximum number of executions (`passes <TimeScale.PASS>`) that can occur in an `execution phase
-        <ContrastiveHebbian_Execution>` before reaching the `termination_threshold
-        <ContrastiveHebbianMechanism.termination_threshold>`, after which an error occurs; if `None` is specified,
+        <ContrastiveHebbian_Execution>` before reaching the `convergence_threshold
+        <ContrastiveHebbianMechanism.convergence_threshold>`, after which an error occurs; if `None` is specified,
         execution may continue indefinitely or until an interpreter exception is generated.
 
     enable_learning : boolean : default False
@@ -769,10 +772,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     is_converged : bool
         `True` when `delta <ContrastiveHebbianMechanism.delta>` is less than or equal to the
-        `minus_phase_termination_criterion <ContrastiveHebbianMechanism.minus_phase_termination_criterion>` in the
-        `minus_phase <ContrastiveHebbian_Minus_Phase>`) or `plus_phase_termination_criterion
-        <ContrastiveHebbianMechanism.plus_phase_termination_criterion>` in the `minus_phase
-        <ContrastiveHebbian_Minus_Phase>`).
+        `minus_phase_termination_threshold <ContrastiveHebbianMechanism.minus_phase_termination_threshold>` in the
+        `minus_phase <ContrastiveHebbian_Minus_Phase>`) or `plus_phase_termination_threshold
+        <ContrastiveHebbianMechanism.plus_phase_termination_threshold>` in the `plus_phase
+        <ContrastiveHebbian_Plus_Phase>`).
 
     termination_function : function
         compares the value of `current_activity <ContrastiveHebbianMechanism.current_activity>` with `previous_value
@@ -784,12 +787,12 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     minus_phase_termination_condition : COUNT or CONVERGENCE : default CONVERGENCE
         determines the type of condition used to terminate the `minus_phase <ContrastiveHebbian_Minus_Phase>` of
         execution.  If it is *COUNT*, the Mechanism is executed the number of times specified in
-        `minus_phase_termination_criterion <ContrastiveHebbianMechanism.minus_phase_termination_criterion>`;
+        `minus_phase_termination_threshold <ContrastiveHebbianMechanism.minus_phase_termination_threshold>`;
         if it is *CONVERGENCE*, execution continues until the value returned by `termination_function
         <ContrastiveHebbianMechanism.termination_function>` is less than or equal to
-        `minus_phase_termination_criterion <ContrastiveHebbianMechanism.minus_phase_termination_criterion>`.
+        `minus_phase_termination_threshold <ContrastiveHebbianMechanism.minus_phase_termination_threshold>`.
 
-    minus_phase_termination_criterion : float
+    minus_phase_termination_threshold : float
         the value used for the specified `minus_phase_termination_condition
         <ContrastiveHebbianMechanism.minus_phase_termination_condition>` to determine when the `minus phase of execution
         <ContrastiveHebbian_Minus_Phase>` completes.
@@ -797,19 +800,19 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     plus_phase_termination_condition : COUNT or CONVERGENCE : default CONVERGENCE
         determines the type of condition used to terminate the `plus_phase <ContrastiveHebbian_Plus_Phase>` of
         execution.  If it is *COUNT*, the Mechanism is executed the number of times specified in
-        `plus_phase_termination_criterion <ContrastiveHebbianMechanism.plus_phase_termination_criterion>`;
+        `plus_phase_termination_threshold <ContrastiveHebbianMechanism.plus_phase_termination_threshold>`;
         if it is *CONVERGENCE*, execution continues until the value returned by `termination_function
         <ContrastiveHebbianMechanism.termination_function>` is less than or equal to
-        `plus_phase_termination_criterion <ContrastiveHebbianMechanism.plus_phase_termination_criterion>`.
+        `plus_phase_termination_threshold <ContrastiveHebbianMechanism.plus_phase_termination_threshold>`.
 
-    plus_phase_termination_criterion : float
+    plus_phase_termination_threshold : float
         the value used for the specified `plus_phase_termination_condition
         <ContrastiveHebbianMechanism.plus_phase_termination_condition>` to determine when the `plus phase of execution
         <ContrastiveHebbian_Plus_Phase>` completes.
 
     max_passes : int or None
         determines the maximum number of executions (`passes <TimeScale.PASS>`) that can occur in an `execution phase
-        <ContrastiveHebbian_Execution>` before reaching the corresponding termination_threshold, after which an error
+        <ContrastiveHebbian_Execution>` before reaching the corresponding convergence_threshold, after which an error
         occurs; if `None` is specified, execution may continue indefinitely or until an interpreter exception is
         generated.
 
@@ -907,6 +910,12 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                     :default value: True
                     :type: bool
 
+                convergence_threshold
+                    see `convergence_threshold <ContrastiveHebbianMechanism.convergence_threshold>`
+
+                    :default value: 0.01
+                    :type: float
+
                 current_activity
                     see `current_activity <ContrastiveHebbianMechanism.current_activity>`
 
@@ -919,8 +928,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                     :default value: None
                     :type:
 
-                current_termination_criterion
-                    see `current_termination_criterion <ContrastiveHebbianMechanism.current_termination_criterion>`
+                current_termination_threshold
+                    see `current_termination_threshold <ContrastiveHebbianMechanism.current_termination_threshold>`
 
                     :default value: None
                     :type:
@@ -983,8 +992,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                     :default value: `CONVERGENCE`
                     :type: str
 
-                minus_phase_termination_criterion
-                    see `minus_phase_termination_criterion <ContrastiveHebbianMechanism.minus_phase_termination_criterion>`
+                minus_phase_termination_threshold
+                    see `minus_phase_termination_threshold <ContrastiveHebbianMechanism.minus_phase_termination_threshold>`
 
                     :default value: 0.01
                     :type: float
@@ -1026,8 +1035,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                     :default value: `CONVERGENCE`
                     :type: str
 
-                plus_phase_termination_criterion
-                    see `plus_phase_termination_criterion <ContrastiveHebbianMechanism.plus_phase_termination_criterion>`
+                plus_phase_termination_threshold
+                    see `plus_phase_termination_threshold <ContrastiveHebbianMechanism.plus_phase_termination_threshold>`
 
                     :default value: 0.01
                     :type: float
@@ -1051,13 +1060,15 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                     :default value: None
                     :type:
 
+
+
         """
         variable = np.array([[0, 0]])
         current_activity = Parameter(None, aliases=['recurrent_activity'])
         plus_phase_activity = None
         minus_phase_activity = None
         current_termination_condition = None
-        current_termination_criterion = None
+        current_termination_threshold = None
         phase_execution_count = 0
         phase_terminated = False
 
@@ -1069,6 +1080,9 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         continuous = Parameter(True, stateful=False, loggable=False)
         clamp = Parameter(HARD_CLAMP, stateful=False, loggable=False)
         combination_function = Parameter(None, stateful=False, loggable=False)
+        convergence_threshold = Parameter(0.01, modulable=True)
+        termination_function = Parameter(Distance, stateful=False, loggable=False)
+
         minus_phase_termination_condition = Parameter(CONVERGENCE, stateful=False, loggable=False)
         plus_phase_termination_condition = Parameter(CONVERGENCE, stateful=False, loggable=False)
         learning_function = Parameter(ContrastiveHebbian, stateful=False, loggable=False)
@@ -1081,8 +1095,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         execution_phase = Parameter(None, read_only=True)
         # is_finished_ = Parameter(False, read_only=True)
 
-        minus_phase_termination_criterion = Parameter(0.01, modulable=True)
-        plus_phase_termination_criterion = Parameter(0.01, modulable=True)
+        minus_phase_termination_threshold = Parameter(0.01, modulable=True)
+        plus_phase_termination_threshold = Parameter(0.01, modulable=True)
 
     paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
 
@@ -1121,9 +1135,9 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  integrator_mode:bool=False,
                  clip=None,
                  minus_phase_termination_condition:tc.enum(CONVERGENCE, COUNT)=CONVERGENCE,
-                 minus_phase_termination_criterion:float=0.01,
+                 minus_phase_termination_threshold:float=0.01,
                  plus_phase_termination_condition:tc.enum(CONVERGENCE, COUNT)=CONVERGENCE,
-                 plus_phase_termination_criterion:float=0.01,
+                 plus_phase_termination_threshold:float=0.01,
                  termination_function:tc.any(is_function_type)=Distance(metric=MAX_ABS_DIFF),
                  max_passes:tc.optional(int)=1000,
                  enable_learning:bool=False,
@@ -1190,9 +1204,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(mode=mode,
                                                   minus_phase_termination_condition=minus_phase_termination_condition,
-                                                  minus_phase_termination_criterion=minus_phase_termination_criterion,
+                                                  minus_phase_termination_threshold=minus_phase_termination_threshold,
                                                   plus_phase_termination_condition=plus_phase_termination_condition,
-                                                  plus_phase_termination_criterion=plus_phase_termination_criterion,
+                                                  plus_phase_termination_threshold=plus_phase_termination_threshold,
+                                                  convergence_threshold=minus_phase_termination_threshold,
                                                   continuous=continuous,
                                                   clamp=clamp,
                                                   input_ports=input_ports,
@@ -1215,7 +1230,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                          integration_rate=integration_rate,
                          clip=clip,
                          termination_function=termination_function,
-                         termination_threshold=minus_phase_termination_criterion,
                          max_passes=max_passes,
                          enable_learning=enable_learning,
                          learning_rate=learning_rate,
@@ -1310,7 +1324,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             self.parameters.execution_phase._set(MINUS_PHASE, context)
 
         if self.parameters.execution_phase._get(context) is MINUS_PHASE:
-            self.parameters.current_termination_criterion._set(self.parameters.minus_phase_termination_criterion._get(context), context)
+            self.parameters.current_termination_threshold._set(self.parameters.minus_phase_termination_threshold._get(context), context)
             self.parameters.current_termination_condition._set(self.minus_phase_termination_condition, context)
             self.parameters.phase_execution_count._set(0, context)
 
@@ -1347,14 +1361,14 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         current_termination_condition = self.parameters.current_termination_condition._get(context)
 
         if current_termination_condition is CONVERGENCE:
-            self.parameters.termination_threshold._set(
-                    self.parameters.current_termination_criterion._get(context),context)
+            self.parameters.convergence_threshold._set(
+                    self.parameters.current_termination_threshold._get(context),context)
             self.parameters.phase_terminated._set(
                     self.is_converged(np.atleast_2d(current_activity), context), context)
         elif current_termination_condition is COUNT:
             self.parameters.phase_terminated._set(
                 (self.parameters.phase_execution_count._get(context) ==
-                 self.parameters.current_termination_criterion._get(context)),
+                 self.parameters.current_termination_threshold._get(context)),
                 context)
         else:
             phase_str = repr('PLUS_PHASE') if self.parameters.execution_phase._get(context) is PLUS_PHASE \
@@ -1369,10 +1383,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 # Store activity from last execution in plus phase
                 self.parameters.plus_phase_activity._set(current_activity, context)
                 # # Set value of primary outputPort to activity at end of plus phase
-                # self.current_activity = self.plus_phase_activity
                 self.parameters.current_activity._set(current_activity, context)
-                # self.execution_phase = None
-                # self.parameters.is_finished_._set(True, context)
                 self.parameters.is_finished_flag._set(True, context)
 
             # Otherwise, prepare for start of plus phase on next execution
@@ -1385,7 +1396,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 if not self.continuous:
                     self.reinitialize(self.initial_value, context=context)
                     self.parameters.current_activity._set(self.parameters.initial_value._get(context), context)
-                self.parameters.current_termination_criterion._set(self.plus_phase_termination_criterion, context)
+                self.parameters.current_termination_threshold._set(self.plus_phase_termination_threshold, context)
                 self.parameters.current_termination_condition._set(self.plus_phase_termination_condition, context)
 
             # Switch execution_phase
@@ -1431,6 +1442,33 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             pass
 
         return variable[RECURRENT_INDEX]
+
+    def delta(self, value=NotImplemented, context=None):
+        if value is NotImplemented:
+            value = self.parameters.value._get(context)
+        return self.termination_function([value[0], self.parameters.previous_value._get(context)[0]])
+
+    @handle_external_context()
+    def is_converged(self, value=NotImplemented, context=None):
+        # Check for convergence
+        if (
+            self.convergence_threshold is not None
+            and self.parameters.previous_value._get(context) is not None
+            and self.initialization_status != ContextFlags.INITIALIZING
+        ):
+            if self.delta(value, context) <= self.convergence_threshold:
+                return True
+            elif self.get_current_execution_time(context).pass_ >= self.max_passes:
+                raise ContrastiveHebbianError(f"Maximum number of executions ({self.max_passes}) has occurred "
+                                              f"before reaching convergence_threshold ({self.convergence_threshold}) "
+                                              f"for {self.name} in trial "
+                                              f"{self.get_current_execution_time(context).trial} "
+                                              f"of run {self.get_current_execution_time(context).run}.")
+            else:
+                return False
+        # Otherwise just return True
+        else:
+            return None
 
     @property
     def _learning_signal_source(self):

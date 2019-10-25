@@ -1479,9 +1479,6 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                 )
         value = self._clip_result(clip, value)
 
-        # Used by update_previous_value, termination_function and delta
-        # self.parameters.value._set(np.atleast_2d(value), context, skip_history=True, skip_log=True)
-
         return value
 
     @handle_external_context(execution_id=NotImplemented)
@@ -1535,28 +1532,30 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         super()._report_mechanism_execution(input_val=print_input, params=print_params, context=context)
 
-    def delta(self, value=NotImplemented, context=None):
-        if value is NotImplemented:
-            value = self.parameters.value._get(context)
-        return self.termination_function([value[0], self.parameters.previous_value._get(context)[0]])
-
-    @handle_external_context()
-    def is_converged(self, value=NotImplemented, context=None):
-        # Check for convergence
-        if (
-            self.termination_threshold is not None
-            and self.parameters.previous_value._get(context) is not None
-            and self.initialization_status != ContextFlags.INITIALIZING
-        ):
-            if self.delta(value, context) <= self.termination_threshold:
-                return True
-            elif self.get_current_execution_time(context).pass_ >= self.max_passes:
-                raise TransferError("Maximum number of executions ({}) has occurred before reaching "
-                                    "termination_threshold ({}) for {} in trial {} of run {}".
-                                    format(self.max_passes, self.termination_threshold, self.name,
-                                           self.get_current_execution_time(context).trial, self.get_current_execution_time(context).run))
-            else:
-                return False
-        # Otherwise just return True
-        else:
-            return None
+    # # MODIFIED 10/24/19 OLD:
+    # def delta(self, value=NotImplemented, context=None):
+    #     if value is NotImplemented:
+    #         value = self.parameters.value._get(context)
+    #     return self.termination_function([value[0], self.parameters.previous_value._get(context)[0]])
+    #
+    # @handle_external_context()
+    # def is_converged(self, value=NotImplemented, context=None):
+    #     # Check for convergence
+    #     if (
+    #         self.termination_threshold is not None
+    #         and self.parameters.previous_value._get(context) is not None
+    #         and self.initialization_status != ContextFlags.INITIALIZING
+    #     ):
+    #         if self.delta(value, context) <= self.termination_threshold:
+    #             return True
+    #         elif self.get_current_execution_time(context).pass_ >= self.max_passes:
+    #             raise TransferError("Maximum number of executions ({}) has occurred before reaching "
+    #                                 "termination_threshold ({}) for {} in trial {} of run {}".
+    #                                 format(self.max_passes, self.termination_threshold, self.name,
+    #                                        self.get_current_execution_time(context).trial, self.get_current_execution_time(context).run))
+    #         else:
+    #             return False
+    #     # Otherwise just return True
+    #     else:
+    #         return None
+    # MODIFIED 10/24/19 END
