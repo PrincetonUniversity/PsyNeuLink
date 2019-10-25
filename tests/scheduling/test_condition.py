@@ -675,22 +675,13 @@ class TestCondition:
 
         termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
-        termination_conds[TimeScale.TRIAL] = WhenFinishedAny()
-        output = []
-        i = 0
-        for step in sched.run(termination_conds=termination_conds):
-            if i == 3:
-                A._is_finished = True
-                B._is_finished = True
-            if i == 4:
-                C._is_finished = True
-            output.append(step)
-            i += 1
+        termination_conds[TimeScale.TRIAL] = AllHaveRun()
+        output = list(sched.run(termination_conds=termination_conds))
+
         expected_output = [
             A, A, B, A, A, B, C
         ]
         assert output == pytest.helpers.setify_expected_output(expected_output)
-
 
 class TestWhenFinished:
 

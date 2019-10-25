@@ -946,6 +946,16 @@ class TransferMechanism(ProcessingMechanism_Base):
             if not isinstance(integrator_mode, bool):
                 return 'may only be True or False.'
 
+        def _validate_termination_metric(self, termination_metric):
+            pass
+
+        def _validate_termination_threshold(self, termination_threshold):
+            pass
+
+        def _validate_termination_comparator(self, termination_comparator):
+            pass
+
+
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
