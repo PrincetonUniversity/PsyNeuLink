@@ -158,21 +158,6 @@ user once the component is constructed, with the one exception of `prefs <Compon
   Each individual preference is accessible as an attribute of the Component, the name of which is the name of the
   preference (see `PreferenceSet <LINK>` for details).
 
-.. _Component_Reinitialize_When:
-
-* **reinitialize_when** - the `reinitialize_when <Component.reinitialize_when>` attribute contains a `Condition`. When
-  this condition is satisfied, the Component calls its `reinitialize <Component.reinitialize>` method. The
-  `reinitialize <Component.reinitialize>` method is executed without arguments, meaning that the relevant function's
-  `initializer<IntegratorFunction.initializer>` attribute (or equivalent -- initialization attributes vary among
-  functions) is used for reinitialization. Keep in mind that the `reinitialize <Component.reinitialize>` method and
-  `reinitialize_when <Component.reinitialize_when>` attribute only exist for Mechanisms that have `stateful
-  <Parameter.stateful>` Parameters, or that have a `function <Mechanism.function>` with `stateful <Parameter.stateful>`
-  Parameters.
-
-  .. note::
-
-        Currently, only Mechanisms reinitialize when their reinitialize_when Conditions are satisfied. Other types of
-        Components do not reinitialize.
 
 .. _User_Modifiable_Parameters:
 
@@ -247,60 +232,13 @@ A Component defines its `parameters <Parameters>` in its *parameters* attribute,
   `ParameterPort_Specification` for details concerning different ways in which the value of a
   parameter can be specified).
 
-.. _Informational_Attributes:
-
-*Informational Attributes*
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In addition to its `user-modifiable parameters <Component_User_Params>`, a Component has attributes that provide
-information about its contents and/or state, but do not directly affect its operation.  Every Component has the
-following two informational attributes:
-
-.. _Component_Execution_Count:
-
-* **execution_count** -- maintains a record of the number of times a Component has executed; it *excludes* the
-  executions carried out during initialization and validation, but includes all other executions, whether they are of
-  the Component on its own are as part of a `Composition`, and irresective of the `context <Context>` in which they
-  are occur. The value can be changed "manually" or programmatically by assigning an integer value directly to the
-  attribute.
-
-.. _Component_Current_Execution_Time:
-
-* **current_execution_time** -- maintains the `Time` of the last execution of the Component in the context of the
-  `Composition`'s current `scheduler <Composition.scheduler`, and is stored as a `time
-  <Context.time>` tuple of values indicating the `TimeScale.TRIAL`,  `TimeScale.PASS`, and `TimeScale.TIME_STEP` of the
-  last execution.
-
-.. _Component_Execute_Until_Finished:
-
-* **execute_until_finished** -- determines whether Component exexcutes until its `is_finished` method returns True.
-  The default `is_finished` method of the Component class always returns True, so that the Compnoent executes just once
-  per call to its `execute <Component.execute>` method.  However, if the Component's class implemnents its own
-  `is_finished` method (e.g., `RecurrentTransferMechanism`) then, on a single call to its `execute <Component.execute>`
-  method, it will continue to execute until either its `is_finished` method returns true or the number of executions
-  exceeds `max_executions_until_finished <Component.max_executions_until_finished>`.
-
-.. _Component_Num_Executions_In_Call:
-
-* **num_executions_until_finished** -- contains the number of times the Component has executed in the current (or last) call
-  to its `execute <Component.execute>` method.  Note that this is distinct from the `execution_count
-  <Comopnent.execution_count>` attribute, that contains the total number of times the Component has executed in its
-  "life."
-
-.. _Component_Max_Executions:
-
-* **max_executions_until_finished** -- determines the maximum number of executions allowed in a single call to its `execute
-  <Component.execute>` method (i.e., `num_executions_until_finished <Component.num_executions_until_finished>`), when
-  `execute_until_finished <Component.execute_until_finished>` is True;  if it is exceeded, a warning message is
-  generated.  Note that this only pertains to `num_executions_until_finished <Component.num_executions_until_finished>` (i.e.,
-  the number of times it is executed in a given call to the Component's `execute <Component.execute>` method),
-  and not its `execution_count <Component.execution_count>`, which is the total number of times the Component
-  has executed in its "life", that can be unlimited.
 
 COMMENT:
 FIX: STATEMENT ABOVE ABOUT MODIFYING EXECUTION COUNT VIOLATES THIS DEFINITION, AS PROBABLY DO OTHER ATTRIBUTES
-  * parameters are things that govern the operation of the Mechanism (including its function) and/or can be modified/modulated
-  * attributes include parameters, but also read-only attributes that reflect but do not determine the operation (e.g., EXECUTION_COUNT)
+  * parameters are things that govern the operation of the Mechanism (including its function) and/or can be
+    modified/modulated
+  * attributes include parameters, but also read-only attributes that reflect but do not determine the operation
+    (e.g., EXECUTION_COUNT)
 COMMENT
 
 ..
@@ -398,6 +336,67 @@ Execution
 ---------
 
 Calls the :keyword:`execute` method of the subclass that, in turn, calls its :keyword:`function`.
+The following attributes control and provide information about the execution of a Component:
+
+.. _Component_Reinitialize_When:
+
+* **reinitialize_when** - contains a `Condition`; when this condition is satisfied, the Component calls its
+  `reinitialize <Component.reinitialize>` method. The `reinitialize <Component.reinitialize>` method is executed
+  without arguments, meaning that the relevant function's `initializer<IntegratorFunction.initializer>` attribute
+  (or equivalent -- initialization attributes vary among functions) is used for reinitialization. Keep in mind that
+  the `reinitialize <Component.reinitialize>` method and `reinitialize_when <Component.reinitialize_when>` attribute
+  only exist for Mechanisms that have `stateful <Parameter.stateful>` Parameters, or that have a `function
+  <Mechanism.function>` with `stateful <Parameter.stateful>` Parameters.
+
+  .. note::
+
+        Currently, only Mechanisms reinitialize when their reinitialize_when Conditions are satisfied. Other types of
+        Components do not reinitialize.
+
+* **is_finished
+
+.. _Component_Execute_Until_Finished:
+
+* **execute_until_finished** -- determines whether Component exexcutes until its `is_finished` method returns True.
+  The default `is_finished` method of the Component class always returns True, so that the Compnoent executes just once
+  per call to its `execute <Component.execute>` method.  However, if the Component's class implemnents its own
+  `is_finished` method (e.g., `RecurrentTransferMechanism`) then, on a single call to its `execute <Component.execute>`
+  method, it will continue to execute until either its `is_finished` method returns true or the number of executions
+  exceeds `max_executions_before_finished <Component_Max_Executions_Before_Finished>`.
+
+.. _Component_Num_Executions_Before_Finished:
+
+* **num_executions_before_finished** -- contains the number of times the Component has executed in the current (or last)
+  call to its `execute <Component.execute>` method.  Note that this is distinct from the `execution_count
+  <Comopnent.execution_count>` attribute, that contains the total number of times the Component has executed in its
+  "life."
+
+.. _Component_Max_Executions_Before_Finished:
+
+* **max_executions_before_finished** -- determines the maximum number of executions allowed in a single call to its
+  `execute <Component.execute>` method (i.e., `num_executions_before_finished
+  <Component.num_executions_before_finished>`), when `execute_until_finished <Component.execute_until_finished>` is
+  True;  if it is exceeded, a warning message is generated.  Note that this only pertains to
+  `num_executions_before_finished <Component_Num_Executions_Before_Finished>` (i.e., the number of times it is
+  executed in a given call to the Component's `execute <Component.execute>` method), and not its `execution_count
+  <Component_Execution_Count>`, which is the total number of times the Component has executed in its "life",
+  that can be unlimited.
+
+.. _Component_Execution_Count:
+
+* **execution_count** -- maintains a record of the number of times a Component has executed since it was construted,
+  *excluding* the executions carried out during initialization and validation, but including all other executions,
+  whether they are of the Component on its own are as part of a `Composition`, and irresective of the `context
+  <Context>` in which they are occur. The value can be changed "manually" or programmatically by assigning an integer
+  value directly to the attribute.  Note that this is the distinct from the `num_executions_before_finished
+  <Component_Num_Executions_Before_Finished>` attribute.
+
+.. _Component_Current_Execution_Time:
+
+* **current_execution_time** -- maintains the `Time` of the last execution of the Component in the context of the
+  `Composition`'s current `scheduler <Composition.scheduler`, and is stored as a `time
+  <Context.time>` tuple of values indicating the `TimeScale.TRIAL`,  `TimeScale.PASS`, and `TimeScale.TIME_STEP` of the
+  last execution.
 
 
 .. _Component_Class_Reference:
@@ -450,7 +449,7 @@ from psyneulink.core.globals.json import JSONDumpable
 from psyneulink.core.globals.keywords import \
     CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, EXECUTE_UNTIL_FINISHED, \
     FUNCTION, FUNCTION_COMPONENT_CATEGORY, FUNCTION_PARAMS, INIT_FULL_EXECUTE_METHOD, INPUT_PORTS, \
-    LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MAX_EXECUTIONS_UNTIL_FINISHED, \
+    LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MAX_EXECUTIONS_BEFORE_FINISHED, \
     MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_PARAMETER_SOURCE, \
     MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
     MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, PARAMS, PARAMS_CURRENT, PREFS_ARG, \
@@ -861,11 +860,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     execute_until_finished : bool
         see `execute_until_finished <Component_Execute_Until_Finished>`
 
-    num_executions_until_finished : int
-        see `num_executions_until_finished <Component_Num_Executions_In_Call>`
+    num_executions_before_finished : int
+        see `num_executions_before_finished <Component_Num_Executions_Before_Finished>`
 
-    max_executions_until_finished : bool
-        see `max_executions_until_finished <Component_Max_Executions>`
+    max_executions_before_finished : bool
+        see `max_executions_before_finished <Component_Max_Executions_Before_Finished>`
 
     reinitialize_when : `Condition`
         see `reinitialize_when <Component_Reinitialize_When>`
@@ -902,7 +901,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     componentCategory = None
     componentType = None
 
-    standard_constructor_args = [REINITIALIZE_WHEN, EXECUTE_UNTIL_FINISHED, MAX_EXECUTIONS_UNTIL_FINISHED]
+    standard_constructor_args = [REINITIALIZE_WHEN, EXECUTE_UNTIL_FINISHED, MAX_EXECUTIONS_BEFORE_FINISHED]
 
     # helper attributes for JSON model spec
     _model_spec_id_parameters = 'parameters'
@@ -928,18 +927,31 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             ----------
 
                 variable
-                    see `variable <Component.variable>`
+                    see `variable <Component_Variable>`
 
                     :default value: numpy.array([0])
                     :type: numpy.ndarray
                     :read only: True
 
                 value
-                    see `value <Component.value>`
+                    see `value <Component_Value>`
 
                     :default value: numpy.array([0])
                     :type: numpy.ndarray
                     :read only: True
+
+                execution_count
+                    see `execution_count <Component_Execution_Count>`
+
+                    :default value: 0
+                    :type: int
+                    :read only: True
+
+                execute_until_finished
+                    see `execute_until_finished <Component_Execute_Until_Finished>`
+
+                    :default value: True
+                    :type: bool
 
                 has_initializers
                     see `has_initializers <Component.has_initializers>`
@@ -947,36 +959,25 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     :default value: False
                     :type: bool
 
-                execution_count
-                    see `execution_count <Component.execution_count>`
-
-                    :default value: 0
-                    :type: int
-                    :read only: True
-
-                is_finished
-                    see `is_finished <Component.is_finished>`
-                    :default value: True
-                    :type: bool
-
-                execute_until_finished
-                    see `execute_until_finished <Component.execute_until_finished>`
+                is_finished_flag
+                    internal parameter used by some Component types to track previous status of is_finished() method,
+                    or to set status reported by the is_finished() method (see
 
                     :default value: True
                     :type: bool
 
-                num_executions_until_finished
-                    see `num_executions_until_finished <Component.num_executions_until_finished>`
-
-                    :default value: 0
-                    :type: int
-                    :read only: True
-
-                max_executions_until_finished
-                    see `max_executions_until_finished <Component.max_executions_until_finished>`
+                max_executions_before_finished
+                    see `max_executions_before_finished <Component_Max_Executions_Before_Finished>`
 
                     :default value: 1000
                     :type: int
+
+                num_executions_before_finished
+                    see `num_executions_before_finished <Component_Num_Executions_Before_Finished>`
+
+                    :default value: 0
+                    :type: int
+                    :read only: True
 
         """
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
@@ -992,8 +993,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                                     pnl_internal=True)
         is_finished_flag = Parameter(True, loggable=False, stateful=True, pnl_internal=True)
         execute_until_finished = True
-        num_executions_until_finished = Parameter(0, read_only=True)
-        max_executions_until_finished = Parameter(1000, modulable=False)
+        num_executions_before_finished = Parameter(0, read_only=True)
+        max_executions_before_finished = Parameter(1000, modulable=False)
 
         def _parse_variable(self, variable):
             return variable

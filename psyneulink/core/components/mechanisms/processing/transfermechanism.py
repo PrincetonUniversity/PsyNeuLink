@@ -625,10 +625,12 @@ class TransferMechanism(ProcessingMechanism_Base):
         specifies the value of `delta <TransferMechanism.delta>` at which `is_converged
         <TransferMechanism.is_converged>` is `True`.
 
+    COMMENT:
     max_passes : int : default 1000
         specifies maximum number of executions (`passes <TimeScale.PASS>`) that can occur in a trial before reaching
         the `termination_threshold <RecurrentTransferMechanism.termination_threshold>`, after which an error occurs;
         if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
+    COMMENT
 
     output_ports : str, list or np.ndarray : default RESULTS
         specifies the OutputPorts for the TransferMechanism; by default, one is created for each InputPort
