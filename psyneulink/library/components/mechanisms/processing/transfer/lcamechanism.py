@@ -711,17 +711,17 @@ class LCAMechanism(RecurrentTransferMechanism):
                     termination_measure = lambda x: max(x)
                     termination_comparison_op = GREATER_THAN_OR_EQUAL
                 elif threshold_criterion == MAX_VS_NEXT:
-                    termination_measure = lambda x: max_vs_next(x)
+                    termination_measure = max_vs_next
                     termination_comparison_op = GREATER_THAN_OR_EQUAL
                 elif threshold_criterion == MAX_VS_AVG:
-                    termination_measure = lambda x: max_vs_avg(x)
+                    termination_measure = max_vs_avg
                     termination_comparison_op = GREATER_THAN_OR_EQUAL
                 else:
                     raise LCAError(f"Unrecognized value provided to 'threshold_criterion arg of {self.__name__}: "
                                    f"{threshold_criterion};  must be VALUE, MAX_VS_NEXT, or MAX_VS_AVG.")
         else:
-            termination_measure = lambda x: max(x)
-            termination_comparison_op = GREATER_THAN_OR_EQUAL
+            termination_measure = termination_measure or (lambda x: max(x))
+            termination_comparison_op = termination_comparison_op or GREATER_THAN_OR_EQUAL
 
         return termination_threshold, termination_measure, termination_comparison_op
 

@@ -149,6 +149,7 @@ class TestLCA:
     def test_equivalance_of_threshold_and_termination_specifications_max_vs_next(self):
         # Note: This tests the equivalence of using LCAMechanism-specific threshold arguments and
         #       generic TransferMechanism termination_<*> arguments
+
         lca_thresh = LCAMechanism(size=3, threshold=0.1, threshold_criterion=MAX_VS_NEXT)
         response = ProcessingMechanism(size=3)
         comp = Composition()
@@ -157,7 +158,7 @@ class TestLCA:
 
         lca_termination = LCAMechanism(size=3,
                                        termination_threshold=0.1,
-                                       termination_measure=lambda x: max_vs_next(x),
+                                       termination_measure=max_vs_next,
                                        termination_comparison_op='>=')
         comp2 = Composition()
         response2 = ProcessingMechanism(size=3)
