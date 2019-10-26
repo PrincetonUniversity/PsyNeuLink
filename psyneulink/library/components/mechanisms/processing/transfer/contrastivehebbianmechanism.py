@@ -1261,7 +1261,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                          prefs=prefs,
                          **kwargs)
 
-
     def _validate_params(self, request_set, target_set=None, context=None):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
@@ -1272,7 +1271,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                           format(repr(SEPARATED), repr(True), self.name,
                                                  repr(INPUT_SIZE), self.input_size,
                                                  repr(TARGET_SIZE), self.target_size))
-
 
     def _instantiate_input_ports(self, input_ports=None, reference_value=None, context=None):
 

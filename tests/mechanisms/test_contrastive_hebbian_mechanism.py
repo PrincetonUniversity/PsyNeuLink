@@ -36,7 +36,6 @@ class TestContrastiveHebbian:
         print(results)
         np.testing.assert_allclose(results, [[np.array([2.])], [np.array([2.])], [np.array([2.])], [np.array([2.])]])
 
-
     def test_using_Hebbian_learning_of_orthognal_inputs_without_integrator_mode(self):
         """Same as tests/mechanisms/test_recurrent_transfer_mechanism/test_learning_of_orthognal_inputs
 
@@ -57,12 +56,16 @@ class TestContrastiveHebbian:
                 # auto=0,
                 hetero=np.full((size,size),0.0)
         )
-        P=pnl.Process(pathway=[R])
-        S=pnl.System(processes=[P])
+
+        # P=pnl.Process(pathway=[R])
+        # S=pnl.System(processes=[P])
+        S = pnl.Composition()
+        S.add_node(R)
 
         inputs_dict = {R:[1,0,1,0]}
         S.run(num_trials=4,
               inputs=inputs_dict)
+
         # KDM 10/2/18: removing this test from here, as it's kind of unimportant to this specific test
         #   and the behavior of the scheduler's time can be a bit odd - should hopefully fix that in future
         #   and test in its own module
@@ -169,7 +172,6 @@ class TestContrastiveHebbian:
         np.testing.assert_allclose(R.parameters.plus_phase_activity.get(S), [0.0, 1.14142296, 0.0, 1.14142296])
         np.testing.assert_allclose(R.parameters.minus_phase_activity.get(S), [0.0, 0.0, 0.0, 0.0])
 
-
     def test_additional_output_ports(self):
         CHL1 = pnl.ContrastiveHebbianMechanism(
                 input_size=2, hidden_size=0, target_size=2,
@@ -183,7 +185,6 @@ class TestContrastiveHebbian:
                 separated=False)
         assert len(CHL2.output_ports)==5
         assert pnl.PLUS_PHASE_OUTPUT in CHL2.output_ports.names
-
 
     def test_configure_learning(self):
 
