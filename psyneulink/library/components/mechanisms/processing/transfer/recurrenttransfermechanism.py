@@ -146,24 +146,34 @@ of its constructor.  It then transforms its input (including from the `recurrent
 <RecurrentTransferMechanism.recurrent_projection>`) using the specified function and parameters (see
 `Transfer_Execution`), and returns the results in its OutputPorts.
 
+*Integration*
+~~~~~~~~~~~~~
+
 Also like a `TransferMechanism`, the function used to integrate its input before passing it to `function
-RecurrentTransferMechanism.function` (when `integrator_mode <RecurrentTransferMechanism.integrator_mode>` is `True`)
-can be specified in the **integrator_function** argument of its constructor.
+TransferMechanism.function` (when `integrator_mode <TransferMechanism.integrator_mode>` is `True`) can be specified
+in the **integrator_function** argument of its constructor.
 
-If a `termination_threshold <RecurrentTransferMechanism.termination_threshold>` is specified, then on each execution
-the `termination_function <RecurrentTransferMechanism.termination_function>` is evaluated, and execution in the current
-`trial` continues until the result returned is less than or equal to the `termination_threshold
-<RecurrentTransferMechanism.termination_threshold>` or the number of executions reaches `max_passes
-<RecurrentTransferMechanism.max_passes>` (if it is specified).
+*Termination*
+~~~~~~~~~~~~~
 
-If it has been `configured for learning <Recurrent_Transfer_Learning>` and is executed as part of a `System`,
-then its `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` is executed when the `learning_condition
-<RecurrentTransferMechanism.learning_condition>` is satisfied,  during the `execution phase <System_Execution>` of
-the System's execution.  Note that this is distinct from the behavior of supervised learning algorithms (such as
-`Reinforcement` and `BackPropagation`), that are executed during the `learning phase <System_Execution>` of a
-System's execution.  By default, the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` executes,
-and updates the `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` immediately after the
-RecurrentTransferMechanism executes.
+If `integrator_mode <TransferMechanism.integrator_mode>` is True, but `termination_threshold
+<TransferMechanism.termination_threshold>` is not specified (i.e., it is not None) or `execute_until_finished
+<Component.execute_until_finished>` is explicitly assigned as False, then the RecurrentTransferMechanism's `value
+<TransferMechanism.value>` and that of its `output_ports <TransferMechanism.output_ports>` are updated once each time
+it is executed.  However, if a `termination_threshold <TransferMechanism.termination_threshold>` is specified,
+it is updated repeatedly (using its current input) until its termination condition is satisfied, using its
+`termination_measure <TransferMechanism.termination_measure>`, `termination_threshold
+<TransferMechanism.termination_threshold>` and `termination_comparator <TransferMechanism.termination_comparator>`
+attributes (see `Transfer_Execution_Termination`).
+
+*Learning*
+~~~~~~~~~~
+
+If the RecurrentTransferMechanism has been `configured for learning <Recurrent_Transfer_Learning>` and is executed as
+part of a `Composition`, then its `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` is executed
+when the `learning_condition <RecurrentTransferMechanism.learning_condition>` is satisfied.  By default,
+the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` executes, and updates the `recurrent_projection
+<RecurrentTransferMechanism.recurrent_projection>` immediately after the RecurrentTransferMechanism executes.
 
 .. _Recurrent_Transfer_Class_Reference:
 
@@ -406,6 +416,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     Arguments
     ---------
 
+    COMMENT:
     default_variable : number, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the input to the Mechanism to use if none is provided in a call to its
         `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method;
@@ -419,6 +430,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         As an example, the following mechanisms are equivalent::
             T1 = TransferMechanism(size = [3, 2])
             T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
+    COMMENT
 
     function : TransferFunction : default Linear
         specifies the function used to transform the input;  can be `Linear`, `Logistic`, `Exponential`,
@@ -509,6 +521,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         must accept a 2d array with one or two items of the same length, and generate a result that is the same size
         as each of these;  default simply adds the two items.
 
+    COMMENT:
     integrator_mode : bool : False
         specifies whether or not the RecurrentTransferMechanism should be executed using its `integrator_function
         <RecurrentTransferMechanism>` to integrate its `variable <RecurrentTransferMechanism.variable>` (
@@ -521,17 +534,21 @@ class RecurrentTransferMechanism(TransferMechanism):
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input if `integrator_mode
         <RecurrentTransferMechanism.integrator_mode>` is `True`).
+    COMMENT
+
         COMMENT:
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
 
+    COMMENT:
     integration_rate : float : default 0.5
-        the rate used for integrating `variable <RecurrentTransferMechanism.variable>` when `integrator_mode
+        specifies the rate used for integrating `variable <RecurrentTransferMechanism.variable>` when `integrator_mode
         <RecurrentTransferMechanism.integrator_mode>` is set to `True`::
 
              result = (integration_rate * variable) +
              (1-integration_rate * input to mechanism's function on the previous time step)
 
+    COMMENT:
     noise : float or function : default 0.0
         a value added to the result of the `function <RecurrentTransferMechanism.function>` or to the result of
         `integrator_function <RecurrentTransferMechanism.integrator_function>`, depending on whether `integrator_mode
@@ -551,6 +568,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     termination_threshold : float : default 0.01
         specifies the value of `delta <RecurrentTransferMechanism.delta>` at which `is_converged
         <RecurrentTransferMechanism.is_converged>` is `True`.
+    COMMENT
 
     enable_learning : boolean : default False
         specifies whether the Mechanism should be configured for learning;  if it is not (the default), then learning
@@ -600,11 +618,13 @@ class RecurrentTransferMechanism(TransferMechanism):
     Attributes
     ----------
 
+    COMMENT:
     variable : 2d np.array with one item in axis 0.
         the input to Mechanism's `function <RecurrentTransferMechanism.function>`.
 
     function : Function
         the Function used to transform the input.
+    COMMENT
 
     matrix : 2d np.array
         the `matrix <AutoAssociativeProjection.matrix>` parameter of the `recurrent_projection` for the Mechanism.
@@ -636,10 +656,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         COMMENT
 
 
-
-
-
-
+    COMMENT:
     integrator_mode :
         **When integrator_mode is set to True:**
 
@@ -740,6 +757,7 @@ class RecurrentTransferMechanism(TransferMechanism):
            <AdaptiveIntegrator.previous_value>` attribute of its `integrator_function
            <RecurrentTransferMechanism.integrator_function>`.
 
+    COMMENT:
     delta : scalar
         value returned by `termination_function <RecurrentTransferMechanism.termination_function>`;  used to determined
         when `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
@@ -756,6 +774,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     termination_threshold : float
         determines the value of `delta <RecurrentTransferMechanism.delta>` at which `is_converged
         <RecurrentTransferMechanism.is_converged>` is `True`.
+    COMMENT
 
     learning_enabled : bool : default False
         indicates whether learning has been enabled for the RecurrentTransferMechanism.  It is set to `True` if
@@ -766,6 +785,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         enable or disable learning; however, if the Mechanism has not been configured for learning, an attempt to
         set `learning_enabled <RecurrentMechahinsm.learning_enabled>` to `True` elicits a warning and is then
         ignored.
+    COMMENT
 
     learning_mechanism : LearningMechanism
         created automatically if `learning is specified <Recurrent_Transfer_Learning>`, and used to train the
@@ -806,6 +826,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             and the first item of ``output_values``.
     COMMENT
 
+    COMMENT:
     output_ports : Dict[str: OutputPort]
         an OrderedDict with the following `OutputPorts <OutputPort>`:
 
@@ -827,6 +848,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         * **variance** of the result (``value`` of TRANSFER_VARIANCE OutputPort);
         * **energy** of the result (``value`` of ENERGY OutputPort);
         * **entropy** of the result (if the ENTROPY OutputPort is present).
+    COMMENT
 
     name : str
         the name of the RecurrentTransferMechanism; if it is not specified in the **name** argument of the constructor,
@@ -860,12 +882,6 @@ class RecurrentTransferMechanism(TransferMechanism):
                     see `combination_function <RecurrentTransferMechanism.combination_function>`
 
                     :default value: `LinearCombination`
-                    :type: `Function`
-
-                termination_function
-                    see `termination_function <RecurrentTransferMechanism.termination_function>`
-
-                    :default value: `Distance`(metric=max_abs_diff)
                     :type: `Function`
 
                 enable_learning
@@ -928,7 +944,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         hetero = Parameter(0, modulable=True)
         combination_function = LinearCombination
         integration_rate = Parameter(0.5, modulable=True)
-        termination_function = Distance(metric=MAX_ABS_DIFF)
         noise = Parameter(0.0, modulable=True)
         smoothing_factor = Parameter(0.5, modulable=True)
         enable_learning = False
@@ -958,8 +973,6 @@ class RecurrentTransferMechanism(TransferMechanism):
                  integration_rate: is_numeric_or_none=0.5,
                  noise=0.0,
                  clip=None,
-                 termination_function:tc.any(is_function_type)=Distance(metric=MAX_ABS_DIFF),
-                 termination_threshold:float=0.01,
                  enable_learning:bool=False,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function: tc.any(is_function_type) = Hebbian,
@@ -1022,8 +1035,6 @@ class RecurrentTransferMechanism(TransferMechanism):
                          integrator_mode=integrator_mode,
                          integration_rate=integration_rate,
                          clip=clip,
-                         termination_function=termination_function,
-                         termination_threshold=termination_threshold,
                          output_ports=output_ports,
                          params=params,
                          name=name,

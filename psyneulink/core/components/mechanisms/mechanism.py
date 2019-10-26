@@ -2530,7 +2530,7 @@ class Mechanism_Base(Mechanism):
             else:
                 raise MechanismError(f"Length ({len(input_item)}) of input ({input_item}) does not match "
                                      f"required length ({len(input_port.defaults.variable)}) for input "
-                                     f"to {input_port.name} {InputPort.__name__} of {self.name}.")
+                                     f"to {InputPort.__name__} {repr(input_port.name)} of {self.name}.")
 
         return np.array(self.get_input_values(context))
 
