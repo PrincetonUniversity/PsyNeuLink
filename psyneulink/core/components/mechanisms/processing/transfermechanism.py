@@ -262,7 +262,7 @@ current input) until its termination condition is met.  The termination conditio
 TransferMechanism's `value <TransferMechanism.value>` (possibly its `previous_value <TransferMechanism.previous_value>`)
 to the `termination_measure <TransferMechanism.termination_measure>` function, and comparing the result to the
 `termination_threshold <TransferMechanism.termination_threshold>` using the operator specified by the
-`termination_comparator <TransferMechanism.termination_comparator>` operator.  Updating continues until the result
+`termination_comparison_op <TransferMechanism.termination_comparison_op>` operator.  Updating continues until the result
 is either true, or the number of updates reaches `max_executions_before_finished
 <Component.max_executions_before_finished>`.  The number of updates that took place is contained in
 `num_executions_before_finished <Component.num_executions_before_finished>`.   By default, the termination condition
@@ -549,7 +549,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     clip=[float:min, float:max],                                                  \
     termination_measure=Distance(metric=MAX_ABS_DIFF),                            \
     termination_threshold=None,                                                   \
-    termination_comparator=LESS_THAN_OR_EQUAL,                                    \
+    termination_comparison_op=LESS_THAN_OR_EQUAL,                                    \
     output_ports=RESULTS                                                          \
     params=None,                                                                  \
     name=None,                                                                    \
@@ -678,7 +678,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         compared to determine when execution of TransferMechanism is complete; see `termination_measure
         <TransferMechanism.termination_measure>` for additional details.
 
-    termination_comparator : comparator keyword : default LESS_THAN_OR_EQUAL
+    termination_comparison_op : comparator keyword : default LESS_THAN_OR_EQUAL
         specifies how `termination_measure_value <TransferMechanism.termination_measure_value>` is compared with
         `termination_threshold <TransferMechanism.termination_threshold>` to determine when execution of
         TransferMechanism is complete; see `termination_measure <TransferMechanism.termination_measure>`
@@ -832,7 +832,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         <TransferMechanism.value>` and `previous_value <TransferMechanism.previous_value>` of the TransferMechanism;
         its result (`termination_measure_value <TransferMechanism.termination_measure_value>`) is compared with
         `termination_threshold <TransferMechanism.termination_threshold>` using
-        `TransferMechanism.termination_comparator`, the result of which is used as the value of `is_finished`.
+        `TransferMechanism.termination_comparison_op`, the result of which is used as the value of `is_finished`.
 
     termination_measure_value : array or scalar
         value returned by `termination_measure <TransferMechanism.termination_measure>`;  used to determine when
@@ -843,7 +843,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         determine when execution of TransferMechanism is complete if `execute_until_finished
         <Component.execute_until_finished>` is True.
 
-    termination_comparator : Comparator
+    termination_comparison_op : Comparator
         used to compare `termination_measure_value <TransferMechanism.termination_measure_value>` with
         `termination_threshold <TransferMechanism.termination_threshold>` to determine when execution of
         TransferMechanism is complete if `execute_until_finished <Component.execute_until_finished>` is True.
@@ -970,8 +970,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                     :type: float or int
 
 
-=                termination_comparator
-                    see `termination_comparator <TransferMechanism.termination_comparator>`
+=                termination_comparison_op
+                    see `termination_comparison_op <TransferMechanism.termination_comparison_op>`
 
                     :default value: LESS_THAN_OR_EQUAL
                     :type: str
@@ -989,7 +989,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         noise = Parameter(0.0, modulable=True)
         termination_measure = Parameter(Distance, modulable=False, stateful=False, loggable=False)
         termination_threshold = Parameter(None, modulable=True)
-        termination_comparator = Parameter(LESS_THAN_OR_EQUAL, modulable=False)
+        termination_comparison_op = Parameter(LESS_THAN_OR_EQUAL, modulable=False, loggable=False)
         termination_measure_value = Parameter(0.0, modulable=False, read_only=True)
 
         def _validate_integrator_mode(self, integrator_mode):
@@ -1006,11 +1006,12 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         def _validate_termination_threshold(self, termination_threshold):
             if (termination_threshold is not None
-                    and termination_threshold is not isinstance(termination_threshold, (int, float))):
+                    and not isinstance(termination_threshold, (int, float))):
                 return 'must be a float or int.'
 
-        def _validate_termination_comparator(self, termination_comparator):
-            if not isinstance(termination_comparator, str) and not termination_comparator in comparison_dict.keys():
+        def _validate_termination_comparison_op(self, termination_comparison_op):
+            if (not isinstance(termination_comparison_op, str)
+                    and not termination_comparison_op in comparison_dict.keys()):
                 return f"must be one of the following keywords: {','.join(comparison_dict.keys())}."
 
     @tc.typecheck
@@ -1028,7 +1029,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                  clip=None,
                  termination_measure:tc.optional(is_function_type)=Distance(metric=MAX_ABS_DIFF),
                  termination_threshold:tc.optional(float)=None,
-                 termination_comparator:str=LESS_THAN_OR_EQUAL,
+                 termination_comparison_op:str=LESS_THAN_OR_EQUAL,
                  output_ports:tc.optional(tc.any(str, Iterable))=RESULTS,
                  params=None,
                  name=None,
@@ -1056,7 +1057,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   clip=clip,
                                                   termination_measure=termination_measure,
                                                   termination_threshold=termination_threshold,
-                                                  termination_comparator=termination_comparator,
+                                                  termination_comparison_op=termination_comparison_op,
                                                   params=params)
         self.on_resume_integrator_mode = on_resume_integrator_mode
         # self.integrator_function = None
@@ -1375,7 +1376,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                                     f"size ({variable.shape[-1]}) of the innermost dimension (axis 0) of its "
                                     f"{repr(VARIABLE)} (i.e., the length of its items .")
             self.integrator_function.parameters.variable.default_value = variable
-            self.integrator_function.parameters.value.default_value = self.integrator_function(variable, context=context)
+            self.integrator_function.parameters.value.default_value = \
+                self.integrator_function(variable, context=context)
         # MODIFIED 6/24/19 END
 
         self.has_integrated = True
@@ -1476,16 +1478,19 @@ class TransferMechanism(ProcessingMechanism_Base):
             # IntegratorFunction function is the second in the function param aggregate
             if_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(1)])
             if_param_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-            if_params, builder = self._gen_llvm_param_ports(self.integrator_function, if_param_ptr, ctx, builder, params, context, arg_in)
+            if_params, builder = self._gen_llvm_param_ports(self.integrator_function,
+                                                            if_param_ptr, ctx, builder, params, context, arg_in)
 
-            mf_in, builder = self._gen_llvm_invoke_function(ctx, builder, self.integrator_function, if_params, if_context, is_out)
+            mf_in, builder = self._gen_llvm_invoke_function(ctx, builder, self.integrator_function,
+                                                            if_params, if_context, is_out)
         else:
             mf_in = is_out
 
         # Main function is the first in the function param aggregate
         mf_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(0)])
         mf_param_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        mf_params, builder = self._gen_llvm_param_ports(self.function, mf_param_ptr, ctx, builder, params, context, arg_in)
+        mf_params, builder = self._gen_llvm_param_ports(self.function, mf_param_ptr, ctx,
+                                                        builder, params, context, arg_in)
 
         mf_out, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_context, mf_in)
 
@@ -1665,18 +1670,23 @@ class TransferMechanism(ProcessingMechanism_Base):
             return self.is_finished_flag
 
         metric = self.parameters.termination_measure._get(context)
-        comparator = self.parameters.termination_comparator._get(context)
+        comparator = self.parameters.termination_comparison_op._get(context)
         value = self.parameters.value._get(context)
         previous_value = self.parameters.previous_value._get(context)
 
+        # try:
+        #     status = metric([value, previous_value])
+        # except:
+        #     status = metric(value)
         try:
-            status = metric([value, previous_value])
+            status = metric(np.squeeze(value))
         except:
-            status = metric(value)
+            status = metric([value, previous_value])
 
         self.parameters.termination_measure_value._set(status, context=context, override=True)
 
-        if any(comparison_dict[comparator](np.atleast_1d(status), threshold)):
+        # if any(comparison_dict[comparator](np.atleast_1d(status), threshold)):
+        if comparison_dict[comparator](np.atleast_1d(status), threshold).any():
             logger.info(f'{type(self).__name__} {self.name} has reached threshold ({threshold})')
             return True
         return False

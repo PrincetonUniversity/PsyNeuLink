@@ -156,7 +156,7 @@ from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.components.ports.outputport import PRIMARY, StandardOutputPorts
 from psyneulink.core.globals.keywords import \
-    BETA, ENERGY, ENTROPY, FUNCTION, INITIALIZER, LCA_MECHANISM, NAME, NOISE, \
+    BETA, ENERGY, ENTROPY, FUNCTION, GREATER_THAN_OR_EQUAL, INITIALIZER, LCA_MECHANISM, NAME, NOISE, \
     OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_PORT, OUTPUT_STD_DEV, OUTPUT_VARIANCE, \
     RATE, RESULT, THRESHOLD, TIME_STEP_SIZE, VALUE
 from psyneulink.core.globals.parameters import Parameter
@@ -599,8 +599,8 @@ class LCAMechanism(RecurrentTransferMechanism):
         hetero = Parameter(-1.0, modulable=True)
         competition = Parameter(1.0, modulable=True)
         time_step_size = Parameter(0.1, modulable=True)
-        threshold = Parameter(None, modulable=True)
-        threshold_criterion = Parameter(VALUE, modulable=False)
+        # threshold = Parameter(None, modulable=True)
+        # threshold_criterion = Parameter(VALUE, modulable=False)
 
         initial_value = None
         integrator_mode = Parameter(True, setter=_integrator_mode_setter)
@@ -626,8 +626,8 @@ class LCAMechanism(RecurrentTransferMechanism):
                  noise=0.0,
                  integrator_mode=True,
                  time_step_size=0.1,
-                 threshold:tc.optional(float)=None,
-                 threshold_criterion:tc.any(tc.enum(VALUE, MAX_VS_NEXT, MAX_VS_AVG), str, int)=VALUE,
+                 # threshold:tc.optional(float)=None,
+                 # threshold_criterion:tc.any(tc.enum(VALUE, MAX_VS_NEXT, MAX_VS_AVG), str, int)=VALUE,
                  clip=None,
                  output_ports:tc.optional(tc.any(str, Iterable))=RESULT,
                  params=None,
@@ -658,6 +658,15 @@ class LCAMechanism(RecurrentTransferMechanism):
         elif hetero is not None:
             competition = -hetero
 
+        # # MODIFIED 10/26/19 NEW: [JDC]
+        # if threshold is not None:
+        #     self.parameters.termination_threshold.default_value  = threshold
+        #     if threshold_criterion == VALUE:
+        #         self.parameters.termination_measure = lambda x,y: max(x)
+        #         self.parameters.termination_comparison_op = GREATER_THAN_OR_EQUAL
+
+        # MODIFIED 10/26/19 END
+
         integrator_function = LeakyCompetingIntegrator
 
         # Assign args to params and functionParams dicts
@@ -668,8 +677,8 @@ class LCAMechanism(RecurrentTransferMechanism):
                                                   competition=competition,
                                                   integrator_mode=integrator_mode,
                                                   time_step_size=time_step_size,
-                                                  threshold=threshold,
-                                                  threshold_criterion=threshold_criterion,
+                                                  # threshold=threshold,
+                                                  # threshold_criterion=threshold_criterion,
                                                   output_ports=output_ports,
                                                   params=params)
 
@@ -705,30 +714,30 @@ class LCAMechanism(RecurrentTransferMechanism):
                           f"note that this will result in a matrix that has positive off-diagonal elements "
                           f"since 'competition' is assumed to specify the magnitude of inhibition.")
 
-    def _instantiate_output_ports(self, context=None):
-
-        threshold_criterion = self.parameters.threshold_criterion._get(context)
-        value = self.parameters.value._get(context)
-
-        if threshold_criterion in {MAX_VS_NEXT, MAX_VS_AVG}:
-            if len(value[0]) < 2:
-                raise LCAError(f"Use of 'MAX_VS_NEXT' or 'MAX_VS_AVG' as specification for " 
-                               f"'threshold_criterion' arg of {self.name} requires that its "
-                               f"{VALUE} have a length of 2 or greater (it is currently {len(value[0])}).")
-            self.output_ports.append(threshold_criterion)
-
-        super()._instantiate_output_ports(context=context)
-
-        if threshold_criterion != VALUE:
-            try:
-                self.output_ports[threshold_criterion].parameters.require_projection_in_composition._set(False, context)
-            except IndexError:
-                if isinstance(threshold_criterion, int):
-                    index_str = 'index'
-                else:
-                    index_str = 'name'
-                raise LCAError(f"{self.name} does not have an {repr(OUTPUT_PORT)} with the {index_str} of "
-                               f"{repr(threshold_criterion)} specified in its 'threshold_criterion' arg.")
+    # def _instantiate_output_ports(self, context=None):
+    #
+    #     threshold_criterion = self.parameters.threshold_criterion._get(context)
+    #     value = self.parameters.value._get(context)
+    #
+    #     if threshold_criterion in {MAX_VS_NEXT, MAX_VS_AVG}:
+    #         if len(value[0]) < 2:
+    #             raise LCAError(f"Use of 'MAX_VS_NEXT' or 'MAX_VS_AVG' as specification for "
+    #                            f"'threshold_criterion' arg of {self.name} requires that its "
+    #                            f"{VALUE} have a length of 2 or greater (it is currently {len(value[0])}).")
+    #         self.output_ports.append(threshold_criterion)
+    #
+    #     super()._instantiate_output_ports(context=context)
+    #
+    #     if threshold_criterion != VALUE:
+    #         try:
+    #             self.output_ports[threshold_criterion].parameters.require_projection_in_composition._set(False, context)
+    #         except IndexError:
+    #             if isinstance(threshold_criterion, int):
+    #                 index_str = 'index'
+    #             else:
+    #                 index_str = 'name'
+    #             raise LCAError(f"{self.name} does not have an {repr(OUTPUT_PORT)} with the {index_str} of "
+    #                            f"{repr(threshold_criterion)} specified in its 'threshold_criterion' arg.")
 
     def _get_integrated_function_input(self, function_variable, initial_value, noise, context):
 
@@ -759,30 +768,30 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         return current_input
 
-    @handle_external_context()
-    def is_finished(self, context=None):
-        """Returns True when value of Mechanism reaches threhsold or if threshold is None.
-
-        Note:  if threshold is None, implements single update (cycle) per call to _execute method
-               (equivalent to setting Component.execute_until_finished = False)
-        """
-
-        threshold = self.parameters.threshold._get(context)
-
-        if threshold is not None:
-            threshold_criterion = self.parameters.threshold_criterion._get(context)
-
-            if threshold_criterion == VALUE:
-                threshold_criterion = RESULT
-            if any(self.output_ports[threshold_criterion].parameters.value._get(context) >= threshold):
-                logger.info(
-                    '{0} {1} has reached threshold {2}'.format(
-                        type(self).__name__,
-                        self.name,
-                        self.function.get_current_function_param(THRESHOLD, context)
-                    )
-                )
-                return True
-            return False
-
-        return True
+    # @handle_external_context()
+    # def is_finished(self, context=None):
+    #     """Returns True when value of Mechanism reaches threhsold or if threshold is None.
+    #
+    #     Note:  if threshold is None, implements single update (cycle) per call to _execute method
+    #            (equivalent to setting Component.execute_until_finished = False)
+    #     """
+    #
+    #     threshold = self.parameters.threshold._get(context)
+    #
+    #     if threshold is not None:
+    #         threshold_criterion = self.parameters.threshold_criterion._get(context)
+    #
+    #         if threshold_criterion == VALUE:
+    #             threshold_criterion = RESULT
+    #         if any(self.output_ports[threshold_criterion].parameters.value._get(context) >= threshold):
+    #             logger.info(
+    #                 '{0} {1} has reached threshold {2}'.format(
+    #                     type(self).__name__,
+    #                     self.name,
+    #                     self.function.get_current_function_param(THRESHOLD, context)
+    #                 )
+    #             )
+    #             return True
+    #         return False
+    #
+    #     return True

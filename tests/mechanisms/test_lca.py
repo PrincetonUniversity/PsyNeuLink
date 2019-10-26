@@ -130,13 +130,22 @@ class TestLCA:
         #       execute_until_finished is False and a condition is added to the scheduler that causes the
         #       LCAMechanism it to execute until it reaches threshold (2nd test).
 
-        lca_until_thresh = LCAMechanism(size=2, threshold=0.7) # Note: , execute_to_threshold=True by default
+        # lca_until_thresh = LCAMechanism(size=2, threshold=0.7) # Note: , execute_to_threshold=True by default
+        lca_until_thresh = LCAMechanism(size=2,
+                                        termination_threshold=0.7,
+                                        termination_measure=lambda x: max(x),
+                                        termination_comparison_op='>=')
         response = ProcessingMechanism(size=2)
         comp = Composition()
         comp.add_linear_processing_pathway([lca_until_thresh, response])
         result1 = comp.run(inputs={lca_until_thresh:[1,0]})
 
-        lca_single_step = LCAMechanism(size=2, threshold=0.7, execute_until_finished=False)
+        # lca_single_step = LCAMechanism(size=2, threshold=0.7, execute_until_finished=False)
+        lca_single_step = LCAMechanism(size=2,
+                                       termination_threshold=0.7,
+                                       termination_measure=lambda x: max(x),
+                                       termination_comparison_op='>=',
+                                       execute_until_finished=False)
         comp2 = Composition()
         response2 = ProcessingMechanism(size=2)
         comp2.add_linear_processing_pathway([lca_single_step,response2])
@@ -147,14 +156,23 @@ class TestLCA:
     def test_LCAMechanism_threshold(self):
         # Note: In this test and the following ones, since the LCAMechanism's threshold is specified
         #       it executes until the it reaches threshold.
-        lca = LCAMechanism(size=2, threshold=0.7)
+        # lca = LCAMechanism(size=2, threshold=0.7)
+        lca = LCAMechanism(size=2,
+                           termination_threshold=0.7,
+                           termination_measure=lambda x: max(x),
+                           termination_comparison_op='>=')
         comp = Composition()
         comp.add_node(lca)
         result = comp.run(inputs={lca:[1,0]})
         assert np.allclose(result, [[0.71463572, 0.28536428]])
 
     def test_LCAMechanism_threshold_with_max_vs_next(self):
-        lca = LCAMechanism(size=3, threshold=0.1, threshold_criterion=MAX_VS_NEXT)
+        # lca = LCAMechanism(size=3, threshold=0.1, threshold_criterion=MAX_VS_NEXT)
+        from psyneulink.core.components.functions.selectionfunctions import max_vs_next
+        lca = LCAMechanism(size=3,
+                           termination_threshold=0.1,
+                           termination_measure=lambda x: max_vs_next(x),
+                           termination_comparison_op='>=')
         response = ProcessingMechanism(size=3)
         comp = Composition()
         comp.add_linear_processing_pathway([lca,response])
@@ -165,7 +183,12 @@ class TestLCA:
         # assert np.allclose(result, [[0.5, 0.39960759, 0.30699604]])
 
     def test_LCAMechanism_threshold_with_max_vs_avg(self):
-        lca = LCAMechanism(size=3, threshold=0.1, threshold_criterion=MAX_VS_AVG)
+        # lca = LCAMechanism(size=3, threshold=0.1, threshold_criterion=MAX_VS_AVG)
+        from psyneulink.core.components.functions.selectionfunctions import max_vs_avg
+        lca = LCAMechanism(size=3,
+                           termination_threshold=0.1,
+                           termination_measure=lambda x: max_vs_avg(x),
+                           termination_comparison_op='>=')
         response = ProcessingMechanism(size=3)
         comp = Composition()
         comp.add_linear_processing_pathway([lca,response])
@@ -173,24 +196,24 @@ class TestLCA:
         result = comp.run(inputs={lca:[1,0.5,0]})
         assert np.allclose(result, [[0.5100369 , 0.43776452, 0.36808511]])
 
-    def test_LCAMechanism_threshold_with_str(self):
-        lca = LCAMechanism(size=2, threshold=0.7, threshold_criterion='MY_OUTPUT_PORT',
-                         output_ports=[RESULT, 'MY_OUTPUT_PORT'])
-        response = ProcessingMechanism(size=2)
-        comp = Composition()
-        comp.add_linear_processing_pathway([lca,response])
-        comp.scheduler.add_condition(response, WhenFinished(lca))
-        result = comp.run(inputs={lca:[1,0]})
-        assert np.allclose(result, [[0.71463572, 0.28536428]])
-
-    def test_LCAMechanism_threshold_with_int(self):
-        lca = LCAMechanism(size=2, threshold=0.7, threshold_criterion=1, output_ports=[RESULT, 'MY_OUTPUT_PORT'])
-        response = ProcessingMechanism(size=2)
-        comp = Composition()
-        comp.add_linear_processing_pathway([lca,response])
-        comp.scheduler.add_condition(response, WhenFinished(lca))
-        result = comp.run(inputs={lca:[1,0]})
-        assert np.allclose(result, [[0.71463572, 0.28536428]])
+    # def test_LCAMechanism_threshold_with_str(self):
+    #     lca = LCAMechanism(size=2, threshold=0.7, threshold_criterion='MY_OUTPUT_PORT',
+    #                      output_ports=[RESULT, 'MY_OUTPUT_PORT'])
+    #     response = ProcessingMechanism(size=2)
+    #     comp = Composition()
+    #     comp.add_linear_processing_pathway([lca,response])
+    #     comp.scheduler.add_condition(response, WhenFinished(lca))
+    #     result = comp.run(inputs={lca:[1,0]})
+    #     assert np.allclose(result, [[0.71463572, 0.28536428]])
+    #
+    # def test_LCAMechanism_threshold_with_int(self):
+    #     lca = LCAMechanism(size=2, threshold=0.7, threshold_criterion=1, output_ports=[RESULT, 'MY_OUTPUT_PORT'])
+    #     response = ProcessingMechanism(size=2)
+    #     comp = Composition()
+    #     comp.add_linear_processing_pathway([lca,response])
+    #     comp.scheduler.add_condition(response, WhenFinished(lca))
+    #     result = comp.run(inputs={lca:[1,0]})
+    #     assert np.allclose(result, [[0.71463572, 0.28536428]])
 
 class TestLCAReinitialize:
 

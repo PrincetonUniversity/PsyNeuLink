@@ -17,8 +17,6 @@ class TestLog:
         PJ = T_2.path_afferents[0]
 
         assert T_1.loggable_items == {
-            'InputPort-0': 'OFF',
-            'RESULTS': 'OFF',
             'clip': 'OFF',
             'termination_threshold': 'OFF',
             'execute_until_finished': 'OFF',
@@ -36,12 +34,11 @@ class TestLog:
             'function': 'OFF',
             'has_initializers': 'OFF',
             'initial_value': 'OFF',
+            'InputPort-0': 'OFF',
             'integration_rate': 'OFF',
             'integrator_function_value': 'OFF',
             'integrator_mode': 'OFF',
             'max_executions_before_finished': 'OFF',
-            'max_passes': 'OFF',
-            'mod_termination_threshold': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
@@ -49,6 +46,8 @@ class TestLog:
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
             'previous_value': 'OFF',
+            'termination_measure_value': 'OFF',
+            'RESULTS': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
         }
@@ -76,8 +75,6 @@ class TestLog:
             'integrator_function_value': 'OFF',
             'integrator_mode': 'OFF',
             'max_executions_before_finished': 'OFF',
-            'max_passes': 'OFF',
-            'mod_termination_threshold': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
@@ -85,6 +82,7 @@ class TestLog:
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
             'previous_value': 'OFF',
+            'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
         }
@@ -137,8 +135,6 @@ class TestLog:
             'integrator_function_value': 'OFF',
             'integrator_mode': 'OFF',
             'max_executions_before_finished': 'OFF',
-            'max_passes': 'OFF',
-            'mod_termination_threshold': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
             'mod_noise': 'EXECUTION',
@@ -146,6 +142,7 @@ class TestLog:
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
             'previous_value': 'OFF',
+            'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
         }
@@ -173,8 +170,6 @@ class TestLog:
             'integrator_function_value': 'OFF',
             'integrator_mode': 'OFF',
             'max_executions_before_finished': 'OFF',
-            'max_passes': 'OFF',
-            'mod_termination_threshold': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
@@ -182,6 +177,7 @@ class TestLog:
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
             'previous_value': 'OFF',
+            'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
         }
@@ -299,8 +295,6 @@ class TestLog:
             'integrator_function_value': 'OFF',
             'integrator_mode': 'OFF',
             'max_executions_before_finished': 'OFF',
-            'max_passes': 'OFF',
-            'mod_termination_threshold': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
@@ -308,6 +302,7 @@ class TestLog:
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
             'previous_value': 'OFF',
+            'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
         }
@@ -335,8 +330,6 @@ class TestLog:
             'integrator_function_value': 'OFF',
             'integrator_mode': 'OFF',
             'max_executions_before_finished': 'OFF',
-            'max_passes': 'OFF',
-            'mod_termination_threshold': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
@@ -344,6 +337,7 @@ class TestLog:
             'num_executions_before_finished': 'OFF',
             'noise': 'OFF',
             'previous_value': 'OFF',
+            'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
         }
@@ -400,8 +394,6 @@ class TestLog:
             'integrator_function_value': 'OFF',
             'integrator_mode': 'OFF',
             'max_executions_before_finished': 'OFF',
-            'max_passes': 'OFF',
-            'mod_termination_threshold': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
@@ -409,6 +401,7 @@ class TestLog:
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
             'previous_value': 'OFF',
+            'termination_measure_value': 'OFF',
             'value': 'EXECUTION',
             'variable': 'OFF'
         }
@@ -436,8 +429,6 @@ class TestLog:
             'integrator_function_value': 'OFF',
             'integrator_mode': 'OFF',
             'max_executions_before_finished': 'OFF',
-            'max_passes': 'OFF',
-            'mod_termination_threshold': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
@@ -445,6 +436,7 @@ class TestLog:
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
             'previous_value': 'OFF',
+            'termination_measure_value': 'OFF',
             'value': 'EXECUTION',
             'variable': 'OFF'
         }
@@ -553,8 +545,6 @@ class TestLog:
             'integrator_function_value': 'OFF',
             'integrator_mode': 'OFF',
             'max_executions_before_finished': 'OFF',
-            'max_passes': 'OFF',
-            'mod_termination_threshold': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
@@ -562,6 +552,7 @@ class TestLog:
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
             'previous_value': 'OFF',
+            'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
         }
@@ -589,8 +580,6 @@ class TestLog:
             'integrator_function_value': 'OFF',
             'integrator_mode': 'OFF',
             'max_executions_before_finished': 'OFF',
-            'max_passes': 'OFF',
-            'mod_termination_threshold': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
@@ -598,6 +587,7 @@ class TestLog:
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
             'previous_value': 'OFF',
+            'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
         }
@@ -630,8 +620,6 @@ class TestLog:
             'integrator_function_value': 'OFF',
             'integrator_mode': 'OFF',
             'max_executions_before_finished': 'OFF',
-            'max_passes': 'OFF',
-            'mod_termination_threshold': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
@@ -639,6 +627,7 @@ class TestLog:
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
             'previous_value': 'OFF',
+            'termination_measure_value': 'OFF',
             'value': 'EXECUTION',
             'variable': 'OFF'
         }
@@ -671,8 +660,6 @@ class TestLog:
             'integrator_function_value': 'OFF',
             'integrator_mode': 'OFF',
             'max_executions_before_finished': 'OFF',
-            'max_passes': 'OFF',
-            'mod_termination_threshold': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
@@ -680,6 +667,7 @@ class TestLog:
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
             'previous_value': 'OFF',
+            'termination_measure_value': 'OFF',
             'value': 'EXECUTION',
             'variable': 'OFF'
         }
