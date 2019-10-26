@@ -26,13 +26,13 @@ class TestContrastiveHebbian:
         # set max passes to ensure failure if no convergence instead of infinite loop
         m.max_passes = 1000
 
-        s = pnl.sys(m, o)
-        ms = pnl.Scheduler(system=s)
-        ms.add_condition(o, pnl.WhenFinished(m))
-        s.scheduler = ms
-        # m.reinitialize_when=pnl.Never()
+        c = pnl.Composition()
+        c.add_linear_processing_pathway([m, o])
+        c.scheduler.add_condition(o, pnl.WhenFinished(m))
+        c._analyze_graph()
         print('matrix:\n', m.afferents[1].matrix)
-        results = s.run(inputs=[2, 2], num_trials=4)
+        c.run(inputs={m:[2, 2]}, num_trials=4)
+        results = c.results
         print(results)
         np.testing.assert_allclose(results, [[np.array([2.])], [np.array([2.])], [np.array([2.])], [np.array([2.])]])
 
@@ -103,6 +103,7 @@ class TestContrastiveHebbian:
         np.testing.assert_allclose(R.parameters.plus_phase_activity.get(C), [0.0, 1.20074767, 0.0, 1.20074767])
         np.testing.assert_allclose(R.parameters.minus_phase_activity.get(C), [0.0, 0.0, 0.0, 0.0])
 
+    # FIX: 10/26/19 - DOES NOT WORK WITH COMPOSITION
     def test_using_Hebbian_learning_of_orthognal_inputs_with_integrator_mode(self):
         """Same as tests/mechanisms/test_recurrent_transfer_mechanism/test_learning_of_orthognal_inputs
 

@@ -1661,7 +1661,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         if (not integrator_mode
                 or threshold is None
                 or self.initialization_status == ContextFlags.INITIALIZING):
-            return True
+            # return True
+            return self.is_finished_flag
 
         metric = self.parameters.termination_measure._get(context)
         comparator = self.parameters.termination_comparator._get(context)
