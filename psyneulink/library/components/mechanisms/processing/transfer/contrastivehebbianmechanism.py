@@ -257,7 +257,7 @@ The `value <InputPort.value>` of the *INPUT*, and possibly *TARGET*, InptutState
 manner in which these are combined is determined by the `clamp <ContrastiveHebbianMechanism.clamp>` attribute: if
 it is *HARD_CLAMP* they are used to replace the corresponding fields of *RECURRENT*;  if it is *SOFT_CLAMP*, *INPUT*
 (and possibly *TARGET*) are added to *RECURRENT*; .  The result is passed to the Mechanism's `integrator_function
-<ContrastiveHebbianMechanism.integrator_function>` (if `integrator_mode <ContrastiveHebbianMechanism.integrator_mode>`
+<ContrastiveHebbianMechanism.integrator_function>` (if `integrator_mode <TransferMechanism.integrator_mode>`
 is `True`) and then its `function <ContrastiveHebbianMechanism.function>`.
 
 If the termination condition for either phase is specified as *CONVERGENCE*, it uses the Mechanism's
@@ -538,28 +538,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         specifies whether or not to reinitialize `current_activity <ContrastiveHebbianMechanism.current_activity>`
         at the beginning of the `minus phase <ContrastiveHebbian_Minus_Phase>` of a trial.
 
-    integrator_function : IntegratorFunction : default AdaptiveIntegrator
-        specifies `IntegratorFunction` to use in `integration_mode <ContrastiveHebbianMechanism.integration_mode>`.
-
-    initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
-        specifies the starting value for time-averaged input if `integrator_mode
-        <ContrastiveHebbianMechanism.integrator_mode>` is `True`.
-
-    noise : float or function : default 0.0
-        specifies value added to the result of the `function <ContrastiveHebbianMechanism.function>`, or to the
-        result of `integrator_function <ContrastiveHebbianMechanism.integrator_function>` if `integrator_mode
-        <ContrastiveHebbianMechanism.integrator_mode>` is `True`;  see `noise <ContrastiveHebbianMechanism.noise>`
-        for additional details.
-
-    integration_rate : float : default 0.5
-        the rate used for exponential time averaging of input when `integrator_mode
-        <ContrastiveHebbianMechanism.integrator_mode>` is `True`; see `integration_rate
-        <TransferMechanism.integration_rate>` for additional details.
-
-    clip : list [float, float] : default None (Optional)
-        specifies the allowable range for the result of `function <ContrastiveHebbianMechanism.function>`;
-        see `clip <TransferMechanism.clip>` for additional details.
-
     minus_phase_termination_condition : COUNT or CONVERGENCE : default CONVERGENCE
         specifies the type of condition used to terminate the `minus_phase <ContrastiveHebbian_Minus_Phase>` of
         execution (see `minus_phase_termination_condition
@@ -674,9 +652,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         an `AutoAssociativeProjection` that projects from the *CURRENT_ACTIVITY_OUTPUT* `OutputPort
         <ContrastiveHebbian_Output>` to the *RECURRENT* `InputPort <ContrastiveHebbian_Input>`.
 
-    variable : value
-        the input to Mechanism's `function <ContrastiveHebbianMechanism.variable>`.
-
     combination_function : method or function
         used to combine `value <InputPort.value>` of the *INPUT* and *TARGET* (if specified)  `InputPorts
         <ContrastiveHebbian_Input>` with that of the *RECURRENT* `InputPort <ContrastiveHebbian_Input>` to determine
@@ -694,53 +669,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         at the beginning of the `minus phase <ContrastiveHebbian_Minus_Phase>` of execution. If `False`, it (and
         the Mechanism's `previous_value <ContrastiveHebbianMechanism.previous_value>` attribute) are set to
         `initial_value <ContrastiveHebbianMechanism.initial_value>`.
-
-    integrator_function :  IntegratorFunction
-        the `IntegratorFunction` used when `integrator_mode <TransferMechanism.integrator_mode>` is set to
-        `True` (see `integrator_mode <ContrastiveHebbianMechanism.integrator_mode>` for details).
-
-        .. note::
-            The ContrastiveHebbianMechanism's `integration_rate <ContrastiveHebbianMechanism.integration_rate>`, `noise
-            <ContrastiveHebbianMechanism.noise>`, and `initial_value <ContrastiveHebbianMechanism.initial_value>`
-            parameters specify the respective parameters of its `integrator_function` (with **initial_value**
-            corresponding to `initializer <IntegratorFunction.initializer>` of integrator_function.
-
-     initial_value :  value, list or np.ndarray
-        determines the starting value for time-averaged input if `integrator_mode
-        <ContrastiveHebbianMechanism.integrator_mode>` is `True`. See TransferMechanism's `initial_value
-        <TransferMechanism.initial_value>` for additional details.
-
-    noise : float or function
-        When `integrator_mode <ContrastiveHebbianMechanism.integrator_mode>` is set to `True`, noise is passed into the
-        `integrator_function <ContrastiveHebbianMechanism.integrator_function>`. Otherwise, noise is added to the result
-        of the `function <ContrastiveHebbianMechanism.function>`.  See TransferMechanism's `noise
-        <TransferMechanism.noise>` for additional details.
-
-    integrator_mode:
-        determines whether input is first processed by `integrator_function
-        <ContrastiveHebbianMechanism.integrator_function>` before being passed to `function
-        <ContrastiveHebbianMechanism.function>`; see TransferMechanism's `integrator_mode
-        <TransferMechanism.integrator_mode>` for additional details.
-
-    integrator_function:
-        used by the Mechanism when it executes if `integrator_mode <ContrastiveHebbianMechanism.integrator_mode>` is
-        `True`.  Uses the `integration_rate  <ContrastiveHebbianMechanism.integration_rate>` parameter
-        of the ContrastiveHebbianMechanism as the `rate <IntegratorFunction.rate>` of the ContrastiveHebbianMechanism's
-        `integrator_function`; see TransferMechanism's `integrator_function <TransferMechanism.integrator_function>`
-        and `ContrastiveHebbian_Execution` above for additional details).
-
-    integration_rate : float
-        the rate used for exponential time averaging of input when `integrator_mode
-        <ContrastiveHebbianMechanism.integrator_mode>` is set to `True`;  see TransferMechanism's
-        `integration_rate <TransferMechanism.integration_rate>` for additional details.
-
-    function : Function
-        used to transform the input and generate the Mechanism's `value <ContrastiveHebbianMechanism.value>`
-        (see `ContrastiveHebbian_Execution` for additional details).
-
-    clip : list [float, float]
-        determines the allowable range for the result of `function <ContrastiveHebbianMechanism.function>`
-        see TransferMechanism's `clip <TransferMechanism.clip>` for additional details.
 
     current_activity : 1d array of floats
         the value of the actvity of the ContrastiveHebbianMechanism following its last `execution

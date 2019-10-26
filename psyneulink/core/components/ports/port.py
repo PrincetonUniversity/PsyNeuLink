@@ -769,7 +769,7 @@ from psyneulink.core.globals.keywords import \
     PARAMETER_PORTS, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, \
     PROJECTION_DIRECTION, PROJECTION, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, \
     RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, STANDARD_OUTPUT_PORTS, \
-    PORT, PORT_CONTEXT, Port_Name, Port_ParamS, PORT_PREFS, PORT_TYPE, port_value, VALUE, VARIABLE, WEIGHT, \
+    PORT, PORT_CONTEXT, Port_Name, port_params, PORT_PREFS, PORT_TYPE, port_value, VALUE, VARIABLE, WEIGHT, \
     PORT_COMPONENT_CATEGORY
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.basepreferenceset import VERBOSE_PREF
@@ -788,7 +788,7 @@ port_keywords = component_keywords.copy()
 port_keywords.update({MECHANISM,
                        PORT_TYPE,
                        port_value,
-                       Port_ParamS,
+                       port_params,
                        PATHWAY_PROJECTIONS,
                        MODULATORY_PROJECTIONS,
                        PROJECTION_TYPE,
@@ -1104,8 +1104,8 @@ class Port_Base(Port):
             - prefs (dict): dictionary containing system preferences (default: Prefs.DEFAULTS)
             - context (str)
             - **kargs (dict): dictionary of arguments using the following keywords for each of the above kargs:
-                # Port_ParamS is not handled here like the others are
-                + Port_ParamS = params
+                # port_params is not handled here like the others are
+                + port_params = params
                 + Port_Name = name
                 + PORT_PREFS = prefs
                 + PORT_CONTEXT = context
@@ -2515,13 +2515,13 @@ def _instantiate_port(port_type:_is_port_class,           # Port's type
         check owner is owner; if not, raise exception
     + 2-item tuple:
         assign first item to port_spec
-        assign second item to Port_ParamS{PROJECTIONS:<projection>}
+        assign second item to port_params{PROJECTIONS:<projection>}
     + Projection object:
         assign reference_value to value
-        assign projection to Port_ParamS{PROJECTIONS:<projection>}
+        assign projection to port_params{PROJECTIONS:<projection>}
     + Projection class (or keyword string constant for one):
         assign reference_value to value
-        assign projection class spec to Port_ParamS{PROJECTIONS:<projection>}
+        assign projection class spec to port_params{PROJECTIONS:<projection>}
     + specification dict for Port
         check compatibility of port_value with reference_value
 

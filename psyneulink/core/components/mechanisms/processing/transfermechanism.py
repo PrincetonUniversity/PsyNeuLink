@@ -57,6 +57,8 @@ argument can be a call to a Function constructor, in which case values may be sp
 
     >>> my_logistic_transfer_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4))
 
+.. _Transfer_Integrator_Mode:
+
 Next, the **integrator_mode** argument allows the TransferMechanism to operate in either an "instantaneous" or
 "time averaged" manner. By default, `integrator_mode <TransferMechanism.integrator_mode>` is set to False, meaning
 execution is instantaneous. In order to switch to time averaging, the **integrator_mode** argument of the constructor
