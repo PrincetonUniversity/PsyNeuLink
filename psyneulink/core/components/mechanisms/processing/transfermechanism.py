@@ -673,7 +673,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         both of which must be arrays, and must return either another array or a scalar;  see `termination_measure
         <TransferMechanism.termination_measure>` for additional details.
 
-    termination_threshold : float : default 0.01
+    termination_threshold : None or float : default None
         specifies value against which `termination_measure_value <TransferMechanism.termination_measure_value>` is
         compared to determine when execution of TransferMechanism is complete; see `termination_measure
         <TransferMechanism.termination_measure>` for additional details.
@@ -838,7 +838,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         value returned by `termination_measure <TransferMechanism.termination_measure>`;  used to determine when
         `is_finished` is True.
 
-    termination_threshold : float
+    termination_threshold : None or float
         value with which `termination_measure_value <TransferMechanism.termination_measure_value>` is compared to
         determine when execution of TransferMechanism is complete if `execute_until_finished
         <Component.execute_until_finished>` is True.
@@ -988,7 +988,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         clip = None
         noise = Parameter(0.0, modulable=True)
         termination_measure = Parameter(Distance, modulable=False, stateful=False, loggable=False)
-        termination_threshold = Parameter(0.01, modulable=True)
+        termination_threshold = Parameter(None, modulable=True)
         termination_comparator = Parameter(LESS_THAN_OR_EQUAL, modulable=False)
         termination_measure_value = Parameter(0.0, modulable=False, read_only=True)
 
@@ -1005,7 +1005,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                 return termination_measure()
 
         def _validate_termination_threshold(self, termination_threshold):
-            if not isinstance(termination_threshold, (int, float)):
+            if (termination_threshold is not None
+                    and termination_threshold is not isinstance(termination_threshold, (int, float))):
                 return 'must be a float or int.'
 
         def _validate_termination_comparator(self, termination_comparator):
@@ -1026,7 +1027,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                  noise=0.0,
                  clip=None,
                  termination_measure:tc.optional(is_function_type)=Distance(metric=MAX_ABS_DIFF),
-                 termination_threshold:float=0.01,
+                 termination_threshold:tc.optional(float)=None,
                  termination_comparator:str=LESS_THAN_OR_EQUAL,
                  output_ports:tc.optional(tc.any(str, Iterable))=RESULTS,
                  params=None,
@@ -1649,8 +1650,9 @@ class TransferMechanism(ProcessingMechanism_Base):
     def is_finished(self, context=None):
         """"Returns True when value of Mechanism reaches threhsold or if threshold is None.
 
-        Note:  if threshold is None, implements single update (cycle) per call to _execute method
-               (equivalent to setting Component.execute_until_finished = False)
+        Note:  if threshold is None or not in integartor_mode,
+                  implements single update (cycle) per call to _execute method
+                  (equivalent to setting Component.execute_until_finished = False)
         """
 
         threshold = self.parameters.termination_threshold._get(context)
@@ -1667,7 +1669,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         previous_value = self.parameters.previous_value._get(context)
 
         try:
-            status = metric(value, previous_value)
+            status = metric([value, previous_value])
         except:
             status = metric(value)
 

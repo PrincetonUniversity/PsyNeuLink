@@ -305,7 +305,6 @@ from collections.abc import Iterable
 
 import numpy as np
 import typecheck as tc
-
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.learningfunctions import ContrastiveHebbian, Hebbian
 from psyneulink.core.components.functions.objectivefunctions import Distance
@@ -322,6 +321,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     CONVERGENCE, RECURRENT, RECURRENT_INDEX, RecurrentTransferMechanism
+from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
 __all__ = [
     'ContrastiveHebbianError', 'ContrastiveHebbianMechanism', 'CONTRASTIVE_HEBBIAN_OUTPUT',
@@ -413,21 +413,25 @@ class CONTRASTIVE_HEBBIAN_OUTPUT():
 
 
 def _CHM_output_activity_getter(owning_component=None, context=None):
-    return owning_component.parameters.current_activity._get(context)[owning_component.target_start:owning_component.target_end]
+    current_activity = owning_component.parameters.current_activity._get(context)
+    return current_activity[owning_component.target_start:owning_component.target_end]
 
 
 def _CHM_input_activity_getter(owning_component=None, context=None):
-    return owning_component.parameters.current_activity._get(context)[:owning_component.input_size]
+    current_activity = owning_component.parameters.current_activity._get(context)
+    return current_activity[:owning_component.input_size]
 
 
 def _CHM_hidden_activity_getter(owning_component=None, context=None):
     if owning_component.hidden_size:
-        return owning_component.parameters.current_activity._get(context)[owning_component.input_size:owning_component.target_start]
+        current_activity = owning_component.parameters.current_activity._get(context)
+        return current_activity[owning_component.input_size:owning_component.target_start]
 
 
 def _CHM_target_activity_getter(owning_component=None, context=None):
     if owning_component.target_size:
-        return owning_component.parameters.current_activity._get(context)[owning_component.target_start:owning_component.target_end]
+        current_activity = owning_component.parameters.current_activity._get(context)
+        return current_activity[owning_component.target_start:owning_component.target_end]
 
 
 class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
@@ -619,8 +623,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         specifies the name of the ContrastiveHebbianMechanism.
 
     prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the ContrastiveHebbianMechanism; see `prefs <ContrastiveHebbianMechanism.prefs>`
-        for details.
+        specifies the `PreferenceSet` for the ContrastiveHebbianMechanism; see `prefs
+        <ContrastiveHebbianMechanism.prefs>` for details.
 
     context : str : default componentType+INITIALIZING
         string used for contextualization of instantiation, hierarchical calls, executions, etc.
@@ -998,13 +1002,15 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                     :type:
 
                 minus_phase_termination_condition
-                    see `minus_phase_termination_condition <ContrastiveHebbianMechanism.minus_phase_termination_condition>`
+                    see `minus_phase_termination_condition
+                    <ContrastiveHebbianMechanism.minus_phase_termination_condition>`
 
                     :default value: `CONVERGENCE`
                     :type: str
 
                 minus_phase_termination_threshold
-                    see `minus_phase_termination_threshold <ContrastiveHebbianMechanism.minus_phase_termination_threshold>`
+                    see `minus_phase_termination_threshold
+                    <ContrastiveHebbianMechanism.minus_phase_termination_threshold>`
 
                     :default value: 0.01
                     :type: float
@@ -1041,13 +1047,15 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                     :type:
 
                 plus_phase_termination_condition
-                    see `plus_phase_termination_condition <ContrastiveHebbianMechanism.plus_phase_termination_condition>`
+                    see `plus_phase_termination_condition
+                    <ContrastiveHebbianMechanism.plus_phase_termination_condition>`
 
                     :default value: `CONVERGENCE`
                     :type: str
 
                 plus_phase_termination_threshold
-                    see `plus_phase_termination_threshold <ContrastiveHebbianMechanism.plus_phase_termination_threshold>`
+                    see `plus_phase_termination_threshold
+                    <ContrastiveHebbianMechanism.plus_phase_termination_threshold>`
 
                     :default value: 0.01
                     :type: float
@@ -1288,8 +1296,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                           context=None):
         """Instantiate an AutoAssociativeProjection from Mechanism to itself
         """
-
-        from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
         if isinstance(matrix, str):
             size = len(mech.defaults.variable[0])
             matrix = get_matrix(matrix, size, size)
@@ -1336,7 +1342,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             self.parameters.execution_phase._set(MINUS_PHASE, context)
 
         if self.parameters.execution_phase._get(context) is MINUS_PHASE:
-            self.parameters.current_termination_threshold._set(self.parameters.minus_phase_termination_threshold._get(context), context)
+            self.parameters.current_termination_threshold._set(
+                    self.parameters.minus_phase_termination_threshold._get(context), context)
             self.parameters.current_termination_condition._set(self.minus_phase_termination_condition, context)
             self.parameters.phase_execution_count._set(0, context)
 

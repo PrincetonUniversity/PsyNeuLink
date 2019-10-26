@@ -319,7 +319,7 @@ class TestDistributionFunctions:
             function=Linear(),
             noise=ExponentialDist(),
             integration_rate=1.0,
-            integrator_mode=True
+            integrator_mode=True,
         )
         val = T.execute([0, 0, 0, 0])
         assert np.allclose(val, [[0.4836021009022533, 1.5688961399691683, 0.7526741095365884, 0.8394328467388229]])
