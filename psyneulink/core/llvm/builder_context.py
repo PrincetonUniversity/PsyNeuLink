@@ -379,6 +379,11 @@ class LLVMBuilderContext:
             input_cim_f = self.get_llvm_function(input_cim_w)
             builder.call(input_cim_f, [state, params, comp_in, data, data])
 
+            # Call parameter CIM
+            param_cim_w = composition._get_node_wrapper(composition.parameter_CIM)
+            param_cim_f = self.get_llvm_function(param_cim_w)
+            builder.call(param_cim_f, [state, params, comp_in, data, data])
+
             if simulation is False and composition.enable_controller and \
                composition.controller_mode == BEFORE:
                 assert composition.controller is not None

@@ -7413,7 +7413,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pnlvm.ir.LiteralStructType(proj_ctx_type_list)))
 
     def _get_input_struct_type(self, ctx):
-        return ctx.get_input_struct_type(self.input_CIM)
+        pathway = ctx.get_input_struct_type(self.input_CIM)
+        if not self.parameter_CIM.afferents:
+            return pathway
+        modulatory = ctx.get_input_struct_type(self.parameter_CIM)
+        return pnlvm.ir.LiteralStructType((pathway, modulatory))
 
     def _get_output_struct_type(self, ctx):
         return ctx.get_output_struct_type(self.output_CIM)
@@ -7539,12 +7543,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             m_function = ctx.get_llvm_function(node)
 
             if node is self.input_CIM:
-                m_in = comp_in
+                # if there are incoming modulatory projections,
+                # the input structure is shared
+                if self.parameter_CIM.afferents:
+                    m_in = builder.gep(comp_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+                else:
+                    m_in = comp_in
+                incoming_projections = []
+            elif node is self.parameter_CIM and node.afferents:
+                # if parameter_CIM has afferent projections,
+                # their values are in comp_in[1]
+                m_in = builder.gep(comp_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
+                # And we run no further projection
                 incoming_projections = []
             elif not is_mech:
                 m_in = builder.alloca(m_function.args[2].type.pointee)
-                incoming_projections = node.input_CIM.afferents
+                incoming_projections = node.input_CIM.afferents + node.parameter_CIM.afferents
             else:
+                # this path also handles parameter_CIM with no afferent
+                # projections. 'comp_in' does not include any extra values,
+                # and the entire call should be optimized out.
                 m_in = builder.alloca(m_function.args[2].type.pointee)
                 incoming_projections = node.afferents
 
@@ -7574,7 +7592,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # Get location of projection output (in mechanism's input structure
                 rec_port = proj.receiver
-                assert rec_port.owner is node or rec_port.owner is node.input_CIM
+                assert rec_port.owner is node or rec_port.owner is node.input_CIM or rec_port.owner is node.parameter_CIM
                 indices = [0]
                 if proj in rec_port.owner.path_afferents:
                     rec_port_idx = rec_port.owner.input_ports.index(rec_port)
@@ -7586,8 +7604,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     for i in range(projection_idx):
                         if isinstance(rec_port.pathway_projections[i], AutoAssociativeProjection):
                             projection_idx -= 1
+                    if not is_mech and node.parameter_CIM.afferents:
+                        # If there are afferent projections to parameter_CIM
+                        # the input structure is split between input_CIM
+                        # and parameter_CIM
+                        if proj in node.parameter_CIM.afferents:
+                            # modulatory projection
+                            indices.append(1)
+                        else:
+                            # pathway projection
+                            indices.append(0)
                     indices.extend([rec_port_idx, projection_idx])
                 elif proj in rec_port.owner.mod_afferents:
+                    # Only mechanism ports list mod projections in mod_afferents
+                    assert is_mech
                     projection_idx = rec_port.owner.mod_afferents.index(proj)
                     indices.extend([len(rec_port.owner.input_ports), projection_idx])
                 else:
@@ -7602,6 +7632,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
                 proj_function = ctx.get_llvm_function(proj)
 
+                if proj_out.type != proj_function.args[3].type:
+                    warnings.warn("Shape mismatch: Projection ({}) results does not match the receiver state({}) input: {} vs. {}".format(proj, proj.receiver, proj.defaults.value, proj.receiver.defaults.variable))
+                    proj_out = builder.bitcast(proj_out, proj_function.args[3].type)
                 builder.call(proj_function, [proj_params, proj_context, proj_in, proj_out])
 
             idx = ctx.int32_ty(self._get_node_index(node))

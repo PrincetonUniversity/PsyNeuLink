@@ -736,7 +736,11 @@ class TestControlMechanisms:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Multilevel")
-    @pytest.mark.parametrize("mode", ["Python"])
+    @pytest.mark.parametrize("mode", ["Python",
+                                      pytest.param("LLVM", marks=pytest.mark.llvm),
+                                      pytest.param("LLVMExec", marks=pytest.mark.llvm),
+                                      pytest.param("LLVMRun", marks=pytest.mark.llvm),
+                                     ])
     def test_multilevel_control(self, mode, benchmark):
         oA = pnl.TransferMechanism(
             name='OuterA',
