@@ -268,7 +268,7 @@ to the `termination_measure <TransferMechanism.termination_measure>` function, a
 is either true, or the number of updates reaches `max_executions_before_finished
 <Component.max_executions_before_finished>`.  The number of updates that took place is contained in
 `num_executions_before_finished <Component.num_executions_before_finished>`.   By default, the termination condition
-for a  RecurrentTransferMechanism is a measure of its convergence, using the `Distance` Function with the
+for a  TransferMechanism is a measure of its convergence, using the `Distance` Function with the
 `MAX_ABS_DIFF` metric as its `termination_measure <TransferMechanism.termination_measure>`; this computes the
 elementwise difference between the current `value <TransferMechanism.value>` and `previous_value
 <TransferMechanism.previous_value>`, and updating terminates when that is less than or equal to the

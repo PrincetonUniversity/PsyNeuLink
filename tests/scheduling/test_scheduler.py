@@ -24,9 +24,6 @@ logger = logging.getLogger(__name__)
 class TestScheduler:
     @classmethod
     def setup_class(self):
-        # self.orig_is_finished = TransferMechanism.is_finished
-        # TransferMechanism._is_finished = False
-        # TransferMechanism.is_finished = lambda self, context: self._is_finished
         self.orig_is_finished_flag = TransferMechanism.is_finished_flag
         self.orig_is_finished = TransferMechanism.is_finished
         TransferMechanism.is_finished_flag = True
@@ -34,8 +31,6 @@ class TestScheduler:
 
     @classmethod
     def teardown_class(self):
-        # del TransferMechanism._is_finished
-        # TransferMechanism.is_finished = self.orig_is_finished
         del TransferMechanism.is_finished_flag
         del TransferMechanism.is_finished
         TransferMechanism.is_finished_flag = self.orig_is_finished_flag
@@ -204,9 +199,6 @@ class TestLinear:
 
     @classmethod
     def setup_class(self):
-        # self.orig_is_finished = TransferMechanism.is_finished
-        # TransferMechanism._is_finished = False
-        # TransferMechanism.is_finished = lambda self, context: self._is_finished
         self.orig_is_finished_flag = TransferMechanism.is_finished_flag
         self.orig_is_finished = TransferMechanism.is_finished
         TransferMechanism.is_finished_flag = True
@@ -214,8 +206,6 @@ class TestLinear:
 
     @classmethod
     def teardown_class(self):
-        # del TransferMechanism._is_finished
-        # TransferMechanism.is_finished = self.orig_is_finished
         del TransferMechanism.is_finished_flag
         del TransferMechanism.is_finished
         TransferMechanism.is_finished_flag = self.orig_is_finished_flag
@@ -703,9 +693,6 @@ class TestLinear:
 class TestBranching:
     @classmethod
     def setup_class(self):
-        # self.orig_is_finished = TransferMechanism.is_finished
-        # TransferMechanism._is_finished = False
-        # TransferMechanism.is_finished = lambda self, context: self._is_finished
         self.orig_is_finished_flag = TransferMechanism.is_finished_flag
         self.orig_is_finished = TransferMechanism.is_finished
         TransferMechanism.is_finished_flag = True
@@ -713,8 +700,6 @@ class TestBranching:
 
     @classmethod
     def teardown_class(self):
-        # del TransferMechanism._is_finished
-        # TransferMechanism.is_finished = self.orig_is_finished
         del TransferMechanism.is_finished_flag
         del TransferMechanism.is_finished
         TransferMechanism.is_finished_flag = self.orig_is_finished_flag
@@ -1125,9 +1110,6 @@ class TestTermination:
 
     @classmethod
     def setup_class(self):
-        # self.orig_is_finished = TransferMechanism.is_finished
-        # TransferMechanism._is_finished = False
-        # TransferMechanism.is_finished = lambda self, context: self._is_finished
         self.orig_is_finished_flag = TransferMechanism.is_finished_flag
         self.orig_is_finished = TransferMechanism.is_finished
         TransferMechanism.is_finished_flag = True
@@ -1135,8 +1117,6 @@ class TestTermination:
 
     @classmethod
     def teardown_class(self):
-        # del TransferMechanism._is_finished
-        # TransferMechanism.is_finished = self.orig_is_finished
         del TransferMechanism.is_finished_flag
         del TransferMechanism.is_finished
         TransferMechanism.is_finished_flag = self.orig_is_finished_flag
