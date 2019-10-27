@@ -2806,6 +2806,10 @@ class Mechanism_Base(Mechanism):
             data_ptr = self._gen_llvm_output_port_parse_variable(ctx, b,
                mech_params, mech_state, value, self.output_ports[i])
             input_ptr = builder.gep(s_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            if input_ptr.type != data_ptr.type:
+                port = self.output_ports[i]
+                warnings.warn("Data shape mismatch: Parsed value does not match output port({} spec: {}) input: {} vs. {}".format(port, port._variable_spec, self.defaults.value, port.defaults.variable))
+                input_ptr = builder.gep(input_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
             b.store(b.load(data_ptr), input_ptr)
             return b
 
