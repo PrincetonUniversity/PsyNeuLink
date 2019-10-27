@@ -22,6 +22,24 @@ logger = logging.getLogger(__name__)
 
 
 class TestScheduler:
+    @classmethod
+    def setup_class(self):
+        # self.orig_is_finished = TransferMechanism.is_finished
+        # TransferMechanism._is_finished = False
+        # TransferMechanism.is_finished = lambda self, context: self._is_finished
+        self.orig_is_finished_flag = TransferMechanism.is_finished_flag
+        self.orig_is_finished = TransferMechanism.is_finished
+        TransferMechanism.is_finished_flag = True
+        TransferMechanism.is_finished = lambda self, context: self.is_finished_flag
+
+    @classmethod
+    def teardown_class(self):
+        # del TransferMechanism._is_finished
+        # TransferMechanism.is_finished = self.orig_is_finished
+        del TransferMechanism.is_finished_flag
+        del TransferMechanism.is_finished
+        TransferMechanism.is_finished_flag = self.orig_is_finished_flag
+        TransferMechanism.is_finished = self.orig_is_finished
 
     def test_copy(self):
         pass
@@ -182,8 +200,26 @@ class TestScheduler:
         assert np.allclose(expected_results, np.asfarray(S.results))
 
 
-
 class TestLinear:
+
+    @classmethod
+    def setup_class(self):
+        # self.orig_is_finished = TransferMechanism.is_finished
+        # TransferMechanism._is_finished = False
+        # TransferMechanism.is_finished = lambda self, context: self._is_finished
+        self.orig_is_finished_flag = TransferMechanism.is_finished_flag
+        self.orig_is_finished = TransferMechanism.is_finished
+        TransferMechanism.is_finished_flag = True
+        TransferMechanism.is_finished = lambda self, context: self.is_finished_flag
+
+    @classmethod
+    def teardown_class(self):
+        # del TransferMechanism._is_finished
+        # TransferMechanism.is_finished = self.orig_is_finished
+        del TransferMechanism.is_finished_flag
+        del TransferMechanism.is_finished
+        TransferMechanism.is_finished_flag = self.orig_is_finished_flag
+        TransferMechanism.is_finished = self.orig_is_finished
 
     def test_no_termination_conds(self):
         comp = Composition()
@@ -665,6 +701,25 @@ class TestLinear:
 
 
 class TestBranching:
+    @classmethod
+    def setup_class(self):
+        # self.orig_is_finished = TransferMechanism.is_finished
+        # TransferMechanism._is_finished = False
+        # TransferMechanism.is_finished = lambda self, context: self._is_finished
+        self.orig_is_finished_flag = TransferMechanism.is_finished_flag
+        self.orig_is_finished = TransferMechanism.is_finished
+        TransferMechanism.is_finished_flag = True
+        TransferMechanism.is_finished = lambda self, context: self.is_finished_flag
+
+    @classmethod
+    def teardown_class(self):
+        # del TransferMechanism._is_finished
+        # TransferMechanism.is_finished = self.orig_is_finished
+        del TransferMechanism.is_finished_flag
+        del TransferMechanism.is_finished
+        TransferMechanism.is_finished_flag = self.orig_is_finished_flag
+        TransferMechanism.is_finished = self.orig_is_finished
+
     #   triangle:         A
     #                    / \
     #                   B   C
@@ -1067,6 +1122,25 @@ class TestBranching:
 
 
 class TestTermination:
+
+    @classmethod
+    def setup_class(self):
+        # self.orig_is_finished = TransferMechanism.is_finished
+        # TransferMechanism._is_finished = False
+        # TransferMechanism.is_finished = lambda self, context: self._is_finished
+        self.orig_is_finished_flag = TransferMechanism.is_finished_flag
+        self.orig_is_finished = TransferMechanism.is_finished
+        TransferMechanism.is_finished_flag = True
+        TransferMechanism.is_finished = lambda self, context: self.is_finished_flag
+
+    @classmethod
+    def teardown_class(self):
+        # del TransferMechanism._is_finished
+        # TransferMechanism.is_finished = self.orig_is_finished
+        del TransferMechanism.is_finished_flag
+        del TransferMechanism.is_finished
+        TransferMechanism.is_finished_flag = self.orig_is_finished_flag
+        TransferMechanism.is_finished = self.orig_is_finished
 
     def test_termination_conditions_reset(self):
         comp = Composition()

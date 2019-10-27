@@ -690,13 +690,18 @@ class TestWhenFinished:
         # self.orig_is_finished = TransferMechanism.is_finished
         # TransferMechanism._is_finished = False
         # TransferMechanism.is_finished = lambda self, context: self._is_finished
-        self.orig_is_finished = TransferMechanism.is_finished_flag
-        TransferMechanism.is_finished_flag = False
+        self.orig_is_finished_flag = TransferMechanism.is_finished_flag
+        self.orig_is_finished = TransferMechanism.is_finished
+        TransferMechanism.is_finished_flag = True
         TransferMechanism.is_finished = lambda self, context: self.is_finished_flag
 
     @classmethod
     def teardown_class(self):
         # del TransferMechanism._is_finished
+        # TransferMechanism.is_finished = self.orig_is_finished
+        del TransferMechanism.is_finished_flag
+        del TransferMechanism.is_finished
+        TransferMechanism.is_finished_flag = self.orig_is_finished_flag
         TransferMechanism.is_finished = self.orig_is_finished
 
     def test_WhenFinishedAny_1(self):
