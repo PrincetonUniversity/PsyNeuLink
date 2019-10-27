@@ -754,7 +754,7 @@ class TestWhenFinished:
         B = TransferMechanism(function=Linear(intercept=4.0), name='B')
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
-            m._is_finished = False
+            m.is_finished_flag = False
             comp.add_node(m)
         comp.add_projection(MappingProjection(), A, C)
         comp.add_projection(MappingProjection(), B, C)
@@ -855,7 +855,6 @@ class TestWhenFinished:
         termination_conds[TimeScale.TRIAL] = WhenFinishedAll()
         output = []
         i = 0
-        A.is_finished(comp)
         A.is_finished_flag = False
         B.is_finished_flag = False
         C.is_finished_flag = False
