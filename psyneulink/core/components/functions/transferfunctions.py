@@ -46,6 +46,7 @@ from enum import Enum, IntEnum
 
 import numpy as np
 import typecheck as tc
+import warnings
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import parameter_keywords, method_type
@@ -4170,14 +4171,6 @@ class TransferWithCosts(TransferFunction):
         self.parameters.enabled_cost_functions.set(enabled_cost_functions, execution_context)
         return enabled_cost_functions
 
-    def _get_input_struct_type(self, ctx):
-        # Workaround for mismatch inputs/outputs in predator prey model
-        return ctx.get_input_struct_type(self.parameters.transfer_fct.get(None))
-
-    def _get_output_struct_type(self, ctx):
-        # Workaround for mismatch inputs/outputs in predator prey model
-        return ctx.get_output_struct_type(self.parameters.transfer_fct.get(None))
-
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         # Run transfer function first
         transfer_f = self.parameters.transfer_fct
@@ -4185,7 +4178,13 @@ class TransferWithCosts(TransferFunction):
         trans_p = ctx.get_param_ptr(self, builder, params, transfer_f.name)
         trans_s = ctx.get_state_ptr(self, builder, state, transfer_f.name)
         trans_in = arg_in
+        if trans_in.type != trans_f.args[2].type:
+            warnings.warn("Unexpected data shape: {} input does not match the transfer function ({}): {} vs. {}".format(self, transfer_f.get(), self.defaults.variable, transfer_f.get().defaults.variable))
+            trans_in = builder.gep(trans_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
         trans_out = arg_out
+        if trans_out.type != trans_f.args[3].type:
+            warnings.warn("Unexpected data shape: {} output does not match the transfer function ({}): {} vs. {}".format(self, transfer_f.get(), self.defaults.value, transfer_f.get().defaults.value))
+            trans_out = builder.gep(trans_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         builder.call(trans_f, [trans_p, trans_s, trans_in, trans_out])
 
         # TODO: Implement cost calculations
