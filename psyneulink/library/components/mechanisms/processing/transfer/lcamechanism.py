@@ -58,11 +58,28 @@ with a `matrix <LCAMechanism.matrix>` in which the diagonal consists of uniform 
 **self_excitation** and the off-diagonal consists of uniform weights specified by the *negative* of the
 **competition** argument.
 
-The *noise*, *leak*, *initial_value*, and *time_step_size* arguments are used to implement the
+.. _LCAMechanism_Integrator_Mode
+
+*Integration*
+~~~~~~~~~~~~~
+
+The **noise**, **leak**, **initial_value**, and **time_step_size** arguments are used to implement the
 `LeakyCompetingIntegrator` as the LCAMechanism's `integrator_function <TransferMechanism.integrator_function>`.
-This is only used used when it is in `integrator_mode <Transfer_Integrator_Mode>`.  If `integrator_mode
+This is only used used when `integrator_mode <Transfer_Integrator_Mode>` is True.  If `integrator_mode
 <TransferMechanism.integrator_mode>` is False, the `LeakyCompetingIntegrator` function is skipped entirely,
-and all related arguments (*noise*, *leak*, *initial_value*, and *time_step_size*) have no effect.
+and all related arguments (**noise**, **leak**, **initial_value**, and **time_step_size**) have no effect.
+
+.. _LCAMechanism_Threshold:
+
+*Thresholding*
+~~~~~~~~~~~~~~
+
+The **threshold** and **threshold_criterion** arguments specify the conditions under which execution of the
+LCAMechanism terminates if `integrator_mode <Transfer_Integrator_Mode>` is True. These are convenience arguments,
+that are used to specify its `termination_threshold <TransferMechanism.termination_threshold>`,
+`termination_measure <TransferMechanism.termination_measure>`,  and `termination_comparison_op
+<TransferMechanism.termination_comparison_op>` attributes; these can also be specified directly as arguments of the
+LCAMechanism's constructor (see `Transfer_Execution_Termination` for additional details).
 
 COMMENT:
 The default format of its `variable <LCAMechanism.variable>`, and default values of its `inhibition
@@ -329,18 +346,14 @@ class LCAMechanism(RecurrentTransferMechanism):
         <LeakyCompetingIntegrator>` for more details on what the `LeakyCompetingIntegrator function
         <LeakyCompetingIntegrator>` computes.
 
-    COMMENT:
     threshold : float or None : default None
         specifes the value at which the Mechanism's `is_finished` attribute is set to True (see `threshold
-        <LCAMechanism.threshold>` for more details).
+        <LCAMechanism_Threshold>` for more details).
 
     threshold_criterion : VALUE, MAX_VS_NEXT, MAX_VS_AVG, str, or int : default VALUE
         specifies the criterion that is used to evaluate whether the threshold has been reached. If *MAX_VS_NEXT* or
-        *MAX_VS_AVG* is specified the length of the LCAMCechanism's `value <Mechanism_Base.value>` must be at least 2.
-        If a str or int is specified then an `output_port <LCAMechanism>` with the corresponding name (str) or index
-        (int) must exist; otherwise, an error is generated (see `theshold_criterion
-        <LCAMechanism.threshold_criterion>` for additional details).
-    COMMENT
+        *MAX_VS_AVG* is specified, then the length of the LCAMCechanism's `value <Mechanism_Base.value>` must be at
+        least 2 (see `threshold <LCAMechanism_Threshold>` for more details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
@@ -386,86 +399,6 @@ class LCAMechanism(RecurrentTransferMechanism):
         <LeakyCompetingIntegrator.value>` (:math:`x_{i}`) on each time step. See `LeakyCompetingIntegrator
         <LeakyCompetingIntegrator>` for more details on what the `LeakyCompetingIntegrator function
         <LeakyCompetingIntegrator>` computes.
-
-    COMMENT:
-    recurrent_projection : MappingProjection
-        a `MappingProjection` that projects from the Mechanism's `primary OutputPort <OutputPort_Primary>`
-        back to it `primary inputPort <Mechanism_InputPorts>`.
-
-    initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS
-        determines the starting value for time-averaged input
-        (only relevant if `beta <TransferMechanism.beta>` parameter is not 1.0).
-        XCOMMENT:
-            Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
-        XCOMMENT
-
-    integrator_function:
-        When *integrator_mode* is set to True, the LCAMechanism executes its `integrator_function
-        <LCAMechanism.integrator_function>`, which is the `LeakyCompetingIntegrator`. See `LeakyCompetingIntegrator
-        <LeakyCompetingIntegrator>` for more details on what it computes. Keep in mind that the `leak
-        <LCAMechanism.leak>` parameter of the `LCAMechanism` determines the `rate <LeakyCompetingIntegrator.rate>` of
-        the `LeakyCompetingIntegrator`.
-
-    integrator_mode:
-        **When integrator_mode is set to True:**
-
-        the variable of the mechanism is first passed into the following equation:
-
-        .. math::
-            leak \\cdot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
-
-        The result of the integrator function above is then passed into the `mechanism's function
-        <LCAMechanism.function>`. Note that on the first execution, *initial_value* sets previous_value.
-
-        **When integrator_mode is set to False:**
-
-        The variable of the mechanism is passed into the `function <TransferMechanism.function>` of the Mechanism.
-        The Mechanism's `integrator_function <TransferMechanism.integrator_function>` is skipped entirely,
-        and all related arguments (*noise*, *leak*, *initial_value*, and *time_step_size*) are ignored.
-
-    noise : float or function : default 0.0
-        When `integrator_mode <LCAMechanism.integrator_mode>` is set to True, noise is passed into the
-        `integrator_function <LCAMechanism.integrator_function>`. Otherwise, noise is added to the output of the
-        `function <LCAMechanism.function>`.
-
-        If noise is a list or array, it must be the same length as `variable <LCAMechanism.default_variable>`.
-
-        If noise is specified as a single float or function, while `variable <LCAMechanism.variable>` is a list or
-        array, noise will be applied to each variable element. In the case of a noise function, this means that the
-        function will be executed separately for each variable element.
-
-        .. note::
-            In order to generate random noise, we recommend selecting a probability distribution function (see
-            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
-            then the noise will simply be an offset that remains the same across all executions.
-
-    time_step_size : float : default 0.1
-        determines the time_step_size used by the Mechanism's `integrator_function <LCAMechanism.integrator_function>`.
-        (see `integrator_mode <LCAMechanism.integrator_mode>` for more details).
-
-    clip : list [float, float] : default None (Optional)
-        specifies the allowable range for the result of `function <LCAMechanism.function>`
-
-        the item in index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the
-        maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set
-        to the value of `clip <LCAMechanism.clip>` that it exceeds.
-
-    threshold : float or None
-        determines the `value <Mechanism_Base.value>` at which the Mechanism's `is_finished` attribute is set to True.
-        If it is None, `is_finished` is never set to True.  If it is a float, then the value specified by
-        `threshold_criterion <LCAMechanism.threshold_criterion>` is compared against threshold, and `is_finished` is
-        set to True when that value exceeds theshold.
-
-    threshold_criterion : *VALUE*, *MAX_VS_NEXT*, *MAX_VS_AVG*, str, or int : default *VALUE*
-        determines the criterion that is used to evaluate whether the threshlod has been reached, at which point
-        `is_finished` is set to True.  If *VALUE* is specified, this occurs when any element of the LCAMechanism's
-        `value <Mechanism_Base.value>` exceeds the value of `threshold <LCAMechanism.threshold>`;  if it is set to
-        `MAX_VS_NEXT <LCAMechanism_MAX_VS_NEXT>` or `MAX_VS_AVG <LCAMechanism_MAX_VS_AVG>`, then it occurs when the
-        `value <OutputPort.value>` of the corresponding OutputPort exceeds the value of `threshold
-        <LCAMechanism.threshold>`; and if threshold_criterion is a str or an int, then the OutputPort specified by
-        that name or index, respectively is used.
-    COMMENT
 
     name : str
         the name of the LCAMechanism Mechanism; if it is not specified in the **name** argument of the constructor, a
@@ -536,17 +469,8 @@ class LCAMechanism(RecurrentTransferMechanism):
 
                     :default value: 0.1
                     :type: float
-
-                threshold
-                    see `threshold <LCAMechanism.threshold>`
-
-                threshold_criterion
-                    see `threshold_criterion <LCAMechanism.threshold_criterion>`
-
-                    :default value: None
-                    :type: float
-
         """
+
         function = Parameter(Logistic, stateful=False, loggable=False)
 
         leak = Parameter(0.5, modulable=True)
@@ -662,32 +586,15 @@ class LCAMechanism(RecurrentTransferMechanism):
                           f"note that this will result in a matrix that has positive off-diagonal elements "
                           f"since 'competition' is assumed to specify the magnitude of inhibition.")
 
-    # def _instantiate_output_ports(self, context=None):
-    #
-    #     threshold_criterion = self.parameters.threshold_criterion._get(context)
-    #     value = self.parameters.value._get(context)
-    #
-    #     if threshold_criterion in {MAX_VS_NEXT, MAX_VS_AVG}:
-    #         if len(value[0]) < 2:
-    #             raise LCAError(f"Use of 'MAX_VS_NEXT' or 'MAX_VS_AVG' as specification for "
-    #                            f"'threshold_criterion' arg of {self.name} requires that its "
-    #                            f"{VALUE} have a length of 2 or greater (it is currently {len(value[0])}).")
-    #         self.output_ports.append(threshold_criterion)
-    #
-    #     super()._instantiate_output_ports(context=context)
-    #
-    #     if threshold_criterion != VALUE:
-    #         try:
-    #             self.output_ports[threshold_criterion].parameters.require_projection_in_composition._set(False, context)
-    #         except IndexError:
-    #             if isinstance(threshold_criterion, int):
-    #                 index_str = 'index'
-    #             else:
-    #                 index_str = 'name'
-    #             raise LCAError(f"{self.name} does not have an {repr(OUTPUT_PORT)} with the {index_str} of "
-    #                            f"{repr(threshold_criterion)} specified in its 'threshold_criterion' arg.")
-
     def _parse_threshold_args(self, kwargs):
+        """Implements convenience arguments threshold and threshold_criterion
+
+        These are translated into the appropriate specifications for the termination_threshold, termination_measure,
+        and termination_comparison_op for TransferMechanism.
+
+        Note:  specifying (threshold and termination_threshold) and/or (threshold and
+        threshold_criterion and termination_measure) causes an error.
+        """
         termination_threshold = kwargs.pop(TERMINATION_THRESHOLD, None)
         threshold = kwargs.pop('threshold', None)
         if threshold is not None:
@@ -753,31 +660,3 @@ class LCAMechanism(RecurrentTransferMechanism):
         )
 
         return current_input
-
-    # @handle_external_context()
-    # def is_finished(self, context=None):
-    #     """Returns True when value of Mechanism reaches threhsold or if threshold is None.
-    #
-    #     Note:  if threshold is None, implements single update (cycle) per call to _execute method
-    #            (equivalent to setting Component.execute_until_finished = False)
-    #     """
-    #
-    #     threshold = self.parameters.threshold._get(context)
-    #
-    #     if threshold is not None:
-    #         threshold_criterion = self.parameters.threshold_criterion._get(context)
-    #
-    #         if threshold_criterion == VALUE:
-    #             threshold_criterion = RESULT
-    #         if any(self.output_ports[threshold_criterion].parameters.value._get(context) >= threshold):
-    #             logger.info(
-    #                 '{0} {1} has reached threshold {2}'.format(
-    #                     type(self).__name__,
-    #                     self.name,
-    #                     self.function.get_current_function_param(THRESHOLD, context)
-    #                 )
-    #             )
-    #             return True
-    #         return False
-    #
-    #     return True
