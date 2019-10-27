@@ -687,13 +687,16 @@ class TestWhenFinished:
 
     @classmethod
     def setup_class(self):
-        self.orig_is_finished = TransferMechanism.is_finished
-        TransferMechanism._is_finished = False
-        TransferMechanism.is_finished = lambda self, context: self._is_finished
+        # self.orig_is_finished = TransferMechanism.is_finished
+        # TransferMechanism._is_finished = False
+        # TransferMechanism.is_finished = lambda self, context: self._is_finished
+        self.orig_is_finished = TransferMechanism.is_finished_flag
+        TransferMechanism.is_finished_flag = False
+        TransferMechanism.is_finished = lambda self, context: self.is_finished_flag
 
     @classmethod
     def teardown_class(self):
-        del TransferMechanism._is_finished
+        # del TransferMechanism._is_finished
         TransferMechanism.is_finished = self.orig_is_finished
 
     def test_WhenFinishedAny_1(self):
@@ -769,10 +772,6 @@ class TestWhenFinished:
         termination_conds[TimeScale.TRIAL] = WhenFinishedAny()
         output = []
         i = 0
-        A.is_finished_flag = False
-        B.is_finished_flag = False
-        C.is_finished_flag = False
-
         for step in sched.run(termination_conds=termination_conds):
             if i == 3:
                 A.is_finished_flag = True
@@ -789,7 +788,9 @@ class TestWhenFinished:
     def test_WhenFinishedAll_1(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+        A.is_finished_flag = True
         B = TransferMechanism(function=Linear(intercept=4.0), name='B')
+        B.is_finished_flag = True
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
             comp.add_node(m)
@@ -842,6 +843,7 @@ class TestWhenFinished:
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
             comp.add_node(m)
+            m.is_finished_flag = False
         comp.add_projection(MappingProjection(), A, C)
         comp.add_projection(MappingProjection(), B, C)
         sched = Scheduler(composition=comp)
@@ -855,10 +857,6 @@ class TestWhenFinished:
         termination_conds[TimeScale.TRIAL] = WhenFinishedAll()
         output = []
         i = 0
-        A.is_finished_flag = False
-        B.is_finished_flag = False
-        C.is_finished_flag = False
-
         for step in sched.run(termination_conds=termination_conds):
             if i == 3:
                 A.is_finished_flag = True
