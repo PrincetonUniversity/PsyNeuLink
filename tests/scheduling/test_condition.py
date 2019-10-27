@@ -688,7 +688,7 @@ class TestWhenFinished:
     @classmethod
     def setup_class(self):
         self.orig_is_finished = TransferMechanism.is_finished
-        TransferMechanism._is_finished = True
+        TransferMechanism._is_finished = False
         TransferMechanism.is_finished = lambda self, context: self._is_finished
 
     @classmethod
@@ -855,6 +855,7 @@ class TestWhenFinished:
         termination_conds[TimeScale.TRIAL] = WhenFinishedAll()
         output = []
         i = 0
+        A.is_finished(comp)
         A.is_finished_flag = False
         B.is_finished_flag = False
         C.is_finished_flag = False

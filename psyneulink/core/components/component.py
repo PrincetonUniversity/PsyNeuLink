@@ -990,7 +990,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                                     stateful=False,
                                     fallback_default=True,
                                     pnl_internal=True)
-        is_finished_flag = Parameter(True, loggable=False, stateful=True, pnl_internal=True)
+        is_finished_flag = Parameter(True, loggable=False, stateful=True)
         execute_until_finished = True
         num_executions_before_finished = Parameter(0, read_only=True)
         max_executions_before_finished = Parameter(1000, modulable=False)
