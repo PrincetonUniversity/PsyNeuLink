@@ -3607,12 +3607,13 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             self.__parameter_components = set()
             return self.__parameter_components
 
-    def _update_parameter_components(self, context):
+    @handle_external_context()
+    def _update_parameter_components(self, context=None):
         # store all Components in Parameters to be used in
         # _dependent_components for _initialize_from_context
         for p in self.parameters:
             try:
-                param_value = p.get(context)
+                param_value = p._get(context)
                 if isinstance(param_value, Component):
                     self._parameter_components.add(param_value)
             # ControlMechanism and GatingMechanism have Parameters that only

@@ -1733,6 +1733,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.controller_condition = controller_condition
         self.controller_condition.owner = self.controller
 
+        self._update_parameter_components()
+
         self.initialization_status = ContextFlags.INITIALIZED
 
     def __repr__(self):
@@ -5452,8 +5454,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         # Skip any projections to ObjectiveMechanism for controller
                         #   (those are handled in _assign_control_components)
-                        if (self.controller
-                                and proj.receiver.owner is self.controller.objective_mechanism):
+                        if (self.controller and
+                                proj.receiver.owner in {self.controller, self.controller.objective_mechanism}):
                             continue
 
                         # Only consider Projections to the rcvr
