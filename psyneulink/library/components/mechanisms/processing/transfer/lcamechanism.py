@@ -104,8 +104,9 @@ Note that **threshold** and **threshold_criterion** are convenience arguments, a
 similarly-named attributes.  Rather, they are used to specify the `termination_threshold 
 <TransferMechanism.termination_threshold>`, `termination_measure <TransferMechanism.termination_measure>`,  
 and `termination_comparison_op <TransferMechanism.termination_comparison_op>` attributes; these can also be 
-specified directly as arguments of the LCAMechanism's constructor (see `Transfer_Execution_Termination` for 
-additional details), in order to implement other termination conditions.
+specified directly as arguments of the LCAMechanism's constructor in order to implement other termination conditions
+(see `TransferMechanism <Transfer_Execution_Termination>` and `RecurrentTransferMechanism
+<Recurrent_Transfer_Termination>`for additional details).
 
 COMMENT:
 The default format of its `variable <LCAMechanism.variable>`, and default values of its `inhibition
@@ -359,12 +360,12 @@ class LCAMechanism(RecurrentTransferMechanism):
 
     threshold : float or None : default None
         specifes the value at which the Mechanism's `is_finished` attribute is set to True
-        (see `LCAMechanism_Threshold>` for additional details).
+        (see `LCAMechanism_Threshold` for additional details).
 
     threshold_criterion : VALUE, MAX_VS_NEXT, MAX_VS_AVG, str, or int : default VALUE
         specifies the criterion that is used to evaluate whether the threshold has been reached. If *MAX_VS_NEXT* or
         *MAX_VS_AVG* is specified, then the length of the LCAMCechanism's `value <Mechanism_Base.value>` must be at
-        least 2 (see `LCAMechanism_Threshold>` for additional details).
+        least 2 (see `LCAMechanism_Threshold` for additional details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for

@@ -146,12 +146,16 @@ of its constructor.  It then transforms its input (including from the `recurrent
 <RecurrentTransferMechanism.recurrent_projection>`) using the specified function and parameters (see
 `Transfer_Execution`), and returns the results in its OutputPorts.
 
+.. _Recurrent_Transfer_Integration:
+
 *Integration*
 ~~~~~~~~~~~~~
 
 Also like a `TransferMechanism`, the function used to integrate its input before passing it to `function
 TransferMechanism.function` (when `integrator_mode <TransferMechanism.integrator_mode>` is `True`) can be specified
 in the **integrator_function** argument of its constructor.
+
+.. _Recurrent_Transfer_Termination:
 
 *Termination*
 ~~~~~~~~~~~~~
