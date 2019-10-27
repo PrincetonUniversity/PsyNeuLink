@@ -1223,18 +1223,6 @@ class OptimizationControlMechanism(ControlMechanism):
         builder.store(builder.load(val_ptr), dest_ptr)
         return os_input
 
-    def apply_control_allocation(self, control_allocation, runtime_params, context):
-        """Update `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>` based on
-        specified `control_allocation <ControlMechanism.control_allocation>`.
-
-        Called by `evaluate <Composition.evaluate>` method of `Composition` when it is assigned as `agent_rep
-        <OptimizationControlMechanism.agent_rep>`.
-        """
-
-        value = [np.atleast_1d(a) for a in control_allocation]
-        self.parameters.value._set(value, context)
-        self._update_output_ports(context=context, runtime_params=runtime_params,
-                                   )
 
     # @property
     # def feature_values(self):
