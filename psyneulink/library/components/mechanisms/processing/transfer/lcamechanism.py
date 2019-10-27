@@ -20,7 +20,8 @@ Overview
 
 An LCAMechanism is a subclass of `RecurrentTransferMechanism` that implements a single-layered `leaky competitng
 accumulator (LCA) <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_  network, in which each element is connected to
-every other element with mutually inhibitory weights. The LCAMechanism's recurrent projection matrix *always* consists
+every other element with mutually inhibitory weights. The LCAMechanism's `recurrent_projection
+<RecurrentTransferMechanism.recurrent_projection>` `matrix <MappingProjection.matrix>` *always* consists
 of `self_excitation <LCAMechanism.self_excitation>` on the diagonal and -`competition <LCAMechanism.competition>`
 off-diagonal.
 
@@ -75,11 +76,36 @@ and all related arguments (**noise**, **leak**, **initial_value**, and **time_st
 ~~~~~~~~~~~~~~
 
 The **threshold** and **threshold_criterion** arguments specify the conditions under which execution of the
-LCAMechanism terminates if `integrator_mode <Transfer_Integrator_Mode>` is True. These are convenience arguments,
-that are used to specify its `termination_threshold <TransferMechanism.termination_threshold>`,
-`termination_measure <TransferMechanism.termination_measure>`,  and `termination_comparison_op
-<TransferMechanism.termination_comparison_op>` attributes; these can also be specified directly as arguments of the
-LCAMechanism's constructor (see `Transfer_Execution_Termination` for additional details).
+LCAMechanism terminates if `integrator_mode <Transfer_Integrator_Mode>` is True.  If **threshold** is None
+(the default), then the LCAMechanism will update its `value <Mechanism_Base.value>` and the `value <OutputPort.value>`
+of each `OutputPort` only once each time it is executed.  If a **threshold** is specified, then it will continue
+to execute until the condition specified by **threshold_criterion** is True; this can be specified using on of the
+following keywords:
+
+  * *VALUE* --  (default) True when any element of the LCAMechanism's `value <Mechanism_Base.value>` is equal to or
+    greater than the **threshold**;
+
+  * *MAX_VS_NEXT* -- True when the element of the LCAMechanism's `value <Mechanism_Base.value>` with the highest
+    values is greater than the one with the next-highest value by an amount that equals or exceeds **threshold**;
+
+  * *MAX_VS_AVG* -- True when the element of the LCAMechanism's `value <Mechanism_Base.value>` with the highest
+    values is greater than the average of the others by an amount that equals or exceeds **threshold**;
+
+.. _LCAMechanism_DDM_APPROXIMATION:
+
+For an LCAMechanism with *exactly* two elements, *MAX_VS_NEXT* implements a close approximation of the `threshold 
+<DriftDiffusionIntegrator.threshold>` parameter of the `DriftDiffusionIntegrator` Function used by a `DDM` (see 
+`Usher & McClelland, 2001; <http://psycnet.apa.org/?&fa=main.doiLanding&doi=10.1037/0033-295X.108.3.550>`_ and 
+`Bogacz et al (2006) <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_). For an LCAMechanism with more than two 
+elements, *MAX_VS_NEXT* and *MAX_VS_AVG* implements threshold approximations with different properties 
+(see `McMillen & Holmes, 2006 <http://www.sciencedirect.com/science/article/pii/S0022249605000891>`_).
+
+Note that **threshold** and **threshold_criterion** are convenience arguments, and are not associated with
+similarly-named attributes.  Rather, they are used to specify the `termination_threshold 
+<TransferMechanism.termination_threshold>`, `termination_measure <TransferMechanism.termination_measure>`,  
+and `termination_comparison_op <TransferMechanism.termination_comparison_op>` attributes; these can also be 
+specified directly as arguments of the LCAMechanism's constructor (see `Transfer_Execution_Termination` for 
+additional details), in order to implement other termination conditions.
 
 COMMENT:
 The default format of its `variable <LCAMechanism.variable>`, and default values of its `inhibition
@@ -101,33 +127,26 @@ Function by default (in place of the `AdaptiveIntegrator` used as the default by
 2. its `matrix <LCAMechanism.matrix>` consisting of `self_excitation <LCAMechanism.self_excitation>` and `competition
 <LCAMechanism.competition>` off diagonal.
 
-In addition to its `primary OutputPort <OutputPort_Primary>` (which contains the current `value <Mechanism_Base.value>`
-of the LCAMechanism), it has available the `StandardOutputPorts of a RecurrentTransferMechanism
-<RecurrentTransferMechanism_Standard_OutputPorts>`, it has two additional `Standard OutputPorts <OutputPort_Standard>`:
+Like any RecurrentTransferMechanism, by default an LCAMechanism has a single `primary OutputPort <OutputPort_Primary>`
+named *RESULT* that contains the Mechanism's current `value <Mechanism_Base.value>`.  The `StandardOutputPorts 
+<OutputPort_Standard>` of a `RecurrentTransferMechanism <RecurrentTransferMechanism_Standard_OutputPorts>`, 
+are also available for assignment, as well as two additional ones:
 
-    - `MAX_VS_NEXT <LCAMechanism_MAX_VS_NEXT>`
+    - `MAX_VS_NEXT <LCAMechanism_MAX_VS_NEXT_OUTPUT_PORT>`
 
-    - `MAX_VS_AVG <LCAMechanism_MAX_VS_AVG>`
+    - `MAX_VS_AVG <LCAMechanism_MAX_VS_AVG_OUTPUT_PORT>`
 
 COMMENT:
-The two elements of the `MAX_VS_NEXT <LCAMechanism_MAX_VS_NEXT>` OutputPort contain, respectively, the index of the
-LCAMechanism element with the greatest value, and the difference between its value and the next highest one.
-`MAX_VS_AVG <LCAMechanism_MAX_VS_AVG>` contains the index of the LCAMechanism element with the greatest value,
-and the difference between its  value and the average of all the others.
+The two elements of the `MAX_VS_NEXT <LCAMechanism_MAX_VS_NEXT_OUTPUT_PORT>` OutputPort contain, respectively, the
+index of the LCAMechanism element with the greatest value, and the difference between its value and the next highest
+one. `MAX_VS_AVG <LCAMechanism_MAX_VS_AVG_OUTPUT_PORT>` contains the index of the LCAMechanism element with the
+greatest value, and the difference between its  value and the average of all the others.
 COMMENT
-The `value <OutputPort.value>` of the `MAX_VS_NEXT <LCAMechanism_MAX_VS_NEXT>` OutputPort contains the difference
-between the two elements of the LCAMechanism’s `value <Mechanism_Base.value>` with the highest values, and the `value
-<OutputPort.value>` of the `MAX_VS_AVG <LCAMechanism_MAX_VS_AVG>` OutputPort contains the difference between the
-element with the highest value and the average of all the others.
-
-For an LCAMechanism with *exactly* two elements, `MAX_VS_NEXT <LCAMechanism_MAX_VS_NEXT>` implements a close
-approximation of the `threshold <DriftDiffusionIntegrator.threshold>` parameter of the `DriftDiffusionIntegrator`
-Function used by a `DDM` (see `Usher & McClelland, 2001;
-<http://psycnet.apa.org/?&fa=main.doiLanding&doi=10.1037/0033-295X.108.3.550>`_ and `Bogacz et al (2006)
-<https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_). For an LCAMechanism with more than two elements, `MAX_VS_NEXT
-<LCAMechanism_MAX_VS_NEXT>` and `MAX_VS_AVG <LCAMechanism_MAX_VS_AVG>` implement threshold approximations with
-different properties (see `McMillen & Holmes, 2006
-<http://www.sciencedirect.com/science/article/pii/S0022249605000891>`_).
+The `value <OutputPort.value>` of the `MAX_VS_NEXT <LCAMechanism_MAX_VS_NEXT_OUTPUT_PORT>` OutputPort contains the
+difference between the two elements of the LCAMechanism’s `value <Mechanism_Base.value>` with the highest values, and
+the `value <OutputPort.value>` of the `MAX_VS_AVG <LCAMechanism_MAX_VS_AVG_OUTPUT_PORT>` OutputPort contains the
+difference between the element with the highest value and the average of all the others (see `above
+<LCAMechanism_DDM_APPROXIMATION>` for their relationship to the output of a `DDM` Mechanism).
 
 .. _LCAMechanism_Execution:
 
@@ -218,7 +237,7 @@ class LCAMechanism_OUTPUT():
                 calculated using the `Stability` Function using the `ENTROPY <CROSS_ENTROPY>` metric.
             COMMENT
 
-            .. _LCAMechanism_MAX_VS_NEXT:
+            .. _LCAMechanism_MAX_VS_NEXT_OUTPUT_PORT:
 
             *MAX_VS_NEXT* : float
                 COMMENT:
@@ -229,7 +248,7 @@ class LCAMechanism_OUTPUT():
                 the difference between the two elements of the LCAMechanism's `value <Mechanism_Base.value>`
                 with the highest values.
 
-            .. _LCAMechanism_MAX_VS_AVG:
+            .. _LCAMechanism_MAX_VS_AVG_OUTPUT_PORT:
 
             *MAX_VS_AVG* : float
                 COMMENT:
@@ -325,35 +344,27 @@ class LCAMechanism(RecurrentTransferMechanism):
         COMMENT
 
     leak : value : default 0.5
-        specifies the `rate <LeakyCompetingIntegrator.rate>` on the `LeakyCompetingIntegrator function
-        <LeakyCompetingIntegrator>`, which scales the contribution of the `LeakyCompetingIntegrator's
-        <LeakyCompetingIntegrator>` `previous_value <LeakyCompetingIntegrator.previous_value>` to the accumulation of
-        the `LeakyCompetingIntegrator's value <LeakyCompetingIntegrator.value>` (:math:`x_{i}`) on each time step.
-        See `LeakyCompetingIntegrator <LeakyCompetingIntegrator>` for more details on what the
-        `LeakyCompetingIntegrator function  <LeakyCompetingIntegrator>` computes.
+        specifies the `rate <LeakyCompetingIntegrator.rate>` for the `LeakyCompetingIntegrator` Function
+        (see `leak <LCAMechanism.leak>` for additional details).
 
     competition : value : default 1.0
-        specifies the magnitude of the off-diagonal terms in the LCAMechanism's recurrent projection, thereby scaling
-        the contributions of the competing unit (all :math:`f(x)_{j}` where :math:`j \\neq i`) to the accumulation of
-        the `LeakyCompetingIntegrator's value <LeakyCompetingIntegrator.value>` (:math:`x_{i}`) on each time step
-        (see `LeakyCompetingIntegrator <LeakyCompetingIntegrator>` for more details on what the
-        `LeakyCompetingIntegrator function  <LeakyCompetingIntegrator>` computes).
+        specifies the magnitude of the off-diagonal terms in the LCAMechanism's `recurrent_projection
+        <RecurrentTransferMechanism.recurrent_projection>` (see `competition <LCAMechanism.competition>` for
+        additional details).
 
     self_excitation : value : default 0.0
-        specifies the diagonal terms in the LCAMechanism's recurrent projection, thereby scaling the contributions of
-        each unit's own recurrent value (:math:`f(x)_{i}`) to the accumulation of the `LeakyCompetingIntegrator's
-        value <LeakyCompetingIntegrator.value>` (:math:`x_{i}`) on each time step. See `LeakyCompetingIntegrator
-        <LeakyCompetingIntegrator>` for more details on what the `LeakyCompetingIntegrator function
-        <LeakyCompetingIntegrator>` computes.
+        specifies the magnidute of the diagonal terms in the LCAMechanism's `recurrent_projection
+        <RecurrentTransferMechanism.recurrent_projection>` (see `self_excitation <LCAMechanism.self_excitation>` for
+        additional details).
 
     threshold : float or None : default None
-        specifes the value at which the Mechanism's `is_finished` attribute is set to True (see `threshold
-        <LCAMechanism_Threshold>` for more details).
+        specifes the value at which the Mechanism's `is_finished` attribute is set to True
+        (see `LCAMechanism_Threshold>` for additional details).
 
     threshold_criterion : VALUE, MAX_VS_NEXT, MAX_VS_AVG, str, or int : default VALUE
         specifies the criterion that is used to evaluate whether the threshold has been reached. If *MAX_VS_NEXT* or
         *MAX_VS_AVG* is specified, then the length of the LCAMCechanism's `value <Mechanism_Base.value>` must be at
-        least 2 (see `threshold <LCAMechanism_Threshold>` for more details).
+        least 2 (see `LCAMechanism_Threshold>` for additional details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
@@ -374,31 +385,30 @@ class LCAMechanism(RecurrentTransferMechanism):
     ----------
 
     matrix : 2d np.array
-        the `matrix <MappingProjection.matrix>` parameter of the `recurrent_projection` for the Mechanism, the
-        `self_excitation <LCAMechanism.self_excitation>` attribute sets the values on the diagonal, and the
-        `competition <LCAMechanism.competition>` attribute sets the magnitude of the negative off-diagonal values.
+        the `matrix <MappingProjection.matrix>` parameter of the `recurrent_projection
+        <RecurrentTransferMechanism.recurrent_projection>` for the Mechanism, the `self_excitation
+        <LCAMechanism.self_excitation>` attribute sets the values on the diagonal, and the `competition
+        <LCAMechanism.competition>` attribute sets the magnitude of the negative off-diagonal values.
 
-    leak : value : default 0.5
-        sets the `rate <LeakyCompetingIntegrator.rate>` on the `LeakyCompetingIntegrator function
-        <LeakyCompetingIntegrator>`, which scales the contribution of the `LeakyCompetingIntegrator's
-        <LeakyCompetingIntegrator>` `previous_value <LeakyCompetingIntegrator.previous_value>` to the
-        accumulation of the `LeakyCompetingIntegrator's value <LeakyCompetingIntegrator.value>`
-        (:math:`x_{i}`) on each time step. See `LeakyCompetingIntegrator <LeakyCompetingIntegrator>`
-        for more details on what the `LeakyCompetingIntegrator function  <LeakyCompetingIntegrator>` computes.
+    leak : value
+        determines the `rate <LeakyCompetingIntegrator.rate>` for the `LeakyCompetingIntegrator` Function,
+        which scales the contribution of its `previous_value <LeakyCompetingIntegrator.previous_value>` to the
+        accumulation of its `variable <LeakyCompetingIntegrator.variable>` (:math:`x_{i}`) on each time step (see
+        `LeakyCompetingIntegrator` for additional details.
 
     competition : value : default 1.0
-        sets the magnitude of the off-diagonal terms in the LCAMechanism's recurrent projection, thereby scaling the
-        contributions of the competing unit (all :math:`f(x)_{j}` where :math:`j \\neq i`) to the accumulation of the
-        `LeakyCompetingIntegrator's value <LeakyCompetingIntegrator.value>` (:math:`x_{i}`) on each time step. See
-        `LeakyCompetingIntegrator <LeakyCompetingIntegrator>` for more details on what the `LeakyCompetingIntegrator
-        function  <LeakyCompetingIntegrator>` computes.
+        determines the magnitude of the off-diagonal terms in the LCAMechanism's `recurrent_projection
+        <RecurrentTransferMechanism.recurrent_projection>`, thereby scaling the contributions of the competing unit
+        (all :math:`f(x)_{j}` where :math:`j \\neq i`) to the accumulation of the `LeakyCompetingIntegrator's
+        <LeakyCompetingIntegrator>` `variable <LeakyCompetingIntegrator.variable>` (:math:`x_{i}`) on each time step
+        (see `LeakyCompetingIntegrator` for additional details.
 
     self_excitation : value : default 0.0
-        sets the diagonal terms in the LCAMechanism's recurrent projection, thereby scaling the contributions of each
-        unit's own recurrent value (:math:`f(x)_{i}`) to the accumulation of the `LeakyCompetingIntegrator's value
-        <LeakyCompetingIntegrator.value>` (:math:`x_{i}`) on each time step. See `LeakyCompetingIntegrator
-        <LeakyCompetingIntegrator>` for more details on what the `LeakyCompetingIntegrator function
-        <LeakyCompetingIntegrator>` computes.
+        determines the diagonal terms in the LCAMechanism's `recurrent_projection
+        <RecurrentTransferMechanism.recurrent_projection>`, thereby scaling the contributions of each unit's own
+        recurrent value (:math:`f(x)_{i}`) to the accumulation of the `LeakyCompetingIntegrator's
+        <LeakyCompetingIntegrator>` `variable <LeakyCompetingIntegrator.value>` (:math:`x_{i}`) on each time step
+        (see `LeakyCompetingIntegrator` for additional details.
 
     name : str
         the name of the LCAMechanism Mechanism; if it is not specified in the **name** argument of the constructor, a

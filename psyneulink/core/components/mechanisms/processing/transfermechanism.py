@@ -758,7 +758,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         `True` (see `integrator_mode <TransferMechanism.integrator_mode>` for details).
 
     initial_value :  value, list or np.ndarray
-        specifies the starting value for the `integration_function <TransferMechanism.integrator_function>`;  only
+        determines the starting value for the `integration_function <TransferMechanism.integrator_function>`;  only
         relevant if `integrator_mode <TransferMechanism.integrator_mode>` is `True` and `integration_rate
         <TransferMechanism.integration_rate>` is not 1.0 (see `integrator_mode <TransferMechanism.integrator_mode>`
         for additional details).
