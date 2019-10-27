@@ -814,8 +814,9 @@ class TestWhenFinished:
     def test_WhenFinishedAll_2(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        A._is_finished = False
+        A.is_finished_flag = False
         B = TransferMechanism(function=Linear(intercept=4.0), name='B')
+        B.is_finished_flag = True
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
             comp.add_node(m)
