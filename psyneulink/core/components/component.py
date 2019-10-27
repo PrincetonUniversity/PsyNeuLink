@@ -3146,7 +3146,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             `Component-based Conditions <Conditions_Component_Based>` to predicate the execution of one or more other
             Components on a Component.
         """
-        return self.is_finished_flag
+        return self.parameters.is_finished_flag._get(context)
 
     def _parse_param_port_sources(self):
         try:

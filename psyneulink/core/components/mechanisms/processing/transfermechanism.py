@@ -1669,7 +1669,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 or threshold is None
                 or self.initialization_status == ContextFlags.INITIALIZING):
             # return True
-            return self.is_finished_flag
+            return self.parameters.is_finished_flag._get(context)
 
         metric = self.parameters.termination_measure._get(context)
         comparator = self.parameters.termination_comparison_op._get(context)
