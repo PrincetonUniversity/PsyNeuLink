@@ -434,6 +434,7 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         initial_value = None
         integrator_mode = Parameter(True, setter=_integrator_mode_setter)
+        termination_measure = Parameter(max, stateful=False, loggable=False)
 
     standard_output_ports = RecurrentTransferMechanism.standard_output_ports.copy()
     standard_output_ports.extend([{NAME:MAX_VS_NEXT,
@@ -568,7 +569,7 @@ class LCAMechanism(RecurrentTransferMechanism):
                                f"args of {self.__name__} can't both be specified.")
             else:
                 if threshold_criterion is VALUE:
-                    termination_measure = lambda x: max(x)
+                    termination_measure = max
                     termination_comparison_op = GREATER_THAN_OR_EQUAL
                 elif threshold_criterion == MAX_VS_NEXT:
                     termination_measure = max_vs_next
@@ -583,7 +584,7 @@ class LCAMechanism(RecurrentTransferMechanism):
                     raise LCAError(f"Unrecognized value provided to 'threshold_criterion arg of {self.__name__}: "
                                    f"{threshold_criterion};  must be VALUE, MAX_VS_NEXT, MAX_VS_AVG or CONVERGENCE")
         else:
-            termination_measure = termination_measure or (lambda x: max(x))
+            termination_measure = termination_measure or max
             termination_comparison_op = termination_comparison_op or GREATER_THAN_OR_EQUAL
 
         return termination_threshold, termination_measure, termination_comparison_op

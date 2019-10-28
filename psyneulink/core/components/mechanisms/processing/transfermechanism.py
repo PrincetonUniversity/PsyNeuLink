@@ -1054,7 +1054,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                  on_resume_integrator_mode=INSTANTANEOUS_MODE_VALUE,
                  noise=0.0,
                  clip=None,
-                 termination_measure:tc.optional(is_function_type)=Distance(metric=MAX_ABS_DIFF),
+                 termination_measure=Distance(metric=MAX_ABS_DIFF),
                  termination_threshold:tc.optional(float)=None,
                  termination_comparison_op:str=LESS_THAN_OR_EQUAL,
                  output_ports:tc.optional(tc.any(str, Iterable))=RESULTS,
