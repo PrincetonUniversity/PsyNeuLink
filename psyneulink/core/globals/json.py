@@ -930,8 +930,22 @@ def generate_script_from_json(model_input):
         'numpy': 'np'
     }
 
-    for module, friendly_name in module_friendly_name_mapping.items():
-        comp_str = re.sub(f'{module}\\.', f'{friendly_name}.', comp_str)
+    module_names = set()
+    potential_module_names = set(re.findall(r'([A-Za-z]+?)\.', comp_str))
+    for module in potential_module_names:
+        try:
+            exec(f'import {module}')
+            module_names.add(module)
+        except (ImportError, ModuleNotFoundError, SyntaxError):
+            pass
+
+    for module in module_names:
+        try:
+            friendly_name = module_friendly_name_mapping[module]
+            comp_str = re.sub(f'{module}\\.', f'{friendly_name}.', comp_str)
+        except KeyError:
+            friendly_name = module
+
         if f'{friendly_name}.' in comp_str:
             imports_str += 'import {0}{1}\n'.format(
                 module,
