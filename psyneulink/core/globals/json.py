@@ -349,7 +349,7 @@ def _parse_parameter_value(value, component_identifiers=None):
             dill_str = base64.decodebytes(bytes(value, 'utf-8'))
             dill.loads(dill_str)
             return f'dill.loads({dill_str})'
-        except (binascii.Error, pickle.UnpicklingError):
+        except (binascii.Error, pickle.UnpicklingError, EOFError):
             pass
 
         # handle IO port specification
