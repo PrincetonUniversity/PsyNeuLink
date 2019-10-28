@@ -218,14 +218,16 @@ class PNLJSONEncoder(json.JSONEncoder):
     def default(self, o):
         from psyneulink.core.components.component import Component, ComponentsMeta
 
-        if isinstance(o, type):
+        if isinstance(o, (type, types.BuiltinFunctionType)):
             if o.__module__ == 'builtins':
                 # just give standard type, like float or int
                 return f'{o.__name__}'
             elif o is numpy.ndarray:
                 return f'{o.__module__}.array'
             else:
-                return f'{o.__module__}.{o.__name__}'
+                # some builtin modules are internally "_module"
+                # but are imported with "module"
+                return f"{o.__module__.lstrip('_')}.{o.__name__}"
         elif isinstance(o, (enum.Enum, types.FunctionType)):
             return str(o)
         elif o is NotImplemented:
@@ -372,6 +374,13 @@ def _parse_parameter_value(value, component_identifiers=None):
         if identifier in component_identifiers:
             value = identifier
 
+        evaluates = False
+        try:
+            eval(value)
+            evaluates = True
+        except (TypeError, NameError, SyntaxError):
+            pass
+
         # handle generic string
         if (
             value not in component_identifiers
@@ -379,6 +388,7 @@ def _parse_parameter_value(value, component_identifiers=None):
             # string, this is definitely imperfect and can't handle the
             # legitimate case, but don't know how to distinguish..
             and '.' not in value
+            and not evaluates
         ):
             value = f"'{value}'"
 
