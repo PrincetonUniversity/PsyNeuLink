@@ -11,7 +11,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.scheduling.scheduler import Scheduler
 
-debug_options=["const_input=[[[7]]]", "const_data", "const_params", "const_data", "const_state", "force_runs=3"]
+debug_options=["const_input=[[[7]]]", "const_data", "const_params", "const_data", "const_state"]
 
 @pytest.mark.composition
 @pytest.mark.parametrize("mode", [
@@ -44,15 +44,9 @@ def test_debug_comp(mode, debug_env):
         os.environ["PNL_LLVM_DEBUG"] = old_env
     pnlvm.debug._update()
 
-    assert len(comp.results) == 6 if  "force_runs" in debug_env else 2
+    assert len(comp.results) == 2
 
-    if "force_runs" in debug_env and "const_input" in debug_env:
-        expected1 = 153.125
-        expected2 = 172.265
-    elif "force_runs" in debug_env:
-        expected1 = 109.375
-        expected2 = 123.046
-    elif "const_input" in debug_env:
+    if "const_input" in debug_env:
         expected1 = 87.5
         expected2 = 131.25
     else:

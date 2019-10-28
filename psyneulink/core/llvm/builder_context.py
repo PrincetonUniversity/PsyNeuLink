@@ -306,7 +306,7 @@ class LLVMBuilderContext:
         else:
             data = data_arg
 
-        yield builder, data, cond_gen
+        yield builder, data, params, cond_gen
 
         if "alloca_data" in debug_env:
             data_vals = builder.load(data)
@@ -320,8 +320,8 @@ class LLVMBuilderContext:
     def gen_autodiffcomp_learning_exec(self, composition, simulation=False):
         composition._build_pytorch_representation(composition.default_execution_id)
         pytorch_model = composition.parameters.pytorch_representation.get(composition.default_execution_id)
-        with self._gen_composition_exec_context(composition, simulation, "_learning") as (builder, data, cond_gen):
-            state, params, comp_in, _, cond = builder.function.args
+        with self._gen_composition_exec_context(composition, simulation, "_learning") as (builder, data, params, cond_gen):
+            state, _, comp_in, _, cond = builder.function.args
         
             pytorch_model._gen_llvm_training_function_body(self, builder, state,
                                                            params, comp_in, data)
@@ -339,8 +339,8 @@ class LLVMBuilderContext:
         assert composition.controller is None
         composition._build_pytorch_representation(composition.default_execution_id)
         pytorch_model = composition.parameters.pytorch_representation.get(composition.default_execution_id)
-        with self._gen_composition_exec_context(composition, simulation) as (builder, data, cond_gen):
-            state, params, comp_in, _, cond = builder.function.args
+        with self._gen_composition_exec_context(composition, simulation) as (builder, data, params, cond_gen):
+            state, _, comp_in, _, cond = builder.function.args
             # Call input CIM
             input_cim_w = composition._get_node_wrapper(composition.input_CIM)
             input_cim_f = self.get_llvm_function(input_cim_w)
@@ -372,12 +372,17 @@ class LLVMBuilderContext:
             return builder.function
 
     def gen_composition_exec(self, composition, simulation=False):
-        with self._gen_composition_exec_context(composition, simulation) as (builder, data, cond_gen):
-            state, params, comp_in, _, cond = builder.function.args
+        with self._gen_composition_exec_context(composition, simulation) as (builder, data, params, cond_gen):
+            state, _, comp_in, _, cond = builder.function.args
             # Call input CIM
             input_cim_w = composition._get_node_wrapper(composition.input_CIM)
             input_cim_f = self.get_llvm_function(input_cim_w)
             builder.call(input_cim_f, [state, params, comp_in, data, data])
+
+            # Call parameter CIM
+            param_cim_w = composition._get_node_wrapper(composition.parameter_CIM)
+            param_cim_f = self.get_llvm_function(param_cim_w)
+            builder.call(param_cim_f, [state, params, comp_in, data, data])
 
             if simulation is False and composition.enable_controller and \
                composition.controller_mode == BEFORE:
@@ -540,12 +545,6 @@ class LLVMBuilderContext:
 
             builder.store(data_in.type.pointee(input_init), data_in)
             builder.store(inputs_ptr.type.pointee(1), inputs_ptr)
-
-        if "force_runs" in debug_env:
-            num = int(debug_env["force_runs"]) if debug_env["force_runs"] else 1
-            print("Forcing number of runs to: ", num)
-            runs_ptr = builder.alloca(runs_ptr.type.pointee)
-            builder.store(runs_ptr.type.pointee(num), runs_ptr)
 
         # Allocate and initialize condition structure
         cond_gen = ConditionGenerator(self, composition)
