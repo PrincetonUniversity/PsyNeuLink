@@ -168,7 +168,7 @@ it is executed.  However, if a `termination_threshold <TransferMechanism.termina
 it is updated repeatedly (using its current input) until its termination condition is satisfied, using its
 `termination_measure <TransferMechanism.termination_measure>`, `termination_threshold
 <TransferMechanism.termination_threshold>` and `termination_comparison_op <TransferMechanism.termination_comparison_op>`
-attributes (see `Transfer_Execution_Termination`).
+attributes (see `Transfer_Termination`).
 
 *Learning*
 ~~~~~~~~~~

@@ -19,7 +19,14 @@ Sections
 --------
   * `Transfer_Overview`
   * `Transfer_Creation`
+  * `Transfer_Structure`
+    * `TransferMechanism_InputPorts`
+    * `TransferMechanism_Function`
+    * `TransferMechanism_OutputPorts`
   * `Transfer_Execution`
+    * `Transfer_Integration`
+    * `Transfer_Termination`
+    * `Transfer_Reinitialization`
   * `Transfer_Class_Reference`
 
 .. _Transfer_Overview:
@@ -210,10 +217,10 @@ input transformed using `step-wise` integration, in which each execution returns
 integration process).
 COMMENT
 
-.. _Transfer_Updating:
+.. _Transfer_Integration:
 
-*Upating*
-~~~~~~~~~
+*Integration*
+~~~~~~~~~~~~~
 
 When a TransferMechanism is executed, it transforms its input using its `function <TransferMechanism.function>` and
 the following parameters (in addition to any specified for the `function <TransferMechanism.function>`):
@@ -253,27 +260,41 @@ A single update is executed if no `termination_threshold <TransferMechanism.term
 (i.e., it is None) or, if one is specified, the Mechanism's `execute_until_finished <Component.execute_until_finished>`
 attribute is explicitly set to False.
 
-.. _Transfer_Execution_Termination:
+.. _Transfer_Termination:
 
-*Termination Condition*
-~~~~~~~~~~~~~~~~~~~~~~~
+*Termination*
+~~~~~~~~~~~~~
 
 If `integrator_mode <TransferMechanism.integrator_mode>` is True, and a `termination_threshold
 <TransferMechanism.termination_threshold>` is specified, then a TransferMechanism continues to update (using its
 current input) until its termination condition is met.  The termination condition is evaluated by passing the
-TransferMechanism's `value <TransferMechanism.value>` (possibly its `previous_value <TransferMechanism.previous_value>`)
-to the `termination_measure <TransferMechanism.termination_measure>` function, and comparing the result to the
-`termination_threshold <TransferMechanism.termination_threshold>` using the operator specified by the
-`termination_comparison_op <TransferMechanism.termination_comparison_op>` operator.  Updating continues until the result
-is either true, or the number of updates reaches `max_executions_before_finished
+TransferMechanism's `value <TransferMechanism.value>` (and possibly its `previous_value
+<TransferMechanism.previous_value>`) to the `termination_measure <TransferMechanism.termination_measure>` function,
+and comparing the result to the `termination_threshold <TransferMechanism.termination_threshold>` using the operator
+specified by the `termination_comparison_op <TransferMechanism.termination_comparison_op>` operator.  Updating
+continues until the result is either true, or the number of updates reaches `max_executions_before_finished
 <Component.max_executions_before_finished>`.  The number of updates that took place is contained in
-`num_executions_before_finished <Component.num_executions_before_finished>`.   By default, the termination condition
-for a  TransferMechanism is a measure of its convergence, using the `Distance` Function with the
-`MAX_ABS_DIFF` metric as its `termination_measure <TransferMechanism.termination_measure>`; this computes the
-elementwise difference between the current `value <TransferMechanism.value>` and `previous_value
-<TransferMechanism.previous_value>`, and updating terminates when that is less than or equal to the
-`termination_threshold <TransferMechanism.termination_threshold>`.
+`num_executions_before_finished <Component.num_executions_before_finished>`.
 
+By default, the termination condition for a  TransferMechanism is a measure of its convergence.  Specifically,
+the default for its `termination_measure <TransferMechanism.termination_measure>` is the `Distance` Function with
+`MAX_ABS_DIFF` its metric; *LESS_THAN_OR_EQUAL* for its `termination_comparasion_op
+<TransferMechanism.termination_comparasion_op>`; and ``0.01`` for its `termination_threshold
+<TransferMechanism.termination_threshold>`.  This computes the elementwise difference between the current `value
+<TransferMechanism.value>` and `previous_value <TransferMechanism.previous_value>`, and updating terminates when that
+is less than or equal to the `termination_threshold <TransferMechanism.termination_threshold>`.  However, other
+measures can be used, by assigning a different function to the **termination_measure** argument of the
+TransferMechanism's constructor, and a corresponding **termination_comparison_op**. The **termination_measure** must
+take one argument that is an array of length 1 or 2;  that is, it has either one or two items in its outermost
+dimension (axis 0).  It it can accept an argument of length 1, then it is passed only the current `value
+<TransferMechanism.value>` of the TransferMechanism each time it is executed.  This is typically the case for
+measures that evaluate whether one of the elements of the Mechanism's `value <TransferMechanism.value>` has exceeded
+the specificed **termination_threshold** (e.g., using the max function).  If the **termination_measure** requires an
+array of length two, then it is passed both the TransferMechanism's current `value <TransferMechanism.value>` (as
+the 1st element of the array) and its `previous_value  <TransferMechanism.previous_value>` (as the 2nd element of
+the array).  This is typically used to compute whether the `value <TransferMechanism.value>` of the TransferMechanism
+has converged (i.e., changed less than the amoung specified by **termination_threshold** (e.g., using the
+`Distance` Function, which requires an array of length 2).
 
 .. _Transfer_Reinitialization:
 

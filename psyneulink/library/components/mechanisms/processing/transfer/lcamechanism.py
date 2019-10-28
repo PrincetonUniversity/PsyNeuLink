@@ -110,7 +110,7 @@ similarly-named attributes.  Rather, they are used to specify the `termination_t
 <TransferMechanism.termination_threshold>`, `termination_measure <TransferMechanism.termination_measure>`,  
 and `termination_comparison_op <TransferMechanism.termination_comparison_op>` attributes; these can also be 
 specified directly as arguments of the LCAMechanism's constructor in order to implement other termination conditions
-(see `TransferMechanism <Transfer_Execution_Termination>` and `RecurrentTransferMechanism
+(see `TransferMechanism <Transfer_Termination>` and `RecurrentTransferMechanism
 <Recurrent_Transfer_Termination>`for additional details).
 
 COMMENT:
