@@ -1675,24 +1675,11 @@ class TransferMechanism(ProcessingMechanism_Base):
         value = self.parameters.value._get(context)
         previous_value = self.parameters.previous_value._get(context)
 
-        # # MODIFIED 10/28/19 OLD:
-        # try:
-        #     status = measure([value, previous_value])
-        # except:
-        #     status = measure(value)
-        # # MODIFIED 10/28/19 NEW: [JDC]
-        # try:
-        #     status = measure(np.squeeze(value))
-        #     # status = measure(value)
-        # except:
-        #     status = measure([value, previous_value])
-        # MODIFIED 10/28/19 NEWER: [JDC]
         if self._termination_measure_num_items_expected==1:
             # Squeeze to collapse 2d array with single item
             status = measure(np.squeeze(value))
         else:
             status = measure([value, previous_value])
-        # MODIFIED 10/28/19 END
 
         self.parameters.termination_measure_value._set(status, context=context, override=True)
 
