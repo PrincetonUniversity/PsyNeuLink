@@ -66,9 +66,9 @@ with a `matrix <LCAMechanism.matrix>` in which the diagonal consists of uniform 
 
 The **noise**, **leak**, **initial_value**, and **time_step_size** arguments are used to implement the
 `LeakyCompetingIntegrator` as the LCAMechanism's `integrator_function <TransferMechanism.integrator_function>`.
-This is only used used when `integrator_mode <Transfer_Integrator_Mode>` is True.  If `integrator_mode
-<TransferMechanism.integrator_mode>` is False, the `LeakyCompetingIntegrator` function is skipped entirely,
-and all related arguments (**noise**, **leak**, **initial_value**, and **time_step_size**) have no effect.
+This is only used used when `integrator_mode <Transfer_Integrator_Mode>` is True (which it is by default).  If
+`integrator_mode <TransferMechanism.integrator_mode>` is False, the `LeakyCompetingIntegrator` function is skipped
+entirely, and all related arguments (**noise**, **leak**, **initial_value**, and **time_step_size**) have no effect.
 
 .. _LCAMechanism_Threshold:
 
@@ -79,7 +79,7 @@ The **threshold** and **threshold_criterion** arguments specify the conditions u
 LCAMechanism terminates if `integrator_mode <Transfer_Integrator_Mode>` is True.  If **threshold** is None
 (the default), then the LCAMechanism will update its `value <Mechanism_Base.value>` and the `value <OutputPort.value>`
 of each `OutputPort` only once each time it is executed.  If a **threshold** is specified, then it will continue
-to execute until the condition specified by **threshold_criterion** is True; this can be specified using on of the
+to execute until the condition specified by **threshold_criterion** is True; this can be specified using one of the
 following keywords:
 
   * *VALUE* --  (default) True when any element of the LCAMechanism's `value <Mechanism_Base.value>` is equal to or
@@ -91,6 +91,9 @@ following keywords:
   * *MAX_VS_AVG* -- True when the element of the LCAMechanism's `value <Mechanism_Base.value>` with the highest
     values is greater than the average of the others by an amount that equals or exceeds **threshold**;
 
+  * *CONVERGENCE* -- True when the no element of the LCAMechanism's current `value <Mechanism_Base.value>`
+    differs from its value on the previous update by more than **threshold**.
+
 .. _LCAMechanism_DDM_APPROXIMATION:
 
 For an LCAMechanism with *exactly* two elements, *MAX_VS_NEXT* implements a close approximation of the `threshold 
@@ -99,6 +102,8 @@ For an LCAMechanism with *exactly* two elements, *MAX_VS_NEXT* implements a clos
 `Bogacz et al (2006) <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_). For an LCAMechanism with more than two 
 elements, *MAX_VS_NEXT* and *MAX_VS_AVG* implements threshold approximations with different properties 
 (see `McMillen & Holmes, 2006 <http://www.sciencedirect.com/science/article/pii/S0022249605000891>`_).
+**CONVERGENCE** (the default for a TransferMechanism) implements a "settling" process, in which the Mechanism
+stops executing when updating produces sufficiently small changes.
 
 Note that **threshold** and **threshold_criterion** are convenience arguments, and are not associated with
 similarly-named attributes.  Rather, they are used to specify the `termination_threshold 
@@ -173,21 +178,23 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.functions.selectionfunctions import max_vs_avg, max_vs_next, MAX_VS_NEXT, MAX_VS_AVG
+from psyneulink.core.components.functions.objectivefunctions import Distance, MAX_ABS_DIFF
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import LeakyCompetingIntegrator
 from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.components.ports.outputport import PRIMARY, StandardOutputPorts
 from psyneulink.core.globals.keywords import \
-    BETA, ENERGY, ENTROPY, FUNCTION, GREATER_THAN_OR_EQUAL, INITIALIZER, LCA_MECHANISM, NAME, NOISE, \
-    OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, RATE, RESULT, \
-    TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, THRESHOLD, TIME_STEP_SIZE, VALUE
+    BETA, CONVERGENCE, ENERGY, ENTROPY, FUNCTION, GREATER_THAN_OR_EQUAL, INITIALIZER, \
+    LCA_MECHANISM, LESS_THAN_OR_EQUAL, NAME, NOISE, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, \
+    RATE, RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, TIME_STEP_SIZE, \
+    VALUE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferMechanism
 
-__all__ = ['LCAMechanism', 'LCAMechanism_OUTPUT', 'LCAError']
+__all__ = ['LCAMechanism', 'LCAMechanism_OUTPUT', 'LCAError', 'CONVERGENCE']
 
 
 logger = logging.getLogger(__name__)
@@ -209,55 +216,15 @@ class LCAMechanism_OUTPUT():
             An LCAMechanism has the following `Standard OutputPorts <OutputPort_Standard>` in addition to those of a
             `RecurrentTransferMechanism <RecurrentTransferMechanism_Standard_OutputPorts>`:
 
-            COMMENT:
-            .. _LCAMechanism_RESULT:
-
-            *RESULT* : 1d np.array
-                the LCAMechanism's `value <Mechanism_Base.value>`.
-
-            .. _LCAMechanism_MEAN:
-
-            *OUTPUT_MEAN* : float
-                the mean of the elements in the LCAMechanism's `value <Mechanism_Base.value>`;.
-
-            .. _LCAMechanism_VARIANCE:
-
-            *OUTPUT_VARIANCE* : float
-                the variance of the elements in the LCAMechanism's `value <Mechanism_Base.value>`;.
-
-            .. _LCAMechanism_ENERGY:
-
-            *ENERGY* : float
-                the energy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,
-                calculated using the `Stability` Function using the `ENERGY` metric.
-
-            .. _LCAMechanism_ENTROPY:
-
-            *ENTROPY* : float
-                the entropy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,
-                calculated using the `Stability` Function using the `ENTROPY <CROSS_ENTROPY>` metric.
-            COMMENT
-
             .. _LCAMechanism_MAX_VS_NEXT_OUTPUT_PORT:
 
             *MAX_VS_NEXT* : float
-                COMMENT:
-                a two-element Numpy array containing the index of the element of
-                `RESULT <LCAMechanism_OUTPUT.RESULT>` with the highest value (element 1) and the difference
-                between that and the next highest one in `TRANSFER_RESULT` (element 2)
-                COMMENT
                 the difference between the two elements of the LCAMechanism's `value <Mechanism_Base.value>`
                 with the highest values.
 
             .. _LCAMechanism_MAX_VS_AVG_OUTPUT_PORT:
 
             *MAX_VS_AVG* : float
-                COMMENT:
-                a two-element Numpy array containing the index of the element of
-                `RESULT` with the highest value (element 1) and the difference
-                between that and the average of the value of all of `RESULT`'s
-                other elements
-                COMMENT
                 the difference between the element of the LCAMechanism's `value <Mechanism_Base.value>`
                 and the average of all of the other elements.
 
@@ -362,7 +329,7 @@ class LCAMechanism(RecurrentTransferMechanism):
         specifes the value at which the Mechanism's `is_finished` attribute is set to True
         (see `LCAMechanism_Threshold` for additional details).
 
-    threshold_criterion : VALUE, MAX_VS_NEXT, MAX_VS_AVG, str, or int : default VALUE
+    threshold_criterion : *VALUE*, *MAX_VS_NEXT*, *MAX_VS_AVG*, or *CONVERGENCE*
         specifies the criterion that is used to evaluate whether the threshold has been reached. If *MAX_VS_NEXT* or
         *MAX_VS_AVG* is specified, then the length of the LCAMCechanism's `value <Mechanism_Base.value>` must be at
         least 2 (see `LCAMechanism_Threshold` for additional details).
@@ -634,9 +601,12 @@ class LCAMechanism(RecurrentTransferMechanism):
                 elif threshold_criterion == MAX_VS_AVG:
                     termination_measure = max_vs_avg
                     termination_comparison_op = GREATER_THAN_OR_EQUAL
+                elif threshold_criterion == CONVERGENCE:
+                    termination_measure = Distance(metric=MAX_ABS_DIFF)
+                    termination_comparison_op = LESS_THAN_OR_EQUAL
                 else:
                     raise LCAError(f"Unrecognized value provided to 'threshold_criterion arg of {self.__name__}: "
-                                   f"{threshold_criterion};  must be VALUE, MAX_VS_NEXT, or MAX_VS_AVG.")
+                                   f"{threshold_criterion};  must be VALUE, MAX_VS_NEXT, MAX_VS_AVG or CONVERGENCE")
         else:
             termination_measure = termination_measure or (lambda x: max(x))
             termination_comparison_op = termination_comparison_op or GREATER_THAN_OR_EQUAL

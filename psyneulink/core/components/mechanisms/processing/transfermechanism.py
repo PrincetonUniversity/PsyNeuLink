@@ -419,9 +419,10 @@ from psyneulink.core.globals.utilities import all_within_range, append_type_to_n
 from psyneulink.core.scheduling.condition import Never
 
 __all__ = [
-    'INITIAL_VALUE', 'CLIP',  'INTEGRATOR_FUNCTION', 'INTEGRATION_RATE', 'Transfer_DEFAULT_BIAS',
-    'Transfer_DEFAULT_GAIN', 'Transfer_DEFAULT_LENGTH', 'Transfer_DEFAULT_OFFSET', 'TRANSFER_OUTPUT',
-    'TransferError', 'TransferMechanism',
+    'INITIAL_VALUE', 'CLIP',  'INTEGRATOR_FUNCTION', 'INTEGRATION_RATE',
+    'TERMINATION_THRESHOLD', 'TERMINATION_MEASURE', 'TERMINATION_MEASURE_VALUE',
+    'Transfer_DEFAULT_BIAS', 'Transfer_DEFAULT_GAIN', 'Transfer_DEFAULT_LENGTH', 'Transfer_DEFAULT_OFFSET',
+    'TRANSFER_OUTPUT', 'TransferError', 'TransferMechanism',
 ]
 
 # TransferMechanism parameter keywords:
@@ -429,6 +430,9 @@ CLIP = "clip"
 INTEGRATOR_FUNCTION = 'integrator_function'
 INTEGRATION_RATE = "integration_rate"
 INITIAL_VALUE = 'initial_value'
+TERMINATION_THRESHOLD = 'termination_threshold'
+TERMINATION_MEASURE = 'termination_measure'
+TERMINATION_MEASURE_VALUE = 'termination_measure_value'
 
 # TransferMechanism default parameter values:
 Transfer_DEFAULT_LENGTH = 1
@@ -1612,6 +1616,29 @@ class TransferMechanism(ProcessingMechanism_Base):
         else:
             return self._get_instantaneous_function_input(variable, noise)
 
+    def _instantiate_attributes_after_function(self, context=None):
+        """Determine numberr of items expected by termination_measure"""
+        super()._instantiate_attributes_after_function(context)
+        
+        measure = self.termination_measure
+        try:
+            # If measure is a Function, use its default_variable to determine expected number of items
+            self._termination_measure_num_items_expected = len(measure.parameters.variable.default_value)
+        except:
+            # Otherwise, use "duck typing"
+            try:
+                # Try a single item first
+                measure(np.array([0,0]))
+                self._termination_measure_num_items_expected = 1
+            except:
+                try:
+                    # termination_measure takes two arguments -- value and previous_value -- (e.g., Distance
+                    measure(np.array([[0,0],[0,0]]))
+                    self._termination_measure_num_items_expected = 2
+                except:
+                    assert False, f"PROGRAM ERROR: Unable to determine length of input for" \
+                                  f" {repr(TERMINATION_MEASURE)} arg of {self.name}"
+
     def _report_mechanism_execution(self, input, params, output, context=None):
         """Override super to report previous_input rather than input, and selected params
         """
@@ -1624,34 +1651,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         del print_params[CLIP]
 
         super()._report_mechanism_execution(input_val=print_input, params=print_params, context=context)
-
-    # # MODIFIED 10/24/19 OLD:
-    # def delta(self, value=NotImplemented, context=None):
-    #     if value is NotImplemented:
-    #         value = self.parameters.value._get(context)
-    #     return self.termination_function([value[0], self.parameters.previous_value._get(context)[0]])
-    #
-    # @handle_external_context()
-    # def is_converged(self, value=NotImplemented, context=None):
-    #     # Check for convergence
-    #     if (
-    #         self.termination_threshold is not None
-    #         and self.parameters.previous_value._get(context) is not None
-    #         and self.initialization_status != ContextFlags.INITIALIZING
-    #     ):
-    #         if self.delta(value, context) <= self.termination_threshold:
-    #             return True
-    #         elif self.get_current_execution_time(context).pass_ >= self.max_passes:
-    #             raise TransferError("Maximum number of executions ({}) has occurred before reaching "
-    #                                 "termination_threshold ({}) for {} in trial {} of run {}".
-    #                                 format(self.max_passes, self.termination_threshold, self.name,
-    #                                        self.get_current_execution_time(context).trial, self.get_current_execution_time(context).run))
-    #         else:
-    #             return False
-    #     # Otherwise just return True
-    #     else:
-    #         return None
-    # MODIFIED 10/24/19 END
 
     @handle_external_context()
     def is_finished(self, context=None):
@@ -1671,19 +1670,29 @@ class TransferMechanism(ProcessingMechanism_Base):
             # return True
             return self.parameters.is_finished_flag._get(context)
 
-        metric = self.parameters.termination_measure._get(context)
+        measure = self.termination_measure
         comparator = self.parameters.termination_comparison_op._get(context)
         value = self.parameters.value._get(context)
         previous_value = self.parameters.previous_value._get(context)
 
+        # # MODIFIED 10/28/19 OLD:
         # try:
-        #     status = metric([value, previous_value])
+        #     status = measure([value, previous_value])
         # except:
-        #     status = metric(value)
-        try:
-            status = metric(np.squeeze(value))
-        except:
-            status = metric([value, previous_value])
+        #     status = measure(value)
+        # # MODIFIED 10/28/19 NEW: [JDC]
+        # try:
+        #     status = measure(np.squeeze(value))
+        #     # status = measure(value)
+        # except:
+        #     status = measure([value, previous_value])
+        # MODIFIED 10/28/19 NEWER: [JDC]
+        if self._termination_measure_num_items_expected==1:
+            # Squeeze to collapse 2d array with single item
+            status = measure(np.squeeze(value))
+        else:
+            status = measure([value, previous_value])
+        # MODIFIED 10/28/19 END
 
         self.parameters.termination_measure_value._set(status, context=context, override=True)
 

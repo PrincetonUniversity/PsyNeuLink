@@ -359,6 +359,7 @@ DISTANCE_METRICS_NAMES = DISTANCE_METRICS._names()
 
 ENERGY = 'energy'
 ENTROPY = 'entropy'
+CONVERGENCE = 'CONVERGENCE'
 
 
 # **********************************************************************************************************************
