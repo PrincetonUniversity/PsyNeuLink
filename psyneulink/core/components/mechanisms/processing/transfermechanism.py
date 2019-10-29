@@ -484,6 +484,13 @@ def _integrator_mode_setter(value, owning_component=None, context=None):
                     owning_component.reinitialize(context=context)
             owning_component._parameter_components.add(owning_component.integrator_function)
         owning_component.parameters.has_initializers._set(True, context)
+        if (
+            not isinstance(
+                owning_component.integrator_function,
+                IntegratorFunction
+            )
+        ):
+            owning_component._needs_integrator_function_init = True
     elif value is False:
         owning_component.parameters.has_initializers._set(False, context)
         if not hasattr(owning_component, "reinitialize_when"):
@@ -982,6 +989,10 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                                self.standard_output_ports,
                                                                indices=PRIMARY)
 
+        # this is checked during execution to see if integrator_mode was set
+        # to True after initialization
+        self._needs_integrator_function_init = False
+
         super(TransferMechanism, self).__init__(
                 default_variable=default_variable,
                 size=size,
@@ -1316,7 +1327,10 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         integration_rate = self.get_current_mechanism_param(INTEGRATION_RATE, context)
 
-        if self.initialization_status == ContextFlags.INITIALIZING:
+        if (
+            self.initialization_status == ContextFlags.INITIALIZING
+            or self._needs_integrator_function_init
+        ):
             self._instantiate_integrator_function(variable=function_variable,
                                                   noise=noise,
                                                   initializer=initial_value,
@@ -1327,6 +1341,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             initial_value = self.integrator_function.initializer
             integration_rate = self.integrator_function.rate
             noise = self.integrator_function.noise
+            self._needs_integrator_function_init = False
 
         current_input = self.integrator_function.execute(
             function_variable,

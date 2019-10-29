@@ -1882,6 +1882,11 @@ class TestIntegratorMode:
         assert np.allclose(expected_result_s1, result[0])
         assert np.allclose(expected_result_s2, result[1])
 
+    def test_set_integrator_mode_after_init(self):
+        T = TransferMechanism()
+        T.integrator_mode = True
+        T.execute(1)
+
 
 class TestOnResumeIntegratorMode:
     def test_integrator_mode_value_spec(self):
