@@ -709,7 +709,7 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         if threshold_criterion in {MAX_VS_NEXT, MAX_VS_AVG}:
             if len(value[0]) < 2:
-                raise LCAError(f"Use of 'MAX_VS_NEXT' or 'MAX_VS_AVG' as specification for " 
+                raise LCAError(f"Use of 'MAX_VS_NEXT' or 'MAX_VS_AVG' as specification for "
                                f"'threshold_criterion' arg of {self.name} requires that its "
                                f"{VALUE} have a length of 2 or greater (it is currently {len(value[0])}).")
             self.output_ports.append(threshold_criterion)

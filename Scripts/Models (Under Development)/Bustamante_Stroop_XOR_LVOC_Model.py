@@ -73,11 +73,11 @@ task_decision = pnl.DDM(
     ]
 )
 
-task_decision.set_log_conditions('func_drift_rate')     
-task_decision.set_log_conditions('mod_drift_rate')      
-task_decision.set_log_conditions('PROBABILITY_LOWER_THRESHOLD')     
-task_decision.set_log_conditions('PROBABILITY_UPPER_THRESHOLD')     
-color_task.set_log_conditions('value')      
+task_decision.set_log_conditions('func_drift_rate')
+task_decision.set_log_conditions('mod_drift_rate')
+task_decision.set_log_conditions('PROBABILITY_LOWER_THRESHOLD')
+task_decision.set_log_conditions('PROBABILITY_UPPER_THRESHOLD')
+color_task.set_log_conditions('value')
 word_task.set_log_conditions('value')
 
 
@@ -129,7 +129,7 @@ lvoc = pnl.OptimizationControlMechanism(
 # print(lvoc.loggable_items)
 lvoc.set_log_conditions('value')
 # print(lvoc.loggable_items)
-# lvoc.set_log_conditions('variable')     
+# lvoc.set_log_conditions('variable')
 # lvoc.agent_rep.set_log_conditions('regression_weights')
 
 lvoc.reportOutputPref=True
@@ -163,7 +163,7 @@ for i in range(3): # testing for three subjects, 200 trials per subject
 
     def print_weights():
         print("OUTCOME = ", lvoc.objective_mechanism.output_ports[pnl.OUTCOME].value)
-        print("WEIGHTS = ", lvoc.agent_rep.parameters.regression_weights.get(i)) 
+        print("WEIGHTS = ", lvoc.agent_rep.parameters.regression_weights.get(i))
         print("LVOC VALUE = ", lvoc.value)
     # duration = timeit.timeit(c.run(inputs=input_dict, context=i), number=1) #number=2
     c.run(inputs=input_dict,
@@ -171,7 +171,7 @@ for i in range(3): # testing for three subjects, 200 trials per subject
           call_after_trial=print_weights) #number=2, num_trials
     # duration = time.time() - start_time
     # print('PREDICTION WEIGHTS T2', lvoc.agent_rep.parameters.regression_weights.get(i))
-    # print("WEIGHTS = ", lvoc.agent_rep.parameters.regression_weights.get(i)) 
+    # print("WEIGHTS = ", lvoc.agent_rep.parameters.regression_weights.get(i))
     # print("OUTCOME = ", lvoc.objective_mechanism.output_ports[pnl.OUTCOME].value)
     # print('LVOC Log\n')
     # print(lvoc.log.csv)
@@ -195,7 +195,7 @@ for i in range(3): # testing for three subjects, 200 trials per subject
 # ------------------------------------------------------------------------------------------------------------------
 
 print('\n\n\nLVOC Log\n')
-print(lvoc.log.csv()) 
+print(lvoc.log.csv())
 # print(lvoc.log.nparray())
 # # print(lvoc.log.print_entries())
 
@@ -210,7 +210,7 @@ print(lvoc.log.csv())
 # print(word_task.log.nparray())
 
 # file_lvoc = open("LVOC_200_LOG.csv", 'w')
-# file_lvoc.write(lvoc.log.csv()) 
+# file_lvoc.write(lvoc.log.csv())
 # file_lvoc.close()
 
 # file_task = open("LVOC_200_TASK.csv", 'w')
