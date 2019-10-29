@@ -668,7 +668,6 @@ class DefaultAllocationFunction(Function_Base):
         """
         num_control_signals = Parameter(1, stateful=False)
 
-    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  params=None,
