@@ -327,7 +327,7 @@ class SGDOptimizer(Optimizer):
             node_idx_ir = ctx.int32_ty(node_idx)
             afferent_node_index_ir = ctx.int32_ty(afferent_node_index)
 
-            delta_w_ptr = builder.gep(delta_w,[zero,node_idx_ir,afferent_node_index_ir])            
+            delta_w_ptr = builder.gep(delta_w,[zero,node_idx_ir,afferent_node_index_ir])
             weights_llvmlite, _, _ = self._pytorch_model._gen_get_node_weight_ptr(ctx, builder, model_params, node, afferent_node)
             
             multiplied_delta_w = self._pytorch_model._gen_inject_mat_scalar_mult(ctx, builder, delta_w_ptr, lr)
