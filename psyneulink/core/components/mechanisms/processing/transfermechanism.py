@@ -20,13 +20,13 @@ Sections
   * `Transfer_Overview`
   * `Transfer_Creation`
   * `Transfer_Structure`
-    * `TransferMechanism_InputPorts`
-    * `TransferMechanism_Function`
-    * `TransferMechanism_OutputPorts`
+        - `TransferMechanism_InputPorts`
+        - `TransferMechanism_Function`
+        - `TransferMechanism_OutputPorts`
   * `Transfer_Execution`
-    * `Transfer_Integration`
-    * `Transfer_Termination`
-    * `Transfer_Reinitialization`
+        - `Transfer_Integration`
+        - `Transfer_Termination`
+        - `Transfer_Reinitialization`
   * `Transfer_Class_Reference`
 
 .. _Transfer_Overview:
@@ -173,7 +173,7 @@ that it returns an output that is identical in shape to its input;  the function
 
 The result of the `function <TransferMechanism.function>` applied to the `value <InputPort.value>` of each InputPort
 is:
-    - appended to an array that represents the TransferMechanism's `value <TransferMechanism.value>`
+    - appended to an array that represents the TransferMechanism's `value <Mechanism_Base.value>`
     - assigned as the `value <OutputPort.value>` of the TransferMechanism's corresponding `OutputPort <OutputPort>`
 
 .. _TransferMechanism_OutputPorts:
@@ -215,8 +215,6 @@ input transformed using `step-wise` integration, in which each execution returns
 integration process).
 COMMENT
 
-.. _Transfer_Integration:
-
 When a TransferMechanism is executed, it transforms its input using its `function <TransferMechanism.function>` and
 the following parameters (in addition to any specified for the `function <TransferMechanism.function>`):
 
@@ -247,16 +245,18 @@ values, each of which is assigned as an item of the Mechanism's `value <Mechanis
 and the `value <OutputPort.value>` of the corresponding `OutputPort` in its `ouput_ports
 <TransferMechanism.output_ports>`.
 
+.. _Transfer_Integration:
+
 *Integration*
 ~~~~~~~~~~~~~
 
 If `integrator_mode <TransferMechanism.integrator_mode>` is False (the default), then the TransferMechanism updates its
 `value <Mechanism_Base.value>` and the `value <OutputPort.value>` of its `output_ports <TransferMechanism.output_ports>`
-without using its `integration_function <TransferMechanism.integration_function>`, as in the following example::
+without using its `integrator_function <TransferMechanism.integrator_function>`, as in the following example::
 
-    >>> my_mech = TransferMechanism(size=2)
+    >>> my_mech = pnl.TransferMechanism(size=2)
     >>> my_mech.execute([0.5, 1])
-    array([[0.5 1. ]])
+    array([[0.5, 1. ]])
 
 Notice that the result is the full linear transfer of the input (i.e., no integration occured).
 
@@ -265,14 +265,14 @@ step of integration per execution, or to continue to integrate until its termina
 A single step of integration is executed if no `termination_threshold <TransferMechanism.termination_threshold>` is
 specified (or it is None, the default), as in the following example::
 
-    >>> my_mech = TransferMechanism(size=2,
-    >>>                             integrator_mode=True)
+    >>> my_mech = pnl.TransferMechanism(size=2,
+    ...                                 integrator_mode=True)
     >>> my_mech.execute([0.5, 1])
-    array([[0.25 0.5 ]])
+    array([[0.25, 0.5 ]])
     >>> my_mech.execute([0.5, 1])
-    array([[0.375 0.75 ]])
+    array([[0.375, 0.75 ]])
     >>> my_mech.execute([0.5, 1])
-    array([[0.4375 0.875 ]])
+    array([[0.4375, 0.875 ]])
 
 Notice that every call to the ``my_execute`` produces a single step of integration (at the default `rate
 <TransferMechanism.rate>` of 0.5).  A single step is also executed if the Mechanism's `execute_until_finished
@@ -290,32 +290,32 @@ executions that took place is contained in `num_executions_before_finished <Comp
 
 By default, a TransferMechanism uses a convergence criterion to terminate integration, as in the following example::
 
-    >>> my_mech = TransferMechanism(size=2,
-    >>>                             integrator_mode=True,
-    >>>                             termination_threshold=0.1)
+    >>> my_mech = pnl.TransferMechanism(size=2,
+    ...                                 integrator_mode=True,
+    ...                                 termination_threshold=0.1)
     >>> my_mech.execute([0.5, 1])
-    array([[0.46875 0.9375 ]])
+    array([[0.46875, 0.9375 ]])
     >>> my_mech.num_executions_before_finished
     4
 
 In this case, the single call to ``my_mech.execute`` caused the Mechanism to integrate for 4 steps, until the
-difference between its current `value <TransferMechanism.value>` and its `previous value
+difference between its current `value <Mechanism_Base.value>` and its `previous value
 <TransferMechanism.previous_value>` is less than the specified **termination_threshold**.  However,
 the **termination_measure** and **termination_comparison_op** arguments can be used to congifure other termination
 conditions.  Thare are two broad types of termination condition.
 
 *Convergence* -- updating terminates based on the difference between the TransferMechanism's current `value
-<Mechanism_Base.value>` and its `previous_value <TransferMechanism.value>` (as in the example above).
+<Mechanism_Base.value>` and its `previous_value <TransferMechanism.previous_value>` (as in the example above).
 This is implemented by specifying **termination_measure** with a function that accepts a 2d array with *two items*
 (1d arrays) as its argument, and returns a scalar (the default for a TransferMechanism is the `Distance` Function with
 `MAX_ABS_DIFF` as its metric).  After each execution, the function is passed the Mechanism's current `value
-<Mechanism_Base.value>` as well as its `previous_value <TransferMechanism.value>`, and the scalar returned is
+<Mechanism_Base.value>` as well as its `previous_value <TransferMechanism.previous_value>`, and the scalar returned is
 compared to **termination_threshold** using the comparison operator specified by **termination_comparison_op** (which
 is *LESS_THAN_OR_EQUAL* by default).  Execution continues until this returns True.  Thus, in the example above,
 execution continued until the difference between the Mechanism's current `value <Mechanism_Base.value>` and
-`previous_value <TransferMechanism.value>` was less than or equal to 0.1.  A `Distance` Function with other metrics
-(e.g., *ENERGY* or *ENTROPY*) can be specified as the **termination_measure**, as can any other function that accepts
-a single argument that is a 2d array with two entries.
+`previous_value <TransferMechanism.previous_value>` was less than or equal to 0.1.  A `Distance` Function with other
+metrics (e.g., *ENERGY* or *ENTROPY*) can be specified as the **termination_measure**, as can any other function that
+accepts a single argument that is a 2d array with two entries.
 
 *Boundary termination* -- updating terminates when the TransferMechanism's current `value <Mechanism_Base.value>`
 meets the condition specified by the **termination_measure**, **termination_comparison_op** and
@@ -326,15 +326,15 @@ current `value <Mechanism_Base.value>`, and the scalar returned is compared to *
 comparison operator specified by **termination_comparison_op**.  Execution continues until this returns True, as in the
 following example::
 
-    >>> my_mech = TransferMechanism(size=2,
-    ...                             integrator_mode=True,
-    ...                             termination_measure=max,
-    ...                             termination_threshold=0.9,
-    ...                             termination_comparison_op=GREATER_THAN_OR_EQUAL)
-    >>> my_mech.execute([0,1]
-    array([[0.      0.96875]])
+    >>> my_mech = pnl.TransferMechanism(size=2,
+    ...                                 integrator_mode=True,
+    ...                                 termination_measure=max,
+    ...                                 termination_threshold=0.9,
+    ...                                 termination_comparison_op=pnl.GREATER_THAN_OR_EQUAL)
+    >>> my_mech.execute([0.5, 1])
+    array([[0.46875, 0.9375 ]])
     >>> my_mech.num_executions_before_finished
-    5
+    4
 
 Here, ``my_mech`` continued to execute for ``5`` times, until the element of the Mechanism's `value
 <Mechanism_Base.value>` with the greatest value exceeded ``0.9``.  Note that GREATER_THAN_EQUAL is a keyword for the
@@ -818,7 +818,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 corresponding to `rate <IntegratorFunction.rate>` of `integrator_function
                 <TransferMechanism.integrator_function>`). However, if there are any disagreements between these
                 (e.g., any of these parameters is specified in the constructor for an `IntegratorFunction` assigned
-                as the **integration_function** arg of the TransferMechanism), the values specified for the
+                as the **integrator_function** arg of the TransferMechanism), the values specified for the
                 `integrator_function <TransferMechanism.integrator_function>` take precedence, and their value(s) are
                 assigned as those of the corresponding parameters on the TransferMechanism.
 
@@ -835,7 +835,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         `True` (see `integrator_mode <TransferMechanism.integrator_mode>` for details).
 
     initial_value :  value, list or np.ndarray
-        determines the starting value for the `integration_function <TransferMechanism.integrator_function>`;  only
+        determines the starting value for the `integrator_function <TransferMechanism.integrator_function>`;  only
         relevant if `integrator_mode <TransferMechanism.integrator_mode>` is `True` and `integration_rate
         <TransferMechanism.integration_rate>` is not 1.0 (see `integrator_mode <TransferMechanism.integrator_mode>`
         for additional details).
