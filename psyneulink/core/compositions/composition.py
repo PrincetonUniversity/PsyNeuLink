@@ -3340,15 +3340,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # FIX 8/27/19 [JDC]:  GENERALIZE TO ControlMechanism
         # MODIFIED 8/12/19 NEW: [JDC] - AVOID DUPLCIATE CONTROL_RELATED PROJECTIONS
-        # Then, delete any ControlMechanism that has its monitored_output_ports attribute assigned
+        # Then, delete any ControlMechanism that has its monitor_for_control attribute assigned
         #    and any ObjectiveMechanism that projects to a ControlMechanism,
         #    as well as any projections to them specified in the pathway;
         #    this is to avoid instantiating projections to them that might conflict with those
         #    instantiated by their constructors or, for a controller, _add_controller()
         items_to_delete = []
-
         for i, item in enumerate(pathway):
-            if ((isinstance(item, ControlMechanism) and not item.add_during_composition_pathway)
+            if ((isinstance(item, ControlMechanism) and item.monitor_for_control)
                     or (isinstance(item, ObjectiveMechanism) and item._role == CONTROL)):
                 items_to_delete.append(item)
                 # Delete any projections to the ControlMechanism or ObjectiveMechanism specified in pathway
