@@ -125,7 +125,7 @@ argument of the LCControlMechanism's constructor.
 The ObjectiveFunction is listed in the LCControlMechanism's `objective_mechanism
 <LCControlMechanism.objective_mechanism>` attribute.  The OutputPorts it monitors are listed in the
 ObjectiveMechanism's `monitored_output_ports <ObjectiveMechanism.monitored_output_ports>` attribute) as well as the
-LCControlMechanism's `monitored_output_ports <LCControlMechanism.monitored_output_ports>` attribute.  These can be
+LCControlMechanism's `monitor_for_control <LCControlMechanism.monitor_for_control>` attribute.  These can be
 displayed using the LCControlMechanism's `show <LCControlMechanism.show>` method.
 
 .. _LCControlMechanism_Function:
@@ -491,7 +491,7 @@ class LCControlMechanism(ControlMechanism):
         the 'ObjectiveMechanism' used by the LCControlMechanism to aggregate the `value <OutputPort.value>`\\s of the
         OutputPorts used to drive its `phasic response <LCControlMechanism_Modes_Of_Operation>`.
 
-    monitored_output_ports : List[OutputPort]
+    monitor_for_control : List[OutputPort]
         list of the `OutputPorts <OutputPort>` that project to `objective_mechanism
         <LCControlMechanism.objective_mechanism>` (and also listed in the ObjectiveMechanism's `monitored_output_ports
         <ObjectiveMechanism.monitored_output_ports>` attribute);  these are used by the ObjectiveMechanism to
