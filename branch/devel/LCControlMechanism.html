@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCControlMechanism &mdash; PsyNeuLink 0.7.0.0+73.g696debd documentation</title>
+  <title>LCControlMechanism &mdash; PsyNeuLink 0.7.0.0+74.g9be811c documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.0.0+73.g696debd',
+              VERSION:'0.7.0.0+74.g9be811c',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.7.0.0+73
+                0.7.0.0+74
               </div>
             
           
@@ -260,7 +260,7 @@ for an EVCControlMechanism see 1st example under <a class="reference internal" h
 </div>
 <p>The ObjectiveFunction is listed in the LCControlMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> attribute.  The OutputPorts it monitors are listed in the
 ObjectiveMechanism’s <code class="xref any docutils literal"><span class="pre">monitored_output_ports</span></code> attribute) as well as the
-LCControlMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.monitored_output_ports" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.monitored_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_ports</span></code></a> attribute.  These can be
+LCControlMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.monitor_for_control" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.monitor_for_control"><code class="xref any py py-attr docutils literal"><span class="pre">monitor_for_control</span></code></a> attribute.  These can be
 displayed using the LCControlMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.show" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.show"><code class="xref any py py-meth docutils literal"><span class="pre">show</span></code></a> method.</p>
 </div>
 </div>
@@ -426,8 +426,8 @@ OutputPorts used to drive its <a class="reference internal" href="#lccontrolmech
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.monitored_output_ports">
-<code class="descname">monitored_output_ports</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.monitored_output_ports" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.monitor_for_control">
+<code class="descname">monitor_for_control</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.monitor_for_control" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>List[OutputPort]</em> – list of the <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a> that project to <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> (and also listed in the ObjectiveMechanism’s <code class="xref any docutils literal"><span class="pre">monitored_output_ports</span></code> attribute);  these are used by the ObjectiveMechanism to
 generate the ControlMechanism’s <a class="reference internal" href="ControlMechanism.html#controlmechanism-input"><span class="std std-ref">input</span></a>, which drives the <a class="reference internal" href="#lccontrolmechanism-modes-of-operation"><span class="std std-ref">phasic response</span></a> of its <code class="xref any docutils literal"><span class="pre">function</span></code>.</p>
 </dd></dl>
@@ -436,7 +436,7 @@ generate the ControlMechanism’s <a class="reference internal" href="ControlMec
 <dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.monitored_output_ports_weights_and_exponents">
 <code class="descname">monitored_output_ports_weights_and_exponents</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.monitored_output_ports_weights_and_exponents" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>List[Tuple(float, float)]</em> – each tuple in the list contains the weight and exponent associated with a corresponding item of
-<a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.monitored_output_ports" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.monitored_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_ports</span></code></a>;  these are the same as those in
+<code class="xref any docutils literal"><span class="pre">monitored_output_ports</span></code>;  these are the same as those in
 the <code class="xref any docutils literal"><span class="pre">monitored_output_ports_weights_and_exponents</span></code> attribute of the <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>, and are used by the ObjectiveMechanism’s <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to parametrize the contribution made to its output by each of the values that
 it monitors (see <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-function"><span class="std std-ref">ObjectiveMechanism Function</span></a>).</p>
 </dd></dl>
