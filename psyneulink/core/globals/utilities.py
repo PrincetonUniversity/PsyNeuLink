@@ -39,6 +39,7 @@ CONTENTS
 * `is_unit_interval`
 * `is_same_function_spec`
 * `is_component`
+* `is_comparison_operator`
 
 *ENUM*
 ~~~~~~
@@ -106,12 +107,13 @@ from enum import Enum, EnumMeta, IntEnum
 import collections
 import numpy as np
 
-from psyneulink.core.globals.keywords import DISTANCE_METRICS, EXPONENTIAL, GAUSSIAN, LINEAR, MATRIX_KEYWORD_VALUES, NAME, SINUSOID, VALUE
+from psyneulink.core.globals.keywords import \
+    comparison_operators, DISTANCE_METRICS, EXPONENTIAL, GAUSSIAN, LINEAR, MATRIX_KEYWORD_VALUES, NAME, SINUSOID, VALUE
 
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
     'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'NodeRole', 'get_class_attributes', 'flatten_list', 'get_all_explicit_arguments',
-    'get_modulationOperation_name', 'get_value_from_array', 'is_component',
+    'get_modulationOperation_name', 'get_value_from_array', 'is_comparison_operator', 'is_component',
     'is_distance_metric', 'is_matrix',
     'insert_list', 'is_matrix_spec', 'all_within_range', 'is_iterable',
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
@@ -1384,6 +1386,17 @@ def is_instance_or_subclass(candidate, spec):
     True if **candidate** is a subclass of **spec** or an instance thereof, False otherwise
     """
     return isinstance(candidate, spec) or (inspect.isclass(candidate) and issubclass(candidate, spec))
+
+def is_comparison_operator(o):
+    """
+    Returns
+    -------
+
+    True if **o** is an entry in comparison_operators dictionary (in keywords)
+    """
+    if o in comparison_operators.values():
+        return True
+    return False
 
 
 def make_readonly_property(val, name=None):

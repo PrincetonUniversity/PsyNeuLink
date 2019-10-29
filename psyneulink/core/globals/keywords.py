@@ -31,7 +31,7 @@ __all__ = [
     'AUTO_ASSOCIATIVE_PROJECTION', 'HAS_INITIALIZERS', 'AUTOASSOCIATIVE_LEARNING', 'AUTOASSOCIATIVE_LEARNING_MECHANISM',
     'BACKPROPAGATION_FUNCTION', 'BEFORE', 'BETA', 'BIAS', 'BOLD', 'BOTH', 'BOUNDS', 'BUFFER_FUNCTION',
     'CHANGED', 'CLAMP_INPUT', 'COMBINATION_FUNCTION_TYPE', 'COMBINE', 'COMBINE_MEANS_FUNCTION',
-    'COMBINE_OUTCOME_AND_COST_FUNCTION', 'COMMAND_LINE', 'comparison_dict', 'COMPARATOR_MECHANISM', 'COMPONENT',
+    'COMBINE_OUTCOME_AND_COST_FUNCTION', 'COMMAND_LINE', 'comparison_operators', 'COMPARATOR_MECHANISM', 'COMPONENT',
     'COMPONENT_INIT', 'COMPONENT_PREFERENCE_SET', 'COMPOSITION', 'COMPOSITION_INTERFACE_MECHANISM',
     'CONCATENATE_FUNCTION', 'CONDITION', 'CONDITIONS', 'CONSTANT', 'ContentAddressableMemory_FUNCTION', 'CONTEXT',
     'CONTROL', 'CONTROL_MECHANISM', 'CONTROL_PROJECTION',  'CONTROL_PROJECTION_PARAMS', 'CONTROL_PROJECTIONS',
@@ -422,12 +422,12 @@ GREATER_THAN_OR_EQUAL = '>='
 NOT_EQUAL = '!='
 
 import operator
-comparison_dict = {LESS_THAN : operator.lt,
-                   LESS_THAN_OR_EQUAL : operator.le,
-                   EQUAL : operator.eq,
-                   GREATER_THAN : operator.gt,
-                   GREATER_THAN_OR_EQUAL : operator.ge,
-                   NOT_EQUAL : operator.ne}
+comparison_operators = {LESS_THAN : operator.lt,
+                        LESS_THAN_OR_EQUAL : operator.le,
+                        EQUAL : operator.eq,
+                        GREATER_THAN : operator.gt,
+                        GREATER_THAN_OR_EQUAL : operator.ge,
+                        NOT_EQUAL : operator.ne}
 
 EID_SIMULATION = '-sim'
 EID_FROZEN = '-frozen'

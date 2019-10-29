@@ -120,19 +120,17 @@ When switching between `integrator_mode <TransferMechanism.integrator_mode>` = T
 <TransferMechanism.integrator_function>` may resume accumulating when the Mechanism returns to `integrator_mode
 <TransferMechanism.integrator_mode>` = True.
 
-        (1)     INSTANTANEOUS_MODE_VALUE - reinitialize the Mechanism with its own current value, so that the value
-        computed by
-                the Mechanism during "Instantaneous Mode" is where the `integrator_function
-                <TransferMechanism.integrator_function>` begins accumulating.
+    * *INSTANTANEOUS_MODE_VALUE* - reinitialize the Mechanism with its own current value,
+      so that the value computed by the Mechanism during "Instantaneous Mode" is where the
+      `integrator_function <TransferMechanism.integrator_function>` begins accumulating.
 
-        (2)     INTEGRATOR_MODE_VALUE - resume accumulation wherever the `integrator_function
-                <TransferMechanism.integrator_function>` left off the last time `integrator_mode
-                <TransferMechanism.integrator_mode>` was True.
+    * *INTEGRATOR_MODE_VALUE* - resume accumulation wherever the `integrator_function
+      <TransferMechanism.integrator_function>` left off the last time `integrator_mode
+      <TransferMechanism.integrator_mode>` was True.
 
-        (3)     REINITIALIZE - call the `integrator_function's <TransferMechanism.integrator_function>` `reinitialize
-        method
-                <AdaptiveIntegrator.reinitialize>` so that accumulation Mechanism begins at `initial_value
-                <TransferMechanism.initial_value>`
+    * *REINITIALIZE* - call the `integrator_function <TransferMechanism.integrator_function>`\\s
+      `reinitialize <AdaptiveIntegrator.reinitialize>` method, so that accumulation begins at
+      `initial_value <TransferMechanism.initial_value>`
 
 Finally, the TransferMechanism has two arguments that can adjust the final result of the mechanism: **clip** and
 **noise**. If `integrator_mode <TransferMechanism.integrator_mode>` is False, `clip <TransferMechanism.clip>` and
@@ -142,7 +140,7 @@ before setting it as the mechanism's value. If `integrator_mode <TransferMechani
 (as its `noise <IntegratorFunction.noise>` parameter -- in the same manner as `integration_rate
 <TransferMechanism.integration_rate>` and `initial_value <TransferMechanism.intial_value>`), whereas `clip
 <TransferMechanism.clip>` modifies the value returned by the mechanism's `function <TransferMechanism.function>`
-before setting it as the TransferMechanism's `value <TransferMechanism.value>`.
+before setting it as the TransferMechanism's `value <Mechanism_Base.value>`.
 
 .. _Transfer_Structure:
 
@@ -200,7 +198,7 @@ all of these can be modulated by one or more `GatingSignals <GatingSignal_Modula
        If any OutputPorts are specified in the **output_ports** argument of the TransferMechanism's constructor,
        then, `as with any Mechanism <Mechanism_Default_Port_Suppression_Note>`, its default OutputPorts are not
        automatically generated.  Therefore, an OutputPort with the appropriate `index <OutputPort.index>` must be
-       explicitly specified for each and every item of the Mechanism's `value <TransferMechanism.value>` (corresponding
+       explicitly specified for each and every item of the Mechanism's `value <Mechanism_Base.value>` (corresponding
        to each InputPort) for which an OutputPort is needed.
 
 .. _Transfer_Execution:
@@ -218,9 +216,6 @@ integration process).
 COMMENT
 
 .. _Transfer_Integration:
-
-*Integration*
-~~~~~~~~~~~~~
 
 When a TransferMechanism is executed, it transforms its input using its `function <TransferMechanism.function>` and
 the following parameters (in addition to any specified for the `function <TransferMechanism.function>`):
@@ -248,53 +243,108 @@ the following parameters (in addition to any specified for the `function <Transf
 
 After each execution, the TransferMechanism's `function <TransferMechanism.function>` -- applied to the `value
 <InputPort.value>` of each of its `input_ports <TransferMechanism.input_ports>` -- generates a corresponding set of
-values, each of which is assigned as an item of the Mechanism's `value <TransferMechanism.value>` attribute,
+values, each of which is assigned as an item of the Mechanism's `value <Mechanism_Base.value>` attribute,
 and the `value <OutputPort.value>` of the corresponding `OutputPort` in its `ouput_ports
 <TransferMechanism.output_ports>`.
 
-If `integrator_mode <TransferMechanism.integrator_mode>` is False, then the TransferMechanism updates its `value
-<TransferMechanism.value>` and the `value <OutputPort.value>` of its `output_ports <TransferMechanism.output_ports>`
-once each time it is executed. If `integrator_mode <TransferMechanism.integrator_mode>` is True, then it can be
-configured to conduct a single update per execution, or to continue to update until its termination condition is met.
-A single update is executed if no `termination_threshold <TransferMechanism.termination_threshold>` is specified
-(i.e., it is None) or, if one is specified, the Mechanism's `execute_until_finished <Component.execute_until_finished>`
-attribute is explicitly set to False.
+*Integration*
+~~~~~~~~~~~~~
+
+If `integrator_mode <TransferMechanism.integrator_mode>` is False (the default), then the TransferMechanism updates its
+`value <Mechanism_Base.value>` and the `value <OutputPort.value>` of its `output_ports <TransferMechanism.output_ports>`
+without using its `integration_function <TransferMechanism.integration_function>`, as in the following example::
+
+    >>> my_mech = TransferMechanism(size=2)
+    >>> my_mech.execute([0.5, 1])
+    array([[0.5 1. ]])
+
+Notice that the result is the full linear transfer of the input (i.e., no integration occured).
+
+If `integrator_mode <TransferMechanism.integrator_mode>` is True, then it can be configured to conduct a single
+step of integration per execution, or to continue to integrate until its termination condition is met.
+A single step of integration is executed if no `termination_threshold <TransferMechanism.termination_threshold>` is
+specified (or it is None, the default), as in the following example::
+
+    >>> my_mech = TransferMechanism(size=2,
+    >>>                             integrator_mode=True)
+    >>> my_mech.execute([0.5, 1])
+    array([[0.25 0.5 ]])
+    >>> my_mech.execute([0.5, 1])
+    array([[0.375 0.75 ]])
+    >>> my_mech.execute([0.5, 1])
+    array([[0.4375 0.875 ]])
+
+Notice that every call to the ``my_execute`` produces a single step of integration (at the default `rate
+<TransferMechanism.rate>` of 0.5).  A single step is also executed if the Mechanism's `execute_until_finished
+<Component.execute_until_finished>` attribute is set to False, even if **termination_threshold** is specified.
 
 .. _Transfer_Termination:
 
 *Termination*
 ~~~~~~~~~~~~~
 
-If `integrator_mode <TransferMechanism.integrator_mode>` is True, and a `termination_threshold
-<TransferMechanism.termination_threshold>` is specified, then a TransferMechanism continues to update (using its
-current input) until its termination condition is met.  The termination condition is evaluated by passing the
-TransferMechanism's `value <TransferMechanism.value>` (and possibly its `previous_value
-<TransferMechanism.previous_value>`) to the `termination_measure <TransferMechanism.termination_measure>` function,
-and comparing the result to the `termination_threshold <TransferMechanism.termination_threshold>` using the operator
-specified by the `termination_comparison_op <TransferMechanism.termination_comparison_op>` operator.  Updating
-continues until the result is either true, or the number of updates reaches `max_executions_before_finished
-<Component.max_executions_before_finished>`.  The number of updates that took place is contained in
-`num_executions_before_finished <Component.num_executions_before_finished>`.
+If `integrator_mode <TransferMechanism.integrator_mode>` is True, and **termination_threshold** is specified, then the
+TransferMechanism continues to integrate (using its current input) until its termination condition is met, or the number
+of executions reaches `max_executions_before_finished <Component.max_executions_before_finished>`.  The number of
+executions that took place is contained in `num_executions_before_finished <Component.num_executions_before_finished>`.
 
-By default, the termination condition for a  TransferMechanism is a measure of its convergence.  Specifically,
-the default for its `termination_measure <TransferMechanism.termination_measure>` is the `Distance` Function with
-`MAX_ABS_DIFF` its metric; *LESS_THAN_OR_EQUAL* for its `termination_comparasion_op
-<TransferMechanism.termination_comparasion_op>`; and ``0.01`` for its `termination_threshold
-<TransferMechanism.termination_threshold>`.  This computes the elementwise difference between the current `value
-<TransferMechanism.value>` and `previous_value <TransferMechanism.previous_value>`, and updating terminates when that
-is less than or equal to the `termination_threshold <TransferMechanism.termination_threshold>`.  However, other
-measures can be used, by assigning a different function to the **termination_measure** argument of the
-TransferMechanism's constructor, and a corresponding **termination_comparison_op**. The **termination_measure** must
-take one argument that is an array of length 1 or 2;  that is, it has either one or two items in its outermost
-dimension (axis 0).  It it can accept an argument of length 1, then it is passed only the current `value
-<TransferMechanism.value>` of the TransferMechanism each time it is executed.  This is typically the case for
-measures that evaluate whether one of the elements of the Mechanism's `value <TransferMechanism.value>` has exceeded
-the specificed **termination_threshold** (e.g., using the max function).  If the **termination_measure** requires an
-array of length two, then it is passed both the TransferMechanism's current `value <TransferMechanism.value>` (as
-the 1st element of the array) and its `previous_value  <TransferMechanism.previous_value>` (as the 2nd element of
-the array).  This is typically used to compute whether the `value <TransferMechanism.value>` of the TransferMechanism
-has converged (i.e., changed less than the amoung specified by **termination_threshold** (e.g., using the
-`Distance` Function, which requires an array of length 2).
+By default, a TransferMechanism uses a convergence criterion to terminate integration, as in the following example::
+
+    >>> my_mech = TransferMechanism(size=2,
+    >>>                             integrator_mode=True,
+    >>>                             termination_threshold=0.1)
+    >>> my_mech.execute([0.5, 1])
+    array([[0.46875 0.9375 ]])
+    >>> my_mech.num_executions_before_finished
+    4
+
+In this case, the single call to ``my_mech.execute`` caused the Mechanism to integrate for 4 steps, until the
+difference between its current `value <TransferMechanism.value>` and its `previous value
+<TransferMechanism.previous_value>` is less than the specified **termination_threshold**.  However,
+the **termination_measure** and **termination_comparison_op** arguments can be used to congifure other termination
+conditions.  Thare are two broad types of termination condition.
+
+*Convergence* -- updating terminates based on the difference between the TransferMechanism's current `value
+<Mechanism_Base.value>` and its `previous_value <TransferMechanism.value>` (as in the example above).
+This is implemented by specifying **termination_measure** with a function that accepts a 2d array with *two items*
+(1d arrays) as its argument, and returns a scalar (the default for a TransferMechanism is the `Distance` Function with
+`MAX_ABS_DIFF` as its metric).  After each execution, the function is passed the Mechanism's current `value
+<Mechanism_Base.value>` as well as its `previous_value <TransferMechanism.value>`, and the scalar returned is
+compared to **termination_threshold** using the comparison operator specified by **termination_comparison_op** (which
+is *LESS_THAN_OR_EQUAL* by default).  Execution continues until this returns True.  Thus, in the example above,
+execution continued until the difference between the Mechanism's current `value <Mechanism_Base.value>` and
+`previous_value <TransferMechanism.value>` was less than or equal to 0.1.  A `Distance` Function with other metrics
+(e.g., *ENERGY* or *ENTROPY*) can be specified as the **termination_measure**, as can any other function that accepts
+a single argument that is a 2d array with two entries.
+
+*Boundary termination* -- updating terminates when the TransferMechanism's current `value <Mechanism_Base.value>`
+meets the condition specified by the **termination_measure**, **termination_comparison_op** and
+**termination_threshold** arguments, without considering its `previous_value <TransferMechanism.previous_value>`.
+This is implemented by specifying **termination_measure** with a function that accepts a 2d array with a *single
+entry* as its argument and returns a scalar.  After each execution, the function is passed the Mechanism's
+current `value <Mechanism_Base.value>`, and the scalar returned is compared to **termination_threshold** using the
+comparison operator specified by **termination_comparison_op**.  Execution continues until this returns True, as in the
+following example::
+
+    >>> my_mech = TransferMechanism(size=2,
+    ...                             integrator_mode=True,
+    ...                             termination_measure=max,
+    ...                             termination_threshold=0.9,
+    ...                             termination_comparison_op=GREATER_THAN_OR_EQUAL)
+    >>> my_mech.execute([0,1]
+    array([[0.      0.96875]])
+    >>> my_mech.num_executions_before_finished
+    5
+
+Here, ``my_mech`` continued to execute for ``5`` times, until the element of the Mechanism's `value
+<Mechanism_Base.value>` with the greatest value exceeded ``0.9``.  Note that GREATER_THAN_EQUAL is a keyword for the
+string ">=", which is a key in the `comparison_operators` dict for the Python ``operator.ge``; any of these can be
+used to specify **termination_comparison_op**).
+
+The values specified for **termination_threshold**, **termination_measure**, and **termination_comparison_op** are
+assigned to the TransferMechanism's `termination_threshold <TransferMechanism.termination_threshold>`,
+`termination_measure <TransferMechanism.termination_measure>`, and `termination_comparison_op
+<TransferMechanism.termination_comparison_op>` attributes, respectively.
 
 .. _Transfer_Reinitialization:
 
@@ -324,7 +374,7 @@ The `reinitialize <TransferMechanism.reinitialize>` method of the `TransferMecha
 
     - the specified value is passed into the mechanism's `function <TransferMechanism.function>` and the function is
     executed
-    - the TransferMechanism's `value <TransferMechanism.value>` attribute is set to the output of the function
+    - the TransferMechanism's `value <Mechanism_Base.value>` attribute is set to the output of the function
     - the TransferMechanism updates its `output_ports <TransferMechanism.output_ports>`
 
 A use case for `reinitialize <AdaptiveIntegrator.reinitialize>` is demonstrated in the following example:
@@ -404,7 +454,7 @@ import inspect
 import numbers
 import warnings
 import logging
-
+import operator
 from collections.abc import Iterable
 
 import numpy as np
@@ -427,7 +477,7 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort, PRIMARY, StandardOutputPorts, standard_output_ports
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    comparison_dict, FUNCTION, INITIALIZER, INSTANTANEOUS_MODE_VALUE, LESS_THAN_OR_EQUAL, \
+    comparison_operators, FUNCTION, INITIALIZER, INSTANTANEOUS_MODE_VALUE, LESS_THAN_OR_EQUAL, \
     MAX_ABS_DIFF, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, NAME, NOISE, \
     OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, OWNER_VALUE, PROB, \
     RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, \
@@ -436,7 +486,8 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import all_within_range, append_type_to_name, iscompatible
+from psyneulink.core.globals.utilities import \
+    all_within_range, append_type_to_name, iscompatible, is_comparison_operator
 from psyneulink.core.scheduling.condition import Never
 
 __all__ = [
@@ -475,28 +526,28 @@ class TRANSFER_OUTPUT():
     .. _TRANSFER_MECHANISM_RESULT:
 
     *RESULT* : 1d np.array
-      first item of TransferMechanism's `value <TransferMechanism.value>` (corresponding to input from its
+      first item of TransferMechanism's `value <Mechanism_Base.value>` (corresponding to input from its
       first InputPort)
 
     *RESULTS* : 2d np.array
-      each item of TransferMechanism's `value <TransferMechanism.value>` (corresponding to input from each
+      each item of TransferMechanism's `value <Mechanism_Base.value>` (corresponding to input from each
       of its `input_ports <TransferMechanism.input_ports>`) is assigned as the `value <OutputPort.value>`
       of a corresponding OutputPort of its `output_ports <TransferMechanism.output_ports>`.
 
     .. _TRANSFER_MECHANISM_MEAN:
 
     *OUTPUT_MEAN* : float
-      mean of `value <TransferMechanism.value>`.
+      mean of `value <Mechanism_Base.value>`.
 
     .. _TRANSFER_MECHANISM_MEDIAN:
 
     *OUTPUT_MEDIAN* : float
-      median of `value <TransferMechanism.value>`.
+      median of `value <Mechanism_Base.value>`.
 
     .. _TRANSFER_MECHANISM_STD_DEV:
 
     *OUTPUT_STD_DEV* : float
-      standard deviation of `value <TransferMechanism.value>`.
+      standard deviation of `value <Mechanism_Base.value>`.
 
     .. _TRANSFER_MECHANISM_VARIANCE:
 
@@ -504,12 +555,12 @@ class TRANSFER_OUTPUT():
       variance of `output_port.value`.
 
     *MECHANISM_VALUE* : list
-      TransferMechanism's `value <TransferMechanism.value>` used as OutputPort's value.
+      TransferMechanism's `value <Mechanism_Base.value>` used as OutputPort's value.
 
     COMMENT:
     *COMBINE* : scalar or numpy array
-      linear combination of the `value <TransferMechanism.value>` of all items of the TransferMechanism's `value
-      <TransferMechanism.value>` (requires that they all have the same dimensionality).
+      linear combination of the `value <Mechanism_Base.value>` of all items of the TransferMechanism's `value
+      <Mechanism_Base.value>` (requires that they all have the same dimensionality).
     COMMENT
 
     """
@@ -658,20 +709,21 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     on_resume_integrator_mode : keyword : default INSTANTANEOUS_MODE_VALUE
         specifies how the `integrator_function <TransferMechanism.integrator_function>` should resume its accumulation
-        when the Mechanism was most recently in "Instantaneous Mode" (integrator_mode = False) and has just switched to
-        "IntegratorFunction Mode" (integrator_mode = True).
+        when the Mechanism was most recently in "Instantaneous Mode" (`integrator_mode
+        <TransferMechanism.intergrator_mode>` = False) and has just switched to "IntegratorFunction Mode"
+        (`integrator_mode <TransferMechanism.intergrator_mode>` = True);  can be one of the following keywords:
 
-        (1)     INSTANTANEOUS_MODE_VALUE - reinitialize the Mechanism with its own current value, so that the value computed by
-                the Mechanism during "Instantaneous Mode" is where the `integrator_function
-                <TransferMechanism.integrator_function>` begins accumulating.
+        * *INSTANTANEOUS_MODE_VALUE* - reinitialize the Mechanism with its own current value,
+          so that the value computed by the Mechanism during "Instantaneous Mode" is where the
+          `integrator_function <TransferMechanism.integrator_function>` begins accumulating.
 
-        (2)     INTEGRATOR_MODE_VALUE - resume accumulation wherever the `integrator_function
-                <TransferMechanism.integrator_function>` left off the last time `integrator_mode
-                <TransferMechanism.integrator_mode>` was True.
+        * *INTEGRATOR_MODE_VALUE* - resume accumulation wherever the `integrator_function
+          <TransferMechanism.integrator_function>` left off the last time `integrator_mode
+          <TransferMechanism.integrator_mode>` was True.
 
-        (3)     REINITIALIZE - call the `integrator_function's <TransferMechanism.integrator_function>` `reinitialize method
-                <AdaptiveIntegrator.reinitialize>` so that accumulation Mechanism begins at `initial_value
-                <TransferMechanism.initial_value>`
+        * *REINITIALIZE* - call the `integrator_function <TransferMechanism.integrator_function>`\\s
+          `reinitialize <AdaptiveIntegrator.reinitialize>` method, so that accumulation begins at
+          `initial_value <TransferMechanism.initial_value>`
 
     noise : float or function : default 0.0
         specifies a value to be added to the result of the TransferMechanism's `function <TransferMechanism.function>`
@@ -755,7 +807,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             the TransferMechanism's `variable <TransferMechanism>` is first passed to its `integrator_function
             <TransferMechanism.integrator_function>`, and then the result is passed to the TransferMechanism's
             `function <TransferMechanism.function>` which computes the TransferMechanism's `value
-            <TransferMechanism.value>`.
+            <Mechanism_Base.value>`.
 
             .. note::
                 The TransferMechanism's `integration_rate <TransferMechanism.integration_rate>`, `noise
@@ -835,11 +887,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         allowable value; any element of the result that exceeds the specified minimum or maximum value is set to
         the value of `clip <TransferMechanism.clip>` that it exceeds.
 
-    value : 2d np.array [array(float64)]
-        result of executing `function <TransferMechanism.function>`.
-
     previous_value : 2d np.array [array(float64)] : default None
-        `value <TransferMechanism.value>` after the previous execution of the Mechanism.  It is assigned `None` on
+        `value <Mechanism_Base.value>` after the previous execution of the Mechanism.  It is assigned `None` on
         the first execution, and when the Mechanism's `reinitialize <Mechanism.reinitialize>` method is called.
 
         .. note::
@@ -856,7 +905,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     termination_measure : function
         used to determine when execution of the TransferMechanism is complete (i.e., `is_finished` is True), if
         `execute_until_finished <Component.execute_until_finished>` is True.  It is passed the `value
-        <TransferMechanism.value>` and `previous_value <TransferMechanism.previous_value>` of the TransferMechanism;
+        <Mechanism_Base.value>` and `previous_value <TransferMechanism.previous_value>` of the TransferMechanism;
         its result (`termination_measure_value <TransferMechanism.termination_measure_value>`) is compared with
         `termination_threshold <TransferMechanism.termination_threshold>` using
         `TransferMechanism.termination_comparison_op`, the result of which is used as the value of `is_finished`.
@@ -1016,7 +1065,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         noise = Parameter(0.0, modulable=True)
         termination_measure = Parameter(Distance, modulable=False, stateful=False, loggable=False)
         termination_threshold = Parameter(None, modulable=True)
-        termination_comparison_op = Parameter(LESS_THAN_OR_EQUAL, modulable=False, loggable=False)
+        termination_comparison_op = Parameter(operator.le, modulable=False, loggable=False)
         termination_measure_value = Parameter(0.0, modulable=False, read_only=True)
 
         def _validate_integrator_mode(self, integrator_mode):
@@ -1037,9 +1086,17 @@ class TransferMechanism(ProcessingMechanism_Base):
                 return 'must be a float or int.'
 
         def _validate_termination_comparison_op(self, termination_comparison_op):
-            if (not isinstance(termination_comparison_op, str)
-                    and not termination_comparison_op in comparison_dict.keys()):
-                return f"must be one of the following keywords: {','.join(comparison_dict.keys())}."
+            if (not termination_comparison_op in comparison_operators.keys()
+                    and not termination_comparison_op in comparison_operators.values()):
+                return f"must be boolean comparison operator or one of the following strings:" \
+                       f" {','.join(comparison_operators.keys())}."
+
+        # def _parse_termination_comparison_op(self, termination_comparison_op):
+        #     try:
+        #         return comparison_operators[termination_comparison_op]
+        #     except KeyError:
+        #         # Assume it is a comparison operator or will be detected by vlidation
+        #         return termination_comparison_op
 
     @tc.typecheck
     def __init__(self,
@@ -1056,7 +1113,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                  clip=None,
                  termination_measure=Distance(metric=MAX_ABS_DIFF),
                  termination_threshold:tc.optional(float)=None,
-                 termination_comparison_op:str=LESS_THAN_OR_EQUAL,
+                 termination_comparison_op:tc.any(str, is_comparison_operator)=LESS_THAN_OR_EQUAL,
                  output_ports:tc.optional(tc.any(str, Iterable))=RESULTS,
                  params=None,
                  name=None,
@@ -1692,7 +1749,8 @@ class TransferMechanism(ProcessingMechanism_Base):
             return self.parameters.is_finished_flag._get(context)
 
         measure = self.termination_measure
-        comparator = self.parameters.termination_comparison_op._get(context)
+        # comparator = self.parameters.termination_comparison_op._get(context)
+        comparator = comparison_operators[self.parameters.termination_comparison_op._get(context)]
         value = self.parameters.value._get(context)
         previous_value = self.parameters.previous_value._get(context)
 
@@ -1704,8 +1762,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         self.parameters.termination_measure_value._set(status, context=context, override=True)
 
-        # if any(comparison_dict[comparator](np.atleast_1d(status), threshold)):
-        if comparison_dict[comparator](np.atleast_1d(status), threshold).any():
+        # if any(comparison_operators[comparator](np.atleast_1d(status), threshold)):
+        if comparator(np.atleast_1d(status), threshold).any():
             logger.info(f'{type(self).__name__} {self.name} has reached threshold ({threshold})')
             return True
         return False
