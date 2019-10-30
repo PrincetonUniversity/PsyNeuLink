@@ -1070,7 +1070,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         on_resume_integrator_mode = Parameter(INSTANTANEOUS_MODE_VALUE, stateful=False, loggable=False)
         clip = None
         noise = Parameter(0.0, modulable=True)
-        termination_measure = Parameter(Distance, modulable=False, stateful=False, loggable=False)
+        termination_measure = Parameter(Distance(metric=MAX_ABS_DIFF), modulable=False, stateful=False, loggable=False)
         termination_threshold = Parameter(None, modulable=True)
         termination_comparison_op = Parameter(operator.le, modulable=False, loggable=False)
         termination_measure_value = Parameter(0.0, modulable=False, read_only=True)
