@@ -890,12 +890,12 @@ class Projection_Base(Projection):
         # instantiate parameter ports from UDF custom parameters if necessary
         try:
             cfp = self.function.cust_fct_params
-            udf_parameters_lacking_ports = {param_name: cfp[param_name] 
+            udf_parameters_lacking_ports = {param_name: cfp[param_name]
                                             for param_name in cfp if param_name not in self.parameter_ports.names}
 
-            _instantiate_parameter_port(self, FUNCTION_PARAMS, 
-                                        udf_parameters_lacking_ports, 
-                                        context=context, 
+            _instantiate_parameter_port(self, FUNCTION_PARAMS,
+                                        udf_parameters_lacking_ports,
+                                        context=context,
                                         function=self.function)
         except AttributeError:
             pass

@@ -141,7 +141,7 @@ def setup_vec_copy(ctx):
     
     # builtin vector copy func
     # param1: ptr to vector 1
-    # param2: sizeof vector 
+    # param2: sizeof vector
     # param3: ptr to output vector (make sure this is same size as param3)
     builder = _setup_builtin_func_builder(ctx, "vec_copy", (double_ptr_ty, ctx.int32_ty, double_ptr_ty))
     u, x, o = builder.function.args

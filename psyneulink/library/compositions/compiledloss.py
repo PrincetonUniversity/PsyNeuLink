@@ -27,7 +27,7 @@ class MSELoss(Loss):
         super().__init__(pytorch_model)
         self.reduction = reduction
 
-    # creates a bin func that returns the mse loss 
+    # creates a bin func that returns the mse loss
     def _gen_call_function(self,ctx):
         name = self._composition.name + "_MSE_CALL"
 
