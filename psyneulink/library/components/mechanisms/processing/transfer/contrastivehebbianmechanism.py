@@ -261,7 +261,7 @@ it is *HARD_CLAMP* they are used to replace the corresponding fields of *RECURRE
 is `True`) and then its `function <ContrastiveHebbianMechanism.function>`.
 
 If the termination condition for either phase is specified as *CONVERGENCE*, it uses the Mechanism's
-`phase_convergence_function <ContrastiveHebbianMechanism.phase_convergence_function>`, together with the 
+`phase_convergence_function <ContrastiveHebbianMechanism.phase_convergence_function>`, together with the
 termination_threshold specified for that phase, to determine when execution of that phase terminates.  If `max_passes
 <ContrastiveHebbianMechanism.max_passes>` is specified, and the number of executions in either phase
 reaches that value, an error is generated.  Otherwise, once a trial of execution is complete (i.e, after completion
@@ -706,7 +706,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         execution in the current phase <ContrastiveHebbian_Execution>`.
 
     delta : scalar
-        value returned by `phase_convergence_function <RecurrentTransferMechanism.phase_convergence_function>`;  
+        value returned by `phase_convergence_function <RecurrentTransferMechanism.phase_convergence_function>`;
         used to determined when `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
 
     is_converged : bool

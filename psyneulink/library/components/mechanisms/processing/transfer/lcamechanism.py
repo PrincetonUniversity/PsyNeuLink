@@ -107,8 +107,8 @@ stops executing when updating produces sufficiently small changes.
 
 Note that **threshold** and **threshold_criterion** are convenience arguments, and are not associated with
 similarly-named attributes.  Rather, they are used to specify the `termination_threshold
-<TransferMechanism.termination_threshold>`, `termination_measure <TransferMechanism.termination_measure>`,  
-and `termination_comparison_op <TransferMechanism.termination_comparison_op>` attributes; these can also be 
+<TransferMechanism.termination_threshold>`, `termination_measure <TransferMechanism.termination_measure>`,
+and `termination_comparison_op <TransferMechanism.termination_comparison_op>` attributes; these can also be
 specified directly as arguments of the LCAMechanism's constructor in order to implement other termination conditions
 (see `TransferMechanism <Transfer_Termination>` and `RecurrentTransferMechanism
 <Recurrent_Transfer_Termination>`for additional details).
