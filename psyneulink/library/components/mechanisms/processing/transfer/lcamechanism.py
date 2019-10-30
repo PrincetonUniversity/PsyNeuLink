@@ -96,17 +96,17 @@ following keywords:
 
 .. _LCAMechanism_DDM_APPROXIMATION:
 
-For an LCAMechanism with *exactly* two elements, *MAX_VS_NEXT* implements a close approximation of the `threshold 
-<DriftDiffusionIntegrator.threshold>` parameter of the `DriftDiffusionIntegrator` Function used by a `DDM` (see 
-`Usher & McClelland, 2001; <http://psycnet.apa.org/?&fa=main.doiLanding&doi=10.1037/0033-295X.108.3.550>`_ and 
-`Bogacz et al (2006) <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_). For an LCAMechanism with more than two 
-elements, *MAX_VS_NEXT* and *MAX_VS_AVG* implements threshold approximations with different properties 
+For an LCAMechanism with *exactly* two elements, *MAX_VS_NEXT* implements a close approximation of the `threshold
+<DriftDiffusionIntegrator.threshold>` parameter of the `DriftDiffusionIntegrator` Function used by a `DDM` (see
+`Usher & McClelland, 2001; <http://psycnet.apa.org/?&fa=main.doiLanding&doi=10.1037/0033-295X.108.3.550>`_ and
+`Bogacz et al (2006) <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_). For an LCAMechanism with more than two
+elements, *MAX_VS_NEXT* and *MAX_VS_AVG* implements threshold approximations with different properties
 (see `McMillen & Holmes, 2006 <http://www.sciencedirect.com/science/article/pii/S0022249605000891>`_).
 **CONVERGENCE** (the default for a TransferMechanism) implements a "settling" process, in which the Mechanism
 stops executing when updating produces sufficiently small changes.
 
 Note that **threshold** and **threshold_criterion** are convenience arguments, and are not associated with
-similarly-named attributes.  Rather, they are used to specify the `termination_threshold 
+similarly-named attributes.  Rather, they are used to specify the `termination_threshold
 <TransferMechanism.termination_threshold>`, `termination_measure <TransferMechanism.termination_measure>`,  
 and `termination_comparison_op <TransferMechanism.termination_comparison_op>` attributes; these can also be 
 specified directly as arguments of the LCAMechanism's constructor in order to implement other termination conditions
@@ -134,8 +134,8 @@ Function by default (in place of the `AdaptiveIntegrator` used as the default by
 <LCAMechanism.competition>` off diagonal.
 
 Like any RecurrentTransferMechanism, by default an LCAMechanism has a single `primary OutputPort <OutputPort_Primary>`
-named *RESULT* that contains the Mechanism's current `value <Mechanism_Base.value>`.  The `StandardOutputPorts 
-<OutputPort_Standard>` of a `RecurrentTransferMechanism <RecurrentTransferMechanism_Standard_OutputPorts>`, 
+named *RESULT* that contains the Mechanism's current `value <Mechanism_Base.value>`.  The `StandardOutputPorts
+<OutputPort_Standard>` of a `RecurrentTransferMechanism <RecurrentTransferMechanism_Standard_OutputPorts>`,
 are also available for assignment, as well as two additional ones:
 
     - `MAX_VS_NEXT <LCAMechanism_MAX_VS_NEXT_OUTPUT_PORT>`
