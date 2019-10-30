@@ -1098,13 +1098,6 @@ class TransferMechanism(ProcessingMechanism_Base):
                 return f"must be boolean comparison operator or one of the following strings:" \
                        f" {','.join(comparison_operators.keys())}."
 
-        # def _parse_termination_comparison_op(self, termination_comparison_op):
-        #     try:
-        #         return comparison_operators[termination_comparison_op]
-        #     except KeyError:
-        #         # Assume it is a comparison operator or will be detected by vlidation
-        #         return termination_comparison_op
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
