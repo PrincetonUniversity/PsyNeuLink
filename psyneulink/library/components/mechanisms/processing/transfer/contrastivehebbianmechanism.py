@@ -166,14 +166,14 @@ as follows:
 In addition to its primary `function <ContrastiveHebbianMechanism.function>`, if either the
 `minus_phase_termination_condition <ContrastiveHebbianMechanism.minus_phase_termination_condition>` or
 `plus_phase_termination_condition <ContrastiveHebbianMechanism.plus_phase_termination_condition>`
-is specified as *CONVERGENCE*, then its `phase_phase_convergence_function 
-<ContrastiveHebbianMechanism.phase_phase_convergence_function>` is used to determine when the corresponding 
-`phase of execution <ContrastiveHebbian_Execution>` is complete. Its `learning_function 
-<ContrastiveHebbianMechanism.learning_function>` is automatically assigned as `ContrastiveHebbian`, but this can be 
-replaced by any function that takes two 1d arrays ("activity ports") and compares them to determine the `matrix 
-<MappingProjection.matrix>`  of the Mechanism's `recurrent_projection  
-<ContrastiveHebbianMechanism.recurrent_projection>`.  If **mode** is specified as `SIMPLE_HEBBIAN 
-<ContrastiveHebbian_SIMPLE_HEBBIAN>`), the default `function <ContrastiveHebbianMechanism.function>` is `Hebbian`, 
+is specified as *CONVERGENCE*, then its `phase_phase_convergence_function
+<ContrastiveHebbianMechanism.phase_phase_convergence_function>` is used to determine when the corresponding
+`phase of execution <ContrastiveHebbian_Execution>` is complete. Its `learning_function
+<ContrastiveHebbianMechanism.learning_function>` is automatically assigned as `ContrastiveHebbian`, but this can be
+replaced by any function that takes two 1d arrays ("activity ports") and compares them to determine the `matrix
+<MappingProjection.matrix>`  of the Mechanism's `recurrent_projection
+<ContrastiveHebbianMechanism.recurrent_projection>`.  If **mode** is specified as `SIMPLE_HEBBIAN
+<ContrastiveHebbian_SIMPLE_HEBBIAN>`), the default `function <ContrastiveHebbianMechanism.function>` is `Hebbian`,
 but can be replaced by any function that takes and returns a 1d array.
 
 .. _ContrastiveHebbian_Output:
@@ -181,7 +181,7 @@ but can be replaced by any function that takes and returns a 1d array.
 *Output*
 ~~~~~~~~
 
-A ContrastiveHebbianMechanism is automatically assigned three `OutputPorts <OutputPort>`: 
+A ContrastiveHebbianMechanism is automatically assigned three `OutputPorts <OutputPort>`:
 
 * *OUTPUT_ACTIVITY_OUTPUT:* assigned as the `primary OutputPort <OutputPort_Primary>`, and contains the pattern
   of activity the Mechanism is trained to generate.  If **target_size** is specified, then it has the same size as
