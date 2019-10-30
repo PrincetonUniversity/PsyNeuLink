@@ -1107,7 +1107,8 @@ from psyneulink.core.components.functions.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import OptimizationControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
+    OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
@@ -1147,7 +1148,8 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, P
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism, MSE
-from psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism import PredictionErrorMechanism
+from psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism import \
+    PredictionErrorMechanism
 
 __all__ = [
 
@@ -2190,7 +2192,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._add_node_role(node_role_pair[0], node_role_pair[1])
 
         objective_mechanism = None
-        if self.controller and self.enable_controller and self.controller.objective_mechanism:
+        # # MODIFIED 10/24/19 OLD:
+        # if self.controller and self.enable_controller and self.controller.objective_mechanism:
+        # MODIFIED 10/24/19 NEW:
+        if self.controller and self.controller.objective_mechanism:
+        # MODIFIED 10/24/19 END
             objective_mechanism = self.controller.objective_mechanism
             self._add_node_role(objective_mechanism, NodeRole.CONTROLLER_OBJECTIVE)
 
@@ -2232,15 +2238,32 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # - if there are LearningMechanisms, OUTPUT node is the last non-learning-related node.
         # - if there are no TERMINAL nodes either, then the last node added to the Composition becomes the OUTPUT node.
         if not self.get_nodes_by_role(NodeRole.OUTPUT):
-            if self.get_nodes_by_role(NodeRole.LEARNING):
+
+            # FIX: 10/24/19: NOW MISSES controller.objective_mechanism in test_controller_objective_mech_not_terminal
+            #                 if controller_enabled = False
+            def remove_learning_and_control_nodes(nodes):
+                output_nodes_copy = nodes.copy()
+                for node in output_nodes_copy:
+                    if (NodeRole.LEARNING in self.nodes_to_roles[node]
+                            or NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[node]
+                            or isinstance(node, ControlMechanism)
+                            or (isinstance(node, ObjectiveMechanism) and node._role == CONTROL)):
+                        nodes.remove(node)
+
+            if self.get_nodes_by_role(NodeRole.LEARNING) or self.get_nodes_by_role(NodeRole.AUTOASSOCIATIVE_LEARNING):
                 # FIX: ADD COMMENT HERE
                 # terminal_nodes = [[n for n in self.nodes if not NodeRole.LEARNING in self.nodes_to_roles[n]][-1]]
                 output_nodes = list([items for items in self.scheduler.consideration_queue
-                                       if any([item for item in items
-                                               if not NodeRole.LEARNING in self.nodes_to_roles[item]])])[-1]
+                                     if any([item for item in items
+                                               if (not NodeRole.LEARNING in self.nodes_to_roles[item] and
+                                                   not NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[item])
+                                               ])])[-1].copy()
             else:
                 output_nodes = self.get_nodes_by_role(NodeRole.TERMINAL)
-            if not output_nodes:
+
+            if output_nodes:
+                remove_learning_and_control_nodes(output_nodes)
+            else:
                 try:
                     # Assign TERMINAL role to nodes that are last in the scheduler's consideration queue that are:
                     #    - not used for Learning;
@@ -2252,7 +2275,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     #    note: get copy of the consideration_set, as don't want to modify one actually used by scheduler
                     output_nodes = list([items for items in self.scheduler.consideration_queue
                                            if any([item for item in items if
-                                                   (not NodeRole.LEARNING in self.nodes_to_roles[item]
+                                                   (not NodeRole.LEARNING in self.nodes_to_roles[item] and
+                                                    not NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[item]
                                                     and not isinstance(item, ControlMechanism)
                                                     and not (isinstance(item, ObjectiveMechanism)
                                                              and item._role == CONTROL))
@@ -2261,12 +2285,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # Next, remove any learning-related nodes, ControlMechanism(s) or control-related
                     #    ObjectiveMechanism(s) that may have "snuck in" (i.e., happen to be in the set)
-                    output_nodes_copy = output_nodes.copy()
-                    for node in output_nodes_copy:
-                        if (NodeRole.LEARNING in self.nodes_to_roles[node]
-                                or isinstance(node, ControlMechanism)
-                                or (isinstance(node, ObjectiveMechanism) and node._role == CONTROL)):
-                            output_nodes.remove(node)
+                    remove_learning_and_control_nodes(output_nodes)
 
                     # Then, add any nodes that are not learning-related or a ControlMechanism,
                     #    and that have *no* efferent Projections
@@ -2277,7 +2296,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     for node in self.nodes:
                         if (not node.efferents
                                 and not NodeRole.LEARNING in self.nodes_to_roles[node]
-                                and not isinstance(node, ControlMechanism)):
+                                and not NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[node]
+                                and not isinstance(node, ControlMechanism)
+                                and not (isinstance(node, ObjectiveMechanism) and node._role == CONTROL)
+                        ):
                             output_nodes.add(node)
                 except IndexError:
                     output_nodes = []
@@ -2745,12 +2767,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     receiver_check = receiver.owner
                 else:
                     receiver_check = receiver
-                if (not isinstance(sender_check, CompositionInterfaceMechanism) and sender_check not in self.nodes) or \
-                         (not isinstance(receiver_check, CompositionInterfaceMechanism) and receiver_check not in self.nodes):
+                if ((not isinstance(sender_check, CompositionInterfaceMechanism) and sender_check not in self.nodes)
+                        or (not isinstance(receiver_check, CompositionInterfaceMechanism)
+                            and receiver_check not in self.nodes)):
                     for proj in existing_projections:
                         self.remove_projection(proj)
-                        for port in receiver_check.input_ports + \
-                            sender_check.output_ports:
+                        for port in receiver_check.input_ports + sender_check.output_ports:
                             if proj in port.afferents_info:
                                 del port.afferents_info[proj]
                             if proj in port.projections:
@@ -3352,8 +3374,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if is_spec(pathway[c], NODE):
                 if is_spec(pathway[c - 1], NODE):
                     # if the previous item was also a node, add a MappingProjection between them
-                    proj = self.add_projection(sender=pathway[c - 1],
-                                               receiver=pathway[c])
+                    if isinstance(pathway[c - 1], tuple):
+                        sender = pathway[c - 1][0]
+                    else:
+                        sender = pathway[c - 1]
+                    if isinstance(pathway[c], tuple):
+                        receiver = pathway[c][0]
+                    else:
+                        receiver = pathway[c]
+                    proj = self.add_projection(sender=sender,
+                                               receiver=receiver)
                     if proj:
                         projections.append(proj)
 
@@ -4825,7 +4855,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # If rcvr is a learning component and not an INPUT node,
             #    break and handle in _assign_learning_components()
             #    (node: this allows TARGET node for learning to remain marked as an INPUT node)
-            if NodeRole.LEARNING in self.nodes_to_roles[rcvr] and not NodeRole.INPUT in self.nodes_to_roles[rcvr]:
+            if ((NodeRole.LEARNING in self.nodes_to_roles[rcvr]
+                 or NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[rcvr])
+                    and not NodeRole.INPUT in self.nodes_to_roles[rcvr]):
                 return
 
             # If rcvr is ObjectiveMechanism for Composition's controller,
@@ -4952,37 +4984,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            color=rcvr_color,
                            rank=rcvr_rank,
                            penwidth=rcvr_penwidth)
-
-                # MODIFIED 5/29/19 OLD: [JDC] SEEMS TO BE HANDLED BY ADDITION OF CALL TO _assign_incoming_edges BELOW
-                # # handle auto-recurrent projections
-                # for input_port in rcvr.input_ports:
-                #     for proj in input_port.path_afferents:
-                #         if proj.sender.owner is not rcvr:
-                #             continue
-                #         if show_node_structure:
-                #             sndr_proj_label = '{}:{}'.format(rcvr_label, rcvr._get_port_name(proj.sender))
-                #             proc_mech_rcvr_label = '{}:{}'.format(rcvr_label, rcvr._get_port_name(proj.receiver))
-                #         else:
-                #             sndr_proj_label = proc_mech_rcvr_label = rcvr_label
-                #         if show_projection_labels:
-                #             edge_label = self._get_graph_node_label(proj, show_dimensions)
-                #         else:
-                #             edge_label = ''
-                #
-                #         # show projection as edge
-                #         if proj.sender in active_items:
-                #             if active_color is BOLD:
-                #                 proj_color = default_node_color
-                #             else:
-                #                 proj_color = active_color
-                #             proj_width = str(default_width + active_thicker_by)
-                #             self.active_item_rendered = True
-                #         else:
-                #             proj_color = default_node_color
-                #             proj_width = str(default_width)
-                #         g.edge(sndr_proj_label, proc_mech_rcvr_label, label=edge_label,
-                #                color=proj_color, penwidth=proj_width)
-                # # MODIFIED 5/29/19 END
 
             # Implement sender edges
             sndrs = processing_graph[rcvr]
@@ -5342,6 +5343,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #    (i.e., allow TARGET node to continue to be marked as an INPUT node)
             learning_components = [node for node in self.learning_components
                                    if not NodeRole.INPUT in self.nodes_to_roles[node]]
+            # learning_components.extend([node for node in self.nodes if
+            #                             NodeRole.AUTOASSOCIATIVE_LEARNING in
+            #                             self.nodes_to_roles[node]])
 
             for rcvr in learning_components:
                 # if rcvr is Projection, skip (handled in _assign_processing_components)
@@ -5490,7 +5494,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 self.active_item_rendered = True
 
                             # Projection to or from a LearningMechanism
-                            elif (NodeRole.LEARNING in self.nodes_to_roles[rcvr]):
+                            elif (NodeRole.LEARNING in self.nodes_to_roles[rcvr]
+                                  or NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[rcvr]):
                                 proj_color = learning_color
                                 proj_width = str(default_width)
 
@@ -5625,7 +5630,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 'fontname': 'arial',
                 'shape': 'record',
                 'color': default_node_color,
-                'penwidth': str(default_width)
+                'penwidth': str(default_width),
             },
             edge_attr={
                 'fontsize': '10',
@@ -7864,7 +7869,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def learning_components(self):
-        return [node for node in self.nodes if NodeRole.LEARNING in self.nodes_to_roles[node]]
+        return [node for node in self.nodes if (NodeRole.LEARNING in self.nodes_to_roles[node] or
+                                                NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[node])]
 
     @property
     def learned_components(self):

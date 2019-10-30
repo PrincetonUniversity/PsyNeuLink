@@ -319,7 +319,7 @@ class TestDistributionFunctions:
             function=Linear(),
             noise=ExponentialDist(),
             integration_rate=1.0,
-            integrator_mode=True
+            integrator_mode=True,
         )
         val = T.execute([0, 0, 0, 0])
         assert np.allclose(val, [[0.4836021009022533, 1.5688961399691683, 0.7526741095365884, 0.8394328467388229]])
@@ -1590,6 +1590,15 @@ class TestTransferMechanismMultipleInputPorts:
 
 
 class TestIntegratorMode:
+    def test_integrator_mode_simple_on_and_off(self):
+        T = TransferMechanism(size=2)
+        assert np.allclose(T.execute([0.5, 1]), [[0.5, 1]])
+        T.integrator_mode=True
+        assert np.allclose(T.execute([0.5, 1]), [[0.25, 0.5 ]])
+        assert np.allclose(T.execute([0.5, 1]), [[0.375, 0.75 ]])
+        T.integrator_mode=False
+        assert np.allclose(T.execute([0.5, 1]), [[0.5, 1]])
+
     def test_previous_value_persistence_execute(self):
         T = TransferMechanism(name="T",
                               initial_value=0.5,
@@ -1889,6 +1898,7 @@ class TestIntegratorMode:
 
 
 class TestOnResumeIntegratorMode:
+
     def test_integrator_mode_value_spec(self):
         T = TransferMechanism(on_resume_integrator_mode=INTEGRATOR_MODE_VALUE,
                               integration_rate=0.5,

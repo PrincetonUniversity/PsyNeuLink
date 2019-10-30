@@ -928,6 +928,8 @@ class DDM(ProcessingMechanism):
         # # Conflict with above
         # self.size = size
 
+        self.parameters.execute_until_finished.default_value = False
+
         super(DDM, self).__init__(default_variable=default_variable,
                                   input_ports=input_ports,
                                   output_ports=output_ports,

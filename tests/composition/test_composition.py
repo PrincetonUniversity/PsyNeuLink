@@ -325,6 +325,21 @@ class TestAddProjection:
         assert np.allclose(B.parameters.value.get(comp), [[22.4,  29.6]])
         assert np.allclose(proj.matrix, weights)
 
+    def test_add_linear_processing_pathway_with_noderole_specified_in_tuple(self):
+        comp = Composition()
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B')
+        C = TransferMechanism(name='composition-pytests-C')
+        comp.add_linear_processing_pathway([
+            (A,pnl.NodeRole.AUTOASSOCIATIVE_LEARNING),
+            (B,pnl.NodeRole.AUTOASSOCIATIVE_LEARNING),
+            C
+        ])
+        comp._analyze_graph()
+        autoassociative_learning_nodes = comp.get_nodes_by_role(pnl.NodeRole.AUTOASSOCIATIVE_LEARNING)
+        assert A in autoassociative_learning_nodes
+        assert B in autoassociative_learning_nodes
+
     def test_add_linear_processing_pathway_containing_nodes_with_existing_projections(self):
         """ Test that add_linear_processing_pathway uses MappingProjections already specified for
                 Hidden_layer_2 and Output_Layer in the pathway it creates within the Composition"""
@@ -548,7 +563,8 @@ class TestAnalyzeGraph:
         # disable controller
         comp.enable_controller = False
         comp._analyze_graph()
-        assert comp.controller.objective_mechanism in comp.get_nodes_by_role(NodeRole.OUTPUT)
+        # assert comp.controller.objective_mechanism in comp.get_nodes_by_role(NodeRole.OUTPUT)
+        assert comp.controller.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)
 
     def test_controller_objective_mech_not_terminal_fall_back(self):
         comp = Composition()
@@ -571,13 +587,21 @@ class TestAnalyzeGraph:
                                                                         )
                                        )
         comp._analyze_graph()
+        # ObjectiveMechanism associated with controller should not be considered an OUTPUT node
         assert comp.controller.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)
         assert B in comp.get_nodes_by_role(NodeRole.OUTPUT)
+
         # disable controller
         comp.enable_controller = False
         comp._analyze_graph()
-        assert comp.controller.objective_mechanism in comp.get_nodes_by_role(NodeRole.OUTPUT)
-        assert B not in comp.get_nodes_by_role(NodeRole.OUTPUT)
+
+        # assert comp.controller.objective_mechanism in comp.get_nodes_by_role(NodeRole.OUTPUT)
+        # assert B not in comp.get_nodes_by_role(NodeRole.OUTPUT)
+
+        # ObjectiveMechanism associated with controller should be treated the same (i.e., not be an OUTPUT node)
+        #    irrespective of whether the controller is enabled or disabled
+        assert comp.controller.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)
+        assert B in comp.get_nodes_by_role(NodeRole.OUTPUT)
 
 
 class TestGraphCycles:
