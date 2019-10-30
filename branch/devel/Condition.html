@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Condition &mdash; PsyNeuLink 0.7.0.0+76.gad7786d documentation</title>
+  <title>Condition &mdash; PsyNeuLink 0.7.0.0+77.g2354a9f documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.0.0+76.gad7786d',
+              VERSION:'0.7.0.0+77.g2354a9f',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.7.0.0+76
+                0.7.0.0+77
               </div>
             
           
@@ -242,8 +242,8 @@ its elements has changed in value more than a specified amount since the previou
 <span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">mech_A</span><span class="p">,</span> <span class="n">NWhen</span><span class="p">(</span><span class="n">Condition</span><span class="p">(</span><span class="n">converge</span><span class="p">,</span> <span class="n">mech_B</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>In the example, a function <code class="xref any docutils literal"><span class="pre">converge</span></code> is defined that references the <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.delta" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.delta"><code class="xref any py py-attr docutils literal"><span class="pre">delta</span></code></a> attribute of
-a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> (which reports the change in its <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.value" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>). The function is assigned to
+<p>In the example, a function <code class="xref any docutils literal"><span class="pre">converge</span></code> is defined that references the <code class="xref any docutils literal"><span class="pre">delta</span></code> attribute of
+a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> (which reports the change in its <code class="xref any docutils literal"><span class="pre">value</span></code>). The function is assigned to
 the standard <a class="reference internal" href="#psyneulink.core.scheduling.condition.Condition" title="psyneulink.core.scheduling.condition.Condition"><code class="xref any py py-class docutils literal"><span class="pre">Condition()</span></code></a> with <code class="xref any docutils literal"><span class="pre">mech_A</span></code> and <code class="xref any docutils literal"><span class="pre">epsilon</span></code> as its arguments, and <a class="reference internal" href="#conditions-composite"><span class="std std-ref">composite Condition</span></a>
 <a class="reference internal" href="#psyneulink.core.scheduling.condition.NWhen" title="psyneulink.core.scheduling.condition.NWhen"><code class="xref any py py-class docutils literal"><span class="pre">NWhen</span></code></a> (which is satisfied the first N times after its condition becomes true),  The Condition is assigned to <code class="xref any docutils literal"><span class="pre">mech_B</span></code>,
 thus scheduling it to execute one time when all of the elements of <code class="xref any docutils literal"><span class="pre">mech_A</span></code> have changed by less than <code class="xref any docutils literal"><span class="pre">epsilon</span></code>.</p>
@@ -369,11 +369,11 @@ satisfied if the specified Component was assigned to run in the previous <a clas
 <li><a class="reference internal" href="#psyneulink.core.scheduling.condition.AllHaveRun" title="psyneulink.core.scheduling.condition.AllHaveRun"><code class="xref any py py-class docutils literal"><span class="pre">AllHaveRun</span></code></a> (<a href="#id15"><span class="problematic" id="id16">*</span></a>Components)
 satisfied when all of the specified Components have executed at least once.</li>
 <li><a class="reference internal" href="#psyneulink.core.scheduling.condition.WhenFinished" title="psyneulink.core.scheduling.condition.WhenFinished"><code class="xref any py py-class docutils literal"><span class="pre">WhenFinished</span></code></a> (Component)
-satisfied when the specified Component has set its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.is_finished" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> attribute to <code class="xref any docutils literal"><span class="pre">True</span></code>.</li>
+satisfied when the specified Component has set its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> attribute to <code class="xref any docutils literal"><span class="pre">True</span></code>.</li>
 <li><a class="reference internal" href="#psyneulink.core.scheduling.condition.WhenFinishedAny" title="psyneulink.core.scheduling.condition.WhenFinishedAny"><code class="xref any py py-class docutils literal"><span class="pre">WhenFinishedAny</span></code></a> (<a href="#id17"><span class="problematic" id="id18">*</span></a>Components)
-satisfied when any of the specified Components has set their <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.is_finished" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> attribute to <code class="xref any docutils literal"><span class="pre">True</span></code>.</li>
+satisfied when any of the specified Components has set their <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> attribute to <code class="xref any docutils literal"><span class="pre">True</span></code>.</li>
 <li><a class="reference internal" href="#psyneulink.core.scheduling.condition.WhenFinishedAll" title="psyneulink.core.scheduling.condition.WhenFinishedAll"><code class="xref any py py-class docutils literal"><span class="pre">WhenFinishedAll</span></code></a> (<a href="#id19"><span class="problematic" id="id20">*</span></a>Components)
-satisfied when all of the specified Components have set their <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.is_finished" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> attributes to <code class="xref any docutils literal"><span class="pre">True</span></code>.</li>
+satisfied when all of the specified Components have set their <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> attributes to <code class="xref any docutils literal"><span class="pre">True</span></code>.</li>
 </ul>
 </div></blockquote>
 <p id="conditions-convenience"><strong>Convenience Conditions</strong> (based on other Conditions, condensed for convenience)</p>
@@ -1374,7 +1374,7 @@ JustRan(A) is satisfied at the beginning of the next <a class="reference interna
 <p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
-<li>the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.is_finished" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> methods of the Component specified in <strong>components</strong> returns <code class="xref any docutils literal"><span class="pre">True</span></code>.</li>
+<li>the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> methods of the Component specified in <strong>components</strong> returns <code class="xref any docutils literal"><span class="pre">True</span></code>.</li>
 </ul>
 </div></blockquote>
 <p class="rubric">Notes</p>
@@ -1399,7 +1399,7 @@ this Condition) can vary arbitrarily in time.</li>
 <p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
-<li>the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.is_finished" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> methods of all Components specified in <strong>components</strong> return <code class="xref any docutils literal"><span class="pre">True</span></code>.</li>
+<li>the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> methods of all Components specified in <strong>components</strong> return <code class="xref any docutils literal"><span class="pre">True</span></code>.</li>
 </ul>
 </div></blockquote>
 <p class="rubric">Notes</p>
@@ -1427,7 +1427,7 @@ this Condition) can vary arbitrarily in time.</li>
 <p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
-<li>the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.is_finished" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> methods of any Components specified in <strong>components</strong> returns <code class="xref any docutils literal"><span class="pre">True</span></code>.</li>
+<li>the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> methods of any Components specified in <strong>components</strong> returns <code class="xref any docutils literal"><span class="pre">True</span></code>.</li>
 </ul>
 </div></blockquote>
 <p class="rubric">Notes</p>

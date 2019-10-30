@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Utilities &mdash; PsyNeuLink 0.7.0.0+76.gad7786d documentation</title>
+  <title>Utilities &mdash; PsyNeuLink 0.7.0.0+77.g2354a9f documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.0.0+76.gad7786d',
+              VERSION:'0.7.0.0+77.g2354a9f',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.7.0.0+76
+                0.7.0.0+77
               </div>
             
           
@@ -204,6 +204,7 @@ are not constrained to be used by PsyNeuLink objects</dd>
 <li><code class="xref any docutils literal"><span class="pre">is_unit_interval</span></code></li>
 <li><a class="reference internal" href="#psyneulink.core.globals.utilities.is_same_function_spec" title="psyneulink.core.globals.utilities.is_same_function_spec"><code class="xref any py py-func docutils literal"><span class="pre">is_same_function_spec</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.globals.utilities.is_component" title="psyneulink.core.globals.utilities.is_component"><code class="xref any py py-func docutils literal"><span class="pre">is_component</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.utilities.is_comparison_operator" title="psyneulink.core.globals.utilities.is_comparison_operator"><code class="xref any py py-func docutils literal"><span class="pre">is_comparison_operator</span></code></a></li>
 </ul>
 </div>
 <div class="section" id="enum">
@@ -567,6 +568,12 @@ pathway which would otherwise form a cycle.</p>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="psyneulink.core.globals.utilities.NodeRole.AUTOASSOCIATIVE_LEARNING">
+<code class="descname">AUTOASSOCIATIVE_LEARNING</code><a class="headerlink" href="#psyneulink.core.globals.utilities.NodeRole.AUTOASSOCIATIVE_LEARNING" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Node that implements an AutoassociativeLearningMechanism</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="psyneulink.core.globals.utilities.NodeRole.TARGET">
 <code class="descname">TARGET</code><a class="headerlink" href="#psyneulink.core.globals.utilities.NodeRole.TARGET" title="Permalink to this definition">¶</a></dt>
 <dd><p>A Node that receives the target for a learning sequence</p>
@@ -599,6 +606,21 @@ pathway which would otherwise form a cycle.</p>
 <dd><p>Extract numeric value from array, preserving numeric type
 :param array:
 :return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="psyneulink.core.globals.utilities.is_comparison_operator">
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">is_comparison_operator</code><span class="sig-paren">(</span><em>o</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.is_comparison_operator" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">True if <strong>o</strong> is an entry in comparison_operators dictionary (in keywords)</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -937,7 +959,7 @@ an array of booleans instead of a single boolean for ==</p>
 
 <dl class="function">
 <dt id="psyneulink.core.globals.utilities.tensor_power">
-<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">tensor_power</code><span class="sig-paren">(</span><em>items</em>, <em>levels: &lt;typecheck.framework.optional object at 0x10ed2e710&gt; = None</em>, <em>flat=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.tensor_power" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">tensor_power</code><span class="sig-paren">(</span><em>items</em>, <em>levels: &lt;typecheck.framework.optional object at 0x1157a2828&gt; = None</em>, <em>flat=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.tensor_power" title="Permalink to this definition">¶</a></dt>
 <dd><p>return tensor product for all members of powerset of items</p>
 <p>levels specifies a range of set levels to return;  1=first order terms, 2=2nd order terms, etc.
 if None, all terms will be returned</p>
