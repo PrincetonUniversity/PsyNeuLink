@@ -772,7 +772,8 @@ class Parameter(types.SimpleNamespace):
                 for k in self._param_attrs
             },
             _owner=self._owner,
-            _inherited=self._inherited
+            _inherited=self._inherited,
+            _user_specified=self._user_specified,
         )
         memo[id(self)] = result
 
