@@ -11,6 +11,7 @@
 import ctypes
 import functools
 import numpy as np
+from typing import Set
 
 from llvmlite import ir
 
@@ -25,11 +26,11 @@ from .jit_engine import *
 __all__ = ['LLVMBuilderContext']
 
 
-_compiled_modules = set()
-_binary_generation = 0
+_compiled_modules:Set[ir.Module] = set()
+_binary_generation:int = 0
 
 
-def _llvm_build(target_generation=_binary_generation + 1):
+def _llvm_build(target_generation:int=_binary_generation + 1):
     global _binary_generation
     if target_generation <= _binary_generation:
         if "compile" in debug_env:
@@ -49,7 +50,7 @@ def _llvm_build(target_generation=_binary_generation + 1):
 
 
 class LLVMBinaryFunction:
-    def __init__(self, name):
+    def __init__(self, name:str):
         self.name = name
 
         self.__c_func = None
@@ -127,7 +128,7 @@ class LLVMBinaryFunction:
 
     @staticmethod
     @functools.lru_cache(maxsize=32)
-    def get(name):
+    def get(name:str):
         _llvm_build(LLVMBuilderContext._llvm_generation)
         return LLVMBinaryFunction(name)
 

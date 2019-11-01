@@ -18,6 +18,7 @@ from llvmlite import ir
 import numpy as np
 import os
 import re
+from typing import Optional, Set
 import weakref
 try:
     import torch
@@ -35,9 +36,9 @@ from .helpers import ConditionGenerator
 __all__ = ['LLVMBuilderContext', '_modules', '_find_llvm_function']
 
 
-_modules = set()
-_all_modules = set()
-_struct_count = 0
+_modules:Set[ir.Module] = set()
+_all_modules:Set[ir.Module] = set()
+_struct_count:int = 0
 
 
 @atexit.register
@@ -56,8 +57,8 @@ _BUILTIN_PREFIX = "__pnl_builtin_"
 _builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'printf'))
 
 class LLVMBuilderContext:
-    uniq_counter = 0
-    _llvm_generation = 0
+    uniq_counter:int = 0
+    _llvm_generation:int = 0
 
     def __init__(self):
         self.int32_ty = _int32_ty
@@ -125,7 +126,7 @@ class LLVMBuilderContext:
 
         return builder
 
-    def gen_llvm_function(self, obj):
+    def gen_llvm_function(self, obj) -> ir.Function:
         cache = self._cache
         try:
             # HACK: allows for learning bin func and non-learning to differ
@@ -138,7 +139,7 @@ class LLVMBuilderContext:
             cache[obj] = obj._gen_llvm_function()
         return cache[obj]
 
-    def get_llvm_function(self, name):
+    def get_llvm_function(self, name) -> ir.Function:
         try:
             f = self.gen_llvm_function(name)
         except AttributeError:
@@ -718,7 +719,7 @@ def _gen_cuda_kernel_wrapper_module(function):
 
 
 @functools.lru_cache(maxsize=128)
-def _convert_llvm_ir_to_ctype(t):
+def _convert_llvm_ir_to_ctype(t:ir.Type):
     type_t = type(t)
 
     if type_t is ir.VoidType:
