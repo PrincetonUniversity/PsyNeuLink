@@ -65,7 +65,8 @@ from psyneulink.core.components.functions.learningfunctions import Kohonen
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.selectionfunctions import OneHot
-from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism
+from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
+    ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process
@@ -79,7 +80,7 @@ from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.library.components.mechanisms.modulatory.learning.kohonenlearningmechanism import KohonenLearningMechanism
 
 __all__ = [
-    'KohonenMechanism', 'KohonenError',
+    'INPUT_PATTERN', 'KohonenMechanism', 'KohonenError', 'MAXIMUM_ACTIVITY'
 ]
 
 logger = logging.getLogger(__name__)
@@ -93,28 +94,34 @@ class KohonenError(Exception):
         return repr(self.error_value)
 
 
-MAX_ACTIVITY_OUTPUT = 'MAX_ACTIVITY_OUTPUT'
+MAXIMUM_ACTIVITY = 'MAXIMUM_ACTIVITY'
 INPUT_PATTERN = 'INPUT_PATTERN'
+
+
+# This is a convenience class that provides list of standard_output_port names in IDE
+class KohonenMechanism_OUTPUT():
+        """
+            .. _KohonenMechanism_Standard_OutputPorts:
+
+            A KohonenMechanism has the following `Standard OutputPorts <OutputPort_Standard>` in addition to those of a
+            `TransferMechanism <TransferMechanism_Standard_OutputPorts>`:
+
+            .. _KohonenMechanism_MAXIMUM_ACTIVITY:
+
+            *MAXIMUM_ACTIVITY* : 1d array
+                 "one hot" encoding of the most active element of the Mechanism's `value <Mechanisms_Base.value>` in
+                 the last execution.
+
+        """
+        MAXIMUM_ACTIVITY=MAXIMUM_ACTIVITY
 
 
 class KohonenMechanism(TransferMechanism):
     """
-    KohonenMechanism(                                      \
-    default_variable=None,                                 \
-    size=None,                                             \
-    function=Linear,                                       \
-    matrix=None,                                           \
-    integrator_function=AdaptiveIntegrator,                \
-    initial_value=None,                                    \
-    noise=0.0,                                             \
-    integration_rate=1.0,                                  \
-    clip=None,                                             \
-    enable_learning=True,                                  \
-    learning_function=Kohonen(distance_function=GAUSSIAN), \
-    learning_rate=None,                                    \
-    params=None,                                           \
-    name=None,                                             \
-    prefs=None)
+    KohonenMechanism(                                          \
+        enable_learning=True,                                  \
+        learning_function=Kohonen(distance_function=GAUSSIAN), \
+        learning_rate=None)
 
     Subclass of `TransferMechanism` that learns a `self-organized <https://en.wikipedia.org/wiki/Self-organizing_map>`_
     map of its input.
@@ -122,56 +129,11 @@ class KohonenMechanism(TransferMechanism):
     Arguments
     ---------
 
-    default_variable : number, list or np.ndarray : default Transfer_DEFAULT_BIAS
-        specifies the input to the mechanism to use if none is provided in a call to its
-        `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method;
-        also serves as a template to specify the length of `variable <KohonenMechanism.variable>` for
-        `function <KohonenMechanism.function>`, and the `primary OutputPort <OutputPort_Primary>`
-        of the mechanism.
-
-    size : int, list or np.ndarray of ints
-        specifies variable as array(s) of zeros if **variable** is not passed as an argument;
-        if **variable** is specified, it takes precedence over the specification of **size**.
-        As an example, the following mechanisms are equivalent::
-            T1 = TransferMechanism(size = [3, 2])
-            T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
-
-    function : TransferFunction : default Linear
-        specifies the function used to transform the input.
-
     COMMENT:
     selection_function : SelectionFunction, function or method : default OneHot(mode=MAX_VAL)
         specifes the function used to select the element of the input used to train the `matrix
         <MappingProjection.matrix>` of afferent `MappingProjection` to the Mechanism.
     COMMENT
-
-    integrator_function : IntegratorFunction : default AdaptiveIntegrator
-        specifies `IntegratorFunction` to use in `integration_mode <KohonenMechanism.integration_mode>`.
-
-    initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
-        specifies the starting value for time-averaged input (only relevant if
-        `integration_rate <KohonenMechanism.integration_rate>` is not 1.0).
-        COMMENT:
-            Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
-        COMMENT
-
-    noise : float or function : default 0.0
-        a value added to the result of the `function <KohonenMechanism.function>` or to the result of
-        `integrator_function <KohonenMechanism.integrator_function>`, depending on whether `integrator_mode
-        <KohonenMechanism.integrator_mode>` is True or False. See `noise <KohonenMechanism.noise>` for more details.
-
-    integration_rate : float : default 0.5
-        the smoothing factor for exponential time averaging of input when `integrator_mode
-        <KohonenMechanism.integrator_mode>` is set to True ::
-
-         result = (integration_rate * current input) +
-         (1-integration_rate * result on previous time_step)
-
-    clip : list [float, float] : default None (Optional)
-        specifies the allowable range for the result of `function <KohonenMechanism.function>` the item in index 0 specifies the
-        minimum allowable value of the result, and the item in index 1 specifies the maximum allowable value; any
-        element of the result that exceeds the specified minimum or maximum value is set to the value of
-        `clip <KohonenMechanism.clip>` that it exceeds.
 
     enable_learning : boolean : default True
         specifies whether the Mechanism should be configured for learning;  if it is not (the default), then learning
@@ -188,28 +150,9 @@ class KohonenMechanism(TransferMechanism):
         specifies function used by `learning_mechanism <KohonenMechanism.learning_mechanism>` to update `matrix
         <MappingProjection.matrix>` of `learned_projection <KohonenMechanism.learned_projection>.
 
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
-        the mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
-        the dictionary override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default see `name <Kohonen Mechanism.name>`
-        specifies the name of the Kohonen Mechanism.
-
-    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the Kohonen Mechanism; see `prefs <Kohonen Mechanism.prefs>` for details.
-
-    context : str : default componentType+INITIALIZING
-        string used for contextualization of instantiation, hierarchical calls, executions, etc.
 
     Attributes
     ----------
-
-    variable : value
-        the input to Mechanism's `function <KohonenMechanism.variable>`.
-
-    function : Function
-        the Function used to transform the input.
 
     COMMENT:
     selection_function : SelectionFunction, function or method : default OneHot(mode=MAX_VAL)
@@ -246,113 +189,14 @@ class KohonenMechanism(TransferMechanism):
         created automatically if `learning is specified <KohonenMechanism_Learning>`, and used to train the
         `learned_projection <KohonenMechanism.learned_projection>`.
 
-    integrator_function :  IntegratorFunction
-        the `IntegratorFunction` used when `integrator_mode <KohonenMechanism.integrator_mode>` is set to
-        `True` (see `integrator_mode <KohonenMechanism.integrator_mode>` for details).
-
-        .. note::
-            The KohonenMechanism's `integration_rate <KohonenMechanism.integration_rate>`, `noise
-            <KohonenMechanism.noise>`, and `initial_value <KohonenMechanism.initial_value>` parameters
-            specify the respective parameters of its `integrator_function` (with **initial_value** corresponding
-            to `initializer <IntegratorFunction.initializer>` of integrator_function.
-
-    initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS
-        determines the starting value for time-averaged input
-        (only relevant if `integration_rate <KohonenMechanism.integration_rate>` parameter is not 1.0).
-        COMMENT:
-            Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
-        COMMENT
-
-    noise : float or function : default 0.0
-        When `integrator_mode <KohonenMechanism.integrator_mode>` is set to True, noise is passed into the `integrator_function
-        <KohonenMechanism.integrator_function>`. Otherwise, noise is added to the output of the `function <KohonenMechanism.function>`.
-
-        If noise is a list or array, it must be the same length as `variable <KohonenMechanism.default_variable>`.
-
-        If noise is specified as a single float or function, while `variable <KohonenMechanism.variable>` is a list or array,
-        noise will be applied to each variable element. In the case of a noise function, this means that the function
-        will be executed separately for each variable element.
-
-        .. note::
-            In order to generate random noise, we recommend selecting a probability distribution function
-            (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
-            the noise will simply be an offset that remains the same across all executions.
-
-    integration_rate : float : default 0.5
-        the smoothing factor for exponential time averaging of input when `integrator_mode <KohonenMechanism.integrator_mode>` is set
-        to True::
-
-          result = (integration_rate * current input) + (1-integration_rate * result on previous time_step)
-
-    integrator_function:
-        When *integrator_mode* is set to True, the KohonenMechanism executes its `integrator_function
-        <KohonenMechanism.integrator_function>`, which is the `AdaptiveIntegrator`. See `AdaptiveIntegrator
-        <AdaptiveIntegrator>` for more details on what it computes. Keep in mind that the `integration_rate
-        <KohonenMechanism.integration_rate>` parameter of the KohonenMechanism corresponds to the `rate
-        <IntegratorFunction.rate>` of the `integrator_function <KohonenMechanism.integrator_function>`.
-
-    integrator_mode:
-        **When integrator_mode is set to True:**
-
-        the variable of the mechanism is first passed into the following equation:
-
-        .. math::
-            value = previous\\_value(1-smoothing\\_factor) + variable \\cdot smoothing\\_factor + noise
-
-        The result of the integrator function above is then passed into the `mechanism's function <KohonenMechanism.function>`. Note that
-        on the first execution, *initial_value* sets previous_value.
-
-        **When integrator_mode is set to False:**
-
-        The variable of the mechanism is passed into the `function of the mechanism <KohonenMechanism.function>`. The mechanism's
-        `integrator_function <KohonenMechanism.integrator_function>` is skipped entirely, and all related arguments (*noise*, *leak*,
-        *initial_value*, and *time_step_size*) are ignored.
-
-    clip : list [float, float] : default None (Optional)
-        specifies the allowable range for the result of `function <KohonenMechanism.function>`
-
-        the item in index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the
-        maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set to
-         the value of `clip <KohonenMechanism.clip>` that it exceeds.
-
-    previous_input : 1d np.array of floats
-        the value of the input on the previous execution, including the value of `recurrent_projection`.
-
-    value : 2d np.array [array(float64)]
-        result of executing `function <KohonenMechanism.function>`; same value as first item of
-        `output_values <KohonenMechanism.output_values>`.
-
-    COMMENT:
-        CORRECTED:
-        value : 1d np.array
-            the output of ``function``;  also assigned to ``value`` of the TRANSFER_RESULT OutputPort
-            and the first item of ``output_values``.
-    COMMENT
-
     output_ports : Dict[str, OutputPort]
         an OrderedDict with the following `OutputPorts <OutputPort>`:
 
-        * `TRANSFER_RESULT`, the `value <OutputPort.value>` of which is the **result** of `function
-          <KohonenMechanism.function>`;
+        * `RESULT` -- `value <OutputPort.value>` is the **result** of `function <TransferMechanism.function>`;
 
-        * `MOST_ACTIVE`, the `value <OutputPort.value>` of which is a "one hot" encoding of the most active
-          element of the Mechanism's `value <KohonenMechanism.value>` in the last execution (used by the
-          `learning_mechanism <KohonenMechanisms.learning_mechanism>` to modify the `learned_projection
-          <KohonenMechanism.learned_projection>`.
-
-    output_values : List[array(float64), array(float64)]
-        a list with the `value <OutputPort.value>` of each of the Mechanism's `output_ports
-        <KohonenMechanism.output_ports>`.
-
-    name : str
-        the name of the Kohonen Mechanism; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the Kohonen Mechanism; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        * `INPUT_PATTERN` -- `value <OutputPort.value>` is the value of the KohonenMechanism's `variable
+          <Mechanisms_Base.variable>`, which is provided to the *ACTIVATION_OUTPUT* InputPort of its
+          `learning_mechanism <KohonenMechanisms.learning_mechanism>`.
 
     Returns
     -------
@@ -393,9 +237,7 @@ class KohonenMechanism(TransferMechanism):
 
         """
         learning_function = Parameter(Kohonen(distance_function=GAUSSIAN), stateful=False, loggable=False)
-
         learning_rate = Parameter(None, modulable=True)
-
         enable_learning = True
         matrix = DEFAULT_MATRIX
 
@@ -404,7 +246,7 @@ class KohonenMechanism(TransferMechanism):
     paramClassDefaults.update({'function': Linear})  # perhaps hacky? not sure (7/10/17 CW)
 
     standard_output_ports = TransferMechanism.standard_output_ports.copy()
-    standard_output_ports.extend([{NAME:MAX_ACTIVITY_OUTPUT,
+    standard_output_ports.extend([{NAME:MAXIMUM_ACTIVITY,
                                     VARIABLE:(OWNER_VALUE,0),
                                     FUNCTION: OneHot(mode=MAX_INDICATOR)}
                                    ])
@@ -564,6 +406,7 @@ class KohonenMechanism(TransferMechanism):
                                                               self.name))
 
         # KDM 10/22/18: should below be aux_components?
+        # FIX: 10/31/19 [JDC]: YES!
 
         # Instantiate Projection from learned_projection's sender to LearningMechanism
         MappingProjection(sender=self.learned_projection.sender,
@@ -571,7 +414,9 @@ class KohonenMechanism(TransferMechanism):
                           matrix=IDENTITY_MATRIX,
                           name="Error Projection for {}".format(learning_mechanism.name))
 
-        # Instantiate Projection from learned_projection's receiver (Mechanism's input) to LearningMechanism
+        # Instantiate Projection from the Mechanism's INPUT_PATTERN OutputPort
+        #    (which has the value of the learned_projection's receiver;  i.e., the Mechanism's input)
+        #    to the LearningMechanism's ACTIVATION_OUTPUT InputPort.
         MappingProjection(sender=self.output_ports[INPUT_PATTERN],
                           receiver=learning_mechanism.input_ports[ACTIVATION_OUTPUT],
                           matrix=IDENTITY_MATRIX,

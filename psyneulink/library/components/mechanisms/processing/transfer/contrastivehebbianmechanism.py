@@ -369,8 +369,8 @@ class CONTRASTIVE_HEBBIAN_OUTPUT():
     """
         .. _ContrastiveHebbianMechanism_Standard_OutputPorts:
 
-        `Standard OutputPorts <OutputPort_Standard>` for `ContrastiveHebbianMechanism` (in addition to those
-        for `RecurrentTransferMechanism` and `TransferMechanism`):
+        A ContrastiveHebbianMechanism has the following `Standard OutputPorts <OutputPort_Standard>` in addition to
+        those of a `RecurruentTransferMechanism <RecurrentTransferMechanism_Standard_OutputPorts>`:
 
         .. _OUTPUT_ACTIVITY_OUTPUT:
 
@@ -444,32 +444,14 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 mode=None,                                                \
                 continuous=True,                                          \
                 clamp=HARD_CLAMP,                                         \
-                function=Linear,                                          \
-                integrator_functon=AdapativeIntegrator,                   \
-                combination_function=LinearCombination,                   \
-                matrix=HOLLOW_MATRIX,                                     \
-                auto=None,                                                \
-                hetero=None,                                              \
-                initial_value=None,                                       \
-                noise=0.0,                                                \
-                integration_rate=0.5,                                     \
-                integrator_mode=False,                                    \
-                integration_rate=0.5,                                     \
-                clip=[float:min, float:max],                              \
                 minus_phase_termination_condition = CONVERGENCE,          \
                 minus_phase_termination_threshold=.01,                    \
                 plus_phase_termination_condition = CONVERGENCE,           \
                 plus_phase_termination_threshold=.01,                     \
                 phase_convergence_function=Distance(metric=MAX_ABS_DIFF), \
                 max_passes=None,                                          \
-                enable_learning=False,                                    \
-                learning_rate=None,                                       \
-                learning_function=ContrastiveHebbian,                     \
                 additional_input_ports=None,                              \
-                additional_output_ports=None,                             \
-                params=None,                                              \
-                name=None,                                                \
-                prefs=None)
+                additional_output_ports=None)
 
     Subclass of `RecurrentTransferMechanism` that implements a single-layer auto-recurrent network using two-phases
     of execution and the `Contrastive Hebbian Learning algorithm
@@ -518,22 +500,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         <ContrastiveHebbian_Input>` in each execution (see `clamp <ContrastiveHebbianMechanism.clamp>` for additional
         details.
 
-    function : TransferFunction : default Linear
-        specifies the function used to transform the input;  can be any function that takes and returns a 1d array
-        of scalar values.
-
-    matrix : list, np.ndarray, np.matrix, matrix keyword, or AutoAssociativeProjection : default HOLLOW_MATRIX
-        specifies the matrix to use for `recurrent_projection <ContrastiveHebbianMechanism.recurrent_projection>`;
-        see **matrix** argument of `RecurrentTransferMechanism` for details of specification.
-
-    auto : number, 1D array, or None : default None
-        specifies matrix with diagonal entries equal to **auto**; see **auto** argument of
-        `RecurrentTransferMechanism` for details of specification.
-
-    hetero : number, 2D array, or None : default None
-        specifies a hollow matrix with all non-diagonal entries equal to **hetero**;  see **hetero** argument of
-        `RecurrentTransferMechanism` for details of specification.
-
     continuous : bool : default True
         specifies whether or not to reinitialize `current_activity <ContrastiveHebbianMechanism.current_activity>`
         at the beginning of the `minus phase <ContrastiveHebbian_Minus_Phase>` of a trial.
@@ -577,36 +543,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         after which an error occurs; if `None` is specified, execution may continue indefinitely or until an
         interpreter exception is generated.
 
-    enable_learning : boolean : default False
-        specifies whether the Mechanism should be `configured for learning <ContrastiveHebbian_Learning>`.
-
-    learning_rate : scalar, or list, 1d or 2d np.array, or np.matrix of numeric values: default False
-        specifies the learning rate used by its `learning function <ContrastiveHebbianMechanism.learning_function>`.
-        If it is `None`, the `default learning_rate for a LearningMechanism <LearningMechanism_Learning_Rate>` is
-        used; if it is assigned a value, that is used as the learning_rate (see `learning_rate
-        <ContrastiveHebbianMechanism.learning_rate>` for details).
-
-    learning_function : function : default ContrastiveHebbian
-        specifies the function for the LearningMechanism if `learning is specified <ContrastiveHebbian_Learning>`.
-        It can be any function so long as it takes a list or 1d array of numeric values as its `variable
-        <Function_Base.variable>` and returns a square matrix of numeric values with the same dimensions as the
-        length of the input.
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
-        the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
-        the dictionary override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default see `name <ContrastiveHebbianMechanism.name>`
-        specifies the name of the ContrastiveHebbianMechanism.
-
-    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the ContrastiveHebbianMechanism; see `prefs
-        <ContrastiveHebbianMechanism.prefs>` for details.
-
-    context : str : default componentType+INITIALIZING
-        string used for contextualization of instantiation, hierarchical calls, executions, etc.
-
     Attributes
     ----------
 
@@ -644,9 +580,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     mode : SIMPLE_HEBBIAN or None
         indicates whether *SIMPLE_HEBBIAN* was used for configuration (see
         `SIMPLE_HEBBIAN mode <ContrastiveHebbian_SIMPLE_HEBBIAN>` for details).
-
-    matrix : 2d np.array
-        the `matrix <AutoAssociativeProjection.matrix>` parameter of the `recurrent_projection` for the Mechanism.
 
     recurrent_projection : AutoAssociativeProjection
         an `AutoAssociativeProjection` that projects from the *CURRENT_ACTIVITY_OUTPUT* `OutputPort
@@ -758,29 +691,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         `False` = `minus phase <ContrastiveHebbian_Minus_Phase>`;
         `True` = `plus phase <ContrastiveHebbian_Plus_Phase>`.
 
-    learning_enabled : bool
-        indicates whether `learning is enabled <ContrastiveHebbian_Learning>`;  see `learning_enabled
-        <RecurrentTransferMechanism.learning_enabled>` of RecurrentTransferMechanism for additional details.
-
-    learning_mechanism : LearningMechanism
-        created automatically if `learning is specified <ContrastiveHebbian_Learning>`, and used to train the
-        `recurrent_projection <ContrastiveHebbianMechanism.recurrent_projection>`.
-
-    learning_rate : float, 1d or 2d np.array, or np.matrix of numeric values
-        determines the learning rate used by the `learning_function <ContrastiveHebbianMechanism.learning_function>`
-        of the `learning_mechanism <ContrastiveHebbianMechanism.learning_mechanism>` (see `learning_rate
-        <AutoAssociativeLearningMechanism.learning_rate>` for details concerning specification and default value
-        assignment).
-
-    learning_function : function
-        the function used by the `learning_mechanism <ContrastiveHebbianMechanism.learning_mechanism>` to train the
-        `recurrent_projection <ContrastiveHebbianMechanism.recurrent_projection>` if `learning is configured
-        <ContrastiveHebbian_Learning>`;  default is `ContrastiveHebbian`.
-
-    value : 2d np.array
-        result of executing `function <ContrastiveHebbianMechanism.function>`; same value as first item of
-        `output_values <ContrastiveHebbianMechanism.output_values>`.
-
     output_ports : Dict[str: OutputPort]
         an OrderedDict with the following `OutputPorts <OutputPort>` by default:
 
@@ -797,19 +707,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         * *ACTIVITY_DIFFERENCE_OUTPUT*, the `value <OutputPort.value>` of which is a 1d array with the elementwise
           differences in activity between the plus and minus phases at the end of an `execution sequence
           <ContrastiveHebbian_Execution>`.
-
-    output_values : List[1d np.array]
-        a list with the `value <OutputPort.value>` of each `OutputPort` in `output_ports
-        <ContrastiveHebbianMechanism.output_ports>`.
-
-    name : str
-        the name of the ContrastiveHebbianMechanism; if it is not specified in the **name** argument of the constructor,
-        a default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the ContrastiveHebbianMechanism; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
 
     Returns
     -------

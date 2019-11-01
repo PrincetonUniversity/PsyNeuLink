@@ -353,8 +353,7 @@ assigned to the TransferMechanism's `termination_threshold <TransferMechanism.te
 
 In some cases, it may be useful to reset the accumulation of a mechanism back to its original starting point, or a new
 starting point. This is done using the `reinitialize <AdaptiveIntegrator.reinitialize>` method on the
-mechanism's
-`integrator_function <TransferMechanism.integrator_function>`, or the mechanisms's own `reinitialize
+mechanism's `integrator_function <TransferMechanism.integrator_function>`, or the mechanisms's own `reinitialize
 <TransferMechanism.reinitialize>` method.
 
 The `reinitialize <AdaptiveIntegrator.reinitialize>` method of the `integrator_function
@@ -562,24 +561,12 @@ class TRANSFER_OUTPUT():
       linear combination of the `value <Mechanism_Base.value>` of all items of the TransferMechanism's `value
       <Mechanism_Base.value>` (requires that they all have the same dimensionality).
     COMMENT
-
     """
 
-    RESULTS=RESULTS
-    RESULT=RESULT
-    MEAN=OUTPUT_MEAN
-    MEDIAN=OUTPUT_MEDIAN
-    STANDARD_DEVIATION=OUTPUT_STD_DEV
-    VARIANCE=OUTPUT_VARIANCE
-    MAX_VAL=MAX_VAL
-    MAX_ABS_VAL=MAX_ABS_VAL
-    MAX_INDICATOR=MAX_INDICATOR
-    MAX_ABS_INDICATOR=MAX_ABS_INDICATOR
-    PROB=PROB
-
-# THE FOLLOWING WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
-# for item in [item[NAME] for item in DDM_standard_output_ports]:
-#     setattr(TRANSFER_OUTPUT.__class__, item, item)
+# Add names of `standard_output_ports <OutputPort.standard_output_ports>` to TRANSFER_OUTPUT
+from psyneulink.core.components.ports.outputport import OUTPUTS
+for item in [i for i in OUTPUTS.__dict__.keys() if '__' not in i]:
+    setattr(TRANSFER_OUTPUT, item, item)
 
 class TransferError(Exception):
     def __init__(self, error_value):

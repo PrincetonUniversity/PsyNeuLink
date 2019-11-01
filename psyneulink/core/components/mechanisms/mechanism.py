@@ -1153,12 +1153,13 @@ class Mechanism_Base(Mechanism):
         contains the parameters for the Mechanism's `function <Mechanism_Base.function>`.  The key of each entry is the
         name of a parameter of the function, and its value is the parameter's value.
 
-    value : ndarray
-        output of the Mechanism's `function <Mechanism_Base.function>`.  It is always at least a 2d np.array, with the
+    value : 2d np.array [array(float64)]
+        result of the Mechanism's `function <Mechanism_Base.function>`.  It is always at least a 2d np.array, with the
         items of axis 0 corresponding to the values referenced by the corresponding `index <OutputPort.index>`
         attribute of the Mechanism's `OutputPorts <OutputPort>`.  The first item is generally referenced by the
         Mechanism's `primary OutputPort <OutputPort_Primary>` (i.e., the one in the its `output_port
-        <Mechanism_Base.output_port>` attribute).  The `value <Mechanism_Base.value>` is `None` until the Mechanism
+        <Mechanism_Base.output_port>` attribute), as well as the first item of `output_values
+        <Mechanism_Base.output_values>`.  The `value <Mechanism_Base.value>` is `None` until the Mechanism
         has been executed at least once.
 
         .. note::

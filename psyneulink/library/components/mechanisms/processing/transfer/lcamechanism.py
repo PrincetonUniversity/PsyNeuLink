@@ -229,40 +229,19 @@ class LCAMechanism_OUTPUT():
                 and the average of all of the other elements.
 
         """
-        RESULT=RESULT
-        MEAN=OUTPUT_MEAN
-        MEDIAN=OUTPUT_MEDIAN
-        STANDARD_DEVIATION=OUTPUT_STD_DEV
-        VARIANCE=OUTPUT_VARIANCE
-        ENERGY=ENERGY
-        ENTROPY=ENTROPY
         MAX_VS_NEXT=MAX_VS_NEXT
         MAX_VS_AVG=MAX_VS_AVG
-    # THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
-    # for item in [item[NAME] for item in DDM_standard_output_ports]:
-    #     setattr(DDM_OUTPUT.__class__, item, item)
 
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class LCAMechanism(RecurrentTransferMechanism):
     """
     LCAMechanism(                    \
-        default_variable=None,       \
-        size=None,                   \
-        function=Logistic,           \
-        initial_value=None,          \
         leak=0.5,                    \
         competition=1.0,             \
         self_excitation=0.0,         \
-        noise=0.0,                   \
-        integrator_mode = True       \
-        time_step_size = 0.1         \
         threshold = None             \
-        threshold_criterion = VALUE  \
-        clip=[float:min, float:max], \
-        params=None,                 \
-        name=None,                   \
-        prefs=None)
+        threshold_criterion = VALUE)
 
     Subclass of `RecurrentTransferMechanism` that implements a Leaky Competitive Accumulator.
 
@@ -309,21 +288,6 @@ class LCAMechanism(RecurrentTransferMechanism):
         *MAX_VS_AVG* is specified, then the length of the LCAMCechanism's `value <Mechanism_Base.value>` must be at
         least 2 (see `LCAMechanism_Threshold` for additional details).
 
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
-        the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
-        the dictionary override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default see `name <LCAMechanism Mechanism.name>`
-        specifies the name of the LCAMechanism Mechanism.
-
-    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the LCAMechanism Mechanism (see `prefs <LCAMechanism Mechanism.prefs>` for
-        details).
-
-    context : str : default ''componentType+INITIALIZNG''
-           string used for contextualization of instantiation, hierarchical calls, executions, etc.
-
     Attributes
     ----------
 
@@ -353,15 +317,6 @@ class LCAMechanism(RecurrentTransferMechanism):
         <LeakyCompetingIntegrator>` `variable <LeakyCompetingIntegrator.value>` (:math:`x_{i}`) on each time step
         (see `LeakyCompetingIntegrator` for additional details.
 
-    name : str
-        the name of the LCAMechanism Mechanism; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the LCAMechanism Mechanism; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
-
     Returns
     -------
     instance of LCAMechanism : LCAMechanism
@@ -386,12 +341,6 @@ class LCAMechanism(RecurrentTransferMechanism):
 
                     :default value: 1.0
                     :type: float
-
-                function
-                    see `function <LCAMechanism.function>`
-
-                    :default value: `Logistic`
-                    :type: `Function`
 
                 initial_value
                     see `initial_value <LCAMechanism.initial_value>`
