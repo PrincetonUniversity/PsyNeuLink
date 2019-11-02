@@ -51,12 +51,12 @@ def module_count():
 # TODO: Should this be selectable?
 _int32_ty = ir.IntType(32)
 _float_ty = ir.DoubleType()
-_global_context = None
 
 _BUILTIN_PREFIX = "__pnl_builtin_"
 _builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'printf'))
 
 class LLVMBuilderContext:
+    __global_context = None
     uniq_counter:int = 0
     _llvm_generation:int = 0
 
@@ -85,10 +85,9 @@ class LLVMBuilderContext:
 
     @staticmethod
     def get_global():
-        global _global_context
-        if _global_context is None:
-            _global_context = LLVMBuilderContext()
-        return _global_context
+        if LLVMBuilderContext.__global_context is None:
+            LLVMBuilderContext.__global_context = LLVMBuilderContext()
+        return LLVMBuilderContext.__global_context
 
     def get_unique_name(self, name: str):
         LLVMBuilderContext.uniq_counter += 1
