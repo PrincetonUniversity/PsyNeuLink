@@ -165,7 +165,7 @@ and assigns three `Standard OutputPorts <OutputPort_Standard>`::
 
     >>> import psyneulink as pnl
     >>> my_mech = pnl.TransferMechanism(input_ports=['MY_INPUT'],
-    ...                                 output_ports=[pnl.RESULT, pnl.OUTPUT_MEAN, pnl.OUTPUT_VARIANCE])
+    ...                                 output_ports=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE])
 
 
 .. _Mechanism_Example_2:
@@ -173,7 +173,7 @@ and assigns three `Standard OutputPorts <OutputPort_Standard>`::
 This shows how the same Mechanism can be specified using a dictionary assigned to the **params** argument::
 
      >>> my_mech = pnl.TransferMechanism(params={pnl.INPUT_PORTS: ['MY_INPUT'],
-     ...                                         pnl.OUTPUT_PORTS: [pnl.RESULT, pnl.OUTPUT_MEAN, pnl.OUTPUT_VARIANCE]})
+     ...                                         pnl.OUTPUT_PORTS: [pnl.RESULT, pnl.MEAN, pnl.VARIANCE]})
 
 See `Port <Port_Examples>` for additional examples of specifying the Ports of a Mechanism.
 
@@ -950,7 +950,7 @@ from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Function, Mechanism, Projection, Port
 from psyneulink.core.components.ports.inputport import DEFER_VARIABLE_SPEC_TO_MECH_MSG, InputPort
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
-from psyneulink.core.components.ports.outputport import OutputPort, standard_output_ports, standard_output_port_names
+from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.ports.port import REMOVE_PORTS, PORT_SPEC, _parse_port_spec
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
@@ -1375,8 +1375,8 @@ class Mechanism_Base(Mechanism):
         OUTPUT_LABELS_DICT: {}
         })
 
-    standard_output_ports = standard_output_ports.copy()
-    standard_output_port_names = standard_output_port_names.copy()
+    standard_output_ports = []
+    standard_output_port_names = []
 
     class Parameters(Mechanism.Parameters):
         """

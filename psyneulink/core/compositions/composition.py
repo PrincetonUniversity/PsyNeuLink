@@ -1008,7 +1008,7 @@ shown as unlabeled arrows, as illustrated for the Composition in the example bel
 | >>> a = ProcessingMechanism(                              |                                                          |
 |               name='A',                                   |                                                          |
 | ...           size=3,                                     |                                                          |
-| ...           output_ports=[RESULTS, OUTPUT_MEAN]         |                                                          |
+| ...           output_ports=[RESULTS, MEAN]                |                                                          |
 | ...           )                                           |                                                          |
 | >>> b = ProcessingMechanism(                              |                                                          |
 | ...           name='B',                                   |                                                          |
@@ -1027,7 +1027,7 @@ shown as unlabeled arrows, as illustrated for the Composition in the example bel
 | >>> comp.add_linear_processing_pathway([b,c])             |                                                          |
 | >>> ctlr = OptimizationControlMechanism(                  |                                                          |
 | ...            name='Controller',                         |                                                          |
-| ...            monitor_for_control=[(pnl.OUTPUT_MEAN, a)],|                                                          |
+| ...            monitor_for_control=[(pnl.MEAN, a)],       |                                                          |
 | ...            control_signals=(GAIN, c),                 |                                                          |
 | ...            agent_rep=comp                             |                                                          |
 | ...            )                                          |                                                          |

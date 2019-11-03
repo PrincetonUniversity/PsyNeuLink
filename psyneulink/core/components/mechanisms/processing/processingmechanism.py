@@ -92,12 +92,14 @@ belongs is run. A ProcessingMechanism always executes before any `ModulatoryMech
 from collections.abc import Iterable
 
 import typecheck as tc
+import numpy as np
 
 from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
-from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONTEXT, PROCESSING_MECHANISM, PREFERENCE_SET_NAME
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.keywords import \
+    FUNCTION, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MECHANISM_VALUE, MEDIAN, \
+    NAME, OWNER_VALUE, PROB, PROCESSING_MECHANISM, PREFERENCE_SET_NAME, RESULT, STANDARD_DEVIATION, VARIABLE, VARIANCE
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
@@ -113,16 +115,23 @@ class ProcessingMechanismError(Exception):
         self.error_value = error_value
 
 
+
+# # These are defined here because STANDARD_DEVIATION AND VARIANCE
+# #    are already defined in Keywords in lower case (used as arg for Functions).
+# STD_DEV_OUTPUT_PORT_NAME = 'STANDARD_DEVIATION'
+# VARIANCE_OUTPUT_PORT_NAME = 'variance'
+
+
 class ProcessingMechanism_Base(Mechanism_Base):
     # DOCUMENTATION: this is a TYPE and subclasses are SUBTYPES
     #                primary purpose is to implement TYPE level preferences for all processing mechanisms
     #                inherits all attributes and methods of Mechanism -- see Mechanism for documentation
-    # IMPLEMENT: consider moving any properties of processing mechanisms not used by control mechanisms to here
-    """Subclass of `Mechanism <Mechanism>` that implements processing in a :ref:`Pathway`.
+    """Subclass of `Mechanism <Mechanism>` that implements processing in a `Pathway`.
 
     .. note::
-       ProcessingMechanism is an abstract class and should NEVER be instantiated by a call to its constructor.
-       It should be instantiated using the constructor for a `subclass <ProcessingMechanism_Subtypes>`.
+       ProcessingMechanism_Base is an abstract class and should NEVER be instantiated by a call to its constructor.
+       It should be instantiated using the constructor for `ProcessingMechanism` or one of its  `subclasses
+       <ProcessingMechanism_Subtypes>`.
    """
 
     componentType = "ProcessingMechanism"
@@ -135,6 +144,35 @@ class ProcessingMechanism_Base(Mechanism_Base):
     # classPreferences = {
     #     PREFERENCE_SET_NAME: 'ProcessingMechanismClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
+
+    paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
+
+    standard_output_ports = Mechanism_Base.standard_output_ports.copy()
+    standard_output_ports.extend([{NAME: RESULT},
+                                  {NAME:MEAN,
+                                   FUNCTION:lambda x: np.mean(x)},
+                                  {NAME: MEDIAN,
+                                   FUNCTION:lambda x: np.median(x)},
+                                  {NAME: STANDARD_DEVIATION,
+                                   FUNCTION:lambda x: np.std(x)},
+                                  {NAME: VARIANCE,
+                                   FUNCTION:lambda x: np.var(x)},
+                                  {NAME: MECHANISM_VALUE,
+                                   VARIABLE: OWNER_VALUE},
+                                  {NAME: OWNER_VALUE,
+                                   VARIABLE: OWNER_VALUE},
+                                  {NAME: MAX_VAL,
+                                   FUNCTION: OneHot(mode=MAX_VAL).function},
+                                  {NAME: MAX_ABS_VAL,
+                                   FUNCTION: OneHot(mode=MAX_ABS_VAL).function},
+                                  {NAME: MAX_INDICATOR,
+                                   FUNCTION: OneHot(mode=MAX_INDICATOR).function},
+                                  {NAME: MAX_ABS_INDICATOR,
+                                   FUNCTION: OneHot(mode=MAX_ABS_INDICATOR).function},
+                                  {NAME: PROB,
+                                   FUNCTION: OneHot(mode=PROB).function}])
+    standard_output_port_names = Mechanism_Base.standard_output_port_names.copy()
+    standard_output_port_names.extend([i['name'] for i in standard_output_ports])
 
     def __init__(self,
                  default_variable=None,
@@ -159,6 +197,11 @@ class ProcessingMechanism_Base(Mechanism_Base):
         """
 
         self.system = None
+
+        # if not isinstance(self.standard_output_ports, StandardOutputPorts):
+        #     self.standard_output_ports = StandardOutputPorts(self,
+        #                                                        self.standard_output_ports,
+        #                                                        indices=PRIMARY)
 
         super().__init__(default_variable=default_variable,
                          size=size,
@@ -252,25 +295,6 @@ class ProcessingMechanism(ProcessingMechanism_Base):
     """
 
     componentType = PROCESSING_MECHANISM
-
-    # # MODIFIED 9/22/19 OLD:
-    # class Parameters(ProcessingMechanism_Base.Parameters):
-    #     """
-    #         Attributes
-    #         ----------
-    #
-    #             execution_count
-    #                 see `execution_count <ProcessingMechanism.execution_count>`
-    #
-    #                 :default value: 0
-    #                 :type: int
-    #                 :read only: True
-    #
-    #     """
-    #     # not stateful because this really is just a global counter,
-    #     # for context-specifc counts should use schedulers which store this info
-    #     execution_count = Parameter(0, read_only=True, loggable=False, stateful=False, fallback_default=True)
-    # MODIFIED 9/22/19 END
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # These will override those specified in TYPE_DEFAULT_PREFERENCES

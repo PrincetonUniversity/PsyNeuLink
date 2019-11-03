@@ -383,11 +383,11 @@ class ComparatorMechanism(ObjectiveMechanism):
         #                     (in this case, to [OUTCOME, {NAME= MSE}]), but fails to expose default in IDE
         # output_ports = output_ports or [OUTCOME, MSE]
 
-        # Create a StandardOutputPorts object from the list of stand_output_ports specified for the class
-        if not isinstance(self.standard_output_ports, StandardOutputPorts):
-            self.standard_output_ports = StandardOutputPorts(self,
-                                                               self.standard_output_ports,
-                                                               indices=PRIMARY)
+        # # Create a StandardOutputPorts object from the list of stand_output_ports specified for the class
+        # if not isinstance(self.standard_output_ports, StandardOutputPorts):
+        #     self.standard_output_ports = StandardOutputPorts(self,
+        #                                                        self.standard_output_ports,
+        #                                                        indices=PRIMARY)
 
         super().__init__(monitor=input_ports,
                          function=function,

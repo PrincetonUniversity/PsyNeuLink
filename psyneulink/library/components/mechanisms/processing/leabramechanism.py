@@ -102,7 +102,7 @@ except ImportError:
 from psyneulink.core.components.functions.function import Function_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.core.components.ports.outputport import PRIMARY, StandardOutputPorts, standard_output_ports
+from psyneulink.core.components.ports.outputport import PRIMARY, StandardOutputPorts
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import FUNCTION, INPUT_PORTS, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, NETWORK, OUTPUT_PORTS, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
@@ -489,7 +489,8 @@ class LeabraMechanism(ProcessingMechanism_Base):
                                INPUT_PORTS: input_port_names,
                                OUTPUT_PORTS: output_port_name})
 
-    standard_output_ports = standard_output_ports.copy()
+    standard_output_ports = ProcessingMechanism_Base.standard_output_ports.copy()
+    standard_output_port_names = ProcessingMechanism_Base.standard_output_port_names.copy()
 
     class Parameters(ProcessingMechanism_Base.Parameters):
         """
@@ -581,10 +582,10 @@ class LeabraMechanism(ProcessingMechanism_Base):
 
         function = LeabraFunction(network=leabra_network)
 
-        if not isinstance(self.standard_output_ports, StandardOutputPorts):
-            self.standard_output_ports = StandardOutputPorts(self,
-                                                               self.standard_output_ports,
-                                                               indices=PRIMARY)
+        # if not isinstance(self.standard_output_ports, StandardOutputPorts):
+        #     self.standard_output_ports = StandardOutputPorts(self,
+        #                                                        self.standard_output_ports,
+        #                                                        indices=PRIMARY)
 
         params = self._assign_args_to_param_dicts(function=function,
                                                   input_size=input_size,

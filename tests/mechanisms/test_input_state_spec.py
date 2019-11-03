@@ -563,7 +563,7 @@ class TestInputPortSpec:
         assert mismatches_specified_default_variable_error_text in str(error_text.value)
 
         with pytest.raises(FunctionError) as error_text:
-            m = TransferMechanism(size=3, output_ports=[pnl.TRANSFER_OUTPUT.MEAN])
+            m = TransferMechanism(size=3, output_ports=[pnl.MEAN])
             p = MappingProjection(sender=m, matrix=[[0,0,0], [0,0,0]])
             T = TransferMechanism(input_ports=[p])
         assert re.match(
@@ -572,7 +572,7 @@ class TestInputPortSpec:
         )
 
         with pytest.raises(FunctionError) as error_text:
-            m2 = TransferMechanism(size=2, output_ports=[pnl.TRANSFER_OUTPUT.MEAN])
+            m2 = TransferMechanism(size=2, output_ports=[pnl.MEAN])
             p2 = MappingProjection(sender=m2, matrix=[[1,1,1],[1,1,1]])
             T2 = TransferMechanism(input_ports=[p2])
         assert re.match(

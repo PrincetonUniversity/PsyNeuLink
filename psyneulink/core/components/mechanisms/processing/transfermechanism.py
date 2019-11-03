@@ -473,12 +473,11 @@ from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism i
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort
-from psyneulink.core.components.ports.outputport import \
-    OutputPort, PRIMARY, StandardOutputPorts, standard_output_ports, standard_output_port_names
+from psyneulink.core.components.ports.outputport import OutputPort, StandardOutputPorts
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     comparison_operators, FUNCTION, INITIALIZER, INSTANTANEOUS_MODE_VALUE, LESS_THAN_OR_EQUAL, \
-    MAX_ABS_DIFF, NAME, NOISE, OWNER_VALUE, RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, \
+    MAX_ABS_DIFF, NAME, NOISE, OWNER_VALUE, PRIMARY, RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, \
     TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE
 
 from psyneulink.core.globals.parameters import Parameter
@@ -492,7 +491,7 @@ __all__ = [
     'INITIAL_VALUE', 'CLIP',  'INTEGRATOR_FUNCTION', 'INTEGRATION_RATE',
     'TERMINATION_THRESHOLD', 'TERMINATION_MEASURE', 'TERMINATION_MEASURE_VALUE',
     'Transfer_DEFAULT_BIAS', 'Transfer_DEFAULT_GAIN', 'Transfer_DEFAULT_LENGTH', 'Transfer_DEFAULT_OFFSET',
-    'TRANSFER_OUTPUT', 'TransferError', 'TransferMechanism',
+    'TransferError', 'TransferMechanism',
 ]
 
 # TransferMechanism parameter keywords:
@@ -514,58 +513,58 @@ Transfer_DEFAULT_OFFSET = 0
 logger = logging.getLogger(__name__)
 
 
-# This is a convenience class that provides list of standard_output_port names in IDE
-class TRANSFER_OUTPUT():
-    """
-    .. _TransferMechanism_Standard_OutputPorts:
-
-    `Standard OutputPorts <OutputPort_Standard>` for `TransferMechanism`: \n
-
-    .. _TRANSFER_MECHANISM_RESULT:
-
-    *RESULT* : 1d np.array
-      first item of TransferMechanism's `value <Mechanism_Base.value>` (corresponding to input from its
-      first InputPort)
-
-    *RESULTS* : 2d np.array
-      each item of TransferMechanism's `value <Mechanism_Base.value>` (corresponding to input from each
-      of its `input_ports <TransferMechanism.input_ports>`) is assigned as the `value <OutputPort.value>`
-      of a corresponding OutputPort of its `output_ports <TransferMechanism.output_ports>`.
-
-    .. _TRANSFER_MECHANISM_MEAN:
-
-    *MEAN* : float
-      mean of `value <Mechanism_Base.value>`.
-
-    .. _TRANSFER_MECHANISM_MEDIAN:
-
-    *MEDIAN* : float
-      median of `value <Mechanism_Base.value>`.
-
-    .. _TRANSFER_MECHANISM_STD_DEV:
-
-    *STANDARD_DEVIATION* : float
-      standard deviation of `value <Mechanism_Base.value>`.
-
-    .. _TRANSFER_MECHANISM_VARIANCE:
-
-    *VARIANCE* : float
-      variance of `output_port.value`.
-
-    *MECHANISM_VALUE* : list
-      TransferMechanism's `value <Mechanism_Base.value>` used as OutputPort's value.
-
-    COMMENT:
-    *COMBINE* : scalar or numpy array
-      linear combination of the `value <Mechanism_Base.value>` of all items of the TransferMechanism's `value
-      <Mechanism_Base.value>` (requires that they all have the same dimensionality).
-    COMMENT
-    """
-
-# Add names of `standard_output_ports <OutputPort.standard_output_ports>` to TRANSFER_OUTPUT
-from psyneulink.core.components.ports.outputport import OUTPUTS
-for item in [i for i in OUTPUTS.__dict__.keys() if '__' not in i]:
-    setattr(TRANSFER_OUTPUT, item, item)
+# # This is a convenience class that provides list of standard_output_port names in IDE
+# class TRANSFER_OUTPUT():
+#     """
+#     .. _TransferMechanism_Standard_OutputPorts:
+#
+#     `Standard OutputPorts <OutputPort_Standard>` for `TransferMechanism`: \n
+#
+#     .. _TRANSFER_MECHANISM_RESULT:
+#
+#     *RESULT* : 1d np.array
+#       first item of TransferMechanism's `value <Mechanism_Base.value>` (corresponding to input from its
+#       first InputPort)
+#
+#     *RESULTS* : 2d np.array
+#       each item of TransferMechanism's `value <Mechanism_Base.value>` (corresponding to input from each
+#       of its `input_ports <TransferMechanism.input_ports>`) is assigned as the `value <OutputPort.value>`
+#       of a corresponding OutputPort of its `output_ports <TransferMechanism.output_ports>`.
+#
+#     .. _TRANSFER_MECHANISM_MEAN:
+#
+#     *MEAN* : float
+#       mean of `value <Mechanism_Base.value>`.
+#
+#     .. _TRANSFER_MECHANISM_MEDIAN:
+#
+#     *MEDIAN* : float
+#       median of `value <Mechanism_Base.value>`.
+#
+#     .. _TRANSFER_MECHANISM_STD_DEV:
+#
+#     *STANDARD_DEVIATION* : float
+#       standard deviation of `value <Mechanism_Base.value>`.
+#
+#     .. _TRANSFER_MECHANISM_VARIANCE:
+#
+#     *VARIANCE* : float
+#       variance of `output_port.value`.
+#
+#     *MECHANISM_VALUE* : list
+#       TransferMechanism's `value <Mechanism_Base.value>` used as OutputPort's value.
+#
+#     COMMENT:
+#     *COMBINE* : scalar or numpy array
+#       linear combination of the `value <Mechanism_Base.value>` of all items of the TransferMechanism's `value
+#       <Mechanism_Base.value>` (requires that they all have the same dimensionality).
+#     COMMENT
+#     """
+#
+# # Add names of `standard_output_ports <OutputPort.standard_output_ports>` to TRANSFER_OUTPUT
+# from psyneulink.core.components.ports.outputport import OUTPUTS
+# for item in [i for i in OUTPUTS.__dict__.keys() if '__' not in i]:
+#     setattr(TRANSFER_OUTPUT, item, item)
 
 class TransferError(Exception):
     def __init__(self, error_value):
@@ -1131,19 +1130,20 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   termination_threshold=termination_threshold,
                                                   termination_comparison_op=termination_comparison_op,
                                                   params=params)
+
         self.on_resume_integrator_mode = on_resume_integrator_mode
         # self.integrator_function = None
         self.has_integrated = False
         self._current_variable_index = 0
 
-        if not isinstance(self.standard_output_ports, StandardOutputPorts):
-            self.standard_output_ports = StandardOutputPorts(self,
-                                                               self.standard_output_ports,
-                                                               indices=PRIMARY)
-
         # this is checked during execution to see if integrator_mode was set
         # to True after initialization
         self._needs_integrator_function_init = False
+
+        # if not isinstance(self.standard_output_ports, StandardOutputPorts):
+        #     self.standard_output_ports = StandardOutputPorts(self,
+        #                                                        self.standard_output_ports,
+        #                                                        indices=PRIMARY)
 
         super(TransferMechanism, self).__init__(
                 default_variable=default_variable,
@@ -1605,8 +1605,8 @@ class TransferMechanism(ProcessingMechanism_Base):
             - Variance of the activation values across units
         Return:
             value of input transformed by TransferMechanism function in outputPort[TransferOuput.RESULT].value
-            mean of items in RESULT outputPort[TransferOuput.OUTPUT_MEAN].value
-            variance of items in RESULT outputPort[TransferOuput.OUTPUT_VARIANCE].value
+            mean of items in RESULT outputPort[TransferOuput.MEAN].value
+            variance of items in RESULT outputPort[TransferOuput.VARIANCE].value
 
         Arguments:
 

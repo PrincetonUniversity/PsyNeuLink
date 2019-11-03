@@ -1091,7 +1091,7 @@ class TestFiltering:
     def node_logged_in_simulation(self):
         Input = pnl.TransferMechanism(name='Input')
         reward = pnl.TransferMechanism(
-            output_ports=[pnl.RESULT, pnl.OUTPUT_MEAN, pnl.OUTPUT_VARIANCE], name='reward')
+            output_ports=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE], name='reward')
         Decision = pnl.DDM(
             function=pnl.DriftDiffusionAnalytical(
                 drift_rate=(1.0, pnl.ControlProjection(

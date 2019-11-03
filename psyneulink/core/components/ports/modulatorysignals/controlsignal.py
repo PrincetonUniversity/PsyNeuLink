@@ -263,10 +263,10 @@ COMMENT:
 
     my_mech_A = TransferMechanism(function=Logistic)
     my_mech_B = TransferMechanism(function=Linear,
-                                 output_ports=[RESULT, OUTPUT_MEAN])
+                                 output_ports=[RESULT, MEAN])
 
     my_ocm = OptimizationControlMechanism(monitor_for_control=[my_mech_A.output_ports[RESULT],
-                                                               my_mech_B.output_ports[OUTPUT_MEAN]],
+                                                               my_mech_B.output_ports[MEAN]],
                                           control_signals=[(GAIN, my_mech_A),
                                                            {NAME: INTERCEPT,
                                                             MECHANISM: my_mech_B,
@@ -279,14 +279,14 @@ the `gain <Logistic.gain>` parameter of the `Logistic` function for ``my_mech_A`
 
     >>> my_mech_A = TransferMechanism(function=Logistic)
     >>> my_mech_B = TransferMechanism(function=Linear,
-    ...                                   output_ports=[RESULT, OUTPUT_MEAN])
+    ...                                   output_ports=[RESULT, MEAN])
 
     >>> process_a = Process(pathway=[my_mech_A])
     >>> process_b = Process(pathway=[my_mech_B])
 
     >>> my_system = System(processes=[process_a, process_b],
     ...                        monitor_for_control=[my_mech_A.output_ports[RESULTS],
-    ...                                             my_mech_B.output_ports[OUTPUT_MEAN]],
+    ...                                             my_mech_B.output_ports[MEAN]],
     ...                        control_signals=[(GAIN, my_mech_A),
     ...                                         {NAME: INTERCEPT,
     ...                                          MECHANISM: my_mech_B,

@@ -77,7 +77,7 @@ def test_botvinick_model(benchmark, mode, reps):
                                                     hetero=-2.0,
                                                     integrator_mode=True,
                                                     integration_rate=0.01,
-                                                    output_ports = [pnl.RECURRENT_OUTPUT.RESULT,
+                                                    output_ports = [pnl.RESULT,
                                                                      {pnl.NAME: 'DECISION_ENERGY',
                                                                       pnl.VARIABLE: (pnl.OWNER_VALUE,0),
                                                                       pnl.FUNCTION: psyneulink.core.components.Stability(

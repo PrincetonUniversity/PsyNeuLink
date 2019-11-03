@@ -188,7 +188,7 @@ from psyneulink.core.components.functions.userdefinedfunction import UserDefined
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     ACTIVATION_INPUT, LEARNING_SIGNAL, LearningMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
-from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism, TRANSFER_OUTPUT
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.ports.inputport import InputPort
@@ -686,10 +686,10 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                   params=params,
                                                   )
 
-        if not isinstance(self.standard_output_ports, StandardOutputPorts):
-            self.standard_output_ports = StandardOutputPorts(self,
-                                                               self.standard_output_ports,
-                                                               indices=PRIMARY)
+        # if not isinstance(self.standard_output_ports, StandardOutputPorts):
+        #     self.standard_output_ports = StandardOutputPorts(self,
+        #                                                        self.standard_output_ports,
+        #                                                        indices=PRIMARY)
 
         super().__init__(default_variable=default_variable,
                          size=size,

@@ -3835,14 +3835,14 @@ class System(System_Base):
         show_graph method::
 
             import psyneulink as pnl
-            mech_1 = pnl.TransferMechanism(name='Mech 1', size=3, output_ports=[pnl.RESULTS, pnl.OUTPUT_MEAN])
+            mech_1 = pnl.TransferMechanism(name='Mech 1', size=3, output_ports=[pnl.RESULTS, pnl.MEAN])
             mech_2 = pnl.TransferMechanism(name='Mech 2', size=5)
             mech_3 = pnl.TransferMechanism(name='Mech 3', size=2, function=pnl.Logistic(gain=pnl.CONTROL))
             my_process_A = pnl.Process(pathway=[mech_1, mech_3], learning=pnl.ENABLED)
             my_process_B = pnl.Process(pathway=[mech_2, mech_3])
             my_system = pnl.System(processes=[my_process_A, my_process_B],
                                    controller=pnl.ControlMechanism(name='my_system Controller'),
-                                   monitor_for_control=[(pnl.OUTPUT_MEAN, mech_1)],
+                                   monitor_for_control=[(pnl.MEAN, mech_1)],
                                    enable_controller=True)
 
         .. _System_show_graph_figure:

@@ -475,7 +475,7 @@ than one InputPort.  OutputPorts can be specified in a similar way, using the **
 The following example specifies two OutputPorts for ``my_mech``, using its `Standard OutputPorts
 <OutputPort_Standard>`::
 
-    my_mech = pnl.TransferMechanism(output_ports=['RESULT', 'OUTPUT_MEAN'])
+    my_mech = pnl.TransferMechanism(output_ports=['RESULT', 'MEAN'])
 
 As with InputPorts, specification of OutputPorts in the **output_ports** argument suppresses the creation of any
 default OutputPorts that would have been created if no OutputPorts were specified (see `note

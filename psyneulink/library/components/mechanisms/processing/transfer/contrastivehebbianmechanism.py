@@ -958,6 +958,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                    {NAME:PLUS_PHASE_OUTPUT,
                                     VARIABLE:PLUS_PHASE_ACTIVITY},
                                    ])
+    standard_output_port_names = RecurrentTransferMechanism.standard_output_port_names.copy()
+    standard_output_port_names.extend([i['name'] for i in standard_output_ports])
 
     @tc.typecheck
     def __init__(self,
@@ -997,8 +999,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         """Instantiate ContrastiveHebbianMechanism
         """
 
-        if not isinstance(self.standard_output_ports, StandardOutputPorts):
-            self.standard_output_ports = StandardOutputPorts(self, self.standard_output_ports, indices=PRIMARY)
+        # if not isinstance(self.standard_output_ports, StandardOutputPorts):
+        #     self.standard_output_ports = StandardOutputPorts(self, self.standard_output_ports, indices=PRIMARY)
 
         if mode is SIMPLE_HEBBIAN:
             hidden_size=0

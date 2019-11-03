@@ -358,7 +358,7 @@ from collections import namedtuple
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.core.components.ports.outputport import OutputPort, PRIMARY, standard_output_ports
+from psyneulink.core.components.ports.outputport import OutputPort, PRIMARY
 from psyneulink.core.components.ports.inputport import InputPort, INPUT_PORT
 from psyneulink.core.components.ports.port import _parse_port_spec
 from psyneulink.core.globals.context import ContextFlags
@@ -606,7 +606,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         FUNCTION: LinearCombination,
         })
 
-    standard_output_ports = standard_output_ports.copy()
+    standard_output_ports = ProcessingMechanism_Base.standard_output_ports.copy()
 
     # FIX:  TYPECHECK MONITOR TO LIST OR ZIP OBJECT
     @tc.typecheck
@@ -643,11 +643,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         self._learning_role = None
 
-        from psyneulink.core.components.ports.outputport import StandardOutputPorts
-        if not isinstance(self.standard_output_ports, StandardOutputPorts):
-            self.standard_output_ports = StandardOutputPorts(self,
-                                                               self.standard_output_ports,
-                                                               indices=PRIMARY)
+        # from psyneulink.core.components.ports.outputport import StandardOutputPorts
+        # if not isinstance(self.standard_output_ports, StandardOutputPorts):
+        #     self.standard_output_ports = StandardOutputPorts(self,
+        #                                                        self.standard_output_ports,
+        #                                                        indices=PRIMARY)
 
         super().__init__(default_variable=default_variable,
                          size=size,
