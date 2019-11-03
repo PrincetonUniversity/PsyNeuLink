@@ -354,20 +354,20 @@ Standard OutputPorts
 ^^^^^^^^^^^^^^^^^^^^^
 
 Mechanisms have a `standard_output_ports <Mechanism_Base.standard_output_ports>` attribute, that contains a list of
-`StandardOutputPorts`:  predefined OutputPorts that can be assigned as its `output_ports <Mechanism_Base.output_ports>`.
-Subclasses of Mechanisms may add ones that are specific to that type of Mechanism (for example, the
-`RecurrentTransferMechanism` class has `standard_output_ports <RecurrentTransferMechanism.standard_output_ports>` for
-calculating the energy and entropy of its `value <TransferMechanism.value>`.  The names of the `standard_output_ports`
-are listed in the Mechanism's `standard_output_port_names <Mechanism_Base.standard_output_port_names>` attribute.
-These can be used to specify the `output_ports <Mechanism_Base.output_ports>` of a Mechanism, as in the following
-example for a `TransferMechanism`::
+`StandardOutputPorts`:  predefined OutputPorts that can be assigned as `output_ports <Mechanism_Base.output_ports>`.
+Every Mechanism has a base set of `standard_output_ports <MechanismStandardOutputPorts>`.  Subclasses of Mechanisms
+may add ones that are specific to that type of Mechanism (for example, the `RecurrentTransferMechanism` class has
+`standard_output_ports <RecurrentTransferMechanism.standard_output_ports>` for calculating the energy and entropy of
+its `value  <TransferMechanism.value>`.  The names of the `standard_output_ports` are listed in the Mechanism's
+`standard_output_port_names <Mechanism_Base.standard_output_port_names>` attribute. These can be used to specify the
+`output_ports <Mechanism_Base.output_ports>` of a Mechanism, as in the following example for a `ProcessingMechanism`::
 
     >>> import psyneulink as pnl
-    >>> my_mech = pnl.TransferMechanism(default_variable=[0,0],
-    ...                                 function=pnl.Logistic(),
-    ...                                 output_ports=[pnl.RESULT,
-    ...                                                pnl.MEAN,
-    ...                                                pnl.VARIANCE])
+    >>> my_mech = pnl.ProcessingMechanism(default_variable=[0,0],
+    ...                                   function=pnl.Logistic,
+    ...                                   output_ports=[pnl.RESULT,
+    ...                                                 pnl.MEAN,
+    ...                                                 pnl.VARIANCE])
 
 In this example, ``my_mech`` is configured with three OutputPorts;  the first will be named *RESULT* and will
 represent logistic transform of the 2-element input vector;  the second will be named  *MEAN* and will
@@ -376,7 +376,7 @@ the variance of the result.
 
 .. _OutputPort_Customization:
 
-*OutputPort Customization*
+*Custom OutputPorts*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An OutputPort's `value <OutputPort.value>` can be customized by specifying its `variable <OutputPort.variable>`
@@ -1432,7 +1432,8 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
     Returns list of instantiated OutputPorts
     """
 
-    # Instantiate owner's standard_output_ports
+    # Instantiate owner's standard_output_ports as StandardOutputPorts
+    #    (from list of dictionaries currently in the existing standard_output_ports attribute)
     if not isinstance(owner.standard_output_ports, StandardOutputPorts):
         owner.standard_output_ports = StandardOutputPorts(owner,
                                                            owner.standard_output_ports,

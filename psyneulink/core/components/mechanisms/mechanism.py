@@ -10,19 +10,19 @@
 
 """
 ..
-    * :ref:`Mechanism_Overview`
-    * :ref:`Mechanism_Creation`
-    * :ref:`Mechanism_Structure`
-     * :ref:`Mechanism_Function`
-     * :ref:`Mechanism_Ports`
-        * :ref:`Mechanism_InputPorts`
-        * :ref:`Mechanism_ParameterPorts`
-        * :ref:`Mechanism_OutputPorts`
-     * :ref:`Mechanism_Additional_Attributes`
-     * :ref:`Mechanism_Role_In_Processes_And_Systems`
-    * :ref:`Mechanism_Execution`
-     * :ref:`Mechanism_Runtime_Parameters`
-    * :ref:`Mechanism_Class_Reference`
+    * `Mechanism_Overview`
+    * `Mechanism_Creation`
+    * `Mechanism_Structure`
+     * `Mechanism_Function`
+     * `Mechanism_Ports`
+        * `Mechanism_InputPorts`
+        * `Mechanism_ParameterPorts`
+        * `Mechanism_OutputPorts`
+     * `Mechanism_Additional_Attributes`
+     * `Mechanism_Role_In_Processes_And_Systems`
+    * `Mechanism_Execution`
+     * `Mechanism_Runtime_Parameters`
+    * `Mechanism_Class_Reference`
 
 
 .. _Mechanism_Overview:
@@ -616,7 +616,6 @@ attribute of a Mechanism is distinct from its `value <Mechanism_Base.value>` att
 unmodified results of its `function <Mechanism_Base.function>` (this is because OutputPorts can modify the item of
 the Mechanism`s `value <Mechanism_Base.value>` to which they refer -- see `OutputPorts <OutputPort_Customization>`).
 
-
 .. _Mechanism_Additional_Attributes:
 
 *Additional Attributes*
@@ -947,6 +946,7 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, function_type, method_type
 from psyneulink.core.components.functions.function import FunctionOutputType
 from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.shellclasses import Function, Mechanism, Projection, Port
 from psyneulink.core.components.ports.inputport import DEFER_VARIABLE_SPEC_TO_MECH_MSG, InputPort
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
@@ -955,15 +955,16 @@ from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.ports.port import REMOVE_PORTS, PORT_SPEC, _parse_port_spec
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ADDITIVE_PARAM, EXECUTION_PHASE, FUNCTION, FUNCTION_PARAMS, \
+    ADDITIVE_PARAM, EXECUTION_PHASE, EXPONENT, FUNCTION, FUNCTION_PARAMS, \
     INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, \
     INPUT_LABELS_DICT, INPUT_PORT, INPUT_PORTS, INPUT_PORT_VARIABLES, \
+    MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MECHANISM, MECHANISM_VALUE, \
+    MECHANISM_COMPONENT_CATEGORY, MEDIAN, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
     MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, MULTIPLICATIVE_PARAM, \
-    OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_EXECUTION_TIME, OWNER_VALUE, \
-    PARAMETER_PORT, PARAMETER_PORTS, PREVIOUS_VALUE, PROJECTIONS, REFERENCE_VALUE, \
-    TARGET_LABELS_DICT, VALUE, VARIABLE, MECHANISM_COMPONENT_CATEGORY, \
-    MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, MECHANISM, WEIGHT, \
-    EXPONENT, NAME
+    NAME, OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_EXECUTION_TIME, OWNER_VALUE, \
+    PARAMETER_PORT, PARAMETER_PORTS, PREVIOUS_VALUE, PROB, PROJECTIONS, REFERENCE_VALUE, RESULT, \
+    STANDARD_DEVIATION, TARGET_LABELS_DICT, VALUE, VARIABLE, VARIANCE, WEIGHT
+
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.scheduling.condition import Condition
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -997,6 +998,11 @@ def _input_port_variables_getter(owning_component=None, context=None):
         return [input_port.parameters.variable._get(context) for input_port in owning_component.input_ports]
     except TypeError:
         return None
+
+
+class MechanismStandardOutputPorts():
+
+
 
 
 class Mechanism_Base(Mechanism):
@@ -1375,8 +1381,30 @@ class Mechanism_Base(Mechanism):
         OUTPUT_LABELS_DICT: {}
         })
 
-    standard_output_ports = []
-    standard_output_port_names = []
+    standard_output_ports = [{NAME: RESULT},
+                             {NAME:MEAN,
+                              FUNCTION:lambda x: np.mean(x)},
+                             {NAME: MEDIAN,
+                              FUNCTION:lambda x: np.median(x)},
+                             {NAME: STANDARD_DEVIATION,
+                              FUNCTION:lambda x: np.std(x)},
+                             {NAME: VARIANCE,
+                              FUNCTION:lambda x: np.var(x)},
+                             {NAME: MECHANISM_VALUE,
+                              VARIABLE: OWNER_VALUE},
+                             {NAME: OWNER_VALUE,
+                              VARIABLE: OWNER_VALUE},
+                             {NAME: MAX_VAL,
+                              FUNCTION: OneHot(mode=MAX_VAL).function},
+                             {NAME: MAX_ABS_VAL,
+                              FUNCTION: OneHot(mode=MAX_ABS_VAL).function},
+                             {NAME: MAX_INDICATOR,
+                              FUNCTION: OneHot(mode=MAX_INDICATOR).function},
+                             {NAME: MAX_ABS_INDICATOR,
+                              FUNCTION: OneHot(mode=MAX_ABS_INDICATOR).function},
+                             {NAME: PROB,
+                              FUNCTION: OneHot(mode=PROB).function}]
+    standard_output_port_names = [i['name'] for i in standard_output_ports]
 
     class Parameters(Mechanism.Parameters):
         """
@@ -3324,7 +3352,7 @@ class Mechanism_Base(Mechanism):
         If the `owner <Port_Base.owner>` of a Port specified in the **ports** argument is not the same as the
         Mechanism to which it is being added an error is generated.    If the name of a specified Port is the same
         as an existing one with the same name, an index is appended to its name, and incremented for each Port
-        subsequently added with the same name (see :ref:`naming conventions <LINK>`).  If a specified Port already
+        subsequently added with the same name (see `naming conventions <LINK>`).  If a specified Port already
         belongs to the Mechanism, the request is ignored.
 
         .. note::

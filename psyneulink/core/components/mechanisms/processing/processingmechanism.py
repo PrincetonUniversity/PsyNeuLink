@@ -95,11 +95,8 @@ import typecheck as tc
 import numpy as np
 
 from psyneulink.core.components.functions.transferfunctions import Linear
-from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
-from psyneulink.core.globals.keywords import \
-    FUNCTION, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MECHANISM_VALUE, MEDIAN, \
-    NAME, OWNER_VALUE, PROB, PROCESSING_MECHANISM, PREFERENCE_SET_NAME, RESULT, STANDARD_DEVIATION, VARIABLE, VARIANCE
+from psyneulink.core.globals.keywords import PROCESSING_MECHANISM, PREFERENCE_SET_NAME
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
@@ -148,31 +145,7 @@ class ProcessingMechanism_Base(Mechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
 
     standard_output_ports = Mechanism_Base.standard_output_ports.copy()
-    standard_output_ports.extend([{NAME: RESULT},
-                                  {NAME:MEAN,
-                                   FUNCTION:lambda x: np.mean(x)},
-                                  {NAME: MEDIAN,
-                                   FUNCTION:lambda x: np.median(x)},
-                                  {NAME: STANDARD_DEVIATION,
-                                   FUNCTION:lambda x: np.std(x)},
-                                  {NAME: VARIANCE,
-                                   FUNCTION:lambda x: np.var(x)},
-                                  {NAME: MECHANISM_VALUE,
-                                   VARIABLE: OWNER_VALUE},
-                                  {NAME: OWNER_VALUE,
-                                   VARIABLE: OWNER_VALUE},
-                                  {NAME: MAX_VAL,
-                                   FUNCTION: OneHot(mode=MAX_VAL).function},
-                                  {NAME: MAX_ABS_VAL,
-                                   FUNCTION: OneHot(mode=MAX_ABS_VAL).function},
-                                  {NAME: MAX_INDICATOR,
-                                   FUNCTION: OneHot(mode=MAX_INDICATOR).function},
-                                  {NAME: MAX_ABS_INDICATOR,
-                                   FUNCTION: OneHot(mode=MAX_ABS_INDICATOR).function},
-                                  {NAME: PROB,
-                                   FUNCTION: OneHot(mode=PROB).function}])
     standard_output_port_names = Mechanism_Base.standard_output_port_names.copy()
-    standard_output_port_names.extend([i['name'] for i in standard_output_ports])
 
     def __init__(self,
                  default_variable=None,

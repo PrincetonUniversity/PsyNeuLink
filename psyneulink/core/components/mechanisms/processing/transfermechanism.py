@@ -513,59 +513,6 @@ Transfer_DEFAULT_OFFSET = 0
 logger = logging.getLogger(__name__)
 
 
-# # This is a convenience class that provides list of standard_output_port names in IDE
-# class TRANSFER_OUTPUT():
-#     """
-#     .. _TransferMechanism_Standard_OutputPorts:
-#
-#     `Standard OutputPorts <OutputPort_Standard>` for `TransferMechanism`: \n
-#
-#     .. _TRANSFER_MECHANISM_RESULT:
-#
-#     *RESULT* : 1d np.array
-#       first item of TransferMechanism's `value <Mechanism_Base.value>` (corresponding to input from its
-#       first InputPort)
-#
-#     *RESULTS* : 2d np.array
-#       each item of TransferMechanism's `value <Mechanism_Base.value>` (corresponding to input from each
-#       of its `input_ports <TransferMechanism.input_ports>`) is assigned as the `value <OutputPort.value>`
-#       of a corresponding OutputPort of its `output_ports <TransferMechanism.output_ports>`.
-#
-#     .. _TRANSFER_MECHANISM_MEAN:
-#
-#     *MEAN* : float
-#       mean of `value <Mechanism_Base.value>`.
-#
-#     .. _TRANSFER_MECHANISM_MEDIAN:
-#
-#     *MEDIAN* : float
-#       median of `value <Mechanism_Base.value>`.
-#
-#     .. _TRANSFER_MECHANISM_STD_DEV:
-#
-#     *STANDARD_DEVIATION* : float
-#       standard deviation of `value <Mechanism_Base.value>`.
-#
-#     .. _TRANSFER_MECHANISM_VARIANCE:
-#
-#     *VARIANCE* : float
-#       variance of `output_port.value`.
-#
-#     *MECHANISM_VALUE* : list
-#       TransferMechanism's `value <Mechanism_Base.value>` used as OutputPort's value.
-#
-#     COMMENT:
-#     *COMBINE* : scalar or numpy array
-#       linear combination of the `value <Mechanism_Base.value>` of all items of the TransferMechanism's `value
-#       <Mechanism_Base.value>` (requires that they all have the same dimensionality).
-#     COMMENT
-#     """
-#
-# # Add names of `standard_output_ports <OutputPort.standard_output_ports>` to TRANSFER_OUTPUT
-# from psyneulink.core.components.ports.outputport import OUTPUTS
-# for item in [i for i in OUTPUTS.__dict__.keys() if '__' not in i]:
-#     setattr(TRANSFER_OUTPUT, item, item)
-
 class TransferError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value

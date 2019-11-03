@@ -14,12 +14,11 @@
 Overview
 --------
 
-A PredictionErrorMechanism is a subclass of `ComparatorMechanism` that receives
-two inputs (a sample and a target), and calculates the temporal difference
-prediction error as found in `Montague, Dayan, and Sejnowski (1996) <http://www.jneurosci.org/content/jneuro/16/5/1936.full.pdf>`_
-using its `function <PredictionErrorMechanism.function>`, and places the delta
-values (the difference between the actual and predicted reward) in its *OUTCOME*
-`OutputPort <PredictionErrorMechanism.output_port>`.
+A PredictionErrorMechanism is a subclass of `ComparatorMechanism` that receives two inputs (a sample and a target),
+and calculates the temporal difference prediction error as found in `Montague, Dayan, and Sejnowski (1996)
+<http://www.jneurosci.org/content/jneuro/16/5/1936.full.pdf>`_ using its `function
+<PredictionErrorMechanism.function>`, and places the delta values (the difference between the actual and predicted
+reward) in its *OUTCOME* `OutputPort <PredictionErrorMechanism.output_port>`.
 
 .. _PredictionErrorMechanism_Creation:
 
