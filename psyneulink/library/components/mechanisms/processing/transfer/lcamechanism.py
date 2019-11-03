@@ -452,11 +452,6 @@ class LCAMechanism(RecurrentTransferMechanism):
                                                   output_ports=output_ports,
                                                   params=params)
 
-        # if not isinstance(self.standard_output_ports, StandardOutputPorts):
-        #     self.standard_output_ports = StandardOutputPorts(self,
-        #                                                        self.standard_output_ports,
-        #                                                        indices=PRIMARY)
-
         super().__init__(default_variable=default_variable,
                          size=size,
                          input_ports=input_ports,

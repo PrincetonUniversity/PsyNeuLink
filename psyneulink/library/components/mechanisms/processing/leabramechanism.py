@@ -582,11 +582,6 @@ class LeabraMechanism(ProcessingMechanism_Base):
 
         function = LeabraFunction(network=leabra_network)
 
-        # if not isinstance(self.standard_output_ports, StandardOutputPorts):
-        #     self.standard_output_ports = StandardOutputPorts(self,
-        #                                                        self.standard_output_ports,
-        #                                                        indices=PRIMARY)
-
         params = self._assign_args_to_param_dicts(function=function,
                                                   input_size=input_size,
                                                   output_size=output_size,

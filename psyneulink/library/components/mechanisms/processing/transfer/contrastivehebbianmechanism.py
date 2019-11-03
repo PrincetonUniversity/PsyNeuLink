@@ -999,9 +999,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         """Instantiate ContrastiveHebbianMechanism
         """
 
-        # if not isinstance(self.standard_output_ports, StandardOutputPorts):
-        #     self.standard_output_ports = StandardOutputPorts(self, self.standard_output_ports, indices=PRIMARY)
-
         if mode is SIMPLE_HEBBIAN:
             hidden_size=0
             # target_size=0

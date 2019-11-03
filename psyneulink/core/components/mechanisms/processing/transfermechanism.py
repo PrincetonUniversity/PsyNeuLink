@@ -1140,11 +1140,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         # to True after initialization
         self._needs_integrator_function_init = False
 
-        # if not isinstance(self.standard_output_ports, StandardOutputPorts):
-        #     self.standard_output_ports = StandardOutputPorts(self,
-        #                                                        self.standard_output_ports,
-        #                                                        indices=PRIMARY)
-
         super(TransferMechanism, self).__init__(
                 default_variable=default_variable,
                 size=size,
