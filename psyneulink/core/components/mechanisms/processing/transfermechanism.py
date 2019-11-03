@@ -473,14 +473,13 @@ from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism i
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort
-from psyneulink.core.components.ports.outputport import OutputPort, PRIMARY, StandardOutputPorts, standard_output_ports
+from psyneulink.core.components.ports.outputport import \
+    OutputPort, PRIMARY, StandardOutputPorts, standard_output_ports, standard_output_port_names
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     comparison_operators, FUNCTION, INITIALIZER, INSTANTANEOUS_MODE_VALUE, LESS_THAN_OR_EQUAL, \
-    MAX_ABS_DIFF, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, NAME, NOISE, \
-    OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, OWNER_VALUE, PROB, \
-    RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, \
-    VARIABLE
+    MAX_ABS_DIFF, NAME, NOISE, OWNER_VALUE, RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, \
+    TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE
 
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -535,22 +534,22 @@ class TRANSFER_OUTPUT():
 
     .. _TRANSFER_MECHANISM_MEAN:
 
-    *OUTPUT_MEAN* : float
+    *MEAN* : float
       mean of `value <Mechanism_Base.value>`.
 
     .. _TRANSFER_MECHANISM_MEDIAN:
 
-    *OUTPUT_MEDIAN* : float
+    *MEDIAN* : float
       median of `value <Mechanism_Base.value>`.
 
     .. _TRANSFER_MECHANISM_STD_DEV:
 
-    *OUTPUT_STD_DEV* : float
+    *STANDARD_DEVIATION* : float
       standard deviation of `value <Mechanism_Base.value>`.
 
     .. _TRANSFER_MECHANISM_VARIANCE:
 
-    *OUTPUT_VARIANCE* : float
+    *VARIANCE* : float
       variance of `output_port.value`.
 
     *MECHANISM_VALUE* : list
@@ -958,7 +957,9 @@ class TransferMechanism(ProcessingMechanism_Base):
     paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({NOISE: None})
 
-    standard_output_ports = standard_output_ports.copy()
+    standard_output_ports = ProcessingMechanism_Base.standard_output_ports.copy()
+    standard_output_port_names = ProcessingMechanism_Base.standard_output_port_names.copy()
+
 
     class Parameters(ProcessingMechanism_Base.Parameters):
         """

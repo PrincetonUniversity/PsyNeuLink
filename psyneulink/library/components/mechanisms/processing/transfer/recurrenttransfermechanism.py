@@ -211,8 +211,7 @@ from psyneulink.library.components.projections.pathway.autoassociativeprojection
 
 __all__ = [
     'CONVERGENCE', 'EXTERNAL', 'EXTERNAL_INDEX',
-    'RECURRENT', 'RECURRENT_INDEX', 'RECURRENT_OUTPUT', 'RecurrentTransferError', 'RecurrentTransferMechanism',
-    'UPDATE'
+    'RECURRENT', 'RECURRENT_INDEX', 'RecurrentTransferError', 'RecurrentTransferMechanism', 'UPDATE'
 ]
 
 EXTERNAL = 'EXTERNAL'
@@ -238,29 +237,29 @@ class RecurrentTransferError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-# This is a convenience class that provides list of standard_output_port names in IDE
-class RECURRENT_OUTPUT(TRANSFER_OUTPUT):
-    """
-        .. _RecurrentTransferMechanism_Standard_OutputPorts:
-
-        A RecurrentTransferMechanism has the following `Standard OutputPorts <OutputPort_Standard>` in addition to
-        those of a `TransferMechanism <TransferMechanism_Standard_OutputPorts>`:
-
-        .. _RecurrentTransferMechanism_Standard_OutputPorts:
-
-        *ENERGY* : float
-            the energy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,
-            calculated using the `Stability` Function using the `ENERGY` metric.
-
-        .. _LCAMechanism_ENTROPY:
-
-        *ENTROPY* : float
-            the entropy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,
-            calculated using the `Stability` Function using the `ENTROPY <CROSS_ENTROPY>` metric.
-
-        """
-    ENERGY=ENERGY_OUTPUT_PORT_NAME
-    ENTROPY=ENTROPY_OUTPUT_PORT_NAME
+# # This is a convenience class that provides list of standard_output_port names in IDE
+# class RECURRENT_OUTPUT(TRANSFER_OUTPUT):
+#     """
+#         .. _RecurrentTransferMechanism_Standard_OutputPorts:
+#
+#         A RecurrentTransferMechanism has the following `Standard OutputPorts <OutputPort_Standard>` in addition to
+#         those of a `TransferMechanism <TransferMechanism_Standard_OutputPorts>`:
+#
+#         .. _RecurrentTransferMechanism_Standard_OutputPorts:
+#
+#         *ENERGY* : float
+#             the energy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,
+#             calculated using the `Stability` Function using the `ENERGY` metric.
+#
+#         .. _LCAMechanism_ENTROPY:
+#
+#         *ENTROPY* : float
+#             the entropy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,
+#             calculated using the `Stability` Function using the `ENTROPY <CROSS_ENTROPY>` metric.
+#
+#         """
+#     ENERGY=ENERGY_OUTPUT_PORT_NAME
+#     ENTROPY=ENTROPY_OUTPUT_PORT_NAME
 
 def _recurrent_transfer_mechanism_matrix_getter(owning_component=None, context=None):
     from psyneulink.library.components.projections.pathway.autoassociativeprojection import get_auto_matrix, get_hetero_matrix
@@ -317,7 +316,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         matrix=HOLLOW_MATRIX,                               \
         auto=None,                                          \
         hetero=None,                                        \
-        has_recurrent_input_port=False                     \
+        has_recurrent_input_port=False                      \
         combination_function=LinearCombination,             \
         integrator_mode=False,                              \
         integrator_function=AdaptiveIntegrator,             \
@@ -469,7 +468,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         <RecurrentTransferMechanism.has_recurrent_input_port>` is `True`.  By default this is a `LinearCombination`
         Function that simply adds them.
 
-    learning_enabled : bool : default False
+    learning_enabled : bool
         indicates whether learning has been enabled for the RecurrentTransferMechanism.  It is set to `True` if
         `learning is specified <Recurrent_Transfer_Learning>` at the time of construction (i.e., if the
         **enable_learning** argument of the Mechanism's constructor is assigned `True`, or when it is configured for
@@ -489,12 +488,12 @@ class RecurrentTransferMechanism(TransferMechanism):
         <AutoAssociativeLearningMechanism.learning_rate>` for details concerning specification and default value
         assignment).
 
-    learning_function : function : default Hebbian
+    learning_function : function
         the function used by the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` to train the
         `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` if `learning is specified
         <Recurrent_Transfer_Learning>`.
 
-    learning_condition : Condition : default None
+    learning_condition : Condition
         determines the condition under which the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>`
         is executed in the context of a `Composition`; it can be specified in the **learning_condition** argument of
         the Mechanism's constructor or of its `configure_learning <RecurrentTransferMechanism.configure_learning>`
@@ -506,6 +505,24 @@ class RecurrentTransferMechanism(TransferMechanism):
             of the System's execution.  Note that this is distinct from the behavior of supervised learning algorithms
             (such as `Reinforcement` and `BackPropagation`), that are executed during the
             `learning phase <System_Execution>` of a System's execution
+
+    standard_output_ports : list[str]
+
+        the following `Standard OutputPorts <OutputPort_Standard>` are available to assign in addition to
+        those of a `TransferMechanism <TransferMechanism_Standard_OutputPorts>`:
+
+        .. _RecurrentTransferMechanism_Standard_OutputPorts:
+
+        *ENERGY* : float
+            the energy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,
+            calculated using the `Stability` Function using the `ENERGY` metric.
+
+        .. _LCAMechanism_ENTROPY:
+
+        *ENTROPY* : float
+            the entropy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,
+            calculated using the `Stability` Function using the `ENTROPY <CROSS_ENTROPY>` metric.
+
 
     Returns
     -------
@@ -602,6 +619,8 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     standard_output_ports = TransferMechanism.standard_output_ports.copy()
     standard_output_ports.extend([{NAME:ENERGY_OUTPUT_PORT_NAME}, {NAME:ENTROPY_OUTPUT_PORT_NAME}])
+    standard_output_port_names = TransferMechanism.standard_output_port_names.copy()
+    standard_output_port_names.extend([ENERGY_OUTPUT_PORT_NAME, ENTROPY_OUTPUT_PORT_NAME])
 
     @tc.typecheck
     def __init__(self,

@@ -357,7 +357,7 @@ Most types of Mechanisms have a `standard_output_ports` class attribute, that co
 OutputPorts relevant to that type of Mechanism (for example, the `TransferMechanism` class has OutputPorts for
 calculating the mean, median, variance, and standard deviation of its result).  The names of these are listed as
 attributes of a class with the name *<ABBREVIATED_CLASS_NAME>_OUTPUT*.  For example, the TransferMechanism class
-defines `TRANSFER_OUTPUT`, with attributes *OUTPUT_MEAN*, *OUTPUT_MEDIAN*, *OUTPUT_VARIANCE* and *OUTPUT_STD_DEV* that
+defines `TRANSFER_OUTPUT`, with attributes *MEAN*, *MEDIAN*, *VARIANCE* and *STANDARD_DEVIATION* that
 are the names of predefined OutputPorts in its `standard_output_ports <TransferMechanism.standard_output_ports>`
 attribute. These can be used in the list of OutputPorts specified for a TransferMechanism object, as in the
 following example::
@@ -597,12 +597,12 @@ from psyneulink.core.components.ports.port import Port_Base, _instantiate_port_l
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ALL, ASSIGN, CALCULATE, CONTEXT, CONTROL_SIGNAL, FUNCTION, GATING_SIGNAL, INDEX, INPUT_PORT, INPUT_PORTS, \
-    MAPPING_PROJECTION, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MECHANISM_VALUE, NAME, \
-    OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, OUTPUT_STD_DEV, OUTPUT_VARIANCE, \
+    MAPPING_PROJECTION, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MECHANISM_VALUE, MEDIAN, \
+    NAME, OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, \
     OWNER_VALUE, PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, PROJECTION_TYPE, \
-    RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_OUTPUT_PORTS, PORT, VALUE, VARIABLE, \
+    RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_PORTS, PORT, VALUE, VARIABLE, VARIANCE, \
     output_port_spec_to_parameter_name
-from psyneulink.core.globals.parameters import Parameter, ParameterError
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
@@ -610,7 +610,8 @@ from psyneulink.core.globals.utilities import \
 
 __all__ = [
     'OUTPUTS', 'OutputPort', 'OutputPortError', 'PRIMARY', 'SEQUENTIAL',
-    'standard_output_ports', 'StandardOutputPorts', 'StandardOutputPortsError', 'port_type_keywords',
+    'standard_output_ports', 'standard_output_port_names', 'StandardOutputPorts', 'StandardOutputPortsError',
+    'port_type_keywords',
 ]
 
 port_type_keywords = port_type_keywords.update({OUTPUT_PORT})
@@ -629,29 +630,19 @@ SEQUENTIAL = 'SEQUENTIAL'
 
 DEFAULT_VARIABLE_SPEC = (OWNER_VALUE, 0)
 
-# This is a convenience class that provides list of standard_output_port names in IDE
-class OUTPUTS():
-    RESULT=RESULT
-    MEAN=OUTPUT_MEAN
-    MEDIAN=OUTPUT_MEDIAN
-    STANDARD_DEVIATION=OUTPUT_STD_DEV
-    VARIANCE=OUTPUT_VARIANCE
-    MECHANISM_VALUE=MECHANISM_VALUE
-    OWNER_VALUE=OWNER_VALUE
-    MAX_VAL=MAX_VAL
-    MAX_ABS_VAL=MAX_VAL
-    MAX_INDICATOR=MAX_INDICATOR
-    MAX_ABS_INDICATOR=MAX_INDICATOR
-    PROB=PROB
+# These are defined here because STANDARD_DEVIATION AND VARIANCE
+#    are already defined in Keywords in lower case (used as arg for Functions).
+STD_DEV_OUTPUT_PORT_NAME = 'STANDARD_DEVIATION'
+VARIANCE_OUTPUT_PORT_NAME = 'VARIANCE'
 
 standard_output_ports = [{NAME: RESULT},
-                          {NAME:OUTPUT_MEAN,
+                          {NAME:MEAN,
                            FUNCTION:lambda x: np.mean(x)},
-                          {NAME: OUTPUT_MEDIAN,
+                          {NAME: MEDIAN,
                            FUNCTION:lambda x: np.median(x)},
-                          {NAME: OUTPUT_STD_DEV,
+                          {NAME: STD_DEV_OUTPUT_PORT_NAME,
                            FUNCTION:lambda x: np.std(x)},
-                          {NAME: OUTPUT_VARIANCE,
+                          {NAME: VARIANCE_OUTPUT_PORT_NAME,
                            FUNCTION:lambda x: np.var(x)},
                           {NAME: MECHANISM_VALUE,
                            VARIABLE: OWNER_VALUE},
@@ -668,6 +659,46 @@ standard_output_ports = [{NAME: RESULT},
                           {NAME: PROB,
                            FUNCTION: OneHot(mode=PROB).function}
                           ]
+
+standard_output_port_names = [i['name'] for i in standard_output_ports]
+
+# This is a convenience class that provides list of standard_output_port names for documentation and in IDE
+class OUTPUTS():
+    """
+    *RESULT* : 1d np.array
+      first item of TransferMechanism's `value <Mechanism_Base.value>` (corresponding to input from its
+      first InputPort)
+
+    *RESULTS* : 2d np.array
+      each item of TransferMechanism's `value <Mechanism_Base.value>` (corresponding to input from each
+      of its `input_ports <TransferMechanism.input_ports>`) is assigned as the `value <OutputPort.value>`
+      of a corresponding OutputPort of its `output_ports <TransferMechanism.output_ports>`.
+
+    .. _OUTPUT_MEAN:
+
+    *MEAN* : float
+      mean of `value <Mechanism_Base.value>`.
+
+    .. _OUTPUT_MEDIAN:
+
+    *MEDIAN* : float
+      median of `value <Mechanism_Base.value>`.
+
+    .. _OUTPUT_STANDARD_DEVIATION:
+
+    *STANDARD_DEVIATION* : float
+      standard deviation of `value <Mechanism_Base.value>`.
+
+    .. _OUTPUT_VARIANCE:
+
+    *VARIANCE* : float
+      variance of `output_port.value`.
+
+    *MECHANISM_VALUE* : list
+      Mechanism's `value <Mechanism_Base.value>` used as OutputPort's value.
+    """
+for name in standard_output_port_names:
+    setattr(OUTPUTS, name, name)
 
 
 def _parse_output_port_variable(variable, owner, context=None, output_port_name=None):

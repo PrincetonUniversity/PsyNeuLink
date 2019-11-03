@@ -950,7 +950,7 @@ from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Function, Mechanism, Projection, Port
 from psyneulink.core.components.ports.inputport import DEFER_VARIABLE_SPEC_TO_MECH_MSG, InputPort
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
-from psyneulink.core.components.ports.outputport import OutputPort
+from psyneulink.core.components.ports.outputport import OutputPort, standard_output_ports, standard_output_port_names
 from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.ports.port import REMOVE_PORTS, PORT_SPEC, _parse_port_spec
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
@@ -1080,6 +1080,8 @@ class Mechanism_Base(Mechanism):
               a count for all instances of that type, and a dictionary of those instances
     COMMENT
 
+
+
     Attributes
     ----------
 
@@ -1192,6 +1194,9 @@ class Mechanism_Base(Mechanism):
                   the `value <OutputPort.OutputPort.value>` of that OutputPort (and its corresponding item in the
                   the Mechanism's `output_values <Mechanism_Base.output_values>` attribute).
 
+    output_ports : ContentAddressableList[str, OutputPort]
+
+
         COMMENT:
             EXAMPLE HERE
         COMMENT
@@ -1218,18 +1223,14 @@ class Mechanism_Base(Mechanism):
         contains the labels corresponding to the value(s) of the OutputPort(s) of the Mechanism. If the current value
         of an OutputPort does not have a corresponding label, then its numeric value is used instead.
 
-    condition : Condition : None
-        condition to be associated with the Mechanism in the `Scheduler` responsible for executing it in each
-        `System` to which it is assigned;  if it is not specified (i.e., its value is `None`), the default
-        Condition for a `Component` is used.  It can be overridden in a given `System` by assigning a Condition for
-        the Mechanism directly to a Scheduler that is then assigned to the System.
+    standard_output_ports : list[dict]
+        list of dictionary specifications for `standard_output_ports <OutputPort.standard_output_ports>` available for
+        assignment to all Mechanisms.
 
-    COMMENT:
-        phaseSpec : int or float :  default 0
-            determines the `TIME_STEP` (s) at which the Mechanism is executed as part of a System
-            (see :ref:`Process_Mechanisms` for specification, and :ref:`System Phase <System_Execution_Phase>`
-            for how phases are used).
-    COMMENT
+    standard_output_port_names : list[str]
+        list of names of `standard_output_ports <Mechanism_Base.standard_output_ports>` that can be used to specify
+        a `StandardOutputPort` to a Mechanism, and to reference it in Mechanism's list of `output_ports
+        <Mechanism_Base.output_ports>`.
 
     ports : ContentAddressableList
         a list of all of the Mechanism's `Ports <Port>`, composed from its `input_ports
@@ -1291,6 +1292,12 @@ class Mechanism_Base(Mechanism):
     attributes_dict : Dict[keyword, value]
         a dictionary containing the attributes (and their current values) that can be used to specify the
         `variable <OutputPort.variable>` of the Mechanism's `OutputPort` (see `OutputPort_Customization`).
+
+    condition : Condition : None
+        condition to be associated with the Mechanism in the `Scheduler` responsible for executing it in each
+        `System` to which it is assigned;  if it is not specified (i.e., its value is `None`), the default
+        Condition for a `Component` is used.  It can be overridden in a given `System` by assigning a Condition for
+        the Mechanism directly to a Scheduler that is then assigned to the System.
 
     name : str
         the name of the Mechanism; if it is not specified in the **name** argument of the constructor, a default is
@@ -1367,6 +1374,9 @@ class Mechanism_Base(Mechanism):
         TARGET_LABELS_DICT: {},
         OUTPUT_LABELS_DICT: {}
         })
+
+    standard_output_ports = standard_output_ports.copy()
+    standard_output_port_names = standard_output_port_names.copy()
 
     class Parameters(Mechanism.Parameters):
         """
