@@ -179,18 +179,20 @@ is:
 .. _TransferMechanism_OutputPorts:
 
 *OutputPorts*
-~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
 
-By default, a TransferMechanism generates one `OutputPort` for each of its `InputPorts`.  The first (and `primary
-<OutputPort_Primary>`) OutputPort is named *RESULT*; subsequent ones use that as the base name, suffixed with an
-incrementing integer starting at '-1' for each additional OutputPort (e.g., *RESULT-1*, *RESULT-2*, etc.; see
-`Naming`). The `value <OutputPort.value>` of each OutputPort is assigned the result of the Mechanism's `function
-<TransferMechanism.function>` applied to the `value <InputPort.value>` of the corresponding InputPort.
-
-Additional OutputPorts can be assigned using the TransferMechanism's `Standard OutputPorts
-<TransferMechanism_Standard_OutputPorts>` (see `OutputPort_Standard`) or by creating `custom OutputPorts
-<OutputPort_Customization>` (but see note below).  Like any OutputPorts, the `value <OutputPort.value>` of any or
-all of these can be modulated by one or more `GatingSignals <GatingSignal_Modulation>`.
+By default, or if the **output_ports** argument is specified using the keyword *RESULTS*, a TransferMechanism generates
+one `OutputPort` for each item in the outer dimension (axis 0) of its `value <Mechanism_Base.value>` (each of which is
+the result of the Mechanism's `function <Mechanism_Base.function>` applied to the `value <InputPort.value>` of the
+corresponding `InputPort`).  If there is only one OutputPort (i.e., the case in which there is only one InputPort and
+therefore only one item in Mechanism's `value <Mechanism_Base.value>`), the OutputPort is named *RESULT*.  If there is
+more than one item in `value <Mechanism_Base.value>`, then an OuputPort is assigned for each;  the name of the first
+is *RESULT-0*, and the names of the subsequent ones are suffixed with an integer that is incremented for each successive
+one (e.g., *RESULT-1*, *RESULT-2*, etc.).  Additional OutputPorts can be assigned using the TransferMechanism's
+`Standard OutputPorts <TransferMechanism_Standard_OutputPorts>` (see `OutputPort_Standard`) or by creating `custom
+OutputPorts <OutputPort_Customization>` (but see note below).   Like any OutputPorts, the `value <OutputPort.value>` of
+any or all of these can be modulated by one or more `ControlSignals <ControlSignal_Modulation>` or `GatingSignals
+<GatingSignal_Modulation>`.
 
     .. _TransferMechanism_OutputPorts_Note:
 
@@ -477,15 +479,15 @@ from psyneulink.core.components.ports.outputport import OutputPort, StandardOutp
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     comparison_operators, FUNCTION, INITIALIZER, INSTANTANEOUS_MODE_VALUE, LESS_THAN_OR_EQUAL, \
-    MAX_ABS_DIFF, NAME, NOISE, OWNER_VALUE, PRIMARY, RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, \
+    MAX_ABS_DIFF, NAME, NOISE, OUTPUT_PORT, OWNER_VALUE, RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, \
     TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE
-
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
     all_within_range, append_type_to_name, iscompatible, is_comparison_operator
 from psyneulink.core.scheduling.condition import Never
+from psyneulink.core.globals.registry import remove_instance_from_registry, register_instance
 
 __all__ = [
     'INITIAL_VALUE', 'CLIP',  'INTEGRATOR_FUNCTION', 'INTEGRATION_RATE',
@@ -875,14 +877,19 @@ class TransferMechanism(ProcessingMechanism_Base):
         **output_ports** argument of the Mechanism's constructor (see `TransferMechanism Standard OutputPorts
         <TransferMechanism_Standard_OutputPorts>`).
 
-    name : str
-        the name of the TransferMechanism; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
+    standard_output_ports : list[str]
 
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the TransferMechanism; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        XXX DEFAULT IS RESULTS
+
+        the following `Standard OutputPorts <OutputPort_Standard>` are available to assign in addition to
+        those of a `TransferMechanism <TransferMechanism_Standard_OutputPorts>`:
+
+        .. _TransferMechanism_Standard_OutputPorts:
+
+        *RESULTS* : 2d np.array
+          generates an OutputPport for each item of Mechanism's `value <Mechanism_Base.value>`;  the first is named
+          *RESULT* (this serves as the Mechanism's `primary OutputPort <OutputPort_Primary>`);  the names of any
+          additional ones are suffixed with a sequentially incremented index (*RESULT-1*, *RESULT-2*, etc.).
 
     Returns
     -------
@@ -1401,13 +1408,22 @@ class TransferMechanism(ProcessingMechanism_Base):
         self.has_integrated = True
 
     def _instantiate_output_ports(self, context=None):
-        # If user specified more than one item for variable, but did not specify any custom OutputPorts
-        # then assign one OutputPort (with the default name, indexed by the number of them) per item of variable
+        # If user specified more than one item for variable, but did not specify any custom OutputPorts,
+        # then assign one OutputPort (with the default name, indexed by the number of the item) per item of variable
         if len(self.defaults.variable) > 1 and len(self.output_ports) == 1 and self.output_ports[0] == RESULTS:
             self.output_ports = []
             for i, item in enumerate(self.defaults.variable):
                 self.output_ports.append({NAME: RESULT, VARIABLE: (OWNER_VALUE, i)})
         super()._instantiate_output_ports(context=context)
+
+        # Relabel first output_port: d
+        #    default (assigned by Mechanism's OutputPort registry) is to name it "RESULT";
+        #    but in this context, explicitly adding -0 index helps put first one on par with others
+        #    (i.e., make clear the alignment of each OutputPort with the items of the TransferMechanmism's value).
+        remove_instance_from_registry(registry=self._portRegistry,
+                                      category=OUTPUT_PORT,
+                                      component=self.output_ports['RESULT'])
+        register_instance(self.output_ports['RESULT'], 'RESULT-0', OutputPort, self._portRegistry, OUTPUT_PORT)
 
     def _get_instantaneous_function_input(self, function_variable, noise):
         noise = self._try_execute_param(noise, function_variable)

@@ -1000,11 +1000,6 @@ def _input_port_variables_getter(owning_component=None, context=None):
         return None
 
 
-class MechanismStandardOutputPorts():
-
-
-
-
 class Mechanism_Base(Mechanism):
     """Base class for Mechanism.
 
@@ -1091,7 +1086,7 @@ class Mechanism_Base(Mechanism):
     Attributes
     ----------
 
-    variable : at least ndarray : default self.defaults.variable
+    variable : at least 2d array : default self.defaults.variable
         used as input to the Mechanism's `function <Mechanism_Base.function>`.  It is always at least a 2d np.array,
         with each item of axis 0 corresponding to a `value <InputPort.value>` of one of the Mechanism's `InputPorts
         <InputPort>` (in the order they are listed in its `input_ports <Mechanism_Base.input_ports>` attribute), and
@@ -1180,12 +1175,7 @@ class Mechanism_Base(Mechanism):
         <Mechanism_Base.output_ports>` attribute.
 
     output_ports : ContentAddressableList[str, OutputPort]
-        list of the Mechanism's `OutputPorts <Mechanism_OutputPorts>`.
-
-        There is always
-        at least one entry, which identifies the Mechanism's `primary OutputPort <OutputPort_Primary>`.
-
-        a list of the Mechanism's `OutputPorts <Mechanism_OutputPorts>`. The first (and possibly only) entry is always
+        list of the Mechanism's `OutputPorts <Mechanism_OutputPorts>`. The first (and possibly only) entry is always
         the Mechanism's `primary OutputPort <OutputPort_Primary>` (i.e., the one in the its `output_port
         <Mechanism_Base.output_port>` attribute).
 
@@ -1200,26 +1190,6 @@ class Mechanism_Base(Mechanism):
                   the `value <OutputPort.OutputPort.value>` of that OutputPort (and its corresponding item in the
                   the Mechanism's `output_values <Mechanism_Base.output_values>` attribute).
 
-    output_ports : ContentAddressableList[str, OutputPort]
-
-
-        COMMENT:
-            EXAMPLE HERE
-        COMMENT
-
-        .. _outputPortValueMapping : Dict[str, int]:
-               contains the mappings of OutputPorts to their indices in the output_values list
-               The key of each entry is the name of an OutputPort, and the value is its position in the
-                    :py:data:`OutputPorts <Mechanism_Base.output_ports>` ContentAddressableList.
-               Used in ``_update_output_ports`` to assign the value of each OutputPort to the correct item of
-                   the Mechanism's ``value`` attribute.
-               Any Mechanism with a function that returns a value with more than one item (i.e., len > 1) MUST implement
-                   self.execute rather than just use the params[FUNCTION].  This is so that _outputPortValueMapping
-                   can be implemented.
-               TBI: if the function of a Mechanism is specified only by params[FUNCTION]
-                   (i.e., it does not implement self.execute) and it returns a value with len > 1
-                   it MUST also specify kwFunctionOutputPortValueMapping.
-
     output_labels_dict : dict
         contains entries that are either label:value pairs, or sub-dictionaries containing label:value pairs,
         in which each label (key) specifies a string associated with a value for the OutputPort(s) of the
@@ -1230,12 +1200,37 @@ class Mechanism_Base(Mechanism):
         of an OutputPort does not have a corresponding label, then its numeric value is used instead.
 
     standard_output_ports : list[dict]
-        list of dictionary specifications for `standard_output_ports <OutputPort.standard_output_ports>` available for
-        assignment to all Mechanisms.
+        list of the dictionary specifications for the following `StandardOutputPorts <StandardOutputPort>` that can
+        be assigned as `OutputPorts <OutputPort>`; types are of `value <OutputPort.value>` of the corresponding
+        OutputPorts:
+
+        *RESULT* : 1d np.array
+          first item of Mechanism's `value <Mechanism_Base.value>`.
+
+        *MEAN* : float
+          mean of the first item of Mechanism's `value <Mechanism_Base.value>`.
+
+        *MEDIAN* : float
+          median of the first item of Mechanism's `value <Mechanism_Base.value>`.
+
+        *STANDARD_DEVIATION* : float
+          standard deviation of the first item of Mechanism's `value <Mechanism_Base.value>`.
+
+        *VARIANCE* : float
+          variance of the first item of Mechanism's `output_port.value`.
+
+        *MECHANISM_VALUE* : list
+          Mechanism's `value <Mechanism_Base.value>`.
+
+        COMMENT:
+        *COMBINE* : scalar or numpy array
+          linear combination of the `value <Mechanism_Base.value>` of all items of the TransferMechanism's `value
+          <Mechanism_Base.value>` (requires that they all have the same dimensionality).
+        COMMENT
 
     standard_output_port_names : list[str]
-        list of names of `standard_output_ports <Mechanism_Base.standard_output_ports>` that can be used to specify
-        a `StandardOutputPort` to a Mechanism, and to reference it in Mechanism's list of `output_ports
+        list of the names of the `standard_output_ports <Mechanism_Base.standard_output_ports>` that can be used to
+        specify a `StandardOutputPort` to a Mechanism, and to reference it in Mechanism's list of `output_ports
         <Mechanism_Base.output_ports>`.
 
     ports : ContentAddressableList

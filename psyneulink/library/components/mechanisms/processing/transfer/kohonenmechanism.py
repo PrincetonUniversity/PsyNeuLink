@@ -192,9 +192,9 @@ class KohonenMechanism(TransferMechanism):
     output_ports : Dict[str, OutputPort]
         an OrderedDict with the following `OutputPorts <OutputPort>`:
 
-        * `RESULT` -- `value <OutputPort.value>` is the **result** of `function <TransferMechanism.function>`;
+        * *RESULT* -- `value <OutputPort.value>` is the result of `function <Mechanism_Base.function>`;
 
-        * `INPUT_PATTERN` -- `value <OutputPort.value>` is the value of the KohonenMechanism's `variable
+        * *INPUT_PATTERN* -- `value <OutputPort.value>` is the value of the KohonenMechanism's `variable
           <Mechanisms_Base.variable>`, which is provided to the *ACTIVATION_OUTPUT* InputPort of its
           `learning_mechanism <KohonenMechanisms.learning_mechanism>`.
 
