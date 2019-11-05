@@ -36,7 +36,7 @@ Creating a ProcessingMechanism
 
 A ProcessingMechanism is created by calling its constructor.
 
-Its `function <ProcessingMechanism.function>` is specified in the **function** argument, which may be the name of a
+Its `function <Mechanism_Base.function>` is specified in the **function** argument, which may be the name of a
 `Function <Function>` class:
 
     >>> import psyneulink as pnl
@@ -66,15 +66,14 @@ Execution
 Three main tasks are completed each time a ProcessingMechanism executes:
 
 1. The ProcessingMechanism updates its `InputPort`(s), and their values are used to assemble `variable
-<ProcessingMechanism.variable>`. Each InputPort `value <InputPort.value>` (often there is only one `InputPort`) is
+<Mechanism_Base.variable>`. Each InputPort `value <InputPort.value>` (often there is only one `InputPort`) is
 added to an outer array, such that each item of variable corresponds to an InputPort `value <InputPort.value>`.
 
-2. The ProcessingMechanism's `variable <ProcessingMechanism.variable>` is handed off as the input to the
-ProcessingMechanism's `function <ProcessingMechanism.function>`, and the function executes.
+2. The ProcessingMechanism's `variable <Mechanism_Base.variable>` is handed off as the input to the
+ProcessingMechanism's `function <Mechanism_Base.function>`, and the function executes.
 
-3. The result of the ProcessingMechanism's `function <ProcessingMechanism.function>` is placed in the Mechanism's
-`value <ProcessingMechanism.value>` attribute, and OutputPorts are generated based on `value
-<ProcessingMechanism.value>`.
+3. The result of the ProcessingMechanism's `function <Mechanism_Base.function>` is placed in the Mechanism's
+`value <Mechanism_Base.value>` attribute, and OutputPorts are generated based on `value <Mechanism_Base.value>`.
 
 A ProcessingMechanism may be executed by calling its execute method directly:
 
@@ -204,62 +203,8 @@ class ProcessingMechanismError(Exception):
 
 class ProcessingMechanism(ProcessingMechanism_Base):
     """
-    ProcessingMechanism(   \
-    default_variable=None, \
-    size=None,             \
-    function=Linear,       \
-    params=None,           \
-    name=None,             \
-    prefs=None)
-
-    Subclass of `ProcessingMechanism <ProcessingMechanism>` that does not have any specialized features.
-
-    Arguments
-    ---------
-
-    default_variable : number, list or np.ndarray
-        the input to the Mechanism to use if none is provided in a call to its
-        `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` methods;
-        also serves as a template to specify the length of `variable <ProcessingMechanism.variable>` for
-        `function <ProcessingMechanism.function>`, and the `primary outputPort <OutputPort_Primary>` of the
-        Mechanism.
-
-    size : int, list or np.ndarray of ints
-        specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
-        if **default_variable** is specified, it takes precedence over the specification of **size**.
-        As an example, the following ProcessingMechanisms are equivalent::
-            P1 = ProcessingMechanism(size = [3, 2])
-            P2 = ProcessingMechanism(default_variable = [[0, 0, 0], [0, 0]])
-
-    function : PsyNeuLink Function : default Linear
-        specifies the function used to compute the output
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
-        the Mechanism, parameters for its `function <ProcessingMechanism.function>`, and/or a custom function and its
-        parameters.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
-
-    name : str : default see `name <ProcessingMechanism.name>`
-        specifies the name of the ProcessingMechanism.
-
-    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the ProcessingMechanism; see `prefs <ProcessingMechanism.prefs>` for details.
-
-    Attributes
-    ----------
-    variable : value: default
-        the input to Mechanism's `function`.
-
-    name : str
-        the name of the ProcessingMechanism; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the ProcessingMechanism; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
-
+    Subclass of `ProcessingMechanism <ProcessingMechanism>` that does not have any specialized features;
+    see Mechanism `Mechanism_Class_Reference` for arguments of constructor and attributes.
     """
 
     componentType = PROCESSING_MECHANISM

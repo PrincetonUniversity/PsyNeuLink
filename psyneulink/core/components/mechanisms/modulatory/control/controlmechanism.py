@@ -295,7 +295,7 @@ dictionary <ParameterPort_Specification>` (see `Mechanism_Constructor_Arguments`
 
 FOR DEVELOPERS:
     If the ObjectiveMechanism has not yet been created, these are added to the **monitored_output_ports** of its
-    constructor called by ControlMechanism._instantiate_objective_mechanmism;  otherwise, they are created using the
+    constructor called by ControlMechanism._instantiate_objective_mechanism;  otherwise, they are created using the
     ObjectiveMechanism.add_to_monitor method.
 COMMENT
 
@@ -385,7 +385,7 @@ The OutputPorts of a ControlMechanism are `ControlSignals <ControlSignal>` (list
 **control** argument of its constructor, that sends a `ControlProjection` to the `ParameterPort` for the
 corresponding parameter.  The ControlSignals are listed in the `control_signals <ControlMechanism.control_signals>`
 attribute;  since they are a type of `OutputPort`, they are also listed in the ControlMechanism's `output_ports
-<ControlMechanism.output_ports>` attribute. The parameters modulated by a ControlMechanism's ControlSignals can be
+<Mechanism_Base.output_ports>` attribute. The parameters modulated by a ControlMechanism's ControlSignals can be
 displayed using its `show <ControlMechanism.show>` method. By default, each `ControlSignal` is assigned as its
 `allocation <ControlSignal.allocation>` the value of the  corresponding item of the ControlMechanism's
 `control_allocation <ControlMechanism.control_allocation>`;  however, subtypes of ControlMechanism may assign
@@ -814,18 +814,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
         <ControlMechanism.costs>` attributes;  must take two 1d arrays (outcome and cost) with scalar values as its
         arguments and return an array with a single scalar value.
 
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters
-        for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
-        specified for parameters in the dictionary override any assigned to those parameters in arguments of the
-        constructor.
-
-    name : str : default see `name <ControlMechanism.name>`
-        specifies the name of the ControlMechanism.
-
-    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the ControlMechanism; see `prefs <ControlMechanism.prefs>` for details.
-
     Attributes
     ----------
 
@@ -938,14 +926,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
         the default form of modulation used by the ControlMechanism's `ControlSignals <GatingSignal>`,
         unless they are `individually specified <ControlSignal_Specification>`.
 
-    name : str
-        the name of the ControlMechanism; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the ControlMechanism; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
     """
 
     componentType = "ControlMechanism"
@@ -1336,13 +1316,13 @@ class ControlMechanism(ModulatoryMechanism_Base):
             uses _instantiate_monitoring_input_port and _instantiate_control_mechanism_input_port to do so.
             For each item in self.monitored_output_ports:
             - if it is a OutputPort, call _instantiate_monitoring_input_port()
-            - if it is a Mechanism, call _instantiate_monitoring_input_port for relevant Mechanism.output_ports
+            - if it is a Mechanism, call _instantiate_monitoring_input_port for relevant Mechanism_Base.output_ports
                 (determined by whether it is a `TERMINAL` Mechanism and/or MonitoredOutputPortsOption specification)
             - each InputPort is assigned a name with the following format:
                 '<name of Mechanism that owns the monitoredOutputPort>_<name of monitoredOutputPort>_Monitor'
 
         Notes:
-        * self.monitored_output_ports is a list, each item of which is a Mechanism.output_port from which a
+        * self.monitored_output_ports is a list, each item of which is a Mechanism_Base.output_port from which a
           Projection will be instantiated to a corresponding InputPort of the ControlMechanism
         * self.input_ports is the usual ordered dict of ports,
             each of which receives a Projection from a corresponding OutputPort in self.monitored_output_ports
