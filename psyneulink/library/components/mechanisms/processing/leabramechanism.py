@@ -163,10 +163,6 @@ class LeabraFunction(Function_Base):
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the LeabraMechanism; see `prefs <LeabraMechanism.prefs>` for details.
-
-
     Attributes
     ----------
 
@@ -382,35 +378,11 @@ class LeabraMechanism(ProcessingMechanism_Base):
         Lower values of quarter_size also effectively reduce the magnitude of learning weight changes during
         a given trial.
 
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
-        the mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
-        the dictionary override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default KWTA-<index>
-        a string used for the name of the mechanism.
-        If is not specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
-
-    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for mechanism.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
-
-    context : str : default componentType+INITIALIZING
-        string used for contextualization of instantiation, hierarchical calls, executions, etc.
-
     Attributes
     ----------
 
-    variable : value
-        the input to this Mechanism's `function <LeabraMechanism.function>`.
-
     function : LeabraFunction
         the function that wraps and executes the leabra mechanism
-
-    value : 2d np.array [array(float64)]
-        result of executing `function <LeabraMechanism.function>`.
 
     input_size : int : default 1
         an integer specifying how many units are in (the size of) the first layer (input) of the leabra network.
@@ -439,33 +411,6 @@ class LeabraMechanism(ProcessingMechanism_Base):
     network : leabra.Network
         the leabra.Network object which is executed by the LeabraMechanism. For more info about leabra Networks,
         please see the `leabra package <https://github.com/benureau/leabra>` on Github.
-
-    output_ports : *ContentAddressableList[OutputPort]* : default [`RESULT <TRANSFER_MECHANISM_RESULT>`]
-        list of Mechanism's `OutputPorts <OutputPorts>`.  By default there is a single OutputPort,
-        `RESULT <TRANSFER_MECHANISM_RESULT>`, that contains the result of a call to the Mechanism's
-        `function <LeabraMechanism.function>`;  additional `standard <TransferMechanism_Standard_OutputPorts>`
-        and/or custom OutputPorts may be included, based on the specifications made in the **output_ports** argument
-        of the Mechanism's constructor.
-
-    output_values : List[array(float64)]
-        each item is the `value <OutputPort.value>` of the corresponding OutputPort in `output_ports
-        <LeabraMechanism.output_ports>`.  The default is a single item containing the result of the
-        TransferMechanism's `function <LeabraMechanism.function>`;  additional
-        ones may be included, based on the specifications made in the
-        **output_ports** argument of the Mechanism's constructor (see `TransferMechanism Standard OutputPorts
-        <TransferMechanism_Standard_OutputPorts>`).
-
-    name : str : default LeabraMechanism-<index>
-        the name of the Mechanism.
-        Specified in the **name** argument of the constructor for the Projection;
-        if not specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        the `PreferenceSet` for Mechanism.
-        Specified in the **prefs** argument of the constructor for the Mechanism;
-        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
-        (see :doc:`PreferenceSet <LINK>` for details).
 
     Returns
     -------

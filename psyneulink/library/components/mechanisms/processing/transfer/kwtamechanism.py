@@ -13,7 +13,7 @@ Overview
 --------
 
 A KWTAMechanism is a subclass of `RecurrentTransferMechanism` that implements a k-winners-take-all (kWTA)
-constraint on the number of elements of the Mechanism's `variable <KWTAMechanism.variable>` that are above a
+constraint on the number of elements of the Mechanism's `variable <Mechanism_Base.variable>` that are above a
 specified threshold.  The implementation is based on the one  described in `O'Reilly and Munakata, 2012
 <https://grey.colorado.edu/CompCogNeuro/index.php/CCNBook/Networks/kWTA_Equations>`_.
 
@@ -24,7 +24,7 @@ Creating a KWTAMechanism
 
 A KWTAMechanism can be created directly by calling its constructor. The **k_value**, **threshold**,
 and **ratio** arguments can be used to specify the function of the KWTAMechanism, and default to a condition
-in which half of the elements in the KWTAMechanism's `variable <KWTAMechanism.variable>`
+in which half of the elements in the KWTAMechanism's `variable <Mechanism_Base.variable>`
 (**k_value** = 0.5) are above 0 and half are below (**threshold** = 0), achieved using an intermediate degree of
 value displacement (**ratio** = 0.5).
 
@@ -34,14 +34,14 @@ Structure
 ---------
 
 The KWTAMechanism calculates an offset to apply to all elements of the Mechanism's `variable
-<KWTAMechanism.variable>` array so that it has a specified number of the elements that are at or above a
+<Mechanism_Base.variable>` array so that it has a specified number of the elements that are at or above a
 specified threshold value.  Typically, this constraint can be satisfied in a number of ways;  how it is satisfied is
 determined by three parameters and two options of the KWTAMechanism:
 
 .. _KWTAMechanism_k_value:
 
 * `k_value <KWTAMechanism.k_value>` parameter -- determines the number of elements of its `variable
-  <KWTAMechanism.variable>` that should be at or above the specified `threshold
+  <Mechanism_Base.variable>` that should be at or above the specified `threshold
   <KWTAMechanism.threshold>`.  A value between 0 and 1 specifies the *proportion* of elements that should be
   at or above the `threshold <KWTAMechanism.threshold>`, while a positive integer specifies the *number* of
   elements that should be at or above the `threshold <KWTAMechanism.threshold>`.  A negative integer specifies
@@ -52,31 +52,29 @@ determined by three parameters and two options of the KWTAMechanism:
 .. _KWTAMechanism_threshold:
 
 * `threshold <KWTAMechanism.threshold>` parameter -- determines the value at or above which the KTWA seeks to
-  assign `k_value <KWTAMechanism.k_value>` elements of its `variable <KWTAMechanism.variable>`.
+  assign `k_value <KWTAMechanism.k_value>` elements of its `variable <Mechanism_Base.variable>`.
 
 .. _KWTAMechanism_ratio:
 
 * `ratio <KWTAMechanism.ratio>` parameter -- determines how the offset applied to the elements of the
-  KWTAMechanism's `variable
-  <KWTAMechanism.variable>` is selected from the scope of possible values;  the `ratio
+  KWTAMechanism's `variable <Mechanism_Base.variable>` is selected from the scope of possible values;  the `ratio
   <KWTAMechanism.ratio>` must be a number between 0 and 1.  An offset is picked that is above the low end of
   the scope by a proportion of the scope equal to the `ratio <KWTAMechanism.ratio>` parameter.  How the scope
   is calculated is determined by the `average_based <KWTAMechanism.average_based>` option, as described below.
 
 .. _KWTAMechanism_average_based:
 
-* `average_based <KWTAMechanism.average_based>` option -- determines how the scope of values is calculated
-  from which the offset applied to the elements of the KWTAMechanism's `variable
-  <KWTAMechanism.variable>` is selected;  If `average_based <KWTAMechanism.average_based>` is
-  `False`, the low end of the scope is the offset that sets the k-th highest element exactly at the threshold
-  (that is, the smallest value that insures that `k_value <KWTAMechanism.k_value>` elements are at or above
-  the `threshold <KWTAMechanism.threshold>`;  the high end of the scope is the offset that sets the k+1-th
-  highest element exactly at the threshold (that is, the largest possible value, such that the `k_value
-  <KWTAMechanism.k_value>` elements but no more are above the `threshold <KWTAMechanism.threshold>`
-  (i.e., the next one is exactly at it). With this setting, all values of offset within the scope generate exactly
-  `k_value <KTWA.k_value>` elements at or above the `threshold <KWTAMechanism.threshold>`.  If `average_based
-  <KWTAMechanism.average_based>` is `True`, the low end of the scope is the offset that places the *average*
-  of the elements with the `k_value <KWTAMechanism.k_value>` highest values at the `threshold
+* `average_based <KWTAMechanism.average_based>` option -- determines how the scope of values is calculated from which
+  the offset applied to the elements of the KWTAMechanism's `variable <Mechanism_Base.variable>` is selected;  If
+  `average_based <KWTAMechanism.average_based>` is `False`, the low end of the scope is the offset that sets the k-th
+  highest element exactly at the threshold (that is, the smallest value that insures that `k_value
+  <KWTAMechanism.k_value>` elements are at or above the `threshold <KWTAMechanism.threshold>`;  the high end of the
+  scope is the offset that sets the k+1-th highest element exactly at the threshold (that is, the largest possible
+  value, such that the `k_value <KWTAMechanism.k_value>` elements but no more are above the `threshold
+  <KWTAMechanism.threshold>` (i.e., the next one is exactly at it). With this setting, all values of offset within
+  the scope generate exactly `k_value <KTWA.k_value>` elements at or above the `threshold <KWTAMechanism.threshold>`.
+  If `average_based <KWTAMechanism.average_based>` is `True`, the low end of the scope is the offset that places the
+  *average* of the elements with the `k_value <KWTAMechanism.k_value>` highest values at the `threshold
   <KWTAMechanism.threshold>`, and the high end of the scope is the offset that places the average of the
   remaining elements at the `threshold <KWTAMechanism.threshold>`.  In this case, the lowest values of
   offset within the scope may produce fewer than `k_value <KWTAMechanism.k_value>` elements at or above the
@@ -86,17 +84,17 @@ determined by three parameters and two options of the KWTAMechanism:
 
   .. note::
      If the `average_based <KWTAMechanism.average_based>` option is `False` (the default), the
-     KWTAMechanism's `variable <KWTAMechanism.variable>`
+     KWTAMechanism's `variable <Mechanism_Base.variable>`
      is guaranteed to have exactly `k_value <KTWA.k_value>` elements at or above the `threshold
      <KWTAMechanism.threshold>` (that is, for *any* value of the `ratio <KTWA.ratio>`).  However, if
      `average_based <KWTAMechanism.average_based>` is `True`, this guarantee does not hold;  `variable
-     <KWTAMechanism.variable>` may have fewer than `k_value <KWTAMechanism.k_value>` elements at or
+     <Mechanism_Base.variable>` may have fewer than `k_value <KWTAMechanism.k_value>` elements at or
      above the `threshold <KWTAMechanism.threshold>` (if the `ratio <KWTAMechanism.ratio>` is low),
      or more than `k_value <KWTAMechanism.k_value>` (if the `ratio <KWTAMechanism.ratio>` is high).
 
   Although setting the `average_based <KWTAMechanism.average_based>` option to `True` does not guarantee that
   *exactly* `k_value <KWTAMechanism.k_value>` elements will be above the threshold, the additional
-  flexibility it affords in the Mechanism's `variable <KWTAMechanism.variable>` attribute  can be useful in
+  flexibility it affords in the Mechanism's `variable <Mechanism_Base.variable>` attribute  can be useful in
   some settings -- for example, when training hidden layers in a `multilayered network
   <LearningMechanism_Multilayer_Learning>`, which may require different numbers of elements to be above the
   specified `threshold <KWTAMechanism.threshold>` for different input-target pairings.
@@ -104,14 +102,14 @@ determined by three parameters and two options of the KWTAMechanism:
 .. KWTAMechanism_Inhibition_only:
 
 * `inhibition_only <KWTAMechanism.inhibition_only>` option -- determines whether the offset applied to the
-  elements of the KWTAMechanism's `variable <KWTAMechanism.variable>` is allowed to be positive
+  elements of the KWTAMechanism's `variable <Mechanism_Base.variable>` is allowed to be positive
   (i.e., whether the KWTAMechanism can increase the value of any elements of its `variable
-  <KWTAMechanism.variable>`).  If set to `False`, the KWTAMechanism will use any offset value
+  <Mechanism_Base.variable>`).  If set to `False`, the KWTAMechanism will use any offset value
   determined by the `ratio <KWTAMechanism.ratio>` parameter from the scope determined by the `average_based
   <KTWA.average_based>` option (including positive offsets). If `inhibition_only
   <KWTAMechanism.inhibition_only>` is `True`, then any positive offset selected is "clipped" at (i.e
   re-assigned a value of) 0.  This ensures that the values of the elements of the KWTAMechanism's
-  `variable <KWTAMechanism.variable>` are never increased.
+  `variable <Mechanism_Base.variable>` are never increased.
 
 COMMENT:
   .. note::
@@ -131,14 +129,14 @@ In all other respects, a KWTAMechanism has the same attributes and is specified 
 Execution
 ---------
 
-When a KTWA is executed, it first determines its `variable <KWTAMechanism.variable>` as follows:
+When a KTWA is executed, it first determines its `variable <Mechanism_Base.variable>` as follows:
 
 * First, like every `RecurrentTransferMechanism`, it combines the input it receives from its recurrent
   `AutoAssociativeProjection` (see `Recurrent_Transfer_Structure <Recurrent_Transfer_Structure>`) with the input
   from any other `MappingProjections <MappingProjection>` it receives, and assigns this to its `variable
-  <KWTAMechanism.variable>` attribute.
+  <Mechanism_Base.variable>` attribute.
 ..
-* Then it modifies its `variable <KWTAMechanism.variable>`, by calculating and assigning an offset to its
+* Then it modifies its `variable <Mechanism_Base.variable>`, by calculating and assigning an offset to its
   elements, so that as close to `k_value <KWTAMechanism.k_value>` elements as possible are at or above the
   `threshold <KWTAMechanism.threshold>`.  The offset is determined by carrying out the following steps in
   each execution of the KTWA:
@@ -153,9 +151,9 @@ When a KTWA is executed, it first determines its `variable <KWTAMechanism.variab
   - constrain the offset to be 0 or negative if the `inhibition_only <KWTAMechanism.inhibition_only>` option
     is set (see `above <KWTAMechanism_inhibition_only>`;
 
-  - apply the offset to all elements of the `variable <KWTAMechanism.variable>`.
+  - apply the offset to all elements of the `variable <Mechanism_Base.variable>`.
 ..
-The modified `variable <KWTAMechanism.variable>` is then passed to the KWTAMechanism's `function
+The modified `variable <Mechanism_Base.variable>` is then passed to the KWTAMechanism's `function
 <KWTAMechanism.function>` to determine its `value <KWTAMechanism.value>`.
 
 
@@ -211,7 +209,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
     ---------
 
     k_value : number : default 0.5
-        specifies the proportion or number of the elements of `variable <KWTAMechanism.variable>` that should
+        specifies the proportion or number of the elements of `variable <Mechanism_Base.variable>` that should
         be at or above the `threshold <KWTAMechanism.threshold>`. A value between 0 and 1 specifies the
         proportion of elements that should be at or above the `threshold <KWTAMechanism.threshold>`, while a
         positive integer specifies the number of values that should be at or above the `threshold
@@ -220,10 +218,10 @@ class KWTAMechanism(RecurrentTransferMechanism):
 
     threshold : number : default 0
         specifies the threshold at or above which the KTWA seeks to assign `k_value <KWTAMechanism.k_value>`
-        elements of its `variable <KWTAMechanism.variable>`.
+        elements of its `variable <Mechanism_Base.variable>`.
 
     ratio : number : default 0.5
-        specifies the offset used to adjust the elements of `variable <KWTAMechanism.variable>` so that there
+        specifies the offset used to adjust the elements of `variable <Mechanism_Base.variable>` so that there
         are the number specified by `k_value <KWTAMechanism.k_value>` at or above the `threshold
         <KWTAMechanism.threshold>`;  it must be a number from 0 to 1 (see `ratio
         <KWTAMechanism_ratio>` for additional information).
@@ -233,7 +231,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
         <KWTAMechanism_average_based>` for additional information).
 
     inhibition_only : boolean : default True
-        specifies whether positive offsets can be applied to the `variable <KWTAMechanism.variable>` in an
+        specifies whether positive offsets can be applied to the `variable <Mechanism_Base.variable>` in an
         effort to achieve `k_value <KWTAMechanism.k_value>` elements at or above the `threshold
         <KWTAMechanism.threshold>`.  If set to `False`, any offset is allowed, including positive offsets;
         if set to `True`, a positive offset will be re-assigned the value of 0 (see `inhibition_only
@@ -244,22 +242,22 @@ class KWTAMechanism(RecurrentTransferMechanism):
     ----------
 
     k_value : number
-        determines the number or proportion of elements of `variable <KWTAMechanism.variable>` that should be
+        determines the number or proportion of elements of `variable <Mechanism_Base.variable>` that should be
         above the `threshold <KWTAMechanism.threshold>` of the KWTAMechanism (see `k_value
         <KWTAMechanism_k_value>` for additional information).
 
     threshold : number
         determines the threshold at or above which the KTWA seeks to assign `k_value <KWTAMechanism.k_value>`
-        elements of its `variable <KWTAMechanism.variable>`.
+        elements of its `variable <Mechanism_Base.variable>`.
 
     ratio : number
-        determines the offset used to adjust the elements of `variable <KWTAMechanism.variable>` so that there
+        determines the offset used to adjust the elements of `variable <Mechanism_Base.variable>` so that there
         are `k_value <KWTAMechanism.k_value>` elements at or above the `threshold
         <KWTAMechanism.threshold>` (see `ratio <KWTAMechanism_ratio>` for additional information).
 
     average_based : boolean : default False
         determines the way in which the scope of offsets is determined, from which the one is selected that is applied
-        to the elements of the `variable <KWTAMechanism.variable>` (see `average_based
+        to the elements of the `variable <Mechanism_Base.variable>` (see `average_based
         <KWTAMechanism_average_based>` for additional information).
 
     inhibition_only : boolean : default True

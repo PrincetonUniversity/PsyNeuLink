@@ -74,7 +74,7 @@ Execution
 
 When a ComparatorMechanism is executed, it updates its input_ports with the values of the OutputPorts specified
 in its **sample** and **target** arguments, and then uses its `function <ComparatorMechanism.function>` to
-compare these.  By default, the result is assigned to the `value <ComparatorMechanism.value>` of its *OUTCOME*
+compare these.  By default, the result is assigned to the `value <Mechanism_Base.value>` of its *OUTCOME*
 `output_port <ComparatorMechanism.output_port>`, and as the first item of the Mechanism's
 `output_values <ComparatorMechanism.output_values>` attribute.
 
@@ -184,12 +184,9 @@ class ComparatorMechanism(ObjectiveMechanism):
     ComparatorMechanism(                                \
         sample,                                         \
         target,                                         \
-        input_ports=[SAMPLE,TARGET]                    \
+        input_ports=[SAMPLE,TARGET]                     \
         function=LinearCombination(weights=[[-1],[1]],  \
-        output_ports=OUTCOME                           \
-        params=None,                                    \
-        name=None,                                      \
-        prefs=None)
+        output_ports=OUTCOME)
 
     Subclass of `ObjectiveMechanism` that compares the values of two `OutputPorts <OutputPort>`.
 
@@ -235,21 +232,6 @@ class ComparatorMechanism(ObjectiveMechanism):
     function :  Function, function or method : default Distance(metric=DIFFERENCE)
         specifies the `function <Comparator.function>` used to compare the `sample` with the `target`.
 
-    output_ports :  List[OutputPort, value, str or dict] or Dict[] : default [OUTCOME]
-        specifies the OutputPorts for the Mechanism;
-
-    params :  Optional[Dict[param keyword: param value]]
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
-        the Mechanism, its function, and/or a custom function and its parameters. Values specified for parameters in
-        the dictionary override any assigned to those parameters in arguments of the
-        constructor.
-
-    name : str : default see `name <ComparatorMechanism.name>`
-        specifies the name of the ComparatorMechanism.
-
-    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the ComparatorMechanism; see `prefs <ComparatorMechanism.prefs>` for details.
-
 
     Attributes
     ----------
@@ -274,9 +256,6 @@ class ComparatorMechanism(ObjectiveMechanism):
         or a python function that takes a 2d array with two items and returns a 1d array of the same length
         as the two input items.
 
-    value : 1d np.array
-        the result of the comparison carried out by the `function <ComparatorMechanism.function>`.
-
     output_port : OutputPort
         contains the `primary <OutputPort_Primary>` OutputPort of the ComparatorMechanism; the default is
         its *OUTCOME* OutputPort, the value of which is equal to the `value <ComparatorMechanism.value>`
@@ -287,16 +266,6 @@ class ComparatorMechanism(ObjectiveMechanism):
 
     output_values : 2d np.array
         contains one item that is the value of the *OUTCOME* OutputPort.
-
-    name : str
-        the name of the ComparatorMechanism; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the ComparatorMechanism; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
-
 
     """
     componentType = COMPARATOR_MECHANISM
@@ -313,7 +282,7 @@ class ComparatorMechanism(ObjectiveMechanism):
             ----------
 
                 variable
-                    see `variable <ComparatorMechanism.variable>`
+                    see `variable <Mechanism_Base.variable>`
 
                     :default value: numpy.array([[0], [0]])
                     :type: numpy.ndarray

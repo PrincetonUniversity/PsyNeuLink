@@ -39,7 +39,7 @@ corresponding OutputPort specified in the **sample** and **target** arguments.
 It is important to recognize that the value of the *SAMPLE* and *TARGET*
 InputPorts must have the same length and type, so that they can be compared
 using the PredictionErrorMechanism's `function
-<PredictionErrorMechanism.function>` By default, they use the format of the
+<PredictionErrorMechanism.function>.` By default, they use the format of the
 OutputPorts specified in the **sample** and **target** arguments, respectively,
 and the `MappingProjection` to each uses an `IDENTITY_MATRIX`. Therefore, for
 the default configuration, the OutputPorts specified in the **sample** and
@@ -195,58 +195,44 @@ class PredictionErrorMechanism(ComparatorMechanism):
     ---------
 
     sample : OutputPort, Mechanism_Base, dict, number, or str
-        specifies the SAMPLE InputPort, which will be evaluated by
-        the function
+        specifies the *SAMPLE* InputPort, that will be evaluated by the `function
+        <PredictionErrorMechanism.function>`.
 
     target : OutputPort, Mechanism_Base, dict, number, or str
-        specifies the TARGET InputPort, which will be used by the function to
-        evaluate the sample
+        specifies the *TARGET* InputPort, that will be used by the function to evaluate the `sample
+        <PredictionErrorMechanism.sample>`.
 
     function : CombinationFunction, ObjectiveFunction, function, or method : default PredictionErrorDeltaFunction
-        the function used to evaluate the sample and target inputs.
+        the function used to evaluate the SAMPLE and TARGET inputs.
 
     output_ports : str, Iterable : default OUTCOME
         by default, contains only the *OUTCOME* (`primary <OutputPort_Primary>`)
         OutputPort of the PredictionErrorMechanism.
 
     learning_rate : Number : default 0.3
-        controls the weight of later timesteps compared to earlier ones. Higher
-        rates weight later timesteps more heavily than previous ones.
-
-    name : str
-        the name of the PredictionErrorMechanism; if it is not specified in the
-        **name** argument of the constructor, a default is assigned by
-        MechanismRegistry (see `Naming` for conventions used for default and
-        duplicate names).
-
+        controls the weight of later timesteps compared to earlier ones;  higher rates weight later timesteps more
+        heavily than previous ones.
 
     Attributes
     ----------
 
     sample : OutputPort, Mechanism_Base, dict, number, or str
-        specifies the SAMPLE InputPort, which will be evaluated by
-        the function
+        the *SAMPLE* `InputPort`, the `value <InputPort.value>` of which will be evaluated by the function.
 
     target : OutputPort, Mechanism_Base, dict, number, or str
-        specifies the TARGET InputPort, which will be used by the function to
-        evaluate the sample
+        the *TARGET* `InputPort`, the `value <InputPort.value>` of which will be used to evaluate `sample
+        <PredictionErrorMechanism.sample>`.
 
     function : CombinationFunction, ObjectiveFunction, Function, or method : default PredictionErrorDeltaFunction
         the function used to evaluate the sample and target inputs.
 
     output_ports : str, Iterable : default OUTCOME
-        by default, contains only the *OUTCOME* (`primary <OutputPort_Primary>`)
-        OutputPort of the PredictionErrorMechanism.
+        by default, contains only the *OUTCOME* (`primary <OutputPort_Primary>`) `OutputPort` of the
+        PredictionErrorMechanism.
 
     learning_rate : Number : default 0.3
-        controls the weight of later timesteps compared to earlier ones. Higher
-        rates weight later timesteps more heavily than previous ones.
-
-    name : str
-        the name of the PredictionErrorMechanism; if it is not specified in the
-        **name** argument of the constructor, a default is assigned by
-        MechanismRegistry (see `Naming` for conventions used for default and
-        duplicate names).
+        controls the weight of later timesteps compared to earlier ones; higher rates weight later timesteps more
+        heavily than previous ones.
 
     """
     componentType = PREDICTION_ERROR_MECHANISM
@@ -263,7 +249,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
             ----------
 
                 variable
-                    see `variable <PredictionErrorMechanism.variable>`
+                    see `variable <Mechanism_Base.variable>`
 
                     :default value: None
                     :type:

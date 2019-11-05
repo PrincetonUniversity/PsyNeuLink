@@ -717,7 +717,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             ----------
 
                 variable
-                    see `variable <ContrastiveHebbianMechanism.variable>`
+                    see `variable <Mechanism_Base.variable>`
 
                     :default value: numpy.array([[0, 0]])
                     :type: numpy.ndarray
