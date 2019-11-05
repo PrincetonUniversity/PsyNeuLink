@@ -120,8 +120,8 @@ def register_category(entry,
 
     # IMPLEMENTATION NOTE:  Move to Port when that is implemented as ABC
     import inspect
-    from psyneulink.core.components.ports.port import Port, Port_Base
-    if inspect.isclass(entry) and issubclass(entry, Port) and not entry == Port_Base:
+    from psyneulink.core.components.shellclasses import Port
+    if inspect.isclass(entry) and issubclass(entry, Port):
         try:
            entry.portAttributes
         except AttributeError:

@@ -315,7 +315,7 @@ import typecheck as tc
 from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
-from psyneulink.core.components.functions.transferfunctions import Exponential, Linear, CostFunctions
+from psyneulink.core.components.functions.transferfunctions import Exponential, Linear, CostFunctions, TransferWithCosts
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.ports.outputport import SEQUENTIAL, _output_port_variable_getter
 from psyneulink.core.components.ports.port import Port_Base
@@ -382,6 +382,34 @@ def _duration_cost_getter(owning_component=None, context=None):
 def _cost_getter(owning_component=None, context=None):
     try:
         return getattr(owning_component.function.parameters, COMBINED_COSTS)._get(context)
+    except (TypeError, IndexError):
+        return None
+
+
+def _intensity_cost_function_getter(owning_component=None, context=None):
+    try:
+        return owning_component.function.parameters.intensity_cost_fct._get(context)
+    except (TypeError, IndexError):
+        return None
+
+
+def _adjustment_cost_function_getter(owning_component=None, context=None):
+    try:
+        return owning_component.function.parameters.adjustment_cost_fct._get(context)
+    except (TypeError, IndexError):
+        return None
+
+
+def _duration_cost_function_getter(owning_component=None, context=None):
+    try:
+        return owning_component.function.parameters.duration_cost_fct._get(context)
+    except (TypeError, IndexError):
+        return None
+
+
+def _combine_costs_function_getter(owning_component=None, context=None):
+    try:
+        return owning_component.function.parameters.combine_costs_fct._get(context)
     except (TypeError, IndexError):
         return None
 
@@ -715,9 +743,7 @@ class ControlSignal(ModulatorySignal):
             pnl_internal=True, constructor_argument='default_variable'
         )
 
-        # # FIX: DOESN'T WORK, SINCE DON'T HAVE ACCESS TO OTHER ARGS
-        # function = Parameter(TransferWithCosts, stateful=False, loggable=False, )
-        # _parse_function = _function_parser
+        function = Parameter(TransferWithCosts, stateful=False, loggable=False)
 
         value = Parameter(
             np.array([defaultControlAllocation]),
@@ -734,10 +760,30 @@ class ControlSignal(ModulatorySignal):
         duration_cost = Parameter(0, read_only=True, getter=_duration_cost_getter)
         cost = Parameter(None, read_only=True, getter=_cost_getter)
 
-        intensity_cost_function = Parameter(Exponential, stateful=False, loggable=False)
-        adjustment_cost_function = Parameter(Linear, stateful=False, loggable=False)
-        duration_cost_function = Parameter(SimpleIntegrator, stateful=False, loggable=False)
-        combine_costs_function = Parameter(Reduce(operation=SUM), stateful=False, loggable=False)
+        intensity_cost_function = Parameter(
+            Exponential,
+            stateful=False,
+            loggable=False,
+            getter=_intensity_cost_function_getter
+        )
+        adjustment_cost_function = Parameter(
+            Linear,
+            stateful=False,
+            loggable=False,
+            getter=_adjustment_cost_function_getter
+        )
+        duration_cost_function = Parameter(
+            SimpleIntegrator,
+            stateful=False,
+            loggable=False,
+            getter=_duration_cost_function_getter
+        )
+        combine_costs_function = Parameter(
+            Reduce(operation=SUM),
+            stateful=False,
+            loggable=False,
+            getter=_combine_costs_function_getter
+        )
         modulation = None
         _validate_cost_options = get_validator_by_type_only([CostFunctions, list])
         _validate_intensity_cost_function = get_validator_by_function(is_function_type)
@@ -797,15 +843,6 @@ class ControlSignal(ModulatorySignal):
                  prefs:is_pref_set=None,
                  **kwargs):
 
-        from psyneulink.core.components.functions.transferfunctions import TransferWithCosts
-        function = TransferWithCosts(default_variable=self.defaults.variable,
-                                     transfer_fct=function,
-                                     enabled_cost_functions=cost_options,
-                                     intensity_cost_fct=intensity_cost_function,
-                                     adjustment_cost_fct=adjustment_cost_function,
-                                     duration_cost_fct=duration_cost_function,
-                                     combine_costs_fct=combine_costs_function)
-
         # This is included in case ControlSignal was created by another Component (such as ControlProjection)
         #    that specified ALLOCATION_SAMPLES in params
         if params and ALLOCATION_SAMPLES in params and params[ALLOCATION_SAMPLES] is not None:
@@ -816,7 +853,7 @@ class ControlSignal(ModulatorySignal):
         index = index or SEQUENTIAL
 
         # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
+        params = self._assign_args_to_param_dicts(
                                                   cost_options=cost_options,
                                                   intensity_cost_function=intensity_cost_function,
                                                   adjustment_cost_function=adjustment_cost_function,
@@ -954,8 +991,24 @@ class ControlSignal(ModulatorySignal):
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
         super()._instantiate_attributes_before_function(function=function, context=context)
-        self._instantiate_cost_functions(context=context)
         self._instantiate_allocation_samples(context=context)
+
+    def _instantiate_function(self, function, function_params=None, context=None):
+        # unsure this is the correct way to go about this...
+        # should probably just have the user instantiate this function with
+        # their desired parameter values rather than trying to handle it in the
+        # constructor here
+        function = TransferWithCosts(
+            default_variable=self.defaults.variable,
+            transfer_fct=function,
+            enabled_cost_functions=self.defaults.cost_options,
+            intensity_cost_fct=self.defaults.intensity_cost_function,
+            adjustment_cost_fct=self.defaults.adjustment_cost_function,
+            duration_cost_fct=self.defaults.duration_cost_function,
+            combine_costs_fct=self.defaults.combine_costs_function,
+        )
+
+        super()._instantiate_function(function, function_params, context)
 
     def _instantiate_allocation_samples(self, context=None):
         """Assign specified `allocation_samples <ControlSignal.allocation_samples>` to a `SampleIterator`."""
@@ -987,11 +1040,6 @@ class ControlSignal(ModulatorySignal):
             self.adjustment_cost = 0
             self.duration_cost = 0
             self.cost = self.defaults.cost = self.intensity_cost
-
-    def _instantiate_cost_functions(self, context=None):
-
-        for cost_function_name in costFunctionNames:
-            self.paramsCurrent[cost_function_name.replace('fct','function')] = getattr(self.function,cost_function_name)
 
     def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
         """Get ControlSignal specified for a parameter or in a 'control_signals' argument
