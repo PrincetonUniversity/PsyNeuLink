@@ -52,11 +52,11 @@ words_hidden_layer = pnl.TransferMechanism(size=2,
 #log hidden layer activation
 # colors_input_layer.set_log_conditions('value')
 # colors_hidden_layer.set_log_conditions('value')
-# colors_hidden_layer.set_log_conditions('RESULTS')
+# colors_hidden_layer.set_log_conditions('RESULT')
 #
 # words_input_layer.set_log_conditions('value')
 # words_hidden_layer.set_log_conditions('value')
-# words_hidden_layer.set_log_conditions('RESULTS')
+# words_hidden_layer.set_log_conditions('RESULT')
 
 
 

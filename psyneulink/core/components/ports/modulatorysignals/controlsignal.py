@@ -285,7 +285,7 @@ the `gain <Logistic.gain>` parameter of the `Logistic` function for ``my_mech_A`
     >>> process_b = Process(pathway=[my_mech_B])
 
     >>> my_system = System(processes=[process_a, process_b],
-    ...                        monitor_for_control=[my_mech_A.output_ports[RESULTS],
+    ...                        monitor_for_control=[my_mech_A.output_ports[RESULT],
     ...                                             my_mech_B.output_ports[MEAN]],
     ...                        control_signals=[(GAIN, my_mech_A),
     ...                                         {NAME: INTERCEPT,

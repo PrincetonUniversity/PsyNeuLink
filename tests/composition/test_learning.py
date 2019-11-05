@@ -962,17 +962,17 @@ class TestBackProp:
             (comp.nodes['Comparator'].output_ports[0].parameters.value.get(comp), np.array([0.48955343, 0.4516952])),
             (comp.nodes['Comparator'].output_ports[pnl.MSE].parameters.value.get(comp), np.array(
                     0.22184555903789838)),
-            (comp.projections['MappingProjection from Color[RESULTS] to Hidden[InputPort-0]'].get_mod_matrix(comp),
+            (comp.projections['MappingProjection from Color[RESULT] to Hidden[InputPort-0]'].get_mod_matrix(comp),
              np.array([
                  [ 0.02512045, 1.02167245],
                  [ 2.02512045, 3.02167245],
              ])),
-            (comp.projections['MappingProjection from Word[RESULTS] to Hidden[InputPort-0]'].get_mod_matrix(comp),
+            (comp.projections['MappingProjection from Word[RESULT] to Hidden[InputPort-0]'].get_mod_matrix(comp),
              np.array([
                  [-0.05024091, 0.9566551 ],
                  [ 1.94975909, 2.9566551 ],
              ])),
-            (comp.projections['MappingProjection from Hidden[RESULTS] to Response[InputPort-0]'].get_mod_matrix(comp),
+            (comp.projections['MappingProjection from Hidden[RESULT] to Response[InputPort-0]'].get_mod_matrix(comp),
              np.array([
                  [ 0.03080958, 1.02830959],
                  [ 2.00464242, 3.00426575],

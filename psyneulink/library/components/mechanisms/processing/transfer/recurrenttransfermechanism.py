@@ -120,7 +120,7 @@ RecurrentTransferMechanism's `function <RecurrentTransferMechanism.function>`.
 
 A RecurrentTransferMechanism also has two additional `OutputPorts <OutputPort>`:  an *ENERGY* OutputPort and, if its
 `function <RecurrentTransferMechanism.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an *ENTROPY*
-OutputPort.  Each of these report the respective values of the vector in it its *RESULTS* (`primary
+OutputPort.  Each of these report the respective values of the vector in it its *RESULT* (`primary
 <OutputPort_Primary>`) OutputPort.
 
 Finally, if it has been `specified for learning <Recurrent_Transfer_Learning>`, the RecurrentTransferMechanism is

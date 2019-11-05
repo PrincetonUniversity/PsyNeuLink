@@ -140,9 +140,9 @@ class TestNaming:
         assert I1.name == 'InputPort-1'
         assert I2.name == 'InputPort-2'
         assert T2.input_ports[0].path_afferents[0].name == \
-               'MappingProjection from T1[RESULTS] to T2[InputPort-0]'
+               'MappingProjection from T1[RESULT] to T2[InputPort-0]'
         assert T2.input_ports[2].path_afferents[0].name == \
-               'MappingProjection from T1[RESULTS] to T2[InputPort-2]'
+               'MappingProjection from T1[RESULT] to T2[InputPort-2]'
 
     # ------------------------------------------------------------------------------------------------
     # TEST 10
@@ -216,7 +216,7 @@ class TestNaming:
 
         # GatingProjections to ProcessingMechanism from GatingSignals of existing GatingMechanism
         T5 = pnl.TransferMechanism(name='T5',
-                                   input_ports=[T3.output_ports[pnl.RESULTS],
+                                   input_ports=[T3.output_ports[pnl.RESULT],
                                                  G3.gating_signals['GatingSignal-0 divergent GatingSignal']],
                                    output_ports=[G3.gating_signals['GatingSignal-0 divergent GatingSignal']])
 

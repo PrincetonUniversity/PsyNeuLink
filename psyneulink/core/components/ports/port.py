@@ -481,7 +481,7 @@ As with InputPorts, specification of OutputPorts in the **output_ports** argumen
 default OutputPorts that would have been created if no OutputPorts were specified (see `note
 <Mechanism_Default_Port_Suppression_Note>` above).  For example, TransferMechanisms create a *RESULT* OutputPort
 by default, that contains the result of their `function <OutputPort.function>`.  This default behavior is suppressed
-by any specifications in its **output_ports** argument.  Therefore, to retain a *RESULTS* OutputPort,
+by any specifications in its **output_ports** argument.  Therefore, to retain a *RESULT* OutputPort,
 it must be included in the **output_ports** argument along with any others that are specified, as in the example
 above.  If the name of a specified OutputPort matches the name of a Standard OutputPort <OutputPort_Standard>` for
 the type of Mechanism, then that is used (as is the case for both of the OutputPorts specified for the

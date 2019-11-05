@@ -1008,7 +1008,7 @@ shown as unlabeled arrows, as illustrated for the Composition in the example bel
 | >>> a = ProcessingMechanism(                              |                                                          |
 |               name='A',                                   |                                                          |
 | ...           size=3,                                     |                                                          |
-| ...           output_ports=[RESULTS, MEAN]                |                                                          |
+| ...           output_ports=[RESULT, MEAN]                |                                                          |
 | ...           )                                           |                                                          |
 | >>> b = ProcessingMechanism(                              |                                                          |
 | ...           name='B',                                   |                                                          |

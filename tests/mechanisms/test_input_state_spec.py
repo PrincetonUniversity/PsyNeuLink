@@ -12,7 +12,7 @@ from psyneulink.core.components.projections.projection import ProjectionError
 from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.port import PortError
-from psyneulink.core.globals.keywords import FUNCTION, INPUT_PORTS, MECHANISM, NAME, OUTPUT_PORTS, PROJECTIONS, RESULTS, VARIABLE
+from psyneulink.core.globals.keywords import FUNCTION, INPUT_PORTS, MECHANISM, NAME, OUTPUT_PORTS, PROJECTIONS, RESULT, VARIABLE
 
 mismatches_specified_default_variable_error_text = 'not compatible with its specified default variable'
 mismatches_default_variable_format_error_text = 'is not compatible with its expected format'
@@ -710,7 +710,7 @@ class TestInputPortSpec:
         my_input_port = InputPort(projections=[T1])
         T2 = TransferMechanism(input_ports=[my_input_port])
         assert T2.input_ports[0].name == 'InputPort-0'
-        assert T2.input_ports[0].projections[0].sender.name == 'RESULTS'
+        assert T2.input_ports[0].projections[0].sender.name == 'RESULT'
 
     # ------------------------------------------------------------------------------------------------
     # TEST 33
@@ -795,7 +795,7 @@ class TestInputPortSpec:
         ([0, 0], None, [transfer_mech], 2, 2),
         ([0, 0], None, [(transfer_mech, None)], 2, 2),
         ([0, 0], None, [(transfer_mech, 1, 1)], 2, 2),
-        ([0, 0], None, [((RESULTS, transfer_mech), 1, 1)], 2, 2),
+        ([0, 0], None, [((RESULT, transfer_mech), 1, 1)], 2, 2),
         ([0, 0], None, [(transfer_mech, 1, 1, None)], 2, 2),
         # size tests
         (None, 2, [transfer_mech], 2, 2),

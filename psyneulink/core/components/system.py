@@ -3835,7 +3835,7 @@ class System(System_Base):
         show_graph method::
 
             import psyneulink as pnl
-            mech_1 = pnl.TransferMechanism(name='Mech 1', size=3, output_ports=[pnl.RESULTS, pnl.MEAN])
+            mech_1 = pnl.TransferMechanism(name='Mech 1', size=3, output_ports=[pnl.RESULT, pnl.MEAN])
             mech_2 = pnl.TransferMechanism(name='Mech 2', size=5)
             mech_3 = pnl.TransferMechanism(name='Mech 3', size=2, function=pnl.Logistic(gain=pnl.CONTROL))
             my_process_A = pnl.Process(pathway=[mech_1, mech_3], learning=pnl.ENABLED)

@@ -568,7 +568,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     clip=[float:min, float:max],                                                  \
     termination_measure=Distance(metric=MAX_ABS_DIFF),                            \
     termination_threshold=None,                                                   \
-    termination_comparison_op=LESS_THAN_OR_EQUAL,                                    \
+    termination_comparison_op=LESS_THAN_OR_EQUAL,                                 \
     output_ports=RESULTS                                                          \
     params=None,                                                                  \
     name=None,                                                                    \
