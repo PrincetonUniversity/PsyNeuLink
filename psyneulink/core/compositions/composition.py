@@ -1008,7 +1008,7 @@ shown as unlabeled arrows, as illustrated for the Composition in the example bel
 | >>> a = ProcessingMechanism(                              |                                                          |
 |               name='A',                                   |                                                          |
 | ...           size=3,                                     |                                                          |
-| ...           output_ports=[RESULT, MEAN]                |                                                          |
+| ...           output_ports=[RESULT, MEAN]                 |                                                          |
 | ...           )                                           |                                                          |
 | >>> b = ProcessingMechanism(                              |                                                          |
 | ...           name='B',                                   |                                                          |
@@ -2463,16 +2463,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if output_port not in set(self.output_CIM_ports.keys()):
 
                     interface_input_port = InputPort(owner=self.output_CIM,
-                                                      variable=output_port.defaults.value,
-                                                      reference_value=output_port.defaults.value,
-                                                      name="OUTPUT_CIM_" + node.name + "_" + output_port.name)
+                                                     variable=output_port.defaults.value,
+                                                     reference_value=output_port.defaults.value,
+                                                     name="OUTPUT_CIM_" + node.name + "_" + output_port.name)
 
                     interface_output_port = OutputPort(
-                        owner=self.output_CIM,
-                        variable=OWNER_VALUE,
-                        function=InterfacePortMap(corresponding_input_port=interface_input_port),
-                        reference_value=output_port.defaults.value,
-                        name="OUTPUT_CIM_" + node.name + "_" + output_port.name)
+                            owner=self.output_CIM,
+                            variable=OWNER_VALUE,
+                            function=InterfacePortMap(corresponding_input_port=interface_input_port),
+                            reference_value=output_port.defaults.value,
+                            name="OUTPUT_CIM_" + node.name + "_" + output_port.name)
 
                     self.output_CIM_ports[output_port] = [interface_input_port, interface_output_port]
 

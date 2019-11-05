@@ -67,13 +67,13 @@ __all__ = ['CompositionInterfaceMechanism']
 
 class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     """
-    CompositionInterfaceMechanism(                            \
-    default_variable=None,                               \
-    size=None,                                              \
-    function=Identity() \
-    params=None,                                            \
-    name=None,                                              \
-    prefs=None)
+    CompositionInterfaceMechanism(  \
+        default_variable=None,      \
+        size=None,                  \
+        function=Identity()         \
+        params=None,                \
+        name=None,                  \
+        prefs=None)
 
     Implements the CompositionInterfaceMechanism subclass of Mechanism.
 

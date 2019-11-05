@@ -1410,10 +1410,14 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _instantiate_output_ports(self, context=None):
         # If user specified more than one item for variable, but did not specify any custom OutputPorts,
         # then assign one OutputPort (with the default name, indexed by the number of the item) per item of variable
-        if len(self.defaults.variable) > 1 and len(self.output_ports) == 1 and self.output_ports[0] == RESULTS:
-            self.output_ports = []
-            for i, item in enumerate(self.defaults.variable):
-                self.output_ports.append({NAME: f'{RESULT}-{i}', VARIABLE: (OWNER_VALUE, i)})
+        # if len(self.defaults.variable) > 1 and len(self.output_ports) == 1 and self.output_ports[0] == RESULTS:
+        if len(self.output_ports) == 1 and self.output_ports[0] == RESULTS:
+            if len(self.defaults.variable) == 1:
+                self.output_ports = [RESULT]
+            else:
+                self.output_ports = []
+                for i, item in enumerate(self.defaults.variable):
+                    self.output_ports.append({NAME: f'{RESULT}-{i}', VARIABLE: (OWNER_VALUE, i)})
         super()._instantiate_output_ports(context=context)
 
         # # Relabel first output_port: d
