@@ -8,6 +8,7 @@ import pytest
 import psyneulink as pnl
 
 from psyneulink.core.components.functions.transferfunctions import Logistic
+from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals import Context
 from psyneulink.core.globals.keywords import TRAINING_SET
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
@@ -1553,128 +1554,10 @@ class TestTrainingIdenticalness():
         'eps, opt', [
             # (1, 'sgd'),
             (10, 'sgd'),
-            # (100, 'sgd')
-        ]
-    )
-    def test_xor_training_identicalness(self, eps, opt):
-        from torch.nn import MSELoss
-        # SET UP MECHANISMS FOR COMPOSITION
-
-        xor_in = TransferMechanism(name='xor_in',
-                                   default_variable=np.zeros(2))
-
-        xor_hid = TransferMechanism(name='xor_hid',
-                                    default_variable=np.zeros(10),
-                                    function=Logistic())
-
-        xor_out = TransferMechanism(name='xor_out',
-                                    default_variable=np.zeros(1),
-                                    function=Logistic())
-
-        # SET UP MECHANISMS FOR SYSTEM
-
-        xor_in_sys = TransferMechanism(name='xor_in_sys',
-                                       default_variable=np.zeros(2))
-
-        xor_hid_sys = TransferMechanism(name='xor_hid_sys',
-                                        default_variable=np.zeros(10),
-                                        function=Logistic())
-
-        xor_out_sys = TransferMechanism(name='xor_out_sys',
-                                        default_variable=np.zeros(1),
-                                        function=Logistic())
-
-        # SET UP PROJECTIONS FOR COMPOSITION
-
-        hid_map = MappingProjection(name='hid_map',
-                                    matrix=np.random.rand(2,10),
-                                    sender=xor_in,
-                                    receiver=xor_hid)
-
-        out_map = MappingProjection(name='out_map',
-                                    matrix=np.random.rand(10,1),
-                                    sender=xor_hid,
-                                    receiver=xor_out)
-
-        # SET UP PROJECTIONS FOR SYSTEM
-
-        hid_map_sys = MappingProjection(name='hid_map_sys',
-                                    matrix=hid_map.matrix.copy(),
-                                    sender=xor_in_sys,
-                                    receiver=xor_hid_sys)
-
-        out_map_sys = MappingProjection(name='out_map_sys',
-                                    matrix=out_map.matrix.copy(),
-                                    sender=xor_hid_sys,
-                                    receiver=xor_out_sys)
-
-        # SET UP COMPOSITION
-        # NOTE: default loss function has changed since implementation of System. We implement a custom loss function
-        # here to make this test pass
-        custom_loss = MSELoss(reduction='sum')
-        xor = AutodiffComposition(param_init_from_pnl=True,
-                                  learning_rate=10,
-                                  optimizer_type=opt,
-                                  loss_spec=lambda x,y: custom_loss(x,y) / 2
-                                  )
-
-        xor.add_node(xor_in)
-        xor.add_node(xor_hid)
-        xor.add_node(xor_out)
-
-        xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
-        xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
-
-        # SET UP INPUTS AND TARGETS
-
-        xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0],
-             [0, 1],
-             [1, 0],
-             [1, 1]])
-
-        xor_targets = np.array(  # the outputs we wish to see from the model
-            [[0],
-             [1],
-             [1],
-             [0]])
-
-        # TRAIN COMPOSITION
-        inputs_dict = {"inputs": {xor_in:xor_inputs},
-                       "targets": {xor_out:xor_targets},
-                       "epochs": eps}
-
-        result = xor.run(inputs=inputs_dict)
-        comp_weights = xor.get_parameters()[0]
-
-        # SET UP SYSTEM
-        xor_process = Process(pathway=[xor_in_sys,
-                                       hid_map_sys,
-                                       xor_hid_sys,
-                                       out_map_sys,
-                                       xor_out_sys],
-                              learning=pnl.LEARNING)
-        xor_sys = System(processes=[xor_process],
-                         learning_rate=10)
-
-        # TRAIN SYSTEM
-        results_sys = xor_sys.run(inputs={xor_in_sys:xor_inputs},
-                                  targets={xor_out_sys:xor_targets},
-                                  num_trials=(eps * xor_inputs.shape[0]))
-        # CHECK THAT PARAMETERS FOR COMPOSITION, SYSTEM ARE SAME
-
-        assert np.allclose(comp_weights[hid_map], hid_map_sys.get_mod_matrix(xor_sys))
-        assert np.allclose(comp_weights[out_map], out_map_sys.get_mod_matrix(xor_sys))
-
-    @pytest.mark.parametrize(
-        'eps, opt', [
-            # (1, 'sgd'),
-            (10, 'sgd'),
             # (40, 'sgd')
         ]
     )
     def test_semantic_net_training_identicalness(self, eps, opt):
-        from torch.nn import MSELoss
         # SET UP MECHANISMS FOR SEMANTIC NET:
 
         nouns_in = TransferMechanism(name="nouns_input",
@@ -1814,11 +1697,9 @@ class TestTrainingIdenticalness():
                                            receiver=out_sig_can_sys)
 
         # SET UP COMPOSITION FOR SEMANTIC NET
-        custom_loss = MSELoss(reduction='sum')
         sem_net = AutodiffComposition(param_init_from_pnl=True,
                                       learning_rate=0.5,
                                       optimizer_type=opt,
-                                      loss_spec=lambda x, y: custom_loss(x, y) / 2
                                       )
 
         sem_net.add_node(nouns_in)
@@ -1933,44 +1814,56 @@ class TestTrainingIdenticalness():
         comp_weights = sem_net.get_parameters()[0]
 
         # SET UP SYSTEM
+        sem_net_sys = Composition()
 
-        p11 = Process(pathway=[nouns_in_sys,
-                               map_nouns_h1_sys,
-                               h1_sys,
-                               map_h1_h2_sys,
-                               h2_sys,
-                               map_h2_I_sys,
-                               out_sig_I_sys],
-                      learning=pnl.LEARNING)
+        learning_components = sem_net_sys.add_backpropagation_learning_pathway(
+            pathway=[
+                nouns_in_sys,
+                map_nouns_h1_sys,
+                h1_sys,
+                map_h1_h2_sys,
+                h2_sys,
+                map_h2_I_sys,
+                out_sig_I_sys
+            ],
+            learning_rate=0.5
+        )
+        inputs_dict_sys[learning_components[pnl.TARGET_MECHANISM]] = targets_dict[out_sig_I]
 
-        p12 = Process(pathway=[rels_in_sys,
-                               map_rels_h2_sys,
-                               h2_sys,
-                               map_h2_is_sys,
-                               out_sig_is_sys],
-                      learning=pnl.LEARNING)
+        learning_components = sem_net_sys.add_backpropagation_learning_pathway(
+            pathway=[
+                rels_in_sys,
+                map_rels_h2_sys,
+                h2_sys,
+                map_h2_is_sys,
+                out_sig_is_sys
+            ],
+            learning_rate=0.5
+        )
+        inputs_dict_sys[learning_components[pnl.TARGET_MECHANISM]] = targets_dict[out_sig_is]
 
-        p21 = Process(pathway=[h2_sys,
-                               map_h2_has_sys,
-                               out_sig_has_sys],
-                      learning=pnl.LEARNING)
+        learning_components = sem_net_sys.add_backpropagation_learning_pathway(
+            pathway=[
+                h2_sys,
+                map_h2_has_sys,
+                out_sig_has_sys
+            ],
+            learning_rate=0.5
+        )
+        inputs_dict_sys[learning_components[pnl.TARGET_MECHANISM]] = targets_dict[out_sig_has]
 
-        p22 = Process(pathway=[h2_sys,
-                               map_h2_can_sys,
-                               out_sig_can_sys],
-                      learning=pnl.LEARNING)
-
-        sem_net_sys = System(processes=[p11,
-                                        p12,
-                                        p21,
-                                        p22,
-                                        ],
-                             learning_rate=0.5)
+        learning_components = sem_net_sys.add_backpropagation_learning_pathway(
+            pathway=[
+                h2_sys,
+                map_h2_can_sys,
+                out_sig_can_sys
+            ],
+            learning_rate=0.5
+        )
+        inputs_dict_sys[learning_components[pnl.TARGET_MECHANISM]] = targets_dict[out_sig_can]
 
         # TRAIN SYSTEM
-
         results = sem_net_sys.run(inputs=inputs_dict_sys,
-                                  targets=targets_dict_sys,
                                   num_trials=(len(inputs_dict_sys[nouns_in_sys]) * eps))
 
         # CHECK THAT PARAMETERS FOR COMPOSITION, SYSTEM ARE SAME
