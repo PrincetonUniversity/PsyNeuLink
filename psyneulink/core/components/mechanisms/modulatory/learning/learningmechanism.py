@@ -648,17 +648,14 @@ def _learning_mechanism_learning_rate_setter(value, owning_component=None, conte
 
 class LearningMechanism(ModulatoryMechanism_Base):
     """
-    LearningMechanism(                        \
-        variable,                             \
-        error_sources,                        \
-        function=BackPropagation,             \
-        learning_rate=None,                   \
-        learning_signals=LEARNING_SIGNAL,     \
-        modulation=ADDITIVE,                  \
-        learning_enabled=True,                \
-        params=None,                          \
-        name=None,                            \
-        prefs=None)
+    LearningMechanism(                    \
+        variable,                         \
+        error_sources,                    \
+        function=BackPropagation,         \
+        learning_rate=None,               \
+        learning_signals=LEARNING_SIGNAL, \
+        modulation=ADDITIVE,              \
+        learning_enabled=True)
 
     Implements a Mechanism that modifies the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`.
 
@@ -749,18 +746,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
     learning_enabled : bool or Enum[ONLINE|AFTER] : True
         specifies whether and when the LearningMechanism's `LearningProjections <LearningProjection>` are executed
         (see `learning_enabled <LearningMechanism.learning_enabled>` for additional details).
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
-        Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
-        the Projection's default `function <LearningProjection.function>` and parameter assignments.  Values specified
-        for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default see `name <LearningMechanism.name>`
-        specifies the name of the LearningMechanism.
-
-    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the LearningMechanism; see `prefs <LearningMechanism.prefs>` for details.
 
 
     Attributes
@@ -889,15 +874,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
     modulation : ModulationParam
         the default form of modulation used by the LearningMechanism's `LearningSignal(s)
         <LearningMechanism_LearningSignal>`, unless they are `individually specified <LearningSignal_Specification>`.
-
-    name : str
-        the name of the LearningMechanism; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the LearningMechanism; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
 
     """
 

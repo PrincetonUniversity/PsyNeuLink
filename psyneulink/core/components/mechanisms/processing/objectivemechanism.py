@@ -415,15 +415,10 @@ class ObjectiveMechanismError(Exception):
 class ObjectiveMechanism(ProcessingMechanism_Base):
     # monitor is an alias to input_ports argument, which can still be used in a spec dict
     """
-    ObjectiveMechanism(               \
-        monitor,                      \
-        default_variable,             \
-        size,                         \
-        function=LinearCombination,   \
-        output_ports=OUTCOME,        \
-        params=None,                  \
-        name=None,                    \
-        prefs=None)
+    ObjectiveMechanism(             \
+        monitor,                    \
+        function=LinearCombination, \
+        output_ports=OUTCOME)
 
     Subclass of `ProcessingMechanism <ProcessingMechanism>` that evaluates the value(s)
     of one or more `OutputPorts <OutputPort>`.

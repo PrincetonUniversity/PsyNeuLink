@@ -435,27 +435,24 @@ class OptimizationControlMechanismError(Exception):
 
 
 class OptimizationControlMechanism(ControlMechanism):
-    """OptimizationControlMechanism(     \
-    objective_mechanism=None,            \
-    monitor_for_control=None,            \
-    objective_mechanism=None,            \
-    origin_objective_mechanism=False     \
-    terminal_objective_mechanism=False   \
-    features=None,                       \
-    feature_function=None,               \
-    function=None,                       \
-    agent_rep=None,                      \
-    search_function=None,                \
-    search_termination_function=None,    \
-    search_space=None,                   \
-    control_signals=None,                \
-    modulation=MULTIPLICATIVE,           \
-    combine_costs=np.sum,                \
-    compute_reconfiguration_cost=None,   \
-    compute_net_outcome=lambda x,y:x-y,  \
-    params=None,                         \
-    name=None,                           \
-    prefs=None)
+    """OptimizationControlMechanism(         \
+        objective_mechanism=None,            \
+        monitor_for_control=None,            \
+        objective_mechanism=None,            \
+        origin_objective_mechanism=False     \
+        terminal_objective_mechanism=False   \
+        features=None,                       \
+        feature_function=None,               \
+        function=None,                       \
+        agent_rep=None,                      \
+        search_function=None,                \
+        search_termination_function=None,    \
+        search_space=None,                   \
+        control_signals=None,                \
+        modulation=MULTIPLICATIVE,           \
+        combine_costs=np.sum,                \
+        compute_reconfiguration_cost=None,   \
+        compute_net_outcome=lambda x,y:x-y)
 
     Subclass of `ControlMechanism <ControlMechanism>` that adjusts its `ControlSignals <ControlSignal>` to optimize
     performance of the `Composition` to which it belongs
@@ -516,19 +513,6 @@ class OptimizationControlMechanism(ControlMechanism):
         must take as its sole argument an array with the same shape as `control_allocation
         <ControlMechanism.control_allocation>`, and return a similar array (see `Function
         <OptimizationControlMechanism_Function>` for additional details).
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for the
-        OptimizationControlMechanism, its `function <OptimizationControlMechanism.function>`, and/or a custom function
-        and its parameters.  Values specified for parameters in the dictionary override any assigned to those
-        parameters in arguments of the constructor.
-
-    name : str : default see `name <OptimizationControlMechanism.name>`
-        specifies the name of the OptimizationControlMechanism.
-
-    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the OptimizationControlMechanism; see `prefs
-        <OptimizationControlMechanism.prefs>` for details.
 
     Attributes
     ----------
@@ -602,14 +586,6 @@ class OptimizationControlMechanism(ControlMechanism):
         if set to True, `simulations <OptimizationControlMechanism_Execution>` will be created normally for each
         `control allocation <control_allocation>`.
 
-    name : str
-        name of the OptimizationControlMechanism; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the OptimizationControlMechanism; if it is not specified in the **prefs** argument of
-        the constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
     """
 
     componentType = OPTIMIZATION_CONTROL_MECHANISM

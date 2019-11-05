@@ -704,20 +704,17 @@ class DefaultAllocationFunction(Function_Base):
 
 class ControlMechanism(ModulatoryMechanism_Base):
     """
-    ControlMechanism(                               \
-        system=None,                                \
-        monitor_for_control=None,                   \
-        objective_mechanism=None,                   \
-        function=Linear,                            \
-        default_allocation=None,                    \
-        control_signals=None,                       \
-        modulation=MULTIPLICATIVE,                  \
-        combine_costs=np.sum,                       \
-        compute_reconfiguration_cost=None,          \
-        compute_net_outcome=lambda x,y:x-y,         \
-        params=None,                                \
-        name=None,                                  \
-        prefs=None)
+    ControlMechanism(                       \
+        system=None,                        \
+        monitor_for_control=None,           \
+        objective_mechanism=None,           \
+        function=Linear,                    \
+        default_allocation=None,            \
+        control_signals=None,               \
+        modulation=MULTIPLICATIVE,          \
+        combine_costs=np.sum,               \
+        compute_reconfiguration_cost=None,  \
+        compute_net_outcome=lambda x,y:x-y)
 
     Subclass of `ModulatoryMechanism <ModulatoryMechanism>` that modulates the parameter(s)
     of one or more `Component(s) <Component>`.

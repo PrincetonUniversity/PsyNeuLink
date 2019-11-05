@@ -248,17 +248,13 @@ def _gating_allocation_setter(value, owning_component=None, context=None):
 
 class GatingMechanism(ControlMechanism):
     """
-    GatingMechanism(                                \
-        default_gating_allocation=None,             \
-        size=None,                                  \
-        monitor_for_gating=None,                    \
-        function=Linear(slope=1, intercept=0),      \
-        default_allocation=None,                    \
-        gating:tc.optional(list) = None,            \
-        modulation=MULTIPLICATIVE,                  \
-        params=None,                                \
-        name=None,                                  \
-        prefs=None)
+    GatingMechanism(                           \
+        default_gating_allocation=None,        \
+        monitor_for_gating=None,               \
+        function=Linear(slope=1, intercept=0), \
+        default_allocation=None,               \
+        gating:tc.optional(list) = None,       \
+        modulation=MULTIPLICATIVE)
 
     Subclass of `ModulatoryMechanism <ModulatoryMechanism>` that gates (modulates) the value(s)
     of one or more `Ports <Port>`.
