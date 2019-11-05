@@ -399,7 +399,7 @@ TransferMechanism::
 
 automatically creates an InputPort, ParameterPorts for its parameters, including the `slope <Linear.slope>` and
 `intercept <Linear.intercept>` parameters of its `Linear` `Function <Function>` (its default `function
-<TransferMechanism.function>`), and an OutputPort (named *RESULT*)::
+<Mechanism_Base.function>`), and an OutputPort (named *RESULT*)::
 
     print(my_mech.input_ports)
     > [(InputPort InputPort-0)]

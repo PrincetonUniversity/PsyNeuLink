@@ -227,7 +227,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
     size : int, list or np.ndarray of ints
         specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
         if **default_variable** is specified, it takes precedence over the specification of **size**.
-        As an example, the following mechanisms are equivalent::
+        As an example, the following ProcessingMechanisms are equivalent::
             P1 = ProcessingMechanism(size = [3, 2])
             P2 = ProcessingMechanism(default_variable = [[0, 0, 0], [0, 0]])
 

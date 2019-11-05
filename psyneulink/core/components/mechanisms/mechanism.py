@@ -207,7 +207,7 @@ specified by the Mechanism's `function <Mechanism_Base.function>` attribute.  Ev
 `EVCControlMechanism`). Mechanism functions are generally from the PsyNeuLink `Function` class.  Most Mechanisms
 allow their function to be specified, using the `function` argument of the Mechanism's constructor.  The function can
 be specified using the name of `Function <Function>` class, or its constructor (including arguments that specify its
-parameters).  For example, the `function <TransferMechanism.function>` of a `TransferMechanism`, which is `Linear` by
+parameters).  For example, the `function <Mechanism_Base.function>` of a `TransferMechanism`, which is `Linear` by
 default, can be specified to be the `Logistic` function as follows::
 
     >>> my_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4))
@@ -1005,9 +1005,12 @@ class Mechanism_Base(Mechanism):
 
     .. note::
        Mechanism is an abstract class and should **never** be instantiated by a direct call to its constructor.
+       COMMENT:
        It should be instantiated using the :class:`mechanism` command (see it for description of parameters),
-       by calling the constructor for a subclass, or using other methods for specifying a Mechanism in context
-       (see `Mechanism_Creation`).
+       COMMENT
+       Mechanisms should be instantiated by calling the constructor for the desired subclass, or using other methods
+       for specifying a Mechanism in context (see `Mechanism_Creation`).  The arguments below can be used in the
+       constructor for any subclass of Mechanism.
 
     COMMENT:
         Description
@@ -1081,7 +1084,37 @@ class Mechanism_Base(Mechanism):
               a count for all instances of that type, and a dictionary of those instances
     COMMENT
 
+    Arguments
+    ---------
 
+    default_variable : number, list or np.ndarray : default None
+        specifies the input to the Mechanism to use if none is provided in a call to its `execute
+        <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method; also serves as a template to specify the
+        length of `variable <Mechanism_Base.variable>` for `function <Mechanism_Base.function>`, and the `primary
+        outputPort <OutputPort_Primary>` of the Mechanism.  If it is not specified, then a subclass-specific default
+        is assigned (usually [[0]]).
+
+    size : int, list or np.ndarray of ints : default None
+        specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
+        if **default_variable** is specified, it takes precedence over the specification of **size**.
+        For example, the following Mechanisms are equivalent::
+            my_mech = ProcessingMechanism(size = [3, 2])
+            my_mech = ProcessingMechanism(default_variable = [[0, 0, 0], [0, 0]])
+
+    input_ports : str, list, dict, or np.ndarray : default None
+        specifies the InputPorts for the Mechanism; if it is not specified, a single InputPort is created
+        using the value of default_variable as its `variable <InputPort.variable>`;  if more than one is specified,
+        the number and, if specified, their values must be compatible with any specifications in **default_variable**
+        or **size** (see `Mechanism_InputPorts` for additional details).
+
+    function : Function : default Linear
+        specifies the function used to generate the Mechanism's `value <Mechanism_Base.value>`;
+        can be a PsyNeuLink `Function` or a `UserDefinedFunction`.
+
+    output_ports : str, list or np.ndarray : default None
+        specifies the OutputPorts for the Mechanism; if it is not specified, a single OutputPort is created
+        the `value <OutputPort.value>` of which is assigned the first item in the outermost dimension (axis 0) of the
+        Mechanism's `value <Mechanism_Base.value>` (see `Mechanism_OutputPorts` for additional details).
 
     Attributes
     ----------
@@ -1170,6 +1203,10 @@ class Mechanism_Base(Mechanism):
            `output_values <Mechanism_Base.output_values>` attribute, which lists the `values <OutputPort.value>`
            of its `OutputPorts <Mechanism_Base.outputPorts>`.
 
+    previous_value : 2d np.array [array(float64)] : default None
+        `value <Mechanism_Base.value>` after the previous execution of the Mechanism.  It is assigned `None` on
+        the first execution, and when the Mechanism's `reinitialize <Mechanism.reinitialize>` method is called.
+
     output_port : OutputPort
         `primary OutputPort <OutputPort_Primary>` for the Mechanism;  same as first entry of its `output_ports
         <Mechanism_Base.output_ports>` attribute.
@@ -1179,7 +1216,7 @@ class Mechanism_Base(Mechanism):
         the Mechanism's `primary OutputPort <OutputPort_Primary>` (i.e., the one in the its `output_port
         <Mechanism_Base.output_port>` attribute).
 
-    output_values : List[value]
+    output_values : List[array(float64)]
         each item in the list corresponds to the `value <OutputPort.value>` of one of the Mechanism's `OutputPorts
         <Mechanism_OutputPorts>` listed in its `output_ports <Mechanism_Base.output_ports>` attribute.
 
@@ -1200,27 +1237,28 @@ class Mechanism_Base(Mechanism):
         of an OutputPort does not have a corresponding label, then its numeric value is used instead.
 
     standard_output_ports : list[dict]
-        list of the dictionary specifications for the following `StandardOutputPorts <StandardOutputPort>` that can
-        be assigned as `OutputPorts <OutputPort>`; types are of `value <OutputPort.value>` of the corresponding
-        OutputPorts:
+        list of the dictionary specifications for `StandardOutputPorts <StandardOutputPort>` that can
+        be assigned as `OutputPorts <OutputPort>`; subclasses may extend this list to include
+         (the type for the `value <OutputPort.value>` of each is listed
+        next to its name):
 
         *RESULT* : 1d np.array
-          first item of Mechanism's `value <Mechanism_Base.value>`.
+          first item in the outermost dimension (axis 0) of the Mechanism's `value <Mechanism_Base.value>`.
 
         *MEAN* : float
-          mean of the first item of Mechanism's `value <Mechanism_Base.value>`.
+          mean of the elements in the first item of Mechanism's `value <Mechanism_Base.value>`.
 
         *MEDIAN* : float
-          median of the first item of Mechanism's `value <Mechanism_Base.value>`.
+          median of the elements in the first item of Mechanism's `value <Mechanism_Base.value>`.
 
         *STANDARD_DEVIATION* : float
-          standard deviation of the first item of Mechanism's `value <Mechanism_Base.value>`.
+          standard deviation of the elements in the first item of Mechanism's `value <Mechanism_Base.value>`.
 
         *VARIANCE* : float
-          variance of the first item of Mechanism's `output_port.value`.
+          variance of the elements in the first item of Mechanism's `output_port.value`.
 
         *MECHANISM_VALUE* : list
-          Mechanism's `value <Mechanism_Base.value>`.
+          Full ndarray of Mechanism's `value <Mechanism_Base.value>`.
 
         COMMENT:
         *COMBINE* : scalar or numpy array
@@ -1230,8 +1268,8 @@ class Mechanism_Base(Mechanism):
 
     standard_output_port_names : list[str]
         list of the names of the `standard_output_ports <Mechanism_Base.standard_output_ports>` that can be used to
-        specify a `StandardOutputPort` to a Mechanism, and to reference it in Mechanism's list of `output_ports
-        <Mechanism_Base.output_ports>`.
+        specify a `StandardOutputPort` in the **output_ports** argument of the Mechanism's constructor, and to
+        reference it in Mechanism's list of `output_ports <Mechanism_Base.output_ports>`.
 
     ports : ContentAddressableList
         a list of all of the Mechanism's `Ports <Port>`, composed from its `input_ports
@@ -2186,38 +2224,39 @@ class Mechanism_Base(Mechanism):
 
     @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, *args, context=None):
-        """
-            If the mechanism's `function <Mechanism.function>` is an `IntegratorFunction`, or if the mechanism has and
-            `integrator_function <TransferMechanism.integrator_function>` (see `TransferMechanism`), this method
-            effectively begins the function's accumulation over again at the specified value, and updates related
-            attributes on the mechanism.  It also reassigns `previous_value <Mechanism.previous_value>` to None.
+        """Reinitialize `previous_value <Mechanism_Base.previous_value>` if Mechanisms is stateful.
 
-            If the mechanism's `function <Mechanism_Base.function>` is an `IntegratorFunction`, its `reinitialize
-            <Mechanism_Base.reinitialize>` method:
+        If the mechanism's `function <Mechanism.function>` is an `IntegratorFunction`, or if the mechanism has and
+        `integrator_function <TransferMechanism.integrator_function>` (see `TransferMechanism`), this method
+        effectively begins the function's accumulation over again at the specified value, and updates related
+        attributes on the mechanism.  It also reassigns `previous_value <Mechanism.previous_value>` to None.
 
-                (1) Calls the function's own `reinitialize <IntegratorFunction.reinitialize>` method (see Note below for
-                    details)
+        If the mechanism's `function <Mechanism_Base.function>` is an `IntegratorFunction`, its `reinitialize
+        <Mechanism_Base.reinitialize>` method:
 
-                (2) Sets the mechanism's `value <Mechanism_Base.value>` to the output of the function's
-                    reinitialize method
+            (1) Calls the function's own `reinitialize <IntegratorFunction.reinitialize>` method (see Note below for
+                details)
 
-                (3) Updates its `output ports <Mechanism_Base.output_port>` based on its new `value
-                    <Mechanism_Base.value>`
+            (2) Sets the mechanism's `value <Mechanism_Base.value>` to the output of the function's
+                reinitialize method
 
-            If the mechanism has an `integrator_function <TransferMechanism.integrator_function>`, its `reinitialize
-            <Mechanism_Base.reinitialize>` method::
+            (3) Updates its `output ports <Mechanism_Base.output_port>` based on its new `value
+                <Mechanism_Base.value>`
 
-                (1) Calls the `integrator_function's <TransferMechanism.integrator_function>` own `reinitialize
-                    <IntegratorFunction.reinitialize>` method (see Note below for details)
+        If the mechanism has an `integrator_function <TransferMechanism.integrator_function>`, its `reinitialize
+        <Mechanism_Base.reinitialize>` method::
 
-                (2) Executes its `function <Mechanism_Base.function>` using the output of the `integrator_function's
-                    <TransferMechanism.integrator_function>` `reinitialize <IntegratorFunction.reinitialize>` method as
-                    the function's variable
+            (1) Calls the `integrator_function's <TransferMechanism.integrator_function>` own `reinitialize
+                <IntegratorFunction.reinitialize>` method (see Note below for details)
 
-                (3) Sets the mechanism's `value <Mechanism_Base.value>` to the output of its function
+            (2) Executes its `function <Mechanism_Base.function>` using the output of the `integrator_function's
+                <TransferMechanism.integrator_function>` `reinitialize <IntegratorFunction.reinitialize>` method as
+                the function's variable
 
-                (4) Updates its `output ports <Mechanism_Base.output_port>` based on its new `value
-                    <Mechanism_Base.value>`
+            (3) Sets the mechanism's `value <Mechanism_Base.value>` to the output of its function
+
+            (4) Updates its `output ports <Mechanism_Base.output_port>` based on its new `value
+                <Mechanism_Base.value>`
 
         .. note::
                 The reinitialize method of an IntegratorFunction Function typically resets the function's

@@ -188,11 +188,11 @@ A Component defines its `parameters <Parameters>` in its *parameters* attribute,
   general, only parameters that take numerical values and/or do not affect the structure, mode of operation,
   or format of the values associated with a Component can be subject to modulation.  For example, for a
   `TransferMechanism`, `clip <TransferMechanism.clip>`, `initial_value <TransferMechanism.initial_value>`,
-  `integrator_mode <TransferMechanism.integrator_mode>`, `input_ports <TransferMechanism.input_ports>`,
-  `output_ports`, and `function <TransferMechanism.function>`, are all listed in user_params, and are user-modifiable,
+  `integrator_mode <TransferMechanism.integrator_mode>`, `input_ports <Mechanism_Base.input_ports>`,
+  `output_ports`, and `function <Mechanism_Base.function>`, are all listed in user_params, and are user-modifiable,
   but are not subject to modulation; whereas `noise <TransferMechanism.noise>` and `integration_rate
   <TransferMechanism.integration_rate>`, as well as the parameters of the TransferMechanism's `function
-  <TransferMechanism.function>` (listed in the *function_params* subdictionary) can all be subject to modulation.
+  <Mechanism_Base.function>` (listed in the *function_params* subdictionary) can all be subject to modulation.
   Parameters that are subject to modulation are associated with a `ParameterPort` to which the ControlSignals
   can project (by way of a `ControlProjection`).
 
@@ -711,7 +711,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     .. note::
        Component is an abstract class and should NEVER be instantiated by a direct call to its constructor.
-       It should be instantiated using the constructor for a subclass.
+       It should be instantiated using the constructor for a subclass.  The arguments below are ones that
+       can be used in the constructor for any Component subclass.
 
     COMMENT:
         Every Component is associated with:

@@ -504,7 +504,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     ----------
 
     variable : 2d ndarray : default array of values of OutputPorts in monitor_output_ports
-        the input to Mechanism's `function <TransferMechanism.function>`.
+        the input to Mechanism's `function <Mechanism_Base.function>`.
 
     monitor : ContentAddressableList[OutputPort]
         determines the OutputPorts, the `values <OutputPort.value>` of which are monitored, and evaluated by the

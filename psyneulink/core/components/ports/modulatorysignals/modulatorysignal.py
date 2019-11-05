@@ -341,14 +341,14 @@ For example, consider a `ControlSignal` that modulates the `bias <Logistic.bias>
 used by a `TransferMechanism`, and assume that the `ParameterPort` for the bias parameter (to which the ControlSignal
 projects) uses a `Linear` function (the default for a ParameterPort) to set the `value <ParameterPort.value>` of
 that parameter. If the `modulation  <ModulatorySignal.modulation>` attribute of the `ControlSignal` is *MULTIPLICATIVE*
-then, when the TransferMechanism's `Logistic` `function <TransferMechanism.function>` is executed, the `function
+then, when the TransferMechanism's `Logistic` `function <Mechanism_Base.function>` is executed, the `function
 <ParameterPort.function>` of the ParameterPort that sets the value of the `Logistic` Function's `bias <Logistic.bias>`
 parameter is executed;  that is a `Linear` Function, that uses the ControlSignal's `value <ControlSignal.value>` as
 its `slope <Linear.slope>` parameter.  Thus, the effect is that the ControlSignal's `value <ControlSignal.value>` is
 multiplied by the base value of the `bias <Logistic.bias>` parameter, before that is used by the TransferMechanism's
 `Logistic` Function.  Thus, the `value <ControlSignal.value>` of the ControlSignal modulates the `bias
 <Logistic.bias>` parameter of the `Logistic` Function when the TransferMechanism's `function
-<TransferMechanism.function>` is executed (see `Port Execution <State_Execution>` for additional details).
+<Mechanism_Base.function>` is executed (see `Port Execution <State_Execution>` for additional details).
 
 COMMENT
 

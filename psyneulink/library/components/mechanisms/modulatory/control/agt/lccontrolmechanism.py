@@ -61,7 +61,7 @@ LCControlMechanism's `function <LCControlMechanism.function>` to drive its `phas
 
 The Mechanisms to be modulated by an LCControlMechanism are specified in the **modulated_mechanisms** argument of its
 constructor. An LCControlMechanism controls a `Mechanism <Mechanism>` by modifying the `multiplicative_param
-<Function_Modulatory_Params>` of the Mechanism's `function <TransferMechanism.function>`.  Therefore, any Mechanism
+<Function_Modulatory_Params>` of the Mechanism's `function <Mechanism_Base.function>`.  Therefore, any Mechanism
 specified for control by an LCControlMechanism must be either a `TransferMechanism`, or a Mechanism that uses a
 `TransferFunction` or a class of `Function <Function>` that implements a `multiplicative_param
 <Function_Modulatory_Params>`.  The **modulate_mechanisms** argument must be a list of such Mechanisms. The keyword

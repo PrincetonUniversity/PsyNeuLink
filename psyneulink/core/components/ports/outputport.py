@@ -14,7 +14,7 @@ OutputPort(s) represent the result(s) of executing a Mechanism.  This may be the
 `function <OutputPort.function>` and/or values derived from that result.  The full set of results are stored in the
 Mechanism's `output_values <Mechanism_Base.output_values>` attribute.  OutputPorts are used to represent
 individual items of the Mechanism's `value <Mechanism_Base.value>`, and/or useful quantities derived from
-them.  For example, the `function <TransferMechanism.TransferMechanism.function>` of a `TransferMechanism` generates
+them.  For example, the `function <Mechanism_Base.function>` of a `TransferMechanism` generates
 a single result (the transformed value of its input);  however, a TransferMechanism can also be assigned OutputPorts
 that represent its mean, variance or other derived values.  In contrast, the `function <DDM.DDM.function>`
 of a `DDM` Mechanism generates several results (such as decision accuracy and response time), each of which can be
@@ -629,78 +629,6 @@ PRIMARY = 0
 SEQUENTIAL = 'SEQUENTIAL'
 
 DEFAULT_VARIABLE_SPEC = (OWNER_VALUE, 0)
-
-# MODIFIED 11/2/19 OLD:
-# # These are defined here because STANDARD_DEVIATION AND VARIANCE
-# #    are already defined in Keywords in lower case (used as arg for Functions).
-# STD_DEV_OUTPUT_PORT_NAME = 'STANDARD_DEVIATION'
-# VARIANCE_OUTPUT_PORT_NAME = 'VARIANCE'
-#
-# standard_output_ports = [{NAME: RESULT},
-#                           {NAME:MEAN,
-#                            FUNCTION:lambda x: np.mean(x)},
-#                           {NAME: MEDIAN,
-#                            FUNCTION:lambda x: np.median(x)},
-#                           {NAME: STD_DEV_OUTPUT_PORT_NAME,
-#                            FUNCTION:lambda x: np.std(x)},
-#                           {NAME: VARIANCE_OUTPUT_PORT_NAME,
-#                            FUNCTION:lambda x: np.var(x)},
-#                           {NAME: MECHANISM_VALUE,
-#                            VARIABLE: OWNER_VALUE},
-#                           {NAME: OWNER_VALUE,
-#                            VARIABLE: OWNER_VALUE},
-#                           {NAME: MAX_VAL,
-#                            FUNCTION: OneHot(mode=MAX_VAL).function},
-#                           {NAME: MAX_ABS_VAL,
-#                            FUNCTION: OneHot(mode=MAX_ABS_VAL).function},
-#                           {NAME: MAX_INDICATOR,
-#                            FUNCTION: OneHot(mode=MAX_INDICATOR).function},
-#                           {NAME: MAX_ABS_INDICATOR,
-#                            FUNCTION: OneHot(mode=MAX_ABS_INDICATOR).function},
-#                           {NAME: PROB,
-#                            FUNCTION: OneHot(mode=PROB).function}
-#                           ]
-#
-# standard_output_port_names = [i['name'] for i in standard_output_ports]
-#
-# # This is a convenience class that provides list of standard_output_port names for documentation and in IDE
-# class OUTPUTS():
-#     """
-#     *RESULT* : 1d np.array
-#       first item of TransferMechanism's `value <Mechanism_Base.value>` (corresponding to input from its
-#       first InputPort)
-#
-#     *RESULTS* : 2d np.array
-#       each item of TransferMechanism's `value <Mechanism_Base.value>` (corresponding to input from each
-#       of its `input_ports <TransferMechanism.input_ports>`) is assigned as the `value <OutputPort.value>`
-#       of a corresponding OutputPort of its `output_ports <TransferMechanism.output_ports>`.
-#
-#     .. _OUTPUT_MEAN:
-#
-#     *MEAN* : float
-#       mean of `value <Mechanism_Base.value>`.
-#
-#     .. _OUTPUT_MEDIAN:
-#
-#     *MEDIAN* : float
-#       median of `value <Mechanism_Base.value>`.
-#
-#     .. _OUTPUT_STANDARD_DEVIATION:
-#
-#     *STANDARD_DEVIATION* : float
-#       standard deviation of `value <Mechanism_Base.value>`.
-#
-#     .. _OUTPUT_VARIANCE:
-#
-#     *VARIANCE* : float
-#       variance of `output_port.value`.
-#
-#     *MECHANISM_VALUE* : list
-#       Mechanism's `value <Mechanism_Base.value>` used as OutputPort's value.
-#     """
-# for name in standard_output_port_names:
-#     setattr(OUTPUTS, name, name)
-# MODIFIED 11/2/19 END
 
 
 def _parse_output_port_variable(variable, owner, context=None, output_port_name=None):

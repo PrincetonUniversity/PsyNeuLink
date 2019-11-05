@@ -22,9 +22,9 @@ Overview
 A RecurrentTransferMechanism is a subclass of `TransferMechanism` that implements a single-layered recurrent
 network, in which each element is connected to every other element (instantiated in a recurrent
 `AutoAssociativeProjection` referenced by the Mechanism's `matrix <RecurrentTransferMechanism.matrix>` parameter).
-Like a TransferMechanism, it can integrate its input prior to executing its `function
-<RecurrentTransferMechanism.function>`. It can also report the energy and, if appropriate, the entropy of its output,
-and can be configured to implement autoassociative (e.g., Hebbian) learning.
+Like a TransferMechanism, it can integrate its input prior to executing its `function <Mechanism_Base.function>`. It
+can also report the energy and, if appropriate, the entropy of its output, and can be configured to implement
+autoassociative (e.g., Hebbian) learning.
 
 .. _Recurrent_Transfer_Creation:
 
@@ -116,12 +116,11 @@ and `hetero <RecurrentTransferMechanism.hetero>` attributes, and is stored in it
 <RecurrentTransferMechanism.recurrent_projection>` can also be made to project to a separate *RECURRENT* InputPort
 rather, than the primary one (named *EXTERNAL*).  In this case, the InputPorts' results will be combined using the
 `combination_function <RecurrentTransferMechanism.combination_function>` *before* being passed to the
-RecurrentTransferMechanism's `function <RecurrentTransferMechanism.function>`.
+RecurrentTransferMechanism's `function <Mechanism_Base.function>`.
 
 A RecurrentTransferMechanism also has two additional `OutputPorts <OutputPort>`:  an *ENERGY* OutputPort and, if its
-`function <RecurrentTransferMechanism.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an *ENTROPY*
-OutputPort.  Each of these report the respective values of the vector in it its *RESULT* (`primary
-<OutputPort_Primary>`) OutputPort.
+`function <Mechanism_Base.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an *ENTROPY* OutputPort.
+Each of these report the respective values of the vector in it its *RESULT* (`primary <OutputPort_Primary>`) OutputPort.
 
 Finally, if it has been `specified for learning <Recurrent_Transfer_Learning>`, the RecurrentTransferMechanism is
 associated with an `AutoAssociativeLearningMechanism` that is used to train its `AutoAssociativeProjection`.
@@ -330,6 +329,30 @@ class RecurrentTransferMechanism(TransferMechanism):
     Arguments
     ---------
 
+    COMMENT:
+    ??OLD OR NEWER THAN BELOW?
+    matrix : list, np.ndarray, np.matrix, matrix keyword, or AutoAssociativeProjection : default FULL_CONNECTIVITY_MATRIX
+        specifies the matrix to use for creating a `recurrent AutoAssociativeProjection <Recurrent_Transfer_Structure>`,
+        or a AutoAssociativeProjection to use. If **auto** or **hetero** arguments are specified, the **matrix** argument
+        will be ignored in favor of those arguments.
+
+    auto : number, 1D array, or None : default None
+        specifies matrix as a diagonal matrix with diagonal entries equal to **auto**, if **auto** is not None;
+        If **auto** and **hetero** are both specified, then matrix is the sum of the two matrices from **auto** and
+        **hetero**. For example, setting **auto** to 1 and **hetero** to -1 would set matrix to have a diagonal of
+        1 and all non-diagonal entries -1. if the **matrix** argument is specified, it will be overwritten by
+        **auto** and/or **hetero**, if either is specified. **auto** can be specified as a 1D array with length equal
+        to the size of the mechanism, if a non-uniform diagonal is desired. Can be modified by control.
+
+    hetero : number, 2D array, or None : default None
+        specifies matrix as a hollow matrix with all non-diagonal entries equal to **hetero**, if **hetero** is not None;
+        If **auto** and **hetero** are both specified, then matrix is the sum of the two matrices from **auto** and
+        **hetero**. For example, setting **auto** to 1 and **hetero** to -1 would set matrix to have a diagonal of
+        1 and all non-diagonal entries -1. if the **matrix** argument is specified, it will be overwritten by
+        **auto** and/or **hetero**, if either is specified. **hetero** can be specified as a 2D array with dimensions
+        equal to the matrix dimensions, if a non-uniform diagonal is desired. Can be modified by control.
+    COMMENT
+
     matrix : list, np.ndarray, np.matrix, matrix keyword, or AutoAssociativeProjection : default HOLLOW_MATRIX
         specifies the matrix to use for creating a `recurrent AutoAssociativeProjection <Recurrent_Transfer_Structure>`,
         or an AutoAssociativeProjection to use.
@@ -408,7 +431,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         points to a separate InputPort. By default, if False, the recurrent_projection points to its `primary
         InputPort <InputPort_Primary>`. If True, the recurrent_projection points to a separate InputPort, and
         the values of all input ports are combined using `LinearCombination <function.LinearCombination>` *before*
-        being passed to the RecurrentTransferMechanism's `function <RecurrentTransferMechanism.function>`.
+        being passed to the RecurrentTransferMechanism's `function <Mechanism_Base.function>`.
 
     combination_function : function : default LinearCombination
         specifies function used to combine the *RECURRENT* and *INTERNAL* `InputPorts <Recurrent_Transfer_Structure>`;
@@ -461,7 +484,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         points to a separate InputPort. If False, the recurrent_projection points to its `primary
         InputPort <InputPort_Primary>`. If True, the recurrent_projection points to a separate InputPort, and
         the values of all input ports are combined using `LinearCombination <function.LinearCombination>` *before*
-        being passed to the RecurrentTransferMechanism's `function <RecurrentTransferMechanism.function>`.
+        being passed to the RecurrentTransferMechanism's `function <Mechanism_Base.function>`.
 
     combination_function : function
         the Function used to combine the *RECURRENT* and *EXTERNAL* InputPorts if `has_recurrent_input_port

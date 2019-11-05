@@ -114,7 +114,7 @@ specified directly as arguments of the LCAMechanism's constructor in order to im
 <Recurrent_Transfer_Termination>`for additional details).
 
 COMMENT:
-The default format of its `variable <LCAMechanism.variable>`, and default values of its `inhibition
+The default format of its `variable <Mechanism_Base.variable>`, and default values of its `inhibition
 <LCAMechanism.inhibition>`, `decay <RecurrentTransferMechanism.decay>` and `noise <TransferMechanism.noise>` parameters
 implement an approximation of a `DDM`.
 COMMENT
