@@ -712,7 +712,6 @@ class TestInputPortSpec:
         assert T2.input_ports[0].name == 'InputPort-0'
         assert T2.input_ports[0].projections[0].sender.name == 'RESULTS'
 
-
     # ------------------------------------------------------------------------------------------------
     # TEST 33
 
