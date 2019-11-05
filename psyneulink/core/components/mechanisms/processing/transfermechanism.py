@@ -1413,17 +1413,17 @@ class TransferMechanism(ProcessingMechanism_Base):
         if len(self.defaults.variable) > 1 and len(self.output_ports) == 1 and self.output_ports[0] == RESULTS:
             self.output_ports = []
             for i, item in enumerate(self.defaults.variable):
-                self.output_ports.append({NAME: RESULT, VARIABLE: (OWNER_VALUE, i)})
+                self.output_ports.append({NAME: f'{RESULT}-{i}', VARIABLE: (OWNER_VALUE, i)})
         super()._instantiate_output_ports(context=context)
 
-        # Relabel first output_port: d
-        #    default (assigned by Mechanism's OutputPort registry) is to name it "RESULT";
-        #    but in this context, explicitly adding -0 index helps put first one on par with others
-        #    (i.e., make clear the alignment of each OutputPort with the items of the TransferMechanmism's value).
-        remove_instance_from_registry(registry=self._portRegistry,
-                                      category=OUTPUT_PORT,
-                                      component=self.output_ports['RESULT'])
-        register_instance(self.output_ports['RESULT'], 'RESULT-0', OutputPort, self._portRegistry, OUTPUT_PORT)
+        # # Relabel first output_port: d
+        # #    default (assigned by Mechanism's OutputPort registry) is to name it "RESULT";
+        # #    but in this context, explicitly adding -0 index helps put first one on par with others
+        # #    (i.e., make clear the alignment of each OutputPort with the items of the TransferMechanmism's value).
+        # remove_instance_from_registry(registry=self._portRegistry,
+        #                               category=OUTPUT_PORT,
+        #                               component=self.output_ports['RESULT'])
+        # register_instance(self.output_ports['RESULT'], 'RESULT-0', OutputPort, self._portRegistry, OUTPUT_PORT)
 
     def _get_instantaneous_function_input(self, function_variable, noise):
         noise = self._try_execute_param(noise, function_variable)

@@ -721,17 +721,17 @@ class TestInputPortSpec:
         # T1 has OutputPorts of with same lengths,
         #    so T2 should use that length for its InputPort variable (since it is not otherwise specified)
         T1 = TransferMechanism(input_ports=[[0,0],[0,0]])
-        T2 = TransferMechanism(input_ports=[(['RESULT', 'RESULT-1'], T1)])
+        T2 = TransferMechanism(input_ports=[(['RESULT-0', 'RESULT-1'], T1)])
         assert len(T2.input_ports[0].value) == 2
-        assert T2.input_ports[0].path_afferents[0].sender.name == 'RESULT'
+        assert T2.input_ports[0].path_afferents[0].sender.name == 'RESULT-0'
         assert T2.input_ports[0].path_afferents[1].sender.name == 'RESULT-1'
 
         # T1 has OutputPorts with different lengths both of which are specified by T2 to project to a singe InputPort,
         #    so T2 should use its variable default as format for the InputPort (since it is not otherwise specified)
         T1 = TransferMechanism(input_ports=[[0,0],[0,0,0]])
-        T2 = TransferMechanism(input_ports=[(['RESULT', 'RESULT-1'], T1)])
+        T2 = TransferMechanism(input_ports=[(['RESULT-0', 'RESULT-1'], T1)])
         assert len(T2.input_ports[0].value) == 1
-        assert T2.input_ports[0].path_afferents[0].sender.name == 'RESULT'
+        assert T2.input_ports[0].path_afferents[0].sender.name == 'RESULT-0'
         assert T2.input_ports[0].path_afferents[1].sender.name == 'RESULT-1'
 
     # ------------------------------------------------------------------------------------------------
