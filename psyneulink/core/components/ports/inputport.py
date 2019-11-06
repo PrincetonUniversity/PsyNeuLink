@@ -561,8 +561,7 @@ class InputPort(Port_Base):
         internal_only=False)
 
     Subclass of `Port <Port>` that calculates and represents the input to a `Mechanism <Mechanism>` from one or more
-    `PathwayProjections <PathwayProjection>` (see `parent class <Port_Class_Reference>` for additional arguments and
-    attributes).
+    `PathwayProjections <PathwayProjection>` (see `Port_Class_Reference` for additional arguments and attributes).
 
     COMMENT:
 

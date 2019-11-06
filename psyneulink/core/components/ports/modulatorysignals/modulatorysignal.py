@@ -443,42 +443,25 @@ modulatory_signal_keywords.update(component_keywords)
 
 class ModulatorySignal(OutputPort):
     """Subclass of `OutputPort` used by a `ModulatoryMechanism <ModulatoryMechanism>` to modulate the value
-    of one more `Ports <Port>`;  see subclasses for arguments of constructor.
+    of one more `Ports <Port>` (see `OutputPort <OutputPort_Class_Reference>` for additional arguments and
+    attributes).
 
     .. note::
        ModulatorySignal is an abstract class and should *never* be instantiated by a call to its constructor.
-       It should be instantiated using the constructor for a `subclass <ModulatorySignal_Subtypes>`.
+       It should be instantiated using the constructor for a `subclass <ModulatorySignal_Subtypes>`
+       (see `Port_Class_Reference` for additional arguments and attributes)
 
     COMMENT:
 
-        Description
-        -----------
-            The ModulatorySignal class is a subtype of the OutputPort class in the Port category of Component,
-            It is used primarily as the sender for GatingProjections
-            Its FUNCTION updates its value:
-                note:  currently, this is the identity function, that simply maps variable to self.value
-
-        Class attributes:
-            + componentType (str) = GATING_SIGNAL
-            + paramClassDefaults (dict)
-                + FUNCTION (LinearCombination)
-                + FUNCTION_PARAMS (Modulation.MULTIPLY)
-
-        Class methods:
-            function (executes function specified in params[FUNCTION];  default: Linear
-
-        PortRegistry
-        -------------
-            All OutputPorts are registered in PortRegistry, which maintains an entry for the subclass,
-              a count for all instances of it, and a dictionary of those instances
+    PortRegistry
+    -------------
+        All OutputPorts are registered in PortRegistry, which maintains an entry for the subclass,
+        a count for all instances of it, and a dictionary of those instances
     COMMENT
 
 
     Arguments
     ---------
-
-    owner : ModulatoryMechanism
-        specifies the `GatingMechanism` to which to assign the ModulatorySignal.
 
     default_allocation : scalar : defaultModulatoryAllocation
         specifies the default template and value used for `variable <ModulatorySignal.variable>`.
@@ -490,16 +473,8 @@ class ModulatorySignal(OutputPort):
     modulation : ModulationParam : default MULTIPLICATIVE
         specifies the type of modulation the ModulatorySignal uses to determine the value of the Port(s) it modulates.
 
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
-        the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
-        override any assigned to those parameters in arguments of the constructor.
-
     Attributes
     ----------
-
-    owner : ModulatoryMechanism
-        the `ModulatoryMechanism <ModulatoryMechanism>` to which the ModulatorySignal belongs.
 
     variable : scalar, list or np.ndarray
         same as `allocation <ModulatorySignal.allocation>`.

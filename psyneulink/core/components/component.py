@@ -882,6 +882,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
        specifies function used to transform `variable <Component.variable>` into `value
        <Component.value>`;  must take an input of the same shape as `variable <Component.variable>`.
 
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
+        the Component and/or a custom function and its parameters. Values specified for parameters in the dictionary
+        override any assigned to those parameters in arguments of the constructor.
+
     name : str : default see `name <Component_Name>`
         a string used for the name of the Component;  default is assigned by relevant `Registry <LINK>` for Component
         (see `Naming` for conventions used for default and duplicate names).
