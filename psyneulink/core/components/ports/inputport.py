@@ -438,10 +438,10 @@ to, and that can be used to customize the InputPort:
 
 * `variable <InputPort.variable>` -- serves as the template for the `value <Projection_Base.value>` of the
   `Projections <Projection>` received by the InputPort:  each must be compatible with (that is, match both the
-  number and type of elements of) the InputPort's `variable <InputPort.variable>`. In general, this must also be
-  compatible with the item of the owner Mechanism's `variable <Mechanism_Base.variable>` to which the InputPort is
-  assigned (see `above <InputPort_Variable_and_Value>` and `Mechanism InputPort
-  specification <Mechanism_InputPort_Specification>`).
+  number and type of elements of) the InputPort's `variable <InputPort.variable>` (see `Mapping_Matrix` for additonal
+  details). In general, this must also be compatible with the item of the owner Mechanism's `variable
+  <Mechanism_Base.variable>` to which the InputPort is assigned (see `above <InputPort_Variable_and_Value>` and
+  `Mechanism InputPort specification <Mechanism_InputPort_Specification>`).
 
 .. _InputPort_Function:
 
@@ -548,6 +548,8 @@ class InputPort(Port_Base):
     """
     InputPort(                                     \
         owner=None,                                \
+        variable=None,                             \
+        reference_value=None,                      \
         function=LinearCombination(operation=SUM), \
         combine=None,                              \
         projections=None,                          \
@@ -556,18 +558,28 @@ class InputPort(Port_Base):
         internal_only=False)
 
     Subclass of `Port <Port>` that calculates and represents the input to a `Mechanism <Mechanism>` from one or more
-    `PathwayProjections <PathwayProjection>` (see `parent class <Port>` for additional arguments).
+    `PathwayProjections <PathwayProjection>` (see `parent class <Port>` for additional arguments and attributes).
+
+    COMMENT:
+
+    PortRegistry
+    -------------
+        All InputPorts are registered in PortRegistry, which maintains an entry for the subclass,
+        a count for all instances of it, and a dictionary of those instances
+
+    COMMENT
 
     Arguments
     ---------
 
-    owner : Mechanism
-        the Mechanism to which the InputPort belongs;  it must be specified or determinable from the context in which
-        the InputPort is created.
-
     reference_value : number, list or np.ndarray
         the value of the item of the owner Mechanism's `variable <Mechanism_Base.variable>` attribute to which
         the InputPort is assigned; used as the template for the InputPort's `value <InputPort.value>` attribute.
+
+    variable : number, list or np.ndarray
+        specifies the shape of the  InputPort's `variable <InputPort.variable>`, which may be used to define the
+        shape of the `matrix <MappingProjection.matrix>` parameter of the `MappingProjection` that projects to the
+        Inputport (see `InputPort_Variable` for additional details).
 
     function : Function or method : default LinearCombination(operation=SUM)
         specifies the function applied to the variable. The default value combines the `values

@@ -1,9 +1,9 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Scratch Pad" type="PythonConfigurationType" factoryName="Python">
-    <module name="PsyNeuLink (Dropbox)" />
+  <configuration default="false" factoryName="Python" name="Scratch Pad" type="PythonConfigurationType">
+    <module name="" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
-    <option name="SDK_HOME" value="$USER_HOME$/anaconda/envs/python37/bin/python" />
+    <option name="SDK_HOME" value="" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Scripts" />
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />

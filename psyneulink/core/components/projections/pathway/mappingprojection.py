@@ -387,9 +387,9 @@ class MappingProjection(PathwayProjection_Base):
        `variable <MappingProjection.variable>`.
 
     matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX
-        the matrix used by `function <MappingProjection.function>` (default: `LinearCombination`) to transform the
-        value of the `sender <MappingProjection.sender>` into a form suitable for the `variable <InputPort.variable>`
-        of its `receiver <MappingProjection.receiver>`.
+        specifies the matrix used by `function <MappingProjection.function>` (default: `LinearCombination`) to
+        transform the `value <MappingProjection.value>` of the `sender <MappingProjection.sender>` into a form suitable
+        for the `variable <InputPort.variable>` of its `receiver <MappingProjection.receiver>` `InputPort`.
 
     Attributes
     ----------

@@ -10,6 +10,15 @@
 
 """
 
+* `ParameterPort_Overview`
+* `ParameterPort_Creation`
+    * `ParameterPort_Specification`
+* `ParameterPort_Structure`
+* `ParameterPort_Execution`
+* `ParameterPort_Class_Reference`
+
+.. _ParameterPort_Overview:
+
 Overview
 --------
 
@@ -388,40 +397,20 @@ class ParameterPortError(Exception):
 
 class ParameterPort(Port_Base):
     """
-    ParameterPort(                                       \
-    owner,                                               \
-    reference_value=None                                 \
-    function=LinearCombination(operation=PRODUCT),       \
-    parameter_modulation_operation=Modulation.MULTIPLY)
+    ParameterPort(                                           \
+        owner,                                               \
+        reference_value=None                                 \
+        function=LinearCombination(operation=PRODUCT),       \
+        parameter_modulation_operation=Modulation.MULTIPLY)
 
     Subclass of `Port <Port>` that represents and possibly modifies the parameter of a `Mechanism <Mechanism>`,
-    `Projection <Projection>`, or its `Function`.
+    `Projection <Projection>`, or its `Function` (see `parent class <Port>` for additional arguments and attributes).
 
     COMMENT:
-
-        Description
-        -----------
-            The ParameterPort class is a componentType in the Port category of Function,
-            Its FUNCTION executes the Projections that it receives and updates the ParameterPort's value
-
-        Class attributes
-        ----------------
-            + componentType (str) = kwMechanisParameterPort
-            + classPreferences
-            + classPreferenceLevel (PreferenceLevel.Type)
-            + paramClassDefaults (dict)
-                + FUNCTION (Linear)
-                + PROJECTION_TYPE (CONTROL_PROJECTION)
-
-        Class methods
-        -------------
-            _instantiate_function: insures that function is ARITHMETIC) (default: Operation.PRODUCT)
-            update: updates self.value from Projections, base_value and runtime in PARAMETER_PORT_PARAMS
-
-        PortRegistry
-        -------------
-            All ParameterPorts are registered in PortRegistry, which maintains an entry for the subclass,
-              a count for all instances of it, and a dictionary of those instances
+    PortRegistry
+    -------------
+        All ParameterPorts are registered in PortRegistry, which maintains an entry for the subclass,
+        a count for all instances of it, and a dictionary of those instances
 
     COMMENT
 
@@ -448,9 +437,6 @@ class ParameterPort(Port_Base):
 
     Attributes
     ----------
-
-    owner : Mechanism or MappingProjection
-        the `Mechanism <Mechanism>` or `MappingProjection` to which the ParameterPort belongs.
 
     mod_afferents : Optional[List[Projection]]
         a list of the `ModulatoryProjection <ModulatoryProjection>` that project to the ParameterPort (i.e.,

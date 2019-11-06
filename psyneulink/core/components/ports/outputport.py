@@ -756,40 +756,21 @@ class OutputPort(Port_Base):
         assign=None,       \
         projections=None)
 
-    Subclass of `Port <Port>` that calculates and represents an output of a `Mechanism <Mechanism>`.
+    Subclass of `Port <Port>` that calculates and represents an output of a `Mechanism <Mechanism>` (see `parent
+    class <Port>` for additional arguments and attributes).
 
     COMMENT:
 
-        Description
-        -----------
-            The OutputPort class is a type in the Port category of Component,
-            It is used primarily as the sender for MappingProjections
-            Its FUNCTION updates its value:
-                note:  currently, this is the identity function, that simply maps variable to value
-
-        Class attributes:
-            + componentType (str) = OUTPUT_PORTS
-            + paramClassDefaults (dict)
-                + FUNCTION (Linear)
-                + FUNCTION_PARAMS   (Operation.PRODUCT)
-
-        Class methods:
-            function (executes function specified in params[FUNCTION];  default: Linear)
-
-        PortRegistry
-        -------------
-            All OutputPorts are registered in PortRegistry, which maintains an entry for the subclass,
-              a count for all instances of it, and a dictionary of those instances
+    PortRegistry
+    -------------
+        All OutputPorts are registered in PortRegistry, which maintains an entry for the subclass,
+        a count for all instances of it, and a dictionary of those instances
 
     COMMENT
 
 
     Arguments
     ---------
-
-    owner : Mechanism
-        the `Mechanism <Mechanism>` to which the OutputPort belongs; it must be specified or determinable from the
-        context in which the OutputPort is created.
 
     reference_value : number, list or np.ndarray
         a template that specifies the format of the OutputPort's `variable <OutputPort.variable>`;  if it is
