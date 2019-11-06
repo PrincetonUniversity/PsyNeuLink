@@ -15,9 +15,8 @@ Overview
 --------
 
 A ProcessingMechanism is a type of `Mechanism <>` that transforms its input in some way.  A ProcessingMechanism always
-receives its input either from another Mechanism, or from the input to a `Process` or `System` when it is
-executed.  Similarly, its output is generally conveyed to another Mechanism or used as the output for a Process
-or System.
+receives its input either from another Mechanism, or from the input to a `Composition` when it is
+executed.  Similarly, its output is generally conveyed to another Mechanism or used as the output for a Composition.
 
 The ProcessingMechanism is the simplest mechanism in PsyNeuLink. It does not have any extra arguments or
 specialized validation. Almost any PsyNeuLink Function, including the `UserDefinedFunction`, may be the function of a
@@ -26,8 +25,8 @@ ProcessingMechanism have more specialized features, and often have restrictions 
 
 The output of a ProcessingMechanism may also be used by a `ModulatoryMechanism <ModulatoryMechanism>` to modify the
 parameters of other components (or its own parameters). ProcessingMechanisms are always executed before all
-ModulatoryMechanisms in the Process and/or System to which they belong, so that any modifications made by the
-ModulatoryMechanism are available to all ProcessingMechanisms in the next `TRIAL`.
+ModulatoryMechanisms in the Composition to which they belong, so that any modifications made by the ModulatoryMechanism
+are available to all ProcessingMechanisms in the next `TRIAL`.
 
 .. _ProcessingMechanism_Creation:
 
@@ -80,11 +79,8 @@ A ProcessingMechanism may be executed by calling its execute method directly:
     >>> my_simple_processing_mechanism = pnl.ProcessingMechanism()      #doctest: +SKIP
     >>> my_simple_processing_mechanism.execute(1.0)                     #doctest: +SKIP
 
-This option is intended for testing and debugging purposes.
-
-More commonly, a mechanism is executed when the `Process <Process_Execution>` or `System <System_Execution>` to which it
-belongs is run. A ProcessingMechanism always executes before any `ModulatoryMechanisms <ModulatoryMechanism>` in the same
-`Process` or `System`.
+This option is intended for testing and debugging purposes.  More commonly, a mechanism is executed when the
+`Composition` to which it belongs is `run <Composition_Run>`.
 
 """
 
