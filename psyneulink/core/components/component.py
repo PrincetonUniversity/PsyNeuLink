@@ -470,6 +470,7 @@ import numbers
 import re
 import types
 import warnings
+import weakref
 
 from abc import ABCMeta
 from collections.abc import Iterable
@@ -1275,8 +1276,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         if newone.parameters is not newone.class_parameters:
             # may be in DEFERRED INIT, so parameters/defaults belongs to class
-            newone.parameters._owner = newone
-            newone.defaults._owner = newone
+            # TODO: consider setting _owner as a property to deal with weakref
+            # proxying so it's sensible (so self.parameters._owner is self)
+            newone.parameters._owner = weakref.proxy(newone)
+            newone.defaults._owner = weakref.proxy(newone)
 
         return newone
 
