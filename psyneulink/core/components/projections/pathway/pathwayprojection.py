@@ -61,7 +61,7 @@ class PathwayProjection_Base(Projection_Base):
     """Subclass of `Projection <Projection>` that projects from an `OutputPort` to an `InputPort`
 
     .. note::
-       PathwayProjection is an abstract class and should NEVER be instantiated by a call to its constructor.
+       PathwayProjection is an abstract class and should *never* be instantiated by a call to its constructor.
        It should be instantiated using the constructor for a `subclass <PathwayProjection_Subtypes>`.
 
     """

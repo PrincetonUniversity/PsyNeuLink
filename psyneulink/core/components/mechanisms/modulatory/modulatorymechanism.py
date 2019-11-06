@@ -137,7 +137,7 @@ class ModulatoryMechanism_Base(Mechanism_Base):
     """Subclass of `Mechanism <Mechanism>` that modulates the value(s) of one or more other `Component(s) <Component>`.
 
     .. note::
-       ModulatoryMechanism is an abstract class and should NEVER be instantiated by a call to its constructor.
+       ModulatoryMechanism is an abstract class and should *never* be instantiated by a call to its constructor.
        They should be instantiated using the constructor for a `subclass <ModulatoryMechanism_Subtypes>`.
 
     COMMENT:

@@ -121,7 +121,7 @@ class ProcessingMechanism_Base(Mechanism_Base):
     """Subclass of `Mechanism <Mechanism>` that implements processing in a `Pathway`.
 
     .. note::
-       ProcessingMechanism_Base is an abstract class and should NEVER be instantiated by a call to its constructor.
+       ProcessingMechanism_Base is an abstract class and should *never* be instantiated by a call to its constructor.
        It should be instantiated using the constructor for `ProcessingMechanism` or one of its  `subclasses
        <ProcessingMechanism_Subtypes>`.
    """

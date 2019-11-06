@@ -10,20 +10,19 @@
 
 """
 ..
-    * `Mechanism_Overview`
-    * `Mechanism_Creation`
-    * `Mechanism_Structure`
-     * `Mechanism_Function`
-     * `Mechanism_Ports`
-        * `Mechanism_InputPorts`
-        * `Mechanism_ParameterPorts`
-        * `Mechanism_OutputPorts`
-     * `Mechanism_Additional_Attributes`
-     * `Mechanism_Role_In_Processes_And_Systems`
-    * `Mechanism_Execution`
-     * `Mechanism_Runtime_Parameters`
-    * `Mechanism_Class_Reference`
-
+* `Mechanism_Overview`
+* `Mechanism_Creation`
+* `Mechanism_Structure`
+ * `Mechanism_Function`
+ * `Mechanism_Ports`
+    * `Mechanism_InputPorts`
+    * `Mechanism_ParameterPorts`
+    * `Mechanism_OutputPorts`
+ * `Mechanism_Additional_Attributes`
+ * `Mechanism_Role_In_Processes_And_Systems`
+* `Mechanism_Execution`
+ * `Mechanism_Runtime_Parameters`
+* `Mechanism_Class_Reference`
 
 .. _Mechanism_Overview:
 
@@ -231,14 +230,16 @@ Again, while not as simple as specifying these as arguments in the function's co
 Any values specified in the parameter dictionary will **override** any specified within the constructor for the function
 itself (see `DDM <DDM_Creation>` for an example).
 
-.. _Mechanism_Function:
+COMMENT:
+.. _Mechanism_Function_Attribute:
 
 `function <Mechanism_Base.function>` Attribute
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The `Function <Function>` Component assigned as the primary function of a Mechanism is assigned to the Mechanism's
+The `Function <Function>` assigned as the primary function of a Mechanism is assigned to the Mechanism's
 `function <Component.function>` attribute, and its `function <Function_Base.function>` is assigned
 to the Mechanism's `function <Mechanism_Base.function>` attribute.
+COMMENT
 
 .. note::
    It is important to recognize the distinction between a `Function <Function>` and its `function
@@ -1004,7 +1005,7 @@ class Mechanism_Base(Mechanism):
     """Base class for Mechanism.
 
     .. note::
-       Mechanism is an abstract class and should **never** be instantiated by a direct call to its constructor.
+       Mechanism is an abstract class and should *never* be instantiated by a direct call to its constructor.
        COMMENT:
        It should be instantiated using the :class:`mechanism` command (see it for description of parameters),
        COMMENT

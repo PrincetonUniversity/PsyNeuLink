@@ -710,7 +710,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     """Base class for Component.
 
     .. note::
-       Component is an abstract class and should NEVER be instantiated by a direct call to its constructor.
+       Component is an abstract class and should *never* be instantiated by a direct call to its constructor.
        It should be instantiated using the constructor for a subclass.  The arguments below are ones that
        can be used in the constructor for any Component subclass.
 

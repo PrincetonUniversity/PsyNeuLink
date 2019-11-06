@@ -479,13 +479,13 @@ class DuplicateProjectionError(Exception):
 #
 
 class Projection_Base(Projection):
-    """Base class for all Projections;  see subclasses for arguments of constructor.
+    """Base class for all Projections.
 
     .. note::
-       Projection is an abstract class and should NEVER be instantiated by a direct call to its constructor.
+       Projection is an abstract class and should *never* be instantiated by a direct call to its constructor.
        It should be created by calling the constructor for a subclass` or by using any of the other methods for
-       `specifying a Projection <Projection_Specification>`.
-
+       `specifying a Projection <Projection_Specification>`.  The arguments below can be used in the
+       constructor for any subclass of Mechanism.
 
     COMMENT:
         Description
@@ -519,6 +519,29 @@ class Projection_Base(Projection):
               a count for all instances of that type, and a dictionary of those instances
     COMMENT
 
+    sender : Optional[OutputPort or Mechanism]
+        specifies the source of the Projection's input. If a `Mechanism <Mechanism>` is specified, its
+        `primary OutputPort <OutputPort_Primary>` is used. If it is not specified, it is assigned in
+        the context in which the Projection is used, or its initialization will be `deferred
+        <Projection_Deferred_Initialization>`.
+
+    receiver: Optional[InputPort or Mechanism]
+        specifies the destination of the Projection's output.  If a `Mechanism <Mechanism>` is specified, its
+        `primary InputPort <InputPort_Primary>` will be used. If it is not specified, it will be assigned in
+        the context in which the Projection is used, or its initialization will be `deferred
+        <Projection_Deferred_Initialization>`.
+
+    weight : number : default None
+       specifies the value by which to multiply the Projection's `value <Projection.value>`
+       before combining it with others (see `weight <Projection.weight>` for additional details).
+
+    exponent : number : default None
+       specifies the value by which to exponentiate the MappingProjection's `value <MappingProjection.value>`
+       before combining it with others (see `exponent <Projection.exponent>` for additional details).
+
+    function : function : default LinearMatrix
+       specifies function used to transform `variable <MappingProjection.variable>` into `value
+       <Projection.value>`;  must take an input of the same shape as `variable <Projection.variable>`.
 
     Attributes
     ----------

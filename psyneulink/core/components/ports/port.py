@@ -9,6 +9,9 @@
 #  *********************************************  Port ********************************************************
 
 """
+* `Port_Overview`
+* `Port_Creation`
+
 
 Overview
 --------
@@ -856,9 +859,9 @@ class Port_Base(Port):
     """Base class for Port; see subclasses for arguments of constructor.
 
     .. note::
-       Port is an abstract class and should NEVER be instantiated by a call to its constructor.
-       It should be instantiated using the constructor for a `subclass <Port_Subtypes>`.
-
+       Port is an abstract class and should *never* be instantiated by a call to its constructor. It should be created
+       by calling the constructor for a `subclass <Port_Subtypes>`, or by using any of the other methods for `specifying
+       a Port <Port_Specification>`.  The arguments below can be used in the constructor for any subclass of Port.
 
     COMMENT:
         Description
@@ -950,6 +953,17 @@ class Port_Base(Port):
              (see Description under PreferenceSet for details)
         - context (str): must be a reference to a subclass, or an exception will be raised
     COMMENT
+
+    Arguments
+    ---------
+
+    owner : Mechanism
+        the Mechanism to which the InputPort belongs;  it must be specified or determinable from the context in which
+        the InputPort is created.
+
+    reference_value : number, list or np.ndarray
+        the value of the item of the owner Mechanism's `variable <Mechanism_Base.variable>` attribute to which
+        the InputPort is assigned; used as the template for the InputPort's `value <InputPort.value>` attribute.
 
     Attributes
     ----------

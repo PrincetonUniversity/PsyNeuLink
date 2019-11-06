@@ -373,7 +373,7 @@ assigned that returns a 2d array with more than one item, and it has the same nu
 <ControlMechanism.control_signals>`, then each ControlSignal is assigned to the corresponding item of the function's
 value.  However, these default behaviors can be modified by specifying that individual ControlSignals reference
 different items in `control_allocation` as their `variable <ControlSignal.variable>`
-(see `OutputPort_Variable`).
+(see `OutputPort_Custom_Variable`).
 
 .. _ControlMechanism_Output:
 
@@ -722,7 +722,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
     COMMENT:
     .. note::
-       ControlMechanism is an abstract class and should NEVER be instantiated by a direct call to its constructor.
+       ControlMechanism is an abstract class and should *never* be instantiated by a direct call to its constructor.
        It should be instantiated using the constructor for a `subclass <ControlMechanism_Subtypes>`.
 
         Description:

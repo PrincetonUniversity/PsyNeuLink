@@ -6,6 +6,24 @@
 # ******************************************  OutputPort *****************************************************
 
 """
+* `OutputPort_Overview`
+* `OutputPort_Creation`
+    * `OutputPort_Deferred_Initialization`
+    * `OutputPort_Primary`
+    * `OutputPort_Specification`
+        * `OutputPort_Forms_of_Specification`
+        * `Variable and Value <OutputPort_Variable_and_Value>`
+        * `Compatibility and Constraints <OutputPort_Compatibility_and_Constraints>`
+        * `OutputPort_Standard`
+        * `OutputPort_Customization`
+            * `Custom Variable <OutputPort_Custom_Variable>`
+            * `Custom Function <OutputPort_Custom_Function>`
+
+* `OutputPort_Structure`
+* `OutputPort_Execution`
+* `OutputPort_Class_Reference`
+
+.. _OutputPort_Overview:
 
 Overview
 --------
@@ -23,7 +41,7 @@ as the input to other  Mechanisms (by way of `projections <Projections>`), or as
 System.  The OutputPort's `efferents <OutputPort.efferents>` attribute lists all of its outgoing
 projections.
 
-.. _OutputPorts_Creation:
+.. _OutputPort_Creation:
 
 Creating an OutputPort
 -----------------------
@@ -240,7 +258,7 @@ which it should project. Each of these is described below:
     are assigned to the OutputPort's `efferents <OutputPort.efferents>` attribute, and `GatingProjections
     <GatingProjection>` to its `mod_afferents <InputPort.mod_afferents>` attribute. Any of the following can be used
     to specify an InputPort by the Components that projection to it (see `below
-    <OutputPort_Compatability_and_Constraints>` for an explanation of the relationship between the `variable` of these
+    <OutputPort_Compatibility_and_Constraints>` for an explanation of the relationship between the `variable` of these
     Components and the OutputPort's `value <OutputPort.value>`):
 
     * **InputPort, GatingSignal, Mechanism, or list with any of these** -- creates an OutputPort with
@@ -378,7 +396,7 @@ the variance of the result.
 .. _OutputPort_Customization:
 
 *Custom OutputPorts*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 
 An OutputPort's `value <OutputPort.value>` can be customized by specifying its `variable <OutputPort.variable>`
 and/or `function <OutputPort.function>` in the **variable** and **function** arguments of the OutputPort's
@@ -386,7 +404,7 @@ constructor, the corresponding entries (*VARIABLE* and *FUNCTION*) of an `Output
 dictionary <OutputPort_Specification_Dictionary>`, or in the variable spec (2nd) item of a `3-item tuple
 <OutputPort_Tuple_Specification>` for the OutputPort.
 
-.. _OutputPort_Variable:
+.. _OutputPort_Custom_Variable:
 
 *OutputPort* `variable <OutputPort.variable>`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -417,6 +435,8 @@ using the following:
     *List[<any of the above items>]* -- this assigns the value of each item in the list to the corresponding item of
     the OutputPort's `variable <OutputPort.variable>`.  This must be compatible (in number and type of elements) with
     the input expected by the OutputPort's `function <OutputPort.function>`.
+
+.. _OutputPort_Custom_Function:
 
 *OutputPort* `function <OutputPort.function>`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -864,13 +884,8 @@ class OutputPort(Port_Base):
         pre-specified names.  However, if any OutputPorts are specified in the **input_ports** argument of the
         Mechanism's constructor, those replace its Standard OutputPorts (see `note
         <Mechanism_Default_Port_Suppression_Note>`);  `standard naming conventions <Naming>` apply to the
-        OutputPorts specified, as well as any that are added to the Mechanism once it is created.
-
-        .. note::
-            Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that Ports with
-            the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
-            Mechanism: Ports within a Mechanism with the same base name are appended an index in the order of their
-            creation.
+        OutputPorts specified, as well as any that are added to the Mechanism once it is created (see `note
+        <Port_Naming_Note>`).
 
     """
 

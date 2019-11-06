@@ -9,6 +9,24 @@
 # *******************************************  InputPort *****************************************************
 #
 """
+* `InputPort_Overview`
+* `InputPort_Creation`
+    * `InputPort_Deferred_Initialization`
+    * `InputPort_Primary`
+    * `InputPort_Specification`
+        * `Forms of Specification <InputPort_Forms_of_Specification>`
+        * `Variable, Value and Mechanism <InputPort_Variable_and_Value>`
+        * `Variable: Compatability and Constaints <InputPort_Compatability_and_Constraints>`
+* `InputPort_Structure`
+    * `Afferent Projections <InputPort_Afferent_Projections>`
+    * `Variable <InputPort_Variable>`
+    * `Function <InputPort_Function>`
+    * `Value <InputPort_Value>`
+    * `Weights ane Exponents <InputPort_Weights_And_Exponents>`
+* `InputPort_Execution`
+* `InputPort_Class_Reference`
+
+.. _InputPort_Overview:
 
 Overview
 --------
@@ -71,7 +89,7 @@ the InputPort is assigned to a Mechanism using the Mechanism's `add_ports <Mecha
 .. _InputPort_Primary:
 
 *Primary InputPort*
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 Every Mechanism has at least one InputPort, referred to as its *primary InputPort*.  If InputPorts are not
 `explicitly specified <InputPort_Specification>` for a Mechanism, a primary InputPort is automatically created
@@ -106,7 +124,7 @@ former (that is, if an *INPUT_PORTS* entry is included in the parameter dictiona
 .. _InputPort_Variable_and_Value:
 
 *InputPort's* `variable <InputPort.variable>`, `value <InputPort.value>` *and Mechanism's* `variable <Mechanism_Base.variable>`
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 Each InputPort specified in the **input_ports** argument of a Mechanism's constructor must correspond to an item of
 the Mechanism's `variable <Mechanism_Base.variable>` attribute (see `Mechanism <Mechanism_Variable_and_InputPorts>`),
@@ -538,7 +556,7 @@ class InputPort(Port_Base):
         internal_only=False)
 
     Subclass of `Port <Port>` that calculates and represents the input to a `Mechanism <Mechanism>` from one or more
-    `PathwayProjections <PathwayProjection>`.
+    `PathwayProjections <PathwayProjection>` (see `parent class <Port>` for additional arguments).
 
     Arguments
     ---------
@@ -589,9 +607,6 @@ class InputPort(Port_Base):
     Attributes
     ----------
 
-    owner : Mechanism
-        the Mechanism to which the InputPort belongs.
-
     path_afferents : List[MappingProjection]
         `MappingProjections <MappingProjection>` that project to the InputPort
         (i.e., for which it is a `receiver <Projection_Base.receiver>`).
@@ -630,7 +645,6 @@ class InputPort(Port_Base):
         the output of the InputPort's `function <InputPort.function>`, that is assigned to an item of the owner
         Mechanism's `variable <Mechanism_Base.variable>` attribute.
 
-
     label : string or number
         the string label that represents the current `value <InputPort.value>` of the InputPort, according to the
         owner mechanism's `input_labels_dict <Mechanism.input_labels_dict>`. If the current `value <InputPort.value>`
@@ -654,13 +668,8 @@ class InputPort(Port_Base):
         automatically create one or more non-default InputPorts, that have pre-specified names.  However, if any
         InputPorts are specified in the **input_ports** argument of the Mechanism's constructor, those replace those
         InputPorts (see `note <Mechanism_Default_Port_Suppression_Note>`), and `standard naming conventions <Naming>`
-        apply to the InputPorts specified, as well as any that are added to the Mechanism once it is created.
-
-        .. note::
-            Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that Ports with
-            the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
-            Mechanism: Ports within a Mechanism with the same base name are appended an index in the order of their
-            creation.
+        apply to the InputPorts specified, as well as any that are added to the Mechanism once it is created
+        (see `note <Port_Naming_Note>`).
 
     """
 

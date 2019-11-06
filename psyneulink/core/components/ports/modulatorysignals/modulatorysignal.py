@@ -446,7 +446,7 @@ class ModulatorySignal(OutputPort):
     of one more `Ports <Port>`;  see subclasses for arguments of constructor.
 
     .. note::
-       ModulatorySignal is an abstract class and should NEVER be instantiated by a call to its constructor.
+       ModulatorySignal is an abstract class and should *never* be instantiated by a call to its constructor.
        It should be instantiated using the constructor for a `subclass <ModulatorySignal_Subtypes>`.
 
     COMMENT:
