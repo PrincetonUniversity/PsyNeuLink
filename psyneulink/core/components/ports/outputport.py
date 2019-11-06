@@ -759,8 +759,8 @@ class OutputPort(Port_Base):
         assign=None,       \
         projections=None)
 
-    Subclass of `Port <Port>` that calculates and represents an output of a `Mechanism <Mechanism>` (see `parent
-    class <Port>` for additional arguments and attributes).
+    Subclass of `Port <Port>` that calculates and represents an output of a `Mechanism <Mechanism>` (see `parent class
+    <Port_Class_Reference>` for additional arguments and attributes).
 
     COMMENT:
 

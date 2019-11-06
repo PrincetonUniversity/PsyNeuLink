@@ -9,6 +9,9 @@
 # **************************************  ParameterPort ******************************************************
 
 """
+Contents
+--------
+
 
 * `ParameterPort_Overview`
 * `ParameterPort_Creation`
@@ -404,7 +407,8 @@ class ParameterPort(Port_Base):
         parameter_modulation_operation=Modulation.MULTIPLY)
 
     Subclass of `Port <Port>` that represents and possibly modifies the parameter of a `Mechanism <Mechanism>`,
-    `Projection <Projection>`, or its `Function` (see `parent class <Port>` for additional arguments and attributes).
+    `Projection <Projection>`, or its `Function` (see `parent class <Port_Class_Reference>` for additional arguments
+    and attributes).
 
     COMMENT:
     PortRegistry
