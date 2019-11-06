@@ -7,7 +7,9 @@ Ports
 .. toctree::
    :maxdepth: 1
 
-   *Subclasses:*
+   Subclasses:
+   -----------
+
    InputPort
    ParameterPort
    OutputPort
