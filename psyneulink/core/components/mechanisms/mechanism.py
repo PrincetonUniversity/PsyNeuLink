@@ -2321,8 +2321,8 @@ class Mechanism_Base(Mechanism):
     def get_current_mechanism_param(self, param_name, context=None):
         if param_name == "variable":
             raise MechanismError(f"The method 'get_current_mechanism_param' is intended for retrieving the current "
-                                 f"value of a mechanism parameter. 'variable' is not a mechanism parameter. If looking "
-                                 f"for {self.name}'s default variable, try {self.name}.defaults.variable.")
+                                 f"value of a mechanism parameter; 'variable' is not a mechanism parameter. If looking "
+                                 f"for {self.name}'s default variable, try '{self.name}.defaults.variable'.")
         try:
             return self._parameter_ports[param_name].parameters.value._get(context)
         except (AttributeError, TypeError):
