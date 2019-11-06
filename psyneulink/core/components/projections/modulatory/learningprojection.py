@@ -316,23 +316,11 @@ class LearningProjection(ModulatoryProjection_Base):
 
     weight : number : default None
        specifies the value by which to multiply the LearningProjection's `value <LearningProjection.value>`
-       before combining it with others (see `weight <LearningProjection.weight>` for additional details).
+       before combining it with others (see `Projection_Weight_Exponent` for additional details).
 
     exponent : number : default None
        specifies the value by which to exponentiate the LearningProjection's `value <LearningProjection.value>`
-       before combining it with others (see `exponent <LearningProjection.exponent>` for additional details).
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
-        Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
-        the Projection's default `function <LearningProjection.function>` and parameter assignments.  Values specified
-        for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default see ModulatoryProjection `name <ModulatoryProjection_Base.name>`
-        specifies the name of the LearningProjection.
-
-    prefs : PreferenceSet or specification dict : default Projection.classPreferences
-        specifies the `PreferenceSet` for the LearningProjection; see `prefs <LearningProjection.prefs>` for details.
+       before combining it with others (see `Projection_Weight_Exponent` for additional details).
 
 
     Attributes
@@ -365,7 +353,7 @@ class LearningProjection(ModulatoryProjection_Base):
         additional details).
 
     learning_signal : 2d np.array
-        the `value <LearningSignal.value>` of the LearningProjection's `sender <LearningProjectoin.sender>`: a matrix of
+        the `value <LearningSignal.value>` of the LearningProjection's `sender <LearningProjection.sender>`: a matrix of
         weight changes calculated by the `LearningMechanism` to which the `sender <LearningProjection.sender>` belongs;
         rows correspond to the `sender <MappingProjection.sender>` of the `learned_projection <LearningProjection>`,
         and columns to its `receiver <MappingProjection.receiver>` (i.e., the input and output of the
@@ -393,32 +381,6 @@ class LearningProjection(ModulatoryProjection_Base):
 
     value : 2d np.array
         same as `weight_change_matrix`.
-
-    weight : number
-       multiplies the `value <LearningProjection.value>` of the LearningProjection after applying `exponent
-       <LearningProjection.exponent>`, and before combining it with any others that project to the `ParameterPort`
-       for the `matrix <MappingProjection.matrix>` parameter of the same `MappingProjection` to determine how that
-       MappingProjection's `matrix <MappingProjection.matrix>` is modified (see `description above
-       <LearningProjection_Weight_Exponent>` for additional details, including relationship to `learning_rate
-       <LearningProjection.learning_rate>`).
-
-    exponent : number
-        exponentiates the `value <LearningProjection.value>` of the LearningProjection, before applying `weight
-        <ControlProjection.weight>`, and before combining it with any others that project to the `ParameterPort`
-       for the `matrix <MappingProjection.matrix>` parameter of the same `MappingProjection` to determine how that
-       MappingProjection's `matrix <MappingProjection.matrix>` is modified (see `description above
-       <LearningProjection_Weight_Exponent>` for additional details, including relationship to `learning_rate
-       <LearningProjection.learning_rate>`).
-
-    name : str
-        name of the LearningProjection; if it is not specified in the **name** argument of its constructor,
-        a default name is assigned (see ModulatoryProjection `name <ModulatoryProjection_Base.name>`;
-        also see `Naming` for conventions regarding duplicate names).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the LearningProjection; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
 
     """
 

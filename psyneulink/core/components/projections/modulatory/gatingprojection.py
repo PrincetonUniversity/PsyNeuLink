@@ -190,28 +190,16 @@ class GatingProjection(ModulatoryProjection_Base):
 
     weight : number : default None
        specifies the value by which to multiply the GatingProjection's `value <GatingProjection.value>`
-       before combining it with others (see `weight <GatingProjection.weight>` for additional details).
+       before combining it with others (see `Projection_Weight_Exponent` for additional details).
 
     exponent : number : default None
        specifies the value by which to exponentiate the GatingProjection's `value <GatingProjection.value>`
-       before combining it with others (see `exponent <GatingProjection.exponent>` for additional details).
+       before combining it with others (see `Projection_Weight_Exponent` for additional details).
 
     gating_signal_params : Dict[param keyword: param value]
         a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for the
         GatingProjection's `sender <ControlProjection.sender>` (see `GatingSignal_Structure` for a description
         of GatingSignal parameters).
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
-        the GatingProjection, its `function <GatingProjection.function>`, and/or a custom function and its parameters.
-        Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
-        constructor.
-
-    name : str : default see ModulatoryProjection `name <ModulatoryProjection_Base.name>`
-        specifies the name of the GatingProjection.
-
-    prefs : PreferenceSet or specification dict : default Projection.classPreferences
-        specifies the `PreferenceSet` for the GatingProjection; see `prefs <GatingProjection.prefs>` for details.
 
     Attributes
     ----------
@@ -240,27 +228,6 @@ class GatingProjection(ModulatoryProjection_Base):
         `OutputPort Execution <OutputPort_Execution>` for how modulation operates and how this applies to InputPorts
         and OutputPorts).
 
-    weight : number
-       multiplies the `value <GatingProjection.value>` of the GatingProjection after applying `exponent
-       <GatingProjection.exponent>`, and before combining it with any others that project to the same `InputPort`
-       or `OutputPort` to determine how that Port's `variable <Port.variable>` is modified (see description in
-       `Projection <Projection_Weight_Exponent>` for details).
-
-    exponent : number
-        exponentiates the `value <GatingProjection.value>` of the GatingProjection, before applying `weight
-        <ControlProjection.weight>`, and before combining it with any others that project to the same `InputPort`
-       or `OutputPort` to determine how that Port's `variable <Port.variable>` is modified (see description in
-       `Projection <Projection_Weight_Exponent>` for details).
-
-    name : str
-        name of the GatingProjection; if it is not specified in the **name** argument of its constructor,
-        a default name is assigned (see ModulatoryProjection `name <ModulatoryProjection_Base.name>`;
-        also see `Naming` for conventions regarding duplicate names).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the GatingProjection; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
     """
 
     color = 0

@@ -126,11 +126,11 @@ class ModulatoryProjection_Base(Projection_Base):
 
     weight : number : default None
        specifies the value by which to multiply the ModulatoryProjection's `value <ModulatoryProjection_Base.value>`
-       before combining it with others (see `weight <ModulatoryProjection_Base.weight>` for additional details).
+       before combining it with others (see Projection_Weight_Exponent for additional details).
 
     exponent : number : default None
        specifies the value by which to exponentiate the ModulatoryProjection's `value <ModulatoryProjection_Base.value>`
-       before combining it with others (see `exponent <ModulatoryProjection_Base.exponent>` for additional details).
+       before combining it with others (see Projection_Weight_Exponent for additional details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -171,18 +171,6 @@ class ModulatoryProjection_Base(Projection_Base):
     value : 2d np.array
         value used to modulate the `function <Port_Base.function>` of the Port that is its `receiver
         <ModulatoryProjection_Base.receiver>`.
-
-    weight : number
-       multiplies the `value <ModulatoryProjection_Base.value>` of the ModulatoryProjection after applying `exponent
-       <ModulatoryProjection_Base.exponent>`, and before combining it with any others that project to the same
-       `Port` to determine that Port's `variable <Port_Base.variable>` is modified (see description in `Projection
-       <Projection_Weight_Exponent>` for details).
-
-    exponent : number
-        exponentiates the `value <ModulatoryProjection_Base.value>` of the ModulatoryProjection, before applying
-        `weight <ModulatoryProjection_Base.weight>`, and before combining it with any others that project to the same
-        `Port` to determine that Port's `variable <Port.variable>` is modified (see description in `Projection
-        <Projection_Weight_Exponent>` for details).
 
     name : str
         the name of the ModulatoryProjection. If the ModulatoryProjection's `initialization has been deferred

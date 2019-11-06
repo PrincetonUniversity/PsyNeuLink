@@ -388,20 +388,14 @@ class ParameterPortError(Exception):
 
 class ParameterPort(Port_Base):
     """
-    ParameterPort(                                              \
-    owner,                                                       \
-    reference_value=None                                         \
-    function=LinearCombination(operation=PRODUCT),               \
-    variable=None,                                               \
-    size=None,                                                   \
-    parameter_modulation_operation=Modulation.MULTIPLY,          \
-    params=None,                                                 \
-    name=None,                                                   \
-    prefs=None)
+    ParameterPort(                                       \
+    owner,                                               \
+    reference_value=None                                 \
+    function=LinearCombination(operation=PRODUCT),       \
+    parameter_modulation_operation=Modulation.MULTIPLY)
 
-    Subclass of `Port <Port>` that represents and possibly modifies the parameter of
-    a `Mechanism <Mechanism>`, `Projection <Projection>`, or its `Function`.
-
+    Subclass of `Port <Port>` that represents and possibly modifies the parameter of a `Mechanism <Mechanism>`,
+    `Projection <Projection>`, or its `Function`.
 
     COMMENT:
 
@@ -431,8 +425,6 @@ class ParameterPort(Port_Base):
 
     COMMENT
 
-    COMMENT:
-
     Arguments
     ---------
 
@@ -449,29 +441,10 @@ class ParameterPort(Port_Base):
         specifies the parameter's initial value and attribute value — that is, the value of the attribute of the
         ParameterPort's owner or its `function <Component.function>` assigned to the parameter.
 
-    size : int, list or np.ndarray of ints
-        specifies variable as array(s) of zeros if **variable** is not passed as an argument;
-        if **variable** is specified, it takes precedence over the specification of **size**.
-        As an example, the following mechanisms are equivalent::
-            T1 = TransferMechanism(size = [3, 2])
-            T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
-
     function : Function or method : default LinearCombination(operation=SUM)
         specifies the function used to convert the parameter's attribute value (same as the ParameterPort's
         `variable <ParameterPort.variable>`) to the ParameterPort's `value <ParameterPort.value>`.
 
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
-        the ParameterPort or its function, and/or a custom function and its parameters.  Values specified for
-        parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default see `name <ParameterPort.name>`
-        specifies the name of the ParameterPort; see ParameterPort `name <ParameterPort.name>` for details.
-
-    prefs : PreferenceSet or specification dict : default Port.classPreferences
-        specifies the `PreferenceSet` for the ParameterPort; see `prefs <ParameterPort.prefs>` for details.
-
-    COMMENT
 
     Attributes
     ----------
@@ -513,11 +486,6 @@ class ParameterPort(Port_Base):
         .. note::
             Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that Ports with
             the same name are permitted in different Mechanisms.
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the ParameterPort; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
     """
 
     #region CLASS ATTRIBUTES

@@ -801,10 +801,11 @@ class OutputPort(Port_Base):
     COMMENT
 
     projections : list of Projection specifications
-        species the `MappingProjection(s) <MappingProjection>` to be sent by the OutputPort, and/or
-        `GatingProjections(s) <GatingProjection>` to be received (see `OutputPort_Projections` for additional details);
-        these will be listed in its `efferents <OutputPort.efferents>` and `mod_afferents <InputPort.mod_afferents>`
-        attributes, respectively (see `OutputPort_Projections` for additional details).
+        specifies the `MappingProjection(s) <MappingProjection>` to be sent by the OutputPort, and/or
+        `ControlProjections <ControlProjection>` and/or `GatingProjections(s) <GatingProjection>` to be received (see
+        `OutputPort_Projections` for additional details); these will be listed in its `efferents <OutputPort.efferents>`
+        and `mod_afferents <InputPort.mod_afferents>` attributes, respectively (see `OutputPort_Projections` for
+        additional details).
 
     Attributes
     ----------

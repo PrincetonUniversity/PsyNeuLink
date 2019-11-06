@@ -39,7 +39,7 @@ each of which has subtypes that differ in the type of information they transmit,
 
   * `MappingProjection`
       takes the `value <OutputPort.value>` of an `OutputPort` of a `ProcessingMechanism <ProcessingMechanism>`
-      converts it by convolving it with the MappingProjection's `matrix <MappingProjection.MappingProjection.matrix>`
+      converts it by convolving it with the MappingProjection's `matrix <MappingProjection.matrix>`
       parameter, and transmits the result to the `InputPort` of another ProcessingMechanism.  Typically,
       MappingProjections are used to connect Mechanisms in the `pathway` of a `Process`, though they can be use for
       other purposes as well (for example, to convey the output of an `ObjectiveMechanism` to a `ModulatoryMechanism
@@ -57,7 +57,7 @@ each of which has subtypes that differ in the type of information they transmit,
   * `LearningProjection`
       takes the `value <LearningSignal.value>` of a `LearningSignal` of a `LearningMechanism`, and transmits
       this to the `ParameterPort` of a `MappingProjection` that uses this to modify its `matrix
-      <MappingProjection.MappingProjection.matrix>` parameter. LearningProjections are used when learning has
+      <MappingProjection.matrix>` parameter. LearningProjections are used when learning has
       been specified for a `Process <Process_Learning_Sequence>` or `System <System_Execution_Learning>`.
   ..
   * `ControlProjection`
@@ -479,15 +479,7 @@ class DuplicateProjectionError(Exception):
 #
 
 class Projection_Base(Projection):
-    """
-    Projection_Base(  \
-    receiver,         \
-    sender=None,      \
-    params=None,      \
-    name=None,        \
-    prefs=None)
-
-    Base class for all Projections.
+    """Base class for all Projections;  see subclasses for arguments of constructor.
 
     .. note::
        Projection is an abstract class and should NEVER be instantiated by a direct call to its constructor.
@@ -544,14 +536,6 @@ class Projection_Base(Projection):
         output of Projection, transmitted to variable of function of its `receiver <Projection_Base.receiver>`.
 
     parameter_ports : ContentAddressableList[str, ParameterPort]
-        a list of the Projection's `ParameterPorts <Projection_ParameterPorts>`, one for each of its specifiable
-        parameters and those of its `function <Mechanism_Base.function>` (i.e., the ones for which there are
-        arguments in their constructors).  The value of the parameters of the Projection are also accessible as
-        attributes of the Projection (using the name of the parameter); the function parameters are listed in the
-        Projection's `function_params <Projection_Base.function_params>` attribute, and as attributes of the `Function`
-        assigned to its `function <Component.function>` attribute.
-
-    parameter_ports : ContentAddressableList[str, ParameterPort]
         a read-only list of the Projection's `ParameterPorts <Mechanism_ParameterPorts>`, one for each of its
         `configurable parameters <ParameterPort_Configurable_Parameters>`, including those of its `function
         <Projection_Base.function>`.  The value of the parameters of the Projection and its `function
@@ -561,23 +545,12 @@ class Projection_Base(Projection):
     weight : number
        multiplies the `value <Projection_Base.value>` of the Projection after applying the `exponent
        <Projection_Base.exponent>`, and before combining with any other Projections that project to the same `Port`
-       to determine that Port's `variable <Port_Base.variable>`.
+       to determine that Port's `variable <Port_Base.variable>` (see `Projection_Weight_Exponent` for details).
 
     exponent : number
         exponentiates the `value <Projection_Base.value>` of the Projection, before applying `weight
-        <Projection_Base.weight>`, and before combining it with any other Projections that project to the same
-        `Port` to determine that Port's `variable <Port_Base.variable>`.
-
-    COMMENT:
-        projectionSender : Mechanism, Port, or Object
-            This is assigned by __init__.py with the default sender port for each subclass.
-            It is used if sender arg is not specified in the constructor or when the Projection is assigned.
-            If it is different than the default;  where it is used, it overrides the ``sender`` argument even if that is
-            provided.
-
-        projectionSender : 1d array
-            Used to instantiate projectionSender
-    COMMENT
+        <Projection_Base.weight>`, and before combining it with any other Projections that project to the same `Port`
+        to determine that Port's `variable <Port_Base.variable>` (see `Projection_Weight_Exponent` for details).
 
     name : str
         the name of the Projection. If the Projection's `initialization has been deferred
@@ -586,11 +559,6 @@ class Projection_Base(Projection):
         name of an existing Projection, it is appended with an indexed suffix, incremented for each Projection with the
         same base name (see `Naming`). If the name is not  specified in the **name** argument of its constructor, a
         default name is assigned by the subclass (see subclass for details)
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the Projection; if it is not specified in the **prefs** argument of the constructor,
-        a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet <LINK>` for
-        details).
 
     """
 

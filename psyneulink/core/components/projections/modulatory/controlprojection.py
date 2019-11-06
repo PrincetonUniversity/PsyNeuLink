@@ -205,11 +205,11 @@ class ControlProjection(ModulatoryProjection_Base):
 
     weight : number : default None
        specifies the value by which to multiply the ControlProjection's `value <ControlProjection.value>`
-       before combining it with others (see `weight <ControlProjection.weight>` for additional details).
+       before combining it with others (see `Projection_Weight_Exponent` for additional details).
 
     exponent : number : default None
        specifies the value by which to exponentiate the ControlProjection's `value <ControlProjection.value>`
-       before combining it with others (see `exponent <ControlProjection.exponent>` for additional details).
+       before combining it with others (see `exponent Projection_Weight_Exponent` for additional details).
 
     control_signal_params pip install --updgrade Sphinx==1.6.2 sphinx-rtd-theme==0.2.4 sphinxcontrib-websupport==1.0.1: Dict[param keyword: param value]
         a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for the
@@ -254,27 +254,6 @@ class ControlProjection(ModulatoryProjection_Base):
         and `ParameterPort Execution <ParameterPort_Execution>` for how modulation operates and how this applies
         to a ParameterPort).
 
-    weight : number
-       multiplies the `value <ControlProjection.value>` of the ControlProjection after applying `exponent
-       <ControlProjection.exponent>`, and before combining it with any others that project to the same `ParameterPort`
-       to determine how that ParameterPort's `variable <ParameterPort.variable>` is modified (see description in
-       `Projection <Projection_Weight_Exponent>` for details).
-
-    exponent : number
-        exponentiates the `value <ControlProjection.value>` of the ControlProjection, before applying `weight
-        <ControlProjection.weight>`, and before combining it with any others that project to the same `ParameterPort`
-        to determine how that ParameterPort's `variable <ParameterPort.variable>` is modified (see description in
-        `Projection <Projection_Weight_Exponent>` for details).
-
-    name : str
-        name of the ControlProjection; if it is not specified in the **name** argument of its constructor,
-        a default name is assigned (see ModulatoryProjection `name <ModulatoryProjection_Base.name>`;
-        also see `Naming` for conventions regarding duplicate names).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the ControlProjection; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
     """
 
     color = 0

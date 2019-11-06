@@ -567,13 +567,13 @@ class InputPort(Port_Base):
         -- if it conflicts with a specification of **function** an error is generated.
 
     projections : list of Projection specifications
-        specifies the `MappingProjection(s) <MappingProjection>` and/or `GatingProjection(s) <GatingProjection>` to be
-        received by the InputPort, and that are listed in its `path_afferents <InputPort.path_afferents>` and
-        `mod_afferents <InputPort.mod_afferents>` attributes, respectively (see
-        `InputPort_Compatability_and_Constraints` for additional details).  If **projections** but neither
-        **variable** nor **size** are specified, then the `value <Projection.value>` of the Projection(s) or their
-        `senders <Projection_Base.sender>` specified in **projections** argument are used to determine the InputPort's
-        `variable <InputPort.variable>`.
+        specifies the `MappingProjection(s) <MappingProjection>`, `ControlProjection(s) <ControlProjection>` and/or
+        `GatingProjection(s) <GatingProjection>` to be received by the InputPort, and that are listed in its
+        `path_afferents <InputPort.path_afferents>` and `mod_afferents <InputPort.mod_afferents>` attributes,
+        respectively (see `InputPort_Compatability_and_Constraints` for additional details).  If **projections** but
+        neither **variable** nor **size** are specified, then the `value <Projection.value>` of the Projection(s) or
+        their `senders <Projection_Base.sender>` specified in **projections** argument are used to determine the
+        InputPort's `variable <InputPort.variable>`.
 
     weight : number : default 1
         specifies the value of the `weight <InputPort.weight>` attribute of the InputPort.
@@ -597,7 +597,8 @@ class InputPort(Port_Base):
         (i.e., for which it is a `receiver <Projection_Base.receiver>`).
 
     mod_afferents : List[GatingProjection]
-        `GatingProjections <GatingProjection>` that project to the InputPort.
+        `ControlProjections <ControlProjection>` and/or `GatingProjections <GatingProjection>` that project to the
+        InputPort.
 
     projections : List[Projection]
         all of the `Projections <Projection>` received by the InputPort.

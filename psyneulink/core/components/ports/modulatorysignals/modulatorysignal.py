@@ -442,16 +442,8 @@ modulatory_signal_keywords.update(component_keywords)
 
 
 class ModulatorySignal(OutputPort):
-    """
-    ModulatorySignal(                                  \
-        owner,                                         \
-        default_allocation=defaultModulatoryAllocation \
-        function=LinearCombination(operation=SUM),     \
-        modulation=MULTIPLICATIVE                      \
-        projections=None)
-
-    Subclass of `OutputPort` used by a `ModulatoryMechanism <ModulatoryMechanism>` to modulate the value
-    of one more `Ports <Port>`.
+    """Subclass of `OutputPort` used by a `ModulatoryMechanism <ModulatoryMechanism>` to modulate the value
+    of one more `Ports <Port>`;  see subclasses for arguments of constructor.
 
     .. note::
        ModulatorySignal is an abstract class and should NEVER be instantiated by a call to its constructor.
