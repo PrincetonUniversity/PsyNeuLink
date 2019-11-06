@@ -202,7 +202,7 @@ by assigning a default `ControlSignal`;  this will use the default value of the
 a `Logistic` function, that specifies two of its parameters.  The `gain <Logistic.gain>` parameter
 is specified using a tuple, the first item of which is the value to be assigned, and the second specifies
 a default `ControlSignal`.  The `bias <Logistic.bias>` parameter is also specified using a tuple,
-in this case with a constructor for the ControlSignal that specifies its `modulation <ControlSignal.modulation>`
+in this case with a constructor for the ControlSignal that specifies its `modulation <ModulatorySignal.modulation>`
 parameter.
 
 In the following example, a `MappingProjection` is created, and its

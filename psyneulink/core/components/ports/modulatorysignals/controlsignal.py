@@ -94,7 +94,7 @@ that are described below.
 
 When a ControlSignal is created, it can be assigned one or more `ControlProjections <ControlProjection>`, using either
 the **projections** argument of its constructor, or in an entry of a dictionary assigned to the **params** argument
-with the key *PROJECTIONS*.  These will be assigned to its `efferents  <ControlSignal.efferents>` attribute.  See
+with the key *PROJECTIONS*.  These will be assigned to its `efferents  <ModulatorySignal.efferents>` attribute.  See
 `Port Projections <Port_Projections>` for additional details concerning the specification of Projections when
 creating a Port.
 
@@ -110,15 +110,15 @@ creating a Port.
 *Modulation*
 ~~~~~~~~~~~~
 
-A ControlSignal has a `modulation <GatingSignal.modulation>` attribute that determines how its ControlSignal's
+A ControlSignal has a `modulation <ModulatorySignal.modulation>` attribute that determines how its ControlSignal's
 `value <ControlSignal.value>` is used by the Ports to which it projects to modify their `value <Port_Base.value>` \\s
-(see `ModulatorySignal_Modulation` for an explanation of how the `modulation <ControlSignal.modulation>`  attribute is
-specified and used to modulate the `value <Port_Base.value>` of a Port). The `modulation <ControlSignal.modulation>`
+(see `ModulatorySignal_Modulation` for an explanation of how the `modulation <ModulatorySignal.modulation>` attribute is
+specified and used to modulate the `value <Port_Base.value>` of a Port). The `modulation <ModulatorySignal.modulation>`
 attribute can be specified in the **modulation** argument of the constructor for a ControlSignal, or in a specification
 dictionary as described `above <ControlSignal_Specification>`. The value must be a value of `ModulationParam`;  if it
 is not specified, its default is the value of the `modulation <ControlMechanism.modulation>` attribute of the
 ControlMechanism to which the ControlSignal belongs (which is the same for all of the ControlSignals belonging to that
-ControlMechanism).  The value of the `modulation <ControlSignal.modulation>` attribute of a ControlSignal is used by
+ControlMechanism).  The value of the `modulation <ModulatorySignal.modulation>` attribute of a ControlSignal is used by
 all of the `ControlProjections <ControlProjection>` that project from that ControlSignal.
 
 .. _ControlSignal_Allocation_and_Intensity
@@ -236,14 +236,14 @@ ControlSignal to the `bias <Logistic.gain>` parameter of the `Logistic` Function
 
 Note that the ControlSignal is specified by it class.  This will create a default ControlSignal,
 with a ControlProjection that projects to the TransferMechanism's `ParameterPort` for the `bias <Logistic.bias>`
-parameter of its `Logistic` Function.  The default value of a ControlSignal's `modulation <ControlSignal.modulation>`
+parameter of its `Logistic` Function.  The default value of a ControlSignal's `modulation <ModulatorySignal.modulation>`
 attribute is *MULTIPLICATIVE*, so that it will multiply the value of the `bias <Logistic.bias>` parameter.
 When the TransferMechanism executes, the Logistic Function will use the value of the ControlSignal as its
 bias parameter.
 
 *Specify attributes of a ControlSignal*.  Ordinarily, ControlSignals modify the *MULTIPLICATIVE_PARAM* of a
 ParameterPort's `function <ParameterPort.function>` to modulate the parameter's value.
-In the example below, this is changed by specifying the `modulation <ControlSignal.modulation>` attribute of a
+In the example below, this is changed by specifying the `modulation <ModulatorySignal.modulation>` attribute of a
 `ControlSignal` for the `Logistic` Function of the `TransferMechanism`.  It is changed so that the value of the
 ControlSignal adds to, rather than multiplies, the value of the `gain <Logistic.gain>` parameter of the Logistic
 function::
@@ -483,13 +483,9 @@ class ControlSignal(ModulatorySignal):
         specifies the values used by the ControlSignal's `owner <ModulatorySignal.owner>` to determine its
         `control_allocation <ControlMechanism.control_allocation>` (see `ControlSignal_Execution`).
 
-    modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
-        specifies the way in which the `value <ControlSignal.value>` the ControlSignal is used to modify the value of
-        the parameter(s) that it controls.
-
     modulates : list of Projection specifications
         specifies the `ControlProjection(s) <ControlProjection>` to be assigned to the ControlSignal, and that will be
-        listed in its `efferents <ControlSignal.efferents>` attribute (see `ControlSignal_Projections` for additional
+        listed in its `efferents <ModulatorySignal.efferents>` attribute (see `ControlSignal_Projections` for additional
         details).
 
     Attributes
@@ -576,28 +572,6 @@ class ControlSignal(ModulatorySignal):
 
     cost : float
         combined result of all `cost functions <ControlSignal_Costs>` that are enabled.
-
-    modulation : ModulationParam
-        specifies the way in which the `value <ControlSignal.value>` the ControlSignal is used to modify the value of
-        the parameter(s) that it controls.
-
-    efferents : [List[ControlProjection]]
-        a list of the `ControlProjections <ControlProjection>` assigned to (i.e., that project from) the ControlSignal.
-
-    name : str
-        name of the ControlSignal; if it is not specified in the **name** argument of its constructor, a default name
-        is assigned (see `name <ModulatorySignal.name>`).
-
-        .. note::
-            Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that Ports with
-            the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
-            Mechanism: Ports within a Mechanism with the same base name are appended an index in the order of their
-            creation.
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the ControlSignal; if it is not specified in the **prefs** argument of the constructor,
-        a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet <LINK>` for
-        details).
 
     """
 
