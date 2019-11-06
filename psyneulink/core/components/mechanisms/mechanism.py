@@ -459,8 +459,8 @@ attribute, as well as the number of InputPorts it has and their `variable <Input
 <InputPort.value>` attributes, are determined by one of the following arguments in the Mechanism's constructor:
 
 * **default_variable** (at least 2d ndarray) -- determines the number and format of the items of the Mechanism's
-  `variable <Mechanism_Base.variable>` attribute.  The number of items in its outermost dimension (axis 0) determines the
-  number of InputPorts created for the Mechanism, and the format of each item determines the format for the
+  `variable <Mechanism_Base.variable>` attribute.  The number of items in its outermost dimension (axis 0) determines
+  the number of InputPorts created for the Mechanism, and the format of each item determines the format for the
   `variable <InputPort.variable>` and `value  <InputPort.value>` attributes of the corresponding InputPort.
   If any InputPorts are specified in the **input_ports** argument or an *INPUT_PORTS* entry of
   a specification dictionary assigned to the **params** argument of the Mechanism's constructor, then the number
@@ -666,8 +666,8 @@ Mechanisms that send/receive these:
     * `mod_afferents <Mechanism_Base.afferents>` -- all of the ModulatoryProjections received by the Mechanism;
     * `efferents <Mechanism_Base.efferents>` -- all of the Projections sent by the Mechanism;
     * `senders <Mechanism_Base.senders>` -- all of the Mechanisms that send a Projection to the Mechanism
-    * `modulators <Mechanism_Base.modulators>` -- all of the ModulatoryMechanisms that send a ModulatoryProjection to the
-      Mechanism
+    * `modulators <Mechanism_Base.modulators>` -- all of the ModulatoryMechanisms that send a ModulatoryProjection to
+      the Mechanism
     * `receivers <Mechanism_Base.receivers>` -- all of the Mechanisms that receive a Projection from the Mechanism
 
 Each of these is a `ContentAddressableList`, which means that the names of the Components in each list can be listed by
@@ -693,8 +693,8 @@ OutputPort(s):
 
 The labels specified in these dictionaries can be used to:
 
-    - specify items in the `inputs <Composition_Run_Inputs>` and `targets <Run_Targets>` arguments of the `run <System.run>` method
-      of a `System`
+    - specify items in the `inputs <Composition_Run_Inputs>` and `targets <Run_Targets>` arguments of the
+      `run <System.run>` method of a `System`
     - report the values of the InputPort(s) and OutputPort(s) of a Mechanism
     - visualize the inputs and outputs of the System's Mechanisms
 
@@ -1478,12 +1478,16 @@ class Mechanism_Base(Mechanism):
                     :read only: True
 
         """
-        variable = Parameter(np.array([[0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
+        variable = Parameter(np.array([[0]]),
+                             read_only=True, pnl_internal=True,
+                             constructor_argument='default_variable')
         value = Parameter(np.array([[0]]), read_only=True, pnl_internal=True)
         previous_value = Parameter(None, read_only=True, pnl_internal=True)
         function = Linear
 
-        input_port_variables = Parameter(None, read_only=True, user=False, getter=_input_port_variables_getter, pnl_internal=True)
+        input_port_variables = Parameter(None, read_only=True, user=False,
+                                         getter=_input_port_variables_getter,
+                                         pnl_internal=True)
 
         input_ports_spec = Parameter(
             None,
@@ -1686,7 +1690,8 @@ class Mechanism_Base(Mechanism):
 
         # handle specifying through params dictionary
         try:
-            default_variable_from_input_ports, input_ports_variable_was_specified = self._handle_arg_input_ports(params[INPUT_PORTS])
+            default_variable_from_input_ports, input_ports_variable_was_specified = \
+                self._handle_arg_input_ports(params[INPUT_PORTS])
 
             # updated here in case it was parsed in _handle_arg_input_ports
             params[INPUT_PORTS] = self.input_ports
@@ -1699,7 +1704,8 @@ class Mechanism_Base(Mechanism):
         if default_variable_from_input_ports is None:
             # fallback to standard arg specification
             try:
-                default_variable_from_input_ports, input_ports_variable_was_specified = self._handle_arg_input_ports(input_ports)
+                default_variable_from_input_ports, input_ports_variable_was_specified = \
+                    self._handle_arg_input_ports(input_ports)
             except AttributeError as e:
                 if DEFER_VARIABLE_SPEC_TO_MECH_MSG in e.args[0]:
                     pass
@@ -2172,9 +2178,11 @@ class Mechanism_Base(Mechanism):
         # instantiate parameter ports from UDF custom parameters if necessary
         try:
             cfp = self.function.cust_fct_params
-            udf_parameters_lacking_ports = {param_name: cfp[param_name] for param_name in cfp if param_name not in self.parameter_ports.names}
+            udf_parameters_lacking_ports = {param_name: cfp[param_name]
+                                            for param_name in cfp if param_name not in self.parameter_ports.names}
 
-            _instantiate_parameter_port(self, FUNCTION_PARAMS, udf_parameters_lacking_ports, context=context, function=self.function)
+            _instantiate_parameter_port(self, FUNCTION_PARAMS, udf_parameters_lacking_ports,
+                                        context=context, function=self.function)
             self._parse_param_port_sources()
         except AttributeError:
             pass
