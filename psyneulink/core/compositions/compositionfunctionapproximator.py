@@ -63,7 +63,7 @@ class CompositionFunctionApproximator(Composition):
         ---------
 
         param_defaults : LearningFunction, function or method
-            specifies the function parameterized by the CompositionFunctionApproximator's <adapt
+            specifies the function parameterized by the CompositionFunctionApproximator's `adapt
             <CompositionFunctionApproximator.adapt>` method, and used by its `evaluate
             <CompositionFunctionApproximator.evaluate>` method to generate and return a predicted `net_outcome
             <ControlMechanism.net_outcome>` for a set of `feature_values <OptimizationControlMechanism.feature_values>`

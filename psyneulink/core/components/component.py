@@ -10,6 +10,28 @@
 
 
 """
+Contents
+--------
+
+* `Component_Overview`
+* `Component_Creation`
+    * `Component_Deferred_Init`
+* `Component_Structure`
+    * `Component_Structural_Attributes`
+        * `Variable <Component_Variable>`
+        * `Function <Component_Function>`
+        * `Value <Component_Value>`
+        * `Log <Component_Log>`
+        * `Name <Component_Name>`
+        * `Preferences <Component_Prefs>`
+    * `User_Modifiable_Parameters`
+    * `Methods <Component_Methods>`
+* `Component_Execution`
+    * `Component_Execution_Initialization`
+    * `Component_Execution_Termination`
+    * `Component_Execution_Count_and_Time`
+* `Component_Class_Reference`
+
 
 .. _Component_Overview:
 
@@ -338,6 +360,11 @@ Execution
 Calls the :keyword:`execute` method of the subclass that, in turn, calls its :keyword:`function`.
 The following attributes control and provide information about the execution of a Component:
 
+.. _Component_Execution_Initialization:
+
+*Initialization*
+~~~~~~~~~~~~~~~~
+
 .. _Component_Reinitialize_When:
 
 * **reinitialize_when** - contains a `Condition`; when this condition is satisfied, the Component calls its
@@ -352,6 +379,11 @@ The following attributes control and provide information about the execution of 
 
         Currently, only Mechanisms reinitialize when their reinitialize_when Conditions are satisfied. Other types of
         Components do not reinitialize.
+
+.. _:
+Component_Execution_Termination
+*Termniation*
+~~~~~~~~~~~~~
 
 .. _Component_Is_Finished:
 
@@ -380,6 +412,11 @@ The following attributes control and provide information about the execution of 
   If it is exceeded, a warning message is generated.  Note that this only pertains to `num_executions_before_finished
   <Component_Num_Executions_Before_Finished>`, and not its `execution_count <Component_Execution_Count>`, which can be
   unlimited.
+
+.. _Component_Execution_Count_and_Time:
+
+*Count and Time*
+~~~~~~~~~~~~~~~~
 
 .. _Component_Execution_Count:
 
@@ -826,6 +863,35 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     Instance methods:
         + function (implementation is optional; aliased to params[FUNCTION] by default)
     COMMENT
+
+    Arguments
+    ---------
+
+    default_variable : scalar, list or array : default [[0]]
+        specifies template for the input to the Component's `function <Component.function>`.
+
+    size : int, list or np.ndarray of ints : default None
+        specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
+        if **default_variable** is specified, it takes precedence over the specification of **size**.
+
+    COMMENT:
+    param_defaults :   :  default None,
+    COMMENT
+
+    function : function : default Linear
+       specifies function used to transform `variable <Component.variable>` into `value
+       <Component.value>`;  must take an input of the same shape as `variable <Component.variable>`.
+
+    name : str : default see `name <Component_Name>`
+        a string used for the name of the Component;  default is assigned by relevant `Registry <LINK>` for Component
+        (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : default Component.classPreferences
+        specifies the `PreferenceSet` for the Component (see `prefs <Component_Base.prefs>` for details).
+
+    context : Context : default None
+        specifies `context <Context>` in which Component is being initialized or executed.
+
 
     Attributes
     ----------

@@ -876,7 +876,8 @@ class PortError(Exception):
 # DOCUMENT:  INSTANTATION CREATES AN ATTIRBUTE ON THE OWNER MECHANISM WITH THE PORT'S NAME + VALUE_SUFFIX
 #            THAT IS UPDATED BY THE PORT'S value setter METHOD (USED BY LOGGING OF MECHANISM ENTRIES)
 class Port_Base(Port):
-    """Base class for Port; see subclasses for arguments of constructor.
+    """Base class for Port (see `Component <Component_Class_Reference>` for additional arguments and
+    attributes).
 
     .. note::
        Port is an abstract class and should *never* be instantiated by a call to its constructor. It should be created

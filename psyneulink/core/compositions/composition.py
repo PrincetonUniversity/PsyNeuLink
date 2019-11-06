@@ -10,7 +10,7 @@
 
 """
 
-Sections
+Contents
 --------
 
   * `Composition_Overview`
