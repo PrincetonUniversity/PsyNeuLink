@@ -2303,28 +2303,26 @@ class Mechanism_Base(Mechanism):
 
             elif self.integrator_function is None or isinstance(self.integrator_function, type):
                 if hasattr(self, "integrator_mode"):
-                    raise MechanismError("Reinitializing {} is not allowed because this Mechanism is not stateful. "
-                                         "(It does not have an integrator to reinitialize.) If this Mechanism "
-                                         "should be stateful, try setting the integrator_mode argument to True. "
-                                         .format(self.name))
+                    raise MechanismError(f"Reinitializing {self.name} is not allowed because this Mechanism "
+                                         f"is not stateful; it does not have an integrator to reinitialize. "
+                                         f"If it should be stateful, try setting the integrator_mode argument to True.")
                 else:
-                    raise MechanismError("Reinitializing {} is not allowed because this Mechanism is not stateful. "
-                                         "(It does not have an integrator to reinitialize).".format(self.name))
+                    raise MechanismError(f"Reinitializing {self.name} is not allowed because this Mechanism "
+                                         f"is not stateful; it does not have an integrator to reinitialize.")
 
             else:
-                raise MechanismError("Reinitializing {} is not allowed because its integrator_function is not an "
-                                     "IntegratorFunction type function, therefore the Mechanism does not have an integrator to"
-                                     " reinitialize.".format(self.name))
+                raise MechanismError(f"Reinitializing {self.name} is not allowed because its integrator_function "
+                                     f"is not an IntegratorFunction type function, therefore the Mechanism "
+                                     f"does not have an integrator to reinitialize.")
         else:
-            raise MechanismError("Reinitializing {} is not allowed because this Mechanism is not stateful. "
-                                 "(It does not have an accumulator to reinitialize).".format(self.name))
+            raise MechanismError(f"Reinitializing {self.name} is not allowed because this Mechanism is not stateful; "
+                                 f"it does not have an accumulator to reinitialize.")
 
     def get_current_mechanism_param(self, param_name, context=None):
         if param_name == "variable":
-            raise MechanismError("The method 'get_current_mechanism_param' is intended for retrieving the current "
-                                 "value of a mechanism parameter. 'variable' is not a mechanism parameter. If looking "
-                                 "for {}'s default variable, try {}.defaults.variable."
-                                 .format(self.name, self.name))
+            raise MechanismError(f"The method 'get_current_mechanism_param' is intended for retrieving the current "
+                                 f"value of a mechanism parameter. 'variable' is not a mechanism parameter. If looking "
+                                 f"for {self.name}'s default variable, try {self.name}.defaults.variable.")
         try:
             return self._parameter_ports[param_name].parameters.value._get(context)
         except (AttributeError, TypeError):
