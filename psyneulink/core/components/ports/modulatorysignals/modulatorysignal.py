@@ -448,10 +448,7 @@ class ModulatorySignal(OutputPort):
         default_allocation=defaultModulatoryAllocation \
         function=LinearCombination(operation=SUM),     \
         modulation=MULTIPLICATIVE                      \
-        projections=None,                              \
-        params=None,                                   \
-        name=None,                                     \
-        prefs=None)
+        projections=None)
 
     Subclass of `OutputPort` used by a `ModulatoryMechanism <ModulatoryMechanism>` to modulate the value
     of one more `Ports <Port>`.
@@ -505,13 +502,6 @@ class ModulatorySignal(OutputPort):
         a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
         the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default see `name <ModulatorySignal.name>`
-        specifies the name of the ModulatorySignal.
-
-    prefs : PreferenceSet or specification dict : default Port.classPreferences
-        specifies the `PreferenceSet` for the LearningSignal; see `prefs <ControlSignal.prefs>` for details.
-
 
     Attributes
     ----------
@@ -573,11 +563,6 @@ class ModulatorySignal(OutputPort):
             the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
             Mechanism: Ports within a Mechanism with the same base name are appended an index in the order of their
             creation.
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the ModulatorySignal; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
 
     """
 

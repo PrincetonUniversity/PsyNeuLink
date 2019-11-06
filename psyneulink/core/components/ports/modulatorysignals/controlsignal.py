@@ -141,7 +141,7 @@ FIX: 8/30/19 -- ADD DESCRIPTION OF function AS ACTUALLY IMPLEMENTED AS TransferW
                 - cost functions can be specified, but attributes are pointers to function's cost functions
                 - cost attributes get value of corresponding attributes of cost function
                 - ?handling of cost_options
-*Function*. A ControlSignal's `allocation <ControlSignal.alloction>` serves as its`variable <ControlSignal.variable>`,
+*Function*. A ControlSignal's `allocation <ControlSignal.allocation>` serves as its`variable <ControlSignal.variable>`,
 and is used by its `function <ControlSignal.function>` to generate an `intensity`. The default `function
 <ControlSignal.function>` for a ControlSignal is an identity function (`Linear` with `slope <Linear.slope>` \\=1 and
 `intercept <Linear.intercept>`\\=0), that simply assigns the `allocation <ControlSignal.allocation>` as the
@@ -437,10 +437,7 @@ class ControlSignal(ModulatorySignal):
         combine_costs_function=Reduce(operation=SUM),              \
         allocation_samples=self.class_defaults.allocation_samples, \
         modulation=MULTIPLICATIVE                                  \
-        projections=None                                           \
-        params=None,                                               \
-        name=None,                                                 \
-        prefs=None)
+        projections=None)
 
     A subclass of `ModulatorySignal <ModulatorySignal>` used by a `ControlMechanism <ControlMechanism>` to
     modulate the parameter(s) of one or more other `Mechanisms <Mechanism>`.

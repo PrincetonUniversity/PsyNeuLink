@@ -267,14 +267,6 @@ class LearningSignal(ModulatorySignal):
         listed in its `efferents <LearningSignal.efferents>` attribute (see `LearningSignal_Projections` for additional
         details).
 
-    name : str : default see ModulatorySignal `name <ModulatorySignal.name>`
-        specifies the name of the LearningSignal; see LearningSignal `name <ModulatorySignal.name>` for additional
-        details.
-
-    prefs : PreferenceSet or specification dict : default Port.classPreferences
-        specifies the `PreferenceSet` for the LearningSignal; see `prefs <LearningSignal.prefs>` for details.
-
-
     Attributes
     ----------
 
@@ -321,11 +313,6 @@ class LearningSignal(ModulatorySignal):
             the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
             Mechanism: Ports within a Mechanism with the same base name are appended an index in the order of their
             creation.
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the LearningSignal; if it is not specified in the **prefs** argument of the constructor,
-        a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet <LINK>` for
-        details).
 
     """
 

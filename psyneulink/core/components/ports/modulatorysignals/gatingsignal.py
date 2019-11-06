@@ -267,10 +267,7 @@ class GatingSignal(ControlSignal):
         variable=defaultGatingAllocation            \
         function=Linear(),                          \
         modulation=MULTIPLICATIVE,                  \
-        projections=None,                           \
-        params=None,                                \
-        name=None,                                  \
-        prefs=None)
+        projections=None)
 
     A subclass of `ModulatorySignal <ModulatorySignal>` used by a `GatingMechanism` to modulate the value(s)
     of one more `InputPort(s) <InputPort>` and/or `OutputPort(s) <OutputPort>`.

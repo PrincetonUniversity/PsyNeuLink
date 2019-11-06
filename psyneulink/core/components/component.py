@@ -892,6 +892,20 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             * `REINITIALIZED <ContextFlags.REINITIALIZED>`
             * `UNINITIALIZED <ContextFlags.UNINITALIZED>`
 
+    COMMENT:
+    FIX: THESE USED TO BE IN CONSTRUCTORS FOR ALL SUBCLASSES.  INTEGRATE WITH ABOVE
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
+        the InputPort or its function, and/or a custom function and its parameters. Values specified for parameters in
+        the dictionary override any assigned to those parameters in arguments of the constructor.
+
+    name : str : default see `name <InputPort.name>`
+        specifies the name of the InputPort; see InputPort `name <InputPort.name>` for details.
+
+    prefs : PreferenceSet or specification dict : default Port.classPreferences
+        specifies the `PreferenceSet` for the InputPort; see `prefs <InputPort.prefs>` for details.
+    COMMENT
+
     """
 
     #CLASS ATTRIBUTES

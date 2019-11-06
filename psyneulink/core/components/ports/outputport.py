@@ -728,19 +728,13 @@ class OutputPortError(Exception):
 
 class OutputPort(Port_Base):
     """
-    OutputPort(           \
-    owner,                \
-    reference_value,      \
-    variable=None,        \
-    size=None,            \
-    function=Linear(),    \
-    index=PRIMARY,        \
-    assign=None,          \
-    projections=None,     \
-    params=None,          \
-    name=None,            \
-    prefs=None,           \
-    context=None)
+    OutputPort(            \
+        owner,             \
+        reference_value,   \
+        function=Linear(), \
+        index=PRIMARY,     \
+        assign=None,       \
+        projections=None)
 
     Subclass of `Port <Port>` that calculates and represents an output of a `Mechanism <Mechanism>`.
 
@@ -787,15 +781,6 @@ class OutputPort(Port_Base):
         specifies the attributes of the  OutputPort's `owner <OutputPort.owner>` Mechanism to be used by the
         OutputPort's `function <OutputPort.function>`  in generating its `value <OutputPort.value>`.
 
-    COMMENT:
-    size : int, list or ndarray of ints
-        specifies variable as array(s) of zeros if **variable** is not passed as an argument;
-        if **variable** is specified, it takes precedence over the specification of **size**.
-        As an example, the following mechanisms are equivalent::
-            T1 = TransferMechanism(size = [3, 2])
-            T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
-    COMMENT
-
     function : Function, function, or method : default Linear
         specifies the function used to transform and/or combine the items designated by the OutputPort's `variable
         <OutputPort.variable>` into its `value <OutputPort.value>`, under the possible influence of
@@ -820,18 +805,6 @@ class OutputPort(Port_Base):
         `GatingProjections(s) <GatingProjection>` to be received (see `OutputPort_Projections` for additional details);
         these will be listed in its `efferents <OutputPort.efferents>` and `mod_afferents <InputPort.mod_afferents>`
         attributes, respectively (see `OutputPort_Projections` for additional details).
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
-        the OutputPort, its function, and/or a custom function and its parameters. Values specified for parameters
-        in the dictionary override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default see `name <OutputPort.name>`
-        specifies the name of the OutputPort; see OutputPort `name <OutputPort.name>` for details.
-
-    prefs : PreferenceSet or specification dict : default Port.classPreferences
-        specifies the `PreferenceSet` for the OutputPort; see `prefs <OutputPort.prefs>` for details.
-
 
     Attributes
     ----------
@@ -864,7 +837,7 @@ class OutputPort(Port_Base):
     function : Function, function, or method
         function used to transform and/or combine the value of the items of the OutputPort's `variable
         <OutputPort.variable>` into its `value <OutputPort.value>`, under the possible influence of
-        `GatingProjections <GatingProjection>` received by the OutputPort.
+        `ControlProjections <ControlProjection>` or `GatingProjections <GatingProjection>` received by the OutputPort.
 
     value : number, list or np.ndarray
         assigned the result of `function <OutputPort.function>`;  the same value is assigned to the corresponding item
@@ -897,11 +870,6 @@ class OutputPort(Port_Base):
             the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
             Mechanism: Ports within a Mechanism with the same base name are appended an index in the order of their
             creation.
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the OutputPort; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
 
     """
 

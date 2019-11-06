@@ -854,16 +854,8 @@ class PortError(Exception):
 #            THAT IS UPDATED BY THE PORT'S value setter METHOD (USED BY LOGGING OF MECHANISM ENTRIES)
 class Port_Base(Port):
     """
-    Port_Base(        \
-    owner,             \
-    variable=None,     \
-    size=None,         \
-    projections=None,  \
-    params=None,       \
-    name=None,         \
-    prefs=None)
 
-    Base class for Port.
+    Base class for Port.  See subclasses for arguments of constructor.
 
     .. note::
        Port is an abstract class and should NEVER be instantiated by a call to its constructor.

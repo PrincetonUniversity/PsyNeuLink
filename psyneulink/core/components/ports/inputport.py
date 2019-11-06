@@ -530,17 +530,12 @@ class InputPort(Port_Base):
     """
     InputPort(                                     \
         owner=None,                                \
-        variable=None,                             \
-        size=None,                                 \
         function=LinearCombination(operation=SUM), \
         combine=None,                              \
         projections=None,                          \
         weight=None,                               \
         exponent=None,                             \
-        internal_only=False,                       \
-        params=None,                               \
-        name=None,                                 \
-        prefs=None)
+        internal_only=False)
 
     Subclass of `Port <Port>` that calculates and represents the input to a `Mechanism <Mechanism>` from one or more
     `PathwayProjections <PathwayProjection>`.
@@ -555,13 +550,6 @@ class InputPort(Port_Base):
     reference_value : number, list or np.ndarray
         the value of the item of the owner Mechanism's `variable <Mechanism_Base.variable>` attribute to which
         the InputPort is assigned; used as the template for the InputPort's `value <InputPort.value>` attribute.
-
-    variable : number, list or np.ndarray
-        specifies the template for the InputPort's `variable <InputPort.variable>` attribute.
-
-    size : int, list or np.ndarray of ints
-        specifies variable as array(s) of zeros if **variable** is not passed as an argument;
-        if **variable** is specified, it takes precedence over the specification of **size**.
 
     function : Function or method : default LinearCombination(operation=SUM)
         specifies the function applied to the variable. The default value combines the `values
@@ -597,18 +585,6 @@ class InputPort(Port_Base):
         specifies whether external input is required by the InputPort's `owner <InputPort.owner>` if its `role
         <Mechanism_Role_In_Processes_And_Systems>` is *EXTERNAL_INPUT*  (see `internal_only <InputPort.internal_only>`
         for details).
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
-        the InputPort or its function, and/or a custom function and its parameters. Values specified for parameters in
-        the dictionary override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default see `name <InputPort.name>`
-        specifies the name of the InputPort; see InputPort `name <InputPort.name>` for details.
-
-    prefs : PreferenceSet or specification dict : default Port.classPreferences
-        specifies the `PreferenceSet` for the InputPort; see `prefs <InputPort.prefs>` for details.
-
 
     Attributes
     ----------
@@ -684,12 +660,6 @@ class InputPort(Port_Base):
             the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
             Mechanism: Ports within a Mechanism with the same base name are appended an index in the order of their
             creation.
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the InputPort; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
-
 
     """
 
