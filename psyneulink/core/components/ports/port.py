@@ -12,19 +12,19 @@
 Contents
 --------
 
-* `Port_Overview`
-* `Port_Creation`
-    * `Port_Specification`
-    * `Port_Projections`
-    * `Port_Deferred_Initialization`
-* `Port_Structure`
-    * `Port_Strucure_Owner`
-    * `Port_Structure_Projections`
-    * `Port_Structure_Variable_Function_Value`
-    * `Port_Modulation`
-* `Port_Execution`
-* `Port_Examples`
-* `Port_Class_Reference`
+  * `Port_Overview`
+  * `Port_Creation`
+      - `Port_Specification`
+      - `Port_Projections`
+      - `Port_Deferred_Initialization`
+  * `Port_Structure`
+      - `Port_Strucure_Owner`
+      - `Port_Structure_Projections`
+      - `Port_Structure_Variable_Function_Value`
+      - `Port_Modulation`
+  * `Port_Execution`
+  * `Port_Examples`
+  * `Port_Class_Reference`
 
 
 .. _Port_Overview:

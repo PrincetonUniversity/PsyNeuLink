@@ -8,7 +8,7 @@
 # **************************************  ControlMechanism ************************************************
 
 """
-Sections
+Contents
 --------
 
   * `ControlMechanism_Overview`
@@ -25,6 +25,7 @@ Sections
   * `ControlMechanism_Execution`
   * `ControlMechanism_Examples`
   * `ControlMechanism_Class_Reference`
+
 
 .. _ControlMechanism_Overview:
 

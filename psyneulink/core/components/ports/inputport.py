@@ -14,18 +14,18 @@ Contents
 
 * `InputPort_Overview`
 * `InputPort_Creation`
-    * `InputPort_Deferred_Initialization`
-    * `InputPort_Primary`
-    * `InputPort_Specification`
-        * `Forms of Specification <InputPort_Forms_of_Specification>`
-        * `Variable, Value and Mechanism <InputPort_Variable_and_Value>`
-        * `Variable: Compatability and Constaints <InputPort_Compatability_and_Constraints>`
+    - `InputPort_Deferred_Initialization`
+    - `InputPort_Primary`
+    - `InputPort_Specification`
+        • `Forms of Specification <InputPort_Forms_of_Specification>`
+        • `Variable, Value and Mechanism <InputPort_Variable_and_Value>`
+        • `Variable: Compatability and Constaints <InputPort_Compatability_and_Constraints>`
 * `InputPort_Structure`
-    * `Afferent Projections <InputPort_Afferent_Projections>`
-    * `Variable <InputPort_Variable>`
-    * `Function <InputPort_Function>`
-    * `Value <InputPort_Value>`
-    * `Weights ane Exponents <InputPort_Weights_And_Exponents>`
+    - `Afferent Projections <InputPort_Afferent_Projections>`
+    - `Variable <InputPort_Variable>`
+    - `Function <InputPort_Function>`
+    - `Value <InputPort_Value>`
+    - `Weights ane Exponents <InputPort_Weights_And_Exponents>`
 * `InputPort_Execution`
 * `InputPort_Class_Reference`
 

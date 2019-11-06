@@ -17,16 +17,17 @@ Contents
   * `Mechanism_Overview`
   * `Mechanism_Creation`
   * `Mechanism_Structure`
-      * `Mechanism_Function`
-      * `Mechanism_Ports`
-          * `Mechanism_InputPorts`
-          * `Mechanism_ParameterPorts`
-          * `Mechanism_OutputPorts`
-      * `Mechanism_Additional_Attributes`
-      * `Mechanism_Role_In_Processes_And_Systems`
+      - `Mechanism_Function`
+      - `Mechanism_Ports`
+          • `Mechanism_InputPorts`
+          • `Mechanism_ParameterPorts`
+          • `Mechanism_OutputPorts`
+      - `Mechanism_Additional_Attributes`
+      - `Mechanism_Role_In_Processes_And_Systems`
   * `Mechanism_Execution`
-      * `Mechanism_Runtime_Parameters`
+      - `Mechanism_Runtime_Parameters`
   * `Mechanism_Class_Reference`
+
 
 .. _Mechanism_Overview:
 

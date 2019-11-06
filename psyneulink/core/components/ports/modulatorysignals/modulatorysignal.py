@@ -9,8 +9,8 @@
 # ********************************************  ModulatorySignal *******************************************************
 
 """
-..
-Sections
+
+Contents
 --------
   * `ModulatorySignal_Overview`
     - `Naming Conventions for ModulatorySignals <ModulatorySignal_Naming>`

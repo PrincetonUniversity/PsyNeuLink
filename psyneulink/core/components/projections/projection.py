@@ -12,13 +12,13 @@
 ..
 Contents
 --------
-* `Projection_Overview`
-* `Projection_Creation`
-* `Projection_Structure`
-    * `Projection_Sender`
-    * `Projection_Receiver`
-* `Projection_Execution`
-* `Projection_Class_Reference`
+  * `Projection_Overview`
+  * `Projection_Creation`
+  * `Projection_Structure`
+      - `Projection_Sender`
+      - `Projection_Receiver`
+  * `Projection_Execution`
+  * `Projection_Class_Reference`
 
 .. _Projection_Overview:
 

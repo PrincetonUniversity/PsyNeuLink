@@ -9,7 +9,7 @@
 # **************************************  GatingMechanism ************************************************
 
 """
-Sections
+Contents
 --------
 
   * `GatingMechanism_Overview`
@@ -19,6 +19,7 @@ Sections
       - `GatingMechanism_Function`
   * `GatingMechanism_Execution`
   * `GatingMechanism_Class_Reference`
+
 
 .. _GatingMechanism_Overview:
 

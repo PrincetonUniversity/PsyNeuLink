@@ -12,14 +12,14 @@ Contents
 
 * `OutputPort_Overview`
 * `OutputPort_Creation`
-    * `OutputPort_Deferred_Initialization`
-    * `OutputPort_Primary`
-    * `OutputPort_Specification`
-        * `OutputPort_Forms_of_Specification`
-        * `Variable and Value <OutputPort_Variable_and_Value>`
-        * `Compatibility and Constraints <OutputPort_Compatibility_and_Constraints>`
-        * `OutputPort_Standard`
-        * `OutputPort_Customization`
+    - `OutputPort_Deferred_Initialization`
+    - `OutputPort_Primary`
+    - `OutputPort_Specification`
+        • `OutputPort_Forms_of_Specification`
+        • `Variable and Value <OutputPort_Variable_and_Value>`
+        • `Compatibility and Constraints <OutputPort_Compatibility_and_Constraints>`
+        • `OutputPort_Standard`
+        • `OutputPort_Customization`
             * `Custom Variable <OutputPort_Custom_Variable>`
             * `Custom Function <OutputPort_Custom_Function>`
 * `OutputPort_Structure`
