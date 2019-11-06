@@ -404,7 +404,7 @@ class ParameterPort(Port_Base):
         owner,                                               \
         reference_value=None                                 \
         function=LinearCombination(operation=PRODUCT),       \
-        parameter_modulation_operation=Modulation.MULTIPLY)
+
 
     Subclass of `Port <Port>` that represents and possibly modifies the parameter of a `Mechanism <Mechanism>`,
     `Projection <Projection>`, or its `Function` (see `Port_Class_Reference` for additional arguments and attributes).
