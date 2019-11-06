@@ -41,7 +41,7 @@ that represent its mean, variance or other derived values.  In contrast, the `fu
 of a `DDM` Mechanism generates several results (such as decision accuracy and response time), each of which can be
 assigned as the `value <OutputPort.value>` of a different OutputPort.  The OutputPort(s) of a Mechanism can serve
 as the input to other  Mechanisms (by way of `projections <Projections>`), or as the output of a Process and/or
-System.  The OutputPort's `efferents <OutputPort.efferents>` attribute lists all of its outgoing
+System.  The OutputPort's `efferents <Port.efferents>` attribute lists all of its outgoing
 projections.
 
 .. _OutputPort_Creation:
@@ -66,7 +66,7 @@ If its **owner* is not specified, `initialization is deferred.
 
 An OutputPort must be owned by a `Mechanism <Mechanism>`.  When OutputPort is specified in the constructor for a
 `Mechanism <Mechanism>` (see `below <InputPort_Specification>`), it is automatically assigned to that Mechanism as
-its owner. If the OutputPort is created directly, its `owner <OutputPort.owner>` Mechanism can specified in the
+its owner. If the OutputPort is created directly, its `owner <Port.owner>` Mechanism can specified in the
 **owner** argument of its constructor, in which case it is assigned to the specified Mechanism.  Otherwise, its
 initialization is `deferred <Port_Deferred_Initialization>` until
 COMMENT:
@@ -132,7 +132,7 @@ to the list (that is, it does *not* replace the one that was already there).
 Each OutputPort created with or assigned to a Mechanism must reference one or more items of the Mechanism's attributes,
 that serve as the OutputPort's `variable <OutputPort.variable>`, and are used by its `function <OutputPort.function>`
 to generate the OutputPort's `value <OutputPort.value>`.  By default, it uses the first item of its `owner
-<OutputPort.owner>` Mechanism's `value <Mechanism_Base.value>`.  However, other attributes (or combinations of them)
+<Port.owner>` Mechanism's `value <Mechanism_Base.value>`.  However, other attributes (or combinations of them)
 can be specified in the **variable** argument of the OutputPort's constructor, or the *VARIABLE* entry in an
 `OutputPort specification dictionary <OutputPort_Specification_Dictionary>` (see `OutputPort_Customization`).
 The specification must be compatible (in the number and type of items it generates) with the input expected by the
@@ -169,12 +169,12 @@ which it should project. Each of these is described below:
     **Direct Specification of an OutputPort**
 
     * existing **OutputPort object** or the name of one -- it cannot belong to another Mechanism, and the format of
-      its `variable <OutputPort.variable>` must be compatible with the aributes of the `owner <OutputPort.owner>`
+      its `variable <OutputPort.variable>` must be compatible with the aributes of the `owner <Port.owner>`
       Mechanism specified for the OutputPort's `variable <OutputPort.variable>` (see `OutputPort_Customization`).
     ..
     * **OutputPort class**, **keyword** *OUTPUT_PORT*, or a **string** -- creates a default OutputPort that uses
-      the first item of the `owner <OutputPort.owner>` Mechanism's `value <Mechanism_Base.value>` as its `variable
-      <OutputPort.variable>`, and assigns it as the `owner <OutputPort.owner>` Mechanism's `primary OutputPort
+      the first item of the `owner <Port.owner>` Mechanism's `value <Mechanism_Base.value>` as its `variable
+      <OutputPort.variable>`, and assigns it as the `owner <Port.owner>` Mechanism's `primary OutputPort
       <OutputPort_Primary>`. If the class name or *OUTPUT_PORT* keyword is used, a default name is assigned to the
       Port; if a string is specified, it is used as the `name <OutputPort.name>` of the OutputPort  (see `Naming`).
 
@@ -193,7 +193,7 @@ which it should project. Each of these is described below:
       using any of the entries that can be included in a `Port specification dictionary <Port_Specification>`
       (see `examples <Port_Specification_Dictionary_Examples>` in Port), including:
 
-      * *VARIABLE*:<keyword or list> - specifies the attribute(s) of its `owner <OutputPort.owner>` Mechanism to use
+      * *VARIABLE*:<keyword or list> - specifies the attribute(s) of its `owner <Port.owner>` Mechanism to use
         as the input to the OutputPort's `function <OutputPort.function>` (see `OutputPort_Customization`); this
         must be compatible (in the number and format of the items it specifies) with the OutputPort's `function
         <OutputPort.function>`.
@@ -214,7 +214,7 @@ which it should project. Each of these is described below:
            replaced by use of the *VARIABLE* and *FUNCTION* entries, respectively.  Although use of *INDEX* and *ASSIGN*
            is currently being supported for backward compatibility, this may be eliminated in a future version.
 
-      * *INDEX*:<int> *[DEPRECATED in version 0.4.5]* - specifies the item of the `owner <OutputPort.owner>`
+      * *INDEX*:<int> *[DEPRECATED in version 0.4.5]* - specifies the item of the `owner <Port.owner>`
         Mechanism's `value <Mechanism_Base.value>` to be used for the OutputPort's `variable <OutputPort.variable>`;
         equivalent to specifying (OWNER_VALUE, <int>) for *VARIABLE* (see `OutputPort_Customization`), which should be
         used for compatibility with future versions.
@@ -248,7 +248,7 @@ which it should project. Each of these is described below:
     When an OutputPort is created, it can be assigned one or more `Projections <Projection>`, using either the
     **projections** argument of its constructor, or in an entry of a dictionary assigned to the **params** argument with
     the key *PROJECTIONS*.  An OutputPort can be assigned either `MappingProjection(s) <MappingProjection>` or
-    `GatingProjection(s) <GatingProjection>`.  MappingProjections are assigned to its `efferents <OutputPort.efferents>`
+    `GatingProjection(s) <GatingProjection>`.  MappingProjections are assigned to its `efferents <Port.efferents>`
     attribute and GatingProjections to its `mod_afferents <OutputPort.mod_afferents>` attribute.  See
     `Port Projections <Port_Projections>` for additional details concerning the specification of Projections when
     creating a Port.
@@ -258,11 +258,11 @@ which it should project. Each of these is described below:
     An OutputPort can also be specified by specifying one or more Components to or from which it should be assigned
     Projection(s). Specifying an OutputPort in this way creates both the OutputPort and any of the specified or
     implied Projection(s) (if they don't already exist). `MappingProjections <MappingProjection>`
-    are assigned to the OutputPort's `efferents <OutputPort.efferents>` attribute, and `GatingProjections
-    <GatingProjection>` to its `mod_afferents <InputPort.mod_afferents>` attribute. Any of the following can be used
-    to specify an InputPort by the Components that projection to it (see `below
-    <OutputPort_Compatibility_and_Constraints>` for an explanation of the relationship between the `variable` of these
-    Components and the OutputPort's `value <OutputPort.value>`):
+    are assigned to the OutputPort's `efferents <Port.efferents>` attribute, while `ControlProjections
+    <ControlProjection>` and `GatingProjections <GatingProjection>` are assigned to its `mod_afferents
+    <Port.mod_afferents>` attribute. Any of the following can be used to specify an InputPort by the Components that
+    projection to it (see `below <OutputPort_Compatibility_and_Constraints>` for an explanation of the relationship
+    between the `variable` of these Components and the OutputPort's `value <OutputPort.value>`):
 
     * **InputPort, GatingSignal, Mechanism, or list with any of these** -- creates an OutputPort with
       the relevant Projection(s).  A `MappingProjection` is created to each InputPort or ProcessingMechanism specified
@@ -300,7 +300,7 @@ which it should project. Each of these is described below:
               consistent with (that is, their `value <Port_Base.value>` must be compatible with the `variable
               <Projection_Base.variable>` of) the Projection specified in the fourth item if that is included.
 
-            * **variable spec** -- specifies the attributes of the OutputPort's `owner <OutputPort.owner>` Mechanism
+            * **variable spec** -- specifies the attributes of the OutputPort's `owner <Port.owner>` Mechanism
               used for its `variable <OutputPort.variable>` (see `OutputPort_Customization`).
 
             * **Projection specification** (optional) -- `specifies a Projection <Projection_Specification>` that
@@ -345,7 +345,7 @@ below, starting with constraints that are given the highest precedence:
   ..
   * **OutputPort's** `value <OutputPort.value>` **not constrained by any of the conditions above** -- then its
     `variable <OutputPort.variable>` is determined by the default for an OutputPort (the format of the first
-    item of its `owner <OutputPort.owner>` Mechanism's `value <Mechanism_Base.value>` ). If the OutputPort is
+    item of its `owner <Port.owner>` Mechanism's `value <Mechanism_Base.value>` ). If the OutputPort is
     `specified to project to any other Components <OutputPort_Projection_Destination_Specification>`, then if the
     Component is a:
 
@@ -414,21 +414,21 @@ dictionary <OutputPort_Specification_Dictionary>`, or in the variable spec (2nd)
 
 By default, an OutputPort uses the first (and often only) item of the owner Mechanism's `value
 <Mechanism_Base.value>` as its `variable <OutputPort.variable>`.  However, this can be customized by specifying
-any other item of its `owner <OutputPort.owner>`\\s `value <Mechanism_Base.value>`, the full `value
-<Mechanism_Base.value>` itself, other attributes of the `owner <OutputPort.owner>`, or any combination of these
+any other item of its `owner <Port.owner>`\\s `value <Mechanism_Base.value>`, the full `value
+<Mechanism_Base.value>` itself, other attributes of the `owner <Port.owner>`, or any combination of these
 using the following:
 
     *OWNER_VALUE* -- keyword specifying the entire `value <Mechanism_Base.value>` of the OutputPort's `owner
-    <OutputPort.owner>`.
+    <Port.owner>`.
 
-    *(OWNER_VALUE, <int>)* -- tuple specifying an item of the `owner <OutputPort.owner>`\\'s `value
+    *(OWNER_VALUE, <int>)* -- tuple specifying an item of the `owner <Port.owner>`\\'s `value
     <Mechanism_Base.value>` indexed by the int;  indexing begins with 0 (e.g.; 1 references the 2nd item).
 
-    *<attribute name>* -- the name of an attribute of the OutputPort's `owner <OutputPort.owner>` (must be one
-    in the `owner <OutputPort.owner>`\\'s `params_dict <Mechanism.attributes_dict>` dictionary); returns the value
+    *<attribute name>* -- the name of an attribute of the OutputPort's `owner <Port.owner>` (must be one
+    in the `owner <Port.owner>`\\'s `params_dict <Mechanism.attributes_dict>` dictionary); returns the value
     of the named attribute for use in the OutputPort's `variable <OutputPort.variable>`.
 
-    *PARAMS_DICT* -- keyword specifying the `owner <OutputPort.owner>` Mechanism's entire `params_dict
+    *PARAMS_DICT* -- keyword specifying the `owner <Port.owner>` Mechanism's entire `params_dict
     <Mechanism.attributes_dict>` dictionary, that contains entries for all of it accessible attributes.  The
     OutputPort's `function <OutputPort.function>` must be able to parse the dictionary.
     COMMENT
@@ -552,11 +552,11 @@ COMMENT:
   `function <OutputPort.function>`.
 COMMENT
 ..
-* `variable <OutputPort.variable>` -- references attributes of the OutputPort's `owner <OutputPort.owner>` that
+* `variable <OutputPort.variable>` -- references attributes of the OutputPort's `owner <Port.owner>` that
   are used as the input to the OutputPort's `function <OutputPort.function>`, to determine its `value
   <OutputPort.value>`.  The specification must match (in both the number and types of elements it generates)
   the input to the OutputPort's `function <OutputPort.function>`.  By default, the first item of the `owner
-  <OutputPort.owner>` Mechanisms' `value <Mechanism_Base.value>` is used.  However, this can be customized as
+  <Port.owner>` Mechanisms' `value <Mechanism_Base.value>` is used.  However, this can be customized as
   described under `OutputPort_Customization`.
 
 * `function <OutputPort.function>` -- takes the OutputPort's `variable <OutputPort.variable>` as its input, and
@@ -567,19 +567,19 @@ COMMENT
   `mod_afferents <OutputPort.mod_afferents>` attribute.  A custom function can also be specified, so long as it can
   take as its input a value that is compatible with the OutputPort's `variable <OutputPort.variable>`.
 
-* `projections <OutputPort.projections>` -- all of the `Projections <Projection>` sent and received by the OutputPort;
+* `projections <Port.projections>` -- all of the `Projections <Projection>` sent and received by the OutputPort;
 
 .. _OutputPort_Efferent_Projections:
 
-* `efferents <OutputPort.path_afferents>` -- `MappingProjections <MappingProjection>` that project from the
-  OutputPort.
+* `efferents <Port.efferents>` -- `MappingProjections <MappingProjection>` that project from the OutputPort.
 
 .. _OutputPort_Modulatory_Projections:
 
-* `mod_afferents <OutputPort.mod_afferents>` -- `GatingProjections <GatingProjection>` that project to the OutputPort,
-  the `value <GatingProjection.value>` of which can modify the OutputPort's `value <InputPort.value>` (see the
-  descriptions of Modulation under `ModulatorySignals <ModulatorySignal_Modulation>` and `GatingSignals
-  <GatingSignal_Modulation>` for additional details).  If the OutputPort receives more than one GatingProjection,
+* `mod_afferents <Port.mod_afferents>` -- `ControlProjections <ControlProjection>` or `GatingProjections
+  <GatingProjection>` that project to the OutputPort, the `value <ModulatoryProjection.value>` of which can modify the
+  OutputPort's `value <InputPort.value>` (see the descriptions of Modulation under `ModulatorySignals
+  <ModulatorySignal_Modulation>`, `ControlSignals <ControlSignal_Modulation>`, and `GatingSignals
+  <GatingSignal_Modulation>` for additional details).  If the  OutputPort receives more than one ModulatoryProjection,
   their values are combined before they are used to modify the `value <OutputPort.value>` of the OutputPort.
 ..
 * `value <OutputPort.value>`:  assigned the result of the OutputPort's `function <OutputPort.function>`, possibly
@@ -752,11 +752,8 @@ class OutputPortError(Exception):
 class OutputPort(Port_Base):
     """
     OutputPort(            \
-        owner,             \
         reference_value,   \
         function=Linear(), \
-        index=PRIMARY,     \
-        assign=None,       \
         projections=None)
 
     Subclass of `Port <Port>` that calculates and represents an output of a `Mechanism <Mechanism>`
@@ -782,7 +779,7 @@ class OutputPort(Port_Base):
         with its `function <OutputPort.function>`.
 
     variable : number, list or np.ndarray
-        specifies the attributes of the  OutputPort's `owner <OutputPort.owner>` Mechanism to be used by the
+        specifies the attributes of the  OutputPort's `owner <Port.owner>` Mechanism to be used by the
         OutputPort's `function <OutputPort.function>`  in generating its `value <OutputPort.value>`.
 
     function : Function, function, or method : default Linear
@@ -808,21 +805,15 @@ class OutputPort(Port_Base):
     projections : list of Projection specifications
         specifies the `MappingProjection(s) <MappingProjection>` to be sent by the OutputPort, and/or
         `ControlProjections <ControlProjection>` and/or `GatingProjections(s) <GatingProjection>` to be received (see
-        `OutputPort_Projections` for additional details); these will be listed in its `efferents <OutputPort.efferents>`
-        and `mod_afferents <InputPort.mod_afferents>` attributes, respectively (see `OutputPort_Projections` for
-        additional details).
+        `OutputPort_Projections` for additional details); these are listed in its `efferents <Port.efferents>` and
+        `mod_afferents <Port.mod_afferents>` attributes, respectively (see `OutputPort_Projections` for additional
+        details).
 
     Attributes
     ----------
 
-    owner : Mechanism
-        the Mechanism to which the OutputPort belongs.
-
-    mod_afferents : List[GatingProjection]
-        `GatingProjections <GatingProjection>` received by the OutputPort.
-
     variable : value, list or np.ndarray
-        the value(s) of the item(s) of the `owner <OutputPort.owner>` Mechanism's attributes specified in the
+        the value(s) of the item(s) of the `owner <Port.owner>` Mechanism's attributes specified in the
         **variable** argument of the constructor, or a *VARIABLE* entry in the `OutputPort specification dictionary
         <OutputPort_Specification_Dictionary>` used to construct the OutputPort.
 
@@ -854,12 +845,6 @@ class OutputPort(Port_Base):
         owner mechanism's `output_labels_dict <Mechanism.output_labels_dict>`. If the current
         `value <OutputPort.value>` of the OutputPort does not have a corresponding label, then the numeric
         `value <OutputPort.value>` is returned.
-
-    efferents : List[MappingProjection]
-        `Projections <Projection>` for which the OutputPort is a `sender <Projection_Base.sender>`).
-
-    projections : List[Projection]
-        all of the `Projections <Projection>` received and sent by the OutputPort.
 
     name : str
         the name of the OutputPort; if it is not specified in the **name** argument of the constructor, a default is

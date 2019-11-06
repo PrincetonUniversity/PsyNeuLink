@@ -547,10 +547,10 @@ any specifications in the Mechanism's `input_ports <Mechanism_Base.input_ports>`
 associated with an instantiated OutputPort at the time the Mechanism is executed are ignored.
 
 The `PathwayProjections <PathwayProjection>` (e.g., `MappingProjections <MappingProjection>`) it receives are listed
-in its `path_afferents <InputPort.path_afferents>` attribute.  If the Mechanism is an `ORIGIN` Mechanism of a
-`Process`, this includes a Projection from the `ProcessInputPort <Process_Input_And_Output>` for that Process.  Any
-`GatingProjections <GatingProjection>` it receives are listed in its `mod_afferents <InputPort.mod_afferents>`
-attribute.
+in its `path_afferents <Port.path_afferents>` attribute.  If the Mechanism is an `ORIGIN` Mechanism of a
+`Composition`, this includes a Projection from the Composition's `input_CIM <Composition.input_CIM>`.  Any
+`ControlProjections <ControlProjection>` or `GatingProjections <GatingProjection>` it receives are listed in its
+`mod_afferents <Port.mod_afferents>` attribute.
 
 
 .. _Mechanism_ParameterPorts:
@@ -1287,7 +1287,7 @@ class Mechanism_Base(Mechanism):
         `path_afferents <InputPorts.path_afferents>` of all of its `input_ports <Mechanism_Base.input_ports>`,
         the `mod_afferents` of all of its `input_ports <Mechanism_Base.input_ports>`,
         `parameter_ports <Mechanism)Base.parameter_ports>`, and `output_ports <Mechanism_Base.output_ports>`,
-        and the `efferents <OutputPort.efferents>` of all of its `output_ports <Mechanism_Base.output_ports>`.
+        and the `efferents <Port.efferents>` of all of its `output_ports <Mechanism_Base.output_ports>`.
 
     afferents : ContentAddressableList
         a list of all of the Mechanism's afferent `Projections <Projection>`, composed from the
@@ -1307,7 +1307,7 @@ class Mechanism_Base(Mechanism):
 
     efferents : ContentAddressableList
         a list of all of the Mechanism's efferent `Projections <Projection>`, composed from the `efferents
-        <OutputPort.efferents>` attributes of all of its `output_ports <Mechanism_Base.output_ports>`.
+        <Port.efferents>` attributes of all of its `output_ports <Mechanism_Base.output_ports>`.
 
     senders : ContentAddressableList
         a list of all of the Mechanisms that send `Projections <Projection>` to the Mechanism (i.e., the senders of
@@ -2619,7 +2619,7 @@ class Mechanism_Base(Mechanism):
     def _update_input_ports(self, context=None, runtime_params=None):
         """Update value for each InputPort in self.input_ports:
 
-        Call execute method for all (MappingProjection) Projections in InputPort.path_afferents
+        Call execute method for all (MappingProjection) Projections in Port.path_afferents
         Aggregate results (using InputPort execute method)
         Update InputPort.value
         """

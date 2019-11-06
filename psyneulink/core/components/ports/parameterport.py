@@ -61,13 +61,13 @@ Creating a ParameterPort
 -------------------------
 
 ParameterPorts are created automatically when the `Mechanism <Mechanism>` or `Projection <Projection>` to which they
-belong is created.  The `owner <ParameterPort.owner>` of a ParameterPort must be a `Mechanism` or `MappingProjection`.
-One ParameterPort is created for each configurable parameter of its owner, as well as for each configurable parameter
-of the owner's `function <Component.function>` (the `configurable parameters <ParameterPort_Configurable_Parameters>`
-of a Component are listed in its `user_params <Component.user_params>` and function_params <Component.function_params>`
-dictionaries. Each ParameterPort is created using the value specified for the corresponding parameter, as described
-below.  The ParameterPorts for the parameters of a Mechanism or Projection are listed in its
-:keyword:`parameter_ports` attribute.
+belong is created.  The `owner <Port.owner>` of a ParameterPort must be a `Mechanism` or `MappingProjection` (the
+initialization of a ParameterPort cannot be `deferred <Port_Deferred_Initialization>`). One ParameterPort is created
+for each configurable parameter of its owner, as well as for each configurable parameter of the owner's `function
+<Component.function>` (the `configurable parameters <ParameterPort_Configurable_Parameters>` of a Component are
+listed in its `user_params <Component.user_params>` and function_params <Component.function_params>` dictionaries.
+Each ParameterPort is created using the value specified for the corresponding parameter, as described below.  The
+ParameterPorts for the parameters of a Mechanism or Projection are listed in its `parameter_ports` attribute.
 
 COMMENT:
     FOR DEVELOPERS: The instantiation of ParameterPorts for all of the `user_params` of a Component can be
@@ -422,7 +422,8 @@ class ParameterPort(Port_Base):
 
     owner : Mechanism or MappingProjection
         the `Mechanism <Mechanism>` or `MappingProjection` to which to which the ParameterPort belongs; it must be
-        specified or determinable from the context in which the ParameterPort is created. The owner of a ParameterPort
+        specified or determinable from the context in which the ParameterPort is created (the initialization of a
+        ParameterPort cannot be `deferred <Port_Deferred_Initialization>`. The owner of a ParameterPort
         for the parameter of a `function <Component.function>` should be specified as the Mechanism or Projection to
         which the function belongs.
 
@@ -443,11 +444,10 @@ class ParameterPort(Port_Base):
 
     mod_afferents : Optional[List[Projection]]
         a list of the `ModulatoryProjection <ModulatoryProjection>` that project to the ParameterPort (i.e.,
-        for which it is a `receiver <Projection_Base.receiver>`); these can be
-        `ControlProjection(s) <ControlProjection>` and/or `LearningProjection(s) <LearningProjection>`,
-        but not `GatingProjection <GatingProjection>`.  The `value <ModulatoryProjection_Base.value>` of each
-        must match the format (number and types of elements) of the ParameterPort's
-        `variable <ParameterPort.variable>`.
+        for which it is a `receiver <Projection_Base.receiver>`); these can be `ControlProjection(s)
+        <ControlProjection>` and/or `LearningProjection(s) <LearningProjection>`, but not `GatingProjection
+        <GatingProjection>`.  The `value <ModulatoryProjection_Base.value>` of each must match the format
+        (number and types of elements) of the ParameterPort's `variable <ParameterPort.variable>`.
 
     variable : number, list or np.ndarray
         the parameter's attribute value — that is, the value of the attribute of the

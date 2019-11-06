@@ -40,8 +40,8 @@ provided by the `Projections <Projection>` to that Mechanism from others in a `P
 InputPort belongs to an `ORIGIN` Mechanism (see `role of Mechanisms in Processes and Systems
 <Mechanism_Role_In_Processes_And_Systems>`), then it receives the input specified when that Process or System is
 `run <Run>`.  The `PathwayProjections <PathWayProjection>` received by an InputPort are listed in its `path_afferents
-<InputPort.path_afferents>`, and its `ModulatoryProjections <ModulatoryProjection>` in its `mod_afferents
-<InputPort.mod_afferents>` attribute.  Its `function <InputPort.function>` combines the values received from its
+<Port.path_afferents>`, and its `ModulatoryProjections <ModulatoryProjection>` in its `mod_afferents
+<Port.mod_afferents>` attribute.  Its `function <InputPort.function>` combines the values received from its
 PathWayProjections, modifies the combined value according to value(s) any ModulatoryProjections it receives, and
 provides the result to the assigned item of its owner Mechanism's `variable <Mechanism_Base.variable>` and
 `input_values <Mechanism_Base.input_values>` attributes (see `below` and `Mechanism InputPorts <Mechanism_InputPorts>`
@@ -81,7 +81,7 @@ If the **owner** argument is not specified, `initialization <Port_Deferred_Initi
 
 An InputPort must be owned by a `Mechanism <Mechanism>`.  When InputPort is specified in the constructor for a
 Mechanism (see `below <InputPort_Specification>`), it is automatically assigned to that Mechanism as its owner. If
-the InputPort is created on its own, its `owner <InputPort.owner>` can specified in the **owner**  argument of its
+the InputPort is created on its own, its `owner <Port.owner>` can specified in the **owner**  argument of its
 constructor, in which case it is assigned to that Mechanism. If its **owner** argument is not specified, its
 initialization is `deferred <Port_Deferred_Initialization>` until
 COMMENT:
@@ -255,11 +255,11 @@ should project to the InputPort. Each of these is described below:
     An InputPort can also be specified by specifying one or more Ports, Mechanisms or Projections that should project
     to it, as described below.  Specifying an InputPort in this way creates both the InputPort and any of the
     specified or implied Projection(s) to it (if they don't already exist). `MappingProjections <MappingProjection>`
-    are assigned to the InputPort's `path_afferents <InputPort.path_afferents>` attribute, and `GatingProjections
-    <GatingProjection>` to its `mod_afferents <InputPort.mod_afferents>` attribute. Any of the following can be used
-    to specify an InputPort by the Components that projection to it (see `below
-    <InputPort_Compatability_and_Constraints>` for an explanation of the relationship between the `value` of these
-    Components and the InputPort's `variable <InputPort.variable>`):
+    are assigned to the InputPort's `path_afferents <Port.path_afferents>` attribute, while `ControlProjections
+    <ControlProjection>` and `GatingProjections <GatingProjection>` to its `mod_afferents <Port.mod_afferents>`
+    attribute. Any of the following can be used to specify an InputPort by the Components that projection to it (see
+    `below <InputPort_Compatability_and_Constraints>` for an explanation of the relationship between the `value` of
+    these Components and the InputPort's `variable <InputPort.variable>`):
 
     * **OutputPort, GatingSignal, Mechanism, or list with any of these** -- creates an InputPort with Projection(s)
       to it from the specified Port(s) or Mechanism(s).  For each Mechanism specified, its `primary OutputPort
@@ -422,11 +422,11 @@ Every InputPort is owned by a `Mechanism <Mechanism>`. It can receive one or mor
 is the `ORIGIN` Mechanism for that Process or System).  It has the following attributes, that includes ones specific
 to, and that can be used to customize the InputPort:
 
-* `projections <OutputPort.projections>` -- all of the `Projections <Projection>` received by the InputPort.
+* `projections <Port.projections>` -- all of the `Projections <Projection>` received by the InputPort.
 
 .. _InputPort_Afferent_Projections:
 
-* `path_afferents <InputPort.path_afferents>` -- `MappingProjections <MappingProjection>` that project to the
+* `path_afferents <Port.path_afferents>` -- `MappingProjections <MappingProjection>` that project to the
   InputPort, the `value <MappingProjection.value>`\\s of which are combined by the InputPort's `function
   <InputPort.function>`, possibly modified by its `mod_afferents <InputPort_mod_afferents>`, and assigned to the
   corresponding item of the owner Mechanism's `variable <Mechanism_Base.variable>`.
@@ -453,7 +453,7 @@ to, and that can be used to customize the InputPort:
   <InputPort.value>` attribute.  The default function is `LinearCombination` that performs an elementwise (Hadamard)
   sums the values. However, the parameters of the `function <InputPort.function>` -- and thus the `value
   <InputPort.value>` of the InputPort -- can be modified by any `GatingProjections <GatingProjection>` received by
-  the InputPort (listed in its `mod_afferents <InputPort.mod_afferents>` attribute.  A custom function can also be
+  the InputPort (listed in its `mod_afferents <Port.mod_afferents>` attribute.  A custom function can also be
   specified, so long as it generates a result that is compatible with the item of the Mechanism's `variable
   <Mechanism_Base.variable>` to which the `InputPort is assigned <Mechanism_InputPorts>`.
 
@@ -481,8 +481,8 @@ Execution
 An InputPort cannot be executed directly.  It is executed when the Mechanism to which it belongs is executed.
 When this occurs, the InputPort executes any `Projections <Projection>` it receives, calls its `function
 <InputPort.function>` to combines the values received from any `MappingProjections <MappingProjection>` it receives
-(listed in its its `path_afferents  <InputPort.path_afferents>` attribute) and modulate them in response to any
-`GatingProjections <GatingProjection>` (listed in its `mod_afferents <InputPort.mod_afferents>` attribute),
+(listed in its its `path_afferents  <Port.path_afferents>` attribute) and modulate them in response to any
+`GatingProjections <GatingProjection>` (listed in its `mod_afferents <Port.mod_afferents>` attribute),
 and then assigns the result to the InputPort's `value <InputPort.value>` attribute. This, in turn, is assigned to
 the item of the Mechanism's `variable <Mechanism_Base.variable>` and `input_values <Mechanism_Base.input_values>`
 attributes  corresponding to that InputPort (see `Mechanism Variable and InputPorts
@@ -550,7 +550,6 @@ class InputPortError(Exception):
 class InputPort(Port_Base):
     """
     InputPort(                                     \
-        owner=None,                                \
         variable=None,                             \
         reference_value=None,                      \
         function=LinearCombination(operation=SUM), \
@@ -594,7 +593,7 @@ class InputPort(Port_Base):
 
     combine : SUM or PRODUCT : default None
         specifies the **operation** argument used by the default `LinearCombination` function, which determines how the
-        `value <Projection.value>` of the InputPort's `projections <InputPort.projections>` are combined.  This is a
+        `value <Projection.value>` of the InputPort's `projections <Port.projections>` are combined.  This is a
         convenience argument, that allows the **operation** to be specified without having to specify the
         LinearCombination function; it assumes that LinearCombination (the default) is used as the InputPort's function
         -- if it conflicts with a specification of **function** an error is generated.
@@ -602,7 +601,7 @@ class InputPort(Port_Base):
     projections : list of Projection specifications
         specifies the `MappingProjection(s) <MappingProjection>`, `ControlProjection(s) <ControlProjection>` and/or
         `GatingProjection(s) <GatingProjection>` to be received by the InputPort, and that are listed in its
-        `path_afferents <InputPort.path_afferents>` and `mod_afferents <InputPort.mod_afferents>` attributes,
+        `path_afferents <Port.path_afferents>` and `mod_afferents <Port.mod_afferents>` attributes,
         respectively (see `InputPort_Compatability_and_Constraints` for additional details).  If **projections** but
         neither **variable** nor **size** are specified, then the `value <Projection.value>` of the Projection(s) or
         their `senders <Projection_Base.sender>` specified in **projections** argument are used to determine the
@@ -615,23 +614,12 @@ class InputPort(Port_Base):
         specifies the value of the `exponent <InputPort.exponent>` attribute of the InputPort.
 
     internal_only : bool : False
-        specifies whether external input is required by the InputPort's `owner <InputPort.owner>` if its `role
+        specifies whether external input is required by the InputPort's `owner <Port.owner>` if its `role
         <Mechanism_Role_In_Processes_And_Systems>` is *EXTERNAL_INPUT*  (see `internal_only <InputPort.internal_only>`
         for details).
 
     Attributes
     ----------
-
-    path_afferents : List[MappingProjection]
-        `MappingProjections <MappingProjection>` that project to the InputPort
-        (i.e., for which it is a `receiver <Projection_Base.receiver>`).
-
-    mod_afferents : List[GatingProjection]
-        `ControlProjections <ControlProjection>` and/or `GatingProjections <GatingProjection>` that project to the
-        InputPort.
-
-    projections : List[Projection]
-        all of the `Projections <Projection>` received by the InputPort.
 
     variable : value, list or np.ndarray
         the template for the `value <Projection_Base.value>` of each Projection that the InputPort receives,
@@ -643,9 +631,9 @@ class InputPort(Port_Base):
     function : Function
         If it is a `CombinationFunction`, it combines the `values <Projection_Base.value>` of the `PathwayProjections
         <PathwayProjection>` (e.g., `MappingProjections <MappingProjection>`) received by the InputPort  (listed in
-        its `path_afferents <InputPort.path_afferents>` attribute), under the possible influence of
+        its `path_afferents <Port.path_afferents>` attribute), under the possible influence of
         `GatingProjections <GatingProjection>` received by the InputPort (listed in its `mod_afferents
-        <InputPort.mod_afferents>` attribute). The result is assigned to the InputPort's `value
+        <Port.mod_afferents>` attribute). The result is assigned to the InputPort's `value
         <InputPort.value>` attribute. For example, the default (`LinearCombination` with *SUM* as it **operation**)
         performs an element-wise (Hadamard) sum of its Projection `values <Projection_Base.value>`, and assigns to
         `value <InputPort.value>` an array that is of the same length as each of the Projection `values
@@ -653,7 +641,7 @@ class InputPort(Port_Base):
         applied and it will generate a value that is the same length as the Projection's `value <Projection.value>`.
         However, if the InputPort receives more than one Projection and uses a function other than a
         CombinationFunction, a warning is generated and only the `value <Projection.value>` of the first Projection
-        list in `path_afferents <InputPort.path_afferents>` is used by the function, which may generate unexpected
+        list in `path_afferents <Port.path_afferents>` is used by the function, which may generate unexpected
         results when executing the Mechanism or Composition to which it belongs.
 
     value : value or ndarray
@@ -673,7 +661,7 @@ class InputPort(Port_Base):
 
     internal_only : bool
         determines whether input is required for this InputPort from `Run` or another `Composition` when the
-        InputPort's `owner <InputPort.owner>` is executed, and its `role <Mechanism_Role_In_Processes_And_Systems>`
+        InputPort's `owner <Port.owner>` is executed, and its `role <Mechanism_Role_In_Processes_And_Systems>`
         is designated as *EXTERNAL_INPUT*;  if `True`, external input is *not* required or allowed;  otherwise,
         external input is required.
 

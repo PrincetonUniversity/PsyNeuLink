@@ -9,6 +9,25 @@
 # ******************************************  ControlSignal *****************************************************
 
 """
+
+Contents:
+---------
+
+  * `Control_signal_Overview`
+  * `ControlSignal_Creation`
+      - `ControlSignal_Specification`
+  * `ControlSignal_Structure`
+      - `ControlSignal_Projections`
+      - `ControlSignal_Modulation`
+      - `ControlSignal_Allocation_and_Intensity`
+      - `ControlSignal_Costs`
+  * `ControlSignal_Execution`
+  * `ControlSignal_Examples`
+  * `ControlSignal_Class_Reference`
+
+
+.. _Control_Signal_Overview:
+
 Overview
 --------
 
@@ -293,6 +312,7 @@ the `gain <Logistic.gain>` parameter of the `Logistic` function for ``my_mech_A`
 
 COMMENT
 
+.. _ControlSignal_Class_Reference:
 
 Class Reference
 ---------------
@@ -424,7 +444,6 @@ class ControlSignalError(Exception):
 class ControlSignal(ModulatorySignal):
     """
     ControlSignal(                                                 \
-        owner,                                                     \
         default_allocation=defaultControlAllocation,               \
         function=TransferWithCosts,                                \
         costs_options=None,                                        \

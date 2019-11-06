@@ -246,19 +246,19 @@ The following types of Projections can be specified for each type of Port:
         | *Port Type*      | *PROJECTIONS* specification   | *Assigned to Attribute*             |
         +==================+===============================+=====================================+
         |`InputPort`       | `PathwayProjection(s)         | `path_afferents                     |
-        |                  | <PathwayProjection>`          | <InputPort.path_afferents>`         |
+        |                  | <PathwayProjection>`          | <tPort.path_afferents>`             |
         |                  |                               |                                     |
         |                  | `ControlProjection(s)         | `mod_afferents                      |
-        |                  | <ControlProjection>`          | <InputPort.mod_afferents>`          |
+        |                  | <ControlProjection>`          | <Port.mod_afferents>`               |
         |                  |                               |                                     |
         |                  | `GatingProjection(s)          | `mod_afferents                      |
-        |                  | <GatingProjection>`           | <InputPort.mod_afferents>`          |
+        |                  | <GatingProjection>`           | <Port.mod_afferents>`               |
         +------------------+-------------------------------+-------------------------------------+
         |`ParameterPort`   | `ControlProjection(s)         | `mod_afferents                      |
         |                  | <ControlProjection>`          | <ParameterPort.mod_afferents>`      |
         +------------------+-------------------------------+-------------------------------------+
         |`OutputPort`      | `PathwayProjection(s)         | `efferents                          |
-        |                  | <PathwayProjection>`          | <OutputPort.efferents>`             |
+        |                  | <PathwayProjection>`          | <Port.efferents>`                   |
         |                  |                               |                                     |
         |                  | `ControlProjection(s)         | `mod_afferents                      |
         |                  | <ControlProjection>`          | <OutputPort.mod_afferents>`         |
@@ -901,9 +901,9 @@ class Port_Base(Port):
     Arguments
     ---------
 
-    owner : Mechanism
-        the Mechanism to which the Port belongs;  it must be specified or determinable from the context in which
-        the Port is created.
+    owner : Mechanism : default None
+        the Mechanism to which the Port belongs;  if it is not specified or determinable from the context in which
+        the Port is created, the Port's initialization is `deferred <Port_Deferred_Initialization>`.
 
     Attributes
     ----------
@@ -921,8 +921,9 @@ class Port_Base(Port):
         list of all Projections received by the Port (i.e., for which it is a `receiver <Projection_Base.receiver>`.
 
     path_afferents : Optional[List[Projection]]
-        list all `PathwayProjections <PathwayProjection>` received by the Port;
-        note:  only `InputPorts <InputPort>` have path_afferents;  the list is empty for other types of Ports.
+        list of all `PathwayProjections <PathwayProjection>` received by the Port (i.e., for which it is the
+        receiver <Projection_Base.receiver>` (note:  only `InputPorts <InputPort>` have path_afferents;  the list is
+        empty for other types of Ports).
 
     mod_afferents : Optional[List[GatingProjection]]
         list of all `ModulatoryProjections <ModulatoryProjection>` received by the Port.

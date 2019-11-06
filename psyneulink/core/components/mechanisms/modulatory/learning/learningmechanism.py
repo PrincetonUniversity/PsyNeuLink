@@ -138,7 +138,7 @@ names and roles (shown in the `figure <LearningMechanism_Single_Layer_Learning_F
   that receives its input from a ComparatorMechanism. If the `primary_learned_projection` is part of a `multilayer
   learning sequence <LearningMechanism_Multilayer_Learning>`, then the LearningMechanism will have one or more
   *ERROR_SIGNAL* InputPorts, that receive their input from the next LearningMechanism(s) in the sequence;  that is,
-  the one(s) associated with the `efferents <OutputPort.efferents>` (outgoing Projections) of its `output_source`,
+  the one(s) associated with the `efferents <Port.efferents>` (outgoing Projections) of its `output_source`,
   with one *ERROR_SIGNAL* InputPort for each of those Projections.  The `value <InputPort.value>`\\s of the
   *ERROR_SIGNAL* InputPorts are summed by the LearningMechanism's `function <LearningMechanism.function>` to
   calculate the `learning_signal <LearningMechanism.learning_signal>` (see `below <LearningMechanism_Function>`);

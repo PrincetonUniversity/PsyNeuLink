@@ -9,6 +9,23 @@
 # ******************************************  GatingSignal *****************************************************
 
 """
+
+Contents:
+---------
+
+  * `Gating_Signal_Overview`
+  * `GatingSignal_Creation`
+      - `GatingSignal_Specification`
+  * `GatingSignal_Structure`
+      - `GatingSignal_Projections`
+      - `GatingSignal_Modulation`
+  * `GatingSignal_Execution`
+  * `GatingSignal_Examples`
+  * `GatingSignal_Class_Reference`
+
+
+.. _Gating_Signal_Overview:
+
 Overview
 --------
 
@@ -221,6 +238,8 @@ created directly and then assigned to ``my_gating_mechanism``::
     ...                                                           my_gating_signal_B])
 
 
+.. _GatingSignal_Class_Reference:
+
 Class Reference
 ---------------
 
@@ -300,9 +319,6 @@ class GatingSignal(ControlSignal):
     Arguments
     ---------
 
-    owner : GatingMechanism
-        specifies the `GatingMechanism` to which to assign the GatingSignal.
-
     default_allocation : scalar, list or np.ndarray : defaultGatingAllocation
         specifies the template and default value used for `allocation <GatingSignal.allocation>`;  must match the
         shape of each item specified in `allocation_samples <GatingSignal.allocation_samples>`.
@@ -341,14 +357,11 @@ class GatingSignal(ControlSignal):
     Attributes
     ----------
 
-    owner : GatingMechanism
-        the `GatingMechanism` to which the GatingSignal belongs.
-
     variable : scalar, list or np.ndarray
         same as `allocation <GatingSignal.allocation>`.
 
     allocation : float : default: defaultGatingAllocation
-        value assigned by the GatingSignal's `owner <GatingSignal.owner>`, and used as the `variable
+        value assigned by the GatingSignal's `owner <Port.owner>`, and used as the `variable
         <GatingSignal.variable>` of the it `function <GatingSignal.function>` to determine the GatingSignal's
         `GatingSignal.intensity`.
     COMMENT:

@@ -831,7 +831,7 @@ class OptimizationControlMechanism(ControlMechanism):
     def _update_input_ports(self, context=None, runtime_params=None):
         """Update value for each InputPort in self.input_ports:
 
-        Call execute method for all (MappingProjection) Projections in InputPort.path_afferents
+        Call execute method for all (MappingProjection) Projections in Port.path_afferents
         Aggregate results (using InputPort execute method)
         Update InputPort.value
         """

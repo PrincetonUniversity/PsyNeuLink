@@ -264,17 +264,17 @@ of a Port are listed in its `projections <Port_Base.projections>` attribute.
     |     Projection       |   sender                              |  receiver                                        |
     |                      |   *(attribute)*                       |  *(attribute)*                                   |
     +======================+=======================================+==================================================+
-    | `MappingProjection`  | `OutputPort`                         | `InputPort`                                     |
-    |                      | (`efferents <OutputPort.efferents>`) | (`path_afferents <InputPort.path_afferents>`)   |
+    | `MappingProjection`  | `OutputPort`                          | `InputPort`                                      |
+    |                      | (`efferents <Port.efferents>`)        | (`path_afferents <Port.path_afferents>`)         |
     +----------------------+---------------------------------------+--------------------------------------------------+
-    | `LearningProjection` | `LearningSignal`                      | `ParameterPort`                                 |
-    |                      | (`efferents <OutputPort.efferents>`) | (`mod_afferents <ParameterPort.mod_afferents>`) |
+    | `LearningProjection` | `LearningSignal`                      | `ParameterPort`                                  |
+    |                      | (`efferents <Port.efferents>`)        | (`mod_afferents <ParameterPort.mod_afferents>`)  |
     +----------------------+---------------------------------------+--------------------------------------------------+
-    | `ControlProjection`  | `ControlSignal`                       | `ParameterPort`                                 |
-    |                      | (`efferents <OutputPort.efferents>`) | (`mod_afferents <ParameterPort.mod_afferents>`) |
+    | `ControlProjection`  | `ControlSignal`                       | `InputPort`, `ParameterPort` or `OutputPort`     |
+    |                      | (`efferents <Port.efferents>`)        | (`mod_afferents <ParameterPort.mod_afferents>`)  |
     +----------------------+---------------------------------------+--------------------------------------------------+
-    | `GatingProjection`   | `GatingSignal`                        | `InputPort` or `OutputPort`                    |
-    |                      | (`efferents <OutputPort.efferents>`) | (`mod_afferents <Port_Base.mod_afferents>`)     |
+    | `GatingProjection`   | `GatingSignal`                        | `InputPort` or `OutputPort`                      |
+    |                      | (`efferents <Port.efferents>`)        | (`mod_afferents <Port_Base.mod_afferents>`)      |
     +----------------------+---------------------------------------+--------------------------------------------------+
 
 .. _Projection_Sender:
