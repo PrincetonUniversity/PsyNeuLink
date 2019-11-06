@@ -373,7 +373,7 @@ ControlMechanism that returns a 2d array with a single item in its outer dimensi
 assigned that returns a 2d array with more than one item, and it has the same number of `control_signals
 <ControlMechanism.control_signals>`, then each ControlSignal is assigned to the corresponding item of the function's
 value.  However, these default behaviors can be modified by specifying that individual ControlSignals reference
-different items in `control_allocation` as their `variable <ControlSignal.variable>`
+different items in `control_allocation` as their `variable <ModulatorySignal.variable>`
 (see `OutputPort_Custom_Variable`).
 
 .. _ControlMechanism_Output:

@@ -22,6 +22,7 @@ Contents
       • `ModulatorySignal_Types`
       • `ModulatorySignal_Implementation`
   * `ModulatorySignal_Execution`
+  * `ModulatorySignal_Examples`
   * `ModulatorySignal_Class_Reference`
   
 
@@ -356,9 +357,9 @@ COMMENT
    The change in the value of a `Port <Port>` in response to a ModulatorySignal does not occur until the Mechanism to
    which the port belongs is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
 
-.. _ModulatorySignal_Class_Reference:
-
 COMMENT:
+
+.. _ModulatorySignal_Examples:
 
 Examples
 --------
@@ -398,6 +399,8 @@ ControlMechanism, or its ControlSignals.  For example, in the following, ``ctl_m
 FIX: EXAMPLE HERE
      THEN, AFTER EXAMPLE: MODULATORYSIGNAL'S VALUE IS ASSIGNED TO THE SPECIFIED PARAMETER.
 COMMENT
+
+.. _ModulatorySignal_Class_Reference:
 
 Class Reference
 ---------------
@@ -449,7 +452,7 @@ class ModulatorySignal(OutputPort):
     .. note::
        ModulatorySignal is an abstract class and should *never* be instantiated by a call to its constructor.
        It should be instantiated using the constructor for a `subclass <ModulatorySignal_Subtypes>`
-       (see `Port_Class_Reference` for additional arguments and attributes)
+       (see `OutputPort_Class_Reference` for additional arguments and attributes)
 
     COMMENT:
 
@@ -466,10 +469,6 @@ class ModulatorySignal(OutputPort):
     default_allocation : scalar : defaultModulatoryAllocation
         specifies the default template and value used for `variable <ModulatorySignal.variable>`.
 
-    function : Function or method : default Linear
-        specifies the function used to determine the value of the ModulatorySignal from the value of its
-        `owner <GatingMechanism.owner>`.
-
     modulation : ModulationParam : default MULTIPLICATIVE
         specifies the type of modulation the ModulatorySignal uses to determine the value of the Port(s) it modulates.
 
@@ -480,16 +479,17 @@ class ModulatorySignal(OutputPort):
         same as `allocation <ModulatorySignal.allocation>`.
 
     allocation : float
-        value assigned by the ModulatorySignal's `owner <ControlSignal.owner>`, and used as the `variable
+        value assigned by the ModulatorySignal's `owner <ModulatorySignal.owner>`, and used as the `variable
         <ModulatorySignal.variable>` of its `function <ModulatorySignal.function>` to determine the ModulatorySignal's
-        `ModulatorySignal.intensity`.
+        `ModulatorySignal.value`.
     COMMENT:
     FOR DEVELOPERS:  Implemented as an alias of the ModulatorySignal's variable Parameter
     COMMENT
 
     function : TransferFunction
-        provides the ModulatorySignal's `value <ModulatorySignal.value>`; the default is an identity function that
-        assigns `variable <ModulatorySignal.variable>` as ModulatorySignal's `value <ModulatorySignal.value>`.
+        used to transform the ModulatorySignal's `allocation <ModulatorySignal.allocation>` into its `value
+        <ModulatorySignal.value>`;  default is the `Identity` Function that simply assigns `allocation
+        <ModulatorySignal.allocation>` to `value <ModulatorySignal.value>`.
 
     value : number, list or np.ndarray
         result of `function <ModulatorySignal.function>`, used to determine the `value <Port_Base.value>` of the

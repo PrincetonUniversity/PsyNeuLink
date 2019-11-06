@@ -786,8 +786,9 @@ class OutputPort(Port_Base):
         OutputPort's `function <OutputPort.function>`  in generating its `value <OutputPort.value>`.
 
     function : Function, function, or method : default Linear
-        specifies the function used to transform and/or combine the items designated by the OutputPort's `variable
-        <OutputPort.variable>` into its `value <OutputPort.value>`, under the possible influence of
+        specifies the function used to transform and/or combine the items of its `owner <Port.owner>`\'s `value
+        <Mechanism_Base.value>` (designated by the OutputPort's `variable <OutputPort.variable>`) into its `value
+        <OutputPort.value>`, under the possible influence of `ControlProjections <ControlProjection>` or
         `GatingProjections <GatingProjection>` received by the OutputPort.
 
     COMMENT:
@@ -855,8 +856,7 @@ class OutputPort(Port_Base):
         `value <OutputPort.value>` is returned.
 
     efferents : List[MappingProjection]
-        `MappingProjections <MappingProjection>` sent by the OutputPort (i.e., for which the OutputPort
-        is a `sender <Projection_Base.sender>`).
+        `Projections <Projection>` for which the OutputPort is a `sender <Projection_Base.sender>`).
 
     projections : List[Projection]
         all of the `Projections <Projection>` received and sent by the OutputPort.

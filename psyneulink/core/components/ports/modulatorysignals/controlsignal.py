@@ -141,12 +141,13 @@ FIX: 8/30/19 -- ADD DESCRIPTION OF function AS ACTUALLY IMPLEMENTED AS TransferW
                 - cost functions can be specified, but attributes are pointers to function's cost functions
                 - cost attributes get value of corresponding attributes of cost function
                 - ?handling of cost_options
-*Function*. A ControlSignal's `allocation <ControlSignal.allocation>` serves as its`variable <ControlSignal.variable>`,
-and is used by its `function <ControlSignal.function>` to generate an `intensity`. The default `function
-<ControlSignal.function>` for a ControlSignal is an identity function (`Linear` with `slope <Linear.slope>` \\=1 and
-`intercept <Linear.intercept>`\\=0), that simply assigns the `allocation <ControlSignal.allocation>` as the
-ControlSignal's `intensity <ControlSignal.intensity>`. However, another `TransferFunction` can be assigned
-(e.g., `Exponential`), or any other function that takes and returns a scalar value or 1d array.
+*Function*. A ControlSignal's `allocation <ControlSignal.allocation>` serves as its`variable
+<ModulatorySignal.variable>`, and is used by its `function <ControlSignal.function>` to generate an `intensity`.
+The default `function <ControlSignal.function>` for a ControlSignal is an identity function (`Linear` with `slope
+<Linear.slope>` \\=1 and `intercept <Linear.intercept>`\\=0), that simply assigns the `allocation
+<ControlSignal.allocation>` as the ControlSignal's `intensity <ControlSignal.intensity>`. However,
+another `TransferFunction` can be assigned (e.g., `Exponential`), or any other function that takes and returns a
+scalar value or 1d array.
 
 *Intensity (value)*. The result of the function is assigned as the value of the ControlSignal's `intensity`
 attribute, which serves as the ControlSignal's `value <ControlSignal.value>` (also referred to as `control_signal`).
@@ -440,38 +441,11 @@ class ControlSignal(ModulatorySignal):
         projections=None)
 
     A subclass of `ModulatorySignal <ModulatorySignal>` used by a `ControlMechanism <ControlMechanism>` to
-    modulate the parameter(s) of one or more other `Mechanisms <Mechanism>`.
-
-    COMMENT:
-
-        Description
-        -----------
-            The ControlSignal class is a subtype of the OutputPort type in the Port category of Component,
-            It is used as the sender for ControlProjections
-            Its FUNCTION updates its value:
-                note:  currently, this is the identity function, that simply maps variable to self.value
-
-        Class attributes:
-            + componentType (str) = CONTROL_SIGNAL
-            + paramClassDefaults (dict)
-                + FUNCTION (Linear)
-                + FUNCTION_PARAMS   (Operation.PRODUCT)
-
-        Class methods:
-            function (executes function specified in params[FUNCTION];  default: Linear)
-
-        PortRegistry
-        -------------
-            All OutputPorts are registered in PortRegistry, which maintains an entry for the subclass,
-              a count for all instances of it, and a dictionary of those instances
-    COMMENT
-
+    modulate the parameter(s) of one or more other `Mechanisms <Mechanism>` (see `ModulatorySignal
+    <ModulatorySignal_Class_Reference>` for additional arguments and attributes)
 
     Arguments
     ---------
-
-    owner : ControlMechanism
-        specifies the `ControlMechanism <ControlMechanism>` to which to assign the ControlSignal.
 
     default_allocation : scalar, list or np.ndarray : defaultControlAllocation
         specifies the template and default value used for `allocation <ControlSignal.allocation>`;  must match the
@@ -506,7 +480,7 @@ class ControlSignal(ModulatorySignal):
         which is assigned as the ControlSignal's `cost <ControlSignal.cost>` attribute.
 
     allocation_samples : list, 1d array, or SampleSpec : default SampleSpec(0.1, 1, 0.1)
-        specifies the values used by the ControlSignal's `owner <ControlSignal.owner>` to determine its
+        specifies the values used by the ControlSignal's `owner <ModulatorySignal.owner>` to determine its
         `control_allocation <ControlMechanism.control_allocation>` (see `ControlSignal_Execution`).
 
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
@@ -518,42 +492,23 @@ class ControlSignal(ModulatorySignal):
         listed in its `efferents <ControlSignal.efferents>` attribute (see `ControlSignal_Projections` for additional
         details).
 
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
-        the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
-        override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default see ModulatorySignal `name <ModulatorySignal.name>`
-        specifies the name of the ControlSignal; see ControlSignal `name <ModulatorySignal.name>` for additional
-        details.
-
-    prefs : PreferenceSet or specification dict : default Port.classPreferences
-        specifies the `PreferenceSet` for the ControlSignal; see `prefs <ControlSignal.prefs>` for details.
-
-
     Attributes
     ----------
 
-    owner : ControlMechanism
-        the `ControlMechanism <ControlMechanism>` to which the ControlSignal belongs.
-
-    variable : scalar, list or np.ndarray
-        same as `allocation <ControlSignal.allocation>`.
-
     allocation : float : default: defaultControlAllocation
-        value assigned by the ControlSignal's `owner <ControlSignal.owner>`, and used as the `variable
-        <ControlSignal.variable>` of its `function <ControlSignal.function>` to determine the ControlSignal's
+        value assigned by the ControlSignal's `owner <ModulatorySignal.owner>`, and used as the `variable
+        <ModulatorySignal.variable>` of its `function <ControlSignal.function>` to determine the ControlSignal's
         `ControlSignal.intensity`.
     COMMENT:
     FOR DEVELOPERS:  Implemented as an alias of the ControlSignal's variable Parameter
     COMMENT
 
     last_allocation : float
-        value of `allocation` in the previous execution of ControlSignal's `owner <ControlSignal.owner>`.
+        value of `allocation` in the previous execution of ControlSignal's `owner <ModulatorySignal.owner>`.
 
     allocation_samples : SampleIterator
         `SampleIterator` created from **allocation_samples** specification and used to generate a set of values to
-        sample by the ControlSignal's `owner <ControlSignal.owner>` when determining its `control_allocation
+        sample by the ControlSignal's `owner <ModulatorySignal.owner>` when determining its `control_allocation
         <ControlMechanism.control_allocation>`.
 
     function : TransferWithCosts
@@ -570,7 +525,7 @@ class ControlSignal(ModulatorySignal):
         to which the ControlSignal is assigned; same as `control_signal <ControlSignal.control_signal>`.
 
     last_intensity : float
-        the `intensity` of the ControlSignal on the previous execution of its `owner <ControlSignal.owner>`.
+        the `intensity` of the ControlSignal on the previous execution of its `owner <ModulatorySignal.owner>`.
 
     index : int
         the item of the owner ControlMechanism's `control_allocation <ControlMechanism.control_allocation>` used as the
@@ -657,7 +612,7 @@ class ControlSignal(ModulatorySignal):
             ----------
 
                 variable
-                    see `variable <ControlSignal.variable>`
+                    see `variable <ModulatorySignal.variable>`
 
                     :default value: numpy.array([1.])
                     :type: numpy.ndarray

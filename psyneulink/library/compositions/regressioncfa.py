@@ -374,7 +374,7 @@ class RegressionCFA(CompositionFunctionApproximator):
 
         control_signals : List[ControlSignal]
             list containing the `ControlSignals <ControlSignal>` of an `OptimizationControlMechanism`;
-            the `variable <ControlSignal.variable>` of each is assigned as the `PV.C` term of `terms
+            the `variable <ModulatorySignal.variable>` of each is assigned as the `PV.C` term of `terms
             <PredictionVector.terms>`.
 
         specified_terms : List[PV]

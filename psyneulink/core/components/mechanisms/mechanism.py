@@ -42,7 +42,7 @@ types of Mechanisms in PsyNeuLink:
       provide the result as input to other Mechanisms in the Process or System, or as the output for a Process or
       System itself.  There are a variety of different types of ProcessingMechanism, that accept various forms of
       input and transform them in different ways (see `ProcessingMechanisms <ProcessingMechanism>` for a list).
-    ..
+
     * `ModulatoryMechanisms <ModulatoryMechanism>` monitor the output of one or more other Mechanisms, and use this
       to modulate the parameters of other Mechanisms or Projections.  There are three basic ModulatoryMechanisms:
 
@@ -64,12 +64,12 @@ types of Mechanisms in PsyNeuLink:
 Every Mechanism is made up of four fundamental components:
 
     * `InputPort(s) <InputPort>` used to receive and represent its input(s);
-    ..
+
     * `Function <Function>` used to transform its input(s) into its output(s);
-    ..
+
     * `ParameterPort(s) <ParameterPort>` used to represent the parameters of its Function (and/or any
       parameters that are specific to the Mechanism itself);
-    ..
+
     * `OutputPort(s) <OutputPort>` used to represent its output(s)
 
 These are described in the sections on `Mechanism_Function` and `Mechanism_Ports` (`Mechanism_InputPorts`,
@@ -88,9 +88,9 @@ the `pathway <Process.pathway>` attribute of a `Process`; the Mechanism can be s
 mentioned above, or using one of the following:
 
   * the name of an **existing Mechanism**;
-  ..
+
   * the name of a **Mechanism type** (subclass);
-  ..
+
   * a **specification dictionary** -- this can contain an entry specifying the type of Mechanism,
     and/or entries specifying the value of parameters used to instantiate it.
     These should take the following form:
