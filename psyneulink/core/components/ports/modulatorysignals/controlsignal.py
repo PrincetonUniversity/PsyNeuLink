@@ -193,9 +193,6 @@ the enabled cost components are summed, however this can be modified by specifyi
     disabled for a ControlSignal, it cannot be re-enabled using `toggle_cost_function`.
     COMMENT
 
-.. note:: The `index <OutputPort.OutputPort.index>` and `assign <OutputPort.OutputPort.assign>`
-        attributes of a ControlSignal are automatically assigned and should not be modified.
-
 .. _ControlSignal_Execution:
 
 Execution
@@ -429,7 +426,6 @@ class ControlSignal(ModulatorySignal):
     ControlSignal(                                                 \
         owner,                                                     \
         default_allocation=defaultControlAllocation,               \
-        index=SEQUENTIAL,                                          \
         function=TransferWithCosts,                                \
         costs_options=None,                                        \
         intensity_cost_function=Exponential,                       \
@@ -450,10 +446,6 @@ class ControlSignal(ModulatorySignal):
     default_allocation : scalar, list or np.ndarray : defaultControlAllocation
         specifies the template and default value used for `allocation <ControlSignal.allocation>`;  must match the
         shape of each item specified in `allocation_samples <ControlSignal.allocation_samples>`.
-
-    index : int : default SEQUENTIAL
-        specifies the item of the owner ControlMechanism's `control_allocation <ControlMechanism.control_allocation>`
-        used as the ControlSignal's `value <ControlSignal.value>`.
 
     function : Function or method : default TransferWithCosts(transfer_fct=Linear(slope=1, intercept=0))
         specifies the function used to determine the `intensity` of the ControlSignal from its `allocation`;
@@ -526,10 +518,6 @@ class ControlSignal(ModulatorySignal):
 
     last_intensity : float
         the `intensity` of the ControlSignal on the previous execution of its `owner <ModulatorySignal.owner>`.
-
-    index : int
-        the item of the owner ControlMechanism's `control_allocation <ControlMechanism.control_allocation>` used as the
-        ControlSignal's `value <ControlSignal.value>`.
 
     control_signal : float
         result of the ControlSignal's `function <ControlSignal.function>`; same as `intensity`.
@@ -780,7 +768,6 @@ class ControlSignal(ModulatorySignal):
                  reference_value=None,
                  default_allocation=None,
                  size=None,
-                 index=None,
                  function=Linear,
                  cost_options:tc.optional(tc.any(CostFunctions, list))=None,
                  intensity_cost_function:(is_function_type)=Exponential,
@@ -799,10 +786,6 @@ class ControlSignal(ModulatorySignal):
         #    that specified ALLOCATION_SAMPLES in params
         if params and ALLOCATION_SAMPLES in params and params[ALLOCATION_SAMPLES] is not None:
             allocation_samples = params[ALLOCATION_SAMPLES]
-
-        # Note index and assign are not used by ControlSignal, but included here for consistency with OutputPort
-        # If index has not been specified, but the owner has, control_allocation has been determined, so use that
-        index = index or SEQUENTIAL
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(
@@ -824,7 +807,6 @@ class ControlSignal(ModulatorySignal):
                          reference_value=reference_value,
                          default_allocation=default_allocation,
                          size=size,
-                         index=index,
                          assign=None,
                          function=function,
                          modulation=modulation,
