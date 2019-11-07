@@ -329,19 +329,19 @@ class MappingProjection(PathwayProjection_Base):
         matrix=DEFAULT_MATRIX)
 
     Subclass of `Projection` that transmits the `value <OutputPort.value>` of the `OutputPort` of one `Mechanism`
-    to the `InputPort` of another (or possibly itself).  See `Projection <Projection_Class_Referenc>` for additional
+    to the `InputPort` of another (or possibly itself).  See `Projection <Projection_Class_Reference>` for additional
     arguments and attributes.
 
     Arguments
     ---------
 
-    sender : Optional[OutputPort or Mechanism]
+    sender : OutputPort or Mechanism : default None
         specifies the source of the Projection's input. If a `Mechanism <Mechanism>` is specified, its
         `primary OutputPort <OutputPort_Primary>` is used. If it is not specified, it is assigned in
         the context in which the MappingProjection is used, or its initialization will be `deferred
         <MappingProjection_Deferred_Initialization>`.
 
-    receiver: Optional[InputPort or Mechanism]
+    receiver: InputPort or Mechanism : default None
         specifies the destination of the Projection's output.  If a `Mechanism <Mechanism>` is specified, its
         `primary InputPort <InputPort_Primary>` will be used. If it is not specified, it will be assigned in
         the context in which the Projection is used, or its initialization will be `deferred

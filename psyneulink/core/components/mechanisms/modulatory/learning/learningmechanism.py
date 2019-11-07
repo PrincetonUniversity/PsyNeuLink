@@ -675,8 +675,8 @@ class LearningMechanism(ModulatoryMechanism_Base):
         modulation=ADDITIVE,              \
         learning_enabled=True)
 
-    Implements a Mechanism that modifies the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`.
-    See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
+    Subclass of ModulatoryMechanism that modifies the `matrix <MappingProjection.matrix>` parameter of a
+    `MappingProjection`. See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
 
     COMMENT:
         Description:
