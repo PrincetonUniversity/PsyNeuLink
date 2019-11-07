@@ -9,7 +9,17 @@
 
 """
 
-.. _Leabra_Mechanism_Overview:
+Contents
+--------
+
+  * `LeabraMechanism_Overview`
+  * `LeabraMechanism_Creation`
+  * `LeabraMechanism_Structure`
+  * `LeabraMechanism_Execution`
+  * `LeabraMechanism_Class_Reference`
+
+
+.. _LeabraMechanism_Overview:
 
 Overview
 --------
@@ -23,7 +33,7 @@ info about leabra, please see `O'Reilly and Munakata, 2016 <https://grey.colorad
     to use the LeabraMechanism. While the LeabraMechanism should always match the output of an equivalent network in
     the leabra package, the leabra package itself is still in development, so it is not guaranteed to be correct yet.
 
-.. _Leabra_Mechanism_Creation:
+.. _LeabraMechanism_Creation:
 
 Creating a LeabraMechanism
 --------------------------
@@ -37,7 +47,7 @@ This option requires users to be familiar with the leabra package, but allows mo
 In the former method of creating a LeabraMechanism, the **training_flag** argument specifies whether the network should
 be learning (updating its weights) or not.
 
-.. _Leabra_Mechanism_Structure:
+.. _LeabraMechanism_Structure:
 
 Structure
 ---------
@@ -72,7 +82,7 @@ target for the LeabraMechanism. The input to the *MAIN_INPUT* InputPort should h
         s = System(processes=[p1, p2])
         s.run(inputs={T1: input_data, T2: training_data})
 
-.. _Leabra_Mechanism_Execution:
+.. _LeabraMechanism_Execution:
 
 Execution
 ---------
@@ -82,7 +92,7 @@ leabra Network's output (after one "trial", default 200 cycles in PsyNeuLink) to
 on Leabra, see `O'Reilly and Munakata, 2016 <https://grey.colorado.edu/emergent/index.php/Leabra>`_ and the
 `leabra Python package on Github <https://github.com/benureau/leabra>`_.
 
-.. _Leabra_Mechanism_Reference:
+.. _LeabraMechanism_Reference:
 
 Class Reference
 ---------------
@@ -340,6 +350,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
     prefs=None)
 
     Subclass of `ProcessingMechanism` that is a wrapper for a Leabra network in PsyNeuLink.
+    See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
 
     Arguments
     ---------

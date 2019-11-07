@@ -8,12 +8,21 @@
 
 # *************************************  CompositionFunctionApproximator ***********************************************
 
-"""
-
 # FIX: SHOULD BE IMPLEMENTED AS ABSTRACT BASE CLASS (ABC)
 
-Composition Function Approximator
----------------------------------
+"""
+
+Contents
+--------
+
+  * `CompositionFunctionApproximator_Overview`
+  * `CompositionFunctionApproximator_Class_Reference`
+
+
+.. _CompositionFunctionApproximator_Overview:
+
+Overview
+--------
 
 A `CompositionFunctionApproximator` is an abstract subclass of `Composition` that, over calls to its `adapt
 <CompositionFunctionApproximator.adapt>` method, parameterizes its `function <Composition.function>` to predict the
@@ -35,6 +44,11 @@ COMMENT:
   based on the `feature_values <OptimizationControlMechanism.feature_values>` for the current trial.
 COMMENT
 
+
+.. _CompositionFunctionApproximator_Class_Reference:
+
+Class Reference
+---------------
 
 """
 

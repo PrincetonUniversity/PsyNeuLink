@@ -132,9 +132,9 @@ Execution
 When a KTWA is executed, it first determines its `variable <Mechanism_Base.variable>` as follows:
 
 * First, like every `RecurrentTransferMechanism`, it combines the input it receives from its recurrent
-  `AutoAssociativeProjection` (see `Recurrent_Transfer_Structure <Recurrent_Transfer_Structure>`) with the input
-  from any other `MappingProjections <MappingProjection>` it receives, and assigns this to its `variable
-  <Mechanism_Base.variable>` attribute.
+  `AutoAssociativeProjection` (see `RecurrentTransferMechanism_Structure`) with the input from any other
+  `MappingProjections <MappingProjection>` it receives, and assigns this to its `variable <Mechanism_Base.variable>`
+  attribute.
 ..
 * Then it modifies its `variable <Mechanism_Base.variable>`, by calculating and assigning an offset to its
   elements, so that as close to `k_value <KWTAMechanism.k_value>` elements as possible are at or above the

@@ -70,8 +70,8 @@ in the **additional_output_ports** argument of the constructor.
 
 A ContrastiveHebbianMechanism can be configured for learning either by specifying **enable_learning** as `True` or using
 the `configure_learning <RecurrentTransferMechanism.configure_learning>` method, with the following differences from a
-standard `RecurrentTransferMechanism <Recurrent_Transfer_Learning>`:  it is automatically assigned `ContrastiveHebbian`
-as its `learning_function <ContrastiveHebbianMechanism.learning_function>`; its `learning_condition
+standard `RecurrentTransferMechanism <RecurrentTransferMechanism_Learning>`:  it is automatically assigned
+`ContrastiveHebbian` as its `learning_function <ContrastiveHebbianMechanism.learning_function>`; its `learning_condition
 <RecurrentTransferMechanism.learning_condition>` is automatically assigned as *CONVERGENCE*; and it is assigned a
 `MappingProjection` from its *ACTIVITY_DIFFERENCE_OUTPUT* (rather than its `primary <OutputPort_Primary>`)
 `OutputPort <ContrastiveHebbian_Output>` to the *ACTIVATION_INPUT* of its `learning_mechanism

@@ -47,7 +47,7 @@ then the `LCAMechanism` implements a close approximation of a `DDM` Mechanism (s
 <http://psycnet.apa.org/?&fa=main.doiLanding&doi=10.1037/0033-295X.108.3.550>`_ and `Bogacz et al (2006)
 <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_).
 
-.. _Recurrent_Transfer_Creation:
+.. _RecurrentTransferMechanism_Creation:
 
 Creating an LCAMechanism
 ------------------------
@@ -110,8 +110,7 @@ similarly-named attributes.  Rather, they are used to specify the `termination_t
 <TransferMechanism.termination_threshold>`, `termination_measure <TransferMechanism.termination_measure>`,
 and `termination_comparison_op <TransferMechanism.termination_comparison_op>` attributes; these can also be
 specified directly as arguments of the LCAMechanism's constructor in order to implement other termination conditions
-(see `TransferMechanism <TransferMechanism_Termination>` and `RecurrentTransferMechanism
-<Recurrent_Transfer_Termination>`for additional details).
+(see `TransferMechanism <TransferMechanism_Termination>` for additional details).
 
 COMMENT:
 The default format of its `variable <LCAMechanism.variable>`, and default values of its `inhibition

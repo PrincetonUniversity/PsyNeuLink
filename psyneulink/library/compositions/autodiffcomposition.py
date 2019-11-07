@@ -10,6 +10,20 @@
 
 """
 
+Contents
+--------
+
+  * `AutodiffComposition_Overview`
+  * `AutodiffComposition_Creation`
+  * `AutodiffComposition_Structure`
+  * `AutodiffComposition_Execution`
+      - `Input <AutodiffComposition_Input>`
+      - `Input <AutodiffComposition_Input>`
+      - `AutodiffComposition_Logging`
+      - `AutodiffComposition_Nested_Execution`
+  * `AutodiffComposition_Class_Reference`
+
+
 .. _AutodiffComposition_Overview:
 
 Overview
@@ -204,8 +218,10 @@ in the exaple above, as follows::
 
 or `using a function <Composition_Input_as_Function>`.
 
+.. _AutodiffComposition_Logging:
+
 Logging
--------
+~~~~~~~
 
 Logging currently works differently in AutodiffComposition than in Composition. In an AutodiffComposition, no logging
 is done by default, because logging substantially (roughly by 30%) slows down AutodiffComposition. If you wish for all
@@ -213,8 +229,10 @@ projection weights and mechanism values to be logged during execution or trainin
 set the **do_logging** argument of the ``run()`` method to ``True``. Logging with AutodiffComposition is slightly hacked
 together, so the time and context in the log are not meaningful, only the logged value is meaningful.
 
+.. _AutodiffComposition_Nested_Execution:
+
 Nested Execution
-----------------
+~~~~~~~~~~~~~~~~
 
 Like any other `Composition`, an AutodiffComposition may be `nested inside another <Composition_Nested>`.  If learning
 is not enabled, nesting is handled in the same way as any other Composition.  However, if learning is enabled for a
@@ -252,7 +270,7 @@ Composition::
     >>> result2 = parentmy_outer_compositionComposition.run(inputs=no_training_input)
     COMMENT
 
-.. _Composition_Class_Reference:
+.. _AutodiffComposition_Class_Reference:
 
 Class Reference
 ---------------
@@ -306,19 +324,20 @@ class AutodiffCompositionError(CompositionError):
 
 class AutodiffComposition(Composition):
     """
-    AutodiffComposition(            \
-    param_init_from_pnl=True,       \
-    patience=None,                  \
-    min_delta=0,                    \
-    learning_rate=0.001,            \
-    learning_enabled=True,          \
-    optimizer_type=None,            \
-    loss_spec=None,                 \
-    randomize=False,                \
-    refresh_losses=False,           \
-    name="autodiff_composition")
+    AutodiffComposition(             \
+        param_init_from_pnl=True,    \
+        patience=None,               \
+        min_delta=0,                 \
+        learning_rate=0.001,         \
+        learning_enabled=True,       \
+        optimizer_type=None,         \
+        loss_spec=None,              \
+        randomize=False,             \
+        refresh_losses=False,        \
+        name="autodiff_composition")
 
-    Subclass of `Composition` that trains models more quickly by integrating with PyTorch.
+    Subclass of `Composition` that trains models using `PyTorch <https://pytorch.org>`_.
+    See `Composition <Composition_Class_Reference>` for additional arguments and attributes.
 
     Arguments
     ---------

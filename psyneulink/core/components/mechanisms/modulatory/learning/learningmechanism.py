@@ -337,21 +337,22 @@ refer to the Components being learned and/or its operation:
   before returning it as the `learning_signal <LearningMechanism.learning_signal>`.  This can be specified in the
   **learning_rate** argument of the LearningMechanism's constructor (or the constructor for its `function
   <LearningMechanism.function>`;  doing so supersedes specification of the **learning_rate** for a
-  `RecurrentTransferMechanism <Recurrent_Transfer_Learning>` used to implement `unsupervised learning
+  `RecurrentTransferMechanism <RecurrentTransferMechanism_Learning>` used to implement `unsupervised learning
   <Composition_Learning_Unsupervised>`, or a Composition's `learning method <Composition_Learning_Methods>` used to
   implement a `supervised learning sequence <Composition_Learning_Supervised>`.  The default value for a
   LearningMechanism's `learning_rate <LearningMechanism.learning_rate>` attribute is `None`, in which case the
   LearningMechanism (and its `function <LearningMechanism.function>`) inherit the learning_rate from the
-  `RecurrentTransferMechanism <Recurrent_Transfer_Learning>` or the `learning method <Composition_Learning_Methods>`
-  of a Composition in which learning was defined.    If that is `None`, then it inherits the learning_rate specified
-  in the constructor of the `RecurrentTransferMechanism <Recurrent_Transfer_Learning>` (for unsupervised learning) or
-  Composition's `learning method <Composition_Learning_Methods>` (for supervised learning).  If that is also `None`,
-  then it uses the value of the `default_learning_rate <LearningFunction.default_learning_rate>` parameter of its
-  `function <LearningMechanism.function>`. A :keyword:`learning_rate` parameter can also be specified for individual
-  `LearningSignals <LearningSignal>` and/or their associated `LearningProjections <LearningProjection>`.  Those have
-  a direct multiplicative effect on the `learning_signal <LearningProjection.learning_signal>` of the LearningSignal
-  and/or it LearningProjections (see `LearningSignal learning_rate <LearningSignal_Learning_Rate>` for additional
-  details).
+  `RecurrentTransferMechanism <RecurrentTransferMechanism_Learning>` or the `learning method
+  <Composition_Learning_Methods>` of a Composition in which learning was defined.  If that is `None`, then it inherits
+  the learning_rate specified in the constructor of the `RecurrentTransferMechanism
+  <RecurrentTransferMechanism_Learning>` (for unsupervised learning) or Composition's `learning method
+  <Composition_Learning_Methods>` (for supervised learning). If that is also `None`, then it uses the value of the
+  `default_learning_rate <LearningFunction.default_learning_rate>` parameter of its `function
+  <LearningMechanism.function>`. A :keyword:`learning_rate` parameter can also be specified for individual
+  `LearningSignals <LearningSignal>` and/or their associated `LearningProjections <LearningProjection>`.
+  Those have a direct multiplicative effect on the `learning_signal <LearningProjection.learning_signal>` of the
+  LearningSignal and/or it LearningProjections (see `LearningSignal learning_rate <LearningSignal_Learning_Rate>`
+  for additional details).
 
 .. _LearningMechanism_Learning_Configurations:
 
@@ -362,12 +363,12 @@ COMMENT
 *Learning Configurations*
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When learning is enabled for a `RecurrentTransferMechanism <Recurrent_Transfer_Learning>` (for `unsupervised learning
-<Composition_Learning_Unsupervised>`) or using the `learning method <Composition_Learning_Methods>` of a Composition,
-all of the Components required for learning are created automatically. The types of Components that are generated
-depend on the type of learning specified and the configuration of the `Composition <Composition>`, as described below.
-All of the learning Components of a Composition can be displayed using its `show_graph` method with the
-**show_learning** argument assigned `True` or *ALL*.
+When learning is enabled for a `RecurrentTransferMechanism <RecurrentTransferMechanism_Learning>` (for `unsupervised
+learning <Composition_Learning_Unsupervised>`) or using the `learning method <Composition_Learning_Methods>` of a
+Composition, all of the Components required for learning are created automatically. The types of Components that are
+generated depend on the type of learning specified and the configuration of the `Composition <Composition>`, as
+described below. All of the learning Components of a Composition can be displayed using its `show_graph` method with
+the **show_learning** argument assigned `True` or *ALL*.
 
 .. _LearningMechanism_Single_Layer_Learning:
 

@@ -22,8 +22,8 @@ An AutoAssociativeLearningMechanism is a subclass of `LearningMechanism`, modifi
 Creating an AutoAssociativeLearningMechanism
 --------------------------------------------
 
-An AutoAssociativeLearningMechanism can be created directly by calling its constructor, but most commonly it is
-created automatically when a RecurrentTransferMechanism is `configured for learning <Recurrent_Transfer_Learning>`,
+An AutoAssociativeLearningMechanism can be created directly by calling its constructor, but most commonly it is created
+automatically when a RecurrentTransferMechanism is `configured for learning <RecurrentTransferMechanism_Learning>`,
 (identified in its `activity_source <AutoAssociativeLearningMechanism.activity_source>` attribute).
 
 .. _AutoAssociativeLearningMechanism_Structure:
