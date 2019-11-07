@@ -143,12 +143,12 @@ the value of its own `primary OutputPort <OutputPort_Primary>` on the previous e
 Like any `TransferMechanism`, the function used to update each element can be specified in the **function** argument
 of its constructor.  This transforms its input (including from the `recurrent_projection
 <RecurrentTransferMechanism.recurrent_projection>`) using the specified function and parameters (see
-`Transfer_Execution`), and returns the results in its OutputPorts.  Also like a TransferMechanism,
+`TransferMechanism_Execution`), and returns the results in its OutputPorts.  Also like a TransferMechanism,
 a RecurrentTransferMechanism can be configured to integrate its input, by setting its `integration_mode
-<TransferMechanism.integration_mode>` to True  (see `Transfer_Integration`), and to do so for a single step of
-integration or until it reaches some termination condition each time it is executed (see `Transfer_Termination`).
-Finally, it can be reinitialized using its `reinitialize <TransferMechanism.reinitialize>` method (see
-`Transfer_Reinitialization`).
+<TransferMechanism.integration_mode>` to True  (see `TransferMechanism_Integration`), and to do so for a
+single step of integration or until it reaches some termination condition each time it is executed (see
+`TransferMechanism_Termination`). Finally, it can be reinitialized using its `reinitialize
+<TransferMechanism.reinitialize>` method (see `TransferMechanism_Reinitialization`).
 
 *Learning*
 ~~~~~~~~~~

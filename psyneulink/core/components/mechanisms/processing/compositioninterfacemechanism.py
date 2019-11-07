@@ -8,8 +8,20 @@
 
 # **************************************  CompositionInterfaceMechanism *************************************************
 
-
 """
+
+Contents
+--------
+
+  * `CompositionInterfaceMechanism_Overview`
+  * `CompositionInterfaceMechanism_Creation`
+  * `CompositionInterfaceMechanism_Structure`
+  * `CompositionInterfaceMechanism_Execution`
+  * `CompositionInterfaceMechanism_Class_Reference`
+
+
+.. _CompositionInterfaceMechanism_Overview:
+
 Overview
 --------
 

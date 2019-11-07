@@ -66,7 +66,7 @@ with a `matrix <LCAMechanism.matrix>` in which the diagonal consists of uniform 
 
 The **noise**, **leak**, **initial_value**, and **time_step_size** arguments are used to implement the
 `LeakyCompetingIntegrator` as the LCAMechanism's `integrator_function <TransferMechanism.integrator_function>`.
-This is only used used when `integrator_mode <Transfer_Integrator_Mode>` is True (which it is by default).  If
+This is only used used when `integrator_mode <TransferMechanism_Integrator_Mode>` is True (which it is by default).  If
 `integrator_mode <TransferMechanism.integrator_mode>` is False, the `LeakyCompetingIntegrator` function is skipped
 entirely, and all related arguments (**noise**, **leak**, **initial_value**, and **time_step_size**) have no effect.
 
@@ -76,7 +76,7 @@ entirely, and all related arguments (**noise**, **leak**, **initial_value**, and
 ~~~~~~~~~~~~~~
 
 The **threshold** and **threshold_criterion** arguments specify the conditions under which execution of the
-LCAMechanism terminates if `integrator_mode <Transfer_Integrator_Mode>` is True.  If **threshold** is None
+LCAMechanism terminates if `integrator_mode <TransferMechanism_Integrator_Mode>` is True.  If **threshold** is None
 (the default), then the LCAMechanism will update its `value <Mechanism_Base.value>` and the `value <OutputPort.value>`
 of each `OutputPort` only once each time it is executed.  If a **threshold** is specified, then it will continue
 to execute until the condition specified by **threshold_criterion** is True; this can be specified using one of the
@@ -110,7 +110,7 @@ similarly-named attributes.  Rather, they are used to specify the `termination_t
 <TransferMechanism.termination_threshold>`, `termination_measure <TransferMechanism.termination_measure>`,
 and `termination_comparison_op <TransferMechanism.termination_comparison_op>` attributes; these can also be
 specified directly as arguments of the LCAMechanism's constructor in order to implement other termination conditions
-(see `TransferMechanism <Transfer_Termination>` and `RecurrentTransferMechanism
+(see `TransferMechanism <TransferMechanism_Termination>` and `RecurrentTransferMechanism
 <Recurrent_Transfer_Termination>`for additional details).
 
 COMMENT:

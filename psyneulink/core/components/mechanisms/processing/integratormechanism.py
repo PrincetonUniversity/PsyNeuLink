@@ -9,6 +9,19 @@
 # **************************************  IntegratorMechanism *************************************************
 
 """
+
+Contents
+--------
+
+  * `IntegratorMechanism_Overview`
+  * `IntegratorMechanism_Creation`
+  * `IntegratorMechanism_Structure`
+  * `IntegratorMechanism_Execution`
+  * `IntegratorMechanism_Class_Reference`
+
+
+.. _IntegratorMechanism_Overview:
+
 Overview
 --------
 
@@ -104,27 +117,8 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         function=AdaptiveIntegrator(rate=0.5))
 
     Subclass of `ProcessingMechanism <ProcessingMechanism>` that integrates its input.
+    See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
 
-    COMMENT:
-        Description:
-            - DOCUMENT:
-
-        Class attributes:
-            + componentType (str): SigmoidLayer
-            + classPreference (PreferenceSet): SigmoidLayer_PreferenceSet, instantiated in __init__()
-            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-            + class_defaults.variable (value):  SigmoidLayer_DEFAULT_BIAS
-            + paramClassDefaults (dict): {FUNCTION_PARAMS:{kwSigmoidLayer_Unitst: kwSigmoidLayer_NetInput
-                                                                     kwSigmoidLayer_Gain: SigmoidLayer_DEFAULT_GAIN
-                                                                     kwSigmoidLayer_Bias: SigmoidLayer_DEFAULT_BIAS}}
-        Class methods:
-            None
-
-        MechanismRegistry:
-           All instances of SigmoidLayer are registered in MechanismRegistry, which maintains an entry for the subclass,
-              a count for all instances of it, and a dictionary of those instances
-
-    COMMENT
 
     Arguments
     ---------

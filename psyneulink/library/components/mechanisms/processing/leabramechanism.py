@@ -59,7 +59,7 @@ target for the LeabraMechanism. The input to the *MAIN_INPUT* InputPort should h
 .. note::
     Currently, there is a bug where LeabraMechanism (and other Mechanisms with multiple input ports) cannot be
     used as `ORIGIN Mechanisms <System_Mechanisms>` for a `System`. If you desire to use a LeabraMechanism as an ORIGIN
-    Mechanism, you can work around this bug by creating two `TransferMechanisms <Transfer_Overview>` as ORIGIN
+    Mechanism, you can work around this bug by creating two `TransferMechanisms <TransferMechanism_Overview>` as ORIGIN
     Mechanisms instead, and have these two TransferMechanisms pass their output to the InputPorts of the
     LeabraMechanism. Here is an example of how to do this. In the example, T2 passes the training_data to the
     *LEARNING_TARGET* InputPort of L (L.input_ports[1])::

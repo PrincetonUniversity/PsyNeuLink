@@ -752,30 +752,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
        It should be instantiated using the constructor for a subclass.
 
     COMMENT:
-        Every Component is associated with:
-         - child class componentName
-         - type
-         - input
-         - execute (method): called to execute it;  it in turn calls self.function
-         - function (method): carries out object's core computation
-             it can be referenced either as self.function, self.params[FUNCTION] or self.paramsCurrent[FUNCTION]
-         - function (Function): the object to which function belongs (and that defines it's parameters)
-         - output (value: self.value)
-         - output_values (return from self.execute: concatenated set of values of output_ports)
-         - class and instance variable defaults
-         - class and instance param defaults
-        The Components's execute method (<subclass>.execute is the Component's primary method
-            (e.g., it is the one called when Process, Mechanism, Port and Projections objects are updated);
-            the following attributes for or associated with the method are defined for every Component object:
-                + execute (method) - the execute method itself
-                + value (value) - the output of the execute method
-            the latter is used for typing and/or templating other variables (e.g., self.defaults.variable):
-                type checking is generally done using Utilities.iscompatible(); for iterables (lists, tuples, dicts):
-                    if the template (the "reference" arg) has entries (e.g., [1, 2, 3]), comparisons will include length
-                    if the template is empty (e.g., [], {}, or ()), length will not be checked
-                    if the template has only numbers, then the candidate must as well
-
-
+    FOR API DOCUMENTATION:
         The Component itself can be called without any arguments (in which case it uses its instance defaults) or
             one or more variables (as defined by the subclass) followed by an optional params dictionary
         The variable(s) can be a function reference, in which case the function is called to resolve the value;
@@ -823,45 +800,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             * However, more restrictive validation (e.g., recurisve, range checking, etc.) can be achieved
                 by overriding the class _validate_variable and _validate_params methods
 
-    Class attributes:
-        + className
-        + suffix - " " + className (used to create subclass and instance names)
-        + componentCategory - category of Component (i.e., Process, Mechanism, Projection, Function)
-        + componentType - type of Component within a category
-                             (e.g., TransferMechanism, MappingProjection, ControlProjection, etc.)
-        + requiredParamClassDefaultTypes - dict of param names & types that all subclasses of Component must implement;
-
-    Class methods:
-        - _handle_size(size, variable)
-        - _validate_variable(variable)
-        - _validate_params(request_set, target_set, context)
-        - _instantiate_defaults(variable, request_set, assign_missing, target_set, default_set=None
-        - reset_params()
-        - _check_args(variable, params)
-        - _assign_args_to_param_dicts(params, param_names, function_param_names)
-
-    Instance attributes:
-        + name
-        + componentName - name of particular Function (linear, exponential, integral, etc.)
-        + class_defaults.variable (value)
-        + variableClassDefault_np_info (ndArrayInfo)
-        + defaults.variable (value)
-        + _default_variable_flexibility
-        + variable (value)
-        + variable_np_info (ndArrayInfo)
-        + function (method)
-        + function (Function)
-        + paramClassDefaults:
-            + FUNCTION
-            + FUNCTION_PARAMS
-        + paramInstanceDefaults
-        + paramsCurrent
-        # + parameter_validation
-        + user_params
-        +._runtime_params_reset
-
-    Instance methods:
-        + function (implementation is optional; aliased to params[FUNCTION] by default)
     COMMENT
 
     Arguments

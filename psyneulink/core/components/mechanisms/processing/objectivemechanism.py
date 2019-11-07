@@ -10,6 +10,22 @@
 
 """
 
+Contents
+--------
+
+  * `ObjectiveMechanism_Overview`
+  * `ObjectiveMechanism_Creation`
+      - `ObjectiveMechanism_Monitor`
+  * `ObjectiveMechanism_Structure`
+        - `ObjectiveMechanism_Input`
+        - `ObjectiveMechanism_Function`
+        - `ObjectiveMechanism_Output`
+  * `ObjectiveMechanism_Execution`
+  * `ObjectiveMechanism_Examples`
+  * `ObjectiveMechanism_Class_Reference`
+
+.. _ObjectiveMechanism_Overview:
+
 Overview
 --------
 
@@ -413,39 +429,15 @@ class ObjectiveMechanismError(Exception):
 
 
 class ObjectiveMechanism(ProcessingMechanism_Base):
-    # monitor is an alias to input_ports argument, which can still be used in a spec dict
     """
     ObjectiveMechanism(             \
         monitor,                    \
         function=LinearCombination, \
         output_ports=OUTCOME)
 
-    Subclass of `ProcessingMechanism <ProcessingMechanism>` that evaluates the value(s)
-    of one or more `OutputPorts <OutputPort>`.
+    Subclass of `ProcessingMechanism <ProcessingMechanism>` that evaluates the value(s) of one or more `OutputPorts 
+    <OutputPort>`.  See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
 
-    COMMENT:
-        Description:
-            ObjectiveMechanism is a subtype of the ProcessingMechanism Type of the Mechanism Category of the
-                Component class
-            Its function uses the LinearCombination Function to compare two input variables
-            COMPARISON_OPERATION (functionParams) determines whether the comparison is subtractive or divisive
-            The function returns an array with the Hadamard (element-wise) difference/quotient of target vs. sample,
-                as well as the mean, sum, sum of squares, and mean sum of squares of the comparison array
-
-        Class attributes:
-            + componentType (str): ObjectiveMechanism
-            + classPreference (PreferenceSet): ObjectiveMechanism_PreferenceSet, instantiated in __init__()
-            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
-            + class_defaults.variable (value):  None (must be specified using **input_ports** and/or **monitor**)
-            + paramClassDefaults (dict): {FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}
-
-        Class methods:
-            None
-
-        MechanismRegistry:
-            All instances of ObjectiveMechanism are registered in MechanismRegistry, which maintains an
-              entry for the subclass, a count for all instances of it, and a dictionary of those instances
-    COMMENT
 
     Arguments
     ---------
@@ -458,10 +450,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         specifies the function used to evaluate the values listed in `monitor` <ObjectiveMechanism.monitor>`
         (see `function <ObjectiveMechanism.function>` for details).
 
-    output_ports :  List[OutputPort, value, str or dict] or Dict[] : default [OUTCOME]
+    output_ports :  list[OutputPort, value, str or dict] or dict[] : default [OUTCOME]
         specifies the OutputPorts for the Mechanism;
 
-    role: Optional[LEARNING, CONTROL]
+    role: LEARNING or CONTROL : default None
         specifies if the ObjectiveMechanism is being used for learning or control (see `role` for details).
 
     Attributes

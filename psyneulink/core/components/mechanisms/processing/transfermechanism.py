@@ -14,23 +14,24 @@
 # ********************************************  TransferMechanism ******************************************************
 
 """
-..
-Sections
+
+Contents
 --------
-  * `Transfer_Overview`
-  * `Transfer_Creation`
-  * `Transfer_Structure`
+
+  * `TransferMechanism_Overview`
+  * `TransferMechanism_Creation`
+  * `TransferMechanism_Structure`
         - `TransferMechanism_InputPorts`
         - `TransferMechanism_Function`
         - `TransferMechanism_OutputPorts`
-  * `Transfer_Execution`
-        - `Transfer_Integration`
-        - `Transfer_Termination`
-        - `Transfer_Reinitialization`
-  * `Transfer_Class_Reference`
+  * `TransferMechanism_Execution`
+        - `TransferMechanism_Integration`
+        - `TransferMechanism_Termination`
+        - `TransferMechanism_Reinitialization`
+  * `TransferMechanism_Class_Reference`
 
 
-.. _Transfer_Overview:
+.. _TransferMechanism_Overview:
 
 Overview
 --------
@@ -47,7 +48,7 @@ Its **integrator_mode** argument can switch the transformation from an "instanta
 mechanism's input is first transformed by its `integrator_function <TransferMechanism.integrator_function>` (
 `AdaptiveIntegrator`). That result is then transformed by the mechanism's `function <Mechanism_Base.function>`.
 
-.. _Transfer_Creation:
+.. _TransferMechanism_Creation:
 
 Creating a TransferMechanism
 -----------------------------
@@ -65,7 +66,7 @@ argument can be a call to a Function constructor, in which case values may be sp
 
     >>> my_logistic_transfer_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4))
 
-.. _Transfer_Integrator_Mode:
+.. _TransferMechanism_Integrator_Mode:
 
 Next, the **integrator_mode** argument allows the TransferMechanism to operate in either an "instantaneous" or
 "time averaged" manner. By default, `integrator_mode <TransferMechanism.integrator_mode>` is set to False, meaning
@@ -143,7 +144,7 @@ before setting it as the mechanism's value. If `integrator_mode <TransferMechani
 <TransferMechanism.clip>` modifies the value returned by the mechanism's `function <Mechanism_Base.function>`
 before setting it as the TransferMechanism's `value <Mechanism_Base.value>`.
 
-.. _Transfer_Structure:
+.. _TransferMechanism_Structure:
 
 Structure
 ---------
@@ -204,7 +205,7 @@ any or all of these can be modulated by one or more `ControlSignals <ControlSign
        explicitly specified for each and every item of the Mechanism's `value <Mechanism_Base.value>` (corresponding
        to each InputPort) for which an OutputPort is needed.
 
-.. _Transfer_Execution:
+.. _TransferMechanism_Execution:
 
 Execution
 ---------
@@ -212,7 +213,7 @@ Execution
 COMMENT:
 DESCRIBE AS TWO MODES (AKIN TO DDM):  INSTANTANEOUS AND TIME-AVERAGED
 INSTANTANEOUS:
-input transformed in a single `execution <Transfer_Execution>` of the Mechanism)
+input transformed in a single `execution <TransferMechanism_Execution>` of the Mechanism)
 TIME-AVERAGED:
 input transformed using `step-wise` integration, in which each execution returns the result of a subsequent step of the
 integration process).
@@ -247,7 +248,7 @@ After each execution, the TransferMechanism's `function <Mechanism_Base.function
 values, each of which is assigned as an item of the Mechanism's `value <Mechanism_Base.value>` attribute, and the
 `value <OutputPort.value>` of the corresponding `OutputPort` in its `ouput_ports <Mechanism_Base.output_ports>`.
 
-.. _Transfer_Integration:
+.. _TransferMechanism_Integration:
 
 *Integration*
 ~~~~~~~~~~~~~
@@ -280,7 +281,7 @@ Notice that every call to the ``my_execute`` produces a single step of integrati
 <TransferMechanism.rate>` of 0.5).  A single step is also executed if the Mechanism's `execute_until_finished
 <Component.execute_until_finished>` attribute is set to False, even if **termination_threshold** is specified.
 
-.. _Transfer_Termination:
+.. _TransferMechanism_Termination:
 
 *Termination*
 ~~~~~~~~~~~~~
@@ -348,7 +349,7 @@ assigned to the TransferMechanism's `termination_threshold <TransferMechanism.te
 `termination_measure <TransferMechanism.termination_measure>`, and `termination_comparison_op
 <TransferMechanism.termination_comparison_op>` attributes, respectively.
 
-.. _Transfer_Reinitialization:
+.. _TransferMechanism_Reinitialization:
 
 *Reinitialization*
 ~~~~~~~~~~~~~~~~~~
@@ -438,7 +439,7 @@ responsible for `modulating <ModulatorySignal_Modulation` other components, or i
 the mechanism's activity.)
 
 COMMENT:
-.. _Transfer_Examples:
+.. _TransferMechanism_Examples:
 
 Examples
 --------
@@ -446,7 +447,7 @@ Examples
 EXAMPLES HERE
 COMMENT
 
-.. _Transfer_Class_Reference:
+.. _TransferMechanism_Class_Reference:
 
 Class Reference
 ---------------
