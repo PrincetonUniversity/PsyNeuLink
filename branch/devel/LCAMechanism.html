@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCAMechanism &mdash; PsyNeuLink 0.7.0.0+78.g83c0590 documentation</title>
+  <title>LCAMechanism &mdash; PsyNeuLink 0.7.0.0+79.gf5c74e3 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.0.0+78.g83c0590',
+              VERSION:'0.7.0.0+79.gf5c74e3',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.7.0.0+78
+                0.7.0.0+79
               </div>
             
           
@@ -197,13 +197,40 @@
             
   <div class="section" id="module-psyneulink.library.components.mechanisms.processing.transfer.lcamechanism">
 <span id="lcamechanism"></span><h1>LCAMechanism<a class="headerlink" href="#module-psyneulink.library.components.mechanisms.processing.transfer.lcamechanism" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="#lcamechanism-overview"><span class="std std-ref">Overview</span></a></li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="#lcamechanism-creation"><span class="std std-ref">Creating an LCAMechanism</span></a></dt>
+<dd><ul class="first last">
+<li><code class="xref any docutils literal"><span class="pre">LCAMechanism_Integrator_Mode</span></code></li>
+<li><a class="reference internal" href="#lcamechanism-threshold"><span class="std std-ref">Thresholding</span></a></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><a class="reference internal" href="#lcamechanism-structure"><span class="std std-ref">Structure</span></a></li>
+<li><a class="reference internal" href="#lcamechanism-execution"><span class="std std-ref">Execution</span></a></li>
+<li><a class="reference internal" href="#lcamechanism-class-reference"><span class="std std-ref">Class Reference</span></a></li>
+</ul>
+</div></blockquote>
+</div>
 <div class="section" id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<span id="lcamechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>An LCAMechanism is a subclass of <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> that implements a single-layered <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/11488378">leaky competitng
 accumulator (LCA)</a>  network, in which each element is connected to
 every other element with mutually inhibitory weights. The LCAMechanism’s <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a> <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> <em>always</em> consists
 of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation"><code class="xref any py py-attr docutils literal"><span class="pre">self_excitation</span></code></a> on the diagonal and -<a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.competition" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.competition"><code class="xref any py py-attr docutils literal"><span class="pre">competition</span></code></a>
 off-diagonal.</p>
+<p>The key distinguishing features of an LCAMechanism are:</p>
+<ol class="arabic simple">
+<li>its <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a>,
+which implements the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">LeakyCompetingIntegrator</span></code></a> (for which <em>rate</em> = <em>leak</em>)</li>
+<li>its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.matrix" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>, consisting of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation"><code class="xref any py py-attr docutils literal"><span class="pre">self_excitation</span></code></a> (diagonal)
+and <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.competition" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.competition"><code class="xref any py py-attr docutils literal"><span class="pre">competition</span></code></a> (off diagonal) components.</li>
+</ol>
 <p>When all of the following conditions are true:</p>
 <ul class="simple">
 <li>The <a class="reference internal" href="#"><span class="doc">LCAMechanism</span></a> mechanism has two elements</li>
@@ -214,7 +241,7 @@ parameter</li>
 <p>then the <a class="reference internal" href="#"><span class="doc">LCAMechanism</span></a> implements a close approximation of a <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a> Mechanism (see <a class="reference external" href="http://psycnet.apa.org/?&amp;fa=main.doiLanding&amp;doi=10.1037/0033-295X.108.3.550">Usher &amp; McClelland, 2001;</a> and <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/17014301">Bogacz et al (2006)</a>).</p>
 </div>
 <div class="section" id="creating-an-lcamechanism">
-<span id="recurrent-transfer-creation"></span><h2>Creating an LCAMechanism<a class="headerlink" href="#creating-an-lcamechanism" title="Permalink to this headline">¶</a></h2>
+<span id="lcamechanism-creation"></span><h2>Creating an LCAMechanism<a class="headerlink" href="#creating-an-lcamechanism" title="Permalink to this headline">¶</a></h2>
 <p>An LCAMechanism can be created directly by calling its constructor.</p>
 <p>The self-excitatory and mutually-inhibitory connections are implemented as a recurrent <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>
 with a <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.matrix" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> in which the diagonal consists of uniform weights specified by
@@ -224,14 +251,14 @@ with a <a class="reference internal" href="#psyneulink.library.components.mechan
 <h3><em>Integration</em><a class="headerlink" href="#integration" title="Permalink to this headline">¶</a></h3>
 <p>The <strong>noise</strong>, <strong>leak</strong>, <strong>initial_value</strong>, and <strong>time_step_size</strong> arguments are used to implement the
 <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">LeakyCompetingIntegrator</span></code></a> as the LCAMechanism’s <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a>.
-This is only used used when <a class="reference internal" href="TransferMechanism.html#transfer-integrator-mode"><span class="std std-ref">integrator_mode</span></a> is True (which it is by default).  If
+This is only used used when <a class="reference internal" href="TransferMechanism.html#transfermechanism-integrator-mode"><span class="std std-ref">integrator_mode</span></a> is True (which it is by default).  If
 <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a> is False, the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">LeakyCompetingIntegrator</span></code></a> function is skipped
 entirely, and all related arguments (<strong>noise</strong>, <strong>leak</strong>, <strong>initial_value</strong>, and <strong>time_step_size</strong>) have no effect.</p>
 </div>
 <div class="section" id="thresholding">
 <span id="lcamechanism-threshold"></span><h3><em>Thresholding</em><a class="headerlink" href="#thresholding" title="Permalink to this headline">¶</a></h3>
 <p>The <strong>threshold</strong> and <strong>threshold_criterion</strong> arguments specify the conditions under which execution of the
-LCAMechanism terminates if <a class="reference internal" href="TransferMechanism.html#transfer-integrator-mode"><span class="std std-ref">integrator_mode</span></a> is True.  If <strong>threshold</strong> is None
+LCAMechanism terminates if <a class="reference internal" href="TransferMechanism.html#transfermechanism-integrator-mode"><span class="std std-ref">integrator_mode</span></a> is True.  If <strong>threshold</strong> is None
 (the default), then the LCAMechanism will update its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> and the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
 of each <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> only once each time it is executed.  If a <strong>threshold</strong> is specified, then it will continue
 to execute until the condition specified by <strong>threshold_criterion</strong> is True; this can be specified using one of the
@@ -259,8 +286,7 @@ stops executing when updating produces sufficiently small changes.</p>
 similarly-named attributes.  Rather, they are used to specify the <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold"><code class="xref any py py-attr docutils literal"><span class="pre">termination_threshold</span></code></a>, <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure"><code class="xref any py py-attr docutils literal"><span class="pre">termination_measure</span></code></a>,
 and <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op"><code class="xref any py py-attr docutils literal"><span class="pre">termination_comparison_op</span></code></a> attributes; these can also be
 specified directly as arguments of the LCAMechanism’s constructor in order to implement other termination conditions
-(see <a class="reference internal" href="TransferMechanism.html#transfer-termination"><span class="std std-ref">TransferMechanism</span></a> and <a href="#id3"><span class="problematic" id="id4">`</span></a>RecurrentTransferMechanism
-&lt;Recurrent_Transfer_Termination&gt;`for additional details).</p>
+(see <a class="reference internal" href="TransferMechanism.html#transfermechanism-termination"><span class="std std-ref">TransferMechanism</span></a> for additional details).</p>
 </div>
 </div>
 <div class="section" id="structure">
@@ -291,15 +317,10 @@ difference between the element with the highest value and the average of all the
 <span id="lcamechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism">
-<em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.</code><code class="descname">LCAMechanism</code><span class="sig-paren">(</span><em>                            default_variable=None,               size=None,                           function=Logistic,                   initial_value=None,                  leak=0.5,                            competition=1.0,                     self_excitation=0.0,                 noise=0.0,                           integrator_mode = True               time_step_size = 0.1                 threshold = None                     threshold_criterion = VALUE          clip=[float:min, float:max],         params=None,                         name=None,                           prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> that implements a Leaky Competitive Accumulator.</p>
-<p>The key distinguishing features of an LCAMechanism are:</p>
-<ol class="arabic simple">
-<li>its <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a>,
-which implements the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">LeakyCompetingIntegrator</span></code></a> (for which <em>rate</em> = <em>leak</em>)</li>
-<li>its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.matrix" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>, consisting of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation"><code class="xref any py py-attr docutils literal"><span class="pre">self_excitation</span></code></a> (diagonal)
-and <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.competition" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.competition"><code class="xref any py py-attr docutils literal"><span class="pre">competition</span></code></a> (off diagonal) components.</li>
-</ol>
+<em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.</code><code class="descname">LCAMechanism</code><span class="sig-paren">(</span><em>leak=0.5</em>, <em>competition=1.0</em>, <em>self_excitation=0.0</em>, <em>threshold = None                     threshold_criterion = VALUE</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass of <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> that implements a Leaky Competitive Accumulator.
+See <a class="reference internal" href="RecurrentTransferMechanism.html#recurrenttransfermechanism-class-reference"><span class="std std-ref">RecurrentTransferMechanism</span></a> for additional
+arguments and attributes.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -316,13 +337,6 @@ additional details).</li>
 <li><strong>threshold_criterion</strong> (<em>VALUE</em>, <em>MAX_VS_NEXT</em>, <em>MAX_VS_AVG</em>, or <em>CONVERGENCE</em>) – specifies the criterion that is used to evaluate whether the threshold has been reached. If <em>MAX_VS_NEXT</em> or
 <em>MAX_VS_AVG</em> is specified, then the length of the LCAMCechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> must be at
 least 2 (see <a class="reference internal" href="#lcamechanism-threshold"><span class="std std-ref">Thresholding</span></a> for additional details).</li>
-<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
-the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
-the dictionary override any assigned to those parameters in arguments of the constructor.</li>
-<li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the LCAMechanism Mechanism.</li>
-<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Mechanism.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the LCAMechanism Mechanism (see <code class="xref any docutils literal"><span class="pre">prefs</span></code> for
-details).</li>
-<li><strong>context</strong> (<em>str : default ''componentType+INITIALIZNG''</em>) – string used for contextualization of instantiation, hierarchical calls, executions, etc.</li>
 </ul>
 </td>
 </tr>
@@ -357,20 +371,6 @@ accumulation of its <a class="reference internal" href="IntegratorFunctions.html
 <dd><p><em>value : default 0.0</em> – determines the diagonal terms in the LCAMechanism’s <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a>, thereby scaling the contributions of each unit’s own
 recurrent value (<span class="math">\(f(x)_{i}\)</span>) to the accumulation of the <a class="reference internal" href="IntegratorFunctions.html#leakycompetingintegrator"><span class="std std-ref">LeakyCompetingIntegrator's</span></a> <code class="xref any docutils literal"><span class="pre">variable</span></code> (<span class="math">\(x_{i}\)</span>) on each time step
 (see <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">LeakyCompetingIntegrator</span></code></a> for additional details.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.name">
-<code class="descname">name</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – the name of the LCAMechanism Mechanism; if it is not specified in the <strong>name</strong> argument of the constructor, a
-default is assigned by MechanismRegistry (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions used for default and duplicate names).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.prefs">
-<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the LCAMechanism Mechanism; if it is not specified in the <strong>prefs</strong> argument of the
-constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
 <table class="docutils field-list" frame="void" rules="none">

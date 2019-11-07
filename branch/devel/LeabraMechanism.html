@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LeabraMechanism &mdash; PsyNeuLink 0.7.0.0+78.g83c0590 documentation</title>
+  <title>LeabraMechanism &mdash; PsyNeuLink 0.7.0.0+79.gf5c74e3 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.0.0+78.g83c0590',
+              VERSION:'0.7.0.0+79.gf5c74e3',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.7.0.0+78
+                0.7.0.0+79
               </div>
             
           
@@ -195,8 +195,20 @@
             
   <div class="section" id="module-psyneulink.library.components.mechanisms.processing.leabramechanism">
 <span id="leabramechanism"></span><h1>LeabraMechanism<a class="headerlink" href="#module-psyneulink.library.components.mechanisms.processing.leabramechanism" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="#leabramechanism-overview"><span class="std std-ref">Overview</span></a></li>
+<li><a class="reference internal" href="#leabramechanism-creation"><span class="std std-ref">Creating a LeabraMechanism</span></a></li>
+<li><a class="reference internal" href="#leabramechanism-structure"><span class="std std-ref">Structure</span></a></li>
+<li><a class="reference internal" href="#leabramechanism-execution"><span class="std std-ref">Execution</span></a></li>
+<li><code class="xref any docutils literal"><span class="pre">LeabraMechanism_Class_Reference</span></code></li>
+</ul>
+</div></blockquote>
+</div>
 <div class="section" id="overview">
-<span id="leabra-mechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<span id="leabramechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A LeabraMechanism is a subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a> that wraps a leabra network. Leabra is an artificial neural
 network algorithm (<a class="reference external" href="ftp://grey.colorado.edu/pub/oreilly/thesis/oreilly_thesis.all.pdf">O’Reilly, 1996</a>). For more
 info about leabra, please see <a class="reference external" href="https://grey.colorado.edu/emergent/index.php/Leabra">O’Reilly and Munakata, 2016</a>.</p>
@@ -209,7 +221,7 @@ the leabra package, the leabra package itself is still in development, so it is 
 </div>
 </div>
 <div class="section" id="creating-a-leabramechanism">
-<span id="leabra-mechanism-creation"></span><h2>Creating a LeabraMechanism<a class="headerlink" href="#creating-a-leabramechanism" title="Permalink to this headline">¶</a></h2>
+<span id="leabramechanism-creation"></span><h2>Creating a LeabraMechanism<a class="headerlink" href="#creating-a-leabramechanism" title="Permalink to this headline">¶</a></h2>
 <p>A LeabraMechanism can be created in two ways. Users can specify the size of the input layer (<strong>input_size</strong>), size
 of the output layer (<strong>output_size</strong>), number of hidden layers (<strong>hidden_layers</strong>), and sizes of the hidden layers
 (<strong>hidden_sizes</strong>). In this case, the LeabraMechanism will initialize the connections as uniform random values between
@@ -220,7 +232,7 @@ In the former method of creating a LeabraMechanism, the <strong>training_flag</s
 be learning (updating its weights) or not.</p>
 </div>
 <div class="section" id="structure">
-<span id="leabra-mechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<span id="leabramechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>The LeabraMechanism has an attribute <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag"><code class="xref any py py-attr docutils literal"><span class="pre">training_flag</span></code></a> which can be set to True/False to
 determine whether the network is currently learning. The <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag"><code class="xref any py py-attr docutils literal"><span class="pre">training_flag</span></code></a> can also be
 changed after creation of the LeabraMechanism, causing it to start/stop learning.</p>
@@ -238,7 +250,7 @@ target for the LeabraMechanism. The input to the <em>MAIN_INPUT</em> InputPort s
 <p class="first admonition-title">Note</p>
 <p>Currently, there is a bug where LeabraMechanism (and other Mechanisms with multiple input ports) cannot be
 used as <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">ORIGIN Mechanisms</span></a> for a <a class="reference internal" href="System.html"><span class="doc">System</span></a>. If you desire to use a LeabraMechanism as an ORIGIN
-Mechanism, you can work around this bug by creating two <a class="reference internal" href="TransferMechanism.html#transfer-overview"><span class="std std-ref">TransferMechanisms</span></a> as ORIGIN
+Mechanism, you can work around this bug by creating two <a class="reference internal" href="TransferMechanism.html#transfermechanism-overview"><span class="std std-ref">TransferMechanisms</span></a> as ORIGIN
 Mechanisms instead, and have these two TransferMechanisms pass their output to the InputPorts of the
 LeabraMechanism. Here is an example of how to do this. In the example, T2 passes the training_data to the
 <em>LEARNING_TARGET</em> InputPort of L (L.input_ports[1]):</p>
@@ -255,14 +267,14 @@ LeabraMechanism. Here is an example of how to do this. In the example, T2 passes
 </div>
 </div>
 <div class="section" id="execution">
-<span id="leabra-mechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<span id="leabramechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>The LeabraMechanism passes input and training data to the leabra Network it wraps, and the LeabraMechanism passes its
 leabra Network’s output (after one “trial”, default 200 cycles in PsyNeuLink) to its primary <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>. For details
 on Leabra, see <a class="reference external" href="https://grey.colorado.edu/emergent/index.php/Leabra">O’Reilly and Munakata, 2016</a> and the
 <a class="reference external" href="https://github.com/benureau/leabra">leabra Python package on Github</a>.</p>
 </div>
 <div class="section" id="class-reference">
-<span id="leabra-mechanism-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<span id="leabramechanism-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction">
 <em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.leabramechanism.</code><code class="descname">LeabraFunction</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>network=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction" title="Permalink to this definition">¶</a></dt>
@@ -279,7 +291,6 @@ variable by providing it as input to the leabra network inside the LeabraFunctio
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
 <li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
-<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Mechanism.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the LeabraMechanism; see <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.prefs" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details.</li>
 </ul>
 </td>
 </tr>
@@ -315,7 +326,8 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 <dl class="class">
 <dt id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism">
 <em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.leabramechanism.</code><code class="descname">LeabraMechanism</code><span class="sig-paren">(</span><em>leabra_net=None</em>, <em>input_size=1</em>, <em>output_size=1</em>, <em>hidden_layers=0</em>, <em>hidden_sizes=None</em>, <em>training_flag=False</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a> that is a wrapper for a Leabra network in PsyNeuLink.</p>
+<dd><p>Subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a> that is a wrapper for a Leabra network in PsyNeuLink.
+See <a class="reference internal" href="Mechanism.html#mechanism-class-reference"><span class="std std-ref">Mechanism</span></a> for additional arguments and attributes.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -341,37 +353,15 @@ If <strong>leabra_net</strong> argument is provided and <a class="reference inte
 quarter_size result in shorter execution times, though very low values may cause slight fluctuations in output.
 Lower values of quarter_size also effectively reduce the magnitude of learning weight changes during
 a given trial.</li>
-<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
-the mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
-the dictionary override any assigned to those parameters in arguments of the constructor.</li>
-<li><strong>name</strong> (<em>str : default KWTA-&lt;index&gt;</em>) – a string used for the name of the mechanism.
-If is not specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
-(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
-<li><strong>prefs</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : Mechanism.classPreferences</em><em>]</em>) – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for mechanism.
-If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</li>
-<li><strong>context</strong> (<em>str : default componentType+INITIALIZING</em>) – string used for contextualization of instantiation, hierarchical calls, executions, etc.</li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
 <dl class="attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.variable">
-<code class="descname">variable</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>value</em> – the input to this Mechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.function" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
-</dd></dl>
-
-<dl class="attribute">
 <dt id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.function">
 <code class="descname">function</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.function" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>LeabraFunction</em> – the function that wraps and executes the leabra mechanism</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.value">
-<code class="descname">value</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.array [array(float64)]</em> – result of executing <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.function" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -421,43 +411,6 @@ a given trial.</p>
 <code class="descname">network</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.network" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>leabra.Network</em> – the leabra.Network object which is executed by the LeabraMechanism. For more info about leabra Networks,
 please see the <code class="xref any docutils literal"><span class="pre">leabra</span> <span class="pre">package</span></code> on Github.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_ports">
-<code class="descname">output_ports</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_ports" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ContentAddressableList[OutputPort]</em> : default [<a class="reference internal" href="TransferMechanism.html#transfer-mechanism-result"><span class="std std-ref">RESULT</span></a>] – list of Mechanism’s <code class="xref any docutils literal"><span class="pre">OutputPorts</span></code>.  By default there is a single OutputPort,
-<a class="reference internal" href="TransferMechanism.html#transfer-mechanism-result"><span class="std std-ref">RESULT</span></a>, that contains the result of a call to the Mechanism’s
-<a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.function" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>;  additional <a class="reference internal" href="TransferMechanism.html#transfermechanism-standard-outputports"><span class="std std-ref">standard</span></a>
-and/or custom OutputPorts may be included, based on the specifications made in the <strong>output_ports</strong> argument
-of the Mechanism’s constructor.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_values">
-<code class="descname">output_values</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_values" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[array(float64)]</em> – each item is the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the corresponding OutputPort in <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_ports" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a>.  The default is a single item containing the result of the
-TransferMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.function" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>;  additional
-ones may be included, based on the specifications made in the
-<strong>output_ports</strong> argument of the Mechanism’s constructor (see <a class="reference internal" href="TransferMechanism.html#transfermechanism-standard-outputports"><span class="std std-ref">TransferMechanism Standard OutputPorts</span></a>).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.name">
-<code class="descname">name</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default LeabraMechanism-&lt;index&gt;</em> – the name of the Mechanism.
-Specified in the <strong>name</strong> argument of the constructor for the Projection;
-if not specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
-(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.prefs">
-<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for Mechanism.
-Specified in the <strong>prefs</strong> argument of the constructor for the Mechanism;
-if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in <code class="docutils literal"><span class="pre">__init__.py</span></code>
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
 <table class="docutils field-list" frame="void" rules="none">

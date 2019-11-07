@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ModulatoryMechanism &mdash; PsyNeuLink 0.7.0.0+78.g83c0590 documentation</title>
+  <title>ModulatoryMechanism &mdash; PsyNeuLink 0.7.0.0+79.gf5c74e3 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.0.0+78.g83c0590',
+              VERSION:'0.7.0.0+79.gf5c74e3',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.7.0.0+78
+                0.7.0.0+79
               </div>
             
           
@@ -165,6 +165,18 @@
             
   <div class="section" id="module-psyneulink.core.components.mechanisms.modulatory.modulatorymechanism">
 <span id="modulatorymechanism"></span><h1>ModulatoryMechanism<a class="headerlink" href="#module-psyneulink.core.components.mechanisms.modulatory.modulatorymechanism" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="#modulatorymechanism-overview"><span class="std std-ref">Overview</span></a></li>
+<li><a class="reference internal" href="#modulatorymechanism-creation"><span class="std std-ref">Creating a ModulatoryMechanism</span></a></li>
+<li><a class="reference internal" href="#modulatorymechanism-structure"><span class="std std-ref">Structure</span></a></li>
+<li><a class="reference internal" href="#modulatorymechanism-execution"><span class="std std-ref">Execution</span></a></li>
+<li><a class="reference internal" href="#modulatorymechanism-class-reference"><span class="std std-ref">Class Reference</span></a></li>
+</ul>
+</div></blockquote>
+</div>
 <div class="section" id="overview">
 <span id="modulatorymechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A ModulatoryMechanism is a type of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that modifies the operation of one or more other <a class="reference internal" href="Component.html"><span class="doc">Components</span></a>.  In general, a ModulatoryMechanism receives its input from an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>, however
@@ -201,7 +213,7 @@ that appear after its LearningSignals in its <a class="reference internal" href=
 can be assigned different <code class="xref any docutils literal"><span class="pre">control_allocations</span></code> (for ControlSignals) or
 <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signals</span></code></a> (for LearningSignals).  A single ModulatorySignal can also be
 assigned multiple ModulatoryProjections; however, as described  in <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-projections"><span class="std std-ref">ModulatoryProjections</span></a>, they will all
-be assigned the same <a class="reference internal" href="ModulatoryProjection.html#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.variable" title="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+be assigned the same <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
 </div>
 <div class="section" id="creating-a-modulatorymechanism">
 <span id="modulatorymechanism-creation"></span><h2>Creating a ModulatoryMechanism<a class="headerlink" href="#creating-a-modulatorymechanism" title="Permalink to this headline">¶</a></h2>
@@ -232,10 +244,11 @@ introduce recurrent connections, care must be given to their <code class="xref a
 <dl class="class">
 <dt id="psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.ModulatoryMechanism_Base">
 <em class="property">class </em><code class="descclassname">psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.</code><code class="descname">ModulatoryMechanism_Base</code><span class="sig-paren">(</span><em>default_variable</em>, <em>size</em>, <em>modulation</em>, <em>params</em>, <em>name</em>, <em>prefs</em>, <em>context=None</em>, <em>function=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.ModulatoryMechanism_Base" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that modulates the value(s) of one or more other <a class="reference internal" href="Component.html"><span class="doc">Component(s)</span></a>.</p>
+<dd><p>Subclass of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that modulates the value(s) of one or more other <a class="reference internal" href="Component.html"><span class="doc">Component(s)</span></a>.
+See <a class="reference internal" href="Mechanism.html#mechanism-class-reference"><span class="std std-ref">Mechanism</span></a> and subclasses for arguments and additional attributes.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">ModulatoryMechanism is an abstract class and should NEVER be instantiated by a call to its constructor.
+<p class="last">ModulatoryMechanism is an abstract class and should <em>never</em> be instantiated by a call to its constructor.
 They should be instantiated using the constructor for a <a class="reference internal" href="ModulatoryMechanisms_OLD.html#modulatorymechanism-subtypes"><span class="std std-ref">subclass</span></a>.</p>
 </div>
 <dl class="attribute">

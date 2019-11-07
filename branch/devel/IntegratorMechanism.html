@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>IntegratorMechanism &mdash; PsyNeuLink 0.7.0.0+78.g83c0590 documentation</title>
+  <title>IntegratorMechanism &mdash; PsyNeuLink 0.7.0.0+79.gf5c74e3 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.0.0+78.g83c0590',
+              VERSION:'0.7.0.0+79.gf5c74e3',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.7.0.0+78
+                0.7.0.0+79
               </div>
             
           
@@ -195,8 +195,20 @@
             
   <div class="section" id="module-psyneulink.core.components.mechanisms.processing.integratormechanism">
 <span id="integratormechanism"></span><h1>IntegratorMechanism<a class="headerlink" href="#module-psyneulink.core.components.mechanisms.processing.integratormechanism" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="#integratormechanism-overview"><span class="std std-ref">Overview</span></a></li>
+<li><a class="reference internal" href="#integratormechanism-creation"><span class="std std-ref">Creating an IntegratorMechanism</span></a></li>
+<li><code class="xref any docutils literal"><span class="pre">IntegratorMechanism_Structure</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">IntegratorMechanism_Execution</span></code></li>
+<li><a class="reference internal" href="#integratormechanism-class-reference"><span class="std std-ref">Class Reference</span></a></li>
+</ul>
+</div></blockquote>
+</div>
 <div class="section" id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<span id="integratormechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>An IntegratorMechanism integrates its input, possibly based on its prior values.  The input can be a single
 scalar value or an array of scalars (list or 1d np.array).  If it is a list or array, then each value is
 independently integrated.  The default function (<code class="xref any docutils literal"><span class="pre">IntegratorFunction</span></code>) can be parametrized to implement either a simple
@@ -219,7 +231,7 @@ argument can be used to specify the length of the array, in which case it will b
 <div class="section" id="structure">
 <h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>An IntegratorMechanism has a single <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>, the <code class="xref any docutils literal"><span class="pre">value</span></code> of which is
-used as the  <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism.variable" title="psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for its <code class="xref any docutils literal"><span class="pre">function</span></code>.
+used as the  <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for its <code class="xref any docutils literal"><span class="pre">function</span></code>.
 The default for <code class="xref any docutils literal"><span class="pre">function</span></code> is <code class="xref any docutils literal"><span class="pre">AdaptiveIntegrator(rate=0.5)</span></code>. However,
 a custom function can also be specified,  so long as it takes a numeric value, or a list or np.ndarray of numeric
 values as its input, and returns a value of the same type and format.  The Mechanism has a single <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>,
@@ -229,7 +241,7 @@ the <code class="xref any docutils literal"><span class="pre">value</span></code
 <div class="section" id="execution">
 <h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>When an IntegratorMechanism is executed, it carries out the specified integration, and assigns the
-result to the <code class="xref any docutils literal"><span class="pre">value</span></code> of its <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a>.  For the default
+result to the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a>.  For the default
 function (<code class="xref any docutils literal"><span class="pre">IntegratorFunction</span></code>), if the value specified for <strong>default_variable</strong> is a list or array, or <strong>size</strong> is greater
 than 1, each element of the array is independently integrated.  If its <code class="xref any docutils literal"><span class="pre">rate</span></code> parameter is a
 single value,  that rate will be used for integrating each element.  If the <code class="xref any docutils literal"><span class="pre">rate</span></code> parameter is a
@@ -240,59 +252,18 @@ list or array, then each element will be used as the rate for the corresponding 
 <span id="integratormechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.mechanisms.processing.integratormechanism.</code><code class="descname">IntegratorMechanism</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>function=AdaptiveIntegrator(rate=0.5)</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that integrates its input.</p>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.mechanisms.processing.integratormechanism.</code><code class="descname">IntegratorMechanism</code><span class="sig-paren">(</span><em>function=AdaptiveIntegrator(rate=0.5)</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that integrates its input.
+See <a class="reference internal" href="Mechanism.html#mechanism-class-reference"><span class="std std-ref">Mechanism</span></a> for additional arguments and attributes.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray</em>) – the input to the Mechanism to use if none is provided in a call to its
-<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.run" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> methods;
-also serves as a template to specify the length of <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism.variable" title="psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for
-<code class="xref any docutils literal"><span class="pre">function</span></code>, and the <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary outputPort</span></a> of the
-Mechanism.</li>
-<li><strong>size</strong> (<em>int</em><em>, </em><em>list</em><em> or </em><em>np.ndarray of ints</em>) – <p>specifies default_variable as array(s) of zeros if <strong>default_variable</strong> is not passed as an argument;
-if <strong>default_variable</strong> is specified, it takes precedence over the specification of <strong>size</strong>.
-As an example, the following mechanisms are equivalent:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">T1</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
-<span class="n">T2</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">default_variable</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
-</pre></div>
-</div>
-</li>
-<li><strong>function</strong> (<em>IntegratorFunction : default IntegratorFunction</em>) – specifies the function used to integrate the input.  Must take a single numeric value, or a list or np.array
-of values, and return one of the same form.</li>
-<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
-the Mechanism, parameters for its <code class="xref any docutils literal"><span class="pre">function</span></code>, and/or a custom function and its
-parameters.  Values specified for parameters in the dictionary override any assigned to those parameters in
-arguments of the constructor.</li>
-<li><strong>name</strong> (str : default see <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism.name" title="psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a>) – specifies the name of the IntegratorMechanism.</li>
-<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Mechanism.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the IntegratorMechanism; see <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism.prefs" title="psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details.</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>function</strong> (<em>IntegratorFunction : default IntegratorFunction</em>) – specifies the function used to integrate the input.  Must take a single numeric value, or a list or np.array
+of values, and return one of the same form.</td>
 </tr>
 </tbody>
 </table>
-<dl class="attribute">
-<dt id="psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism.variable">
-<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>value: default</em> – the input to Mechanism’s <code class="docutils literal"><span class="pre">function</span></code>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism.name">
-<code class="descname">name</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – the name of the IntegratorMechanism; if it is not specified in the <strong>name</strong> argument of the constructor, a
-default is assigned by MechanismRegistry (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions used for default and duplicate names).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism.prefs">
-<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the IntegratorMechanism; if it is not specified in the <strong>prefs</strong> argument of the
-constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
-</dd></dl>
-
 </dd></dl>
 
 </div>
