@@ -394,15 +394,42 @@ class TestBackProp:
                                              function=pnl.Logistic,
                                              size=3)
 
-        input_weights = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
-        middle_weights = (np.arange(5 * 4).reshape((5, 4)) + 1) / (5 * 4)
-        output_weights = (np.arange(4 * 3).reshape((4, 3)) + 1) / (4 * 3)
+        input_weights_matrix = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
+        middle_weights_matrix = (np.arange(5 * 4).reshape((5, 4)) + 1) / (5 * 4)
+        output_weights_matrix = (np.arange(4 * 3).reshape((4, 3)) + 1) / (4 * 3)
+
+        # This projection will be used by the process below by referencing it in the process' pathway;
+        #    note: sender and receiver args don't need to be specified
+        input_weights = pnl.MappingProjection(
+            name='Input Weights',
+            matrix=input_weights_matrix,
+        )
+
+        # This projection will be used by the process below by assigning its sender and receiver args
+        #    to mechanismss in the pathway
+        middle_weights = pnl.MappingProjection(
+            name='Middle Weights',
+            sender=hidden_layer_1,
+            receiver=hidden_layer_2,
+            matrix=middle_weights_matrix,
+        )
+
+        # Commented lines in this projection illustrate variety of ways in which matrix and learning signals can be specified
+        output_weights = pnl.MappingProjection(
+            name='Output Weights',
+            sender=hidden_layer_2,
+            receiver=output_layer,
+            matrix=output_weights_matrix,
+        )
 
         comp = pnl.Composition(name='multilayer')
 
         p = [input_layer, input_weights, hidden_layer_1, middle_weights, hidden_layer_2, output_weights, output_layer]
-        learning_components = comp.add_backpropagation_learning_pathway(pathway=p,
-                                                                learning_rate=1.)
+        learning_components = comp.add_backpropagation_learning_pathway(
+            pathway=p,
+            loss_function='sse',
+            learning_rate=1.
+        )
 
         target_node = learning_components[pnl.TARGET_MECHANISM]
 
@@ -414,6 +441,52 @@ class TestBackProp:
         comp.run(inputs=input_dictionary,
                  num_trials=10)
     
+        objective_output_layer = comp.nodes[5]
+
+        expected_output = [
+            (output_layer.get_output_values(comp), [np.array([0.22686074, 0.25270212, 0.91542149])]),
+            # error here? why still MSE
+            (objective_output_layer.output_ports[pnl.MSE].parameters.value.get(comp), np.array(0.04082589331852094)),
+            (input_weights.get_mod_matrix(comp), np.array([
+                [ 0.09900247, 0.19839653, 0.29785764, 0.39739191, 0.49700232],
+                [ 0.59629092, 0.69403786, 0.79203411, 0.89030237, 0.98885379],
+            ])),
+            (middle_weights.get_mod_matrix(comp), np.array([
+                [ 0.09490249, 0.10488719, 0.12074013, 0.1428774 ],
+                [ 0.29677354, 0.30507726, 0.31949676, 0.3404652 ],
+                [ 0.49857336, 0.50526254, 0.51830509, 0.53815062],
+                [ 0.70029406, 0.70544225, 0.71717037, 0.73594383],
+                [ 0.90192903, 0.90561554, 0.91609668, 0.93385292],
+            ])),
+            (output_weights.get_mod_matrix(comp), np.array([
+                [-0.74447522, -0.71016859, 0.31575293],
+                [-0.50885177, -0.47444784, 0.56676582],
+                [-0.27333719, -0.23912033, 0.8178167 ],
+                [-0.03767547, -0.00389039, 1.06888608],
+            ])),
+            (comp.parameters.results.get(comp), [
+                [np.array([0.8344837 , 0.87072018, 0.89997433])],
+                [np.array([0.77970193, 0.83263138, 0.90159627])],
+                [np.array([0.70218502, 0.7773823 , 0.90307765])],
+                [np.array([0.60279149, 0.69958079, 0.90453143])],
+                [np.array([0.4967927 , 0.60030321, 0.90610082])],
+                [np.array([0.4056202 , 0.49472391, 0.90786617])],
+                [np.array([0.33763025, 0.40397637, 0.90977675])],
+                [np.array([0.28892812, 0.33633532, 0.9117193 ])],
+                [np.array([0.25348771, 0.28791896, 0.9136125 ])],
+                [np.array([0.22686074, 0.25270212, 0.91542149])]
+            ]),
+        ]
+
+        # Test nparray output of log for Middle_Weights
+
+        for i in range(len(expected_output)):
+            val, expected = expected_output[i]
+            # setting absolute tolerance to be in accordance with reference_output precision
+            # if you do not specify, assert_allcose will use a relative tolerance of 1e-07,
+            # which WILL FAIL unless you gather higher precision values to use as reference
+            np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
+
     @pytest.mark.parametrize('models', [
         # [pnl.SYSTEM,pnl.COMPOSITION],
         # [pnl.SYSTEM,'AUTODIFF'],
