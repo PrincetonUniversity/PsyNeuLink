@@ -446,15 +446,14 @@ modulatory_signal_keywords.update(component_keywords)
 
 class ModulatorySignal(OutputPort):
     """Subclass of `OutputPort` used by a `ModulatoryMechanism <ModulatoryMechanism>` to modulate the value
-    of one more `Ports <Port>`.  See `OutputPort <OutputPort_Class_Reference>` for additional arguments and
-    attributes.
+    of one more `Ports <Port>`.  See `OutputPort <OutputPort_Class_Reference>` and subclasses for additional
+    arguments and attributes.
 
     .. note::
        ModulatorySignal is an abstract class and should *never* be instantiated by a call to its constructor.
        It should be instantiated using the constructor for a `subclass <ModulatorySignal_Subtypes>`.
 
     COMMENT:
-
     PortRegistry
     -------------
         All OutputPorts are registered in PortRegistry, which maintains an entry for the subclass,

@@ -111,7 +111,7 @@ class ModulatoryProjectionError(Exception):
 
 class ModulatoryProjection_Base(Projection_Base):
     """Subclass of `Projection <Projection>` that modulates the value of a `Port <Port>`.
-    See `Projection_Class_Reference` and subclasses for arguments and attributes.
+    See `Projection <Projection_Class_Reference>` and subclasses for arguments and additonal attributes.
 
     .. note::
        ModulatoryProjection is an abstract class and should **never** be instantiated by a call to its constructor.

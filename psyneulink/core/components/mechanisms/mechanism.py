@@ -1008,10 +1008,11 @@ def _input_port_variables_getter(owning_component=None, context=None):
 class Mechanism_Base(Mechanism):
     """Base class for Mechanism.
     The arguments below can be used in the constructor for any subclass of Mechanism.
-    See `Component <Component_Class_Reference>` for additional arguments and attributes.
+    See `Component <Component_Class_Reference>` and subclasses for additional arguments and attributes.
 
     .. note::
        Mechanism is an abstract class and should *never* be instantiated by a direct call to its constructor.
+
        COMMENT:
        It should be instantiated using the :class:`mechanism` command (see it for description of parameters),
        COMMENT
@@ -1059,30 +1060,6 @@ class Mechanism_Base(Mechanism):
                 (self.defaults.value)
             - the value of each OutputPort must be compatible with the corresponding item of the self.value
                  (the output of the Mechanism's execute method)
-
-        Class attributes
-        ----------------
-            + componentCategory = kwMechanismFunctionCategory
-            + className = componentCategory
-            + suffix = " <className>"
-            + className (str): kwMechanismFunctionCategory
-            + suffix (str): " <className>"
-            + registry (dict): MechanismRegistry
-            + classPreference (PreferenceSet): Mechanism_BasePreferenceSet, instantiated in __init__()
-            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-            + class_defaults.variable (list)
-            + paramClassDefaults (dict):
-            + default_mechanism (str): Currently DDM_MECHANISM (class reference resolved in __init__.py)
-
-        Class methods
-        -------------
-            - _validate_variable(variable, context)
-            - _validate_params(request_set, target_set, context)
-            - terminate_execute(self, context=None): terminates execution of Mechanism (for TimeScale = time_step)
-            - adjust(params, context)
-                modifies specified Mechanism params (by calling Function._instantiate_defaults)
-                returns output
-            - plot(): generates a plot of the Mechanism's function using the specified parameter values
 
         MechanismRegistry
         -----------------

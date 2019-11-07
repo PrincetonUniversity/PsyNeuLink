@@ -15,9 +15,23 @@ Contents
 
   * `Composition_Overview`
   * `Composition_Creation`
+      - `Composition_Nested`
   * `Composition_Run`
+      - `Composition_Run_Inputs`
+      - `Composition_Input_as_Function`
+      - `Composition_Scope_of_Execution`
   * `Composition_Controller`
+      - `Composition_Controller_Assignment`
+      - `Composition_Controller_Execution`
   * `Composition_Learning`
+      - `Composition_Learning_Standard`
+          • `Composition_Learning_Unsupervised`
+          • `Composition_Learning_Unsupervised`
+              - `Composition_Learning_Methods`
+              - `Composition_Learning_Components`
+              - `Composition_Learning_Execution`
+      - `Composition_Learning_AutodiffComposition`
+      - `Composition_Learning_UDF`
   * `Composition_Visualization`
   * `Composition_Class_Reference`
 
@@ -194,8 +208,8 @@ Running a Composition
 
 .. _Composition_Run_Inputs:
 
-*Inputs*
-========
+*Run with Input Dictionary*
+===========================
 
 The `run <Composition.run>` method presents the inputs for each `TRIAL` to the input_ports of the INPUT Nodes in the
 `scope of execution <Composition_Scope_of_Execution>`. These input values are specified in the **inputs** argument of
@@ -455,8 +469,8 @@ Shorthand - specify **Mechanism a**'s inputs in a list because it is the only IN
 
 .. _Composition_Input_as_Function:
 
-*Interactive Inputs*
-====================
+*Run with Input Function*
+=========================
 
 An alternative way to specify inputs is with a function. The function must return a dictionary that satisfies
 the rules above for standard input specification. The only difference is that on each execution, the function returns
@@ -907,7 +921,7 @@ learning sequence even though they project to another Mechanism (the *COMPARATOR
        project to a ComparatorMechanism, and is relegated to being an `INTERNAL` node of the Composition
        Mechanism C is now the one that projects to the ComparatorMechanism and assigned as the `OUTPUT` node.
 
-.. _Compositon_Learning_Execution:
+.. _Composition_Learning_Execution:
 
 *Execution of Learning*
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -1456,151 +1470,161 @@ STATE_FUNCTION_PARAMS = "STATE_FUNCTION_PARAMS"
 
 class Composition(Composition_Base, metaclass=ComponentsMeta):
     """
-        Composition
+    Composition(
+        controller=None,
+        enable_controller=None,
+        controller_mode=AFTER,
+        controller_condition=Always,
+        enable_learning=True,
+        name=None,
+        prefs=Composition.classPreferences
+        context=None)
 
-        Arguments
-        ---------
+    Base class for Composition.
 
-        controller:   `OptimizationControlmechanism` : default None
-            specifies the `OptimizationControlMechanism` to use as the Composition's `controller
-            <Composition.controller>` (see `Composition_Controller` for details).
+    Arguments
+    ---------
 
-        enable_controller: bool : default None
-            specifies whether the Composition's `controller <Composition.controller>` is executed when the
-            Composition is executed.  Set to True by default if **controller** specified;  if set to False,
-            the `controller <Composition.controller>` is ignored when the Composition is executed.
+    controller:   `OptimizationControlmechanism` : default None
+        specifies the `OptimizationControlMechanism` to use as the Composition's `controller
+        <Composition.controller>` (see `Composition_Controller` for details).
 
-        controller_mode: Enum[BEOFRE|AFTER] : default AFTER
-            specifies whether the controller is executed before or after the rest of the Composition
-            in each trial.  Must be either the keyword *BEFORE* or *AFTER*.
+    enable_controller: bool : default None
+        specifies whether the Composition's `controller <Composition.controller>` is executed when the
+        Composition is executed.  Set to True by default if **controller** specified;  if set to False,
+        the `controller <Composition.controller>` is ignored when the Composition is executed.
 
-        controller_condition: Condition : default Always
-            specifies when the Composition's `controller <Composition.controller>` is executed in a trial.
+    controller_mode: Enum[BEOFRE|AFTER] : default AFTER
+        specifies whether the controller is executed before or after the rest of the Composition
+        in each trial.  Must be either the keyword *BEFORE* or *AFTER*.
 
-        enable_learning: bool : default True
-            specifies whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when it is
-            executed.
+    controller_condition: Condition : default Always
+        specifies when the Composition's `controller <Composition.controller>` is executed in a trial.
 
-        name : str : default see `name <Composition.name>`
-            specifies the name of the Composition.
+    enable_learning: bool : default True
+        specifies whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when it is
+        executed.
 
-        prefs : PreferenceSet or specification dict : default Composition.classPreferences
-            specifies the `PreferenceSet` for the Composition; see `prefs <Composition.prefs>` for details.
+    name : str : default see `name <Composition.name>`
+        specifies the name of the Composition.
 
-        Attributes
-        ----------
+    prefs : PreferenceSet or specification dict : default Composition.classPreferences
+        specifies the `PreferenceSet` for the Composition; see `prefs <Composition.prefs>` for details.
 
-        graph : `Graph`
-            the full `Graph` associated with this Composition. Contains both Nodes (`Mechanisms <Mechanism>` or
-            `Compositions <Composition>`) and `Projections <Projection>`
+    Attributes
+    ----------
 
-        nodes : `list[Mechanisms and Compositions]`
-            a list of all Nodes (`Mechanisms <Mechanism>` and/or `Compositions <Composition>`) contained in
-            this Composition
+    graph : `Graph`
+        the full `Graph` associated with this Composition. Contains both Nodes (`Mechanisms <Mechanism>` or
+        `Compositions <Composition>`) and `Projections <Projection>`
 
-        input_CIM : `CompositionInterfaceMechanism`
-            mediates input values for the INPUT nodes of the Composition. If the Composition is nested, then the
-            input_CIM and its InputPorts serve as proxies for the Composition itself in terms of afferent projections.
+    nodes : `list[Mechanisms and Compositions]`
+        a list of all Nodes (`Mechanisms <Mechanism>` and/or `Compositions <Composition>`) contained in
+        this Composition
 
-        input_CIM_ports : dict
-            a dictionary in which keys are InputPorts of INPUT Nodes in a composition, and values are lists
-            containing two items: the corresponding InputPort and OutputPort on the input_CIM.
+    input_CIM : `CompositionInterfaceMechanism`
+        mediates input values for the INPUT nodes of the Composition. If the Composition is nested, then the
+        input_CIM and its InputPorts serve as proxies for the Composition itself in terms of afferent projections.
 
-        afferents : ContentAddressableList
-            a list of all of the `Projections <Projection>` to the Composition's `input_CIM`.
+    input_CIM_ports : dict
+        a dictionary in which keys are InputPorts of INPUT Nodes in a composition, and values are lists
+        containing two items: the corresponding InputPort and OutputPort on the input_CIM.
 
-        output_CIM : `CompositionInterfaceMechanism`
-            aggregates output values from the OUTPUT nodes of the Composition. If the Composition is nested, then the
-            output_CIM and its OutputPorts serve as proxies for Composition itself in terms of efferent projections.
+    afferents : ContentAddressableList
+        a list of all of the `Projections <Projection>` to the Composition's `input_CIM`.
 
-        output_CIM_ports : dict
-            a dictionary in which keys are OutputPorts of OUTPUT Nodes in a composition, and values are lists
-            containing two items: the corresponding InputPort and OutputPort on the input_CIM.
+    output_CIM : `CompositionInterfaceMechanism`
+        aggregates output values from the OUTPUT nodes of the Composition. If the Composition is nested, then the
+        output_CIM and its OutputPorts serve as proxies for Composition itself in terms of efferent projections.
 
-        efferents : ContentAddressableList
-            a list of all of the `Projections <Projection>` from the Composition's `output_CIM`.
+    output_CIM_ports : dict
+        a dictionary in which keys are OutputPorts of OUTPUT Nodes in a composition, and values are lists
+        containing two items: the corresponding InputPort and OutputPort on the input_CIM.
 
-        env : Gym Forager Environment : default: None
-            stores a Gym Forager Environment so that the Composition may interact with this environment within a
-            single call to `run <Composition.run>`.
+    efferents : ContentAddressableList
+        a list of all of the `Projections <Projection>` from the Composition's `output_CIM`.
 
-        shadows : dict
-            a dictionary in which the keys are all in the Composition and the values are lists of any Nodes that
-            `shadow <InputPort_Shadow_Inputs>` the original Node's input.
+    env : Gym Forager Environment : default: None
+        stores a Gym Forager Environment so that the Composition may interact with this environment within a
+        single call to `run <Composition.run>`.
 
-        controller : OptimizationControlMechanism
-            identifies the `OptimizationControlMechanism` used as the Composition's controller
-            (see `Composition_Controller` for details).
+    shadows : dict
+        a dictionary in which the keys are all in the Composition and the values are lists of any Nodes that
+        `shadow <InputPort_Shadow_Inputs>` the original Node's input.
 
-        enable_controller : bool
-            determines whether the Composition's `controller <Composition.controller>` is executed in each trial
-            (see controller_mode <Composition.controller_mode>` for timing of execution).  Set to True by default
-            if `controller <Composition.controller>` is specified.  Setting it to False suppresses exectuion of the
-            `controller <Composition.controller>`.
+    controller : OptimizationControlMechanism
+        identifies the `OptimizationControlMechanism` used as the Composition's controller
+        (see `Composition_Controller` for details).
 
-        controller_mode :  BEFORE or AFTER
-            determines whether the controller is executed before or after the rest of the `Composition`
-            is executed on each trial.
+    enable_controller : bool
+        determines whether the Composition's `controller <Composition.controller>` is executed in each trial
+        (see controller_mode <Composition.controller_mode>` for timing of execution).  Set to True by default
+        if `controller <Composition.controller>` is specified.  Setting it to False suppresses exectuion of the
+        `controller <Composition.controller>`.
 
-        controller_condition : Condition
-            specifies whether the controller is executed in a given trial.  The default is `Always`, which
-            executes the controller on every trial.
+    controller_mode :  BEFORE or AFTER
+        determines whether the controller is executed before or after the rest of the `Composition`
+        is executed on each trial.
 
-        default_execution_id
-            if no *context* is specified in a call to run, this *context* is used;  by default,
-            it is the Composition's `name <Composition.name>`.
+    controller_condition : Condition
+        specifies whether the controller is executed in a given trial.  The default is `Always`, which
+        executes the controller on every trial.
 
-        execution_ids : set
-            stores all execution_ids used by this Composition.
+    default_execution_id
+        if no *context* is specified in a call to run, this *context* is used;  by default,
+        it is the Composition's `name <Composition.name>`.
 
-        enable_learning: bool : default True
-            determines whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when it is
-            executed.
+    execution_ids : set
+        stores all execution_ids used by this Composition.
 
-        learning_components : list
-            contains the learning-related components in the Composition, all or many of which may have been
-            created automatically in a call to one of its `add_<*learning_type*>_pathway' methods (see
-            `Composition_Learning` for details).  This does *not* contain the `ProcessingMechanisms
-            <ProcessingMechanism>` or `MappingProjections <MappingProjection>` in the pathway(s) being learned;
-            those are contained in `learning_pathways <Composition.learning_pathways>` attribute.
+    enable_learning: bool : default True
+        determines whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when it is
+        executed.
 
-        learned_components : list[list]
-            contains a list of the components subject to learning in the Composition (`ProcessingMechanisms
-            <ProcessingMechanism>` and `MappingProjections <MappingProjection>`);  this does *not* contain the
-            components used for learning; those are contained in `learning_components
-            <Composition.learning_components>` attribute.
+    learning_components : list
+        contains the learning-related components in the Composition, all or many of which may have been
+        created automatically in a call to one of its `add_<*learning_type*>_pathway' methods (see
+        `Composition_Learning` for details).  This does *not* contain the `ProcessingMechanisms
+        <ProcessingMechanism>` or `MappingProjections <MappingProjection>` in the pathway(s) being learned;
+        those are contained in `learning_pathways <Composition.learning_pathways>` attribute.
 
-        COMMENT:
-        learning_pathways : list[list]
-            contains a list of the learning pathways specified for the Composition; each item contains a list of the
-            `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjection(s) <MappingProjection>` specified a
-            a call to one of the Composition's `add_<*learning_type*>_pathway' methods (see `Composition_Learning`
-            for details).  This does *not* contain the components used for learning; those are contained in
-            `learning_components <Composition.learning_components>` attribute.
-        COMMENT
+    learned_components : list[list]
+        contains a list of the components subject to learning in the Composition (`ProcessingMechanisms
+        <ProcessingMechanism>` and `MappingProjections <MappingProjection>`);  this does *not* contain the
+        components used for learning; those are contained in `learning_components
+        <Composition.learning_components>` attribute.
 
-        results : 3d array
-            stores the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` Mechanisms in the Composition for
-            every `TRIAL <TimeScale.TRIAL>` executed in a call to `run <Composition.run>`.  Each item in the outermost
-            dimension (axis 0) of the array corresponds to a trial; each item within a trial corresponds to the
-            `output_values <Mechanism_Base.output_values>` of an `OUTPUT` Mechanism.
+    COMMENT:
+    learning_pathways : list[list]
+        contains a list of the learning pathways specified for the Composition; each item contains a list of the
+        `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjection(s) <MappingProjection>` specified a
+        a call to one of the Composition's `add_<*learning_type*>_pathway' methods (see `Composition_Learning`
+        for details).  This does *not* contain the components used for learning; those are contained in
+        `learning_components <Composition.learning_components>` attribute.
+    COMMENT
 
-        simulation_results : 3d array
-            stores the `results <Composition.results>` for executions of the Composition when it is executed using
-            its `evaluate <Composition.evaluate>` method.
+    results : 3d array
+        stores the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` Mechanisms in the Composition for
+        every `TRIAL <TimeScale.TRIAL>` executed in a call to `run <Composition.run>`.  Each item in the outermost
+        dimension (axis 0) of the array corresponds to a trial; each item within a trial corresponds to the
+        `output_values <Mechanism_Base.output_values>` of an `OUTPUT` Mechanism.
 
-        retain_old_simulation_data : bool
-            if True, all Parameter values generated during simulations will be saved for later inspection;
-            if False, simulation values will be deleted unless otherwise specified by individual Parameters
+    simulation_results : 3d array
+        stores the `results <Composition.results>` for executions of the Composition when it is executed using
+        its `evaluate <Composition.evaluate>` method.
 
-        name : str
-            the name of the Composition; if it is not specified in the **name** argument of the constructor, a default
-            is assigned by CompositionRegistry (see `Naming` for conventions used for default and duplicate names).
+    retain_old_simulation_data : bool
+        if True, all Parameter values generated during simulations will be saved for later inspection;
+        if False, simulation values will be deleted unless otherwise specified by individual Parameters
 
-        prefs : PreferenceSet or specification dict
-            the `PreferenceSet` for the Composition; if it is not specified in the **prefs** argument of the
-            constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-            <LINK>` for details).
+    name : str
+        the name of the Composition; if it is not specified in the **name** argument of the constructor, a default
+        is assigned by CompositionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the Composition; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
 
     """
     # Composition now inherits from Component, so registry inherits name None

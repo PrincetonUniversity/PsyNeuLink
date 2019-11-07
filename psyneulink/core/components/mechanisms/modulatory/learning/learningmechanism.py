@@ -9,6 +9,23 @@
 # *******************************************  LearningMechanism *******************************************************
 
 """
+
+Contents
+--------
+
+  * `LearningMechanism_Overview`
+  * `LearningMechanism_Creation`
+      - `LearningMechanism_Explicit_Creation`
+  * `LearningMechanism_Structure`
+      - `LearningMechanism_InputPorts`
+      - `LearningMechanism_Function`
+      - `LearningMechanism_OutputPorts`
+      - `LearningMechanism_Additional_Attributes`
+      - `LearningMechanism_Learning_Configurations`
+  * `LearningMechanism_Execution`
+  * `LearningMechanism_Class_Reference`
+
+
 .. _LearningMechanism_Overview:
 
 Overview
@@ -658,6 +675,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         learning_enabled=True)
 
     Implements a Mechanism that modifies the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`.
+    See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
 
     COMMENT:
         Description:
@@ -687,23 +705,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
             - activation_derivative:  get from FUNCTION of sample_activation_mechanism/receiver_mech
                                       assumes derivative of Logistic unless otherwise specified
             - error_derivative:  get from FUNCTION of error_sources/next_level_mech;  but handled in ObjectiveMechanism
-
-        Class attributes:
-            + className = LEARNING_MECHANISM
-            + componentType = ADAPTIVE_MECHANISM
-            + paramClassDefaults (dict):
-                + FUNCTION (Function): (default: BP)
-                + FUNCTION_PARAMS:
-                    + LEARNING_RATE (value): (default: 1)
-            + classPreference (PreferenceSet): LearningSignalPreferenceSet, instantiated in __init__()
-            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-
-        Class methods:
-            None
-
-        MechanismRegistry:
-            All instances of LearningMechanism are registered in MechanismRegistry, which maintains an
-              entry for the subclass, a count for all instances of it, and a dictionary of those instances
     COMMENT
 
     Arguments

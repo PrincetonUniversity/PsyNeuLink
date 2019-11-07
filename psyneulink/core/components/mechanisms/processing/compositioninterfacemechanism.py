@@ -82,7 +82,10 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     CompositionInterfaceMechanism(  \
         function=Identity())
 
-    Implements the CompositionInterfaceMechanism subclass of Mechanism.
+    Subclass of `ProcessingMechanism <ProcessingMechanism>` that acts as interface between a Composition and its
+    inputs from and outputs to the environment or other Mechanisms (if it is a nested Composition).
+
+    See `Mechanism <Mechanism_Class_Reference>` for arguments and additonal attributes.
 
     Attributes
     ----------

@@ -209,8 +209,8 @@ class ProcessingMechanismError(Exception):
 
 class ProcessingMechanism(ProcessingMechanism_Base):
     """
-    Subclass of `ProcessingMechanism <ProcessingMechanism>` that does not have any specialized features;
-    see Mechanism `Mechanism_Class_Reference` for arguments of constructor and attributes.
+    Subclass of `ProcessingMechanism <ProcessingMechanism>` that does not have any specialized features.
+    See Mechanism `Mechanism_Class_Reference` for arguments of constructor and attributes.
     """
 
     componentType = PROCESSING_MECHANISM

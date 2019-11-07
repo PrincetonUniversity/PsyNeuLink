@@ -571,6 +571,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         )
 
     Subclass of `ProcessingMechanism <ProcessingMechanism>` that performs a simple transform of its input.
+    See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
 
     Arguments
     ---------

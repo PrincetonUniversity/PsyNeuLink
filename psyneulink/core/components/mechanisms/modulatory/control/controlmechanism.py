@@ -8,6 +8,7 @@
 # **************************************  ControlMechanism ************************************************
 
 """
+
 Contents
 --------
 
@@ -711,21 +712,16 @@ class ControlMechanism(ModulatoryMechanism_Base):
         objective_mechanism=None,           \
         function=Linear,                    \
         default_allocation=None,            \
-        control_signals=None,               \
+        control=None,                       \
         modulation=MULTIPLICATIVE,          \
         combine_costs=np.sum,               \
         compute_reconfiguration_cost=None,  \
         compute_net_outcome=lambda x,y:x-y)
 
-    Subclass of `ModulatoryMechanism <ModulatoryMechanism>` that modulates the parameter(s)
-    of one or more `Component(s) <Component>`.
-
+    Subclass of `ModulatoryMechanism <ModulatoryMechanism>` that modulates the parameter(s) of one or more
+    `Component(s) <Component>`.  See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
 
     COMMENT:
-    .. note::
-       ControlMechanism is an abstract class and should *never* be instantiated by a direct call to its constructor.
-       It should be instantiated using the constructor for a `subclass <ControlMechanism_Subtypes>`.
-
         Description:
             Protocol for instantiating unassigned ControlProjections (i.e., w/o a sender specified):
                If sender is not specified for a ControlProjection (e.g., in a parameter specification tuple)
@@ -751,13 +747,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     explicitly listed
                 TBI: if it appears in a tuple with a Mechanism, or in the Mechamism's params list, it applies to
                     just that Mechanism
-
-        Class attributes:
-            + componentType (str): System Default Mechanism
-            + paramClassDefaults (dict):
-                + FUNCTION: Linear
-                + FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0}
-                + OBJECTIVE_MECHANISM: List[]
     COMMENT
 
     Arguments
@@ -789,7 +778,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         which the **default_allocation** was not specified in its constructor (see default_allocation
         <ControlMechanism.default_allocation>` for additional details).
 
-    control : ControlSignal specification or List[ControlSignal specification, ...]
+    control : ControlSignal specification or list[ControlSignal specification, ...]
         specifies the parameters to be controlled by the ControlMechanism; a `ControlSignal` is created for each
         (see `ControlSignal_Specification` for details of specification).
 
