@@ -362,8 +362,8 @@ class TestReinitialize:
             I_not_integrator = IntegratorMechanism(function=Linear)
             I_not_integrator.execute(1.0)
             I_not_integrator.reinitialize(0.0)
-        assert "not allowed because this Mechanism is not stateful." in str(err_txt.value)
-        assert "(It does not have an accumulator to reinitialize)" in str(err_txt.value)
+        assert "not allowed because this Mechanism is not stateful;" in str(err_txt.value)
+        assert "it does not have an accumulator to reinitialize" in str(err_txt.value)
 
 
 VECTOR_SIZE=4
