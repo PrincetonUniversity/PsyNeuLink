@@ -163,10 +163,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         specifies the `matrix <AutoAssociativeProjection.matrix>` to be learned (see `learning_signals
         <LearningMechanism.learning_signals>` for details of specification).
 
-    modulation : ModulationParam : default ADDITIVE
-        specifies the default form of modulation used by the AutoAssociativeLearningMechanism's LearningSignals,
-        unless they are `individually specified <LearningSignal_Specification>`.
-
     function : LearningFunction or function : default Hebbian
         specifies the function used to calculate the AutoAssociativeLearningMechanism's `learning_signal
         <AutoAssociativeLearningMechanism.learning_signal>` attribute.  It must take as its **variable** argument a
@@ -266,10 +262,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         the first item is the `value <OutputPort.value>` of the LearningMechanism's `learning_signal
         <AutoAssociativeLearningMechanism.learning_signal>`, followed by the `value <OutputPort.value>`\\s
         of any additional (user-specified) OutputPorts.
-
-    modulation : ModulationParam
-        the default form of modulation used by the AutoAssociativeLearningMechanism's `LearningSignal(s)
-        <LearningMechanism_LearningSignal>`, unless they are `individually specified <LearningSignal_Specification>`.
 
     """
 
