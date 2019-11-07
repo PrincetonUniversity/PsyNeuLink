@@ -373,9 +373,8 @@ class RegressionCFA(CompositionFunctionApproximator):
             arrays of features to assign as the `PV.F` term of `terms <PredictionVector.terms>`.
 
         control_signals : List[ControlSignal]
-            list containing the `ControlSignals <ControlSignal>` of an `OptimizationControlMechanism`;
-            the `variable <ModulatorySignal.variable>` of each is assigned as the `PV.C` term of `terms
-            <PredictionVector.terms>`.
+            list containing the `ControlSignals <ControlSignal>` of an `OptimizationControlMechanism`;  the `variable
+            <Projection_Base.variable>` of each is assigned as the `PV.C` term of `terms <PredictionVector.terms>`.
 
         specified_terms : List[PV]
             terms to include in `vector <PredictionVector.vector>`; entries must be members of the `PV` Enum.

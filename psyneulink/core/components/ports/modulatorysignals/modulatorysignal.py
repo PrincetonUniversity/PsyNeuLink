@@ -96,7 +96,7 @@ Structure
 A ModulatorySignal is always assigned to a `ModulatoryMechanism <ModulatoryMechanism>`, and must be assigned to an
 ModulatoryMechanism of the appropriate type (`see types of ModulatoryMechanism <ModulatoryMechanism_Types>`).  The
 ModulatorySignal receives a `modulatory_allocation` from the ModulatoryMechanism to which it is assigned, that it uses
-as the `variable <Function_Base.variable>` for its `function <ModulatorySignal.function>`, the result of which is the
+as the `variable <Function_Base.variable>` for its `function <ModulatoryMechanism.function>`, the result of which is the
 modulatory `value <ModulatorySignal.value>` of the ModulatorySignal.  A ModulatorySignal is associated with one or more
 `ModulatoryProjections <ModulatoryProjection>` of the corresponding type, that that receive the ModulatorySignal's
 `value <ModulatorySignal.value>`, and use this to modulate the Port(s) to which they project.  All of the
@@ -163,9 +163,9 @@ ModulatorySignals used and the type of Port modulated:
     or an `OutputPort` of the Mechanism, that determines how the `value <Mechanism_Base.value>` of the Mechanism
     (i.e., the result of its `function <Mechanism_Base.function>`) is used to generate the output of the Mechanism.
 
-  * **modulation of a** `MappingProjection` -- a `LearningSignal` must be used; this modulates the `ParameterPort` for
-    the `matrix <MappingProjection.matrix>` parameter of a MappingProjection's `function  <MappingProjection.function>`
-    which, in turn, determines how it computes the MappingProjection's `value <MappingProjection.value>`.
+  * **modulation of a** `MappingProjection` -- a `LearningSignal` must be used; this modulates the `ParameterPort`
+    for the `matrix <MappingProjection.matrix>` parameter of a MappingProjection's `function  <MProjection.function>`
+    which, in turn, determines how it computes the MappingProjection's `value <Projection_Base.value>`.
 
 The following table summarizes the three uses of modulation, the ModulatorySignals for each, and the Ports they
 modulate. The mechanics of modulation are described in greater detail in `ModulatorySignal_Implementation`,
@@ -446,13 +446,12 @@ modulatory_signal_keywords.update(component_keywords)
 
 class ModulatorySignal(OutputPort):
     """Subclass of `OutputPort` used by a `ModulatoryMechanism <ModulatoryMechanism>` to modulate the value
-    of one more `Ports <Port>` (see `OutputPort <OutputPort_Class_Reference>` for additional arguments and
-    attributes).
+    of one more `Ports <Port>`.  See `OutputPort <OutputPort_Class_Reference>` for additional arguments and
+    attributes.
 
     .. note::
        ModulatorySignal is an abstract class and should *never* be instantiated by a call to its constructor.
-       It should be instantiated using the constructor for a `subclass <ModulatorySignal_Subtypes>`
-       (see `OutputPort_Class_Reference` for additional arguments and attributes)
+       It should be instantiated using the constructor for a `subclass <ModulatorySignal_Subtypes>`.
 
     COMMENT:
 
@@ -492,8 +491,8 @@ class ModulatorySignal(OutputPort):
         <ModulatorySignal.allocation>` to `value <ModulatorySignal.value>`.
 
     value : number, list or np.ndarray
-        result of `function <ModulatorySignal.function>`, used to determine the `value <Port_Base.value>` of the
-        Port(s) being modulated.
+        result of `function <ModulatorySignal.function>`, used to determine the `value <Port_Base.value>` of the Port(s)
+        being modulated.
 
     modulation : ModulationParam
         determines how the output of the ModulatorySignal is used to modulate the value of the port(s) being modulated.

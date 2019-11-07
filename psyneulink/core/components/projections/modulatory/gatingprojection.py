@@ -9,6 +9,17 @@
 # *********************************************  GatingProjection ******************************************************
 
 """
+Contents
+--------
+
+  * `GatingProjection_Overview`
+  * `GatingProjection_Creation`
+      - `GatingProjection_Deferred_Initialization`
+  * `GatingProjection_Structure`
+  * `GatingProjection_Execution`
+  * `GatingProjection_Class_Reference`
+
+
 .. _GatingProjection_Overview:
 
 Overview
@@ -56,7 +67,7 @@ The `sender <GatingProjection.sender>` of a GatingProjection is a `GatingSignal`
 <GatingSignal.value>` of the `sender <GatingProjection.sender>` is used by the GatingProjection as its
 `variable <GatingProjection.variable>`;  this is also assigned to its `gating_signal
 <GatingProjection.gating_signal>` attribute, and serves as the input to the GatingProjection's `function
-<GatingProjection.function>`.  The default `function <GatingProjection.function>` for a
+<Projection_Base.function>`.  The default `function <Projection_Base.function>` for a
 GatingProjection is an identity function (`Linear` with **slope**\\ =1 and **intercept**\\ =0);  that is,
 it simply conveys the value of its `gating_signal <GatingProjection.gating_signal>` to its `receiver
 <GatingProjection.receiver>`, for use in modifying the `value <Port_Base.value>` of the Port that it gates. Its
@@ -68,11 +79,11 @@ Execution
 ---------
 
 A GatingProjection cannot be executed directly.  It is executed when the `InputPort` or `OutputPort` to which it
-projects is updated.  Note that this only occurs when the `Mechanism <Mechanism>` to which the `Port <Port>`
-belongs is executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating). When a GatingProjection
-is executed, its `function <GatingProjection.function>` gets the `gating_signal <GatingProjection.gating_signal>` from
-its `sender <GatingProjection.sender>` and conveys that to its `receiver <GatingProjection.receiver>`.  This is used by
-the `receiver <GatingProjection.receiver>` to modify the `value <Port_Base.value>` of the Port gated by the
+projects is updated.  Note that this only occurs when the `Mechanism <Mechanism>` to which the `Port <Port>` belongs
+is executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating). When a GatingProjection is
+executed, its `function <Projection_Base.function>` gets the `gating_signal <GatingProjection.gating_signal>` from
+its `sender <GatingProjection.sender>` and conveys that to its `receiver <GatingProjection.receiver>`.  This is used
+by the `receiver <GatingProjection.receiver>` to modify the `value <Port_Base.value>` of the Port gated by the
 GatingProjection (see `ModulatorySignal_Modulation`, `InputPort Execution <InputPort_Execution>` and `OutputPort
 Execution <OutputPort_Execution>` for how modulation operates and how this applies to a InputPorts and OutputPorts).
 
@@ -134,77 +145,33 @@ class GatingProjection(ModulatoryProjection_Base):
     GatingProjection(           \
      sender=None,               \
      receiver=None,             \
-     function=Linear            \
-     weight=None,               \
-     exponent=None,             \
-     gating_signal_params=None, \
-     params=None,               \
-     name=None,                 \
-     prefs=None)
+     gating_signal_params=None)
 
     Subclass of `ModulatoryProjection <ModulatoryProjection>` that modulates the value of an `InputPort` or
-    `OutputPort`.
-
-    COMMENT:
-        Description:
-            The GatingProjection class is a type in the Projection category of Component.
-            It implements a projection to the InputPort or OutputPort of a Mechanism that modulates the value of
-            that port
-            It:
-               - takes a scalar as its input (sometimes referred to as a "gating signal")
-               - uses its `function` to compute its value
-               - its value is used to modulate the value of the port to which it projects
-
-        ** MOVE:
-        ProjectionRegistry:
-            All GatingProjections are registered in ProjectionRegistry, which maintains an entry for the subclass,
-              a count for all instances of it, and a dictionary of those instances
-
-        Class attributes:
-            + color (value): for use in interface design
-            + classPreference (PreferenceSet): GatingProjectionPreferenceSet, instantiated in __init__()
-            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-            + paramClassDefaults:
-                FUNCTION:Linear,
-                FUNCTION_PARAMS:{SLOPE: 1, INTERCEPT: 0},  # Note: this implements identity function
-                PROJECTION_SENDER: DefaultGatingMechanism, # GatingProjection (assigned to class ref in __init__ module)
-    COMMENT
+    `OutputPort` of a `Mechanism <Mechanism>`.
+    See `Projection <ModulatoryProjection_Class_Reference>` for additional arguments and attributes.
 
 
     Arguments
     ---------
 
-    sender : Optional[GatingMechanism or GatingSignal]
+    sender : GatingMechanism or GatingSignal : default None
         specifies the source of the `gating_signal <GatingProjection.gating_signal>` for the GatingProjection;
         if it is not specified and cannot be `inferred from context <GatingProjection_Creation>` , initialization is
         `deferred <GatingProjection_Deferred_Initialization>`.
 
-    receiver : Optional[Mechanism, InputPort or OutputPort]
+    receiver : Mechanism, InputPort or OutputPort : default None
         specifies the `InputPort` or `OutputPort` to which the GatingProjection projects; if it is not specified,
         and cannot be `inferred from context <GatingProjection_Creation>`, initialization is `deferred
         <GatingProjection_Deferred_Initialization>`.
 
-    function : TransferFunction : default Linear(slope=1, intercept=0)
-        specifies the function used to convert the `gating_signal <GatingProjection.gating_signal>` to the
-        GatingProjection's `value <GatingProjection.value>`.
-
-    weight : number : default None
-       specifies the value by which to multiply the GatingProjection's `value <GatingProjection.value>`
-       before combining it with others (see `Projection_Weight_Exponent` for additional details).
-
-    exponent : number : default None
-       specifies the value by which to exponentiate the GatingProjection's `value <GatingProjection.value>`
-       before combining it with others (see `Projection_Weight_Exponent` for additional details).
-
     gating_signal_params : Dict[param keyword: param value]
         a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for the
-        GatingProjection's `sender <ControlProjection.sender>` (see `GatingSignal_Structure` for a description
+        GatingProjection's `sender <GatingProjection.sender>` (see `GatingSignal_Structure` for a description
         of GatingSignal parameters).
 
     Attributes
     ----------
-
-    componentType : GATING_PROJECTION
 
     sender : GatingSignal
         source of the `gating_signal <GatingProjection.gating_signal>`.
@@ -217,10 +184,6 @@ class GatingProjection(ModulatoryProjection_Base):
 
     gating_signal : 1d np.array
         the `value <GatingSignal.value>` of the GatingProjection's `sender <GatingProjection.sender>`.
-
-    function : Function
-        assigns the `gating_signal` received from the `sender <GatingProjection.sender>` to the
-        GatingProjection's `value <GatingProjection.value>`; the default is an identity function.
 
     value : float
         the value used to modify the `value <Port_Base.value>` of the `InputPort` or `OutputPort` gated by the
@@ -248,7 +211,7 @@ class GatingProjection(ModulatoryProjection_Base):
             ----------
 
                 function
-                    see `function <GatingProjection.function>`
+                    see `function <Projection_Base.function>`
 
                     :default value: `Linear`
                     :type: `Function`

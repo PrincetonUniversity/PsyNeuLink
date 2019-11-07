@@ -391,9 +391,9 @@ starting with constraints that are given the highest precedence:
         * **Existing MappingProjection** -- then its `value <Projection_Base.value>` determines the
           InputPort's `variable <InputPort.variable>`.
 
-        * `Matrix specification <Mapping_Matrix_Specification>` -- its receiver dimensionality determines the format
-          of the InputPort's `variable <InputPort.variable>`. For a standard 2d "weight" matrix (i.e., one that maps
-          a 1d array from its `sender <Projection_Base.sender>` to a 1d array of its `receiver
+        * `Matrix specification <MappingProjection_Matrix_Specification>` -- its receiver dimensionality determines the
+          format of the InputPort's `variable <InputPort.variable>`. For a standard 2d "weight" matrix (i.e., one that
+          maps a 1d array from its `sender <Projection_Base.sender>` to a 1d array of its `receiver
           <Projection_Base.receiver>`), the receiver dimensionality is its outer dimension (axis 1, or its number of
           columns).  However, if the `sender <Projection_Base.sender>` has more than one dimension, then the
           dimensionality of the receiver (used for the InputPort's `variable <InputPort.variable>`) is the
@@ -426,11 +426,11 @@ to, and that can be used to customize the InputPort:
 
 .. _InputPort_Afferent_Projections:
 
-* `path_afferents <Port.path_afferents>` -- `MappingProjections <MappingProjection>` that project to the
-  InputPort, the `value <MappingProjection.value>`\\s of which are combined by the InputPort's `function
-  <InputPort.function>`, possibly modified by its `mod_afferents <InputPort_mod_afferents>`, and assigned to the
-  corresponding item of the owner Mechanism's `variable <Mechanism_Base.variable>`.
-..
+* `path_afferents <Port.path_afferents>` -- `MappingProjections <MappingProjection>` that project to the InputPort,
+  the `value <Projection_Base.value>`\\s of which are combined by the InputPort's `function <InputPort.function>`,
+  possibly modified by its `mod_afferents <InputPort_mod_afferents>`, and assigned to the corresponding item of the
+  owner Mechanism's `variable <Mechanism_Base.variable>`.
+
 * `mod_afferents <InputPort_mod_afferents>` -- `GatingProjections <GatingProjection>` that project to the InputPort,
   the `value <GatingProjection.value>` of which can modify the InputPort's `value <InputPort.value>` (see the
   descriptions of Modulation under `ModulatorySignals <ModulatorySignal_Modulation>` and `GatingSignals
@@ -560,7 +560,7 @@ class InputPort(Port_Base):
         internal_only=False)
 
     Subclass of `Port <Port>` that calculates and represents the input to a `Mechanism <Mechanism>` from one or more
-    `PathwayProjections <PathwayProjection>` (see `Port_Class_Reference` for additional arguments and attributes).
+    `PathwayProjections <PathwayProjection>`.  See `Port_Class_Reference` for additional arguments and attributes.
 
     COMMENT:
 
@@ -593,7 +593,7 @@ class InputPort(Port_Base):
 
     combine : SUM or PRODUCT : default None
         specifies the **operation** argument used by the default `LinearCombination` function, which determines how the
-        `value <Projection.value>` of the InputPort's `projections <Port.projections>` are combined.  This is a
+        `value <Projection_Base.value>` of the InputPort's `projections <Port.projections>` are combined.  This is a
         convenience argument, that allows the **operation** to be specified without having to specify the
         LinearCombination function; it assumes that LinearCombination (the default) is used as the InputPort's function
         -- if it conflicts with a specification of **function** an error is generated.
@@ -603,8 +603,8 @@ class InputPort(Port_Base):
         `GatingProjection(s) <GatingProjection>` to be received by the InputPort, and that are listed in its
         `path_afferents <Port.path_afferents>` and `mod_afferents <Port.mod_afferents>` attributes,
         respectively (see `InputPort_Compatability_and_Constraints` for additional details).  If **projections** but
-        neither **variable** nor **size** are specified, then the `value <Projection.value>` of the Projection(s) or
-        their `senders <Projection_Base.sender>` specified in **projections** argument are used to determine the
+        neither **variable** nor **size** are specified, then the `value <Projection_Base.value>` of the Projection(s)
+        or their `senders <Projection_Base.sender>` specified in **projections** argument are used to determine the
         InputPort's `variable <InputPort.variable>`.
 
     weight : number : default 1
@@ -626,23 +626,22 @@ class InputPort(Port_Base):
         each of which must match the format (number and types of elements) of the InputPort's
         `variable <InputPort.variable>`.  If neither the **variable** or **size** argument is specified, and
         **projections** is specified, then `variable <InputPort.variable>` is assigned the `value
-        <Projection.value>` of the Projection(s) or its `sender <Projection_Base.sender>`.
+        <Projection_Base.value>` of the Projection(s) or its `sender <Projection_Base.sender>`.
 
     function : Function
         If it is a `CombinationFunction`, it combines the `values <Projection_Base.value>` of the `PathwayProjections
         <PathwayProjection>` (e.g., `MappingProjections <MappingProjection>`) received by the InputPort  (listed in
-        its `path_afferents <Port.path_afferents>` attribute), under the possible influence of
-        `GatingProjections <GatingProjection>` received by the InputPort (listed in its `mod_afferents
-        <Port.mod_afferents>` attribute). The result is assigned to the InputPort's `value
-        <InputPort.value>` attribute. For example, the default (`LinearCombination` with *SUM* as it **operation**)
-        performs an element-wise (Hadamard) sum of its Projection `values <Projection_Base.value>`, and assigns to
-        `value <InputPort.value>` an array that is of the same length as each of the Projection `values
-        <Projection_Base.value>`.  If the InputPort receives only one Projection, then any other function can be
-        applied and it will generate a value that is the same length as the Projection's `value <Projection.value>`.
-        However, if the InputPort receives more than one Projection and uses a function other than a
-        CombinationFunction, a warning is generated and only the `value <Projection.value>` of the first Projection
-        list in `path_afferents <Port.path_afferents>` is used by the function, which may generate unexpected
-        results when executing the Mechanism or Composition to which it belongs.
+        its `path_afferents <Port.path_afferents>` attribute), under the possible influence of `GatingProjections
+        <GatingProjection>` received by the InputPort (listed in its `mod_afferents <Port.mod_afferents>` attribute).
+        The result is assigned to the InputPort's `value <InputPort.value>` attribute. For example, the default
+        (`LinearCombination` with *SUM* as it **operation**) performs an element-wise (Hadamard) sum of its Projection
+        `values <Projection_Base.value>`, and assigns to `value <InputPort.value>` an array that is of the same length
+        as each of the Projection `values <Projection_Base.value>`.  If the InputPort receives only one Projection,
+        then any other function can be applied and it will generate a value that is the same length as the Projection's
+        `value <Projection_Base.value>`. However, if the InputPort receives more than one Projection and uses a function
+        other than a CombinationFunction, a warning is generated and only the `value <Projection_Base.value>` of the
+        first Projection list in `path_afferents <Port.path_afferents>` is used by the function, which may generate
+        unexpected results when executing the Mechanism or Composition to which it belongs.
 
     value : value or ndarray
         the output of the InputPort's `function <InputPort.function>`, that is assigned to an item of the owner

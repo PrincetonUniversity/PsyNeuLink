@@ -108,7 +108,7 @@ A ContrastiveHebbianMechanism always has two, and possibly three `InputPorts <In
 
     * *INPUT:* receives external input to the Mechanism;
     ..
-    * *RECURRENT:* receives the `value <MappingProjection.value>` of the Mechanism's `recurrent_projection
+    * *RECURRENT:* receives the `value <Projection_Base.value>` of the Mechanism's `recurrent_projection
       <ContrastiveHebbianMechanism.recurrent_projection>`;
     ..
     * *TARGET:* only implemented if **target_size** is specified, **separated = `True` (default), and

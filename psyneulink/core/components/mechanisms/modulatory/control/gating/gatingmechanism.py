@@ -380,7 +380,7 @@ class GatingMechanism(ControlMechanism):
         single item used by all of the `gating_signals <GatingMechanism.gating_signals>`.
 
     gating_allocation : scalar or 1d np.array of ints
-        the result of the GatingMechanism's `function <GatingProjection.function>`;
+        the result of the GatingMechanism's `function <Projection_Base.function>`;
         each item is the value assigned to the corresponding `GatingSignal` listed in `gating_signals
         <GatingMechanism.gating_signals>`, and used by each GatingSignal to generate the `gating_signal
         <GatingSignal.gating_signal>` assigned to its `GatingProjections <GatingProjection>`; same as the

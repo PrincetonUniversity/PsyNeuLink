@@ -256,7 +256,7 @@ for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
     <BLANKLINE>
     COMMENT
 
-Note that since the `name <Projection.name>` attribute of the Projection was not assigned, its default name is
+Note that since the `name <Projection_Base.name>` attribute of the Projection was not assigned, its default name is
 reported.
 
 The following shows the Log of ``proj_A_to_B`` in numpy array format, with and without header information::

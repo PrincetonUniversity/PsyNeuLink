@@ -718,7 +718,7 @@ class EVCControlMechanism(ControlMechanism):
         `EVC_policies`;
 
     control_allocation : 2d np.array : [[defaultControlAllocation]]
-        determines the value assigned as the `variable <ModulatorySignal.variable>` for each `ControlSignal` and its
+        determines the value assigned as the `variable <Projection_Base.variable>` for each `ControlSignal` and its
         associated `ControlProjection`.  Each item of the array must be a 1d array (usually containing a scalar)
         that specifies an `allocation` for the corresponding ControlSignal, and the number of items must equal the
         number of ControlSignals in the EVCControlMechanism's `control_signals` attribute.

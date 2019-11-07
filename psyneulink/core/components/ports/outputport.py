@@ -576,7 +576,7 @@ COMMENT
 .. _OutputPort_Modulatory_Projections:
 
 * `mod_afferents <Port.mod_afferents>` -- `ControlProjections <ControlProjection>` or `GatingProjections
-  <GatingProjection>` that project to the OutputPort, the `value <ModulatoryProjection.value>` of which can modify the
+  <GatingProjection>` that project to the OutputPort, the `value <Projection_Base.value>` of which can modify the
   OutputPort's `value <InputPort.value>` (see the descriptions of Modulation under `ModulatorySignals
   <ModulatorySignal_Modulation>`, `ControlSignals <ControlSignal_Modulation>`, and `GatingSignals
   <GatingSignal_Modulation>` for additional details).  If the  OutputPort receives more than one ModulatoryProjection,
@@ -756,8 +756,8 @@ class OutputPort(Port_Base):
         function=Linear(), \
         projections=None)
 
-    Subclass of `Port <Port>` that calculates and represents an output of a `Mechanism <Mechanism>`
-    (see `Port_Class_Reference` for additional arguments and attributes).
+    Subclass of `Port <Port>` that calculates and represents an output of a `Mechanism <Mechanism>`.
+    See `Port_Class_Reference` for additional arguments and attributes.
 
     COMMENT:
 

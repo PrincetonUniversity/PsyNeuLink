@@ -106,7 +106,7 @@ each of which projects to the InputPort or OutputPort that it gates.
 
 When a GatingSignal is created, it can be assigned one or more `GatingProjections <GatingProjection>`, using either
 the **projections** argument of its constructor, or in an entry of a dictionary assigned to the **params** argument
-with the key *PROJECTIONS*.  These will be assigned to its `efferents  <GatingSignal.efferents>` attribute.  See
+with the key *PROJECTIONS*.  These will be assigned to its `efferents <GatingSignal.efferents>` attribute.  See
 `Port Projections <Port_Projections>` for additional details concerning the specification of Projections when
 creating a Port.
 
@@ -280,39 +280,18 @@ gating_signal_keywords = {GATE}
 class GatingSignal(ControlSignal):
     """
     GatingSignal(                                   \
-        owner,                                      \
         default_allocation=defaultGatingAllocation, \
-        index=PRIMARY                               \
-        variable=defaultGatingAllocation            \
-        function=Linear(),                          \
-        modulation=MULTIPLICATIVE,                  \
-        projections=None)
+        function=Linear())
 
     A subclass of `ModulatorySignal <ModulatorySignal>` used by a `GatingMechanism` to modulate the value(s)
-    of one more `InputPort(s) <InputPort>` and/or `OutputPort(s) <OutputPort>`.
+    of one more `InputPort(s) <InputPort>` and/or `OutputPort(s) <OutputPort>`. See `ControlSignal
+    <ControlSignal_Class_Reference>` for additional arguments and attributes).
 
     COMMENT:
-
-        Description
-        -----------
-            The GatingSignal class is a subtype of the OutputPort class in the Port category of Component,
-            It is used primarily as the sender for GatingProjections
-            Its FUNCTION updates its value:
-                note:  currently, this is the identity function, that simply maps variable to self.value
-
-        Class attributes:
-            + componentType (str) = GATING_SIGNAL
-            + paramClassDefaults (dict)
-                + FUNCTION (Linear)
-                + FUNCTION_PARAMS (Modulation.MULTIPLY)
-
-        Class methods:
-            function (executes function specified in params[FUNCTION];  default: Linear
-
-        PortRegistry
-        -------------
-            All OutputPorts are registered in PortRegistry, which maintains an entry for the subclass,
-              a count for all instances of it, and a dictionary of those instances
+    PortRegistry
+    -------------
+        All OutputPorts are registered in PortRegistry, which maintains an entry for the subclass,
+          a count for all instances of it, and a dictionary of those instances
     COMMENT
 
 
@@ -320,50 +299,18 @@ class GatingSignal(ControlSignal):
     ---------
 
     default_allocation : scalar, list or np.ndarray : defaultGatingAllocation
-        specifies the template and default value used for `allocation <GatingSignal.allocation>`;  must match the
-        shape of each item specified in `allocation_samples <GatingSignal.allocation_samples>`.
-
-    index : int : default PRIMARY
-        specifies the item of the owner GatingMechanism's `gating_allocation <GatingMechanism.gating_allocation>` used as the
-        GatingSignal's `value <GatingSignal.value>`.
+        specifies the template and default value used for `allocation <GatingSignal.allocation>`.
 
     function : Function or method : default Linear
         specifies the function used to determine the value of the GatingSignal from the value of its
         `owner <GatingMechanism.owner>`.
 
-    modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
-        specifies the way in which the `value <GatingSignal.value>` the GatingSignal is used to modify the
-        `value <Port_Base.value>` of the Port(s) to which the GatingSignal's
-        `GatingProjection(s) <GatingProjection>` project.
-
-    modulates : list of Projection specifications
-        specifies the `GatingProjection(s) <GatingProjection>` to be assigned to the GatingSignal, and that will be
-        listed in its `efferents <GatingSignal.efferents>` attribute (see `GatingSignal_Projections` for additional
-        details).
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
-        the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
-        override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default see ModulatorySignal `name <ModulatorySignal.name>`
-        specifies the name of the GatingSignal;  see GatingSignal `name <ModulatorySignal.name>` for additional
-        details.
-
-    prefs : PreferenceSet or specification dict : default Port.classPreferences
-        specifies the `PreferenceSet` for the GatingSignal; see `prefs <GatingSignal.prefs>` for details.
-
-
     Attributes
     ----------
 
-    variable : scalar, list or np.ndarray
-        same as `allocation <GatingSignal.allocation>`.
-
     allocation : float : default: defaultGatingAllocation
-        value assigned by the GatingSignal's `owner <Port.owner>`, and used as the `variable
-        <GatingSignal.variable>` of the it `function <GatingSignal.function>` to determine the GatingSignal's
-        `GatingSignal.intensity`.
+        value assigned by the GatingSignal's `owner <Port.owner>`, and used as the `variable <Projection_Base.variable>`
+        of the GatingSignal's `function <GatingSignal.function>` to determine its`GatingSignal.intensity`.
     COMMENT:
     FOR DEVELOPERS:  Implemented as an alias of the GatingSignal's variable Parameter
     COMMENT
@@ -382,36 +329,16 @@ class GatingSignal(ControlSignal):
         of the Port(s) to which the GatingSignal's `GatingProjection(s) <GatingProjection>` project; same as
         `gating_signal <GatingSignal.gating_signal>`.
 
-    index : int
-        the item of the owner GatingMechanism's `gating_allocation <GatingMechanism.gating_allocation>` used as the
-        GatingSignal's `value <GatingSignal.value>`.
-
     gating_signal : number, list or np.ndarray
         result of the GatingSignal's `function <GatingSignal.function>` (same as its `value <GatingSignal.value>`).
 
-
     modulation : ModulationParam
-        determines the way in the which `value <GatingSignal.value>` of the GatingSignal is used to modify the
-        `value <Port_Base.value>` of the Port(s) to which the GatingSignal's
-        `GatingProjection(s) <GatingProjection>` project.
+        determines the way in the which `value <GatingSignal.value>` of the GatingSignal is used to modify the `value
+        <Port_Base.value>` of the InputPort(s) and/or OutputPort(s) to which the GatingSignal's `GatingProjection(s)
+        <GatingProjection>` project.
 
     efferents : [List[GatingProjection]]
         a list of the `GatingProjections <GatingProjection>` assigned to (i.e., that project from) the GatingSignal.
-
-    name : str
-        name of the GatingSignal; if not is specified in the **name** argument of its constructor, a default name
-        is assigned (see `name <ModulatorySignal.name>`).
-
-        .. note::
-            Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that Ports with
-            the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
-            Mechanism: Ports within a Mechanism with the same base name are appended an index in the order of their
-            creation.
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the GatingSignal; if it is not specified in the **prefs** argument of the constructor,
-        a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet <LINK>` for
-        details).
 
     """
 
@@ -493,8 +420,6 @@ class GatingSignal(ControlSignal):
                  reference_value=None,
                  default_allocation=defaultGatingAllocation,
                  size=None,
-                 index=None,
-                 # assign=None,
                  function=Linear,
                  modulation:tc.optional(str)=None,
                  modulates=None,
@@ -502,13 +427,6 @@ class GatingSignal(ControlSignal):
                  name=None,
                  prefs:is_pref_set=None,
                  **kwargs):
-
-        if index is None and owner is not None:
-            allocation = owner.gating_allocation
-            if len(allocation)==1:
-                index = PRIMARY
-            else:
-                index = SEQUENTIAL
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
@@ -525,8 +443,6 @@ class GatingSignal(ControlSignal):
                          default_allocation=default_allocation,
                          size=size,
                          modulation=modulation,
-                         index=index,
-                         # assign=assign,
                          modulates=modulates,
                          params=params,
                          name=name,

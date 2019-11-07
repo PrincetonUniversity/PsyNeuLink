@@ -43,7 +43,6 @@ types of Mechanisms in PsyNeuLink:
       System itself.  There are a variety of different types of ProcessingMechanism, that accept various forms of
       input and transform them in different ways (see `ProcessingMechanisms <ProcessingMechanism>` for a list).
 
-    * `ModulatoryMechanisms <ModulatoryMechanism>` monitor the output of one or more other Mechanisms, and use this
       to modulate the parameters of other Mechanisms or Projections.  There are three basic ModulatoryMechanisms:
 
       * `LearningMechanism <LearningMechanism>` - these receive training (target) values, and compare them with the
@@ -538,9 +537,9 @@ contrast to Ports specified in a Mechanism's constructor which **do** `replace a
 **Projections to InputPorts**
 
 Each InputPort of a Mechanism can receive one or more `Projections <Projection>` from other Mechanisms.  When a
-Mechanism is created, a `MappingProjection` is created automatically for any OutputPorts or Projections from them
-that are in its `InputPort specification <InputPort_Specification>`, using `AUTO_ASSIGN_MATRIX` as the Projection's
-`matrix specification <Mapping_Matrix_Specification>`.  However, if a specification in the **input_ports** argument
+Mechanism is created, a `MappingProjection` is created automatically for any OutputPorts or Projections from them that
+are in its `InputPort specification <InputPort_Specification>`, using `AUTO_ASSIGN_MATRIX` as the Projection's `matrix
+specification <MappingProjection_Matrix_Specification>`.  However, if a specification in the **input_ports** argument
 or an *INPUT_PORTS* entry of a **params** dictionary cannot be resolved to an instantiated OutputPort at the time the
 Mechanism is created, no MappingProjection is assigned to the InputPort, and this must be done by some other means;
 any specifications in the Mechanism's `input_ports <Mechanism_Base.input_ports>` attribute that are not
@@ -1008,6 +1007,8 @@ def _input_port_variables_getter(owning_component=None, context=None):
 
 class Mechanism_Base(Mechanism):
     """Base class for Mechanism.
+    The arguments below can be used in the constructor for any subclass of Mechanism.
+    See `Component <Component_Class_Reference>` for additional arguments and attributes.
 
     .. note::
        Mechanism is an abstract class and should *never* be instantiated by a direct call to its constructor.
@@ -1015,8 +1016,7 @@ class Mechanism_Base(Mechanism):
        It should be instantiated using the :class:`mechanism` command (see it for description of parameters),
        COMMENT
        Mechanisms should be instantiated by calling the constructor for the desired subclass, or using other methods
-       for specifying a Mechanism in context (see `Mechanism_Creation`).  The arguments below can be used in the
-       constructor for any subclass of Mechanism.
+       for specifying a Mechanism in context (see `Mechanism_Creation`)
 
     COMMENT:
         Description

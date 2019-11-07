@@ -453,7 +453,7 @@ COMMENT:
 *Initial Values*
 ================
 
-Any Mechanism that is the `sender <Projection.Projection_Base.sender>` of a Projection that closes a loop in a Process
+Any Mechanism that is the `sender <Projection_Base.sender>` of a Projection that closes a loop in a Process
 or System, and that is not an `ORIGIN` Mechanism, is designated as `INITIALIZE_CYCLE`. An initial value can be assigned
 to such Mechanisms, that will be used to initialize them when the Process or System is first run.  These values are
 specified in the **initial_values** argument of :keyword:`run`, as a dictionary. The key for each entry must

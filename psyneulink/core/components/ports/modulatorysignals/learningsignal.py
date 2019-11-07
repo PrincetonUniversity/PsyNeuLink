@@ -9,6 +9,23 @@
 # ******************************************  LearningSignal *****************************************************
 
 """
+
+Contents:
+---------
+
+  * `Learning_signal_Overview`
+  * `LearningSignal_Creation`
+      - `LearningSignal_Specification`
+  * `LearningSignal_Structure`
+      - `LearningSignal_Projections`
+      - `LearningSignal_Modulation`
+      - `LearningSignal_Learning_Rate`
+  * `LearningSignal_Execution`
+  * `LearningSignal_Class_Reference`
+
+
+.. _LearningSignal_Overview:
+
 Overview
 --------
 
@@ -163,6 +180,8 @@ projects.
    applied until the MappingProjection is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of
    "lazy" updating).
 
+.. _LearningSignal_Class_Reference:
+
 Class Reference
 ---------------
 
@@ -211,38 +230,20 @@ class LearningSignal(ModulatorySignal):
         prefs=None)
 
     A subclass of `ModulatorySignal <ModulatorySignal>` used by a `LearningMechanism` to modify the `matrix
-    <MappingProjection.matrix>` parameter of one more more `MappingProjection(s) <MappingProjection>`.
+    <MappingProjection.matrix>` parameter of one more more `MappingProjection(s) <MappingProjection>`.  See
+    `ModulatorySignal <ModulatorySignal_Class_Reference>` for additional arguments and attributes.
 
     COMMENT:
+   PortRegistry
+    -------------
 
-        Description
-        -----------
-            The LearningSignal class is a subtype of the OutputPort type in the Port category of Component,
-            It is used as the sender for LearningProjections
-            Its FUNCTION updates its value:
-                note:  currently, this is the identity function, that simply maps variable to self.value
-
-        Class attributes:
-            + componentType (str) = LEARNING_SIGNAL
-            + paramClassDefaults (dict)
-                + FUNCTION (Linear)
-                + FUNCTION_PARAMS   (Operation.PRODUCT)
-
-        Class methods:
-            function (executes function specified in params[FUNCTION];  default: Linear)
-
-        PortRegistry
-        -------------
-            All OutputPorts are registered in PortRegistry, which maintains an entry for the subclass,
-              a count for all instances of it, and a dictionary of those instances
+        All OutputPorts are registered in PortRegistry, which maintains an entry for the subclass,
+        a count for all instances of it, and a dictionary of those instances
     COMMENT
 
 
     Arguments
     ---------
-
-    owner : LearningMechanism
-        specifies the `LearningMechanism` to which to assign the LearningSignal.
 
     function : Function or method : default Linear
         specifies the function used by the LearningSignal to generate its
@@ -257,11 +258,6 @@ class LearningSignal(ModulatorySignal):
         of the `matrix <MappingProjection.matrix>` parameter for the `MappingProjection(s) <MappingProjection>` to which
         the LearningSignal's `LearningProjection(s) <LearningProjection>` project.
 
-    params : Dict[param keyword: param value] : default None
-        a `parameter specification dictionary <ParameterPort_Specification>` that can be used to specify the
-        parameters for the LearningSignal and/or a custom function and its parameters. Values specified for
-        parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
-
     modulates : list of Projection specifications
         specifies the `LearningProjection(s) <GatingProjection>` to be assigned to the LearningSignal, and that will be
         listed in its `efferents <LearningSignal.efferents>` attribute (see `LearningSignal_Projections` for additional
@@ -270,17 +266,10 @@ class LearningSignal(ModulatorySignal):
     Attributes
     ----------
 
-    owner : LearningMechanism
-        the `LearningMechanism` to which the LearningSignal belongs.
-
-    variable : number, list or np.ndarray
-        used by `function <LearningSignal.function>` to generate the LearningSignal's
-        `learning_signal <LearningSignal.learning_signal>`.
-
     function : TransferFunction :  default Linear(slope=1, intercept=0)
-        converts `variable <LearningSignal.variable>` into the LearningSignal's
-        `learning_signal <LearningSignal.learning_signal>`. The default is the identity function, which assigns the
-        LearningSignal's `variable <LearningSignal.variable>` as its `learning_signal <LearningSignal.learning_signal>`.
+        converts `variable <Projection_Base.variable>` into the LearningSignal's `learning_signal
+        <LearningSignal.learning_signal>`. The default is the `Identity` Function, that assigns the LearningSignal's
+        `variable <Projection_Base.variable>` as its `learning_signal <LearningSignal.learning_signal>`.
 
     learning_rate : float : None
         determines the learning rate for the LearningSignal.  It is used to specify the
@@ -302,17 +291,6 @@ class LearningSignal(ModulatorySignal):
         determines the way in which the `value <LearningSignal.value>` of the LearningSignal is used to modify the
         value of the `matrix <MappingProjection.matrix>` parameter for the `MappingProjection` to which the
         LearningSignal's `LearningProjection(s) <LearningProjection>` project.
-
-    name : str
-        name of the LearningSignal; the first LearningSignal is always assigned the name *LEARNING_SIGNAL*;  any
-        additional LearningSignals without the **name** argument of their constructor specified are assigned a default
-        name (see `name <ModulatorySignal.name>`).
-
-        .. note::
-            Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that Ports with
-            the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
-            Mechanism: Ports within a Mechanism with the same base name are appended an index in the order of their
-            creation.
 
     """
 

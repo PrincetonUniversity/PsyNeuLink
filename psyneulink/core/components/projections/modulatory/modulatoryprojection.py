@@ -9,6 +9,17 @@
 # ******************************************  ModulatoryProjection *****************************************************
 
 """
+
+Contents
+--------
+
+  * `ModulatoryProjection_Overview`
+  * `ModulatoryProjection_Creation`
+  * `ModulatoryProjection_Structure`
+  * `ModulatoryProjection_Execution`
+  * `ModulatoryProjection_Class_Reference`
+
+
 .. _ModulatoryProjection_Overview:
 
 Overview
@@ -35,7 +46,7 @@ that modulate different types of Components and their Ports:
     to the `InputPort` or `OutputPort` of a `ProcessingMechanism <ProcessingMechanism>` for use by the Port's
     `function <Port_Base.function>` in modulating its `value <Port_Base.value>`.
 
-.. _Projection_Creation:
+.. _ModulatoryProjection_Creation:
 
 Creating a ModulatoryProjection
 -------------------------------
@@ -99,8 +110,8 @@ class ModulatoryProjectionError(Exception):
 
 
 class ModulatoryProjection_Base(Projection_Base):
-    """Subclass of `Projection <Projection>` that modulates the value of a `Port <Port>`;  see subclasses for
-    argument of constructor.
+    """Subclass of `Projection <Projection>` that modulates the value of a `Port <Port>`.
+    See `Projection_Class_Reference` and subclasses for arguments and attributes.
 
     .. note::
        ModulatoryProjection is an abstract class and should **never** be instantiated by a call to its constructor.
@@ -108,25 +119,6 @@ class ModulatoryProjection_Base(Projection_Base):
 
     Attributes
     ----------
-
-    receiver : Port of a Mechanism or MappingProjection
-        the Port to which the ModulatoryProjection projects, the `function <Port_Base.function>` of which is
-        modulated by it.
-
-    sender : ModulatoryMechanism
-        the `ModulatorySignal <ModulatorySignal>` from which the ModulatoryProjection projects.
-
-    variable : 2d np.array
-        value received from the `ModulatorySignal <ModulatorySignal>` that is the ModulatoryProjection's
-        `sender <ModulatoryProjection_Base.sender>`.
-
-    function : Function : default Linear
-        assigns the value received from the ModulatoryProjection's `sender <ModulatoryProjection_Base.sender>` to
-        its `value <ModulatoryProjection_Base.value>`.
-
-    value : 2d np.array
-        value used to modulate the `function <Port_Base.function>` of the Port that is its `receiver
-        <ModulatoryProjection_Base.receiver>`.
 
     name : str
         the name of the ModulatoryProjection. If the ModulatoryProjection's `initialization has been deferred

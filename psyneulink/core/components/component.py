@@ -745,11 +745,11 @@ class ComponentsMeta(ABCMeta):
 
 class Component(JSONDumpable, metaclass=ComponentsMeta):
     """Base class for Component.
+    The arguments below are ones that can be used in the constructor for any Component subclass.
 
     .. note::
        Component is an abstract class and should *never* be instantiated by a direct call to its constructor.
-       It should be instantiated using the constructor for a subclass.  The arguments below are ones that
-       can be used in the constructor for any Component subclass.
+       It should be instantiated using the constructor for a subclass.
 
     COMMENT:
         Every Component is associated with:

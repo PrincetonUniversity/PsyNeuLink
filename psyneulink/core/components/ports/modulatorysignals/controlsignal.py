@@ -456,8 +456,8 @@ class ControlSignal(ModulatorySignal):
         projections=None)
 
     A subclass of `ModulatorySignal <ModulatorySignal>` used by a `ControlMechanism <ControlMechanism>` to
-    modulate the parameter(s) of one or more other `Mechanisms <Mechanism>` (see `ModulatorySignal
-    <ModulatorySignal_Class_Reference>` for additional arguments and attributes)
+    modulate the parameter(s) of one or more other `Mechanisms <Mechanism>`.  See `ModulatorySignal
+    <ModulatorySignal_Class_Reference>` for additional arguments and attributes.
 
     Arguments
     ---------
@@ -504,7 +504,7 @@ class ControlSignal(ModulatorySignal):
 
     allocation : float : default: defaultControlAllocation
         value assigned by the ControlSignal's `owner <ModulatorySignal.owner>`, and used as the `variable
-        <ModulatorySignal.variable>` of its `function <ControlSignal.function>` to determine the ControlSignal's
+        <Projection_Base.variable>` of its `function <ControlSignal.function>` to determine the ControlSignal's
         `ControlSignal.intensity`.
     COMMENT:
     FOR DEVELOPERS:  Implemented as an alias of the ControlSignal's variable Parameter
@@ -579,6 +579,9 @@ class ControlSignal(ModulatorySignal):
 
     cost : float
         combined result of all `cost functions <ControlSignal_Costs>` that are enabled.
+
+    efferents : [List[ControlProjection]]
+        a list of the `ControlProjections <ControlProjection>` assigned to (i.e., that project from) the ControlSignal.
 
     """
 

@@ -149,7 +149,7 @@ specified in any of the following ways:
   * **Inline specification** -- a MappingProjection specification can be interposed between any two Mechanisms in the
     `pathway <Process.pathway>` list. This creates a Projection from the preceding Mechanism in the list to the
     one that follows it.  It can be specified using any of the ways used to `specify a Projection
-    <Projection_Specification>` or the `matrix parameter <Mapping_Matrix_Specification>` of one.
+    <Projection_Specification>` or the `matrix parameter <MappingProjection_Matrix_Specification>` of one.
   ..
 
   .. _Process_Tuple_Specification:

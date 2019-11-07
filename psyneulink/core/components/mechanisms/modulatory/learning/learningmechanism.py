@@ -112,9 +112,9 @@ names and roles (shown in the `figure <LearningMechanism_Single_Layer_Learning_F
 
 .. _LearningMechanism_Activation_Input:
 
-* *ACTIVATION_INPUT* - receives the value of the input to the `primary_learned_projection`; that is, the
-  `value <MappingProjection.value>` of that MappingProjection's `sender <MappingProjection.sender>`.
-  The value is assigned as the first item of the LearningMechanism's `variable <LearningMechanism.variable>` attribute.
+* *ACTIVATION_INPUT* - receives the value of the input to the `primary_learned_projection`; that is, the `value
+  <Projection_Base.value>` of that MappingProjection's `sender <MappingProjection.sender>`. The value is assigned
+  as the first item of the LearningMechanism's `variable <LearningMechanism.variable>` attribute.
 
 .. _LearningMechanism_Activation_Output:
 

@@ -9,6 +9,21 @@
 # *******************************************  LearningProjection **********************************************************
 
 """
+
+Contents
+--------
+
+  * `LearningProjection_Overview`
+  * `LearningProjection_Creation`
+      - `LearningProjection_Deferred_Initialization`
+      - `LearningProjection_Sender`
+      - `LearningProjection_Function_and_Learning_Rate`
+      - `LearningProjection_Receiver`
+  * `LearningProjection_Structure`
+  * `LearningProjection_Execution`
+  * `LearningProjection_Class_Reference`
+
+
 .. _LearningProjection_Overview:
 
 Overview
@@ -107,20 +122,19 @@ over the direct specification of the `learning_rate <LearningProjection.learning
 *Weight and Exponent*
 ~~~~~~~~~~~~~~~~~~~~~
 
-Every LearningProjection has a `weight <LearningProjection.weight>` and `exponent <LearningProjection.exponent>`
+Every LearningProjection has a `weight <Projection_Base.weight>` and `exponent <Projection_Base.exponent>`
 attribute that are applied to its `value <LearningProjection.value>` before it is combined  with other
 LearningProjections that modify the `ParameterPort` for the `matrix <MappingProjection.matrix>` parameter of the
 `MappingProjection` to which they project (see description under `Projection <Projection_Weight_Exponent>` for
 additional details).
 
 .. note::
-   The `weight <MappingProjection.weight>` and `exponent <MappingProjection.exponent>` attributes of a
-   LearningProjection are not commonly used, and are implemented largely for generality and compatibility with other
-   types of `Projection`.  They are distinct from, and are applied in addition to the LearningProjection's
-   `learning_rate <LearningProjection.learning_rate>` attribute.  As noted under  `Projection
-   <Projection_Weight_Exponent>`, they are not normalized and thus their effects aggregate if a ParameterPort
-   receives one or more LearningProjections with non-default values of their  `weight
-   <MappingProjection.weight>` and `exponent <MappingProjection.exponent>` attributes.
+   The `weight <Projection_Base.weight>` and `exponent <Projection_Base.exponent>` attributes of a LearningProjection
+   are not commonly used, and are implemented largely for generality and compatibility with other types of `Projection`.
+   They are distinct from, and are applied in addition to the LearningProjection's `learning_rate
+   <LearningProjection.learning_rate>` attribute.  As noted under  `Projection <Projection_Weight_Exponent>`, they are
+   not normalized and thus their effects aggregate if a ParameterPort receives one or more LearningProjections with
+   non-default values of their  `weight <Projection_Base.weight>` and `exponent <Projection_Base.exponent>` attributes.
 
 .. _LearningProjection_Receiver:
 
@@ -240,31 +254,7 @@ class LearningProjection(ModulatoryProjection_Base):
 
     Subclass of `ModulatoryProjection <ModulatoryProjection>` that modulates the value of a `ParameterPort` for the
     `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`.
-
-    COMMENT:
-        Description:
-            The LearningProjection class is a componentType in the Projection category of Function.
-            It implements a Projection from the LEARNING_SIGNAL outputPort of a LearningMechanism to the MATRIX
-            parameterPort of a MappingProjection that modifies its matrix parameter.
-            It's function takes the output of a LearningMechanism (its learning_signal attribute), and provides this
-            to the parameterPort to which it projects, possibly scaled by the LearningProjection's learning_rate.
-
-        Class attributes:
-            + className = LEARNING_PROJECTION
-            + componentType = PROJECTION
-            + paramClassDefaults (dict) :
-                default
-                + FUNCTION (Function): default Linear
-                + FUNCTION_PARAMS (dict):
-                    + SLOPE (value) : default 1
-                    + INTERCEPT (value) : default 0
-
-            + classPreference (PreferenceSet): LearningProjectionPreferenceSet, instantiated in __init__()
-            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-
-        Class methods:
-            None
-    COMMENT
+    See `Projection <ModulatoryProjection_Class_Reference>` for additional arguments and attributes.
 
     Arguments
     ---------
@@ -314,19 +304,9 @@ class LearningProjection(ModulatoryProjection_Base):
         the `learned_projection <LearningProjection.learned_projection>` when the latter is executed (see
         `learning_enabled <LearningProjection.learning_enabled>` for additional details).
 
-    weight : number : default None
-       specifies the value by which to multiply the LearningProjection's `value <LearningProjection.value>`
-       before combining it with others (see `Projection_Weight_Exponent` for additional details).
-
-    exponent : number : default None
-       specifies the value by which to exponentiate the LearningProjection's `value <LearningProjection.value>`
-       before combining it with others (see `Projection_Weight_Exponent` for additional details).
-
 
     Attributes
     ----------
-
-    componentType : LEARNING_PROJECTION
 
     sender : LearningSignal
         source of `learning_signal <LearningProjection.learning_signal>`

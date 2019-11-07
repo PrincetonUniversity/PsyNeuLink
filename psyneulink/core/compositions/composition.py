@@ -2733,10 +2733,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         feedback : bool
             When False (default) all Nodes within a cycle containing this Projection execute in parallel. This
             means that each Projections within the cycle actually passes to its `receiver <Projection_Base.receiver>`
-            the `value <Projection.value>` of its `sender <Projection_Base.sender>` from the previous execution.
+            the `value <Projection_Base.value>` of its `sender <Projection_Base.sender>` from the previous execution.
             When True, this Projection "breaks" the cycle, such that all Nodes execute in sequence, and only the
             Projection marked as 'feedback' passes to its `receiver <Projection_Base.receiver>` the
-            `value <Projection.value>` of its `sender <Projection_Base.sender>` from the previous execution.
+            `value <Projection_Base.value>` of its `sender <Projection_Base.sender>` from the previous execution.
 
         Returns
         -------

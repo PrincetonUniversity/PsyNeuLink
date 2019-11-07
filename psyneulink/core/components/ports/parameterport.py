@@ -217,10 +217,9 @@ In the following example, a `MappingProjection` is created, and its
     ...                                                       pnl.LearningSignal))
 
 .. note::
-   The `matrix <MappingProjection.MappingProjection.matrix>` parameter belongs to the MappingProjection's
-   `function <MappingProjection.MappingProjection.function>`;  however, since it has only one standard function,
-   its arguments are available in the constructor for the Projection (see
-   `Component_Specifying_Functions_and_Parameters` for a more detailed explanation).
+   The `matrix <MappingProjection.MappingProjection.matrix>` parameter belongs to the MappingProjection's `function
+   <Projection_Base.function>`;  however, since it has only one standard function, its arguments are available in the
+   constructor for the Projection (see `Component_Specifying_Functions_and_Parameters` for a more detailed explanation).
 
 The example below shows how to specify the parameters in the first example using a parameter specification dictionary::
 
@@ -407,7 +406,7 @@ class ParameterPort(Port_Base):
 
 
     Subclass of `Port <Port>` that represents and possibly modifies the parameter of a `Mechanism <Mechanism>`,
-    `Projection <Projection>`, or its `Function` (see `Port_Class_Reference` for additional arguments and attributes).
+    `Projection <Projection>`, or its `Function`. See `Port_Class_Reference` for additional arguments and attributes.
 
     COMMENT:
     PortRegistry
