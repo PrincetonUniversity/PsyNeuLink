@@ -15,6 +15,20 @@
 
 """
 
+Contents
+--------
+
+  * `LCAMechanism_Overview`
+  * `LCAMechanism_Creation`
+      - `LCAMechanism_Integrator_Mode`
+      - `LCAMechanism_Threshold`
+  * `LCAMechanism_Structure`
+  * `LCAMechanism_Execution`
+  * `LCAMechanism_Class_Reference`
+
+
+.. _LCAMechanism_Overview:
+
 Overview
 --------
 
@@ -24,6 +38,14 @@ every other element with mutually inhibitory weights. The LCAMechanism's `recurr
 <RecurrentTransferMechanism.recurrent_projection>` `matrix <MappingProjection.matrix>` *always* consists
 of `self_excitation <LCAMechanism.self_excitation>` on the diagonal and -`competition <LCAMechanism.competition>`
 off-diagonal.
+
+The key distinguishing features of an LCAMechanism are:
+
+1. its `integrator_function <TransferMechanism.integrator_function>`,
+   which implements the `LeakyCompetingIntegrator` (for which *rate* = *leak*)
+
+2. its `matrix <LCAMechanism.matrix>`, consisting of `self_excitation <LCAMechanism.self_excitation>` (diagonal)
+   and `competition <LCAMechanism.competition>` (off diagonal) components.
 
     COMMENT:
     .. math::
@@ -47,7 +69,7 @@ then the `LCAMechanism` implements a close approximation of a `DDM` Mechanism (s
 <http://psycnet.apa.org/?&fa=main.doiLanding&doi=10.1037/0033-295X.108.3.550>`_ and `Bogacz et al (2006)
 <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_).
 
-.. _RecurrentTransferMechanism_Creation:
+.. _LCAMechanism_Creation:
 
 Creating an LCAMechanism
 ------------------------
@@ -241,23 +263,9 @@ class LCAMechanism(RecurrentTransferMechanism):
         threshold_criterion = VALUE)
 
     Subclass of `RecurrentTransferMechanism` that implements a Leaky Competitive Accumulator.
+    See `RecurrentTransferMechanism <RecurrentTransferMechanism_Class_Reference>` for additional
+    arguments and attributes.
 
-    The key distinguishing features of an LCAMechanism are:
-
-    1. its `integrator_function <TransferMechanism.integrator_function>`,
-       which implements the `LeakyCompetingIntegrator` (for which *rate* = *leak*)
-
-    2. its `matrix <LCAMechanism.matrix>`, consisting of `self_excitation <LCAMechanism.self_excitation>` (diagonal)
-       and `competition <LCAMechanism.competition>` (off diagonal) components.
-
-    COMMENT:
-        Description
-        -----------
-            LCAMechanism is a Subtype of the RecurrentTransferMechanism Subtype of the TransferMechanism
-            Subtype of the ProcessingMechanisms Type of the Mechanism Category of the Component class.
-            It implements a RecurrentTransferMechanism with a set of uniform recurrent inhibitory weights.
-            In all other respects, it is identical to a RecurrentTransferMechanism.
-    COMMENT
 
     Arguments
     ---------

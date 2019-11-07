@@ -340,6 +340,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         learning_condition=UPDATE)
 
     Subclass of `TransferMechanism` that implements a single-layer auto-recurrent network.
+    See `TransferMechanism <TransferMechanism_Class_Reference>` for additional arguments and attributes.
 
     Arguments
     ---------
