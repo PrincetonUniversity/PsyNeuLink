@@ -435,7 +435,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         function=LinearCombination, \
         output_ports=OUTCOME)
 
-    Subclass of `ProcessingMechanism <ProcessingMechanism>` that evaluates the value(s) of one or more `OutputPorts 
+    Subclass of `ProcessingMechanism <ProcessingMechanism>` that evaluates the value(s) of one or more `OutputPorts
     <OutputPort>`.  See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
 
 
