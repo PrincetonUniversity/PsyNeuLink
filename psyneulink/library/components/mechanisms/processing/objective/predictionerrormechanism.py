@@ -11,6 +11,20 @@
 # ***************************** PredictionErrorMechanism ***********************
 
 """
+
+Contents
+--------
+
+  * `PredictionErrorMechanism_Overview`
+  * `PredictionErrorMechanism_Creation`
+  * `PredictionErrorMechanism_Structure`
+  * `PredictionErrorMechanism_Execution`
+  * `PredictionErrorMechanism_Example`
+  * `PredictionErrorMechanism_Class_Reference`
+
+
+.. _PredictionErrorMechanism_Overview:
+
 Overview
 --------
 
@@ -89,7 +103,7 @@ and generates a similar array as its result. The result is assigned as the
 value of the PredictionErrorMechanism's *OUTCOME* (`primary
 <OutputPort_Primary>`) OutputPort.
 
-.. _PredictionErrorMechanism_Function:
+.. _PredictionErrorMechanism_Execution:
 
 Execution
 ---------
@@ -189,25 +203,20 @@ class PredictionErrorMechanism(ComparatorMechanism):
         name=None,                                           \
         prefs=None)
 
-    Calculates the prediction error between the predicted reward and the target
+    Subclass of ComparatorMechanism that calculates the prediction error between the predicted reward and the target.
+    See `ComparatorMechanism <ComparatorMechanism_Class_Reference>` for additional arguments and attributes.
 
     Arguments
     ---------
 
     sample : OutputPort, Mechanism_Base, dict, number, or str
-        specifies the *SAMPLE* InputPort, that will be evaluated by the `function
-        <PredictionErrorMechanism.function>`.
+        specifies the *SAMPLE* InputPort, that is evaluated by the `function <PredictionErrorMechanism.function>`.
 
     target : OutputPort, Mechanism_Base, dict, number, or str
-        specifies the *TARGET* InputPort, that will be used by the function to evaluate the `sample
-        <PredictionErrorMechanism.sample>`.
+        specifies the *TARGET* InputPort used by the function to evaluate `sample<PredictionErrorMechanism.sample>`.
 
     function : CombinationFunction, ObjectiveFunction, function, or method : default PredictionErrorDeltaFunction
         the function used to evaluate the SAMPLE and TARGET inputs.
-
-    output_ports : str, Iterable : default OUTCOME
-        by default, contains only the *OUTCOME* (`primary <OutputPort_Primary>`)
-        OutputPort of the PredictionErrorMechanism.
 
     learning_rate : Number : default 0.3
         controls the weight of later timesteps compared to earlier ones;  higher rates weight later timesteps more

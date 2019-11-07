@@ -9,6 +9,18 @@
 
 """
 
+Contents
+--------
+
+  * `KWTAMechanism_Overview`
+  * `KWTAMechanism_Creation`
+  * `KWTAMechanism_Structure`
+  * `KWTAMechanism_Execution`
+  * `KWTAMechanism_Class_Reference`
+
+
+.. _KWTAMechanism_Overview:
+
 Overview
 --------
 
@@ -203,7 +215,8 @@ class KWTAMechanism(RecurrentTransferMechanism):
         average_based=False,  \
         inhibition_only=True)
 
-    Subclass of `RecurrentTransferMechanism` that dynamically regulates its input relative to a given threshold.
+    Subclass of `RecurrentTransferMechanism` that dynamically regulates its input relative to a given threshold. See
+    `RecurrentTransferMechanism <RecurrentTransferMechanism_Class_Reference>` for additional arguments and attributes.
 
     Arguments
     ---------

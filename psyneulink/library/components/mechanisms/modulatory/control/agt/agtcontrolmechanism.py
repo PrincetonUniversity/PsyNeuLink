@@ -10,6 +10,21 @@
 
 """
 
+Contents
+--------
+
+  * `AGTControlMechanism_Overview`
+  * `AGTControlMechanism_Creation`
+  * `AGTControlMechanism_Structure`
+      - `AGTControlMechanism_Input`
+      - `AGTControlMechanism_Function`
+      - `AGTControlMechanism_Output`
+  * `AGTControlMechanism_Execution`
+  * `AGTControlMechanism_Class_Reference`
+
+
+.. _AGTControlMechanism_Overview:
+
 Overview
 --------
 
@@ -174,66 +189,33 @@ class AGTControlMechanismError(Exception):
 class AGTControlMechanism(ControlMechanism):
     """
     AGTControlMechanism(                \
-        system=None,                    \
-        monitored_output_ports=None,   \
-        function=Linear,                \
-        control_signals=None,           \
-        params=None,                    \
-        name=None,                      \
-        prefs=None)
+        monitored_output_ports=None,    \
+        control_signals=None)
 
     Subclass of `ControlMechanism <ModulatoryMechanism>` that modulates the `multiplicative_param
     <Function_Modulatory_Params>` of the `function <Mechanism_Base.function>` of one or more `Mechanisms <Mechanism>`.
+    See `ControlMechanism <ControlMechanism_Class_Reference>` for additional arguments and attributes.
 
     Arguments
     ---------
-
-    system : System : default None
-        specifies the `System` for which the AGTControlMechanism should serve as a `controller <System.controller>`;
-        the AGTControlMechanism will inherit any `OutputPorts <OutputPort>` specified in the **monitor_for_control**
-        argument of the `system <EVCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
-        specified in its **control_signals** argument.
 
     monitored_output_ports : List[`OutputPort`, `Mechanism`, str, value, dict, `MonitoredOutputPortsOption`] or Dict
         specifies the OutputPorts to be monitored by the `objective_mechanism <AGTControlMechanism.objective_mechanism>`
         (see `monitored_output_ports <ObjectiveMechanism.monitored_output_ports>` for details of specification).
 
-    function : TransferFunction :  default Linear(slope=1, intercept=0)
-        specifies the Function used to convert the AGTControlMechanism's `input <AGTControlMechanism_Input>` into its
-        `control_allocation <AGTControlMechanism.control_allocation>`, that is used to assign the `allocation
-        <ControlSignal.allocation>` of its `ControlSignal(s) <ControlSignal>`.
-
     control_signals : List[ParameterPort, tuple[str, Mechanism] or dict]
         specifies the parameters to be controlled by the AGTControlMechanism; a `ControlSignal` is created for each
         (see `ControlSignal_Specification` for details of specification).
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters
-        for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
-        specified for parameters in the dictionary override any assigned to those parameters in arguments of the
-        constructor.
-
-    name : str : default see `name <AGTControlMechanism.name>`
-        specifies the name of the AGTControlMechanism.
-
-    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the AGTControlMechanism; see `prefs <AGTControlMechanism.prefs>` for details.
 
 
     Attributes
     ----------
 
-    system : System_Base
-        the `System` for which AGTControlMechanism is the `controller <System.controller>`;
-        the AGTControlMechanism inherits any `OutputPorts <OutputPort>` specified in the **monitor_for_control**
-        argument of the `system <EVCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
-        specified in its **control_signals** argument.
-
     objective_mechanism : ObjectiveMechanism
         `ObjectiveMechanism` that monitors and evaluates the values specified in the ControlMechanism's
         **objective_mechanism** argument, the output of which is used as `input <AGTControlMechanism_Input>` to the
-        AGTControlMechanism. It is created automatically when AGTControlMechanism is created, and uses as a `DualAdaptiveIntegrator` as
-        is `function <ObjectiveMechanism.function>`.
+        AGTControlMechanism. It is created automatically when AGTControlMechanism is created, and uses as a
+        `DualAdaptiveIntegrator` as is `function <ObjectiveMechanism.function>`.
 
     monitored_output_ports : List[OutputPort]
         each item is an `OutputPort` monitored by the `objective_mechanism <AGTControlMechanism.objective_mechanism>`; it is
@@ -249,40 +231,6 @@ class AGTControlMechanism(ControlMechanism):
         <AGTControlMechanism.objective_mechanism>`, and are used by the ObjectiveMechanism's `function
         <ObjectiveMechanism.function>` to parametrize the contribution made to its output by each of the values that
         it monitors (see `ObjectiveMechanism Function <ObjectiveMechanism_Function>`).
-
-    function : TransferFunction :  default Linear(slope=1, intercept=0)
-        determines the Function used to convert the AGTControlMechanism's `input <AGTControlMechanism_Input>` into its
-        `control_allocation <AGTControlMechanism.control_allocation>`, that is used to assign the
-        `allocation <ControlSignal.allocation>` for its `ControlSignal(s) <ControlSignal>`.
-
-    control_allocation : 2d np.array
-        contains the value(s) assigned as the `allocation <ControlSignal.allocation>` for the `ControlSignal(s)
-        <ControlSignal>` listed in the `control_signals` attribute;  if the default `function <AGTControlMechanism.function>`
-        is used, it contains a single value that is assigned as the `allocation <ControlSignal.allocation>` for
-        all of the AGTControlMechanism's `control_signals <AGTControlMechanism.control_signals>`. The AGTControlMechanism's control_allocation
-        is the same as its `value <Mechanism_Base.value>` attribute).
-
-    control_signals : List[ControlSignal]
-        list of the AGTControlMechanism's `ControlSignals <ControlSignals>` , including any inherited from a `system
-        <ControlMechanism.system>` for which it is a `controller <System.controller>` (same as
-        ControlMechanism's `output_ports <Mechanism_Base.output_ports>` attribute); each sends a `ControlProjection`
-        to the `ParameterPort` for the parameter it controls
-
-    control_projections : List[ControlProjection]
-        list of `ControlProjections <ControlProjection>`, one for each `ControlSignal` in `control_signals`.
-
-    modulation : ModulationParam
-        the default form of modulation used by the ControlMechanism's `ControlSignals <GatingSignal>`,
-        unless they are `individually specified <ControlSignal_Specification>`.
-
-    name : str
-        the name of the AGTControlMechanism; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the AGTControlMechanism; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
 
    """
 

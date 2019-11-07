@@ -9,6 +9,19 @@
 
 """
 
+Contents
+--------
+
+  * `KohonenMechanism_Overview`
+  * `KohonenMechanism_Creation`
+  * `KohonenMechanism_Structure`
+      - `KohonenMechanism_Learning`
+  * `KohonenMechanism_Execution`
+  * `KohonenMechanism_Class_Reference`
+
+
+.. _KohonenMechanism_Overview:
+
 Overview
 --------
 
@@ -19,31 +32,35 @@ which is a particular form of `self-organized map (SOM) <https://en.wikipedia.or
 default, a KohonenMechanism uses a `KohonenLearningMechanism` and the `Kohonen` `LearningFunction <LearningFunctions>`
 to implement implement a form of unsupervised learning that produces the self-organized map.
 
-.. _Kohonen_Creation:
+.. _KohonenMechanism_Creation:
 
 Creating a KohonenMechanism
 ---------------------------
 
 A KohonenMechanism can be created directly by calling its constructor.
 
-.. _Kohonen_Structure:
+.. _KohonenMechanism_Structure:
 
 Structure
 ---------
 
-XXX
+TBD
 
-.. _Kohonen_Learning:
+.. _KohonenMechanism_Learning:
 
+Learning
+~~~~~~~~
 
-.. _Kohonen_Execution:
+TBD
+
+.. _KohonenMechanism_Execution:
 
 Execution
 ---------
 
-XXX
+TBD
 
-.. _Kohonen_Reference:
+.. _KohonenMechanism_Class_Reference:
 
 Class Reference
 ---------------
@@ -125,6 +142,7 @@ class KohonenMechanism(TransferMechanism):
 
     Subclass of `TransferMechanism` that learns a `self-organized <https://en.wikipedia.org/wiki/Self-organizing_map>`_
     map of its input.
+    See `TransferMechanism <TransferMechanism_Class_Reference>` for additional arguments and attributes.
 
     Arguments
     ---------
@@ -169,7 +187,7 @@ class KohonenMechanism(TransferMechanism):
         <KohonenMechanism.learned_projection>`.
 
     learning_enabled : bool
-        indicates whether `learning is enabled <Kohonen_Learning>`;  see `learning_enabled
+        indicates whether `learning is enabled <KohonenMechanism_Learning>`;  see `learning_enabled
         <KohonenMechanism.learning_enabled>` for additional details.
 
     learning_rate : float, 1d or 2d np.array, or np.matrix of numeric values : default None

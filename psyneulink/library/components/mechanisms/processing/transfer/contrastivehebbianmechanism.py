@@ -8,6 +8,27 @@
 # **************************************** ContrastiveHebbianMechanism *************************************************
 
 """
+
+Contents
+--------
+
+  * `ContrastiveHebbian_Overview`
+  * `ContrastiveHebbian_Creation`
+      - `ContrastiveHebbian_Size`
+      - `ContrastiveHebbian_Phases`
+      - `ContrastiveHebbian_OutputPorts`
+      - `ContrastiveHebbian_Learning`
+      - `ContrastiveHebbian_SIMPLE_HEBBIAN`
+  * `ContrastiveHebbian_Structure`
+      - `ContrastiveHebbian_Input`
+      - `ContrastiveHebbian_Functions`
+      - `ContrastiveHebbian_Output`
+  * `ContrastiveHebbian_Execution`
+      - `ContrastiveHebbian_Processing`
+      - `ContrastiveHebbian_Learning_Execution`
+  * `ContrastiveHebbian_Class_Reference`
+
+
 .. _ContrastiveHebbian_Overview:
 
 Overview
@@ -34,8 +55,10 @@ described below.
 
 .. _ContrastiveHebbian_Creation:
 
-Creation
---------
+Creating a ContrastiveHebbianMechanism
+--------------------------------------
+
+.. _ContrastiveHebbian_Size:
 
 *Size*
 ~~~~~~
@@ -46,6 +69,8 @@ it determines the total number of processing units.  If either the **hidden_size
 are specified, then those units are treated as distinct from the input units (see `ContrastiveHebbian_Execution` for
 details).
 
+.. _ContrastiveHebbian_Phases:
+
 *Phases*
 ~~~~~~~~
 
@@ -55,8 +80,10 @@ A ContrastiveHebbianMechanism `executes in two phases <ContrastiveHebbian_Execut
 respective phases of execution are terminated.  Other parameters can also be configured that influence processing (see
 `ContrastiveHebbian_Execution`).
 
-*OututStates*
-~~~~~~~~~~~~~
+.. _ContrastiveHebbian_OutputPorts:
+
+*OututPorts*
+~~~~~~~~~~~~
 
 The Mechanism is automatically assigned three of its five `Standard OutputPorts
 <ContrastiveHebbianMechanism_Standard_OutputPorts>`: *OUTPUT_ACTIVITY_OUTPUT*, *CURRENT_ACTIVITY_OUTPUT*,
@@ -455,14 +482,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     Subclass of `RecurrentTransferMechanism` that implements a single-layer auto-recurrent network using two-phases
     of execution and the `Contrastive Hebbian Learning algorithm
-    <https://www.sciencedirect.com/science/article/pii/B978148321448150007X>`_
-
-    COMMENT:
-        Description
-        -----------
-            ContrastiveHebbianMechanism is a Subtype of RecurrentTransferMechanism customized to implement a
-            the `ContrastiveHebbian` `LearningFunction <LearningFunctions>`.
-    COMMENT
+    <https://www.sciencedirect.com/science/article/pii/B978148321448150007X>`_.  See `RecurrentTransferMechanism
+    <RecurrentTransferMechanism_Class_Reference>` for additional arguments and attributes.
 
     Arguments
     ---------

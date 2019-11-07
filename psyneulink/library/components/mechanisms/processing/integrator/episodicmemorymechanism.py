@@ -9,6 +9,17 @@
 
 """
 
+
+Contents
+--------
+
+  * `EpisodicMemoryMechanism_Overview`
+  * `EpisodicMemoryMechanism_Creation`
+  * `EpisodicMemoryMechanism_Structure`
+  * `EpisodicMemoryMechanism_Execution`
+  * `EpisodicMemoryMechanism_Class_Reference`
+
+
 .. _EpisodicMemoryMechanism_Overview:
 
 Overview
@@ -124,7 +135,8 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
     )
 
     Subclass of `IntegratorMechanism <IntegratorMechanism>` that implements a `differentiable neural dictionary
-    (ContentAddressableMemory)<HTML>`_
+    (ContentAddressableMemory)<HTML>`_.  See `Mechanism <Mechanism_Class_Reference>` for additional arguments and
+    attributes.
 
     Arguments
     ---------

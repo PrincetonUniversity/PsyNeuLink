@@ -239,7 +239,7 @@ the `function <LearningMechanism.function>` of the `LearningMechanism` for the M
 The following Components are created for each learning sequence specified for a Process (see figure below):
 
     * a `TARGET` `ComparatorMechanism` (assigned to the Process' `target_nodes <Process.target_nodes>`
-      attribute), that is used to `calculate an error signal <ComparatorMechanism_Function>` for the sequence, by
+      attribute), that is used to `calculate an error signal <ComparatorMechanism_Execution>` for the sequence, by
       comparing `a specified output <LearningMechanism_Activation_Output>` of the last Mechanism in the learning
       sequence (received in the ComparatorMechanism's *SAMPLE* `InputPort <ComparatorMechanism_Structure>`) with the
       item of the **target** argument in Process' `execute <Process.execute>` or `run <Process.run>` method

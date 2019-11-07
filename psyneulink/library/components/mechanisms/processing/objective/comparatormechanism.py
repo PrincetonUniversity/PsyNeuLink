@@ -9,6 +9,19 @@
 
 """
 
+Contents
+--------
+
+  * `ComparatorMechanism_Overview`
+  * `ComparatorMechanism_Creation`
+  * `ComparatorMechanism_Structure`
+  * `ComparatorMechanism_Execution`
+  * `ComparatorMechanism_Example`
+  * `ComparatorMechanism_Class_Reference`
+
+
+.. _ComparatorMechanism_Overview:
+
 Overview
 --------
 
@@ -67,7 +80,7 @@ it is replaced with one that takes two arrays with the same format as its inputs
 result. The result is assigned as the value of the Comparator Mechanism's *OUTCOME* (`primary <OutputPort_Primary>`)
 OutputPort.
 
-.. _ComparatorMechanism_Function:
+.. _ComparatorMechanism_Execution:
 
 Execution
 ---------
@@ -189,30 +202,8 @@ class ComparatorMechanism(ObjectiveMechanism):
         output_ports=OUTCOME)
 
     Subclass of `ObjectiveMechanism` that compares the values of two `OutputPorts <OutputPort>`.
+    See `ObjectiveMechanism <ObjectiveMechanism_Class_Reference>` for additional arguments and attributes.
 
-    COMMENT:
-        Description:
-            ComparatorMechanism is a subtype of the ObjectiveMechanism Subtype of the ProcssingMechanism Type
-            of the Mechanism Category of the Component class.
-            By default, it's function uses the LinearCombination Function to compare two input variables.
-            COMPARISON_OPERATION (functionParams) determines whether the comparison is subtractive or divisive
-            The function returns an array with the Hadamard (element-wise) differece/quotient of target vs. sample,
-                as well as the mean, sum, sum of squares, and mean sum of squares of the comparison array
-
-        Class attributes:
-            + componentType (str): ComparatorMechanism
-            + classPreference (PreferenceSet): Comparator_PreferenceSet, instantiated in __init__()
-            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
-            + class_defaults.variable (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
-            + paramClassDefaults (dict): {FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}
-
-        Class methods:
-            None
-
-        MechanismRegistry:
-            All instances of ComparatorMechanism are registered in MechanismRegistry, which maintains an
-              entry for the subclass, a count for all instances of it, and a dictionary of those instances
-    COMMENT
 
     Arguments
     ---------
