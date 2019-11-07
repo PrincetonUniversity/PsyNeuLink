@@ -659,9 +659,20 @@ def _error_signal_getter(owning_component=None, context=None):
         return None
 
 def _learning_mechanism_learning_rate_setter(value, owning_component=None, context=None):
-    if hasattr(owning_component, "function") and owning_component.function:
-        if hasattr(owning_component.function.parameters, "learning_rate"):
+    try:
+        # this prevents overridding a specified value on the function with
+        # this mechanism's default during initialization
+        # these checks could be done universally if we make a special handler
+        # for these parameters that serve only as mirrors into function
+        # parameters of the same name
+        if (
+            owning_component.initialization_status is not ContextFlags.INITIALIZING
+            or owning_component.parameters.learning_rate._user_specified
+            or not owning_component.function.parameters.learning_rate._user_specified
+        ):
             owning_component.function.parameters.learning_rate._set(value, context)
+    except AttributeError:
+        pass
     return value
 
 class LearningMechanism(ModulatoryMechanism_Base):
