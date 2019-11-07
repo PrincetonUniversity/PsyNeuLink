@@ -9,6 +9,19 @@
 # **************************************  IntegratorMechanism *************************************************
 
 """
+
+Contents
+--------
+
+  * `IntegratorMechanism_Overview`
+  * `IntegratorMechanism_Creation`
+  * `IntegratorMechanism_Structure`
+  * `IntegratorMechanism_Execution`
+  * `IntegratorMechanism_Class_Reference`
+
+
+.. _IntegratorMechanism_Overview:
+
 Overview
 --------
 
@@ -40,7 +53,7 @@ Structure
 ---------
 
 An IntegratorMechanism has a single `InputPort`, the `value <InputPort.InputPort.value>` of which is
-used as the  `variable <IntegratorMechanism.variable>` for its `function <IntegratorMechanism.function>`.
+used as the  `variable <Mechanism_Base.variable>` for its `function <IntegratorMechanism.function>`.
 The default for `function <IntegratorMechanism.function>` is `AdaptiveIntegrator(rate=0.5)`. However,
 a custom function can also be specified,  so long as it takes a numeric value, or a list or np.ndarray of numeric
 values as its input, and returns a value of the same type and format.  The Mechanism has a single `OutputPort`,
@@ -53,7 +66,7 @@ Execution
 ---------
 
 When an IntegratorMechanism is executed, it carries out the specified integration, and assigns the
-result to the `value <IntegratorMechanism.value>` of its `primary OutputPort <OutputPort_Primary>`.  For the default
+result to the `value <Mechanism_Base.value>` of its `primary OutputPort <OutputPort_Primary>`.  For the default
 function (`IntegratorFunction`), if the value specified for **default_variable** is a list or array, or **size** is greater
 than 1, each element of the array is independently integrated.  If its `rate <IntegratorFunction.rate>` parameter is a
 single value,  that rate will be used for integrating each element.  If the `rate <IntegratorFunction.rate>` parameter is a
@@ -100,83 +113,19 @@ class IntegratorMechanismError(Exception):
 
 class IntegratorMechanism(ProcessingMechanism_Base):
     """
-    IntegratorMechanism(                   \
-    default_variable=None,                 \
-    size=None,                             \
-    function=AdaptiveIntegrator(rate=0.5), \
-    params=None,                           \
-    name=None,                             \
-    prefs=None)
+    IntegratorMechanism( \
+        function=AdaptiveIntegrator(rate=0.5))
 
     Subclass of `ProcessingMechanism <ProcessingMechanism>` that integrates its input.
+    See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
 
-    COMMENT:
-        Description:
-            - DOCUMENT:
-
-        Class attributes:
-            + componentType (str): SigmoidLayer
-            + classPreference (PreferenceSet): SigmoidLayer_PreferenceSet, instantiated in __init__()
-            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-            + class_defaults.variable (value):  SigmoidLayer_DEFAULT_BIAS
-            + paramClassDefaults (dict): {FUNCTION_PARAMS:{kwSigmoidLayer_Unitst: kwSigmoidLayer_NetInput
-                                                                     kwSigmoidLayer_Gain: SigmoidLayer_DEFAULT_GAIN
-                                                                     kwSigmoidLayer_Bias: SigmoidLayer_DEFAULT_BIAS}}
-        Class methods:
-            None
-
-        MechanismRegistry:
-           All instances of SigmoidLayer are registered in MechanismRegistry, which maintains an entry for the subclass,
-              a count for all instances of it, and a dictionary of those instances
-
-    COMMENT
 
     Arguments
     ---------
 
-    default_variable : number, list or np.ndarray
-        the input to the Mechanism to use if none is provided in a call to its
-        `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` methods;
-        also serves as a template to specify the length of `variable <IntegratorMechanism.variable>` for
-        `function <IntegratorMechanism.function>`, and the `primary outputPort <OutputPort_Primary>` of the
-        Mechanism.
-
-    size : int, list or np.ndarray of ints
-        specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
-        if **default_variable** is specified, it takes precedence over the specification of **size**.
-        As an example, the following mechanisms are equivalent::
-            T1 = TransferMechanism(size = [3, 2])
-            T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
-
     function : IntegratorFunction : default IntegratorFunction
         specifies the function used to integrate the input.  Must take a single numeric value, or a list or np.array
         of values, and return one of the same form.
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
-        the Mechanism, parameters for its `function <IntegratorMechanism.function>`, and/or a custom function and its
-        parameters.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
-
-    name : str : default see `name <IntegratorMechanism.name>`
-        specifies the name of the IntegratorMechanism.
-
-    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the IntegratorMechanism; see `prefs <IntegratorMechanism.prefs>` for details.
-
-    Attributes
-    ----------
-    variable : value: default
-        the input to Mechanism's ``function``.
-
-    name : str
-        the name of the IntegratorMechanism; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the IntegratorMechanism; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
 
     """
 

@@ -1508,12 +1508,12 @@ class TestTransferMechanismMultipleInputPorts:
     @pytest.mark.transfer_mechanism
     @pytest.mark.mimo
     def test_transfer_mech_2d_variable_mean(self):
-        from psyneulink.core.globals.keywords import OUTPUT_MEAN
+        from psyneulink.core.globals.keywords import MEAN
         T = TransferMechanism(
             name='T',
             function=Linear(slope=2.0, intercept=1.0),
             default_variable=[[0.0, 0.0], [0.0, 0.0]],
-            output_ports=[OUTPUT_MEAN]
+            output_ports=[MEAN]
         )
         val = T.execute([[1.0, 2.0], [3.0, 4.0]])
 
@@ -1825,7 +1825,7 @@ class TestIntegratorMode:
             T_not_integrator = TransferMechanism()
             T_not_integrator.execute(1.0)
             T_not_integrator.reinitialize(0.0)
-        assert "not allowed because this Mechanism is not stateful." in str(err_txt.value)
+        assert "not allowed because this Mechanism is not stateful;" in str(err_txt.value)
         assert "try setting the integrator_mode argument to True." in str(err_txt.value)
 
     def test_switch_mode(self):

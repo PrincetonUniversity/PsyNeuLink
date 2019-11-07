@@ -17,14 +17,14 @@ from psyneulink.core.components.functions.userdefinedfunction import UserDefined
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
-from psyneulink.core.components.mechanisms.processing.transfermechanism import TRANSFER_OUTPUT, TransferMechanism
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.compositions.composition import Composition, CompositionError
 from psyneulink.core.compositions.pathwaycomposition import PathwayComposition
 from psyneulink.core.compositions.systemcomposition import SystemComposition
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, ALLOCATION_SAMPLES, DISABLE, INPUT_PORT, NAME, PROJECTIONS, OVERRIDE, TARGET_MECHANISM
+    ADDITIVE, ALLOCATION_SAMPLES, DISABLE, INPUT_PORT, NAME, PROJECTIONS, RESULT, OVERRIDE, TARGET_MECHANISM, VARIANCE
 from psyneulink.core.globals.utilities import NodeRole
 from psyneulink.core.scheduling.condition import AfterNCalls
 from psyneulink.core.scheduling.condition import EveryNCalls
@@ -32,7 +32,7 @@ from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism import LCControlMechanism
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
-    RECURRENT_OUTPUT, RecurrentTransferMechanism
+    RecurrentTransferMechanism
 
 logger = logging.getLogger(__name__)
 
@@ -2308,7 +2308,7 @@ class TestRun:
         R = RecurrentTransferMechanism(size=1,
                                        function=Logistic(),
                                        hetero=-2.0,
-                                       output_ports = [RECURRENT_OUTPUT.RESULT])
+                                       output_ports = [RESULT])
         comp.add_node(R)
         comp._analyze_graph()
         sched = Scheduler(composition=comp)
@@ -2341,7 +2341,7 @@ class TestRun:
                                        hetero=-2.0,
                                        integrator_mode=True,
                                        integration_rate=0.01,
-                                       output_ports = [RECURRENT_OUTPUT.RESULT])
+                                       output_ports = [RESULT])
         comp.add_node(R)
         comp._analyze_graph()
         sched = Scheduler(composition=comp)
@@ -2400,7 +2400,7 @@ class TestRun:
         R = RecurrentTransferMechanism(size=2,
                                        function=Logistic(),
                                        hetero=-2.0,
-                                       output_ports = [RECURRENT_OUTPUT.RESULT])
+                                       output_ports = [RESULT])
         comp.add_node(R)
         comp._analyze_graph()
         sched = Scheduler(composition=comp)
@@ -2433,7 +2433,7 @@ class TestRun:
                                        hetero=-2.0,
                                        integrator_mode=True,
                                        integration_rate=0.01,
-                                       output_ports = [RECURRENT_OUTPUT.RESULT])
+                                       output_ports = [RESULT])
         comp.add_node(R)
         comp._analyze_graph()
         sched = Scheduler(composition=comp)
@@ -4262,8 +4262,7 @@ class TestCompositionInterface:
                               function=Linear(slope=1.0))
         C = TransferMechanism(name="composition-pytests-C",
                               function=Linear(slope=2.0),
-                              output_ports=[TRANSFER_OUTPUT.RESULT,
-                                             TRANSFER_OUTPUT.VARIANCE])
+                              output_ports=[RESULT, VARIANCE])
         comp.add_node(A)
         comp.add_node(B)
         comp.add_node(C)
@@ -4297,8 +4296,7 @@ class TestCompositionInterface:
                               function=Linear(slope=3.0))
         E = TransferMechanism(name="composition-pytests-E",
                               function=Linear(slope=4.0),
-                              output_ports=[TRANSFER_OUTPUT.RESULT,
-                                             TRANSFER_OUTPUT.VARIANCE])
+                              output_ports=[RESULT, VARIANCE])
         comp.add_node(A)
         comp.add_node(B)
         comp.add_node(C)

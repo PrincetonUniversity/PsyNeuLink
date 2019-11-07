@@ -15,6 +15,20 @@
 
 """
 
+Contents
+--------
+
+  * `LCAMechanism_Overview`
+  * `LCAMechanism_Creation`
+      - `LCAMechanism_Integrator_Mode`
+      - `LCAMechanism_Threshold`
+  * `LCAMechanism_Structure`
+  * `LCAMechanism_Execution`
+  * `LCAMechanism_Class_Reference`
+
+
+.. _LCAMechanism_Overview:
+
 Overview
 --------
 
@@ -24,6 +38,14 @@ every other element with mutually inhibitory weights. The LCAMechanism's `recurr
 <RecurrentTransferMechanism.recurrent_projection>` `matrix <MappingProjection.matrix>` *always* consists
 of `self_excitation <LCAMechanism.self_excitation>` on the diagonal and -`competition <LCAMechanism.competition>`
 off-diagonal.
+
+The key distinguishing features of an LCAMechanism are:
+
+1. its `integrator_function <TransferMechanism.integrator_function>`,
+   which implements the `LeakyCompetingIntegrator` (for which *rate* = *leak*)
+
+2. its `matrix <LCAMechanism.matrix>`, consisting of `self_excitation <LCAMechanism.self_excitation>` (diagonal)
+   and `competition <LCAMechanism.competition>` (off diagonal) components.
 
     COMMENT:
     .. math::
@@ -47,7 +69,7 @@ then the `LCAMechanism` implements a close approximation of a `DDM` Mechanism (s
 <http://psycnet.apa.org/?&fa=main.doiLanding&doi=10.1037/0033-295X.108.3.550>`_ and `Bogacz et al (2006)
 <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_).
 
-.. _Recurrent_Transfer_Creation:
+.. _LCAMechanism_Creation:
 
 Creating an LCAMechanism
 ------------------------
@@ -66,7 +88,7 @@ with a `matrix <LCAMechanism.matrix>` in which the diagonal consists of uniform 
 
 The **noise**, **leak**, **initial_value**, and **time_step_size** arguments are used to implement the
 `LeakyCompetingIntegrator` as the LCAMechanism's `integrator_function <TransferMechanism.integrator_function>`.
-This is only used used when `integrator_mode <Transfer_Integrator_Mode>` is True (which it is by default).  If
+This is only used used when `integrator_mode <TransferMechanism_Integrator_Mode>` is True (which it is by default).  If
 `integrator_mode <TransferMechanism.integrator_mode>` is False, the `LeakyCompetingIntegrator` function is skipped
 entirely, and all related arguments (**noise**, **leak**, **initial_value**, and **time_step_size**) have no effect.
 
@@ -76,7 +98,7 @@ entirely, and all related arguments (**noise**, **leak**, **initial_value**, and
 ~~~~~~~~~~~~~~
 
 The **threshold** and **threshold_criterion** arguments specify the conditions under which execution of the
-LCAMechanism terminates if `integrator_mode <Transfer_Integrator_Mode>` is True.  If **threshold** is None
+LCAMechanism terminates if `integrator_mode <TransferMechanism_Integrator_Mode>` is True.  If **threshold** is None
 (the default), then the LCAMechanism will update its `value <Mechanism_Base.value>` and the `value <OutputPort.value>`
 of each `OutputPort` only once each time it is executed.  If a **threshold** is specified, then it will continue
 to execute until the condition specified by **threshold_criterion** is True; this can be specified using one of the
@@ -110,8 +132,7 @@ similarly-named attributes.  Rather, they are used to specify the `termination_t
 <TransferMechanism.termination_threshold>`, `termination_measure <TransferMechanism.termination_measure>`,
 and `termination_comparison_op <TransferMechanism.termination_comparison_op>` attributes; these can also be
 specified directly as arguments of the LCAMechanism's constructor in order to implement other termination conditions
-(see `TransferMechanism <Transfer_Termination>` and `RecurrentTransferMechanism
-<Recurrent_Transfer_Termination>`for additional details).
+(see `TransferMechanism <TransferMechanism_Termination>` for additional details).
 
 COMMENT:
 The default format of its `variable <LCAMechanism.variable>`, and default values of its `inhibition
@@ -184,12 +205,10 @@ from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.components.ports.outputport import PRIMARY, StandardOutputPorts
 from psyneulink.core.globals.keywords import \
-    BETA, CONVERGENCE, ENERGY, ENTROPY, FUNCTION, GREATER_THAN_OR_EQUAL, INITIALIZER, \
-    LCA_MECHANISM, LESS_THAN_OR_EQUAL, NAME, NOISE, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, \
-    RATE, RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, TIME_STEP_SIZE, \
-    VALUE
+    BETA, CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, INITIALIZER, LCA_MECHANISM, LESS_THAN_OR_EQUAL, NAME, NOISE, \
+    RATE, RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, TIME_STEP_SIZE, VALUE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferMechanism
@@ -229,59 +248,24 @@ class LCAMechanism_OUTPUT():
                 and the average of all of the other elements.
 
         """
-        RESULT=RESULT
-        MEAN=OUTPUT_MEAN
-        MEDIAN=OUTPUT_MEDIAN
-        STANDARD_DEVIATION=OUTPUT_STD_DEV
-        VARIANCE=OUTPUT_VARIANCE
-        ENERGY=ENERGY
-        ENTROPY=ENTROPY
         MAX_VS_NEXT=MAX_VS_NEXT
         MAX_VS_AVG=MAX_VS_AVG
-    # THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
-    # for item in [item[NAME] for item in DDM_standard_output_ports]:
-    #     setattr(DDM_OUTPUT.__class__, item, item)
 
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class LCAMechanism(RecurrentTransferMechanism):
     """
     LCAMechanism(                    \
-        default_variable=None,       \
-        size=None,                   \
-        function=Logistic,           \
-        initial_value=None,          \
         leak=0.5,                    \
         competition=1.0,             \
         self_excitation=0.0,         \
-        noise=0.0,                   \
-        integrator_mode = True       \
-        time_step_size = 0.1         \
         threshold = None             \
-        threshold_criterion = VALUE  \
-        clip=[float:min, float:max], \
-        params=None,                 \
-        name=None,                   \
-        prefs=None)
+        threshold_criterion = VALUE)
 
     Subclass of `RecurrentTransferMechanism` that implements a Leaky Competitive Accumulator.
+    See `RecurrentTransferMechanism <RecurrentTransferMechanism_Class_Reference>` for additional
+    arguments and attributes.
 
-    The key distinguishing features of an LCAMechanism are:
-
-    1. its `integrator_function <TransferMechanism.integrator_function>`,
-       which implements the `LeakyCompetingIntegrator` (for which *rate* = *leak*)
-
-    2. its `matrix <LCAMechanism.matrix>`, consisting of `self_excitation <LCAMechanism.self_excitation>` (diagonal)
-       and `competition <LCAMechanism.competition>` (off diagonal) components.
-
-    COMMENT:
-        Description
-        -----------
-            LCAMechanism is a Subtype of the RecurrentTransferMechanism Subtype of the TransferMechanism
-            Subtype of the ProcessingMechanisms Type of the Mechanism Category of the Component class.
-            It implements a RecurrentTransferMechanism with a set of uniform recurrent inhibitory weights.
-            In all other respects, it is identical to a RecurrentTransferMechanism.
-    COMMENT
 
     Arguments
     ---------
@@ -308,21 +292,6 @@ class LCAMechanism(RecurrentTransferMechanism):
         specifies the criterion that is used to evaluate whether the threshold has been reached. If *MAX_VS_NEXT* or
         *MAX_VS_AVG* is specified, then the length of the LCAMCechanism's `value <Mechanism_Base.value>` must be at
         least 2 (see `LCAMechanism_Threshold` for additional details).
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
-        the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
-        the dictionary override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default see `name <LCAMechanism Mechanism.name>`
-        specifies the name of the LCAMechanism Mechanism.
-
-    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the LCAMechanism Mechanism (see `prefs <LCAMechanism Mechanism.prefs>` for
-        details).
-
-    context : str : default ''componentType+INITIALIZNG''
-           string used for contextualization of instantiation, hierarchical calls, executions, etc.
 
     Attributes
     ----------
@@ -353,15 +322,6 @@ class LCAMechanism(RecurrentTransferMechanism):
         <LeakyCompetingIntegrator>` `variable <LeakyCompetingIntegrator.value>` (:math:`x_{i}`) on each time step
         (see `LeakyCompetingIntegrator` for additional details.
 
-    name : str
-        the name of the LCAMechanism Mechanism; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the LCAMechanism Mechanism; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
-
     Returns
     -------
     instance of LCAMechanism : LCAMechanism
@@ -386,12 +346,6 @@ class LCAMechanism(RecurrentTransferMechanism):
 
                     :default value: 1.0
                     :type: float
-
-                function
-                    see `function <LCAMechanism.function>`
-
-                    :default value: `Logistic`
-                    :type: `Function`
 
                 initial_value
                     see `initial_value <LCAMechanism.initial_value>`
@@ -504,11 +458,6 @@ class LCAMechanism(RecurrentTransferMechanism):
                                                   time_step_size=time_step_size,
                                                   output_ports=output_ports,
                                                   params=params)
-
-        if not isinstance(self.standard_output_ports, StandardOutputPorts):
-            self.standard_output_ports = StandardOutputPorts(self,
-                                                               self.standard_output_ports,
-                                                               indices=PRIMARY)
 
         super().__init__(default_variable=default_variable,
                          size=size,

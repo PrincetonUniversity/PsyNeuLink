@@ -9,6 +9,17 @@
 # ******************************************  ModulatoryProjection *****************************************************
 
 """
+
+Contents
+--------
+
+  * `ModulatoryProjection_Overview`
+  * `ModulatoryProjection_Creation`
+  * `ModulatoryProjection_Structure`
+  * `ModulatoryProjection_Execution`
+  * `ModulatoryProjection_Class_Reference`
+
+
 .. _ModulatoryProjection_Overview:
 
 Overview
@@ -35,7 +46,7 @@ that modulate different types of Components and their Ports:
     to the `InputPort` or `OutputPort` of a `ProcessingMechanism <ProcessingMechanism>` for use by the Port's
     `function <Port_Base.function>` in modulating its `value <Port_Base.value>`.
 
-.. _Projection_Creation:
+.. _ModulatoryProjection_Creation:
 
 Creating a ModulatoryProjection
 -------------------------------
@@ -99,90 +110,15 @@ class ModulatoryProjectionError(Exception):
 
 
 class ModulatoryProjection_Base(Projection_Base):
-    """
-    ModulatoryProjection_Base(     \
-        receiver,                  \
-        sender=None,               \
-        weight=None,               \
-        exponent=None,             \
-        params=None,               \
-        name=None,                 \
-        prefs=None)
-
-    Subclass of `Projection <Projection>` that modulates the value of a `Port <Port>`.
+    """Subclass of `Projection <Projection>` that modulates the value of a `Port <Port>`.
+    See `Projection <Projection_Class_Reference>` and subclasses for arguments and additonal attributes.
 
     .. note::
-       ModulatoryProjection is an abstract class and should NEVER be instantiated by a call to its constructor.
+       ModulatoryProjection is an abstract class and should **never** be instantiated by a call to its constructor.
        It should be instantiated using the constructor for a `subclass <ModulatoryProjection_Subtypes>`.
-
-    Arguments
-    ---------
-
-    receiver : Optional[Port or Mechanism]
-        specifies the Port to which the ModulatoryProjection projects.
-
-    sender : Optional[OutputPort or Mechanism] : default None
-        specifies the Component from which the ModulatoryProjection projects.
-
-    weight : number : default None
-       specifies the value by which to multiply the ModulatoryProjection's `value <ModulatoryProjection_Base.value>`
-       before combining it with others (see `weight <ModulatoryProjection_Base.weight>` for additional details).
-
-    exponent : number : default None
-       specifies the value by which to exponentiate the ModulatoryProjection's `value <ModulatoryProjection_Base.value>`
-       before combining it with others (see `exponent <ModulatoryProjection_Base.exponent>` for additional details).
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
-        ModulatoryProjection, its `function <ModulatoryProjection_Base.function>`, and/or a custom function and its
-        parameters. By default, it contains an entry for the ModulatoryProjection's default `function
-        <ModulatoryProjection_Base.function>` and parameter assignments.  Values specified for parameters in the
-        dictionary override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default see ModulatoryProjection `name <ModulatoryProjection_Base.name>`
-        specifies the name of the ModulatoryProjection; see ModulatoryProjection `name <ModulatoryProjection_Base.name>`
-        for details.
-
-    prefs : PreferenceSet or specification dict : default Projection.classPreferences
-        specifies the `PreferenceSet` for the ModulatoryProjection; see `prefs <ModulatoryProjection_Base.prefs>`
-        for details.
-
-    context : str : default None
-        optional reference to a subclass
 
     Attributes
     ----------
-
-    receiver : MATRIX ParameterPort of a MappingProjection
-        the Port to which the ModulatoryProjection projects, the `function <Port_Base.function>` of which is
-        modulated by it.
-
-    sender : LEARNING_SIGNAL OutputPort of a LearningMechanism
-        the `ModulatorySignal <ModulatorySignal>` from which the ModulatoryProjection projects.
-
-    variable : 2d np.array
-        value received from the `ModulatorySignal <ModulatorySignal>` that is the ModulatoryProjection's
-        `sender <ModulatoryProjection_Base.sender>`.
-
-    function : Function : default Linear
-        assigns the value received from the ModulatoryProjection's `sender <ModulatoryProjection_Base.sender>` to
-        its `value <ModulatoryProjection_Base.value>`.
-
-    value : 2d np.array
-        value used to modulate the `function <Port_Base.function>` of the Port that is its `receiver
-        <ModulatoryProjection_Base.receiver>`.
-
-    weight : number
-       multiplies the `value <ModulatoryProjection_Base.value>` of the ModulatoryProjection after applying `exponent
-       <ModulatoryProjection_Base.exponent>`, and before combining it with any others that project to the same
-       `Port` to determine that Port's `variable <Port_Base.variable>` is modified (see description in `Projection
-       <Projection_Weight_Exponent>` for details).
-
-    exponent : number
-        exponentiates the `value <ModulatoryProjection_Base.value>` of the ModulatoryProjection, before applying
-        `weight <ModulatoryProjection_Base.weight>`, and before combining it with any others that project to the same
-        `Port` to determine that Port's `variable <Port.variable>` is modified (see description in `Projection
-        <Projection_Weight_Exponent>` for details).
 
     name : str
         the name of the ModulatoryProjection. If the ModulatoryProjection's `initialization has been deferred
@@ -193,11 +129,6 @@ class ModulatoryProjection_Base(Projection_Base):
         argument of its constructor, a default name is assigned using the following format:
         '<ModualatorySignal type> for <receiver owner Mechanism's name>[<receiver's name>]'
         (for example, ``'GatingSignal for my_mech[InputPort-0]'``).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the ModulatoryProjection; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
 
     """
     componentCategory = MODULATORY_PROJECTION

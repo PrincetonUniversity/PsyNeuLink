@@ -9,13 +9,20 @@
 # ***************************************************  DDM *************************************************************
 
 """
-..
-Sections
+
+Contents
 --------
   * `DDM_Overview`
   * `DDM_Creation`
+  * `DDM_Structure`
+      - `DDM_Input`
+      - `DDM_Output`
+      - `DDM_Modes`
+          • `DDM_Analytic_Mode`
+          • `DDM_Integration_Mode`
   * `DDM_Execution`
   * `DDM_Class_Reference`
+
 
 .. _DDM_Overview:
 
@@ -621,52 +628,11 @@ class DDM(ProcessingMechanism):
     name=None,                         \
     prefs=None)
 
-    Implement a Drift Diffusion Process, either by calculating an `analytic solution <DDM_Analytic_Mode>` or carrying
-    out `step-wise numerical integration <DDM_Integration_Mode>`.
+    Implements a drift diffusion process (also known as the `Diffusion Decision Model
+    <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2474742/>`_, either by calculating an `analytic solution
+    <DDM_Analytic_Mode>` or carrying out `step-wise numerical integration <DDM_Integration_Mode>`.
+    See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
 
-    COMMENT:
-        Description
-        -----------
-            DDM is a subclass Type of the Mechanism Category of the Component class
-            It implements a Mechanism for several forms of the Drift Diffusion Model (DDM) for
-                two alternative forced choice (2AFC) decision making:
-                - analytical solution [Bogacz et al. (2006), Srivastava et al. (2016)]
-                     - stochastically estimated decion outcome (convert mean ER into value between 1 and -1)
-                     - mean ER
-                     - mean RT
-                     - mean, variance, and skew of RT for correct (posititive threshold) responses
-                     - mean, variance, and skew of RT for incorrect (negative threshold) responses
-                - stepwise integrator that simulates each step of the integration process
-        Class attributes
-        ----------------
-            + componentType (str): DDM
-            + classPreference (PreferenceSet): DDM_PreferenceSet, instantiated in __init__()
-            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-            + paramClassDefaults (dict): {
-                                          kwDDM_AnalyticSolution: kwDriftDiffusionAnalytical,
-                                          FUNCTION_PARAMS: {DRIFT_RATE:<>
-                                                                  STARTING_POINT:<>
-                                                                  THRESHOLD:<>
-                                                                  NOISE:<>
-                                                                  NON_DECISION_TIME:<>},
-                                          OUTPUT_PORTS: [DDM_DECISION_VARIABLE,
-                                                          DDM_RESPONSE_TIME,
-                                                          DDM_PROBABILITY_UPPER_THRESHOLD,
-                                                          DDM_PROBABILITY_LOWER_THRESHOLD,
-                                                          DDM_RT_CORRECT_MEAN,
-                                                          DDM_RT_CORRECT_VARIANCE,
-                                                          DDM_RT_CORRECT_SKEW,
-                                                          DDM_RT_INCORRECT_MEAN,
-                                                          DDM_RT_INCORRECT_VARIANCE,
-                                                          DDM_RT_INCORRECT_SKEW,
-        Class methods
-        -------------
-            - plot() : generates a dynamic plot of the DDM
-        MechanismRegistry
-        -----------------
-            All instances of DDM are registered in MechanismRegistry, which maintains an entry for the subclass,
-              a count for all instances of it, and a dictionary of those instances
-    COMMENT
 
     Arguments
     ---------
@@ -677,27 +643,9 @@ class DDM(ProcessingMechanism):
         <DDM.variable>` for its `function <DDM.function>`, and the `primary OutputPort <OuputState_Primary>` of the
         DDM (see `Input` <DDM_Creation>` for how an input with a length of greater than 1 is handled).
 
-    size : int, list or np.ndarray of ints
-        specifies the `default_variable <DDM.default_variable>` as array(s) of zeros if **default_variable** is not
-        passed as an argument; if **default_variable** is specified, it takes precedence over the specification of
-        **size**. As an example, the following mechanisms are equivalent::
-            T1 = TransferMechanism(size = [3, 2])
-            T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
-
     function : IntegratorFunction : default DriftDiffusionAnalytical
         specifies the function to use to `execute <DDM_Execution>` the decision process; determines the mode of
         execution (see `function <DDM.function>` and `DDM_Modes` for additional information).
-
-    params : Dict[param keyword: param value] : default None
-        a dictionary that can be used to specify parameters of the Mechanism, parameters of its `function
-        <DDM.function>`, and/or  a custom function and its parameters (see `Mechanism <Mechanism>` for specification of
-        a params dict).
-
-    name : str : default see `name <DDM.name>`
-        specifies the name of the DDM.
-
-    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the DDM; see `prefs <DDM.prefs>` for details.
 
     COMMENT:
     context=componentType+INITIALIZING):
@@ -745,14 +693,6 @@ class DDM(ProcessingMechanism):
         ones may be included, based on the `function <DDM.function>` and any specifications made in the
         **output_ports** argument of the DDM's constructor (see `DDM Standard OutputPorts
         <DDM_Standard_OutputPorts>`).
-
-    name : str
-        the name of the DDM; if it is not specified in the **name** argument of the constructor, a default is
-        assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the DDM; if it is not specified in the **prefs** argument of the constructor, a default
-        is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
 
     COMMENT:
         MOVE TO METHOD DEFINITIONS:

@@ -9,7 +9,17 @@
 
 """
 
-.. _Leabra_Mechanism_Overview:
+Contents
+--------
+
+  * `LeabraMechanism_Overview`
+  * `LeabraMechanism_Creation`
+  * `LeabraMechanism_Structure`
+  * `LeabraMechanism_Execution`
+  * `LeabraMechanism_Class_Reference`
+
+
+.. _LeabraMechanism_Overview:
 
 Overview
 --------
@@ -23,7 +33,7 @@ info about leabra, please see `O'Reilly and Munakata, 2016 <https://grey.colorad
     to use the LeabraMechanism. While the LeabraMechanism should always match the output of an equivalent network in
     the leabra package, the leabra package itself is still in development, so it is not guaranteed to be correct yet.
 
-.. _Leabra_Mechanism_Creation:
+.. _LeabraMechanism_Creation:
 
 Creating a LeabraMechanism
 --------------------------
@@ -37,7 +47,7 @@ This option requires users to be familiar with the leabra package, but allows mo
 In the former method of creating a LeabraMechanism, the **training_flag** argument specifies whether the network should
 be learning (updating its weights) or not.
 
-.. _Leabra_Mechanism_Structure:
+.. _LeabraMechanism_Structure:
 
 Structure
 ---------
@@ -59,7 +69,7 @@ target for the LeabraMechanism. The input to the *MAIN_INPUT* InputPort should h
 .. note::
     Currently, there is a bug where LeabraMechanism (and other Mechanisms with multiple input ports) cannot be
     used as `ORIGIN Mechanisms <System_Mechanisms>` for a `System`. If you desire to use a LeabraMechanism as an ORIGIN
-    Mechanism, you can work around this bug by creating two `TransferMechanisms <Transfer_Overview>` as ORIGIN
+    Mechanism, you can work around this bug by creating two `TransferMechanisms <TransferMechanism_Overview>` as ORIGIN
     Mechanisms instead, and have these two TransferMechanisms pass their output to the InputPorts of the
     LeabraMechanism. Here is an example of how to do this. In the example, T2 passes the training_data to the
     *LEARNING_TARGET* InputPort of L (L.input_ports[1])::
@@ -72,7 +82,7 @@ target for the LeabraMechanism. The input to the *MAIN_INPUT* InputPort should h
         s = System(processes=[p1, p2])
         s.run(inputs={T1: input_data, T2: training_data})
 
-.. _Leabra_Mechanism_Execution:
+.. _LeabraMechanism_Execution:
 
 Execution
 ---------
@@ -82,7 +92,7 @@ leabra Network's output (after one "trial", default 200 cycles in PsyNeuLink) to
 on Leabra, see `O'Reilly and Munakata, 2016 <https://grey.colorado.edu/emergent/index.php/Leabra>`_ and the
 `leabra Python package on Github <https://github.com/benureau/leabra>`_.
 
-.. _Leabra_Mechanism_Reference:
+.. _LeabraMechanism_Reference:
 
 Class Reference
 ---------------
@@ -102,7 +112,7 @@ except ImportError:
 from psyneulink.core.components.functions.function import Function_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.core.components.ports.outputport import PRIMARY, StandardOutputPorts, standard_output_ports
+from psyneulink.core.components.ports.outputport import PRIMARY, StandardOutputPorts
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import FUNCTION, INPUT_PORTS, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, NETWORK, OUTPUT_PORTS, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
@@ -162,10 +172,6 @@ class LeabraFunction(Function_Base):
 
     owner : Component
         `component <Component>` to which to assign the Function.
-
-    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the LeabraMechanism; see `prefs <LeabraMechanism.prefs>` for details.
-
 
     Attributes
     ----------
@@ -344,6 +350,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
     prefs=None)
 
     Subclass of `ProcessingMechanism` that is a wrapper for a Leabra network in PsyNeuLink.
+    See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
 
     Arguments
     ---------
@@ -382,35 +389,11 @@ class LeabraMechanism(ProcessingMechanism_Base):
         Lower values of quarter_size also effectively reduce the magnitude of learning weight changes during
         a given trial.
 
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
-        the mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
-        the dictionary override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default KWTA-<index>
-        a string used for the name of the mechanism.
-        If is not specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
-
-    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for mechanism.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
-
-    context : str : default componentType+INITIALIZING
-        string used for contextualization of instantiation, hierarchical calls, executions, etc.
-
     Attributes
     ----------
 
-    variable : value
-        the input to this Mechanism's `function <LeabraMechanism.function>`.
-
     function : LeabraFunction
         the function that wraps and executes the leabra mechanism
-
-    value : 2d np.array [array(float64)]
-        result of executing `function <LeabraMechanism.function>`.
 
     input_size : int : default 1
         an integer specifying how many units are in (the size of) the first layer (input) of the leabra network.
@@ -440,33 +423,6 @@ class LeabraMechanism(ProcessingMechanism_Base):
         the leabra.Network object which is executed by the LeabraMechanism. For more info about leabra Networks,
         please see the `leabra package <https://github.com/benureau/leabra>` on Github.
 
-    output_ports : *ContentAddressableList[OutputPort]* : default [`RESULT <TRANSFER_MECHANISM_RESULT>`]
-        list of Mechanism's `OutputPorts <OutputPorts>`.  By default there is a single OutputPort,
-        `RESULT <TRANSFER_MECHANISM_RESULT>`, that contains the result of a call to the Mechanism's
-        `function <LeabraMechanism.function>`;  additional `standard <TransferMechanism_Standard_OutputPorts>`
-        and/or custom OutputPorts may be included, based on the specifications made in the **output_ports** argument
-        of the Mechanism's constructor.
-
-    output_values : List[array(float64)]
-        each item is the `value <OutputPort.value>` of the corresponding OutputPort in `output_ports
-        <LeabraMechanism.output_ports>`.  The default is a single item containing the result of the
-        TransferMechanism's `function <LeabraMechanism.function>`;  additional
-        ones may be included, based on the specifications made in the
-        **output_ports** argument of the Mechanism's constructor (see `TransferMechanism Standard OutputPorts
-        <TransferMechanism_Standard_OutputPorts>`).
-
-    name : str : default LeabraMechanism-<index>
-        the name of the Mechanism.
-        Specified in the **name** argument of the constructor for the Projection;
-        if not specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        the `PreferenceSet` for Mechanism.
-        Specified in the **prefs** argument of the constructor for the Mechanism;
-        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
-        (see :doc:`PreferenceSet <LINK>` for details).
-
     Returns
     -------
     instance of LeabraMechanism : LeabraMechanism
@@ -489,7 +445,8 @@ class LeabraMechanism(ProcessingMechanism_Base):
                                INPUT_PORTS: input_port_names,
                                OUTPUT_PORTS: output_port_name})
 
-    standard_output_ports = standard_output_ports.copy()
+    standard_output_ports = ProcessingMechanism_Base.standard_output_ports.copy()
+    standard_output_port_names = ProcessingMechanism_Base.standard_output_port_names.copy()
 
     class Parameters(ProcessingMechanism_Base.Parameters):
         """
@@ -580,11 +537,6 @@ class LeabraMechanism(ProcessingMechanism_Base):
                                                   training_flag, quarter_size)
 
         function = LeabraFunction(network=leabra_network)
-
-        if not isinstance(self.standard_output_ports, StandardOutputPorts):
-            self.standard_output_ports = StandardOutputPorts(self,
-                                                               self.standard_output_ports,
-                                                               indices=PRIMARY)
 
         params = self._assign_args_to_param_dicts(function=function,
                                                   input_size=input_size,

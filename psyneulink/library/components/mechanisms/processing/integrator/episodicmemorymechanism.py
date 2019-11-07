@@ -9,6 +9,17 @@
 
 """
 
+
+Contents
+--------
+
+  * `EpisodicMemoryMechanism_Overview`
+  * `EpisodicMemoryMechanism_Creation`
+  * `EpisodicMemoryMechanism_Structure`
+  * `EpisodicMemoryMechanism_Execution`
+  * `EpisodicMemoryMechanism_Class_Reference`
+
+
 .. _EpisodicMemoryMechanism_Overview:
 
 Overview
@@ -124,7 +135,8 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
     )
 
     Subclass of `IntegratorMechanism <IntegratorMechanism>` that implements a `differentiable neural dictionary
-    (ContentAddressableMemory)<HTML>`_
+    (ContentAddressableMemory)<HTML>`_.  See `Mechanism <Mechanism_Class_Reference>` for additional arguments and
+    attributes.
 
     Arguments
     ---------
@@ -142,18 +154,6 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         the associate to be stored in its memory, and must return a 2d array that is the value of the
         content and assoc retrieved from its memory.
 
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
-        the Mechanism, its `function <Mechanism_Base.function>`, and/or a custom function and its parameters.  Values
-        specified for parameters in the dictionary override any assigned to those parameters in arguments of the
-        constructor.
-
-    name : str : default see `name <EpisodicMemoryMechanism.name>`
-        specifies the name of the EpisodicMemoryMechanism.
-
-    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the EpisodicMemoryMechanism; see `prefs <TransferMechanism.prefs>` for details.
-
     Attributes
     ----------
 
@@ -164,15 +164,6 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         contains key-value pairs stored in the `function <EpisodicMemoryMechanism.function>'\\s `memory` attribute
         (if it has one).
 
-    name : str
-        the name of the EpisodicMemoryMechanism; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the EpisodicMemoryMechanism; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
-
     """
 
     class Parameters(ProcessingMechanism_Base.Parameters):
@@ -181,7 +172,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
             ----------
 
                 variable
-                    see `variable <EpisodicMemoryMechanism.variable>`
+                    see `variable <Mechanism_Base.variable>`
 
                     :default value: [[0]]
                     :type: list

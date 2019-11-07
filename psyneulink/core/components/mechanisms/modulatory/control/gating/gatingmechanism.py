@@ -9,7 +9,8 @@
 # **************************************  GatingMechanism ************************************************
 
 """
-Sections
+
+Contents
 --------
 
   * `GatingMechanism_Overview`
@@ -19,6 +20,7 @@ Sections
       - `GatingMechanism_Function`
   * `GatingMechanism_Execution`
   * `GatingMechanism_Class_Reference`
+
 
 .. _GatingMechanism_Overview:
 
@@ -248,20 +250,16 @@ def _gating_allocation_setter(value, owning_component=None, context=None):
 
 class GatingMechanism(ControlMechanism):
     """
-    GatingMechanism(                                \
-        default_gating_allocation=None,             \
-        size=None,                                  \
-        monitor_for_gating=None,                    \
-        function=Linear(slope=1, intercept=0),      \
-        default_allocation=None,                    \
-        gating:tc.optional(list) = None,            \
-        modulation=MULTIPLICATIVE,                  \
-        params=None,                                \
-        name=None,                                  \
-        prefs=None)
+    GatingMechanism(                           \
+        default_gating_allocation=None,        \
+        monitor_for_gating=None,               \
+        function=Linear(slope=1, intercept=0), \
+        default_allocation=None,               \
+        gate=None,                             \
+        modulation=MULTIPLICATIVE)
 
-    Subclass of `ModulatoryMechanism <ModulatoryMechanism>` that gates (modulates) the value(s)
-    of one or more `Ports <Port>`.
+    Subclass of `ModulatoryMechanism <ModulatoryMechanism>` that gates (modulates) the value(s) of one or more `Ports
+    <Port>`.  See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
 
     COMMENT:
         Description:
@@ -274,12 +272,6 @@ class GatingMechanism(ControlMechanism):
                    it then iterates through all of the InputPorts and OutputPorts of all of the Mechanisms in its
                    System, identifies ones without a sender specified, calls its deferred_init() method,
                    instantiates a GatingSignal for it, and assigns it as the GatingProjection's sender.
-
-        Class attributes:
-            + componentType (str): System Default Mechanism
-            + paramClassDefaults (dict):
-                + FUNCTION: Linear
-                + FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0}
     COMMENT
 
     Arguments
@@ -312,7 +304,7 @@ class GatingMechanism(ControlMechanism):
         which the **default_allocation** was not specified in its constructor (see default_allocation
         <GatingMechanism.default_allocation>` for additional details).
 
-    gate : List[GatingSignal, InputPort, OutputPort, Mechanism, tuple[str, Mechanism], or dict]
+    gate : list[GatingSignal, InputPort, OutputPort, Mechanism, tuple[str, Mechanism], or dict]
         specifies the `InputPorts <InputPort>` and/or `OutputPorts <OutputPorts>` to be gated by the
         GatingMechanism; the number of items must equal the length of the **default_gating_allocation**
         argument; if a `Mechanism <Mechanism>` is specified, its `primary InputPort <InputPort_Primary>`
@@ -383,7 +375,7 @@ class GatingMechanism(ControlMechanism):
         single item used by all of the `gating_signals <GatingMechanism.gating_signals>`.
 
     gating_allocation : scalar or 1d np.array of ints
-        the result of the GatingMechanism's `function <GatingProjection.function>`;
+        the result of the GatingMechanism's `function <Projection_Base.function>`;
         each item is the value assigned to the corresponding `GatingSignal` listed in `gating_signals
         <GatingMechanism.gating_signals>`, and used by each GatingSignal to generate the `gating_signal
         <GatingSignal.gating_signal>` assigned to its `GatingProjections <GatingProjection>`; same as the

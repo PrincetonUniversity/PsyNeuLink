@@ -113,14 +113,14 @@ def main():
                                          reward_input_mech:[[0],[1]]},
                                  context=context,
                                  bin_execute=BIN_EXECUTE,
-<<<<<<< HEAD
-                                 # animate={'show_controller':True,
-                                 #          'show_cim':True}
+# <<<<<<< HEAD
+                                 animate={'show_controller':True,
+                                          'show_cim':True}
                                  )
-=======
-                                 )
+# # =======
+#                                  )
     print(run_results)
->>>>>>> 431b1188c0625f981643db64d2db3226eed4ddb2
+# >>>>>>> 431b1188c0625f981643db64d2db3226eed4ddb2
 
 if RUN:
     if __name__ == "__main__":

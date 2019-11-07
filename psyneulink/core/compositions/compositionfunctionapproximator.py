@@ -8,12 +8,21 @@
 
 # *************************************  CompositionFunctionApproximator ***********************************************
 
-"""
-
 # FIX: SHOULD BE IMPLEMENTED AS ABSTRACT BASE CLASS (ABC)
 
-Composition Function Approximator
----------------------------------
+"""
+
+Contents
+--------
+
+  * `CompositionFunctionApproximator_Overview`
+  * `CompositionFunctionApproximator_Class_Reference`
+
+
+.. _CompositionFunctionApproximator_Overview:
+
+Overview
+--------
 
 A `CompositionFunctionApproximator` is an abstract subclass of `Composition` that, over calls to its `adapt
 <CompositionFunctionApproximator.adapt>` method, parameterizes its `function <Composition.function>` to predict the
@@ -36,6 +45,11 @@ COMMENT:
 COMMENT
 
 
+.. _CompositionFunctionApproximator_Class_Reference:
+
+Class Reference
+---------------
+
 """
 
 from psyneulink.core.compositions.composition import Composition
@@ -50,43 +64,45 @@ class CompositionFunctionApproximatorError(Exception):
 
 
 class CompositionFunctionApproximator(Composition):
-    """Parameterizes `its function <CompositionFunctionApproximator.function>` to predict a `net_outcome
+    """Subclass of `Composition` that implements a FunctionApproximator as the `agent_rep
+    <OptimizationControlmechanism.agent>` of an `OptimizationControlmechanism`.
+
+    Parameterizes `its function <CompositionFunctionApproximator.function>` to predict a `net_outcome
     <Controlmechanism.net_outcome>` for a set of `feature_values <OptimizationControlmechanism.feature_values>`
     and a `control_allocation <ControlMechanism.control_allocation>` provided by an `OptimizationControlmechanism`.
+
+    See `Composition <Composition_Class_Reference>` for additional arguments and attributes.
+
+    Arguments
+    ---------
+
+    param_defaults : LearningFunction, function or method
+        specifies the function parameterized by the CompositionFunctionApproximator's `adapt
+        <CompositionFunctionApproximator.adapt>` method, and used by its `evaluate
+        <CompositionFunctionApproximator.evaluate>` method to generate and return a predicted `net_outcome
+        <ControlMechanism.net_outcome>` for a set of `feature_values <OptimizationControlMechanism.feature_values>`
+        and a `control_allocation <OptimizationControlMechanism>` provided by an `OptimizationControlMechanism`.
+
+    Attributes
+    ----------
+
+    function : LearningFunction, function or method
+        parameterized by the CompositionFunctionApproximator's <adapt <CompositionFunctionApproximator.adapt>`
+        method, and used by its `evaluate <CompositionFunctionApproximator.evaluate>` method to generate and return
+        a predicted `net_outcome <ControlMechanism.net_outcome>` for a set of `feature_values
+        <OptimizationControlMechanism.feature_values>` and a `control_allocation <OptimizationControlMechanism>`
+        provided by an `OptimizationControlMechanism`.
+
+    prediction_parameters : 1d array
+        parameters adjusted by `adapt <CompositionFunctionApproximator.adapt>` method, and used by `function
+        <FunctionAppproximator.function>` to predict the `net_outcome <ControlMechanism.net_outcome>`
+        for a given set of `feature_values <OptimizationControlMechanism.feature_values>` and `control_allocation
+        <ControlMechanism.control_allocation>`.
 
     """
 
     def __init__(self, name=None, **param_defaults):
-        """
-
-        Arguments
-        ---------
-
-        param_defaults : LearningFunction, function or method
-            specifies the function parameterized by the CompositionFunctionApproximator's <adapt
-            <CompositionFunctionApproximator.adapt>` method, and used by its `evaluate
-            <CompositionFunctionApproximator.evaluate>` method to generate and return a predicted `net_outcome
-            <ControlMechanism.net_outcome>` for a set of `feature_values <OptimizationControlMechanism.feature_values>`
-            and a `control_allocation <OptimizationControlMechanism>` provided by an `OptimizationControlMechanism`.
-
-        Attributes
-        ----------
-
-        function : LearningFunction, function or method
-            parameterized by the CompositionFunctionApproximator's <adapt <CompositionFunctionApproximator.adapt>`
-            method, and used by its `evaluate <CompositionFunctionApproximator.evaluate>` method to generate and return
-            a predicted `net_outcome <ControlMechanism.net_outcome>` for a set of `feature_values
-            <OptimizationControlMechanism.feature_values>` and a `control_allocation <OptimizationControlMechanism>`
-            provided by an `OptimizationControlMechanism`.
-
-        prediction_parameters : 1d array
-            parameters adjusted by `adapt <CompositionFunctionApproximator.adapt>` method, and used by `function
-            <FunctionAppproximator.function>` to predict the `net_outcome <ControlMechanism.net_outcome>`
-            for a given set of `feature_values <OptimizationControlMechanism.feature_values>` and `control_allocation
-            <ControlMechanism.control_allocation>`.
-
-        """
-        # self.function = function
+       # self.function = function
         super().__init__(name=name, **param_defaults)
 
     def adapt(self, feature_values, control_allocation, net_outcome, context=None):

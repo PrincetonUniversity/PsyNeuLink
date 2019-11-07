@@ -9,6 +9,17 @@
 # *************************************  KohonenLearningMechanism **********************************************
 
 """
+
+Contents
+--------
+
+  * `KohonenLearningMechanism_Overview`
+  * `KohonenLearningMechanism_Creation`
+  * `KohonenLearningMechanism_Structure`
+  * `KohonenLearningMechanism_Execution`
+  * `KohonenLearningMechanism_Class_Reference`
+
+
 .. _KohonenLearningMechanism_Overview:
 
 Overview
@@ -24,7 +35,7 @@ Creating a KohonenLearningMechanism
 -----------------------------------
 
 An KohonenLearningMechanism can be created directly by calling its constructor, but most commonly it is
-created automatically when a KohonenMechanism is `configured for learning <Kohonen_Learning>`.
+created automatically when a KohonenMechanism is `configured for learning <KohonenMechanism_Learning>`.
 
 .. _KohonenLearningMechanism_Structure:
 
@@ -62,7 +73,7 @@ An KohonenLearningMechanism is identical to a `LearningMechanism` in all respect
     the entire weight change matrix (see `learning_rate <KohonenLearningMechanism.learning_rate>` for
     additional details).
 
-.. _KohonenLearningMechanism_Learning:
+.. _KohonenLearningMechanism_Execution:
 
 Execution
 ---------
@@ -138,9 +149,10 @@ class KohonenLearningMechanism(LearningMechanism):
         name=None,                           \
         prefs=None)
 
-    Implements a `LearningMechanism` that modifies the `matrix <MappingProjection.matrix>` parameter of the
+    Subclass of `LearningMechanism` that modifies the `matrix <MappingProjection.matrix>` parameter of the
     `learning_projection <KohonenMechanism.learning_projection` of the associated `KohonenMechanism`
     (`activity_source <KohonenLearningMechanism.activity_source>`).
+    See `LearningMechanism <LearningMechanism_Class_Reference>` for additional arguments and attributes.
 
 
     Arguments
@@ -170,18 +182,6 @@ class KohonenLearningMechanism(LearningMechanism):
     learning_rate : float : default None
         specifies the learning rate for the KohonenLearningMechanism. (see `learning_rate
         <KohonenLearningMechanism.learning_rate>` for details).
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
-        Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
-        the Projection's default `function <LearningProjection.function>` and parameter assignments.  Values specified
-        for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default see `name <KohonenLearningMechanism.name>`
-        specifies the name of the KohonenLearningMechanism.
-
-    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the KohonenLearningMechanism; see `prefs <KohonenLearningMechanism.prefs>` for details.
 
 
     Attributes
@@ -268,15 +268,6 @@ class KohonenLearningMechanism(LearningMechanism):
         the default form of modulation used by the KohonenLearningMechanism's `LearningSignal(s)
         <LearningMechanism_LearningSignal>`, unless they are `individually specified <LearningSignal_Specification>`.
 
-    name : str
-        the name of the KohonenLearningMechanism; if it is not specified in the **name** argument of the
-        constructor, a default is assigned by MechanismRegistry (see `Naming` for conventions used for default and
-        duplicate names).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the KohonenLearningMechanism; if it is not specified in the **prefs** argument
-        of the constructor, a default is assigned using `classPreferences` defined in __init__.py (see
-        `PreferenceSet <LINK>` for details).
     """
 
     componentType = KOHONEN_LEARNING_MECHANISM

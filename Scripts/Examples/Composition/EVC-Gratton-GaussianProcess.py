@@ -10,7 +10,7 @@ Input = pnl.TransferMechanism(
     name='Input',
 )
 Reward = pnl.TransferMechanism(
-    output_ports=[pnl.RESULT, pnl.OUTPUT_MEAN, pnl.OUTPUT_VARIANCE],
+    output_ports=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE],
     name='Reward'
 )
 Decision = pnl.DDM(

@@ -10,6 +10,28 @@
 
 
 """
+Contents
+--------
+
+* `Component_Overview`
+* `Component_Creation`
+    * `Component_Deferred_Init`
+* `Component_Structure`
+    * `Component_Structural_Attributes`
+        * `Variable <Component_Variable>`
+        * `Function <Component_Function>`
+        * `Value <Component_Value>`
+        * `Log <Component_Log>`
+        * `Name <Component_Name>`
+        * `Preferences <Component_Prefs>`
+    * `User_Modifiable_Parameters`
+    * `Methods <Component_Methods>`
+* `Component_Execution`
+    * `Component_Execution_Initialization`
+    * `Component_Execution_Termination`
+    * `Component_Execution_Count_and_Time`
+* `Component_Class_Reference`
+
 
 .. _Component_Overview:
 
@@ -188,11 +210,11 @@ A Component defines its `parameters <Parameters>` in its *parameters* attribute,
   general, only parameters that take numerical values and/or do not affect the structure, mode of operation,
   or format of the values associated with a Component can be subject to modulation.  For example, for a
   `TransferMechanism`, `clip <TransferMechanism.clip>`, `initial_value <TransferMechanism.initial_value>`,
-  `integrator_mode <TransferMechanism.integrator_mode>`, `input_ports <TransferMechanism.input_ports>`,
-  `output_ports`, and `function <TransferMechanism.function>`, are all listed in user_params, and are user-modifiable,
+  `integrator_mode <TransferMechanism.integrator_mode>`, `input_ports <Mechanism_Base.input_ports>`,
+  `output_ports`, and `function <Mechanism_Base.function>`, are all listed in user_params, and are user-modifiable,
   but are not subject to modulation; whereas `noise <TransferMechanism.noise>` and `integration_rate
   <TransferMechanism.integration_rate>`, as well as the parameters of the TransferMechanism's `function
-  <TransferMechanism.function>` (listed in the *function_params* subdictionary) can all be subject to modulation.
+  <Mechanism_Base.function>` (listed in the *function_params* subdictionary) can all be subject to modulation.
   Parameters that are subject to modulation are associated with a `ParameterPort` to which the ControlSignals
   can project (by way of a `ControlProjection`).
 
@@ -338,6 +360,11 @@ Execution
 Calls the :keyword:`execute` method of the subclass that, in turn, calls its :keyword:`function`.
 The following attributes control and provide information about the execution of a Component:
 
+.. _Component_Execution_Initialization:
+
+*Initialization*
+~~~~~~~~~~~~~~~~
+
 .. _Component_Reinitialize_When:
 
 * **reinitialize_when** - contains a `Condition`; when this condition is satisfied, the Component calls its
@@ -352,6 +379,11 @@ The following attributes control and provide information about the execution of 
 
         Currently, only Mechanisms reinitialize when their reinitialize_when Conditions are satisfied. Other types of
         Components do not reinitialize.
+
+.. _:
+Component_Execution_Termination
+*Termniation*
+~~~~~~~~~~~~~
 
 .. _Component_Is_Finished:
 
@@ -380,6 +412,11 @@ The following attributes control and provide information about the execution of 
   If it is exceeded, a warning message is generated.  Note that this only pertains to `num_executions_before_finished
   <Component_Num_Executions_Before_Finished>`, and not its `execution_count <Component_Execution_Count>`, which can be
   unlimited.
+
+.. _Component_Execution_Count_and_Time:
+
+*Count and Time*
+~~~~~~~~~~~~~~~~
 
 .. _Component_Execution_Count:
 
@@ -708,36 +745,14 @@ class ComponentsMeta(ABCMeta):
 
 class Component(JSONDumpable, metaclass=ComponentsMeta):
     """Base class for Component.
+    The arguments below are ones that can be used in the constructor for any Component subclass.
 
     .. note::
-       Component is an abstract class and should NEVER be instantiated by a direct call to its constructor.
+       Component is an abstract class and should *never* be instantiated by a direct call to its constructor.
        It should be instantiated using the constructor for a subclass.
 
     COMMENT:
-        Every Component is associated with:
-         - child class componentName
-         - type
-         - input
-         - execute (method): called to execute it;  it in turn calls self.function
-         - function (method): carries out object's core computation
-             it can be referenced either as self.function, self.params[FUNCTION] or self.paramsCurrent[FUNCTION]
-         - function (Function): the object to which function belongs (and that defines it's parameters)
-         - output (value: self.value)
-         - output_values (return from self.execute: concatenated set of values of output_ports)
-         - class and instance variable defaults
-         - class and instance param defaults
-        The Components's execute method (<subclass>.execute is the Component's primary method
-            (e.g., it is the one called when Process, Mechanism, Port and Projections objects are updated);
-            the following attributes for or associated with the method are defined for every Component object:
-                + execute (method) - the execute method itself
-                + value (value) - the output of the execute method
-            the latter is used for typing and/or templating other variables (e.g., self.defaults.variable):
-                type checking is generally done using Utilities.iscompatible(); for iterables (lists, tuples, dicts):
-                    if the template (the "reference" arg) has entries (e.g., [1, 2, 3]), comparisons will include length
-                    if the template is empty (e.g., [], {}, or ()), length will not be checked
-                    if the template has only numbers, then the candidate must as well
-
-
+    FOR API DOCUMENTATION:
         The Component itself can be called without any arguments (in which case it uses its instance defaults) or
             one or more variables (as defined by the subclass) followed by an optional params dictionary
         The variable(s) can be a function reference, in which case the function is called to resolve the value;
@@ -785,46 +800,41 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             * However, more restrictive validation (e.g., recurisve, range checking, etc.) can be achieved
                 by overriding the class _validate_variable and _validate_params methods
 
-    Class attributes:
-        + className
-        + suffix - " " + className (used to create subclass and instance names)
-        + componentCategory - category of Component (i.e., Process, Mechanism, Projection, Function)
-        + componentType - type of Component within a category
-                             (e.g., TransferMechanism, MappingProjection, ControlProjection, etc.)
-        + requiredParamClassDefaultTypes - dict of param names & types that all subclasses of Component must implement;
-
-    Class methods:
-        - _handle_size(size, variable)
-        - _validate_variable(variable)
-        - _validate_params(request_set, target_set, context)
-        - _instantiate_defaults(variable, request_set, assign_missing, target_set, default_set=None
-        - reset_params()
-        - _check_args(variable, params)
-        - _assign_args_to_param_dicts(params, param_names, function_param_names)
-
-    Instance attributes:
-        + name
-        + componentName - name of particular Function (linear, exponential, integral, etc.)
-        + class_defaults.variable (value)
-        + variableClassDefault_np_info (ndArrayInfo)
-        + defaults.variable (value)
-        + _default_variable_flexibility
-        + variable (value)
-        + variable_np_info (ndArrayInfo)
-        + function (method)
-        + function (Function)
-        + paramClassDefaults:
-            + FUNCTION
-            + FUNCTION_PARAMS
-        + paramInstanceDefaults
-        + paramsCurrent
-        # + parameter_validation
-        + user_params
-        +._runtime_params_reset
-
-    Instance methods:
-        + function (implementation is optional; aliased to params[FUNCTION] by default)
     COMMENT
+
+    Arguments
+    ---------
+
+    default_variable : scalar, list or array : default [[0]]
+        specifies template for the input to the Component's `function <Component.function>`.
+
+    size : int, list or np.ndarray of ints : default None
+        specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
+        if **default_variable** is specified, it takes precedence over the specification of **size**.
+
+    COMMENT:
+    param_defaults :   :  default None,
+    COMMENT
+
+    function : function : default Linear
+       specifies function used to transform `variable <Component.variable>` into `value
+       <Component.value>`;  must take an input of the same shape as `variable <Component.variable>`.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
+        the Component and/or a custom function and its parameters. Values specified for parameters in the dictionary
+        override any assigned to those parameters in arguments of the constructor.
+
+    name : str : default see `name <Component_Name>`
+        a string used for the name of the Component;  default is assigned by relevant `Registry <LINK>` for Component
+        (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : default Component.classPreferences
+        specifies the `PreferenceSet` for the Component (see `prefs <Component_Base.prefs>` for details).
+
+    context : Context : default None
+        specifies `context <Context>` in which Component is being initialized or executed.
+
 
     Attributes
     ----------
@@ -890,6 +900,20 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             * `INITIALIZED <ContextFlags.INITIALIZED>`
             * `REINITIALIZED <ContextFlags.REINITIALIZED>`
             * `UNINITIALIZED <ContextFlags.UNINITALIZED>`
+
+    COMMENT:
+    FIX: THESE USED TO BE IN CONSTRUCTORS FOR ALL SUBCLASSES.  INTEGRATE WITH ABOVE
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
+        the InputPort or its function, and/or a custom function and its parameters. Values specified for parameters in
+        the dictionary override any assigned to those parameters in arguments of the constructor.
+
+    name : str : default see `name <InputPort.name>`
+        specifies the name of the InputPort; see InputPort `name <InputPort.name>` for details.
+
+    prefs : PreferenceSet or specification dict : default Port.classPreferences
+        specifies the `PreferenceSet` for the InputPort; see `prefs <InputPort.prefs>` for details.
+    COMMENT
 
     """
 

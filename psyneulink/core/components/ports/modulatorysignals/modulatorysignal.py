@@ -9,8 +9,8 @@
 # ********************************************  ModulatorySignal *******************************************************
 
 """
-..
-Sections
+
+Contents
 --------
   * `ModulatorySignal_Overview`
     - `Naming Conventions for ModulatorySignals <ModulatorySignal_Naming>`
@@ -22,6 +22,7 @@ Sections
       • `ModulatorySignal_Types`
       • `ModulatorySignal_Implementation`
   * `ModulatorySignal_Execution`
+  * `ModulatorySignal_Examples`
   * `ModulatorySignal_Class_Reference`
   
 
@@ -95,7 +96,7 @@ Structure
 A ModulatorySignal is always assigned to a `ModulatoryMechanism <ModulatoryMechanism>`, and must be assigned to an
 ModulatoryMechanism of the appropriate type (`see types of ModulatoryMechanism <ModulatoryMechanism_Types>`).  The
 ModulatorySignal receives a `modulatory_allocation` from the ModulatoryMechanism to which it is assigned, that it uses
-as the `variable <Function_Base.variable>` for its `function <ModulatorySignal.function>`, the result of which is the
+as the `variable <Function_Base.variable>` for its `function <ModulatoryMechanism.function>`, the result of which is the
 modulatory `value <ModulatorySignal.value>` of the ModulatorySignal.  A ModulatorySignal is associated with one or more
 `ModulatoryProjections <ModulatoryProjection>` of the corresponding type, that that receive the ModulatorySignal's
 `value <ModulatorySignal.value>`, and use this to modulate the Port(s) to which they project.  All of the
@@ -162,9 +163,9 @@ ModulatorySignals used and the type of Port modulated:
     or an `OutputPort` of the Mechanism, that determines how the `value <Mechanism_Base.value>` of the Mechanism
     (i.e., the result of its `function <Mechanism_Base.function>`) is used to generate the output of the Mechanism.
 
-  * **modulation of a** `MappingProjection` -- a `LearningSignal` must be used; this modulates the `ParameterPort` for
-    the `matrix <MappingProjection.matrix>` parameter of a MappingProjection's `function  <MappingProjection.function>`
-    which, in turn, determines how it computes the MappingProjection's `value <MappingProjection.value>`.
+  * **modulation of a** `MappingProjection` -- a `LearningSignal` must be used; this modulates the `ParameterPort`
+    for the `matrix <MappingProjection.matrix>` parameter of a MappingProjection's `function  <MProjection.function>`
+    which, in turn, determines how it computes the MappingProjection's `value <Projection_Base.value>`.
 
 The following table summarizes the three uses of modulation, the ModulatorySignals for each, and the Ports they
 modulate. The mechanics of modulation are described in greater detail in `ModulatorySignal_Implementation`,
@@ -341,14 +342,14 @@ For example, consider a `ControlSignal` that modulates the `bias <Logistic.bias>
 used by a `TransferMechanism`, and assume that the `ParameterPort` for the bias parameter (to which the ControlSignal
 projects) uses a `Linear` function (the default for a ParameterPort) to set the `value <ParameterPort.value>` of
 that parameter. If the `modulation  <ModulatorySignal.modulation>` attribute of the `ControlSignal` is *MULTIPLICATIVE*
-then, when the TransferMechanism's `Logistic` `function <TransferMechanism.function>` is executed, the `function
+then, when the TransferMechanism's `Logistic` `function <Mechanism_Base.function>` is executed, the `function
 <ParameterPort.function>` of the ParameterPort that sets the value of the `Logistic` Function's `bias <Logistic.bias>`
 parameter is executed;  that is a `Linear` Function, that uses the ControlSignal's `value <ControlSignal.value>` as
 its `slope <Linear.slope>` parameter.  Thus, the effect is that the ControlSignal's `value <ControlSignal.value>` is
 multiplied by the base value of the `bias <Logistic.bias>` parameter, before that is used by the TransferMechanism's
 `Logistic` Function.  Thus, the `value <ControlSignal.value>` of the ControlSignal modulates the `bias
 <Logistic.bias>` parameter of the `Logistic` Function when the TransferMechanism's `function
-<TransferMechanism.function>` is executed (see `Port Execution <State_Execution>` for additional details).
+<Mechanism_Base.function>` is executed (see `Port Execution <State_Execution>` for additional details).
 
 COMMENT
 
@@ -356,9 +357,9 @@ COMMENT
    The change in the value of a `Port <Port>` in response to a ModulatorySignal does not occur until the Mechanism to
    which the port belongs is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
 
-.. _ModulatorySignal_Class_Reference:
-
 COMMENT:
+
+.. _ModulatorySignal_Examples:
 
 Examples
 --------
@@ -398,6 +399,8 @@ ControlMechanism, or its ControlSignals.  For example, in the following, ``ctl_m
 FIX: EXAMPLE HERE
      THEN, AFTER EXAMPLE: MODULATORYSIGNAL'S VALUE IS ASSIGNED TO THE SPECIFIED PARAMETER.
 COMMENT
+
+.. _ModulatorySignal_Class_Reference:
 
 Class Reference
 ---------------
@@ -442,101 +445,53 @@ modulatory_signal_keywords.update(component_keywords)
 
 
 class ModulatorySignal(OutputPort):
-    """
-    ModulatorySignal(                                  \
-        owner,                                         \
-        default_allocation=defaultModulatoryAllocation \
-        function=LinearCombination(operation=SUM),     \
-        modulation=MULTIPLICATIVE                      \
-        projections=None,                              \
-        params=None,                                   \
-        name=None,                                     \
-        prefs=None)
-
-    Subclass of `OutputPort` used by a `ModulatoryMechanism <ModulatoryMechanism>` to modulate the value
-    of one more `Ports <Port>`.
+    """Subclass of `OutputPort` used by a `ModulatoryMechanism <ModulatoryMechanism>` to modulate the value
+    of one more `Ports <Port>`.  See `OutputPort <OutputPort_Class_Reference>` and subclasses for additional
+    arguments and attributes.
 
     .. note::
-       ModulatorySignal is an abstract class and should NEVER be instantiated by a call to its constructor.
+       ModulatorySignal is an abstract class and should *never* be instantiated by a call to its constructor.
        It should be instantiated using the constructor for a `subclass <ModulatorySignal_Subtypes>`.
 
     COMMENT:
-
-        Description
-        -----------
-            The ModulatorySignal class is a subtype of the OutputPort class in the Port category of Component,
-            It is used primarily as the sender for GatingProjections
-            Its FUNCTION updates its value:
-                note:  currently, this is the identity function, that simply maps variable to self.value
-
-        Class attributes:
-            + componentType (str) = GATING_SIGNAL
-            + paramClassDefaults (dict)
-                + FUNCTION (LinearCombination)
-                + FUNCTION_PARAMS (Modulation.MULTIPLY)
-
-        Class methods:
-            function (executes function specified in params[FUNCTION];  default: Linear
-
-        PortRegistry
-        -------------
-            All OutputPorts are registered in PortRegistry, which maintains an entry for the subclass,
-              a count for all instances of it, and a dictionary of those instances
+    PortRegistry
+    -------------
+        All OutputPorts are registered in PortRegistry, which maintains an entry for the subclass,
+        a count for all instances of it, and a dictionary of those instances
     COMMENT
 
 
     Arguments
     ---------
 
-    owner : ModulatoryMechanism
-        specifies the `GatingMechanism` to which to assign the ModulatorySignal.
-
     default_allocation : scalar : defaultModulatoryAllocation
         specifies the default template and value used for `variable <ModulatorySignal.variable>`.
-
-    function : Function or method : default Linear
-        specifies the function used to determine the value of the ModulatorySignal from the value of its
-        `owner <GatingMechanism.owner>`.
 
     modulation : ModulationParam : default MULTIPLICATIVE
         specifies the type of modulation the ModulatorySignal uses to determine the value of the Port(s) it modulates.
 
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
-        the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
-        override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default see `name <ModulatorySignal.name>`
-        specifies the name of the ModulatorySignal.
-
-    prefs : PreferenceSet or specification dict : default Port.classPreferences
-        specifies the `PreferenceSet` for the LearningSignal; see `prefs <ControlSignal.prefs>` for details.
-
-
     Attributes
     ----------
-
-    owner : ModulatoryMechanism
-        the `ModulatoryMechanism <ModulatoryMechanism>` to which the ModulatorySignal belongs.
 
     variable : scalar, list or np.ndarray
         same as `allocation <ModulatorySignal.allocation>`.
 
     allocation : float
-        value assigned by the ModulatorySignal's `owner <ControlSignal.owner>`, and used as the `variable
+        value assigned by the ModulatorySignal's `owner <ModulatorySignal.owner>`, and used as the `variable
         <ModulatorySignal.variable>` of its `function <ModulatorySignal.function>` to determine the ModulatorySignal's
-        `ModulatorySignal.intensity`.
+        `ModulatorySignal.value`.
     COMMENT:
     FOR DEVELOPERS:  Implemented as an alias of the ModulatorySignal's variable Parameter
     COMMENT
 
     function : TransferFunction
-        provides the ModulatorySignal's `value <ModulatorySignal.value>`; the default is an identity function that
-        assigns `variable <ModulatorySignal.variable>` as ModulatorySignal's `value <ModulatorySignal.value>`.
+        used to transform the ModulatorySignal's `allocation <ModulatorySignal.allocation>` into its `value
+        <ModulatorySignal.value>`;  default is the `Identity` Function that simply assigns `allocation
+        <ModulatorySignal.allocation>` to `value <ModulatorySignal.value>`.
 
     value : number, list or np.ndarray
-        result of `function <ModulatorySignal.function>`, used to determine the `value <Port_Base.value>` of the
-        Port(s) being modulated.
+        result of `function <ModulatorySignal.function>`, used to determine the `value <Port_Base.value>` of the Port(s)
+        being modulated.
 
     modulation : ModulationParam
         determines how the output of the ModulatorySignal is used to modulate the value of the port(s) being modulated.
@@ -573,11 +528,6 @@ class ModulatorySignal(OutputPort):
             the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
             Mechanism: Ports within a Mechanism with the same base name are appended an index in the order of their
             creation.
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the ModulatorySignal; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
 
     """
 

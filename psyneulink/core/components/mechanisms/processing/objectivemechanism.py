@@ -10,6 +10,22 @@
 
 """
 
+Contents
+--------
+
+  * `ObjectiveMechanism_Overview`
+  * `ObjectiveMechanism_Creation`
+      - `ObjectiveMechanism_Monitor`
+  * `ObjectiveMechanism_Structure`
+        - `ObjectiveMechanism_Input`
+        - `ObjectiveMechanism_Function`
+        - `ObjectiveMechanism_Output`
+  * `ObjectiveMechanism_Execution`
+  * `ObjectiveMechanism_Examples`
+  * `ObjectiveMechanism_Class_Reference`
+
+.. _ObjectiveMechanism_Overview:
+
 Overview
 --------
 
@@ -57,7 +73,7 @@ used to specify attributes of the InputPort and/or MappingProjection(s) to it, t
 monitor the specified OutputPort.  In general, the `value <OutputPort.value>` of each specified OutputPort determines
 the format of the `variable <InputPort.variable>` of the InputPort that is created for it by the ObjectiveMechanism.
 However, this can be overridden using the ObjectiveMechanism's `default_variable <ObjectiveMechanism.default_variable>`
-or `size <ObjectiveMechanism.size>` attributes (see `Mechanism InputPort specification
+or `size <Mechanism_Base.size>` attributes (see `Mechanism InputPort specification
 <Mechanism_InputPort_Specification>`), or by specifying a Projection from the OutputPort to the InputPort (see
 `Input Source Specification <InputPort_Projection_Source_Specification>`). If an item in the
 **monitor** argument specifies an InputPort for the ObjectiveMechanism, but not the OutputPort to
@@ -160,7 +176,7 @@ The ObjectiveMechanism's `function <ObjectiveMechanism.function>` uses the value
 <ObjectiveMechanism.input_ports>` to compute an `objective (or "loss") function
 <https://en.wikipedia.org/wiki/Loss_function>`_, that is assigned as the value of its *OUTCOME* `OutputPort
 <ObjectiveMechanism_Output>`.  By default, it uses a `LinearCombination` function to sum the values of the values of
-the items in its `variable <ObjectiveMechanism.variable>`. However, by assigning values to the 'weight
+the items in its `variable <Mechanism_Base.variable>`. However, by assigning values to the 'weight
 <InputPort.weight>` and/or 'exponent <InputPort.exponent>` attributes of the corresponding InputPorts,
 it can be configured to calculate differences, ratios,  etc. (see `example
 <ObjectiveMechanism_Weights_and_Exponents_Example>` below).  The `function <ObjectiveMechanism.function>`  can also
@@ -186,8 +202,8 @@ Execution
 ---------
 
 When an ObjectiveMechanism is executed, it updates its input_ports with the values of the OutputPorts listed in
-its `monitor <ObjectiveMechanism.monitor>` attribute, and then uses its `function <ObjectiveMechanism.function>` to
-evaluate these.  The result is assigned as to its `value <ObjectiveMechanism.value>` attribute as the value of its
+its `monitor <ObjectiveMechanism.monitor>` attribute, and then uses its `function <ObjectiveMechanism.function>`
+to evaluate these.  The result is assigned as to its `value <Mechanism_Base.value>` attribute as the value of its
 *OUTCOME* (`primary <OutputPort_Primary>`) OutputPort.
 
 .. _ObjectiveMechanism_Examples:
@@ -358,7 +374,7 @@ from collections import namedtuple
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.core.components.ports.outputport import OutputPort, PRIMARY, standard_output_ports
+from psyneulink.core.components.ports.outputport import OutputPort, PRIMARY
 from psyneulink.core.components.ports.inputport import InputPort, INPUT_PORT
 from psyneulink.core.components.ports.port import _parse_port_spec
 from psyneulink.core.globals.context import ContextFlags
@@ -413,44 +429,15 @@ class ObjectiveMechanismError(Exception):
 
 
 class ObjectiveMechanism(ProcessingMechanism_Base):
-    # monitor is an alias to input_ports argument, which can still be used in a spec dict
     """
-    ObjectiveMechanism(               \
-        monitor,                      \
-        default_variable,             \
-        size,                         \
-        function=LinearCombination,   \
-        output_ports=OUTCOME,        \
-        params=None,                  \
-        name=None,                    \
-        prefs=None)
+    ObjectiveMechanism(             \
+        monitor,                    \
+        function=LinearCombination, \
+        output_ports=OUTCOME)
 
-    Subclass of `ProcessingMechanism <ProcessingMechanism>` that evaluates the value(s)
-    of one or more `OutputPorts <OutputPort>`.
+    Subclass of `ProcessingMechanism <ProcessingMechanism>` that evaluates the value(s) of one or more `OutputPorts
+    <OutputPort>`.  See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
 
-    COMMENT:
-        Description:
-            ObjectiveMechanism is a subtype of the ProcessingMechanism Type of the Mechanism Category of the
-                Component class
-            Its function uses the LinearCombination Function to compare two input variables
-            COMPARISON_OPERATION (functionParams) determines whether the comparison is subtractive or divisive
-            The function returns an array with the Hadamard (element-wise) difference/quotient of target vs. sample,
-                as well as the mean, sum, sum of squares, and mean sum of squares of the comparison array
-
-        Class attributes:
-            + componentType (str): ObjectiveMechanism
-            + classPreference (PreferenceSet): ObjectiveMechanism_PreferenceSet, instantiated in __init__()
-            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
-            + class_defaults.variable (value):  None (must be specified using **input_ports** and/or **monitor**)
-            + paramClassDefaults (dict): {FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}
-
-        Class methods:
-            None
-
-        MechanismRegistry:
-            All instances of ObjectiveMechanism are registered in MechanismRegistry, which maintains an
-              entry for the subclass, a count for all instances of it, and a dictionary of those instances
-    COMMENT
 
     Arguments
     ---------
@@ -459,52 +446,18 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         specifies the OutputPorts, the `values <OutputPort.value>` of which will be monitored, and evaluated by
         `function <ObjectiveMechanism.function>` (see `ObjectiveMechanism_Monitor` for details of specification).
 
-    default_variable : number, list or np.ndarray : default monitor
-        specifies the format of the `variable <ObjectiveMechanism.variable>` for the `InputPorts` of the
-        ObjectiveMechanism (see `Mechanism InputPort specification <Mechanism_InputPort_Specification>` for details).
-
-    size : int, list or np.ndarray of ints
-        specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
-        if **default_variable** is specified, it takes precedence over the specification of **size**.
-        As an example, the following mechanisms are equivalent::
-            T1 = TransferMechanism(size = [3, 2])
-            T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
-
-    COMMENT:
-    input_ports :  List[InputPort, value, str or dict] or Dict[] : default None
-        specifies the names and/or formats to use for the values of the InputPorts that receive the input from the
-        OutputPorts specified in the monitor** argument; if specified, there must be one for each item
-        specified in the **monitor** argument.
-    COMMENT
-
-    function: CombinationFunction, ObjectiveFunction, function or method : default LinearCombination
+    function : CombinationFunction, ObjectiveFunction, function or method : default LinearCombination
         specifies the function used to evaluate the values listed in `monitor` <ObjectiveMechanism.monitor>`
         (see `function <ObjectiveMechanism.function>` for details).
 
-    output_ports :  List[OutputPort, value, str or dict] or Dict[] : default [OUTCOME]
+    output_ports :  list[OutputPort, value, str or dict] or dict[] : default [OUTCOME]
         specifies the OutputPorts for the Mechanism;
 
-    role: Optional[LEARNING, CONTROL]
+    role: LEARNING or CONTROL : default None
         specifies if the ObjectiveMechanism is being used for learning or control (see `role` for details).
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for the
-        Mechanism, its `function <Mechanism_Base.function>`, and/or a custom function and its parameters. Values
-        specified for parameters in the dictionary override any assigned to those parameters in arguments of the
-        constructor.
-
-    name : str : default see `name <ObjectiveMechanism.name>`
-        specifies the name of the ObjectiveMechanism.
-
-    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the ObjectiveMechanism; see `prefs <ObjectiveMechanism.prefs>` for details.
-
 
     Attributes
     ----------
-
-    variable : 2d ndarray : default array of values of OutputPorts in monitor_output_ports
-        the input to Mechanism's `function <TransferMechanism.function>`.
 
     monitor : ContentAddressableList[OutputPort]
         determines the OutputPorts, the `values <OutputPort.value>` of which are monitored, and evaluated by the
@@ -539,29 +492,16 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         `LearningMechanism`), or for control in a Composition (in conjunction with a `ControlMechanism
         <ControlMechanism>`).
 
-    value : 1d np.array
-        the output of the evaluation carried out by the ObjectiveMechanism's `function <ObjectiveMechanism.function>`.
-
     output_port : OutputPort
         contains the `primary OutputPort <OutputPort_Primary>` of the ObjectiveMechanism; the default is
         its *OUTCOME* `OutputPort <ObjectiveMechanism_Output>`, the value of which is equal to the
-        `value <ObjectiveMechanism.value>` attribute of the ObjectiveMechanism.
+        `value <Mechanism_Base.value>` attribute of the ObjectiveMechanism.
 
     output_ports : ContentAddressableList[OutputPort]
         by default, contains only the *OUTCOME* (`primary <OutputPort_Primary>`) OutputPort of the ObjectiveMechanism.
 
     output_values : 2d np.array
         contains one item that is the value of the *OUTCOME* `OutputPort <ObjectiveMechanism_Output>`.
-
-    name : str
-        the name of the ObjectiveMechanism; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the ObjectiveMechanism; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
-
 
     """
 
@@ -606,7 +546,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         FUNCTION: LinearCombination,
         })
 
-    standard_output_ports = standard_output_ports.copy()
+    standard_output_ports = ProcessingMechanism_Base.standard_output_ports.copy()
 
     # FIX:  TYPECHECK MONITOR TO LIST OR ZIP OBJECT
     @tc.typecheck
@@ -642,12 +582,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                   params=params)
 
         self._learning_role = None
-
-        from psyneulink.core.components.ports.outputport import StandardOutputPorts
-        if not isinstance(self.standard_output_ports, StandardOutputPorts):
-            self.standard_output_ports = StandardOutputPorts(self,
-                                                               self.standard_output_ports,
-                                                               indices=PRIMARY)
 
         super().__init__(default_variable=default_variable,
                          size=size,

@@ -9,6 +9,18 @@
 # *********************************************  ControlProjection *********************************************************
 
 """
+
+Contents
+--------
+
+  * `ControlProjection_Overview`
+  * `ControlProjection_Creation`
+      - `ControlProjection_Deferred_Initialization`
+  * `ControlProjection_Structure`
+  * `ControlProjection_Execution`
+  * `ControlProjection_Class_Reference`
+
+
 .. _ControlProjection_Overview:
 
 Overview
@@ -65,12 +77,12 @@ The `sender <ControlProjection.sender>` of a ControlProjection is a `ControlSign
 <ControlMechanism>`. The `value <ControlSignal.value>` of the `sender <ControlProjection.sender>` is used by the
 ControlProjection as its `variable <ControlProjection.variable>`;  this is also assigned to its `control_signal
 <ControlProjection.control_signal>` attribute, and serves as the input to the ControlProjection's `function
-<ControlProjection.function>`.  The default `function <ControlProjection.function>` for a
-ControlProjection is an identity function (`Linear` with **slope**\\ =1 and **intercept**\\ =0);  that is, it simply
-conveys the value of its `control_signal <ControlProjection.control_signal>` to its `receiver
-<ControlProjection.receiver>`, for use in modifying the value of the parameter that it controls. Its `receiver
-<ControlProjection.receiver>` is the `ParameterPort` for the parameter of the `Mechanism <Mechanism>` or its `function
-<Mechanism_Base.function>` that is controlled by the ControlProjection.
+<Projection_Base.function>`.  The default `function <Projection_Base.function>` for a ControlProjection is an identity
+function (`Linear` with **slope**\\ =1 and **intercept**\\ =0);  that is, it simply conveys the value of its
+`control_signal <ControlProjection.control_signal>` to its `receiver <ControlProjection.receiver>`, for use in
+modifying the value of the parameter that it controls. Its `receiver <ControlProjection.receiver>` is the
+`ParameterPort` for the parameter of the `Mechanism <Mechanism>` or its `function Mechanism_Base.function>` that is
+controlled by the ControlProjection.
 
 .. _ControlProjection_Execution:
 
@@ -80,7 +92,7 @@ Execution
 A ControlProjection cannot be executed directly.  It is executed when the `ParameterPort` to which it projects is
 updated.  Note that this only occurs when the `Mechanism <Mechanism>` to which the `ParameterPort` belongs is executed
 (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating). When a ControlProjection is executed, its
-`function <ControlProjection.function>` gets the `control_signal <ControlProjection.control_signal>` from its `sender
+`function <Projection_Base.function>` gets the `control_signal <ControlProjection.control_signal>` from its `sender
 <ControlProjection.sender>` and conveys that to its `receiver <ControlProjection.receiver>`.  This is used by the
 `receiver <ControlProjection.receiver>` to modify the parameter controlled by the ControlProjection (see
 `ModulatorySignal_Modulation` and `ParameterPort Execution <ParameterPort_Execution>` for how modulation operates and
@@ -92,7 +104,6 @@ how this applies to a ParameterPort).
    "lazy" updating).
 
 .. _ControlProjection_Class_Reference:
-
 
 Class Reference
 ---------------
@@ -147,91 +158,32 @@ class ControlProjection(ModulatoryProjection_Base):
     ControlProjection(           \
      sender=None,                \
      receiver=None,              \
-     function=Linear,            \
-     weight=None,                \
-     exponent=None,              \
-     control_signal_params=None, \
-     params=None,                \
-     name=None,                  \
-     prefs=None)
+     control_signal_params=None)
 
-    Subclass of `ModulatoryProjection <ModulatoryProjection>` that modulates the value of a `ParameterPort` of a
-    `Mechanism <Mechanism>`.
-
-    COMMENT:
-        Description:
-            The ControlProjection class is a type in the Projection category of Component.
-            It implements a projection to the ParameterPort of a Mechanism that modifies a parameter of its function.
-            It:
-               - takes a scalar as its input (sometimes referred to as an "allocation")
-               - uses its `function` to compute its value (sometimes referred to as its "intensity"
-                 based on its input (allocation) its `sender`,
-               - used to modify a parameter of the owner of the `receiver` or its `function`.
-
-        ** MOVE:
-        ProjectionRegistry:
-            All ControlProjections are registered in ProjectionRegistry, which maintains an entry for the subclass,
-              a count for all instances of it, and a dictionary of those instances
-
-        Class attributes:
-            + color (value): for use in interface design
-            + classPreference (PreferenceSet): ControlProjectionPreferenceSet, instantiated in __init__()
-            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-            + paramClassDefaults:
-                FUNCTION:Linear,
-                FUNCTION_PARAMS:{SLOPE: 1, INTERCEPT: 0},  # Note: this implements identity function
-                PROJECTION_SENDER: ControlMechanism
-                CONTROL_SIGNAL_COST_OPTIONS:CostFunctions.DEFAULTS,
-                ALLOCATION_SAMPLES: DEFAULT_ALLOCATION_SAMPLES,
-    COMMENT
-
+    Subclass of `ModulatoryProjection <ModulatoryProjection>` that modulates the value of an `InputPort`,
+    `ParameterPort`, or `OutputPort` of a `Mechanism <Mechanism>`.
+    See `Projection <ModulatoryProjection_Class_Reference>` for additional arguments and attributes.
 
     Arguments
     ---------
 
-    sender : Optional[ControlMechanism or ControlSignal]
+    sender : ControlMechanism or ControlSignal : default None
         specifies the source of the `control_signal <ControlProjection.control_signal>` for the ControlProjection;
         if it is not specified and cannot be `inferred from context <ControlProjection_Creation>`, initialization is
         `deferred <ControlProjection_Deferred_Initialization>`.
 
-    receiver : Optional[Mechanism or ParameterPort]
-        specifies the `ParameterPort` associated with the parameter to be controlled; if it is not specified,
-        and cannot be `inferred from context <ControlProjection_Creation>`, initialization is `deferred
-        <ControlProjection_Deferred_Initialization>`.
+    receiver : Mechanism or ParameterPort  : default None
+        specifies the `InputPort`, `ParameterPort` or `OutputPort` associated with the parameter to be controlled; if
+        it is not specified, and cannot be `inferred from context <ControlProjection_Creation>`, initialization is
+        `deferred <ControlProjection_Deferred_Initialization>`.
 
-    function : TransferFunction : default Linear(slope=1, intercept=0)
-        specifies the function used to convert the `control_signal <ControlProjection.control_signal>` to the
-        ControlProjection's `value <ControlProjection.value>`.
-
-    weight : number : default None
-       specifies the value by which to multiply the ControlProjection's `value <ControlProjection.value>`
-       before combining it with others (see `weight <ControlProjection.weight>` for additional details).
-
-    exponent : number : default None
-       specifies the value by which to exponentiate the ControlProjection's `value <ControlProjection.value>`
-       before combining it with others (see `exponent <ControlProjection.exponent>` for additional details).
-
-    control_signal_params pip install --updgrade Sphinx==1.6.2 sphinx-rtd-theme==0.2.4 sphinxcontrib-websupport==1.0.1: Dict[param keyword: param value]
+    control_signal_params : Dict[param keyword: param value] : None
         a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for the
         ControlProjection's `sender <ControlProjection.sender>` (see `ControlSignal_Structure` for a description
         of ControlSignal parameters).
 
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
-        the ControlProjection, its `function <ControlProjection.function>`, and/or a custom function and its parameters.
-        Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
-        constructor.
-
-    name : str : default see ModulatoryProjection `name <ModulatoryProjection_Base.name>`
-        specifies the name of the ControlProjection.
-
-    prefs : PreferenceSet or specification dict : default Projection.classPreferences
-        specifies the `PreferenceSet` for the ControlProjection; see `prefs <ControlProjection.prefs>` for details.
-
     Attributes
     ----------
-
-    componentType : CONTROL_PROJECTION
 
     sender : ControlSignal
         source of the `control_signal <ControlProjection.control_signal>`.
@@ -245,36 +197,11 @@ class ControlProjection(ModulatoryProjection_Base):
     control_signal : 1d np.array
         the `value <ControlSignal.value>` of the ControlProjection's `sender <ControlProjection.sender>`.
 
-    function : Function
-        assigns the `control_signal` received from the `sender <ControlProjection.sender>` to the
-        ControlProjection's `value <ControlProjection.value>`; the default in an identity function.
-
     value : float
         the value used to modify the parameter controlled by the ControlProjection (see `ModulatorySignal_Modulation`
         and `ParameterPort Execution <ParameterPort_Execution>` for how modulation operates and how this applies
         to a ParameterPort).
 
-    weight : number
-       multiplies the `value <ControlProjection.value>` of the ControlProjection after applying `exponent
-       <ControlProjection.exponent>`, and before combining it with any others that project to the same `ParameterPort`
-       to determine how that ParameterPort's `variable <ParameterPort.variable>` is modified (see description in
-       `Projection <Projection_Weight_Exponent>` for details).
-
-    exponent : number
-        exponentiates the `value <ControlProjection.value>` of the ControlProjection, before applying `weight
-        <ControlProjection.weight>`, and before combining it with any others that project to the same `ParameterPort`
-        to determine how that ParameterPort's `variable <ParameterPort.variable>` is modified (see description in
-        `Projection <Projection_Weight_Exponent>` for details).
-
-    name : str
-        name of the ControlProjection; if it is not specified in the **name** argument of its constructor,
-        a default name is assigned (see ModulatoryProjection `name <ModulatoryProjection_Base.name>`;
-        also see `Naming` for conventions regarding duplicate names).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the ControlProjection; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
     """
 
     color = 0
@@ -302,7 +229,7 @@ class ControlProjection(ModulatoryProjection_Base):
                     :read only: True
 
                 function
-                    see `function <ControlProjection.function>`
+                    see `function <Projection_Base.function>`
 
                     :default value: `Linear`
                     :type: `Function`

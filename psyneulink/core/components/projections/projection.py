@@ -9,16 +9,16 @@
 # **********************************************  Projection ***********************************************************
 
 """
-..
-Sections
+
+Contents
 --------
-      * `Projection_Overview`
-      * `Projection_Creation`
-      * `Projection_Structure`
-         * `Projection_Sender`
-         * `Projection_Receiver`
-      * `Projection_Execution`
-      * `Projection_Class_Reference`
+  * `Projection_Overview`
+  * `Projection_Creation`
+  * `Projection_Structure`
+      - `Projection_Sender`
+      - `Projection_Receiver`
+  * `Projection_Execution`
+  * `Projection_Class_Reference`
 
 .. _Projection_Overview:
 
@@ -39,7 +39,7 @@ each of which has subtypes that differ in the type of information they transmit,
 
   * `MappingProjection`
       takes the `value <OutputPort.value>` of an `OutputPort` of a `ProcessingMechanism <ProcessingMechanism>`
-      converts it by convolving it with the MappingProjection's `matrix <MappingProjection.MappingProjection.matrix>`
+      converts it by convolving it with the MappingProjection's `matrix <MappingProjection.matrix>`
       parameter, and transmits the result to the `InputPort` of another ProcessingMechanism.  Typically,
       MappingProjections are used to connect Mechanisms in the `pathway` of a `Process`, though they can be use for
       other purposes as well (for example, to convey the output of an `ObjectiveMechanism` to a `ModulatoryMechanism
@@ -57,7 +57,7 @@ each of which has subtypes that differ in the type of information they transmit,
   * `LearningProjection`
       takes the `value <LearningSignal.value>` of a `LearningSignal` of a `LearningMechanism`, and transmits
       this to the `ParameterPort` of a `MappingProjection` that uses this to modify its `matrix
-      <MappingProjection.MappingProjection.matrix>` parameter. LearningProjections are used when learning has
+      <MappingProjection.matrix>` parameter. LearningProjections are used when learning has
       been specified for a `Process <Process_Learning_Sequence>` or `System <System_Execution_Learning>`.
   ..
   * `ControlProjection`
@@ -106,14 +106,14 @@ Projection in context:
         <MappingProjection.receiver>` cannot be inferred from the context in which this specification occurs, then its
         `initialization is deferred <MappingProjection_Deferred_Initialization>` until both of those have been
         determined (e.g., it is used in the specification of a `pathway <Process.pathway>` for a `Process`). For
-        MappingProjections, a `matrix specification <Mapping_Matrix_Specification>` can also be used to specify the
-        projection (see **value** below).
+        MappingProjections, a `matrix specification <MappingProjection_Matrix_Specification>` can also be used to
+        specify the projection (see **value** below).
       COMMENT:
 
       * *LEARNING_PROJECTION*  (or *LEARNING*) -- this can only be used in the specification of a `MappingProjection`
-        (see `tuple <Mapping_Matrix_Specification>` format).  If the `receiver <MappingProjection.receiver>` of the
-        MappingProjection projects to a `LearningMechanism` or a `ComparatorMechanism` that projects to one, then a
-        `LearningSignal` is added to that LearningMechanism and assigned as the LearningProjection's `sender
+        (see `tuple <MappingProjection_Matrix_Specification>` format).  If the `receiver <MappingProjection.receiver>`
+        of the MappingProjection projects to a `LearningMechanism` or a `ComparatorMechanism` that projects to one,
+        then a `LearningSignal` is added to that LearningMechanism and assigned as the LearningProjection's `sender
         <LearningProjection.sender>`;  otherwise, a LearningMechanism is `automatically created
         <LearningMechanism_Creation>`, along with a LearningSignal that is assigned as the LearningProjection's `sender
         <LearningProjection.sender>`. See `LearningMechanism_Learning_Configurations` for additional details.
@@ -139,8 +139,8 @@ Projection in context:
   * **value** -- creates a Projection of a type determined by the context of the specification, and using the
     specified value as the `value <Projection_Base.value>` of the Projection, which must be compatible with the
     `variable <Port_Base.variable>` attribute of its `receiver <Projection_Base.receiver>`.  If the Projection is a
-    `MappingProjection`, the value is interpreted as a `matrix specification <Mapping_Matrix_Specification>` and
-    assigned as the `matrix <MappingProjection.matrix>` parameter of the Projection;  it must be compatible with the
+    `MappingProjection`, the value is interpreted as a `matrix specification <MappingProjection_Matrix_Specification>`
+    and assigned as the `matrix <MappingProjection.matrix>` parameter of the Projection;  it must be compatible with the
     `value <Port_Base.value>` attribute of its `sender <MappingProjection.sender>` and `variable <Port_Base.variable>`
     attribute of its `receiver <MappingProjection.receiver>`.
   ..
@@ -264,17 +264,17 @@ of a Port are listed in its `projections <Port_Base.projections>` attribute.
     |     Projection       |   sender                              |  receiver                                        |
     |                      |   *(attribute)*                       |  *(attribute)*                                   |
     +======================+=======================================+==================================================+
-    | `MappingProjection`  | `OutputPort`                         | `InputPort`                                     |
-    |                      | (`efferents <OutputPort.efferents>`) | (`path_afferents <InputPort.path_afferents>`)   |
+    | `MappingProjection`  | `OutputPort`                          | `InputPort`                                      |
+    |                      | (`efferents <Port.efferents>`)        | (`path_afferents <Port.path_afferents>`)         |
     +----------------------+---------------------------------------+--------------------------------------------------+
-    | `LearningProjection` | `LearningSignal`                      | `ParameterPort`                                 |
-    |                      | (`efferents <OutputPort.efferents>`) | (`mod_afferents <ParameterPort.mod_afferents>`) |
+    | `LearningProjection` | `LearningSignal`                      | `ParameterPort`                                  |
+    |                      | (`efferents <Port.efferents>`)        | (`mod_afferents <ParameterPort.mod_afferents>`)  |
     +----------------------+---------------------------------------+--------------------------------------------------+
-    | `ControlProjection`  | `ControlSignal`                       | `ParameterPort`                                 |
-    |                      | (`efferents <OutputPort.efferents>`) | (`mod_afferents <ParameterPort.mod_afferents>`) |
+    | `ControlProjection`  | `ControlSignal`                       | `InputPort`, `ParameterPort` or `OutputPort`     |
+    |                      | (`efferents <Port.efferents>`)        | (`mod_afferents <ParameterPort.mod_afferents>`)  |
     +----------------------+---------------------------------------+--------------------------------------------------+
-    | `GatingProjection`   | `GatingSignal`                        | `InputPort` or `OutputPort`                    |
-    |                      | (`efferents <OutputPort.efferents>`) | (`mod_afferents <Port_Base.mod_afferents>`)     |
+    | `GatingProjection`   | `GatingSignal`                        | `InputPort` or `OutputPort`                      |
+    |                      | (`efferents <Port.efferents>`)        | (`mod_afferents <Port_Base.mod_afferents>`)      |
     +----------------------+---------------------------------------+--------------------------------------------------+
 
 .. _Projection_Sender:
@@ -335,8 +335,8 @@ A `receiver <Projection_Base.receiver>` can be specified as:
 Every Projection has a `weight <Projection_Base.weight>` and `exponent <Projection_Base.exponent>` attribute. These
 are applied to its `value <Projection_Base.value>` before combining it with other Projections that project to the same
 `Port`.  If both are specified, the `exponent <Projection_Base.exponent>` is applied before the `weight
-<Projection_Base.weight>`.  These attributes determine both how the Projection's `value <Projection.value>` is combined
-with others to determine the `variable <Port_Base.variable>` of the Port to which they project.
+<Projection_Base.weight>`.  These attributes determine both how the Projection's `value <Projection_Base.value>` is
+combined with others to determine the `variable <Port_Base.variable>` of the Port to which they project.
 
 .. note::
    The `weight <Projection_Base.weight>` and `exponent <Projection_Base.exponent>` attributes of a Projection are not
@@ -479,53 +479,44 @@ class DuplicateProjectionError(Exception):
 #
 
 class Projection_Base(Projection):
-    """
-    Projection_Base(  \
-    receiver,         \
-    sender=None,      \
-    params=None,      \
-    name=None,        \
-    prefs=None)
-
-    Base class for all Projections.
+    """Base class for all Projections.
+    The arguments below can be used in the constructor for any subclass of Mechanism.
+    See `Component <Component_Class_Reference>` and subclasses for additional arguments and attributes.
 
     .. note::
-       Projection is an abstract class and should NEVER be instantiated by a direct call to its constructor.
+       Projection is an abstract class and should *never* be instantiated by a direct call to its constructor.
        It should be created by calling the constructor for a subclass` or by using any of the other methods for
        `specifying a Projection <Projection_Specification>`.
 
-
     COMMENT:
-        Description
-        -----------
-            Projection category of Component class (default type:  MappingProjection)
+    Gotchas
+    -------
+        When referring to the Mechanism that is a Projection's sender or receiver Mechanism, must add ".owner"
 
-        Gotchas
-        -------
-            When referring to the Mechanism that is a Projection's sender or receiver Mechanism, must add ".owner"
-
-        Class attributes
-        ----------------
-            + componentCategory (str): kwProjectionFunctionCategory
-            + className (str): kwProjectionFunctionCategory
-            + suffix (str): " <className>"
-            + registry (dict): ProjectionRegistry
-            + classPreference (PreferenceSet): ProjectionPreferenceSet, instantiated in __init__()
-            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-            + class_defaults.variable (value): [0]
-            + requiredParamClassDefaultTypes = {PROJECTION_SENDER: [str, Mechanism, Port]}) # Default sender type
-            + paramClassDefaults (dict)
-            + FUNCTION (Function class or object, or method)
-
-        Class methods
-        -------------
-            None
-
-        ProjectionRegistry
-        ------------------
-            All Projections are registered in ProjectionRegistry, which maintains a dict for each subclass,
-              a count for all instances of that type, and a dictionary of those instances
+    ProjectionRegistry
+    ------------------
+        All Projections are registered in ProjectionRegistry, which maintains a dict for each subclass,
+        a count for all instances of that type, and a dictionary of those instances
     COMMENT
+
+    Arguments
+    ---------
+
+    sender : OutputPort or Mechanism : default None
+        specifies the source of the Projection's input. If a `Mechanism <Mechanism>` is specified, its
+        `primary OutputPort <OutputPort_Primary>` is used. If it is not specified, it is assigned in
+        the context in which the Projection is used, or its initialization will be `deferred
+        <Projection_Deferred_Initialization>`.
+
+    function : TransferFunction : default LinearMatrix
+        specifies function used to convey (and potentially convert) `variable <Projection_Base.variable>` to `value
+        <Projection_Base.value>`.
+
+    receiver: InputPort or Mechanism : default None
+        specifies the destination of the Projection's output.  If a `Mechanism <Mechanism>` is specified, its
+        `primary InputPort <InputPort_Primary>` will be used. If it is not specified, it will be assigned in
+        the context in which the Projection is used, or its initialization will be `deferred
+        <Projection_Deferred_Initialization>`.
 
 
     Attributes
@@ -540,16 +531,11 @@ class Projection_Base(Projection):
     receiver : Port
         Port to which Projection sends its output  (see `Projection_Receiver` for additional information)
 
+    function :  TransferFunction
+        conveys (and potentially converts) `variable <Projection_Base.variable>` to `value <Projection_Base.value>`.
+
     value : value
         output of Projection, transmitted to variable of function of its `receiver <Projection_Base.receiver>`.
-
-    parameter_ports : ContentAddressableList[str, ParameterPort]
-        a list of the Projection's `ParameterPorts <Projection_ParameterPorts>`, one for each of its specifiable
-        parameters and those of its `function <Mechanism_Base.function>` (i.e., the ones for which there are
-        arguments in their constructors).  The value of the parameters of the Projection are also accessible as
-        attributes of the Projection (using the name of the parameter); the function parameters are listed in the
-        Projection's `function_params <Projection_Base.function_params>` attribute, and as attributes of the `Function`
-        assigned to its `function <Component.function>` attribute.
 
     parameter_ports : ContentAddressableList[str, ParameterPort]
         a read-only list of the Projection's `ParameterPorts <Mechanism_ParameterPorts>`, one for each of its
@@ -561,23 +547,12 @@ class Projection_Base(Projection):
     weight : number
        multiplies the `value <Projection_Base.value>` of the Projection after applying the `exponent
        <Projection_Base.exponent>`, and before combining with any other Projections that project to the same `Port`
-       to determine that Port's `variable <Port_Base.variable>`.
+       to determine that Port's `variable <Port_Base.variable>` (see `Projection_Weight_Exponent` for details).
 
     exponent : number
         exponentiates the `value <Projection_Base.value>` of the Projection, before applying `weight
-        <Projection_Base.weight>`, and before combining it with any other Projections that project to the same
-        `Port` to determine that Port's `variable <Port_Base.variable>`.
-
-    COMMENT:
-        projectionSender : Mechanism, Port, or Object
-            This is assigned by __init__.py with the default sender port for each subclass.
-            It is used if sender arg is not specified in the constructor or when the Projection is assigned.
-            If it is different than the default;  where it is used, it overrides the ``sender`` argument even if that is
-            provided.
-
-        projectionSender : 1d array
-            Used to instantiate projectionSender
-    COMMENT
+        <Projection_Base.weight>`, and before combining it with any other Projections that project to the same `Port`
+        to determine that Port's `variable <Port_Base.variable>` (see `Projection_Weight_Exponent` for details).
 
     name : str
         the name of the Projection. If the Projection's `initialization has been deferred
@@ -586,11 +561,6 @@ class Projection_Base(Projection):
         name of an existing Projection, it is appended with an indexed suffix, incremented for each Projection with the
         same base name (see `Naming`). If the name is not  specified in the **name** argument of its constructor, a
         default name is assigned by the subclass (see subclass for details)
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the Projection; if it is not specified in the **prefs** argument of the constructor,
-        a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet <LINK>` for
-        details).
 
     """
 

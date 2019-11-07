@@ -10,6 +10,26 @@
 
 """
 
+Contents
+--------
+
+  * `LCControlMechanism_Overview`
+  * `LCControlMechanism_Creation`
+      - `LCControlMechanism_ObjectiveMechanism_Creation`
+      - `LCControlMechanism_Modulated_Mechanisms`
+  * `LCControlMechanism_Structure`
+      - `LCControlMechanism_Input`
+          • `LCControlMechanism_ObjectiveMechanism`
+      - `LCControlMechanism_Function`
+          • `LCControlMechanism_Modes_Of_Operation`
+      - `LCControlMechanism_Output`
+  * `LCControlMechanism_Execution`
+  * `LCControlMechanism_Examples`
+  * `LCControlMechanism_Class_Reference`
+
+
+.. _LCControlMechanism_Overview:
+
 Overview
 --------
 
@@ -27,7 +47,7 @@ coeruleus-norepinephrine (LC-NE) system.
 .. _LCControlMechanism_Creation:
 
 Creating an LCControlMechanism
------------------------
+------------------------------
 
 An LCControlMechanism can be created in any of the ways used to `create a ControlMechanism <ControlMechanism_Creation>`.
 The following sections describe how to specify the inputs that drive the LCControlMechanism's response, and the
@@ -61,7 +81,7 @@ LCControlMechanism's `function <LCControlMechanism.function>` to drive its `phas
 
 The Mechanisms to be modulated by an LCControlMechanism are specified in the **modulated_mechanisms** argument of its
 constructor. An LCControlMechanism controls a `Mechanism <Mechanism>` by modifying the `multiplicative_param
-<Function_Modulatory_Params>` of the Mechanism's `function <TransferMechanism.function>`.  Therefore, any Mechanism
+<Function_Modulatory_Params>` of the Mechanism's `function <Mechanism_Base.function>`.  Therefore, any Mechanism
 specified for control by an LCControlMechanism must be either a `TransferMechanism`, or a Mechanism that uses a
 `TransferFunction` or a class of `Function <Function>` that implements a `multiplicative_param
 <Function_Modulatory_Params>`.  The **modulate_mechanisms** argument must be a list of such Mechanisms. The keyword
@@ -185,10 +205,31 @@ which it corresponds. The Mechanisms modulated by an LCControlMechanism can be d
 <LCControlMechanism.show>` method.
 COMMENT
 
+.. _LCControlMechanism_Execution:
+
+Execution
+---------
+
+An LCControlMechanism executes within a `Composition` at a point specified in the Composition's `Scheduler` or, if it
+is the `controller <Composition.controller>` for a `Composition`, after all of the other Mechanisms in the Composition
+have `executed <Composition_Run>` in a `TRIAL`. It's `function <LCControlMechanism.function>` takes the `value
+<InputPort.value>` of the LCControlMechanism's `primary InputPort <InputPort_Primary>` as its input, and generates a
+response -- under the influence of its `mode <FitzHughNagumoIntegrator.mode>` parameter -- that is assigned as the
+`allocation <LCControlSignal.allocation>` of its `ControlSignals <ControlSignal>`.  The latter are used by its
+`ControlProjections <ControlProjection>` to modulate the response -- in the next `TRIAL` of execution --  of the
+Mechanisms the LCControlMechanism controls.
+
+.. note::
+   A `ParameterPort` that receives a `ControlProjection` does not update its value until its owner Mechanism
+   executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a
+   LCControlMechanism has executed, the `multiplicative_param <Function_Modulatory_Params>` parameter of the `function
+   <Mechanism_Base.function>` of a Mechanism that it controls will not assume its new value until that Mechanism has
+   executed.
+
 .. _LCControlMechanism_Examples:
 
 Examples
-~~~~~~~~
+--------
 
 The following example generates an LCControlMechanism that modulates the function of two TransferMechanisms, one that
 uses a `Linear` function and the other a `Logistic` function::
@@ -230,14 +271,11 @@ Calling `LC.show()` generates the following report::
         my_logistic_mechanism: gain
         my_linear_mechanism: slope
 
-
-
 Note that the LCControlMechanism controls the `multiplicative_param <Function_Modulatory_Params>` of the `function
 <Mechanism_Base.function>` of each Mechanism:  the `gain <Logistic.gain>` parameter for ``my_mech_1``, since it uses
 a `Logistic` Function; and the `slope <Linear.slope>` parameter for ``my_mech_2``, since it uses a `Linear` Function.
 
 COMMENT:
-
 ADDITIONAL EXAMPLES HERE OF THE DIFFERENT FORMS OF SPECIFICATION FOR
 **monitor_for_control** and **modulated_mechanisms**
 
@@ -245,29 +283,7 @@ STRUCTURE:
 MODE INPUT_PORT <- NAMED ONE, LAST?
 SIGNAL INPUT_PORT(S) <- PRIMARY;  MUST BE FROM PROCESSING MECHANISMS
 CONTROL SIGNALS
-
 COMMENT
-
-.. _LCControlMechanism_Execution:
-
-Execution
----------
-
-An LCControlMechanism executes within a `Composition` at a point specified in the Composition's `Scheduler` or, if it
-is the `controller <Composition.controller>` for a `Composition`, after all of the other Mechanisms in the Composition
-have `executed <Composition_Run>` in a `TRIAL`. It's `function <LCControlMechanism.function>` takes the `value
-<InputPort.value>` of the LCControlMechanism's `primary InputPort <InputPort_Primary>` as its input, and generates a
-response -- under the influence of its `mode <FitzHughNagumoIntegrator.mode>` parameter -- that is assigned as the
-`allocation <LCControlSignal.allocation>` of its `ControlSignals <ControlSignal>`.  The latter are used by its
-`ControlProjections <ControlProjection>` to modulate the response -- in the next `TRIAL` of execution --  of the
-Mechanisms the LCControlMechanism controls.
-
-.. note::
-   A `ParameterPort` that receives a `ControlProjection` does not update its value until its owner Mechanism
-   executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a
-   LCControlMechanism has executed, the `multiplicative_param <Function_Modulatory_Params>` parameter of the `function
-   <Mechanism_Base.function>` of a Mechanism that it controls will not assume its new value until that Mechanism has
-   executed.
 
 .. _LCControlMechanism_Class_Reference:
 
@@ -311,8 +327,6 @@ class LCControlMechanismError(Exception):
 class LCControlMechanism(ControlMechanism):
     """
     LCControlMechanism(                           \
-        system=None,                              \
-        objective_mechanism=None,                 \
         modulated_mechanisms=None,                \
         initial_w_FitzHughNagumo=0.0,             \
         initial_v_FitzHughNagumo=0.0,             \
@@ -334,30 +348,14 @@ class LCControlMechanism(ControlMechanism):
         time_constant_w_FitzHughNagumo = 12.5,    \
         integration_method="RK4"                  \
         base_level_gain=0.5,                      \
-        scaling_factor_gain=3.0,                  \
-        modulation=None,                          \
-        params=None,                              \
-        name=None,                                \
-        prefs=None)
+        scaling_factor_gain=3.0)
 
-    Subclass of `ControlMechanism <ModulatoryMechanism>` that modulates the `multiplicative_param
-    <Function_Modulatory_Params>` of the `function <Mechanism_Base.function>` of one or more `Mechanisms <Mechanism>`.
+    Subclass of `ControlMechanism` that modulates the `multiplicative_param <Function_Modulatory_Params>` of the
+    `function <Mechanism_Base.function>` of one or more `Mechanisms <Mechanism>`.
+    See `ControlMechanism <ControlMechanism_Class_Reference>` for additional arguments and attributes.
 
     Arguments
     ---------
-
-    system : System : default None
-        specifies the `System` for which the LCControlMechanism should serve as a `controller <System.controller>`;
-        the LCControlMechanism will inherit any `OutputPorts <OutputPort>` specified in the **monitor_for_control**
-        argument of the `system <LCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
-        specified in its **control_signals** argument.
-
-    objective_mechanism : ObjectiveMechanism, List[OutputPort or Tuple[OutputPort, list or 1d np.array, list or 1d \
-    np.array]] : default ObjectiveMechanism(function=CombineMeans)
-        specifies either an `ObjectiveMechanism` to use for the LCControlMechanism or a list of the OutputPorts it
-        should
-        monitor; if a list of `OutputPort specifications <ObjectiveMechanism_Monitor>` is used,
-        a default ObjectiveMechanism is created and the list is passed to its **monitored_output_ports** argument.
 
     modulated_mechanisms : List[`Mechanism`] or *ALL*
         specifies the Mechanisms to be modulated by the LCControlMechanism. If it is a list, every item must be a
@@ -465,31 +463,9 @@ class LCControlMechanism(ControlMechanism):
 
         scaling_factor_gain = k
 
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters
-        for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
-        specified for parameters in the dictionary override any assigned to those parameters in arguments of the
-        constructor.
-
-    name : str : default see `name <LCControlMechanism.name>`
-        specifies the name of the LCControlMechanism.
-
-    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the LCControlMechanism; see `prefs <LCControlMechanism.prefs>` for details.
-
 
     Attributes
     ----------
-
-    system : System_Base
-        the `System` for which LCControlMechanism is the `controller <System.controller>`;
-        the LCControlMechanism inherits any `OutputPorts <OutputPort>` specified in the **monitor_for_control**
-        argument of the `system <LCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
-        specified in its **control_signals** argument.
-
-    objective_mechanism : ObjectiveMechanism : ObjectiveMechanism(function=CombinedMeans))
-        the 'ObjectiveMechanism' used by the LCControlMechanism to aggregate the `value <OutputPort.value>`\\s of the
-        OutputPorts used to drive its `phasic response <LCControlMechanism_Modes_Of_Operation>`.
 
     monitor_for_control : List[OutputPort]
         list of the `OutputPorts <OutputPort>` that project to `objective_mechanism
@@ -633,19 +609,6 @@ class LCControlMechanism(ControlMechanism):
             g(t) = G + k w(t)
 
         scaling_factor_gain = k
-
-    modulation : ModulationParam : default MULTIPLICATIVE
-        the default value of `ModulationParam` that specifies the form of modulation used by the LCControlMechanism's
-        `ControlProjections <ControlProjection>` unless they are `individually specified <ControlSignal_Specification>`.
-
-    name : str
-        the name of the LCControlMechanism; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the LCControlMechanism; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
 
     """
 

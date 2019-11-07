@@ -3,11 +3,12 @@ Ports
 
 .. _Port_Subtypes:
 
+Subclasses:
+-----------
 
 .. toctree::
    :maxdepth: 1
 
-   *Subclasses:*
    InputPort
    ParameterPort
    OutputPort

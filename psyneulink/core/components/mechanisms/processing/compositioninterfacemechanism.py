@@ -8,8 +8,20 @@
 
 # **************************************  CompositionInterfaceMechanism *************************************************
 
-
 """
+
+Contents
+--------
+
+  * `CompositionInterfaceMechanism_Overview`
+  * `CompositionInterfaceMechanism_Creation`
+  * `CompositionInterfaceMechanism_Structure`
+  * `CompositionInterfaceMechanism_Execution`
+  * `CompositionInterfaceMechanism_Class_Reference`
+
+
+.. _CompositionInterfaceMechanism_Overview:
+
 Overview
 --------
 
@@ -67,65 +79,19 @@ __all__ = ['CompositionInterfaceMechanism']
 
 class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     """
-    CompositionInterfaceMechanism(                            \
-    default_variable=None,                               \
-    size=None,                                              \
-    function=Identity() \
-    params=None,                                            \
-    name=None,                                              \
-    prefs=None)
+    CompositionInterfaceMechanism(  \
+        function=Identity())
 
-    Implements the CompositionInterfaceMechanism subclass of Mechanism.
+    Subclass of `ProcessingMechanism <ProcessingMechanism>` that acts as interface between a Composition and its
+    inputs from and outputs to the environment or other Mechanisms (if it is a nested Composition).
 
-    Arguments
-    ---------
-
-    default_variable : number, list or np.ndarray
-        the input to the Mechanism to use if none is provided in a call to its
-        `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` methods;
-        also serves as a template to specify the length of `variable <CompositionInterfaceMechanism.variable>` for
-        `function <CompositionInterfaceMechanism.function>`, and the `primary outputPort <OutputPort_Primary>` of the
-        Mechanism.
-
-    size : int, list or np.ndarray of ints
-        specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
-        if **default_variable** is specified, it takes precedence over the specification of **size**.
-
-    function : InterfaceFunction : default Identity
-        specifies the function used to transform the variable before assigning it to the Mechanism's OutputPort(s)
-
-    params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterPort_Specifying_Parameters>` that can be used to specify the parameters for
-        the `Mechanism <Mechanism>`, parameters for its `function <CompositionInterfaceMechanism.function>`, and/or a
-        custom function and its parameters.  Values specified for parameters in the dictionary override any assigned
-        to those parameters in arguments of the constructor.
-
-    name : str : default CompositionInterfaceMechanism-<index>
-        a string used for the name of the Mechanism.
-        If not is specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
-
-    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for Mechanism.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    See `Mechanism <Mechanism_Class_Reference>` for arguments and additonal attributes.
 
     Attributes
     ----------
-    variable : value: default
-        the input to Mechanism's ``function``.
 
-    name : str : default CompositionInterfaceMechanism-<index>
-        the name of the Mechanism.
-        Specified in the **name** argument of the constructor for the Mechanism;
-        if not is specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
-
-    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for Mechanism.
-        Specified in the **prefs** argument of the constructor for the Mechanism;
-        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
-        (see :doc:`PreferenceSet <LINK>` for details).
+    function : InterfaceFunction : default Identity
+        the function used to transform the variable before assigning it to the Mechanism's OutputPort(s)
 
     """
 

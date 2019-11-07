@@ -196,7 +196,7 @@ Please see `Condition` for a list of all supported Conditions and their behavior
 
     >>> comp = pnl.Composition()
     >>> comp.add_linear_processing_pathway([A, B, C])
-    [(TransferMechanism A), (MappingProjection MappingProjection from A[RESULTS] to B[InputPort-0]), (TransferMechanism B), (MappingProjection MappingProjection from B[RESULTS] to C[InputPort-0]), (TransferMechanism C)]
+    [(TransferMechanism A), (MappingProjection MappingProjection from A[RESULT] to B[InputPort-0]), (TransferMechanism B), (MappingProjection MappingProjection from B[RESULT] to C[InputPort-0]), (TransferMechanism C)]
 
     >>> # implicit condition of Always for A
     >>> comp.scheduler.add_condition(B, pnl.EveryNCalls(A, 2))
@@ -211,7 +211,7 @@ Please see `Condition` for a list of all supported Conditions and their behavior
 
     >>> comp = pnl.Composition()
     >>> comp.add_linear_processing_pathway([A, B])
-    [(TransferMechanism A), (MappingProjection MappingProjection from A[RESULTS] to B[InputPort-0]), (TransferMechanism B)]
+    [(TransferMechanism A), (MappingProjection MappingProjection from A[RESULT] to B[InputPort-0]), (TransferMechanism B)]
 
     >>> comp.scheduler.add_condition(
     ...     A,
@@ -239,10 +239,10 @@ Please see `Condition` for a list of all supported Conditions and their behavior
 
     >>> comp = pnl.Composition()
     >>> comp.add_linear_processing_pathway([A, C])
-    [(TransferMechanism A), (MappingProjection MappingProjection from A[RESULTS] to C[InputPort-0]), (TransferMechanism C)]
+    [(TransferMechanism A), (MappingProjection MappingProjection from A[RESULT] to C[InputPort-0]), (TransferMechanism C)]
 
     >>> comp.add_linear_processing_pathway([B, C])
-    [(TransferMechanism B), (MappingProjection MappingProjection from B[RESULTS] to C[InputPort-0]), (TransferMechanism C)]
+    [(TransferMechanism B), (MappingProjection MappingProjection from B[RESULT] to C[InputPort-0]), (TransferMechanism C)]
 
     >>> comp.scheduler.add_condition(A, pnl.EveryNPasses(1))
     >>> comp.scheduler.add_condition(B, pnl.EveryNCalls(A, 2))
