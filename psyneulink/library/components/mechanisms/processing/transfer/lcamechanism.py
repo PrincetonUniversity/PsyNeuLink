@@ -259,13 +259,13 @@ class LCAMechanism(RecurrentTransferMechanism):
         leak=0.5,                    \
         competition=1.0,             \
         self_excitation=0.0,         \
+        time_step_size=0.1,          \
         threshold = None             \
         threshold_criterion = VALUE)
 
     Subclass of `RecurrentTransferMechanism` that implements a Leaky Competitive Accumulator.
     See `RecurrentTransferMechanism <RecurrentTransferMechanism_Class_Reference>` for additional
     arguments and attributes.
-
 
     Arguments
     ---------
@@ -283,6 +283,10 @@ class LCAMechanism(RecurrentTransferMechanism):
         specifies the magnidute of the diagonal terms in the LCAMechanism's `recurrent_projection
         <RecurrentTransferMechanism.recurrent_projection>` (see `self_excitation <LCAMechanism.self_excitation>` for
         additional details).
+
+    time_step_size : float : default 0.1
+        assigned as the `time_step_size <LeakyCompetingIntegrator.time_step_size>` parameter of the
+        `LeakyCompetingIntegrator` Function (see `time_step_size <LCAMechanism.time_step_size>` for additional details).
 
     threshold : float or None : default None
         specifes the value at which the Mechanism's `is_finished` attribute is set to True
@@ -308,19 +312,23 @@ class LCAMechanism(RecurrentTransferMechanism):
         accumulation of its `variable <LeakyCompetingIntegrator.variable>` (:math:`x_{i}`) on each time step (see
         `LeakyCompetingIntegrator` for additional details.
 
-    competition : value : default 1.0
+    competition : value
         determines the magnitude of the off-diagonal terms in the LCAMechanism's `recurrent_projection
         <RecurrentTransferMechanism.recurrent_projection>`, thereby scaling the contributions of the competing unit
         (all :math:`f(x)_{j}` where :math:`j \\neq i`) to the accumulation of the `LeakyCompetingIntegrator's
         <LeakyCompetingIntegrator>` `variable <LeakyCompetingIntegrator.variable>` (:math:`x_{i}`) on each time step
         (see `LeakyCompetingIntegrator` for additional details.
 
-    self_excitation : value : default 0.0
+    self_excitation : value
         determines the diagonal terms in the LCAMechanism's `recurrent_projection
         <RecurrentTransferMechanism.recurrent_projection>`, thereby scaling the contributions of each unit's own
         recurrent value (:math:`f(x)_{i}`) to the accumulation of the `LeakyCompetingIntegrator's
         <LeakyCompetingIntegrator>` `variable <LeakyCompetingIntegrator.value>` (:math:`x_{i}`) on each time step
         (see `LeakyCompetingIntegrator` for additional details.
+
+    time_step_size : float
+        parameter of the `LeakyCompetingIntegrator` Function that determines the timing precision of the integration
+        process it implements, and used to scale its `noise <LeakyCompetingIntegrator.noise>` parameter appropriately.
 
     Returns
     -------
