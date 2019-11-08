@@ -1069,6 +1069,12 @@ class ControlMechanism(ModulatoryMechanism_Base):
             for i in range(len(control_spec)):
                 # handle 2-item tuple
                 if is_2tuple(control_spec[i]):
+
+                    # this is an odd case that uses two names in the name entry
+                    # unsure what it means
+                    if isinstance(control_spec[i][0], list):
+                        continue
+
                     control_spec[i] = {
                         NAME: control_spec[i][0],
                         MECHANISM: control_spec[i][1]
