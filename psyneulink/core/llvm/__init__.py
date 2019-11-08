@@ -74,11 +74,9 @@ class LLVMBinaryFunction:
         return self.c_func(*args, **kwargs)
 
     def wrap_call(self, *pargs):
-        #print(pargs)
         cpargs = (ctypes.byref(p) if p is not None else None for p in pargs)
-        args = zip(cpargs, self.byref_arg_types)
-        cargs = (ctypes.cast(p, ctypes.POINTER(t)) for p, t in args)
-        self(*tuple(cargs))
+        args = zip(cpargs, self.c_func.argtypes)
+        self(*(ctypes.cast(p, t) for p, t in args))
 
     @property
     def byref_arg_types(self):
