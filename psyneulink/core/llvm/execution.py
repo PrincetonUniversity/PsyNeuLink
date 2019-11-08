@@ -189,7 +189,7 @@ class FuncExecution(CUDAExecution):
         new_variable = np.asfarray(variable)
 
         if len(self._execution_ids) > 1:
-            # wrap_call casts the arguments so we only need contiguaous data
+            # wrap_call casts the arguments so we only need contiguous data
             # layout
             ct_vi = np.ctypeslib.as_ctypes(new_variable)
             self._bin_multirun.wrap_call(self._param_struct,
