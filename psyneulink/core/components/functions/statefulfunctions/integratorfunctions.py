@@ -2954,7 +2954,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         (see `offset <LeakyCompetingIntegrator.offset>` for details).
 
     time_step_size : float : default 0.0
-        determines the timing precision of the integration process (see `time_step_size
+        specifies the timing precision of the integration process (see `time_step_size
         <LeakyCompetingIntegrator.time_step_size>` for details.
 
     initializer : float, list or 1d array : default 0.0

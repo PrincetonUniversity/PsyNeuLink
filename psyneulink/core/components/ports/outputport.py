@@ -375,14 +375,14 @@ Standard OutputPorts
 ^^^^^^^^^^^^^^^^^^^^^
 
 Mechanisms have a `standard_output_ports <Mechanism_Base.standard_output_ports>` attribute, that contains a list of
-`StandardOutputPorts`:  predefined OutputPorts that can be assigned as `output_ports <Mechanism_Base.output_ports>`.
-Every Mechanism has a base set of StandardOutputPorts. Subclasses of Mechanisms may add ones that are specific to
-that type of Mechanism (for example, the `RecurrentTransferMechanism` class has `standard_output_ports
-<RecurrentTransferMechanism.standard_output_ports>` for calculating the energy and entropy of its `value
-<Mechanism_Base.value>`.  The names of the `standard_output_ports` are listed in the Mechanism's
-`standard_output_port_names <Mechanism_Base.standard_output_port_names>` attribute. These can be used to specify the
-`output_ports <Mechanism_Base.output_ports>` of a Mechanism, as in the following example for a
-`ProcessingMechanism <ProcessingMechanism>`::
+`StandardOutputPorts`: `OutputPort specification dictionaries <OutputPort_Specification_Dictionary>` that can be
+assigned as `output_ports <Mechanism_Base.output_ports>`. There is a base set of StandardOutputPorts for all
+Mechanisms. Subclasses of Mechanisms may add ones that are specific to that type of Mechanism (for example, the
+`RecurrentTransferMechanism` class has `standard_output_ports <RecurrentTransferMechanism.standard_output_ports>`
+for calculating the energy and entropy of its `value <Mechanism_Base.value>`.  The names of the `standard_output_ports`
+are listed in the Mechanism's `standard_output_port_names <Mechanism_Base.standard_output_port_names>` attribute.
+These can be used to specify the `output_ports <Mechanism_Base.output_ports>` of a Mechanism, as in the following
+example for a `ProcessingMechanism <ProcessingMechanism>`::
 
     >>> import psyneulink as pnl
     >>> my_mech = pnl.ProcessingMechanism(default_variable=[0,0],
