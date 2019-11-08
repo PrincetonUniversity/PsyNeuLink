@@ -2058,7 +2058,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
 
         rvalp = builder.alloca(ptri.type.pointee)
         rand_state_ptr = ctx.get_state_ptr(self, builder, state, "random_state")
-        normal_f = ctx.get_llvm_function("__pnl_builtin_mt_rand_normal")
+        normal_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_normal")
         builder.call(normal_f, [rand_state_ptr, rvalp])
 
         rval = builder.load(rvalp)
@@ -3017,7 +3017,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         input_length = ctx.int32_ty(arg_in.type.pointee.count)
         output_length = ctx.int32_ty(arg_out.type.pointee.count)
-        builtin = ctx.get_llvm_function("__pnl_builtin_vxm")
+        builtin = ctx.import_llvm_function("__pnl_builtin_vxm")
         builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
         return builder
 
@@ -4179,7 +4179,7 @@ class TransferWithCosts(TransferFunction):
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         # Run transfer function first
         transfer_f = self.parameters.transfer_fct
-        trans_f = ctx.get_llvm_function(transfer_f.get())
+        trans_f = ctx.import_llvm_function(transfer_f.get())
         trans_p = ctx.get_param_ptr(self, builder, params, transfer_f.name)
         trans_s = ctx.get_state_ptr(self, builder, state, transfer_f.name)
         trans_in = arg_in

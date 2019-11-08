@@ -7572,7 +7572,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             context, params, comp_in, data_in, data_out = llvm_func.args[:5]
             cond_ptr = llvm_func.args[-1]
 
-            m_function = ctx.get_llvm_function(node)
+            m_function = ctx.import_llvm_function(node)
 
             if node is self.input_CIM:
                 # if there are incoming modulatory projections,
@@ -7662,7 +7662,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Projections are listed second in param and state structure
                 proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
                 proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
-                proj_function = ctx.get_llvm_function(proj)
+                proj_function = ctx.import_llvm_function(proj)
 
                 if proj_out.type != proj_function.args[3].type:
                     warnings.warn("Shape mismatch: Projection ({}) results does not match the receiver state({}) input: {} vs. {}".format(proj, proj.receiver, proj.defaults.value, proj.receiver.defaults.variable))

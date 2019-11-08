@@ -297,7 +297,7 @@ class OneHot(SelectionFunction):
         builder.store(ctx.int32_ty(0), idx_ptr)
 
         if self.mode in {PROB, PROB_INDICATOR}:
-            rng_f = ctx.get_llvm_function("__pnl_builtin_mt_rand_double")
+            rng_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
             dice_ptr = builder.alloca(ctx.float_ty)
             mt_state_ptr = ctx.get_state_ptr(self, builder, state, "random_state")
             builder.call(rng_f, [mt_state_ptr, dice_ptr])

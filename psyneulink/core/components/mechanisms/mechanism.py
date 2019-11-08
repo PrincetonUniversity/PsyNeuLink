@@ -2766,7 +2766,7 @@ class Mechanism_Base(Mechanism):
         all_ports = self.ports
         mod_afferents = self.mod_afferents
         for i, port in enumerate(ports):
-            s_function = ctx.get_llvm_function(port)
+            s_function = ctx.import_llvm_function(port)
 
             # Find output location
             builder, p_output = get_output_ptr(builder, i)
@@ -2805,7 +2805,7 @@ class Mechanism_Base(Mechanism):
         # of InputPort results should match the main function input.
         is_output_list = []
         for port in self.input_ports:
-            is_function = ctx.get_llvm_function(port)
+            is_function = ctx.import_llvm_function(port)
             is_output_list.append(is_function.args[3].type.pointee)
 
         # Check if all elements are the same. Function input will be array type if yes.
@@ -2894,7 +2894,7 @@ class Mechanism_Base(Mechanism):
         return builder
 
     def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable):
-        fun = ctx.get_llvm_function(function)
+        fun = ctx.import_llvm_function(function)
         fun_in, builder = self._gen_llvm_function_input_parse(builder, ctx, fun, variable)
         fun_out = builder.alloca(fun.args[3].type.pointee)
 
