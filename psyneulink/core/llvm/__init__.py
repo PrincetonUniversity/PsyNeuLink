@@ -63,20 +63,12 @@ class LLVMBinaryFunction:
         # Function signature
         f = _find_llvm_function(self.name, _compiled_modules)
 
+        # Create ctype function instance
         return_type = _convert_llvm_ir_to_ctype(f.return_value.type)
-        params = []
-        self.__byref_arg_types = []
-        for a in f.args:
-            param_type = _convert_llvm_ir_to_ctype(a.type)
-            if type(a.type) is ir.PointerType:
-                # remember pointee type for easier initialization
-                byref_type = _convert_llvm_ir_to_ctype(a.type.pointee)
-            else:
-                byref_type = None
-
-            self.__byref_arg_types.append(byref_type)
-            params.append(param_type)
+        params = [_convert_llvm_ir_to_ctype(a.type) for a in f.args]
         self.__c_func_type = ctypes.CFUNCTYPE(return_type, *params)
+
+        self.__byref_arg_types = [p._type_ for p in params]
 
     def __call__(self, *args, **kwargs):
         return self.c_func(*args, **kwargs)
