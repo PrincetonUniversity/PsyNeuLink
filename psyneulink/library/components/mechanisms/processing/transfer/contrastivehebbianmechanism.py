@@ -86,8 +86,8 @@ respective phases of execution are terminated.  Other parameters can also be con
 ~~~~~~~~~~~~
 
 The Mechanism is automatically assigned three of its five `Standard OutputPorts
-<ContrastiveHebbianMechanism_Standard_OutputPorts>`: *OUTPUT_ACTIVITY_OUTPUT*, *CURRENT_ACTIVITY_OUTPUT*,
-and *ACTIVITY_DIFFERENT_OUTPUT* (see `below <ContrastiveHebbian_Output>`). Additional OutputPorts can be specified
+<ContrastiveHebbianMechanism_Standard_OutputPorts>`: *OUTPUT_ACTIVITY*, *CURRENT_ACTIVITY*,
+and *ACTIVITY_DIFFERENT* (see `below <ContrastiveHebbian_Output>`). Additional OutputPorts can be specified
 in the **additional_output_ports** argument of the constructor.
 
 .. _ContrastiveHebbian_Learning:
@@ -100,7 +100,7 @@ the `configure_learning <RecurrentTransferMechanism.configure_learning>` method,
 standard `RecurrentTransferMechanism <RecurrentTransferMechanism_Learning>`:  it is automatically assigned
 `ContrastiveHebbian` as its `learning_function <ContrastiveHebbianMechanism.learning_function>`; its `learning_condition
 <RecurrentTransferMechanism.learning_condition>` is automatically assigned as *CONVERGENCE*; and it is assigned a
-`MappingProjection` from its *ACTIVITY_DIFFERENCE_OUTPUT* (rather than its `primary <OutputPort_Primary>`)
+`MappingProjection` from its *ACTIVITY_DIFFERENCE* (rather than its `primary <OutputPort_Primary>`)
 `OutputPort <ContrastiveHebbian_Output>` to the *ACTIVATION_INPUT* of its `learning_mechanism
 <ContrastiveHebbianMechanism.learning_mechanism>`.
 
@@ -210,26 +210,26 @@ but can be replaced by any function that takes and returns a 1d array.
 
 A ContrastiveHebbianMechanism is automatically assigned three `OutputPorts <OutputPort>`:
 
-* *OUTPUT_ACTIVITY_OUTPUT:* assigned as the `primary OutputPort <OutputPort_Primary>`, and contains the pattern
+* *OUTPUT_ACTIVITY:* assigned as the `primary OutputPort <OutputPort_Primary>`, and contains the pattern
   of activity the Mechanism is trained to generate.  If **target_size** is specified, then it has the same size as
   the *TARGET* InputPort;  if **target_size** is not specified or is 0, if `separated
   <ContrastiveHebbianMechanism.separated>` is `False`, or if mode is *SIMPLE_HEBBIAN*, then the size of the
-  *OUTPUT_ACTIVITY_OUTPUT* OutputPort is the same as the *INPUT* InputPort (see `ContrastiveHebbian_Input`).
+  *OUTPUT_ACTIVITY* OutputPort is the same as the *INPUT* InputPort (see `ContrastiveHebbian_Input`).
 ..
-* *CURRENT_ACTIVITY_OUTPUT:* assigned the value of the `current_activity <ContrastiveHebbianMechanism.current_activity>`
+* *CURRENT_ACTIVITY:* assigned the value of the `current_activity <ContrastiveHebbianMechanism.current_activity>`
   attribute after each `execution <ContrastiveHebbian_Execution>` of the Mechanism, which contains the activity of all
   processing units in the Mechanism (input, hidden and/or target);  has the same size as the *RECURRENT* InputPort.
 ..
-* *ACTIVITY_DIFFERENCE_OUTPUT:* assigned the difference between `plus_phase_activity
+* *ACTIVITY_DIFFERENCE:* assigned the difference between `plus_phase_activity
   <ContrastiveHebbianMechanism.plus_phase_activity>` and `minus_phase_activity
   <ContrastiveHebbianMechanism.minus_phase_activity>` at the `completion of execution
   <ContrastiveHebbian_Execution>`. If `configured for learning <ContrastiveHebbian_Learning>`, a `MappingProjection`
-  is assigned from the *ACTIVITY_DIFFERENCE_OUTPUT* `OutputPort <ContrastiveHebbian_Output>` to the
+  is assigned from the *ACTIVITY_DIFFERENCE* `OutputPort <ContrastiveHebbian_Output>` to the
   *ACTIVATION_INPUT* of the `learning_mechanism <ContrastiveHebbianMechanism.learning_mechanism>`.
 
-A ContrastiveHebbianMechanism also has two additional `Standard OutputPorts
-<ContrastiveHebbianMechanism_Standard_OutputPorts>` -- *MINUS_PHASE_OUTPUT* and *PLUS_PHASE_ACTIVITY_OUTPUT* --
-that it can be assigned, as well as those of a `RecurrentTransferMechanism
+These also appear in the ContrastiveHebbianMechanism's `Standard OutputPorts
+<ContrastiveHebbianMechanism_Standard_OutputPorts>`, along with two others -- *MINUS_PHASE_ACTIVITY* and
+*PLUS_PHASE_ACTIVITY* -- that it can be assigned, as well as those of a `RecurrentTransferMechanism
 <RecurrentTransferMechanism_Standard_OutputPorts>` or `TransferMechanism <TransferMechanism_Standard_OutputPorts>`.
 
 
@@ -296,16 +296,16 @@ of the *minus phase*), the following computations and assignments are made:
 
 * if a *TARGET* InputPort `has been specified <ContrastiveHebbian_Input>`, then the `target field
   <ContrastiveHebbian_Fields>` of `current_activity <ContrastiveHebbianMechanism.current_activity>` is assigned as
-  `value <OutputPort.value>` of *OUTPUT_ACTIVITY_OUTPUT* `OutputPort <ContrastiveHebbian_Output>`;  otherwise,
+  `value <OutputPort.value>` of *OUTPUT_ACTIVITY* `OutputPort <ContrastiveHebbian_Output>`;  otherwise,
   it is assigned the value of the `input_field <ContrastiveHebbian_Fields>` of `current_activity
   <ContrastiveHebbianMechanism.current_activity>`.
 ..
 * `plus_phase_activity <ContrastiveHebbianMechanism.plus_phase_activity>` is assigned as the `value
-  <OutputPort.value>` of the *CURRENT_ACTIVITY* `OutputPort <ContrastiveHebbian_Output>`;
+  <OutputPort.value>` of the *CURRENT_ACTIVITY_ATTR* `OutputPort <ContrastiveHebbian_Output>`;
 ..
 * the difference between `plus_phase_activity <ContrastiveHebbianMechanism.plus_phase_activity>` and
   `minus_phase_activity <ContrastiveHebbianMechanism.minus_phase_activity>` is assigned as the `value
-  <OutputPort.value>` of the *ACTIVITY_DIFFERENCE_OUTPUT* `OutputPort <ContrastiveHebbian_Output>`.
+  <OutputPort.value>` of the *ACTIVITY_DIFFERENCE* `OutputPort <ContrastiveHebbian_Output>`.
 
 .. _ContrastiveHebbian_Learning_Execution:
 
@@ -313,7 +313,7 @@ of the *minus phase*), the following computations and assignments are made:
 ~~~~~~~~~~
 
 If a ContrastiveHebbianMechanism is `configured for learning <ContrastiveHebbian_Learning>`, at the end of each
-`trial of execution <ContrastiveHebbian_Processing>` the `value <OutputPort.value>` of its *ACTIVITY_DIFFERENCE_OUTPUT*
+`trial of execution <ContrastiveHebbian_Processing>` the `value <OutputPort.value>` of its *ACTIVITY_DIFFERENCE*
 `OutputPort <ContrastiveHebbian_Output>` is passed to its `learning_mechanism
 <ContrastiveHebbianMechanism.learning_mechanism>`.  If the Mechanism is part of a `System`, then the
 `learning_mechanism <ContrastiveHebbianMechanism.learning_mechanism>` is executed during the `execution phase
@@ -352,8 +352,8 @@ from psyneulink.library.components.projections.pathway.autoassociativeprojection
 
 __all__ = [
     'ContrastiveHebbianError', 'ContrastiveHebbianMechanism', 'CONTRASTIVE_HEBBIAN_OUTPUT',
-    'ACTIVITY_DIFFERENCE_OUTPUT', 'CURRENT_ACTIVITY_OUTPUT', 'SIMPLE_HEBBIAN', 'INPUT',
-    'MINUS_PHASE_ACTIVITY', 'MINUS_PHASE_OUTPUT', 'PLUS_PHASE_ACTIVITY', 'PLUS_PHASE_OUTPUT'
+    'ACTIVITY_DIFFERENCE', 'CURRENT_ACTIVITY', 'SIMPLE_HEBBIAN', 'INPUT',
+    'MINUS_PHASE_ACTIVITY_ATTR', 'MINUS_PHASE_ACTIVITY', 'PLUS_PHASE_ACTIVITY_ATTR', 'PLUS_PHASE_ACTIVITY'
 ]
 
 INPUT = 'INPUT'
@@ -369,16 +369,16 @@ INPUT_INDEX = 0
 RECURRENT_INDEX = 1
 TARGET_INDEX = 2
 
-OUTPUT_ACTIVITY = 'output_activity'
-CURRENT_ACTIVITY = 'current_activity'
-MINUS_PHASE_ACTIVITY = 'minus_phase_activity'
-PLUS_PHASE_ACTIVITY = 'plus_phase_activity'
+OUTPUT_ACTIVITY_ATTR = 'output_activity'
+CURRENT_ACTIVITY_ATTR = 'current_activity'
+MINUS_PHASE_ACTIVITY_ATTR = 'minus_phase_activity'
+PLUS_PHASE_ACTIVITY_ATTR = 'plus_phase_activity'
 
-OUTPUT_ACTIVITY_OUTPUT = 'OUTPUT_ACTIVITY_OUTPUT'
-CURRENT_ACTIVITY_OUTPUT = 'CURRENT_ACTIVITY_OUTPUT'
-ACTIVITY_DIFFERENCE_OUTPUT = 'ACTIVITY_DIFFERENCE_OUTPUT'
-MINUS_PHASE_OUTPUT = 'MINUS_PHASE_OUTPUT'
-PLUS_PHASE_OUTPUT = 'PLUS_PHASE_OUTPUT'
+OUTPUT_ACTIVITY = 'OUTPUT_ACTIVITY'
+CURRENT_ACTIVITY = 'CURRENT_ACTIVITY'
+ACTIVITY_DIFFERENCE = 'ACTIVITY_DIFFERENCE'
+MINUS_PHASE_ACTIVITY = 'MINUS_PHASE_ACTIVITY'
+PLUS_PHASE_ACTIVITY = 'PLUS_PHASE_ACTIVITY'
 
 MINUS_PHASE = False
 PLUS_PHASE  = True
@@ -399,44 +399,44 @@ class CONTRASTIVE_HEBBIAN_OUTPUT():
         A ContrastiveHebbianMechanism has the following `Standard OutputPorts <OutputPort_Standard>` in addition to
         those of a `RecurruentTransferMechanism <RecurrentTransferMechanism_Standard_OutputPorts>`:
 
-        .. _OUTPUT_ACTIVITY_OUTPUT:
+        .. _OUTPUT_ACTIVITY:
 
-        *OUTPUT_ACTIVITY_OUTPUT* : 1d np.array
+        *OUTPUT_ACTIVITY* : 1d np.array
             array with activity of the `target_field <ContrastiveHebbian_Fields>` of `current_activity
             <ContrastiveHebbianMechanism.current_activity>` if a *TARGET* `InputPort is specified
             <ContrastiveHebbian_Input>`;  otherwise, has activity of the `input_field <ContrastiveHebbian_Fields>` of
             `current_activity <ContrastiveHebbianMechanism.current_activity>`.
 
-        .. _CURRENT_ACTIVITY_OUTPUT:
+        .. _CURRENT_ACTIVITY:
 
-        *CURRENT_ACTIVITY_OUTPUT* : 1d np.array
+        *CURRENT_ACTIVITY* : 1d np.array
             array with `current_activity <ContrastiveHebbianMechanism.current_activity>`.
 
-        .. _ACTIVITY_DIFFERENCE_OUTPUT:
+        .. _ACTIVITY_DIFFERENCE:
 
-        *ACTIVITY_DIFFERENCE_OUTPUT* : 1d np.array
+        *ACTIVITY_DIFFERENCE* : 1d np.array
             array of element-wise differences between `plus_phase_activity
             <ContrastiveHebbianMechanism.plus_phase_activity>` and `minus_phase_activity
             <ContrastiveHebbianMechanism.minus_phase_activity>`.
 
-        .. _MINUS_PHASE_OUTPUT:
+        .. _MINUS_PHASE_ACTIVITY:
 
-        *MINUS_PHASE_OUTPUT* : 1d np.array
+        *MINUS_PHASE_ACTIVITY* : 1d np.array
             array `minus_phase_activity <ContrastiveHebbianMechanism.minus_phase_activity>`
             (i.e., activity at the end of the `minus phase of execution <ContrastiveHebbian_Minus_Phase>`.
 
-        .. _PLUS_PHASE_OUTPUT:
+        .. _PLUS_PHASE_ACTIVITY:
 
-        *PLUS_PHASE_OUTPUT* : 1d np.array
+        *PLUS_PHASE_ACTIVITY* : 1d np.array
             array `plus_phase_activity <ContrastiveHebbianMechanism.plus_phase_activity>`
             (i.e., activity at the end of the `plus phase of execution <ContrastiveHebbian_Plus_Phase>`.
 
 
         """
-    CURRENT_ACTIVITY_OUTPUT=CURRENT_ACTIVITY_OUTPUT
-    ACTIVITY_DIFFERENCE_OUTPUT=ACTIVITY_DIFFERENCE_OUTPUT
-    MINUS_PHASE_OUTPUT=MINUS_PHASE_OUTPUT
-    PLUS_PHASE_OUTPUT=PLUS_PHASE_OUTPUT
+    CURRENT_ACTIVITY=CURRENT_ACTIVITY
+    ACTIVITY_DIFFERENCE=ACTIVITY_DIFFERENCE
+    MINUS_PHASE_ACTIVITY=MINUS_PHASE_ACTIVITY
+    PLUS_PHASE_ACTIVITY=PLUS_PHASE_ACTIVITY
 
 
 def _CHM_output_activity_getter(owning_component=None, context=None):
@@ -499,7 +499,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     target_size : int : default None
         specifies the size of the *TARGET* `InputPort <ContrastiveHebbian_Input>`, number of units in the
         `input_field <ContrastiveHebbian_Fields>` of `current_activity <ContrastiveHebbianMechanism.current_activity>`,
-        and of the `OUTPUT_ACTIVITY_OUTPUT` `OutputPort <ContrastiveHebbian_Output>`.
+        and of the `OUTPUT_ACTIVITY` `OutputPort <ContrastiveHebbian_Output>`.
 
     separated : bool : default True
         specifies whether `target_field <ContrastiveHebbian_Fields>` should be different from the `input_field
@@ -581,7 +581,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         size of the *TARGET* `InputPort <ContrastiveHebbian_Input>` `if specified <ContrastiveHebbian_Creation>` and,
         if so, the number of units in `target_activity <ContrastiveHebbianMechanism.target_activity>`, the
         `target_field <ContrastiveHebbian_Fields>` of `current_activity <ContrastiveHebbianMechanism.current_activity>`,
-        and the *OUTPUT_ACTIVITY_OUTPUT* `OutputPort <ContrastiveHebbian_Output>`.
+        and the *OUTPUT_ACTIVITY* `OutputPort <ContrastiveHebbian_Output>`.
 
     target_start : int
         index of first unit of `target_field <ContrastiveHebbian_Fields>`.
@@ -595,7 +595,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     recurrent_size : int
         size of *RECURRENT* `InputPort <ContrastiveHebbian_Input>`, `current_activity
-        <ContrastiveHebbianMechanism.current_activity>`, and *CURRENT_ACTIVITY_OUTPUT* `OutputPort
+        <ContrastiveHebbianMechanism.current_activity>`, and *CURRENT_ACTIVITY* `OutputPort
         <ContrastiveHebbian_Output>`.
 
     mode : SIMPLE_HEBBIAN or None
@@ -603,7 +603,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         `SIMPLE_HEBBIAN mode <ContrastiveHebbian_SIMPLE_HEBBIAN>` for details).
 
     recurrent_projection : AutoAssociativeProjection
-        an `AutoAssociativeProjection` that projects from the *CURRENT_ACTIVITY_OUTPUT* `OutputPort
+        an `AutoAssociativeProjection` that projects from the *CURRENT_ACTIVITY* `OutputPort
         <ContrastiveHebbian_Output>` to the *RECURRENT* `InputPort <ContrastiveHebbian_Input>`.
 
     combination_function : method or function
@@ -708,22 +708,60 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         `False` = `minus phase <ContrastiveHebbian_Minus_Phase>`;
         `True` = `plus phase <ContrastiveHebbian_Plus_Phase>`.
 
-    output_ports : Dict[str: OutputPort]
-        an OrderedDict with the following `OutputPorts <OutputPort>` by default:
+    output_ports : ContentAddressableList[OutputPort]
+        contains the following `OutputPorts <OutputPort>` by default:
 
-        * *OUTPUT_ACTIVITY_OUTPUT*, the  `primary OutputPort  <OutputPort_Primary>` of the Mechanism, the `value
+        * *OUTPUT_ACTIVITY*, the `primary OutputPort  <OutputPort_Primary>` of the Mechanism, the `value
           <OutputPort.value>` of which is `target_activity <ContrastiveHebbianMechanism.target_activity>` if a
           *TARGET* `InputPort <ContrastiveHebbian_Input>` is implemented;  otherwise,  `input_activity
           <ContrastiveHebbianMechanism.input_activity>` is assigned as its `value <OutputPort.value>`.
 
-        * *CURRENT_ACTIVITY_OUTPUT* -- the `value <OutputPort.value>` of which is a 1d array containing the activity
+        * *CURRENT_ACTIVITY* -- the `value <OutputPort.value>` of which is a 1d array containing the activity
           of the ContrastiveHebbianMechanism after each execution;  at the end of an `execution sequence
           <ContrastiveHebbian_Execution>`, it is assigned the value of `plus_phase_activity
           <ContrastiveHebbianMechanism.plus_phase_activity>`.
 
-        * *ACTIVITY_DIFFERENCE_OUTPUT*, the `value <OutputPort.value>` of which is a 1d array with the elementwise
+        * *ACTIVITY_DIFFERENCE*, the `value <OutputPort.value>` of which is a 1d array with the elementwise
           differences in activity between the plus and minus phases at the end of an `execution sequence
           <ContrastiveHebbian_Execution>`.
+
+    standard_output_ports : list[str]
+
+        the following `Standard OutputPorts <OutputPort_Standard>` are available to assign in addition to
+        those of a `TransferMechanism <TransferMechanism_Standard_OutputPorts>`:
+
+        .. _ContrastiveHebbianMechanism_Standard_OutputPorts:
+
+        *OUTPUT_ACTIVITY* : 1d np.array
+            array with activity of the `target_field <ContrastiveHebbian_Fields>` of `current_activity
+            <ContrastiveHebbianMechanism.current_activity>` if a *TARGET* `InputPort is specified
+            <ContrastiveHebbian_Input>`;  otherwise, has activity of the `input_field <ContrastiveHebbian_Fields>` of
+            `current_activity <ContrastiveHebbianMechanism.current_activity>`.
+
+        .. _CURRENT_ACTIVITY:
+
+        *CURRENT_ACTIVITY* : 1d np.array
+            array with `current_activity <ContrastiveHebbianMechanism.current_activity>`.
+
+        .. _ACTIVITY_DIFFERENCE:
+
+        *ACTIVITY_DIFFERENCE* : 1d np.array
+            array of element-wise differences between `plus_phase_activity
+            <ContrastiveHebbianMechanism.plus_phase_activity>` and `minus_phase_activity
+            <ContrastiveHebbianMechanism.minus_phase_activity>`.
+
+        .. _MINUS_PHASE_ACTIVITY:
+
+        *MINUS_PHASE_ACTIVITY* : 1d np.array
+            array `minus_phase_activity <ContrastiveHebbianMechanism.minus_phase_activity>`
+            (i.e., activity at the end of the `minus phase of execution <ContrastiveHebbian_Minus_Phase>`.
+
+        .. _PLUS_PHASE_ACTIVITY:
+
+        *PLUS_PHASE_ACTIVITY* : 1d np.array
+            array `plus_phase_activity <ContrastiveHebbianMechanism.plus_phase_activity>`
+            (i.e., activity at the end of the `plus phase of execution <ContrastiveHebbian_Plus_Phase>`.
+
 
     Returns
     -------
@@ -963,17 +1001,17 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
 
     standard_output_ports = RecurrentTransferMechanism.standard_output_ports.copy()
-    standard_output_ports.extend([{NAME:OUTPUT_ACTIVITY_OUTPUT,
-                                    VARIABLE:OUTPUT_ACTIVITY},
-                                   {NAME:CURRENT_ACTIVITY_OUTPUT,
-                                    VARIABLE:CURRENT_ACTIVITY},
-                                   {NAME:ACTIVITY_DIFFERENCE_OUTPUT,
-                                    VARIABLE:[PLUS_PHASE_ACTIVITY, MINUS_PHASE_ACTIVITY],
+    standard_output_ports.extend([{NAME:OUTPUT_ACTIVITY,
+                                    VARIABLE:OUTPUT_ACTIVITY_ATTR},
+                                   {NAME:CURRENT_ACTIVITY,
+                                    VARIABLE:CURRENT_ACTIVITY_ATTR},
+                                   {NAME:ACTIVITY_DIFFERENCE,
+                                    VARIABLE:[PLUS_PHASE_ACTIVITY_ATTR, MINUS_PHASE_ACTIVITY_ATTR],
                                     FUNCTION: lambda v: v[0] - v[1]},
-                                   {NAME:MINUS_PHASE_OUTPUT,
-                                    VARIABLE:MINUS_PHASE_ACTIVITY},
-                                   {NAME:PLUS_PHASE_OUTPUT,
-                                    VARIABLE:PLUS_PHASE_ACTIVITY},
+                                   {NAME:MINUS_PHASE_ACTIVITY,
+                                    VARIABLE:MINUS_PHASE_ACTIVITY_ATTR},
+                                   {NAME:PLUS_PHASE_ACTIVITY,
+                                    VARIABLE:PLUS_PHASE_ACTIVITY_ATTR},
                                    ])
     standard_output_port_names = RecurrentTransferMechanism.standard_output_port_names.copy()
     standard_output_port_names.extend([i['name'] for i in standard_output_ports])
@@ -1055,7 +1093,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         combination_function = combination_function or self.combination_function
 
-        output_ports = [OUTPUT_ACTIVITY_OUTPUT, CURRENT_ACTIVITY_OUTPUT, ACTIVITY_DIFFERENCE_OUTPUT]
+        output_ports = [OUTPUT_ACTIVITY, CURRENT_ACTIVITY, ACTIVITY_DIFFERENCE]
         if additional_output_ports:
             if isinstance(additional_output_ports, list):
                 output_ports += additional_output_ports
@@ -1140,7 +1178,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             matrix = get_matrix(matrix, size, size)
 
         return AutoAssociativeProjection(owner=mech,
-                                         sender=self.output_ports[CURRENT_ACTIVITY_OUTPUT],
+                                         sender=self.output_ports[CURRENT_ACTIVITY],
                                          receiver=self.input_ports[RECURRENT],
                                          matrix=matrix,
                                          name=mech.name + ' recurrent projection')
@@ -1148,10 +1186,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     def _instantiate_attributes_after_function(self, context=None):
 
         # Assign these after instantiation of function, since they are initialized in _execute (see below)
-        self.attributes_dict_entries.update({OUTPUT_ACTIVITY:OUTPUT_ACTIVITY,
-                                             CURRENT_ACTIVITY:CURRENT_ACTIVITY,
-                                             MINUS_PHASE_ACTIVITY:MINUS_PHASE_ACTIVITY,
-                                             PLUS_PHASE_ACTIVITY:PLUS_PHASE_ACTIVITY})
+        self.attributes_dict_entries.update({OUTPUT_ACTIVITY_ATTR:OUTPUT_ACTIVITY_ATTR,
+                                             CURRENT_ACTIVITY_ATTR:CURRENT_ACTIVITY_ATTR,
+                                             MINUS_PHASE_ACTIVITY_ATTR:MINUS_PHASE_ACTIVITY_ATTR,
+                                             PLUS_PHASE_ACTIVITY_ATTR:PLUS_PHASE_ACTIVITY_ATTR})
         super()._instantiate_attributes_after_function(context=context)
 
     def _execute(self,
@@ -1332,9 +1370,9 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     @property
     def _learning_signal_source(self):
-        """Override default to use ACTIVITY_DIFFERENCE_OUTPUT as source of learning signal
+        """Override default to use ACTIVITY_DIFFERENCE as source of learning signal
         """
-        return self.output_ports[ACTIVITY_DIFFERENCE_OUTPUT]
+        return self.output_ports[ACTIVITY_DIFFERENCE]
 
     @property
     def input_activity(self):

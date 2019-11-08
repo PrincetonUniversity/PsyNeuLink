@@ -562,7 +562,6 @@ class RecurrentTransferMechanism(TransferMechanism):
             the entropy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,
             calculated using the `Stability` Function using the `ENTROPY <CROSS_ENTROPY>` metric.
 
-
     Returns
     -------
     instance of RecurrentTransferMechanism : RecurrentTransferMechanism
