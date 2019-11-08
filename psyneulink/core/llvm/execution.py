@@ -418,8 +418,8 @@ class CompExecution(CUDAExecution):
         if node is not self._composition.input_CIM and self.__frozen_vals is None:
             self.freeze_values()
 
-        self._bin_func.wrap_call(self._state_struct, self._param_struct,
-                                 inputs, self.__frozen_vals, self._data_struct)
+        self._bin_func(self._state_struct, self._param_struct,
+                       inputs, self.__frozen_vals, self._data_struct)
 
         if "comp_node_debug" in self.__debug_env:
             print("RAN: {}. CTX: {}".format(node, self.extract_node_state(node)))
@@ -450,10 +450,10 @@ class CompExecution(CUDAExecution):
                                                 self._data_struct,
                                                 self._conditions, self._ct_len)
         else:
-            self._bin_exec_func.wrap_call(self._state_struct,
-                                          self._param_struct,
-                                          self._get_input_struct(inputs),
-                                          self._data_struct, self._conditions)
+            self._bin_exec_func(self._state_struct,
+                                self._param_struct,
+                                self._get_input_struct(inputs),
+                                self._data_struct, self._conditions)
 
     def cuda_execute(self, inputs):
         # NOTE: Make sure that input struct generation is inlined.
