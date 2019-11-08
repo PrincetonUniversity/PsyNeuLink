@@ -645,9 +645,13 @@ class ModulatorySignal(OutputPort):
         # If the name is not a default name for the class,
         #    or the ModulatorySignal has no projections (which are used to name it)
         #    then return
-        if (not (self.name is self.__class__.__name__
-                 or self.__class__.__name__ + '-' in self.name) or
-                    len(self.efferents)==0):
+        if (
+            not (
+                self.name is self.__class__.__name__
+                or self.__class__.__name__ + '-' in self.name
+            )
+            or len(self.efferents) == 0
+        ):
             return self.name
 
         # Construct default name
