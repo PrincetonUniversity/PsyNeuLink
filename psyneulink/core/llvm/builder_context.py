@@ -48,10 +48,6 @@ def module_count():
         print("Total structures generated: ", _struct_count)
 
 
-# TODO: Should this be selectable?
-_int32_ty = ir.IntType(32)
-_float_ty = ir.DoubleType()
-
 _BUILTIN_PREFIX = "__pnl_builtin_"
 _builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'printf'))
 
@@ -59,13 +55,14 @@ class LLVMBuilderContext:
     __global_context = None
     uniq_counter:int = 0
     _llvm_generation:int = 0
+    int32_ty = ir.IntType(32)
+    float_ty = ir.DoubleType()
 
     def __init__(self):
-        self.int32_ty = _int32_ty
-        self.float_ty = _float_ty
         self._modules = []
         self._cache = weakref.WeakKeyDictionary()
         self._learningcache = weakref.WeakKeyDictionary()
+
     def __enter__(self):
         module = ir.Module(name="PsyNeuLinkModule-" + str(LLVMBuilderContext._llvm_generation))
         self._modules.append(module)
