@@ -732,7 +732,6 @@ def _convert_llvm_ir_to_ctype(t:ir.Type):
     elif type_t is ir.FloatType:
         return ctypes.c_float
     elif type_t is ir.PointerType:
-        # FIXME: Can this handle void*? Do we care?
         pointee = _convert_llvm_ir_to_ctype(t.pointee)
         ret_t = ctypes.POINTER(pointee)
     elif type_t is ir.ArrayType:
