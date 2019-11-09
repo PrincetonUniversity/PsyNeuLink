@@ -80,11 +80,11 @@ class LLVMBuilderContext:
         assert len(self._modules) > 0
         return self._modules[-1]
 
-    @staticmethod
-    def get_global():
-        if LLVMBuilderContext.__global_context is None:
-            LLVMBuilderContext.__global_context = LLVMBuilderContext()
-        return LLVMBuilderContext.__global_context
+    @classmethod
+    def get_global(cls):
+        if cls.__global_context is None:
+            cls.__global_context = LLVMBuilderContext()
+        return cls.__global_context
 
     def get_unique_name(self, name: str):
         LLVMBuilderContext.uniq_counter += 1
