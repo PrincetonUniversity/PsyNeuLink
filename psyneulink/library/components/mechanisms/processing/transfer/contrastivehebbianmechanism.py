@@ -687,6 +687,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         .. _ContrastiveHebbianMechanism_Standard_OutputPorts:
 
+        .. _OUTPUT_ACTIVITY:
+
         *OUTPUT_ACTIVITY* : 1d np.array
             array with activity of the `target_field <ContrastiveHebbian_Fields>` of `current_activity
             <ContrastiveHebbianMechanism.current_activity>` if a *TARGET* `InputPort is specified
