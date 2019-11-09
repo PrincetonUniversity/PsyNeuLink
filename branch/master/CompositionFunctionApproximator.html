@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>CompositionFunctionApproximator &mdash; PsyNeuLink 0.7.0.0+12.g9aad961 documentation</title>
+  <title>CompositionFunctionApproximator &mdash; PsyNeuLink 0.7.1.0 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.0.0+12.g9aad961',
+              VERSION:'0.7.1.0',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -45,7 +45,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="AutodiffComposition" href="AutodiffComposition.html" />
+    <link rel="next" title="RegressionCFA" href="RegressionCFA.html" />
     <link rel="prev" title="Composition" href="Composition.html" /> 
 </head>
 
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.7.0.0+12
+                0.7.1.0
               </div>
             
           
@@ -185,20 +185,58 @@
 <h1>CompositionFunctionApproximator<a class="headerlink" href="#compositionfunctionapproximator" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 </div>
-<span class="target" id="module-psyneulink.core.compositions.compositionfunctionapproximator"></span><p># FIX: SHOULD BE IMPLEMENTED AS ABSTRACT BASE CLASS (ABC)</p>
-<div class="section" id="composition-function-approximator">
-<h2>Composition Function Approximator<a class="headerlink" href="#composition-function-approximator" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-psyneulink.core.compositions.compositionfunctionapproximator"></span><div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="#compositionfunctionapproximator-overview"><span class="std std-ref">Overview</span></a></li>
+<li><a class="reference internal" href="#compositionfunctionapproximator-class-reference"><span class="std std-ref">Class Reference</span></a></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="overview">
+<span id="compositionfunctionapproximator-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A <a class="reference internal" href="#"><span class="doc">CompositionFunctionApproximator</span></a> is an abstract subclass of <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> that, over calls to its <a class="reference internal" href="#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.adapt" title="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.adapt"><code class="xref any py py-meth docutils literal"><span class="pre">adapt</span></code></a> method, parameterizes its <code class="xref any docutils literal"><span class="pre">function</span></code> to predict the
 <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a> of the Composition (or part of one) controlled by an
 <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a>, for a given set of <a class="reference internal" href="OptimizationControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values"><code class="xref any py py-attr docutils literal"><span class="pre">feature_values</span></code></a>
 and a <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a> provided by the OptimizationControlMechanism.
-Its <a class="reference internal" href="#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.evaluate" title="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.evaluate"><code class="xref any py py-meth docutils literal"><span class="pre">evaluate</span></code></a> method calls its <code class="xref any docutils literal"><span class="pre">function</span></code> to generate and return the predicted <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a> for a given set of <a class="reference internal" href="OptimizationControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values"><code class="xref any py py-attr docutils literal"><span class="pre">feature_values</span></code></a>, <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a> and
+Its <a class="reference internal" href="#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.evaluate" title="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.evaluate"><code class="xref any py py-meth docutils literal"><span class="pre">evaluate</span></code></a> method calls its <a class="reference internal" href="#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.function" title="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to generate and return the predicted <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a> for a given set of <a class="reference internal" href="OptimizationControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values"><code class="xref any py py-attr docutils literal"><span class="pre">feature_values</span></code></a>, <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a> and
 <code class="xref any docutils literal"><span class="pre">num_estimates</span></code></p>
+</div>
+<div class="section" id="class-reference">
+<span id="compositionfunctionapproximator-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator">
 <em class="property">class </em><code class="descclassname">psyneulink.core.compositions.compositionfunctionapproximator.</code><code class="descname">CompositionFunctionApproximator</code><span class="sig-paren">(</span><em>name=None</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator" title="Permalink to this definition">¶</a></dt>
-<dd><p>Parameterizes <code class="xref any docutils literal"><span class="pre">its</span> <span class="pre">function</span></code> to predict a <code class="xref any docutils literal"><span class="pre">net_outcome</span></code> for a set of <code class="xref any docutils literal"><span class="pre">feature_values</span></code>
+<dd><p>Subclass of <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> that implements a FunctionApproximator as the <code class="xref any docutils literal"><span class="pre">agent_rep</span></code> of an <code class="xref any docutils literal"><span class="pre">OptimizationControlmechanism</span></code>.</p>
+<p>Parameterizes <a class="reference internal" href="#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.function" title="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.function"><code class="xref any py py-attr docutils literal"><span class="pre">its</span> <span class="pre">function</span></code></a> to predict a <code class="xref any docutils literal"><span class="pre">net_outcome</span></code> for a set of <code class="xref any docutils literal"><span class="pre">feature_values</span></code>
 and a <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a> provided by an <code class="xref any docutils literal"><span class="pre">OptimizationControlmechanism</span></code>.</p>
+<p>See <a class="reference internal" href="Composition.html#composition-class-reference"><span class="std std-ref">Composition</span></a> for additional arguments and attributes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>param_defaults</strong> (<a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.LearningFunction" title="psyneulink.core.components.functions.learningfunctions.LearningFunction"><em>LearningFunction</em></a><em>, </em><a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function"><em>function</em></a><em> or </em><em>method</em>) – specifies the function parameterized by the CompositionFunctionApproximator’s <a class="reference internal" href="#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.adapt" title="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.adapt"><code class="xref any py py-meth docutils literal"><span class="pre">adapt</span></code></a> method, and used by its <a class="reference internal" href="#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.evaluate" title="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.evaluate"><code class="xref any py py-meth docutils literal"><span class="pre">evaluate</span></code></a> method to generate and return a predicted <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a> for a set of <a class="reference internal" href="OptimizationControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values"><code class="xref any py py-attr docutils literal"><span class="pre">feature_values</span></code></a>
+and a <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">control_allocation</span></a> provided by an <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a>.</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.function">
+<code class="descname">function</code><a class="headerlink" href="#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>LearningFunction, function or method</em> – parameterized by the CompositionFunctionApproximator’s &lt;adapt &lt;CompositionFunctionApproximator.adapt&gt;`
+method, and used by its <a class="reference internal" href="#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.evaluate" title="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.evaluate"><code class="xref any py py-meth docutils literal"><span class="pre">evaluate</span></code></a> method to generate and return
+a predicted <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a> for a set of <a class="reference internal" href="OptimizationControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values"><code class="xref any py py-attr docutils literal"><span class="pre">feature_values</span></code></a> and a <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">control_allocation</span></a>
+provided by an <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.prediction_parameters">
+<code class="descname">prediction_parameters</code><a class="headerlink" href="#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.prediction_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d array</em> – parameters adjusted by <a class="reference internal" href="#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.adapt" title="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.adapt"><code class="xref any py py-meth docutils literal"><span class="pre">adapt</span></code></a> method, and used by <code class="xref any docutils literal"><span class="pre">function</span></code> to predict the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a>
+for a given set of <a class="reference internal" href="OptimizationControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values"><code class="xref any py py-attr docutils literal"><span class="pre">feature_values</span></code></a> and <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a>.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.adapt">
 <code class="descname">adapt</code><span class="sig-paren">(</span><em>feature_values</em>, <em>control_allocation</em>, <em>net_outcome</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.adapt" title="Permalink to this definition">¶</a></dt>
@@ -224,7 +262,7 @@ and a <a class="reference internal" href="ControlMechanism.html#psyneulink.core.
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="AutodiffComposition.html" class="btn btn-neutral float-right" title="AutodiffComposition" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="RegressionCFA.html" class="btn btn-neutral float-right" title="RegressionCFA" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="Composition.html" class="btn btn-neutral float-left" title="Composition" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

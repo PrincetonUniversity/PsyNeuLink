@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Pathway Projections &mdash; PsyNeuLink 0.7.0.0+12.g9aad961 documentation</title>
+  <title>Pathway Projections &mdash; PsyNeuLink 0.7.1.0 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.0.0+12.g9aad961',
+              VERSION:'0.7.1.0',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.7.0.0+12
+                0.7.1.0
               </div>
             
           
@@ -200,7 +200,27 @@
 <li class="toctree-l1"><a class="reference internal" href="AutoAssociativeProjection.html">AutoAssociativeProjection</a></li>
 </ul>
 </div>
-<span class="target" id="module-psyneulink.core.components.projections.pathway.pathwayprojection"></span><div class="section" id="overview">
+<span class="target" id="module-psyneulink.core.components.projections.pathway.pathwayprojection"></span><div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="#pathwayprojection-overview"><span class="std std-ref">Overview</span></a></li>
+<li><a class="reference internal" href="#pathwayprojection-creation"><span class="std std-ref">Creating a PathwayProjection</span></a></li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="#pathwayprojection-structure"><span class="std std-ref">Structure</span></a></dt>
+<dd><ul class="first last">
+<li><code class="xref any docutils literal"><span class="pre">PathwayProjection_Sender</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">PathwayProjection_Receiver</span></code></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><a class="reference internal" href="#pathwayprojection-execution"><span class="std std-ref">Execution</span></a></li>
+<li><a class="reference internal" href="#pathwayprojection-class-reference"><span class="std std-ref">Class Reference</span></a></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="overview">
 <span id="pathwayprojection-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>PathwayProjections allow information to be passed between mechanisms.  A PathwayProjection takes its input from the
 <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of one Mechanism (its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>), and does whatever conversion is needed to
@@ -208,18 +228,21 @@ transmit that information to the <a class="reference internal" href="InputPort.h
 primary type of PathwayProjection is a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.</p>
 </div>
 <div class="section" id="creating-a-pathwayprojection">
-<span id="projection-creation"></span><h2>Creating a PathwayProjection<a class="headerlink" href="#creating-a-pathwayprojection" title="Permalink to this headline">¶</a></h2>
-<p>A PathwayProjection can be created on its own, by calling the constructor for the desired type of projection.  More
-commonly, however, projections are either specified in the context of creating a Port to or from which they project</p>
-<blockquote>
-<div>(see <a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">Specifying a Projection</span></a>, and <a class="reference internal" href="Port.html#port-projections"><span class="std std-ref">Projections</span></a> in Port), or are <a class="reference internal" href="Projection.html#projection-automatic-creation"><span class="std std-ref">created automatically</span></a>, as described below.</div></blockquote>
+<span id="pathwayprojection-creation"></span><h2>Creating a PathwayProjection<a class="headerlink" href="#creating-a-pathwayprojection" title="Permalink to this headline">¶</a></h2>
+<p>A PathwayProjection can is created in the same ways as a <a class="reference internal" href="Projection.html#projection-creation"><span class="std std-ref">Projection</span></a>.</p>
 </div>
 <div class="section" id="structure">
 <span id="pathwayprojection-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p>A PathwayProjection has the same structure as a <a class="reference internal" href="Projection.html#projection-structure"><span class="std std-ref">Projection</span></a>.</p>
 </div>
 <div class="section" id="execution">
 <span id="pathwayprojection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<span class="target" id="pathwayprojection-class-reference"></span></div>
+<p>A PathwayProjection executes in the same was as a <a class="reference internal" href="Projection.html#projection-execution"><span class="std std-ref">Projection</span></a>.</p>
+</div>
+<div class="section" id="class-reference">
+<span id="pathwayprojection-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<p>See <a class="reference internal" href="Projection.html#projection-class-reference"><span class="std std-ref">Projection</span></a>.</p>
+</div>
 </div>
 
 

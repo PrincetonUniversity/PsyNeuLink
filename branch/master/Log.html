@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Log &mdash; PsyNeuLink 0.7.0.0+12.g9aad961 documentation</title>
+  <title>Log &mdash; PsyNeuLink 0.7.1.0 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.0.0+12.g9aad961',
+              VERSION:'0.7.1.0',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.7.0.0+12
+                0.7.1.0
               </div>
             
           
@@ -305,7 +305,7 @@ This is specified as a <a class="reference internal" href="#psyneulink.core.glob
 is <code class="xref any docutils literal"><span class="pre">OFF</span></code>.</p>
 <p class="rubric" id="log-examples">Examples</p>
 <p>The following example creates a Process with two <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanisms</span></a>, one that projects to
-another, and logs the <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> and <em>RESULTS</em> <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of the first and the
+another, and logs the <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> and <em>RESULT</em> <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of the first and the
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the first to the second:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Create a Process with two TransferMechanisms, and get a reference for the Projection created between them:</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">my_mech_A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;mech_A&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
@@ -316,14 +316,14 @@ another, and logs the <a class="reference internal" href="TransferMechanism.html
 
 <span class="c1"># Show the loggable items (and current condition assignments) for each Mechanism and the Projection between them:</span>
 <span class="o">&gt;&gt;</span> <span class="n">my_mech_A</span><span class="o">.</span><span class="n">loggable_items</span>
-<span class="p">{</span><span class="s1">&#39;InputPort-0&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;slope&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;RESULTS&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;integration_rate&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;intercept&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;noise&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">}</span>
+<span class="p">{</span><span class="s1">&#39;InputPort-0&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;slope&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;RESULT&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;integration_rate&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;intercept&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;noise&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">}</span>
 <span class="o">&gt;&gt;</span> <span class="n">my_mech_B</span><span class="o">.</span><span class="n">loggable_items</span>
-<span class="p">{</span><span class="s1">&#39;InputPort-0&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;slope&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;RESULTS&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;intercept&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;noise&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;integration_rate&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">}</span>
+<span class="p">{</span><span class="s1">&#39;InputPort-0&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;slope&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;RESULT&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;intercept&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;noise&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;integration_rate&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">}</span>
 <span class="o">&gt;&gt;</span> <span class="n">proj_A_to_B</span><span class="o">.</span><span class="n">loggable_items</span>
 <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;matrix&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">}</span>
 
-<span class="c1"># Assign the noise parameter and RESULTS OutputPort of my_mech_A, and the matrix of the Projection, to be logged</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">my_mech_A</span><span class="o">.</span><span class="n">set_log_conditions</span><span class="p">([</span><span class="n">pnl</span><span class="o">.</span><span class="n">NOISE</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">RESULTS</span><span class="p">])</span>
+<span class="c1"># Assign the noise parameter and RESULT OutputPort of my_mech_A, and the matrix of the Projection, to be logged</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">my_mech_A</span><span class="o">.</span><span class="n">set_log_conditions</span><span class="p">([</span><span class="n">pnl</span><span class="o">.</span><span class="n">NOISE</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">RESULT</span><span class="p">])</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">proj_A_to_B</span><span class="o">.</span><span class="n">set_log_conditions</span><span class="p">(</span><span class="n">pnl</span><span class="o">.</span><span class="n">MATRIX</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -337,7 +337,7 @@ Executing the Process generates entries in the Logs, that can then be displayed 
 
 <span class="c1"># List the items of each Mechanism and the Projection that were actually logged:</span>
 <span class="o">&gt;&gt;</span> <span class="n">my_mech_A</span><span class="o">.</span><span class="n">logged_items</span>
-<span class="p">{</span><span class="s1">&#39;RESULTS&#39;</span><span class="p">:</span> <span class="s1">&#39;EXECUTION&#39;</span><span class="p">,</span> <span class="s1">&#39;noise&#39;</span><span class="p">:</span> <span class="s1">&#39;EXECUTION&#39;</span><span class="p">}</span>
+<span class="p">{</span><span class="s1">&#39;RESULT&#39;</span><span class="p">:</span> <span class="s1">&#39;EXECUTION&#39;</span><span class="p">,</span> <span class="s1">&#39;noise&#39;</span><span class="p">:</span> <span class="s1">&#39;EXECUTION&#39;</span><span class="p">}</span>
 <span class="o">&gt;&gt;</span> <span class="n">my_mech_B</span><span class="o">.</span><span class="n">logged_items</span>
 <span class="p">{}</span>
 <span class="o">&gt;&gt;</span> <span class="n">proj_A_to_B</span><span class="o">.</span><span class="n">logged_items</span>
@@ -354,8 +354,8 @@ method of a Log:</p>
 
 <span class="n">Logged</span> <span class="n">Item</span><span class="p">:</span>   <span class="n">Time</span>       <span class="n">Context</span>                                                                   <span class="n">Value</span>
 
-<span class="s1">&#39;RESULTS&#39;</span>      <span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">0</span>     <span class="s2">&quot; EXECUTING  System System-0| Mechanism: mech_A [in processes: [&#39;Pro...&quot;</span>   <span class="p">[</span> <span class="mf">0.</span>  <span class="mf">0.</span><span class="p">]</span>
-<span class="s1">&#39;RESULTS&#39;</span>      <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span>     <span class="s2">&quot; EXECUTING  System System-0| Mechanism: mech_A [in processes: [&#39;Pro...&quot;</span>   <span class="p">[</span> <span class="mf">0.</span>  <span class="mf">0.</span><span class="p">]</span>
+<span class="s1">&#39;RESULT&#39;</span>      <span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">0</span>     <span class="s2">&quot; EXECUTING  System System-0| Mechanism: mech_A [in processes: [&#39;Pro...&quot;</span>   <span class="p">[</span> <span class="mf">0.</span>  <span class="mf">0.</span><span class="p">]</span>
+<span class="s1">&#39;RESULT&#39;</span>      <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span>     <span class="s2">&quot; EXECUTING  System System-0| Mechanism: mech_A [in processes: [&#39;Pro...&quot;</span>   <span class="p">[</span> <span class="mf">0.</span>  <span class="mf">0.</span><span class="p">]</span>
 
 <span class="s1">&#39;noise&#39;</span>        <span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">0</span>     <span class="s2">&quot; EXECUTING  System System-0| Mechanism: mech_A [in processes: [&#39;Pro...&quot;</span>   <span class="p">[</span> <span class="mf">0.</span><span class="p">]</span>
 <span class="s1">&#39;noise&#39;</span>        <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span>     <span class="s2">&quot; EXECUTING  System System-0| Mechanism: mech_A [in processes: [&#39;Pro...&quot;</span>   <span class="p">[</span> <span class="mf">0.</span><span class="p">]</span>
@@ -363,8 +363,8 @@ method of a Log:</p>
 </div>
 <p>They can also be exported in numpy array and CSV formats.  The following shows the CSV-formatted output of the Logs
 for <code class="docutils literal"><span class="pre">my_mech_A</span></code> and  <code class="docutils literal"><span class="pre">proj_A_to_B</span></code>, using different formatting options:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">my_mech_A</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="n">entries</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">NOISE</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">RESULTS</span><span class="p">],</span> <span class="n">owner_name</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">quotes</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
-<span class="s1">&#39;Run&#39;</span><span class="p">,</span> <span class="s1">&#39;Trial&#39;</span><span class="p">,</span> <span class="s1">&#39;Time_step&#39;</span><span class="p">,</span> <span class="s1">&#39;noise&#39;</span><span class="p">,</span> <span class="s1">&#39;RESULTS&#39;</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">my_mech_A</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="n">entries</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">NOISE</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">RESULT</span><span class="p">],</span> <span class="n">owner_name</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">quotes</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+<span class="s1">&#39;Run&#39;</span><span class="p">,</span> <span class="s1">&#39;Trial&#39;</span><span class="p">,</span> <span class="s1">&#39;Time_step&#39;</span><span class="p">,</span> <span class="s1">&#39;noise&#39;</span><span class="p">,</span> <span class="s1">&#39;RESULT&#39;</span>
 <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span> <span class="mf">0.0</span>
 <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span> <span class="mf">0.0</span>
 
@@ -376,7 +376,7 @@ for <code class="docutils literal"><span class="pre">my_mech_A</span></code> and
 <span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;1.0 1.0 1.0&#39;</span> <span class="s1">&#39;1.0 1.0 1.0&#39;</span>
 </pre></div>
 </div>
-<p>Note that since the <code class="xref any docutils literal"><span class="pre">name</span></code> attribute of the Projection was not assigned, its default name is
+<p>Note that since the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.name" title="psyneulink.core.components.projections.projection.Projection_Base.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a> attribute of the Projection was not assigned, its default name is
 reported.</p>
 <p>The following shows the Log of <code class="docutils literal"><span class="pre">proj_A_to_B</span></code> in numpy array format, with and without header information:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">proj_A_to_B</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">nparray</span><span class="p">(</span><span class="n">entries</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">MATRIX</span><span class="p">],</span> <span class="n">owner_name</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>

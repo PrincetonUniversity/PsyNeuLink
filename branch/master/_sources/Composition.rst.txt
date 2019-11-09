@@ -6,6 +6,7 @@ Composition
 
    *Subclasses:*
    CompositionFunctionApproximator
+   RegressionCFA
    AutodiffComposition
 
 .. automodule:: psyneulink.core.compositions.composition

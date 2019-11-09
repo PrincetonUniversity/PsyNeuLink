@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Process &mdash; PsyNeuLink 0.7.0.0+12.g9aad961 documentation</title>
+  <title>Process &mdash; PsyNeuLink 0.7.1.0 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.0.0+12.g9aad961',
+              VERSION:'0.7.1.0',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.7.0.0+12
+                0.7.1.0
               </div>
             
           
@@ -251,7 +251,7 @@ specified in any of the following ways:</p>
 <div><ul class="simple">
 <li><strong>Inline specification</strong> – a MappingProjection specification can be interposed between any two Mechanisms in the
 <a class="reference internal" href="#psyneulink.core.components.process.Process.pathway" title="psyneulink.core.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> list. This creates a Projection from the preceding Mechanism in the list to the
-one that follows it.  It can be specified using any of the ways used to <a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">specify a Projection</span></a> or the <a class="reference internal" href="MappingProjection.html#mapping-matrix-specification"><span class="std std-ref">matrix parameter</span></a> of one.</li>
+one that follows it.  It can be specified using any of the ways used to <a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">specify a Projection</span></a> or the <a class="reference internal" href="MappingProjection.html#mappingprojection-matrix-specification"><span class="std std-ref">matrix parameter</span></a> of one.</li>
 </ul>
 <ul class="simple" id="process-tuple-specification">
 <li><strong>Tuple learning specification</strong> – this can be used in the same way as an inline specification;  the first item
@@ -332,7 +332,7 @@ the <a class="reference internal" href="LearningMechanism.html#psyneulink.core.c
 <blockquote>
 <div><ul class="simple">
 <li>a <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> (assigned to the Process’ <code class="xref any docutils literal"><span class="pre">target_nodes</span></code>
-attribute), that is used to <a class="reference internal" href="ComparatorMechanism.html#comparatormechanism-function"><span class="std std-ref">calculate an error signal</span></a> for the sequence, by
+attribute), that is used to <a class="reference internal" href="ComparatorMechanism.html#comparatormechanism-execution"><span class="std std-ref">calculate an error signal</span></a> for the sequence, by
 comparing <a class="reference internal" href="LearningMechanism.html#learningmechanism-activation-output"><span class="std std-ref">a specified output</span></a> of the last Mechanism in the learning
 sequence (received in the ComparatorMechanism’s <em>SAMPLE</em> <a class="reference internal" href="ComparatorMechanism.html#comparatormechanism-structure"><span class="std std-ref">InputPort</span></a>) with the
 item of the <strong>target</strong> argument in Process’ <a class="reference internal" href="#psyneulink.core.components.process.Process.execute" title="psyneulink.core.components.process.Process.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="#psyneulink.core.components.process.Process.run" title="psyneulink.core.components.process.Process.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method
@@ -505,7 +505,7 @@ that conform to the format for the <a class="reference internal" href="#psyneuli
 
 <dl class="class">
 <dt id="psyneulink.core.components.process.Process">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.process.</code><code class="descname">Process</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>pathway=None</em>, <em>initial_values=None</em>, <em>clamp_input=None</em>, <em>default_projection_matrix='AutoAssignMatrix'</em>, <em>learning=None</em>, <em>learning_rate=None</em>, <em>target=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x11172d268&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.process.Process" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.process.</code><code class="descname">Process</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>pathway=None</em>, <em>initial_values=None</em>, <em>clamp_input=None</em>, <em>default_projection_matrix='AutoAssignMatrix'</em>, <em>learning=None</em>, <em>learning_rate=None</em>, <em>target=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x1192fc510&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.process.Process" title="Permalink to this definition">¶</a></dt>
 <dd><p>Process(process_spec=None,                               default_variable=None,                                   pathway=None,                                            initial_values={},                                       clamp_input:=None,                                       default_projection_matrix=DEFAULT_PROJECTION_MATRIX,     learning=None,                                           learning_rate=None                                       target=None,                                             params=None,                                             name=None,                                               prefs=None</p>
 <p>Base class for Process.</p>
 <dl class="attribute">
@@ -703,11 +703,11 @@ occurs at the beginning of one or a series of executions invoked by a call to th
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>input</strong> (<em>List</em><em>[</em><a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value"><em>value</em></a><em>] or </em><em>ndarray: default zeroes</em>) – specifies the value(s) of the Process’ <a class="reference internal" href="#psyneulink.core.components.process.Process.input" title="psyneulink.core.components.process.Process.input"><code class="xref any py py-attr docutils literal"><span class="pre">input</span></code></a> for the <a class="reference internal" href="#process-execution"><span class="std std-ref">execution</span></a>;
+<li><strong>input</strong> (<em>List</em><em>[</em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><em>value</em></a><em>] or </em><em>ndarray: default zeroes</em>) – specifies the value(s) of the Process’ <a class="reference internal" href="#psyneulink.core.components.process.Process.input" title="psyneulink.core.components.process.Process.input"><code class="xref any py py-attr docutils literal"><span class="pre">input</span></code></a> for the <a class="reference internal" href="#process-execution"><span class="std std-ref">execution</span></a>;
 it is provided as the input to the <a class="reference internal" href="#psyneulink.core.components.process.Process.origin_mechanism" title="psyneulink.core.components.process.Process.origin_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">origin_mechanism</span></code></a> and must be compatible
 (in number and type of items) with its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute (see
 <a class="reference internal" href="#process-input-and-output"><span class="std std-ref">Process input and output</span></a> for details).</li>
-<li><strong>target</strong> (<em>List</em><em>[</em><a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value"><em>value</em></a><em>] or </em><em>ndarray: default None</em>) – specifies the target value assigned to each of the <code class="xref any docutils literal"><span class="pre">target_nodes</span></code> for
+<li><strong>target</strong> (<em>List</em><em>[</em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><em>value</em></a><em>] or </em><em>ndarray: default None</em>) – specifies the target value assigned to each of the <code class="xref any docutils literal"><span class="pre">target_nodes</span></code> for
 the <a class="reference internal" href="#process-execution"><span class="std std-ref">execution</span></a>.  Each item is assigned to the <em>TARGET</em> <a class="reference internal" href="ComparatorMechanism.html#comparatormechanism-structure"><span class="std std-ref">InputPort</span></a> of the corresponding <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> in <code class="xref any docutils literal"><span class="pre">target_nodes</span></code>; the number of items must equal the number of items in
 <code class="xref any docutils literal"><span class="pre">target_nodes</span></code>, and each item of <strong>target</strong> be compatible with the
 <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute of the <em>TARGET</em> <a class="reference internal" href="ComparatorMechanism.html#comparatormechanism-structure"><span class="std std-ref">InputPort</span></a>

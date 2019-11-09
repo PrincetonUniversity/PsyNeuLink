@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.7.0.0+12.g9aad961 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.7.1.0 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.0.0+12.g9aad961',
+              VERSION:'0.7.1.0',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.7.0.0+12
+                0.7.1.0
               </div>
             
           
@@ -102,6 +102,7 @@
 <li class="toctree-l2"><a class="reference internal" href="Component.html">Components</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Compositions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="CompositionFunctionApproximator.html">CompositionFunctionApproximator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="RegressionCFA.html">RegressionCFA</a></li>
 <li class="toctree-l3"><a class="reference internal" href="AutodiffComposition.html">AutodiffComposition</a></li>
 </ul>
 </li>
@@ -181,18 +182,69 @@
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="CompositionFunctionApproximator.html">CompositionFunctionApproximator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="RegressionCFA.html">RegressionCFA</a></li>
 <li class="toctree-l1"><a class="reference internal" href="AutodiffComposition.html">AutodiffComposition</a></li>
 </ul>
 </div>
-<span class="target" id="module-psyneulink.core.compositions.composition"></span><div class="section" id="sections">
-<h2>Sections<a class="headerlink" href="#sections" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-psyneulink.core.compositions.composition"></span><div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li><a class="reference internal" href="#composition-overview"><span class="std std-ref">Overview</span></a></li>
-<li><a class="reference internal" href="#composition-creation"><span class="std std-ref">Creating a Composition</span></a></li>
-<li><a class="reference internal" href="#composition-run"><span class="std std-ref">Running a Composition</span></a></li>
-<li><a class="reference internal" href="#composition-controller"><span class="std std-ref">Controlling a Composition</span></a></li>
-<li><a class="reference internal" href="#composition-learning"><span class="std std-ref">Learning in a Composition</span></a></li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="#composition-creation"><span class="std std-ref">Creating a Composition</span></a></dt>
+<dd><ul class="first last">
+<li><a class="reference internal" href="#composition-nested"><span class="std std-ref">Nested Compositions</span></a></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="#composition-run"><span class="std std-ref">Running a Composition</span></a></dt>
+<dd><ul class="first last">
+<li><a class="reference internal" href="Run.html#composition-run-inputs"><span class="std std-ref">Inputs</span></a></li>
+<li><a class="reference internal" href="#composition-input-as-function"><span class="std std-ref">Run with Input Function</span></a></li>
+<li><code class="xref any docutils literal"><span class="pre">Composition_Scope_of_Execution</span></code></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="#composition-controller"><span class="std std-ref">Controlling a Composition</span></a></dt>
+<dd><ul class="first last">
+<li><a class="reference internal" href="#composition-controller-assignment"><span class="std std-ref">Assigning a Controller</span></a></li>
+<li><a class="reference internal" href="#composition-controller-execution"><span class="std std-ref">Controller Execution</span></a></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="#composition-learning"><span class="std std-ref">Learning in a Composition</span></a></dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="#composition-learning-standard"><span class="std std-ref">Learning Using PsyNeuLink Components</span></a></dt>
+<dd><ul class="first last">
+<li><a class="reference internal" href="#composition-learning-unsupervised"><span class="std std-ref">Unsupervised Learning</span></a></li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="#composition-learning-unsupervised"><span class="std std-ref">Unsupervised Learning</span></a></dt>
+<dd><ul class="first last">
+<li><a class="reference internal" href="#composition-learning-methods"><span class="std std-ref">Learning Methods</span></a></li>
+<li><a class="reference internal" href="#composition-learning-components"><span class="std std-ref">Learning Components</span></a></li>
+<li><a class="reference internal" href="#composition-learning-execution"><span class="std std-ref">Execution of Learning</span></a></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><a class="reference internal" href="#composition-learning-autodiffcomposition"><span class="std std-ref">Learning Using AutodiffCompositon</span></a></li>
+<li><a class="reference internal" href="#composition-learning-udf"><span class="std std-ref">Learning Using UserDefinedFunctions</span></a></li>
+</ul>
+</dd>
+</dl>
+</li>
 <li><a class="reference internal" href="#composition-visualization"><span class="std std-ref">Visualizing a Composition</span></a></li>
 <li><a class="reference internal" href="#composition-class-reference"><span class="std std-ref">Class Reference</span></a></li>
 </ul>
@@ -370,8 +422,8 @@ the nested composition just as for any other node.</p>
 </div>
 <div class="section" id="running-a-composition">
 <span id="composition-run"></span><h2>Running a Composition<a class="headerlink" href="#running-a-composition" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="inputs">
-<span id="composition-run-inputs"></span><h3><em>Inputs</em><a class="headerlink" href="#inputs" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="run-with-input-dictionary">
+<span id="composition-run-inputs"></span><h3><em>Run with Input Dictionary</em><a class="headerlink" href="#run-with-input-dictionary" title="Permalink to this headline">¶</a></h3>
 <p>The <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method presents the inputs for each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> to the input_ports of the INPUT Nodes in the
 <code class="xref any docutils literal"><span class="pre">scope</span> <span class="pre">of</span> <span class="pre">execution</span></code>. These input values are specified in the <strong>inputs</strong> argument of
 a Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.execute" title="psyneulink.core.compositions.composition.Composition.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> methods.</p>
@@ -743,8 +795,8 @@ situations:</p>
 </pre></div>
 </div>
 </div>
-<div class="section" id="interactive-inputs">
-<span id="composition-input-as-function"></span><h3><em>Interactive Inputs</em><a class="headerlink" href="#interactive-inputs" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="run-with-input-function">
+<span id="composition-input-as-function"></span><h3><em>Run with Input Function</em><a class="headerlink" href="#run-with-input-function" title="Permalink to this headline">¶</a></h3>
 <p>An alternative way to specify inputs is with a function. The function must return a dictionary that satisfies
 the rules above for standard input specification. The only difference is that on each execution, the function returns
 the input values for each INPUT Node for a single trial.</p>
@@ -829,7 +881,7 @@ in response to its input.</p>
 <ul class="simple">
 <li><a class="reference internal" href="#composition-learning-methods"><span class="std std-ref">Learning Methods</span></a></li>
 <li><a class="reference internal" href="#composition-learning-components"><span class="std std-ref">Learning Components</span></a></li>
-<li><a class="reference internal" href="#compositon-learning-execution"><span class="std std-ref">Execution of Learning</span></a></li>
+<li><code class="xref any docutils literal"><span class="pre">Compositon_Learning_Execution</span></code></li>
 </ul>
 <div class="section" id="learning-methods">
 <span id="composition-learning-methods"></span><h5><em>Learning Methods</em><a class="headerlink" href="#learning-methods" title="Permalink to this headline">¶</a></h5>
@@ -859,7 +911,7 @@ return the set of learning components generates for the pathway, as described be
 following Components, and assigns to them the <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole" title="psyneulink.core.globals.utilities.NodeRole"><code class="xref any py py-class docutils literal"><span class="pre">NodeRoles</span></code></a> indicated:</p>
 <blockquote>
 <div><ul class="simple">
-<li><em>COMPARATOR_MECHANISM</em> <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> – used to <a class="reference internal" href="ComparatorMechanism.html#comparatormechanism-function"><span class="std std-ref">calculate an error signal</span></a> for the sequence by comparing the value received by the ComparatorMechanism’s
+<li><em>COMPARATOR_MECHANISM</em> <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> – used to <a class="reference internal" href="ComparatorMechanism.html#comparatormechanism-execution"><span class="std std-ref">calculate an error signal</span></a> for the sequence by comparing the value received by the ComparatorMechanism’s
 <em>SAMPLE</em> <a class="reference internal" href="ComparatorMechanism.html#comparatormechanism-structure"><span class="std std-ref">InputPort</span></a> (from the <a class="reference internal" href="LearningMechanism.html#learningmechanism-activation-output"><span class="std std-ref">output</span></a> of
 the last Processing Mechanism in the learning sequence) with the value received in the <em>COMPARATOR_MECHANISM</em>’s
 <em>TARGET</em> <a class="reference internal" href="ComparatorMechanism.html#comparatormechanism-structure"><span class="std std-ref">InputPort</span></a> (from the <em>TARGET_MECHANISM</em> generated by the method –
@@ -962,7 +1014,7 @@ Mechanism C is now the one that projects to the ComparatorMechanism and assigned
 </div></blockquote>
 </div>
 <div class="section" id="execution-of-learning">
-<span id="compositon-learning-execution"></span><h5><em>Execution of Learning</em><a class="headerlink" href="#execution-of-learning" title="Permalink to this headline">¶</a></h5>
+<span id="composition-learning-execution"></span><h5><em>Execution of Learning</em><a class="headerlink" href="#execution-of-learning" title="Permalink to this headline">¶</a></h5>
 <p>When a Composition is run that contains one or more learning sequences, all of the ProcessingMechanisms for a
 sequence are executed first, and then its LearningComponents. This is shown in an animation of the XOR network
 from the <a class="reference internal" href="#composition-xor-example"><span class="std std-ref">example above</span></a>:</p>
@@ -1036,7 +1088,7 @@ shown as unlabeled arrows, as illustrated for the Composition in the example bel
 <span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span>
 <span class="go">              name=&#39;A&#39;,</span>
 <span class="gp">... </span>          <span class="n">size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-<span class="gp">... </span>          <span class="n">output_ports</span><span class="o">=</span><span class="p">[</span><span class="n">RESULTS</span><span class="p">,</span> <span class="n">OUTPUT_MEAN</span><span class="p">]</span>
+<span class="gp">... </span>          <span class="n">output_ports</span><span class="o">=</span><span class="p">[</span><span class="n">RESULT</span><span class="p">,</span> <span class="n">MEAN</span><span class="p">]</span>
 <span class="gp">... </span>          <span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span>
 <span class="gp">... </span>          <span class="n">name</span><span class="o">=</span><span class="s1">&#39;B&#39;</span><span class="p">,</span>
@@ -1055,7 +1107,7 @@ shown as unlabeled arrows, as illustrated for the Composition in the example bel
 <span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ctlr</span> <span class="o">=</span> <span class="n">OptimizationControlMechanism</span><span class="p">(</span>
 <span class="gp">... </span>           <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Controller&#39;</span><span class="p">,</span>
-<span class="gp">... </span>           <span class="n">monitor_for_control</span><span class="o">=</span><span class="p">[(</span><span class="n">pnl</span><span class="o">.</span><span class="n">OUTPUT_MEAN</span><span class="p">,</span> <span class="n">a</span><span class="p">)],</span>
+<span class="gp">... </span>           <span class="n">monitor_for_control</span><span class="o">=</span><span class="p">[(</span><span class="n">pnl</span><span class="o">.</span><span class="n">MEAN</span><span class="p">,</span> <span class="n">a</span><span class="p">)],</span>
 <span class="gp">... </span>           <span class="n">control_signals</span><span class="o">=</span><span class="p">(</span><span class="n">GAIN</span><span class="p">,</span> <span class="n">c</span><span class="p">),</span>
 <span class="gp">... </span>           <span class="n">agent_rep</span><span class="o">=</span><span class="n">comp</span>
 <span class="gp">... </span>           <span class="p">)</span>
@@ -1123,8 +1175,20 @@ and nested Compositions in an outer Composition, <code class="docutils literal">
 <span id="composition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.compositions.composition.Composition">
-<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>controller: psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism = None</em>, <em>enable_controller=None</em>, <em>controller_mode: &lt;typecheck.tc_predicates.enum object at 0x1147f9438&gt; = 'after'</em>, <em>controller_condition: psyneulink.core.scheduling.condition.Condition = &lt;psyneulink.core.scheduling.condition.Always object&gt;</em>, <em>enable_learning=False</em>, <em>retain_old_simulation_data=None</em>, <em>prefs=None</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
+<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>controller: psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism = None</em>, <em>enable_controller=None</em>, <em>controller_mode: &lt;typecheck.tc_predicates.enum object at 0x11bcc99b0&gt; = 'after'</em>, <em>controller_condition: psyneulink.core.scheduling.condition.Condition = &lt;psyneulink.core.scheduling.condition.Always object&gt;</em>, <em>enable_learning=False</em>, <em>retain_old_simulation_data=None</em>, <em>prefs=None</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Composition(</dt>
+<dd>controller=None,
+enable_controller=None,
+controller_mode=AFTER,
+controller_condition=Always,
+enable_learning=True,
+name=None,
+prefs=Composition.classPreferences
+context=None)</dd>
+</dl>
+<p>Base class for Composition.</p>
+<table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
@@ -1318,7 +1382,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.add_backpropagation_learning_pathway">
-<code class="descname">add_backpropagation_learning_pathway</code><span class="sig-paren">(</span><em>pathway</em>, <em>learning_rate=0.05</em>, <em>error_function=None</em>, <em>loss_function: &lt;typecheck.tc_predicates.enum object at 0x114801278&gt; = 'MSE'</em>, <em>learning_update: &lt;typecheck.framework.optional object at 0x114801400&gt; = 'after'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_backpropagation_learning_pathway" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_backpropagation_learning_pathway</code><span class="sig-paren">(</span><em>pathway</em>, <em>learning_rate=0.05</em>, <em>error_function=None</em>, <em>loss_function: &lt;typecheck.tc_predicates.enum object at 0x11c42da90&gt; = 'MSE'</em>, <em>learning_update: &lt;typecheck.framework.optional object at 0x11c42db70&gt; = 'after'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_backpropagation_learning_pathway" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convenience method that calls <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway" title="psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway"><code class="xref any py py-meth docutils literal"><span class="pre">add_linear_learning_pathway</span></code></a> with <a href="#id2"><span class="problematic" id="id3">**</span></a>learning_function**=`Backpropagation`</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1364,7 +1428,7 @@ an optimal Control policy.</p>
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway">
-<code class="descname">add_linear_learning_pathway</code><span class="sig-paren">(</span><em>pathway</em>, <em>learning_function</em>, <em>loss_function=None</em>, <em>learning_rate=0.05</em>, <em>error_function=(LinearCombination LinearCombination Function-7)</em>, <em>learning_update: &lt;typecheck.tc_predicates.any object at 0x1147f9f60&gt; = 'online'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_linear_learning_pathway</code><span class="sig-paren">(</span><em>pathway</em>, <em>learning_function</em>, <em>loss_function=None</em>, <em>learning_rate=0.05</em>, <em>error_function=(LinearCombination LinearCombination Function-7)</em>, <em>learning_update: &lt;typecheck.tc_predicates.any object at 0x11c42d7f0&gt; = 'online'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implement learning pathway (including necessary <a class="reference internal" href="#composition-learning-components"><span class="std std-ref">learning components</span></a>.</p>
 <p>Generic method for implementing a learning pathway.  Calls <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway" title="psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway"><code class="xref any py py-meth docutils literal"><span class="pre">add_linear_processing_pathway</span></code></a> to implement
 the processing components including, if necessary, the MappingProjections between Mechanisms.  All of the
@@ -1542,10 +1606,10 @@ its <a class="reference internal" href="Projection.html#psyneulink.core.componen
 <li><strong>receiver</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort" title="psyneulink.core.components.ports.inputport.InputPort"><em>InputPort</em></a>) – the receiver of <strong>projection</strong></li>
 <li><strong>feedback</strong> (<em>bool</em>) – When False (default) all Nodes within a cycle containing this Projection execute in parallel. This
 means that each Projections within the cycle actually passes to its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>
-the <code class="xref any docutils literal"><span class="pre">value</span></code> of its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> from the previous execution.
+the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> from the previous execution.
 When True, this Projection “breaks” the cycle, such that all Nodes execute in sequence, and only the
 Projection marked as ‘feedback’ passes to its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> the
-<code class="xref any docutils literal"><span class="pre">value</span></code> of its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> from the previous execution.</li>
+<a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> from the previous execution.</li>
 </ul>
 </td>
 </tr>
@@ -1577,7 +1641,7 @@ already specified.  If an item in the list is a list of projections, called recu
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.add_reinforcement_learning_pathway">
-<code class="descname">add_reinforcement_learning_pathway</code><span class="sig-paren">(</span><em>pathway</em>, <em>learning_rate=0.05</em>, <em>error_function=None</em>, <em>learning_update: &lt;typecheck.tc_predicates.any object at 0x1148010b8&gt; = 'online'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_reinforcement_learning_pathway" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_reinforcement_learning_pathway</code><span class="sig-paren">(</span><em>pathway</em>, <em>learning_rate=0.05</em>, <em>error_function=None</em>, <em>learning_update: &lt;typecheck.tc_predicates.any object at 0x11c42d8d0&gt; = 'online'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_reinforcement_learning_pathway" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convenience method that calls <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway" title="psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway"><code class="xref any py py-meth docutils literal"><span class="pre">add_linear_learning_pathway</span></code></a> with <a href="#id4"><span class="problematic" id="id5">**</span></a>learning_function**=`Reinforcement`</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1613,7 +1677,7 @@ LEARNED_PROJECTION: learned_projection}</li>
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.add_td_learning_pathway">
-<code class="descname">add_td_learning_pathway</code><span class="sig-paren">(</span><em>pathway</em>, <em>learning_rate=0.05</em>, <em>error_function=None</em>, <em>learning_update: &lt;typecheck.tc_predicates.any object at 0x114801208&gt; = 'online'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_td_learning_pathway" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_td_learning_pathway</code><span class="sig-paren">(</span><em>pathway</em>, <em>learning_rate=0.05</em>, <em>error_function=None</em>, <em>learning_update: &lt;typecheck.tc_predicates.any object at 0x11c42d978&gt; = 'online'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_td_learning_pathway" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convenience method that calls <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway" title="psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway"><code class="xref any py py-meth docutils literal"><span class="pre">add_linear_learning_pathway</span></code></a> with <a href="#id6"><span class="problematic" id="id7">**</span></a>learning_function**=`TDLearning`</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />

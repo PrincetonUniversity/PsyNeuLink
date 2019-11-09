@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EpisodicMemoryMechanism &mdash; PsyNeuLink 0.7.0.0+12.g9aad961 documentation</title>
+  <title>EpisodicMemoryMechanism &mdash; PsyNeuLink 0.7.1.0 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.0.0+12.g9aad961',
+              VERSION:'0.7.1.0',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.7.0.0+12
+                0.7.1.0
               </div>
             
           
@@ -197,6 +197,18 @@
             
   <div class="section" id="module-psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism">
 <span id="episodicmemorymechanism"></span><h1>EpisodicMemoryMechanism<a class="headerlink" href="#module-psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="#episodicmemorymechanism-overview"><span class="std std-ref">Overview</span></a></li>
+<li><a class="reference internal" href="#episodicmemorymechanism-creation"><span class="std std-ref">Creating a TransferMechanism</span></a></li>
+<li><a class="reference internal" href="#episodicmemorymechanism-structure"><span class="std std-ref">Structure</span></a></li>
+<li><a class="reference internal" href="#episodicmemorymechanism-execution"><span class="std std-ref">Execution</span></a></li>
+<li><a class="reference internal" href="#episodicmemorymechanism-class-reference"><span class="std std-ref">Class Reference</span></a></li>
+</ul>
+</div></blockquote>
+</div>
 <div class="section" id="overview">
 <span id="episodicmemorymechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>An EpisodicMemoryMechanism is an <a class="reference internal" href="IntegratorMechanism.html"><span class="doc">IntegratorMechanism</span></a> that can store and retrieve content-associate pairs.
@@ -258,7 +270,8 @@ may be different than the <a class="reference internal" href="InputPort.html#psy
 <dt id="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism">
 <em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.</code><code class="descname">EpisodicMemoryMechanism</code><span class="sig-paren">(</span><em>content_size=1</em>, <em>assoc_size=1</em>, <em>function=ContentAddressableMemory</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="IntegratorMechanism.html"><span class="doc">IntegratorMechanism</span></a> that implements a <a href="#id1"><span class="problematic" id="id2">`differentiable neural dictionary
-(ContentAddressableMemory)&lt;HTML&gt;`_</span></a></p>
+(ContentAddressableMemory)&lt;HTML&gt;`_</span></a>.  See <a class="reference internal" href="Mechanism.html#mechanism-class-reference"><span class="std std-ref">Mechanism</span></a> for additional arguments and
+attributes.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -271,12 +284,6 @@ if it is 0 (the default) then no <em>ASSOC_INPUT</em> InputPort or <em>ASSOC_OUT
 must take as its <code class="xref any docutils literal"><span class="pre">variable</span></code> a 2d array, the first item of which is the content and the second
 the associate to be stored in its memory, and must return a 2d array that is the value of the
 content and assoc retrieved from its memory.</li>
-<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
-the Mechanism, its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and/or a custom function and its parameters.  Values
-specified for parameters in the dictionary override any assigned to those parameters in arguments of the
-constructor.</li>
-<li><strong>name</strong> (str : default see <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.name" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a>) – specifies the name of the EpisodicMemoryMechanism.</li>
-<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Mechanism.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the EpisodicMemoryMechanism; see <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.prefs" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details.</li>
 </ul>
 </td>
 </tr>
@@ -293,20 +300,6 @@ constructor.</li>
 <code class="descname">memory</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>3d array</em> – contains key-value pairs stored in the <code class="xref any docutils literal"><span class="pre">function</span> <span class="pre">&lt;EpisodicMemoryMechanism.function&gt;'s</span> <span class="pre">`memory</span></code> attribute
 (if it has one).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.name">
-<code class="descname">name</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – the name of the EpisodicMemoryMechanism; if it is not specified in the <strong>name</strong> argument of the constructor, a
-default is assigned by MechanismRegistry (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions used for default and duplicate names).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.prefs">
-<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the EpisodicMemoryMechanism; if it is not specified in the <strong>prefs</strong> argument of the
-constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
 <dl class="attribute">

@@ -1,9 +1,9 @@
 Naming
 ======
 
-Every object in PsyNeuLink has a `name` attribute, that is a string used to refer to it in printouts and display.
-The name of a object can be specified in the **name** argument of its constructor.  An object's name can be reassignd,
-but this should be done with caution, as other objects may depend on its name.
+Every object in PsyNeuLink has a `name <Component.name>` attribute, that is a string used to refer to it in printouts
+and display. The name of a object can be specified in the **name** argument of its constructor.  An object's name can
+be reassigned, but this should be done with caution, as other objects may depend on its name.
 
 Default Names
 -------------

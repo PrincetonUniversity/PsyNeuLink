@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ComparatorMechanism &mdash; PsyNeuLink 0.7.0.0+12.g9aad961 documentation</title>
+  <title>ComparatorMechanism &mdash; PsyNeuLink 0.7.1.0 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.0.0+12.g9aad961',
+              VERSION:'0.7.1.0',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.7.0.0+12
+                0.7.1.0
               </div>
             
           
@@ -197,8 +197,21 @@
             
   <div class="section" id="module-psyneulink.library.components.mechanisms.processing.objective.comparatormechanism">
 <span id="comparatormechanism"></span><h1>ComparatorMechanism<a class="headerlink" href="#module-psyneulink.library.components.mechanisms.processing.objective.comparatormechanism" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="#comparatormechanism-overview"><span class="std std-ref">Overview</span></a></li>
+<li><a class="reference internal" href="#comparatormechanism-creation"><span class="std std-ref">Creating a ComparatorMechanism</span></a></li>
+<li><a class="reference internal" href="#comparatormechanism-structure"><span class="std std-ref">Structure</span></a></li>
+<li><a class="reference internal" href="#comparatormechanism-execution"><span class="std std-ref">Execution</span></a></li>
+<li><a class="reference internal" href="#comparatormechanism-example"><span class="std std-ref">Example</span></a></li>
+<li><a class="reference internal" href="#comparatormechanism-class-reference"><span class="std std-ref">Class Reference</span></a></li>
+</ul>
+</div></blockquote>
+</div>
 <div class="section" id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<span id="comparatormechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A ComparatorMechanism is a subclass of <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that receives two inputs (a sample and a target), compares
 them using its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and places the calculated discrepancy between the two in its
 <em>OUTCOME</em> <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_port" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_port"><code class="xref any py py-attr docutils literal"><span class="pre">OutputPort</span></code></a>.</p>
@@ -247,10 +260,10 @@ result. The result is assigned as the value of the Comparator Mechanism’s <em>
 OutputPort.</p>
 </div>
 <div class="section" id="execution">
-<span id="comparatormechanism-function"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<span id="comparatormechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>When a ComparatorMechanism is executed, it updates its input_ports with the values of the OutputPorts specified
 in its <strong>sample</strong> and <strong>target</strong> arguments, and then uses its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to
-compare these.  By default, the result is assigned to the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.value" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <em>OUTCOME</em>
+compare these.  By default, the result is assigned to the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <em>OUTCOME</em>
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_port" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_port"><code class="xref any py py-attr docutils literal"><span class="pre">output_port</span></code></a>, and as the first item of the Mechanism’s
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_values" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a> attribute.</p>
 <p class="rubric" id="comparatormechanism-example">Example</p>
@@ -304,27 +317,21 @@ more than one OutputPort, and one of those was desired, it would have had to be 
 
 <dl class="class">
 <dt id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism">
-<em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.</code><code class="descname">ComparatorMechanism</code><span class="sig-paren">(</span><em>                                        sample,                                                 target,                                                 input_ports=[SAMPLE,TARGET]                            function=LinearCombination(weights=[[-1],[1]],          output_ports=OUTCOME                                   params=None,                                            name=None,                                              prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that compares the values of two <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>.</p>
+<em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.</code><code class="descname">ComparatorMechanism</code><span class="sig-paren">(</span><em>                                        sample,                                                 target,                                                 input_ports=[SAMPLE,TARGET]                             function=LinearCombination(weights=[[-1],[1]],          output_ports=OUTCOME</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass of <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that compares the values of two <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>.
+See <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-class-reference"><span class="std std-ref">ObjectiveMechanism</span></a> for additional arguments and attributes.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>sample</strong> (<a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><em>OutputPort</em></a><em>, </em><em>Mechanism</em><em>, </em><a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value"><em>value</em></a><em>, or </em><a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context.string" title="psyneulink.core.globals.context.Context.string"><em>string</em></a>) – specifies the value to compare with the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a> by the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</li>
-<li><strong>target</strong> (<a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><em>OutputPort</em></a><em>, </em><em>Mechanism</em><em>, </em><a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value"><em>value</em></a><em>, or </em><a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context.string" title="psyneulink.core.globals.context.Context.string"><em>string</em></a>) – specifies the value with which the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal"><span class="pre">sample</span></code></a> is compared by the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</li>
-<li><strong>input_ports</strong> (<em>List</em><em>[</em><a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort" title="psyneulink.core.components.ports.inputport.InputPort"><em>InputPort</em></a><em>, </em><a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value"><em>value</em></a><em>, </em><em>str</em><em> or </em><em>dict</em><em>] or </em><em>Dict</em><em>[</em><em>] </em><em>: default</em><em> [</em><em>SAMPLE</em><em>, </em><a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><em>TARGET</em></a><em>]</em>) – specifies the names and/or formats to use for the values of the sample and target InputPorts;
+<li><strong>sample</strong> (<a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><em>OutputPort</em></a><em>, </em><em>Mechanism</em><em>, </em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><em>value</em></a><em>, or </em><a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context.string" title="psyneulink.core.globals.context.Context.string"><em>string</em></a>) – specifies the value to compare with the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a> by the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</li>
+<li><strong>target</strong> (<a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><em>OutputPort</em></a><em>, </em><em>Mechanism</em><em>, </em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><em>value</em></a><em>, or </em><a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context.string" title="psyneulink.core.globals.context.Context.string"><em>string</em></a>) – specifies the value with which the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal"><span class="pre">sample</span></code></a> is compared by the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</li>
+<li><strong>input_ports</strong> (<em>List</em><em>[</em><a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort" title="psyneulink.core.components.ports.inputport.InputPort"><em>InputPort</em></a><em>, </em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><em>value</em></a><em>, </em><em>str</em><em> or </em><em>dict</em><em>] or </em><em>Dict</em><em>[</em><em>] </em><em>: default</em><em> [</em><em>SAMPLE</em><em>, </em><a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><em>TARGET</em></a><em>]</em>) – specifies the names and/or formats to use for the values of the sample and target InputPorts;
 by default they are named <em>SAMPLE</em> and <em>TARGET</em>, and their formats are match the value of the OutputPorts
 specified in the <strong>sample</strong> and <strong>target</strong> arguments, respectively (see <a class="reference internal" href="#comparatormechanism-structure"><span class="std std-ref">Structure</span></a>
 for additional details).</li>
-<li><strong>function</strong> (<em>Function</em><em>, </em><a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.function"><em>function</em></a><em> or </em><em>method : default Distance</em><em>(</em><em>metric=DIFFERENCE</em><em>)</em>) – specifies the <code class="xref any docutils literal"><span class="pre">function</span></code> used to compare the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal"><span class="pre">sample</span></code></a> with the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a>.</li>
-<li><strong>output_ports</strong> (<em>List</em><em>[</em><a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><em>OutputPort</em></a><em>, </em><a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value"><em>value</em></a><em>, </em><em>str</em><em> or </em><em>dict</em><em>] or </em><em>Dict</em><em>[</em><em>] </em><em>: default</em><em> [</em><em>OUTCOME</em><em>]</em>) – specifies the OutputPorts for the Mechanism;</li>
-<li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword: param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
-the Mechanism, its function, and/or a custom function and its parameters. Values specified for parameters in
-the dictionary override any assigned to those parameters in arguments of the
-constructor.</li>
-<li><strong>name</strong> (str : default see <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.name" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a>) – specifies the name of the ComparatorMechanism.</li>
-<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Mechanism.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the ComparatorMechanism; see <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.prefs" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details.</li>
+<li><strong>function</strong> (<em>Function</em><em>, </em><a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function"><em>function</em></a><em> or </em><em>method : default Distance</em><em>(</em><em>metric=DIFFERENCE</em><em>)</em>) – specifies the <code class="xref any docutils literal"><span class="pre">function</span></code> used to compare the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal"><span class="pre">sample</span></code></a> with the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a>.</li>
 </ul>
 </td>
 </tr>
@@ -359,16 +366,10 @@ as the two input items.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.value">
-<code class="descname">value</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array</em> – the result of the comparison carried out by the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
-</dd></dl>
-
-<dl class="attribute">
 <dt id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_port">
 <code class="descname">output_port</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_port" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>OutputPort</em> – contains the <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary</span></a> OutputPort of the ComparatorMechanism; the default is
-its <em>OUTCOME</em> OutputPort, the value of which is equal to the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.value" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
+its <em>OUTCOME</em> OutputPort, the value of which is equal to the <code class="xref any docutils literal"><span class="pre">value</span></code>
 attribute of the ComparatorMechanism.</p>
 </dd></dl>
 
@@ -382,20 +383,6 @@ attribute of the ComparatorMechanism.</p>
 <dt id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_values">
 <code class="descname">output_values</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_values" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>2d np.array</em> – contains one item that is the value of the <em>OUTCOME</em> OutputPort.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.name">
-<code class="descname">name</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – the name of the ComparatorMechanism; if it is not specified in the <strong>name</strong> argument of the constructor, a
-default is assigned by MechanismRegistry (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions used for default and duplicate names).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.prefs">
-<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the ComparatorMechanism; if it is not specified in the <strong>prefs</strong> argument of the
-constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
 </dd></dl>

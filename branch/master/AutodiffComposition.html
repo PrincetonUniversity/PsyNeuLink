@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.7.0.0+12.g9aad961 documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.7.1.0 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.0.0+12.g9aad961',
+              VERSION:'0.7.1.0',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -46,7 +46,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Scheduling" href="Scheduling.html" />
-    <link rel="prev" title="CompositionFunctionApproximator" href="CompositionFunctionApproximator.html" /> 
+    <link rel="prev" title="RegressionCFA" href="RegressionCFA.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.7.0.0+12
+                0.7.1.0
               </div>
             
           
@@ -181,6 +181,28 @@
             
   <div class="section" id="module-psyneulink.library.compositions.autodiffcomposition">
 <span id="autodiffcomposition"></span><h1>AutodiffComposition<a class="headerlink" href="#module-psyneulink.library.compositions.autodiffcomposition" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="#autodiffcomposition-overview"><span class="std std-ref">Overview</span></a></li>
+<li><a class="reference internal" href="#autodiffcomposition-creation"><span class="std std-ref">Creating an AutodiffComposition</span></a></li>
+<li><a class="reference internal" href="#autodiffcomposition-structure"><span class="std std-ref">Structure</span></a></li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="#autodiffcomposition-execution"><span class="std std-ref">Execution</span></a></dt>
+<dd><ul class="first last">
+<li><a class="reference internal" href="#autodiffcomposition-input"><span class="std std-ref">Input</span></a></li>
+<li><a class="reference internal" href="#autodiffcomposition-input"><span class="std std-ref">Input</span></a></li>
+<li><a class="reference internal" href="#autodiffcomposition-logging"><span class="std std-ref">Logging</span></a></li>
+<li><a class="reference internal" href="#autodiffcomposition-nested-execution"><span class="std std-ref">Nested Execution</span></a></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><a class="reference internal" href="#autodiffcomposition-class-reference"><span class="std std-ref">Class Reference</span></a></li>
+</ul>
+</div></blockquote>
+</div>
 <div class="section" id="overview">
 <span id="autodiffcomposition-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>AutodiffComposition is a subclass of <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> used to train feedforward neural network models through integration
@@ -348,9 +370,8 @@ in the exaple above, as follows:</p>
 </pre></div>
 </div>
 <p>or <a class="reference internal" href="Composition.html#composition-input-as-function"><span class="std std-ref">using a function</span></a>.</p>
-</div>
 <div class="section" id="logging">
-<h2>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h2>
+<span id="autodiffcomposition-logging"></span><h3>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h3>
 <p>Logging currently works differently in AutodiffComposition than in Composition. In an AutodiffComposition, no logging
 is done by default, because logging substantially (roughly by 30%) slows down AutodiffComposition. If you wish for all
 projection weights and mechanism values to be logged during execution or training of AutodiffComposition, you must
@@ -358,7 +379,7 @@ set the <strong>do_logging</strong> argument of the <code class="docutils litera
 together, so the time and context in the log are not meaningful, only the logged value is meaningful.</p>
 </div>
 <div class="section" id="nested-execution">
-<h2>Nested Execution<a class="headerlink" href="#nested-execution" title="Permalink to this headline">¶</a></h2>
+<span id="autodiffcomposition-nested-execution"></span><h3>Nested Execution<a class="headerlink" href="#nested-execution" title="Permalink to this headline">¶</a></h3>
 <p>Like any other <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, an AutodiffComposition may be <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested inside another</span></a>.  If learning
 is not enabled, nesting is handled in the same way as any other Composition.  However, if learning is enabled for a
 nested AutodiffComposition, its input format is different (see below);  as a consequence, a nested AutodiffComposition
@@ -381,12 +402,14 @@ Composition:</p>
 </pre></div>
 </div>
 </div>
+</div>
 <div class="section" id="class-reference">
-<span id="composition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<span id="autodiffcomposition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition">
 <em class="property">class </em><code class="descclassname">psyneulink.library.compositions.autodiffcomposition.</code><code class="descname">AutodiffComposition</code><span class="sig-paren">(</span><em>param_init_from_pnl=True</em>, <em>patience=None</em>, <em>min_delta=0</em>, <em>learning_rate=0.001</em>, <em>learning_enabled=True</em>, <em>optimizer_type=None</em>, <em>loss_spec=None</em>, <em>randomize=False</em>, <em>refresh_losses=False</em>, <em>name=&quot;autodiff_composition&quot;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> that trains models more quickly by integrating with PyTorch.</p>
+<dd><p>Subclass of <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> that trains models using <a class="reference external" href="https://pytorch.org">PyTorch</a>.
+See <a class="reference internal" href="Composition.html#composition-class-reference"><span class="std std-ref">Composition</span></a> for additional arguments and attributes.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -700,7 +723,7 @@ correspond to the <code class="xref any docutils literal"><span class="pre">EXEC
         <a href="Scheduling.html" class="btn btn-neutral float-right" title="Scheduling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="CompositionFunctionApproximator.html" class="btn btn-neutral float-left" title="CompositionFunctionApproximator" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="RegressionCFA.html" class="btn btn-neutral float-left" title="RegressionCFA" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
