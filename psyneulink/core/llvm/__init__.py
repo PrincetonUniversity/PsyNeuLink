@@ -54,12 +54,8 @@ class LLVMBinaryFunction:
         self.name = name
 
         self.__c_func = None
-        self.__c_func_type = None
-        self.__byref_arg_types = None
-
         self.__cuda_kernel = None
 
-    def _init_host_func_type(self):
         # Function signature
         f = _find_llvm_function(self.name, _compiled_modules)
 
@@ -68,7 +64,14 @@ class LLVMBinaryFunction:
         params = [_convert_llvm_ir_to_ctype(a.type) for a in f.args]
         self.__c_func_type = ctypes.CFUNCTYPE(return_type, *params)
 
-        self.__byref_arg_types = [p._type_ for p in params]
+        self.byref_arg_types = [p._type_ for p in params]
+
+    @property
+    def c_func(self):
+        if self.__c_func is None:
+            ptr = _cpu_engine._engine.get_function_address(self.name)
+            self.__c_func = self.__c_func_type(ptr)
+        return self.__c_func
 
     def __call__(self, *args, **kwargs):
         return self.c_func(*args, **kwargs)
@@ -77,25 +80,6 @@ class LLVMBinaryFunction:
         cpargs = (ctypes.byref(p) if p is not None else None for p in pargs)
         args = zip(cpargs, self.c_func.argtypes)
         self(*(ctypes.cast(p, t) for p, t in args))
-
-    @property
-    def byref_arg_types(self):
-        if self.__byref_arg_types is None:
-            self._init_host_func_type()
-        return self.__byref_arg_types
-
-    @property
-    def _c_func_type(self):
-        if self.__c_func_type is None:
-            self._init_host_func_type()
-        return self.__c_func_type
-
-    @property
-    def c_func(self):
-        if self.__c_func is None:
-            ptr = _cpu_engine._engine.get_function_address(self.name)
-            self.__c_func = self._c_func_type(ptr)
-        return self.__c_func
 
     @property
     def _cuda_kernel(self):
