@@ -776,9 +776,9 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         .. _COMBINE:
 
-        *COMBINE* : scalar or numpy array
-          linear combination of the `value <Mechanism_Base.value>` of all items of the TransferMechanism's `value
-          <Mechanism_Base.value>` (requires that they all have the same dimensionality).
+        *COMBINE* : 1d array
+          Element-wise (Hadamard) sum of all items of the TransferMechanism's `value <Mechanism_Base.value>`
+          (requires that they all have the same dimensionality).
 
     Returns
     -------
