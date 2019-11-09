@@ -523,11 +523,8 @@ class RecurrentTransferMechanism(TransferMechanism):
             `learning phase <System_Execution>` of a System's execution
 
     standard_output_ports : list[str]
-
-        the following `Standard OutputPorts <OutputPort_Standard>` are available to assign in addition to
-        those of a `TransferMechanism <TransferMechanism_Standard_OutputPorts>`:
-
-        .. _RecurrentTransferMechanism_Standard_OutputPorts:
+        list of `Standard OutputPorts <OutputPort_Standard>` that includes the following in addition to the
+        `standard_output_ports <TransferMechanism.standard_output_ports>` of a `TransferMechanism`:
 
         *ENERGY* : float
             the energy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,

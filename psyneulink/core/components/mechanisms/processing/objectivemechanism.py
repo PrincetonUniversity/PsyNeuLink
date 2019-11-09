@@ -487,11 +487,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         contains one item that is the value of the *OUTCOME* `OutputPort <ObjectiveMechanism_Output>`.
 
     standard_output_ports : list[str]
-
-        the following `Standard OutputPort <OutputPort_Standard>` is available to assign in addition to
-        those of a `Mechanism <Mechanism_Standard_OutputPorts>`:
-
-        .. _ObjectiveMechanism_Standard_OutputPorts:
+        list of `Standard OutputPort <OutputPort_Standard>` that includes the following in addition to
+        the `standard_output_ports <Mechanism_Base.standard_output_ports>` of a `Mechanism <Mechanism>`:
 
         .. _OBJECTIVE_MECHANISM_OUTCOME
 

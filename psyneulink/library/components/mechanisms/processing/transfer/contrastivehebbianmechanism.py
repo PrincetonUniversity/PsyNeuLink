@@ -85,8 +85,8 @@ respective phases of execution are terminated.  Other parameters can also be con
 *OututPorts*
 ~~~~~~~~~~~~
 
-The Mechanism is automatically assigned three of its five `Standard OutputPorts
-<ContrastiveHebbianMechanism_Standard_OutputPorts>`: *OUTPUT_ACTIVITY*, *CURRENT_ACTIVITY*,
+The Mechanism is automatically assigned three of its five `standard_output_ports
+<ContrastiveHebbianMechanism.standard_output_ports>`: *OUTPUT_ACTIVITY*, *CURRENT_ACTIVITY*,
 and *ACTIVITY_DIFFERENT* (see `below <ContrastiveHebbian_Output>`). Additional OutputPorts can be specified
 in the **additional_output_ports** argument of the constructor.
 
@@ -227,10 +227,10 @@ A ContrastiveHebbianMechanism is automatically assigned three `OutputPorts <Outp
   is assigned from the *ACTIVITY_DIFFERENCE* `OutputPort <ContrastiveHebbian_Output>` to the
   *ACTIVATION_INPUT* of the `learning_mechanism <ContrastiveHebbianMechanism.learning_mechanism>`.
 
-These also appear in the ContrastiveHebbianMechanism's `Standard OutputPorts
-<ContrastiveHebbianMechanism_Standard_OutputPorts>`, along with two others -- *MINUS_PHASE_ACTIVITY* and
-*PLUS_PHASE_ACTIVITY* -- that it can be assigned, as well as those of a `RecurrentTransferMechanism
-<RecurrentTransferMechanism_Standard_OutputPorts>` or `TransferMechanism <TransferMechanism_Standard_OutputPorts>`.
+These also appear in the ContrastiveHebbianMechanism's `standard_output_ports
+<ContrastiveHebbianMechanism.standard_output_ports>`, along with two others -- *MINUS_PHASE_ACTIVITY* and
+*PLUS_PHASE_ACTIVITY* -- that it can be assigned, in addition to the `standard_output_ports
+<RecurrentTransferMechanism.standard_output_ports>` of a `RecurrentTransferMechanism`.
 
 
 .. _ContrastiveHebbian_Execution:
@@ -338,7 +338,6 @@ from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear, get_matrix
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
-from psyneulink.core.components.ports.outputport import PRIMARY, StandardOutputPorts
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     CONTRASTIVE_HEBBIAN_MECHANISM, COUNT, FUNCTION, HARD_CLAMP, HOLLOW_MATRIX, MAX_ABS_DIFF, NAME, \
@@ -681,11 +680,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
           <ContrastiveHebbian_Execution>`.
 
     standard_output_ports : list[str]
-
-        the following `Standard OutputPorts <OutputPort_Standard>` are available to assign in addition to
-        those of a `TransferMechanism <TransferMechanism_Standard_OutputPorts>`:
-
-        .. _ContrastiveHebbianMechanism_Standard_OutputPorts:
+        list of `Standard OutputPorts <OutputPort_Standard>` that includes the following in addition to the
+        `standard_output_ports <RecurrentTransferMechanism.standard_output_ports>` of a `RecurrentTransferMechanism`:
 
         .. _OUTPUT_ACTIVITY:
 

@@ -149,9 +149,9 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.ports.inputport import InputPort
-from psyneulink.core.components.ports.outputport import OutputPort, PRIMARY, StandardOutputPorts
+from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.port import _parse_port_spec
-from psyneulink.core.globals.context import Context, ContextFlags
+from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import COMPARATOR_MECHANISM, FUNCTION, INPUT_PORTS, NAME, OUTCOME, SAMPLE, TARGET, VARIABLE, PREFERENCE_SET_NAME, MSE, SSE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
@@ -239,11 +239,8 @@ class ComparatorMechanism(ObjectiveMechanism):
         contains one item that is the value of the *OUTCOME* OutputPort.
 
     standard_output_ports : list[str]
-
-        the following `Standard OutputPorts <OutputPort_Standard>` are available to assign in addition to
-        those of an `ObjectiveMechanism <ObjectiveMechanism_Standard_OutputPorts>`:
-
-        .. _ComparatorMechanism_Standard_OutputPorts:
+        list of `Standard OutputPorts <OutputPort_Standard>` that includes the following in addition to the
+        `standard_output_ports <ObjectiveMechanism.standard_output_ports>` of an `ObjectiveMechanism`:
 
         .. _COMPARATOR_MECHANISM_SSE
 

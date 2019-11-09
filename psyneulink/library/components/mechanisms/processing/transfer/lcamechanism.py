@@ -81,7 +81,7 @@ with a `matrix <LCAMechanism.matrix>` in which the diagonal consists of uniform 
 **self_excitation** and the off-diagonal consists of uniform weights specified by the *negative* of the
 **competition** argument.
 
-.. _LCAMechanism_Integrator_Mode
+.. _LCAMechanism_Integrator_Mode:
 
 *Integration*
 ~~~~~~~~~~~~~
@@ -155,25 +155,21 @@ Function by default (in place of the `AdaptiveIntegrator` used as the default by
 <LCAMechanism.competition>` off diagonal.
 
 Like any RecurrentTransferMechanism, by default an LCAMechanism has a single `primary OutputPort <OutputPort_Primary>`
-named *RESULT* that contains the Mechanism's current `value <Mechanism_Base.value>`.  The `StandardOutputPorts
-<OutputPort_Standard>` of a `RecurrentTransferMechanism <RecurrentTransferMechanism_Standard_OutputPorts>`,
-are also available for assignment, as well as two additional ones:
-
-    - `MAX_VS_NEXT <LCAMechanism_MAX_VS_NEXT_OUTPUT_PORT>`
-
-    - `MAX_VS_AVG <LCAMechanism_MAX_VS_AVG_OUTPUT_PORT>`
+named *RESULT* that contains the Mechanism's current `value <Mechanism_Base.value>`.  It also has two
+`StandardOutputPorts <OutputPort_Standard>` in its `standard_output_ports <LCAMechanism.standard_output_ports>`
+attribute -- *MAX_VS_NEXT* and *MAX_VS_AVG* that are available for assignment, in addition to the
+`standard_output_ports <RecurrentTransferMechanism.standard_output_ports>` of a `RecurrentTransferMechanism`:
 
 COMMENT:
-The two elements of the `MAX_VS_NEXT <LCAMechanism_MAX_VS_NEXT_OUTPUT_PORT>` OutputPort contain, respectively, the
-index of the LCAMechanism element with the greatest value, and the difference between its value and the next highest
-one. `MAX_VS_AVG <LCAMechanism_MAX_VS_AVG_OUTPUT_PORT>` contains the index of the LCAMechanism element with the
-greatest value, and the difference between its  value and the average of all the others.
+The two elements of the **MAX_VS_NEXT** OutputPort contain, respectively, the index of the LCAMechanism element with
+the greatest value, and the difference between its value and the next highest one. **MAX_VS_AVG** OutputPort contains
+the index of the LCAMechanism element with the greatest value, and the difference between its  value and the average
+of all the others.
 COMMENT
-The `value <OutputPort.value>` of the `MAX_VS_NEXT <LCAMechanism_MAX_VS_NEXT_OUTPUT_PORT>` OutputPort contains the
-difference between the two elements of the LCAMechanism’s `value <Mechanism_Base.value>` with the highest values, and
-the `value <OutputPort.value>` of the `MAX_VS_AVG <LCAMechanism_MAX_VS_AVG_OUTPUT_PORT>` OutputPort contains the
-difference between the element with the highest value and the average of all the others (see `above
-<LCAMechanism_DDM_APPROXIMATION>` for their relationship to the output of a `DDM` Mechanism).
+The `value <OutputPort.value>` of the *MAX_VS_NEXT* OutputPort contains the difference between the two elements of
+the LCAMechanism’s `value <Mechanism_Base.value>` with the highest values, and the `value <OutputPort.value>` of the
+*MAX_VS_AVG* OutputPort contains the difference between the element with the highest value and the average of all
+the others (see `above <LCAMechanism_DDM_APPROXIMATION>` for their relationship to the output of a `DDM` Mechanism).
 
 .. _LCAMechanism_Execution:
 
@@ -203,7 +199,6 @@ from psyneulink.core.components.functions.objectivefunctions import Distance, MA
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import LeakyCompetingIntegrator
 from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
-from psyneulink.core.components.ports.outputport import PRIMARY, StandardOutputPorts
 from psyneulink.core.globals.keywords import \
     BETA, CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, INITIALIZER, LCA_MECHANISM, LESS_THAN_OR_EQUAL, NAME, NOISE, \
     RATE, RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, TIME_STEP_SIZE, VALUE
@@ -213,7 +208,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferMechanism
 
-__all__ = ['LCAMechanism', 'LCAMechanism_OUTPUT', 'LCAError', 'CONVERGENCE']
+__all__ = ['LCAMechanism', 'LCAError', 'CONVERGENCE']
 
 
 logger = logging.getLogger(__name__)
@@ -226,30 +221,6 @@ class LCAError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-
-# This is a convenience class that provides list of standard_output_port names in IDE
-class LCAMechanism_OUTPUT():
-        """
-            .. _LCAMechanism_Standard_OutputPorts:
-
-            An LCAMechanism has the following `Standard OutputPorts <OutputPort_Standard>` in addition to those of a
-            `RecurrentTransferMechanism <RecurrentTransferMechanism_Standard_OutputPorts>`:
-
-            .. _LCAMechanism_MAX_VS_NEXT_OUTPUT_PORT:
-
-            *MAX_VS_NEXT* : float
-                the difference between the two elements of the LCAMechanism's `value <Mechanism_Base.value>`
-                with the highest values.
-
-            .. _LCAMechanism_MAX_VS_AVG_OUTPUT_PORT:
-
-            *MAX_VS_AVG* : float
-                the difference between the element of the LCAMechanism's `value <Mechanism_Base.value>`
-                and the average of all of the other elements.
-
-        """
-        MAX_VS_NEXT=MAX_VS_NEXT
-        MAX_VS_AVG=MAX_VS_AVG
 
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
@@ -329,6 +300,23 @@ class LCAMechanism(RecurrentTransferMechanism):
     time_step_size : float
         parameter of the `LeakyCompetingIntegrator` Function that determines the timing precision of the integration
         process it implements, and used to scale its `noise <LeakyCompetingIntegrator.noise>` parameter appropriately.
+
+    standard_output_ports : list[str]
+        list of `Standard OutputPorts <OutputPort_Standard>` that includes the following in addition to the
+        `standard_output_ports <RecurrentTransferMechanism.standard_output_ports>` of a `RecurrentTransferMechanism`:
+
+        .. _MAX_VS_NEXT:
+
+        *MAX_VS_NEXT* : float
+            the difference between the two elements of the LCAMechanism's `value <Mechanism_Base.value>`
+            with the highest values.
+
+        .. _MAX_VS_AVG:
+
+        *MAX_VS_AVG* : float
+            the difference between the element of the LCAMechanism's `value <Mechanism_Base.value>`
+            and the average of all of the other elements.
+
 
     Returns
     -------
