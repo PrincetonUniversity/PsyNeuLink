@@ -115,10 +115,11 @@ When the path integration function is selected, the mechanism carries out step-w
 execution of the mechanism computes one step. (see `DDM_Modes` and `DDM_Execution` for additional details).
 
 The `value <DDM.value>` of the DDM Mechanism may have up to ten items. The first two of these are always assigned, and
-are represented by the DDM Mechanism's two default `output_ports <DDM.output_ports>`: `DECISION_VARIABLE
-<DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`.  Other `output_ports <DDM.output_ports>` may be
-automatically assigned, depending on the `function <DDM.function>` that has been assigned to the DDM, as shown in the
-table below:
+are represented by the DDM Mechanism's two default `OutputPorts``: `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and
+`RESPONSE_TIME <DDM_RESPONSE_TIME>`.  Other `output_ports <DDM.output_ports>` may be automatically assigned,
+depending on the `function <DDM.function>` that has been assigned to the DDM, as shown in the table below:
+
+.. _DDM_Default_OutputPorts:
 
 +------------------------------------+---------------------------------------------------------+
 |                                    |                     **Function**                        |
@@ -162,13 +163,15 @@ table below:
 
 .. _DDM_Custom_OutputPorts:
 
-The `output_ports <DDM.output_ports>` assigned to a DDM can be customized by specifying a list of the desired DDM
-`Standard OutputPorts <DDM_Standard_OutputPorts>` in the **output_ports** argument of its constructor, or the
-*OUTPUT_PORTS* entry of an `OutputPort specification dictionary <OutputPort_Specification_Dictionary>`.  This can
-include two additional `Standard OutputPorts <DDM_Standard_OutputPorts>` for the DDM - `DECISION_VARIABLE_ARRAY
-<DDM_OUTPUT.DDM_DECISION_VARIABLE_ARRAY>` and `SELECTED_INPUT_ARRAY <DDM_OUTPUT.DDM_SELECTED_INPUT_ARRAY>`,
-that are available  if the *ARRAY* option is specified in its **input_format** argument (see `DDM_Input`).  As with
-any Mechanism, `customized OutputPorts <OutputPort_Customization>` can also be created and assigned.
+The `output_ports <DDM.output_ports>` assigned to a DDM can explicilty determined by specifying ones from the list
+of `Standard OutputPorts <DDM_Standard_OutputPorts>` in the **output_ports** argument of its constructor, or the
+*OUTPUT_PORTS* entry of an `OutputPort specification dictionary <OutputPort_Specification_Dictionary>`.  This
+can include any of the OutputPorts `listed above `DDM_Default_OutputPorts`, as well as two additional ones --
+-- `DECISION_VARIABLE_ARRAY <DDM_OUTPUT.DDM_DECISION_VARIABLE_ARRAY>` and `SELECTED_INPUT_ARRAY
+<DDM_OUTPUT.DDM_SELECTED_INPUT_ARRAY>` -- that are available if the *ARRAY* option is specified in its
+**input_format** argument (see `DDM_Input`).  All of these `Standard OutputPorts <DDM_Standard_OutputPorts>`
+are listed in the DDM's `standard_output_ports <DDM.standard_output_ports>` attribute. As with any Mechanism,
+`customized OutputPorts <OutputPort_Customization>` can also be created and assigned.
 
 .. _DDM_Modes:
 
