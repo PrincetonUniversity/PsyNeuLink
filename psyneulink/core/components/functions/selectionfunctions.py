@@ -423,7 +423,7 @@ class OneHot(SelectionFunction):
 
         elif self.mode is MAX_ABS_VAL:
             max_value = np.max(np.absolute(variable))
-            result = np.where(variable == max_value, max_value, 0)
+            result = np.where(np.absolute(variable)==max_value, variable, 0)
 
         elif self.mode is MAX_INDICATOR:
             max_value = np.max(variable)
@@ -431,7 +431,7 @@ class OneHot(SelectionFunction):
 
         elif self.mode is MAX_ABS_INDICATOR:
             max_value = np.max(np.absolute(variable))
-            result = np.where(variable == max_value, 1, 0)
+            result = np.where(np.absolute(variable) == max_value, 1, 0)
 
         if self.mode is MIN_VAL:
             min_value = np.min(variable)
@@ -439,7 +439,7 @@ class OneHot(SelectionFunction):
 
         elif self.mode is MIN_ABS_VAL:
             min_value = np.min(np.absolute(variable))
-            result = np.where(variable == min_value, min_value, 0)
+            result = np.where(np.absolute(variable) == min_value, variable, 0)
 
         elif self.mode is MIN_INDICATOR:
             min_value = np.min(variable)
@@ -447,7 +447,7 @@ class OneHot(SelectionFunction):
 
         elif self.mode is MIN_ABS_INDICATOR:
             min_value = np.min(np.absolute(variable))
-            result = np.where(variable == min_value, 1, 0)
+            result = np.where(np.absolute(variable) == min_value, 1, 0)
 
         elif self.mode in {PROB, PROB_INDICATOR}:
             # 1st item of variable should be data, and 2nd a probability distribution for choosing

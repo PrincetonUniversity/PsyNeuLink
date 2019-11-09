@@ -2023,6 +2023,11 @@ class TestOutputPorts:
         print("Number of output ports: ", len(T.output_ports))
         print(T.output_ports)
 
+    def test_combine_standard_output_port(self):
+        T = TransferMechanism(default_variable=[[0,0,0],[0,0,0]], output_ports=[COMBINE])
+        T.execute([[1,2,1],[5,0,4]])
+        assert np.allclose(T.output_ports[0].value, [6,2,5])
+
         # assert len(T.input_ports) == 4
         # assert len(T.output_ports) == 4
         #

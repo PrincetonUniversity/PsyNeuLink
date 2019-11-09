@@ -264,10 +264,10 @@ class ProcessingMechanism(ProcessingMechanism_Base):
        variance of the elements.
 
      *MAX_VAL* : float
-       maximum value among the elements.
+       element with the greatest value is assigned its value, all others are assigned 0.
 
      *MAX_ABS_VAL* : float
-       absolute value of *MAX_VAL*.
+       element with the greatest absolute value is assigned its value, all others are assigned 0.
 
      *MAX_INDICATOR* : 1d array
        element with the greatest value is assigned 1, all others are assigned 0.
@@ -276,7 +276,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
        element with the greatest absolute value is assigned 1, all others are assigned 0.
 
      *PROB* : float
-       probability of the element chosen probabilistically based on softmax distribution, all others are assigned 0.
+       element chosen probabilistically based on softmax distribution is assigned its value, all others are assigned 0.
 
     """
 
