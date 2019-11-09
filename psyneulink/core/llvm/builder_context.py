@@ -53,7 +53,7 @@ _builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'printf'))
 
 class LLVMBuilderContext:
     __global_context = None
-    uniq_counter:int = 0
+    __uniq_counter:int = 0
     _llvm_generation:int = 0
     int32_ty = ir.IntType(32)
     float_ty = ir.DoubleType()
@@ -86,10 +86,11 @@ class LLVMBuilderContext:
             cls.__global_context = LLVMBuilderContext()
         return cls.__global_context
 
-    def get_unique_name(self, name: str):
-        LLVMBuilderContext.uniq_counter += 1
+    @classmethod
+    def get_unique_name(cls, name: str):
+        cls.__uniq_counter += 1
         name = re.sub(r"[- ()\[\]]", "_", name)
-        return name + '_' + str(LLVMBuilderContext.uniq_counter)
+        return name + '_' + str(cls.__uniq_counter)
 
     def get_builtin(self, name: str, args=[], function_type=None):
         if name in _builtin_intrinsics:
