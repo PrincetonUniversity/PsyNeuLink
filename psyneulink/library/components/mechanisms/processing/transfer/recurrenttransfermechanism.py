@@ -251,29 +251,6 @@ class RecurrentTransferError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-# # This is a convenience class that provides list of standard_output_port names in IDE
-# class RECURRENT_OUTPUT(TRANSFER_OUTPUT):
-#     """
-#         .. _RecurrentTransferMechanism_Standard_OutputPorts:
-#
-#         A RecurrentTransferMechanism has the following `Standard OutputPorts <OutputPort_Standard>` in addition to
-#         those of a `TransferMechanism <TransferMechanism_Standard_OutputPorts>`:
-#
-#         .. _RecurrentTransferMechanism_Standard_OutputPorts:
-#
-#         *ENERGY* : float
-#             the energy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,
-#             calculated using the `Stability` Function using the `ENERGY` metric.
-#
-#         .. _LCAMechanism_ENTROPY:
-#
-#         *ENTROPY* : float
-#             the entropy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,
-#             calculated using the `Stability` Function using the `ENTROPY <CROSS_ENTROPY>` metric.
-#
-#         """
-#     ENERGY=ENERGY_OUTPUT_PORT_NAME
-#     ENTROPY=ENTROPY_OUTPUT_PORT_NAME
 
 def _recurrent_transfer_mechanism_matrix_getter(owning_component=None, context=None):
     from psyneulink.library.components.projections.pathway.autoassociativeprojection import get_auto_matrix, get_hetero_matrix
