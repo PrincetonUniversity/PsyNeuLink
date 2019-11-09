@@ -351,9 +351,9 @@ from psyneulink.library.components.mechanisms.processing.transfer.recurrenttrans
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
 __all__ = [
-    'ContrastiveHebbianError', 'ContrastiveHebbianMechanism', 'CONTRASTIVE_HEBBIAN_OUTPUT',
     'ACTIVITY_DIFFERENCE', 'CURRENT_ACTIVITY', 'SIMPLE_HEBBIAN', 'INPUT',
-    'MINUS_PHASE_ACTIVITY_ATTR', 'MINUS_PHASE_ACTIVITY', 'PLUS_PHASE_ACTIVITY_ATTR', 'PLUS_PHASE_ACTIVITY'
+    'MINUS_PHASE_ACTIVITY', 'PLUS_PHASE_ACTIVITY', 'OUTPUT_ACTIVITY',
+    'ContrastiveHebbianError', 'ContrastiveHebbianMechanism',
 ]
 
 INPUT = 'INPUT'
@@ -365,20 +365,20 @@ SEPARATED = 'separated'
 
 SIMPLE_HEBBIAN = 'SIMPLE_HEBBIAN'
 
-INPUT_INDEX = 0
-RECURRENT_INDEX = 1
-TARGET_INDEX = 2
+OUTPUT_ACTIVITY = 'OUTPUT_ACTIVITY'
+CURRENT_ACTIVITY = 'CURRENT_ACTIVITY'
+ACTIVITY_DIFFERENCE = 'ACTIVITY_DIFFERENCE'
+MINUS_PHASE_ACTIVITY = 'MINUS_PHASE_ACTIVITY'
+PLUS_PHASE_ACTIVITY = 'PLUS_PHASE_ACTIVITY'
 
 OUTPUT_ACTIVITY_ATTR = 'output_activity'
 CURRENT_ACTIVITY_ATTR = 'current_activity'
 MINUS_PHASE_ACTIVITY_ATTR = 'minus_phase_activity'
 PLUS_PHASE_ACTIVITY_ATTR = 'plus_phase_activity'
 
-OUTPUT_ACTIVITY = 'OUTPUT_ACTIVITY'
-CURRENT_ACTIVITY = 'CURRENT_ACTIVITY'
-ACTIVITY_DIFFERENCE = 'ACTIVITY_DIFFERENCE'
-MINUS_PHASE_ACTIVITY = 'MINUS_PHASE_ACTIVITY'
-PLUS_PHASE_ACTIVITY = 'PLUS_PHASE_ACTIVITY'
+INPUT_INDEX = 0
+RECURRENT_INDEX = 1
+TARGET_INDEX = 2
 
 MINUS_PHASE = False
 PLUS_PHASE  = True
@@ -390,53 +390,6 @@ class ContrastiveHebbianError(Exception):
 
     def __str__(self):
         return repr(self.error_value)
-
-# This is a convenience class that provides list of standard_output_port names in IDE
-class CONTRASTIVE_HEBBIAN_OUTPUT():
-    """
-        .. _ContrastiveHebbianMechanism_Standard_OutputPorts:
-
-        A ContrastiveHebbianMechanism has the following `Standard OutputPorts <OutputPort_Standard>` in addition to
-        those of a `RecurruentTransferMechanism <RecurrentTransferMechanism_Standard_OutputPorts>`:
-
-        .. _OUTPUT_ACTIVITY:
-
-        *OUTPUT_ACTIVITY* : 1d np.array
-            array with activity of the `target_field <ContrastiveHebbian_Fields>` of `current_activity
-            <ContrastiveHebbianMechanism.current_activity>` if a *TARGET* `InputPort is specified
-            <ContrastiveHebbian_Input>`;  otherwise, has activity of the `input_field <ContrastiveHebbian_Fields>` of
-            `current_activity <ContrastiveHebbianMechanism.current_activity>`.
-
-        .. _CURRENT_ACTIVITY:
-
-        *CURRENT_ACTIVITY* : 1d np.array
-            array with `current_activity <ContrastiveHebbianMechanism.current_activity>`.
-
-        .. _ACTIVITY_DIFFERENCE:
-
-        *ACTIVITY_DIFFERENCE* : 1d np.array
-            array of element-wise differences between `plus_phase_activity
-            <ContrastiveHebbianMechanism.plus_phase_activity>` and `minus_phase_activity
-            <ContrastiveHebbianMechanism.minus_phase_activity>`.
-
-        .. _MINUS_PHASE_ACTIVITY:
-
-        *MINUS_PHASE_ACTIVITY* : 1d np.array
-            array `minus_phase_activity <ContrastiveHebbianMechanism.minus_phase_activity>`
-            (i.e., activity at the end of the `minus phase of execution <ContrastiveHebbian_Minus_Phase>`.
-
-        .. _PLUS_PHASE_ACTIVITY:
-
-        *PLUS_PHASE_ACTIVITY* : 1d np.array
-            array `plus_phase_activity <ContrastiveHebbianMechanism.plus_phase_activity>`
-            (i.e., activity at the end of the `plus phase of execution <ContrastiveHebbian_Plus_Phase>`.
-
-
-        """
-    CURRENT_ACTIVITY=CURRENT_ACTIVITY
-    ACTIVITY_DIFFERENCE=ACTIVITY_DIFFERENCE
-    MINUS_PHASE_ACTIVITY=MINUS_PHASE_ACTIVITY
-    PLUS_PHASE_ACTIVITY=PLUS_PHASE_ACTIVITY
 
 
 def _CHM_output_activity_getter(owning_component=None, context=None):
