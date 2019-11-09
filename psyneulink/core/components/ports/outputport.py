@@ -1365,12 +1365,8 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
                 if output_port.initialization_status == ContextFlags.DEFERRED_INIT:
                     try:
                         output_port_value = OutputPort._get_port_function_value(owner,
-                                                                                  # MODIFIED 9/22/19 OLD:
-                                                                                  # output_port.function,
-                                                                                  # MODIFIED 9/22/19 NEW: [JDC]
-                                                                                  output_port._init_args[FUNCTION],
-                                                                                  # MODIFIED 9/22/19 END
-                                                                                  output_port._init_args[VARIABLE])
+                                                                                output_port._init_args[FUNCTION],
+                                                                                output_port._init_args[VARIABLE])
                     # For backward compatibility with INDEX and ASSIGN
                     except AttributeError:
                         index = output_port.index

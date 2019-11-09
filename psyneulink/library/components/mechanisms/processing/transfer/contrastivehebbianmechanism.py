@@ -140,7 +140,7 @@ A ContrastiveHebbianMechanism always has two, and possibly three `InputPorts <In
     ..
     * *TARGET:* only implemented if **target_size** is specified, **separated = `True` (default), and
       mode is not `SIMPLE_HEBBIAN <ContrastiveHebbian_SIMPLE_HEBBIAN>`;  receives the `target <Run.target>`
-      specified in the `run <System.run>` method of any `System` to which the Mechanism belongs.
+      specified in the `run <System.run>` method of any `Composition` to which the Mechanism belongs.
 
 The sizes of these are determined by arguments in its constructor, which generally conform to one of two
 configurations.
@@ -441,8 +441,10 @@ class CONTRASTIVE_HEBBIAN_OUTPUT():
 
 def _CHM_output_activity_getter(owning_component=None, context=None):
     current_activity = owning_component.parameters.current_activity._get(context)
-    return current_activity[owning_component.target_start:owning_component.target_end]
-
+    if owning_component.target_size:
+        return current_activity[owning_component.target_start:owning_component.target_end]
+    else:
+        return current_activity[:owning_component.input_size]
 
 def _CHM_input_activity_getter(owning_component=None, context=None):
     current_activity = owning_component.parameters.current_activity._get(context)
