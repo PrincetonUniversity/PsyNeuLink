@@ -582,6 +582,10 @@ class ModulatorySignal(OutputPort):
             if PROJECTIONS in kwargs:
                 modulates = kwargs.pop(PROJECTIONS, modulates)
 
+        if params is not None:
+            if PROJECTIONS in params:
+                modulates = params.pop(PROJECTIONS, modulates)
+
         # Deferred initialization
         # if self.initialization_status & (ContextFlags.DEFERRED_INIT | ContextFlags.INITIALIZING):
         if self.initialization_status & ContextFlags.DEFERRED_INIT:
@@ -596,6 +600,9 @@ class ModulatorySignal(OutputPort):
             # Assign args to params and functionParams dicts
             params = self._assign_args_to_param_dicts(params=params,
                                                       modulation=modulation)
+
+        if modulates is not None and not isinstance(modulates, list):
+            modulates = [modulates]
 
         super().__init__(owner=owner,
                          reference_value=reference_value,

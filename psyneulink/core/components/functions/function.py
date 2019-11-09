@@ -224,17 +224,7 @@ def get_param_value_for_keyword(owner, keyword):
 
     """
     try:
-        function_val = owner.params[FUNCTION]
-        if function_val is None:
-            # paramsCurrent will go directly to an attribute value first before
-            # returning what's actually in its dictionary, so fall back
-            try:
-                keyval = owner.params.data[FUNCTION].keyword(owner, keyword)
-            except KeyError:
-                keyval = None
-        else:
-            keyval = function_val.keyword(owner, keyword)
-        return keyval
+        return owner.function.keyword(owner, keyword)
     except FunctionError as e:
         # assert(False)
         # prefs is not always created when this is called, so check
@@ -264,7 +254,7 @@ def get_param_value_for_keyword(owner, keyword):
 
 def get_param_value_for_function(owner, function):
     try:
-        return owner.paramsCurrent[FUNCTION].param_function(owner, function)
+        return owner.function.param_function(owner, function)
     except FunctionError as e:
         if owner.prefs.verbosePref:
             print("{} of {}".format(e, owner.name))
@@ -368,7 +358,6 @@ class Function_Base(Function):
             + componentName (str):   assigned by subclasses
             + variable (value) - used as input to function's execute method
             + paramInstanceDefaults (dict) - defaults for instance (created and validated in Components init)
-            + paramsCurrent (dict) - set currently in effect
             + value (value) - output of execute method
             + name (str) - if not specified as an arg, a default based on the class is assigned in register_category
             + prefs (PreferenceSet) - if not specified as an arg, default is created by copying BasePreferenceSet
@@ -836,12 +825,6 @@ class ArgumentTherapy(Function_Base):
                                                   pertinacity=pertincacity,
                                                   params=params)
 
-        # This validates variable and/or params_list if assigned (using _validate_params method below),
-        #    and assigns them to paramsCurrent and paramInstanceDefaults;
-        #    otherwise, assigns paramClassDefaults to paramsCurrent and paramInstanceDefaults
-        # NOTES:
-        #    * paramsCurrent can be changed by including params in call to function
-        #    * paramInstanceDefaults can be changed by calling assign_default
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,

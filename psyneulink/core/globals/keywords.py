@@ -88,7 +88,7 @@ __all__ = [
     'OVERRIDE', 'OVERRIDE_PARAM', 'OVERWRITE',
     'OWNER', 'OWNER_EXECUTION_COUNT', 'OWNER_EXECUTION_TIME', 'OWNER_VALUE', 'OWNER_VARIABLE',
     'PARAM_CLASS_DEFAULTS', 'PARAM_INSTANCE_DEFAULTS', 'PARAMETER_PORT', 'PARAMETER_PORT_PARAMS',
-    'PARAMETER_PORTS', 'PARAMS', 'PARAMS_DICT', 'PARAMS_CURRENT', 'PATHWAY', 'PATHWAY_PROJECTION', 'PEARSON',
+    'PARAMETER_PORTS', 'PARAMS', 'PARAMS_DICT', 'PATHWAY', 'PATHWAY_PROJECTION', 'PEARSON',
     'PREDICTION_MECHANISM', 'PREDICTION_MECHANISMS', 'PREDICTION_MECHANISM_OUTPUT', 'PREDICTION_MECHANISM_PARAMS',
     'PREDICTION_MECHANISM_TYPE', 'PREFS_ARG', 'PREF_BASE_VALUE', 'PREF_CURRENT_VALUE', 'PREFERENCE_SET',
     'PREFERENCE_SET_NAME', 'PREF_LEVEL', 'PREFS', 'PREFS_OWNER', 'PREVIOUS_VALUE', 'PRIMARY', 'PROB', 'PROB_INDICATOR',
@@ -513,10 +513,7 @@ FUNCTION_PARAMS  = "function_params" # Parameters used to instantiate or assign 
 
 PARAM_CLASS_DEFAULTS = "paramClassDefaults"        # "Factory" default params for a Function
 PARAM_INSTANCE_DEFAULTS = "paramInstanceDefaults" # Parameters used to instantiate a Function; supercede paramClassDefaults
-PARAMS_CURRENT = "paramsCurrent"                  # Parameters currently in effect for an instance of a Function
-                                                   #    in general, this includes params specifed as arg in a
-                                                   #    to Function.execute;  however, there are some exceptions
-                                                   #    in which those are kept separate from paramsCurrent (see DDM)
+
 FUNCTION_CHECK_ARGS = 'super._check_args' # Use for "context" arg
 FUNCTION_OUTPUT_TYPE_CONVERSION = "enable_output_type_conversion"  # Used in Function Components to set output type
 

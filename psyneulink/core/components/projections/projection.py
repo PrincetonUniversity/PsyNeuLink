@@ -646,7 +646,7 @@ class Projection_Base(Projection):
                 receiver = <Mechanism>.input_port
             ControlProjection:
                 sender = <Mechanism>.output_port
-                receiver = <Mechanism>.paramsCurrent[<param>] IF AND ONLY IF there is a single one
+                receiver = <Mechanism>.<param> IF AND ONLY IF there is a single one
                             that is a ParameterPort;  otherwise, an exception is raised
         * _instantiate_sender, _instantiate_receiver must be called before _instantiate_function:
             - _validate_params must be called before _instantiate_sender, as it validates PROJECTION_SENDER
@@ -913,7 +913,7 @@ class Projection_Base(Projection):
             port._update(context=context, params=runtime_params)
 
             # Assign version of ParameterPort.value matched to type of template
-            #    to runtime param or paramsCurrent (per above)
+            #    to runtime param
             # FYI (7/18/17 CW) : in addition to the params and attribute being set, the port's variable is ALSO being
             # set by the statement below. For example, if port_Name is 'matrix', the statement below sets
             # params['matrix'] to port.value, calls setattr(port.owner, 'matrix', port.value), which sets the
@@ -984,13 +984,6 @@ class Projection_Base(Projection):
     def parameter_ports(self):
         """Read-only access to _parameter_ports"""
         return self._parameter_ports
-
-    @parameter_ports.setter
-    def parameter_ports(self, value):
-        # IMPLEMENTATION NOTE:
-        # This keeps parameter_ports property readonly,
-        #    but averts exception when setting paramsCurrent in Component (around line 850)
-        pass
 
     # Provide invocation wrapper
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):

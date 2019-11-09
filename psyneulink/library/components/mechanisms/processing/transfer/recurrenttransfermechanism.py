@@ -872,7 +872,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             raise RecurrentTransferError("Matrix parameter ({}) for {} failed to produce a suitable matrix: "
                                          "if the matrix parameter does not produce a suitable matrix, the "
                                          "'auto' and 'hetero' parameters must be specified; currently, either"
-                                         "auto or hetero parameter is missing.".format(self.params[MATRIX], self))
+                                         "auto or hetero parameter is missing.".format(self.matrix, self))
 
         if AUTO not in param_keys and HETERO in param_keys:
             d = np.diagonal(matrix).copy()

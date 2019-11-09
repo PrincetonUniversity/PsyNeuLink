@@ -1165,7 +1165,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         super()._instantiate_attributes_before_function(function=function, context=context)
 
         if self.initial_value is None:
-            self.initial_value = self.defaults.variable
+            self.parameters.initial_value._set(self.defaults.variable, context)
 
     def _instantiate_integrator_function(self, variable, noise, initializer,  rate,
                                          context):

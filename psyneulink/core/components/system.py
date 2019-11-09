@@ -1075,7 +1075,7 @@ class System(System_Base):
 # FIX: AUGMENT LinearMatrix TO USE FULL_CONNECTIVITY_MATRIX IF len(sender) != len(receiver)
         """Instantiate processes of System
 
-        Use self.processes (populated by self.paramsCurrent[PROCESSES] in Function._assign_args_to_param_dicts
+        Use self.processes (populated by self.processes in Function._assign_args_to_param_dicts
         If self.processes is empty, instantiate default process by calling process()
         Iterate through self.processes, instantiating each (including the input to each input projection)
         If input is specified, check that it's length equals the number of processes
@@ -1227,7 +1227,7 @@ class System(System_Base):
             pass
 
         # # Instantiate processList using process_tuples, and point self.processes to it
-        # # Note: this also points self.params[PROCESSES] to self.processes
+        # # Note: this also points self.processes to self.processes
         self.process_tuples = processes_spec
         self._processList = ProcessList(self, self.process_tuples)
         self.processes = self._processList.processes

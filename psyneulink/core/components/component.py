@@ -489,7 +489,7 @@ from psyneulink.core.globals.keywords import \
     LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MAX_EXECUTIONS_BEFORE_FINISHED, \
     MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_PARAMETER_SOURCE, \
     MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
-    MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, PARAMS, PARAMS_CURRENT, PREFS_ARG, \
+    MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, PARAMS, PREFS_ARG, \
     REINITIALIZE_WHEN, SIZE, USER_PARAMS, VALUE, VARIABLE
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase, copy_parameter_value
@@ -701,9 +701,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         The default variableList is a list of default values, one for each of the variables defined in the child class
         The params argument is a dictionary; the key for each entry is the parameter name, associated with its value.
             + Component subclasses can define the param FUNCTION:<method or Function class>
-        The Component can be called with a params argument, which should contain entries for one or more of its params;
-            - those values will be assigned to paramsCurrent at run time (overriding previous values in paramsCurrent)
-            - if the Component is called without a variable and/or params argument, it uses paramInstanceDefaults
         The instance defaults can be assigned at initialization or using the _instantiate_defaults class method;
             - if instance defaults are not assigned on initialization, the corresponding class defaults are assigned
         Parameters can be REQUIRED to be in paramClassDefaults (for which there is no default value to assign)
@@ -1189,22 +1186,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         self._runtime_params_reset = {}
 
-        # KDM 9/9/19: this exists to deal with all the attribute setting in self.paramsCurrent - if not set
-        # these will be included in logs as COMMAND_LINE settings. Remove this when self.paramsCurrent is removed
+        # KDM 11/12/19: this exists to deal with currently unknown attribute
+        # setting - if not set these will be included in logs as COMMAND_LINE
+        # settings. Remove this eventually
         self.most_recent_context = context
-
-        # KDM: this is a poorly implemented hack that stops the .update call from
-        # starting off a chain of assignment/validation calls that ends up
-        # calling _instantiate_attributes_before_function and so attempting to create
-        # ParameterPorts twice in some cases
-        self.paramsCurrent = {}
-        orig_validation_pref = self.paramValidationPref
-        self.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
-        self.paramsCurrent.update(self.paramInstanceDefaults)
-        self.paramValidationPref = orig_validation_pref
-
-        # VALIDATE FUNCTION (self.function and/or self.params[function, FUNCTION_PARAMS])
-        self._validate_function(function=function)
 
         # INSTANTIATE ATTRIBUTES BEFORE FUNCTION
         # Stub for methods that need to be executed before instantiating function
@@ -1217,9 +1202,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         #    - assign initial function parameter values from ParameterPorts,
         #    - assign function's output to self.defaults.value (based on call of self.execute)
         self._instantiate_function(function=function, function_params=function_params, context=context)
-
-        # SET CURRENT VALUES OF VARIABLE AND PARAMS
-        # self.paramsCurrent = self.paramInstanceDefaults
 
         self._instantiate_value(context=context)
 
@@ -1748,7 +1730,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     params[FUNCTION_PARAMS].__additem__(param_name,kwargs[arg][param_name])
 
             # If no input_ports or output_ports are specified, ignore
-            #   (ones in paramClassDefaults will be assigned to paramsCurrent below (in params_class_defaults_only)
             elif arg in {INPUT_PORTS, OUTPUT_PORTS} and kwargs[arg] is None:
                 continue
 
@@ -1829,9 +1810,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         #    this is to deal with the following:
         #    • _create_attributes_for_params assigns properties to each param in user_params;
         #    • the setter for those properties (in make_property) also assigns its value to its entry user_params;
-        #    • paramInstanceDefaults are assigned to paramsCurrent in Component.__init__ assigns
-        #    • therefore, assignments of paramInstance defaults to paramsCurrent in __init__ overwrites the
-        #         the user-specified values (from the constructor args) in user_params
         self.user_params_for_instantiation = OrderedDict()
         for param_name in sorted(list(self.user_params.keys())):
             param_value = self.user_params[param_name]
@@ -1874,8 +1852,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         #    These must be created here, so that attributes in user_params that need to can reference them
         #    (e.g., TransferMechanism noise property references noise param of integrator_function,
         #           which is declared in paramClassDefaults);
-        #    previously these were created when paramsCurrent is assigned (in __init__());  however because
-        #    the order is not guaranteed, the user_param may be assigned before one from paramClassDefaults
+        #    previously the order was not guaranteed, the user_param may be assigned before one from paramClassDefaults
         params_class_defaults_only = dict(item for item in self.paramClassDefaults.items()
                                           if not any(hasattr(parent_class, item[0])
                                                      for parent_class in self.__class__.mro()))
@@ -1935,7 +1912,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         Called by functions to validate variable and params
         Validation can be suppressed by turning parameter_validation attribute off
         target_set is a params dictionary to which params should be assigned;
-           otherwise, they are assigned to paramsCurrent;
 
         Does the following:
         - instantiate variable (if missing or callable)
@@ -1946,7 +1922,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         :param variable: (anything but a dict) - variable to validate
         :param params: (dict) - params to validate
-        :target_set: (dict) - set to which params should be assigned (default: self.paramsCurrent)
+        :target_set: (dict) - set to which params should be assigned
         :return:
         """
         # VARIABLE ------------------------------------------------------------
@@ -1968,10 +1944,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             variable = self._validate_variable(variable, context=context)
 
         # PARAMS ------------------------------------------------------------
-
-        # If target_set is not specified, use paramsCurrent
-        if target_set is None:
-            target_set = self.paramsCurrent
 
         # # MODIFIED 11/27/16 OLD:
         # # If parameter_validation is set, the function was called with params,
@@ -2414,7 +2386,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         pref_buffer = self.prefs._param_validation_pref
         self.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
-        self.paramsCurrent.update(validated_set)
         # The following is so that:
         #    if the Component is a function and it is passed as an argument to a Component,
         #    then the parameters are available in self.user_params_for_instantiation
@@ -2921,18 +2892,15 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         #     it instantiates the reference (using FUNCTION_PARAMS if present)
         #     and puts a reference to the instance in target_set[FUNCTION]
         #
-        This checks for an execute method in params[FUNCTION].
-        It checks for a valid method reference in paramsCurrent, then paramInstanceDefaults, then paramClassDefaults
+        This checks for an execute method in function
         If a specification is not present or valid:
             - it checks self.execute and, if present, kwExecute is assigned to it
             - if self.execute is not present or valid, an exception is raised
-        When completed, there is guaranteed to be a valid method in paramsCurrent[FUNCTION] and/or self.execute;
+        When completed, there is guaranteed to be a valid method in self.function and/or self.execute;
             otherwise, an exception is raised
 
         Notes:
             * no new assignments (to FUNCTION or self.execute) are made here, except:
-                if paramsCurrent[kwMethod] specified is not valid,
-                an attempt is made to replace with a valid entry from paramInstanceDefaults or paramClassDefaults
             * if FUNCTION is missing, it is assigned to self.execute (if it is present)
             * no instantiations are done here;
             * any assignment(s) to and/or instantiation(s) of self.execute and/or params[FUNCTION]
@@ -2964,7 +2932,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             or isinstance(function, types.MethodType)
             or is_instance_or_subclass(function, Function)
         ):
-            self.paramsCurrent[FUNCTION] = function
+            self.function = function
             return
         # self.function is NOT OK, so raise exception
         else:
@@ -2979,7 +2947,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         pass
 
     def _instantiate_function(self, function, function_params=None, context=None):
-        """Instantiate function defined in <subclass>.function or <subclass>.paramsCurrent[FUNCTION]
+        """Instantiate function defined in <subclass>.function or <subclass>.function
 
         Instantiate params[FUNCTION] if present, and assign it to self.function
 
@@ -2994,7 +2962,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             - if self.function IS implemented, it is assigned to params[FUNCTION]
             - if self.function IS NOT implemented: program error (should have been caught in _validate_function)
         Upon successful completion:
-            - self._function === self.paramsCurrent[FUNCTION]
+            - self._function === self.function
             - self.execute should always return the output of self.function in the first item of its output array;
                  this is done by Function.execute;  any subclass override should do the same, so that...
             - value is value[0] returned by self.execute
@@ -3323,10 +3291,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         else:
             raise ComponentError("Attempt to assign non-PreferenceSet {0} to {0}.prefs".
                                 format(pref_set, self.name))
-
-    @property
-    def params(self):
-        return self.paramsCurrent
 
     @property
     def user_params(self):
@@ -3798,7 +3762,6 @@ def make_property(name):
         if (
             hasattr(self, '_prefs')
             and self.paramValidationPref
-            and hasattr(self, PARAMS_CURRENT)
             and hasattr(self, 'user_params_for_instantiation')
             and hasattr(self, 'user_params')
             and hasattr(self, 'paramInstanceDefaults')

@@ -2292,14 +2292,14 @@ class Mechanism_Base(Mechanism):
                 + execute every self.input_port.path_afferents.[<Projection>.execute()...]
                 + combine results and/or gate portusing self.input_port.function()
                 + assign the result in self.input_port.value
-            - Call every self.params[<ParameterPort>].execute(); for each:
-                + execute self.params[<ParameterPort>].mod_afferents.[<Projection>.execute()...]
+            - Call every self.<parameterport>.execute(); for each:
+                + execute self.<parameterport>].mod_afferents.[<projection>.execute()...
                     (usually this is just a single ControlProjection)
                 + combine results for each ModulationParam or assign value from an OVERRIDE specification
-                + assign the result to self.params[<ParameterPort>].value
+                + assign the result to self.<parameterport>.value
             - Call subclass' self.execute(params):
                 - use self.input_port.value as its variable,
-                - use self.params[<ParameterPort>].value for each param of subclass' self.function
+                - use self.<parameterport>.value for each param of subclass' self.function
                 - call self._update_output_ports() to assign the output to each self.output_ports[<OutputPort>].value
                 Note:
                 * if execution is occurring as part of initialization, each output_port is reset to 0
@@ -3506,15 +3506,6 @@ class Mechanism_Base(Mechanism):
                                       component=mechanism)
         del mechanism
 
-
-    def _get_mechanism_param_values(self):
-        """Return dict with current value of each ParameterPort in paramsCurrent
-        :return: (dict)
-        """
-        from psyneulink.core.components.ports.parameterport import ParameterPort
-        return dict((param, value.value) for param, value in self.paramsCurrent.items()
-                    if isinstance(value, ParameterPort))
-
     def get_input_port_position(self, port):
         if port in self.input_ports:
             return self.input_ports.index(port)
@@ -3614,12 +3605,6 @@ class Mechanism_Base(Mechanism):
     @property
     def parameter_ports(self):
         return self._parameter_ports
-
-    @parameter_ports.setter
-    def parameter_ports(self, value):
-        # This keeps parameter_ports property readonly,
-        #    but averts exception when setting paramsCurrent in Component (around line 850)
-        pass
 
     @property
     def output_port(self):

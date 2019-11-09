@@ -788,7 +788,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
             OBJECTIVE_MECHANISM param determines which Ports will be monitored.
                 specifies the OutputPorts of the terminal Mechanisms in the System to be monitored by ControlMechanism
-                this specification overrides any in System.params[], but can be overridden by Mechanism.params[]
+                this specification overrides any in System.], but can be overridden by mechanism.params[
                 ?? if MonitoredOutputPorts appears alone, it will be used to determine how Ports are assigned from
                     System.execution_graph by default
                 if MonitoredOutputPortsOption is used, it applies to any Mechanisms specified in the list for which

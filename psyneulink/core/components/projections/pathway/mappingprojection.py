@@ -534,7 +534,6 @@ class MappingProjection(PathwayProjection_Base):
         except TypeError:
             mapping_output_len = 1
 
-        # FIX: CONVERT ALL REFS TO paramsCurrent[FUNCTION_PARAMS][MATRIX] TO self.matrix (CHECK THEY'RE THE SAME)
         # FIX: CONVERT ALL REFS TO matrix_spec TO self._matrix_spec
         # FIX: CREATE @PROPERTY FOR self._learning_spec AND ASSIGN IN INIT??
         # FIX: HOW DOES mapping_output_len RELATE TO receiver_len?/
@@ -618,16 +617,16 @@ class MappingProjection(PathwayProjection_Base):
 
     @property
     def _matrix_spec(self):
-        """Returns matrix specification in self.paramsCurrent[FUNCTION_PARAMS][MATRIX]
+        """Returns matrix specification in self.function_params[MATRIX]
 
         Returns matrix param for MappingProjection, getting second item if it is
          an unnamed (matrix, projection) tuple
         """
-        return self._get_param_value_from_tuple(self.paramsCurrent[FUNCTION_PARAMS][MATRIX])
+        return self._get_param_value_from_tuple(self.function_params[MATRIX])
 
     @_matrix_spec.setter
     def _matrix_spec(self, value):
-        """Assign matrix specification for self.paramsCurrent[FUNCTION_PARAMS][MATRIX]
+        """Assign matrix specification for self.function_params[MATRIX]
 
         Assigns matrix param for MappingProjection, assigning second item if it is
          a 2-item tuple or unnamed (matrix, projection) tuple
@@ -636,16 +635,16 @@ class MappingProjection(PathwayProjection_Base):
         # Specification is a two-item tuple, so validate that 2nd item is:
         # *LEARNING* or *LEARNING_PROJECTION* keyword, LearningProjection subclass, or instance of a LearningPojection
         from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
-        if (isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX], tuple) and
-                    len(self.paramsCurrent[FUNCTION_PARAMS][MATRIX]) == 2 and
-                (self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1] in {LEARNING, LEARNING_PROJECTION}
-                 or isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], LearningProjection) or
-                     (inspect.isclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]) and
-                          issubclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], LearningProjection)))):
-            self.paramsCurrent[FUNCTION_PARAMS][MATRIX] = (value, self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1])
+        if (isinstance(self.function_params[MATRIX], tuple) and
+                    len(self.function_params[MATRIX]) == 2 and
+                (self.function_params[MATRIX][1] in {LEARNING, LEARNING_PROJECTION}
+                 or isinstance(self.function_params[MATRIX][1], LearningProjection) or
+                     (inspect.isclass(self.function_params[MATRIX][1]) and
+                          issubclass(self.function_params[MATRIX][1], LearningProjection)))):
+            self.function_params.__additem__(MATRIX, (value, self.function_params[MATRIX][1]))
 
         else:
-            self.paramsCurrent[FUNCTION_PARAMS][MATRIX] = value
+            self.function_params.__additem__(MATRIX, value)
 
     @property
     def logPref(self):
