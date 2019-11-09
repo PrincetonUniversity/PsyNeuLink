@@ -236,7 +236,7 @@ class ProcessingMechanismError(Exception):
 
 class ProcessingMechanism(ProcessingMechanism_Base):
     """
-    Implements instance of `ProcessingMechanism_Base <ProcessingMechanism>` subclass of `Mechanism`.
+    Implements instance of `ProcessingMechanism_Base <ProcessingMechanism>` subclass of `Mechanism <Mechanism>`.
     See `Mechanism <Mechanism_Class_Reference>` and `subclasses <ProcessingMechanism_Subtypes>` of ProcessingMechanism
     for arguments and additional attributes.
 
