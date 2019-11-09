@@ -157,7 +157,7 @@ def objective_function(variable):
     """Return difference between optimal and actual actions"""
     actual_action = variable[0]
     optimal_action = variable[1]
-    similarity = 1-difference([optimal_action, actual_action])/4
+    similarity = 1 - difference([optimal_action, actual_action]) / 4
     return similarity
 
 ocm = OptimizationControlMechanism(name='EVC',
@@ -248,7 +248,7 @@ def main():
                                          context=context,
                                          bin_execute=BIN_EXECUTE,
                                          )
-            agent_action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
+            agent_action = np.where(run_results[0] == 0, 0, run_results[0] / np.abs(run_results[0]))
             
             def print_controller():
                 if VERBOSE >= SIMULATION_REPORTING:

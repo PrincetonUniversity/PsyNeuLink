@@ -17,45 +17,54 @@ class TestLog:
         PJ = T_2.path_afferents[0]
 
         assert T_1.loggable_items == {
-            'InputPort-0': 'OFF',
-            'RESULTS': 'OFF',
             'clip': 'OFF',
-            'convergence_criterion': 'OFF',
+            'termination_threshold': 'OFF',
+            'execute_until_finished': 'OFF',
             'func_additive_param': 'OFF',
             'func_bounds': 'OFF',
+            'func_execute_until_finished': 'OFF',
             'func_has_initializers': 'OFF',
             'func_intercept': 'OFF',
+            'func_max_executions_before_finished': 'OFF',
             'func_multiplicative_param': 'OFF',
+            'func_num_executions_before_finished': 'OFF',
             'func_slope': 'OFF',
             'func_value': 'OFF',
             'func_variable': 'OFF',
             'function': 'OFF',
             'has_initializers': 'OFF',
             'initial_value': 'OFF',
+            'InputPort-0': 'OFF',
             'integration_rate': 'OFF',
             'integrator_function_value': 'OFF',
             'integrator_mode': 'OFF',
-            'max_passes': 'OFF',
-            'mod_convergence_criterion': 'OFF',
+            'max_executions_before_finished': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'OFF',
             'noise': 'OFF',
+            'num_executions_before_finished': 'OFF',
             'previous_value': 'OFF',
+            'termination_measure_value': 'OFF',
+            'RESULT': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
         }
         assert T_2.loggable_items == {
             'InputPort-0': 'OFF',
-            'RESULTS': 'OFF',
+            'RESULT': 'OFF',
             'clip': 'OFF',
-            'convergence_criterion': 'OFF',
+            'termination_threshold': 'OFF',
+            'execute_until_finished': 'OFF',
             'func_additive_param': 'OFF',
             'func_bounds': 'OFF',
+            'func_execute_until_finished': 'OFF',
             'func_has_initializers': 'OFF',
             'func_intercept': 'OFF',
+            'func_max_executions_before_finished': 'OFF',
             'func_multiplicative_param': 'OFF',
+            'func_num_executions_before_finished': 'OFF',
             'func_slope': 'OFF',
             'func_value': 'OFF',
             'func_variable': 'OFF',
@@ -65,46 +74,57 @@ class TestLog:
             'integration_rate': 'OFF',
             'integrator_function_value': 'OFF',
             'integrator_mode': 'OFF',
-            'max_passes': 'OFF',
-            'mod_convergence_criterion': 'OFF',
+            'max_executions_before_finished': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'OFF',
             'noise': 'OFF',
+            'num_executions_before_finished': 'OFF',
             'previous_value': 'OFF',
+            'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
         }
         assert PJ.loggable_items == {
+            'execute_until_finished': 'OFF',
             'exponent': 'OFF',
             'func_bounds': 'OFF',
+            'func_execute_until_finished': 'OFF',
             'func_has_initializers': 'OFF',
             'func_matrix': 'OFF',
+            'func_max_executions_before_finished': 'OFF',
+            'func_num_executions_before_finished': 'OFF',
             'func_value': 'OFF',
             'has_initializers': 'OFF',
             'func_variable': 'OFF',
             'matrix': 'OFF',
+            'max_executions_before_finished': 'OFF',
             'mod_matrix': 'OFF',
+            'num_executions_before_finished': 'OFF',
             'value': 'OFF',
             'variable': 'OFF',
             'weight': 'OFF'
         }
 
         T_1.set_log_conditions('mod_noise')
-        T_1.set_log_conditions(pnl.RESULTS)
+        T_1.set_log_conditions(pnl.RESULT)
         PJ.set_log_conditions('mod_matrix')
 
         assert T_1.loggable_items == {
             'InputPort-0': 'OFF',
-            'RESULTS': 'EXECUTION',
+            'RESULT': 'EXECUTION',
             'clip': 'OFF',
-            'convergence_criterion': 'OFF',
+            'termination_threshold': 'OFF',
+            'execute_until_finished': 'OFF',
             'func_additive_param': 'OFF',
             'func_bounds': 'OFF',
+            'func_execute_until_finished': 'OFF',
             'func_has_initializers': 'OFF',
             'func_intercept': 'OFF',
+            'func_max_executions_before_finished': 'OFF',
             'func_multiplicative_param': 'OFF',
+            'func_num_executions_before_finished': 'OFF',
             'func_slope': 'OFF',
             'func_value': 'OFF',
             'func_variable': 'OFF',
@@ -114,27 +134,32 @@ class TestLog:
             'integration_rate': 'OFF',
             'integrator_function_value': 'OFF',
             'integrator_mode': 'OFF',
-            'max_passes': 'OFF',
-            'mod_convergence_criterion': 'OFF',
+            'max_executions_before_finished': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
             'mod_noise': 'EXECUTION',
             'mod_slope': 'OFF',
             'noise': 'OFF',
+            'num_executions_before_finished': 'OFF',
             'previous_value': 'OFF',
+            'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
         }
         assert T_2.loggable_items == {
             'InputPort-0': 'OFF',
-            'RESULTS': 'OFF',
+            'RESULT': 'OFF',
             'clip': 'OFF',
-            'convergence_criterion': 'OFF',
+            'termination_threshold': 'OFF',
+            'execute_until_finished': 'OFF',
             'func_additive_param': 'OFF',
             'func_bounds': 'OFF',
+            'func_execute_until_finished': 'OFF',
             'func_has_initializers': 'OFF',
             'func_intercept': 'OFF',
+            'func_max_executions_before_finished': 'OFF',
             'func_multiplicative_param': 'OFF',
+            'func_num_executions_before_finished': 'OFF',
             'func_slope': 'OFF',
             'func_value': 'OFF',
             'func_variable': 'OFF',
@@ -144,27 +169,34 @@ class TestLog:
             'integration_rate': 'OFF',
             'integrator_function_value': 'OFF',
             'integrator_mode': 'OFF',
-            'max_passes': 'OFF',
-            'mod_convergence_criterion': 'OFF',
+            'max_executions_before_finished': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'OFF',
             'noise': 'OFF',
+            'num_executions_before_finished': 'OFF',
             'previous_value': 'OFF',
+            'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
         }
         assert PJ.loggable_items == {
+            'execute_until_finished': 'OFF',
             'exponent': 'OFF',
             'func_bounds': 'OFF',
+            'func_execute_until_finished': 'OFF',
             'func_has_initializers': 'OFF',
             'func_matrix': 'OFF',
+            'func_max_executions_before_finished': 'OFF',
+            'func_num_executions_before_finished': 'OFF',
             'func_value': 'OFF',
             'func_variable': 'OFF',
             'has_initializers': 'OFF',
             'matrix': 'OFF',
+            'max_executions_before_finished': 'OFF',
             'mod_matrix': 'EXECUTION',
+            'num_executions_before_finished': 'OFF',
             'value': 'OFF',
             'variable': 'OFF',
             'weight': 'OFF'
@@ -174,7 +206,7 @@ class TestLog:
         PS.execute()
         PS.execute()
 
-        assert T_1.logged_items == {'RESULTS': 'EXECUTION', 'mod_noise': 'EXECUTION'}
+        assert T_1.logged_items == {'RESULT': 'EXECUTION', 'mod_noise': 'EXECUTION'}
         assert PJ.logged_items == {'mod_matrix': 'EXECUTION'}
 
         T_1.log.print_entries(contexts=PS)
@@ -183,8 +215,8 @@ class TestLog:
         # # Log for mech_A:
         # #
         # # Index     Variable:                                          Context                                                                  Value
-        # # 0         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        # # 1         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
+        # # 0         'RESULT'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
+        # # 1         'RESULT'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
         # #
         # #
         # # 0         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
@@ -194,18 +226,18 @@ class TestLog:
         # # Log for mech_A:
         # #
         # # Index     Variable:                                          Context                                                                  Value
-        # # 0         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        # # 1         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
+        # # 0         'RESULT'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
+        # # 1         'RESULT'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
         # #
         # #
         # # 0         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
         # # 1         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
 
-        T_1_csv = T_1.log.csv(entries=['mod_noise', 'RESULTS'], owner_name=False, quotes=None)
+        T_1_csv = T_1.log.csv(entries=['mod_noise', 'RESULT'], owner_name=False, quotes=None)
         print(T_1_csv)
         assert T_1_csv == \
             "'Execution Context', 'Data'\n" \
-            + "'{0}', \'Index\', \'mod_noise\', \'RESULTS\'\n".format(PS.default_execution_id) \
+            + "'{0}', \'Index\', \'mod_noise\', \'RESULT\'\n".format(PS.default_execution_id) \
             + ", 0, 0.0, 0.0 0.0\n" \
             + ", 1, 0.0, 0.0 0.0\n" \
             + ", 2, 0.0, 0.0 0.0\n"
@@ -217,7 +249,7 @@ class TestLog:
             + ", \'1\', \'1.0 0.0\' \'0.0 1.0\'\n" \
             + ", \'2\', \'1.0 0.0\' \'0.0 1.0\'\n"
 
-        result = T_1.log.nparray(entries=['mod_noise', 'RESULTS'], header=False, owner_name=True)
+        result = T_1.log.nparray(entries=['mod_noise', 'RESULT'], header=False, owner_name=True)
         assert result[0] == PS.default_execution_id
         np.testing.assert_array_equal(result[1][0],
                                       np.array([[[0], [1], [2]],
@@ -241,14 +273,18 @@ class TestLog:
 
         assert T1.loggable_items == {
             'InputPort-0': 'OFF',
-            'RESULTS': 'OFF',
+            'RESULT': 'OFF',
             'clip': 'OFF',
-            'convergence_criterion': 'OFF',
+            'termination_threshold': 'OFF',
+            'execute_until_finished': 'OFF',
             'func_additive_param': 'OFF',
             'func_bounds': 'OFF',
+            'func_execute_until_finished': 'OFF',
             'func_has_initializers': 'OFF',
             'func_intercept': 'OFF',
+            'func_max_executions_before_finished': 'OFF',
             'func_multiplicative_param': 'OFF',
+            'func_num_executions_before_finished': 'OFF',
             'func_slope': 'OFF',
             'func_value': 'OFF',
             'func_variable': 'OFF',
@@ -258,27 +294,32 @@ class TestLog:
             'integration_rate': 'OFF',
             'integrator_function_value': 'OFF',
             'integrator_mode': 'OFF',
-            'max_passes': 'OFF',
-            'mod_convergence_criterion': 'OFF',
+            'max_executions_before_finished': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'OFF',
             'noise': 'OFF',
+            'num_executions_before_finished': 'OFF',
             'previous_value': 'OFF',
+            'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
         }
         assert T2.loggable_items == {
             'InputPort-0': 'OFF',
-            'RESULTS': 'OFF',
+            'RESULT': 'OFF',
             'clip': 'OFF',
-            'convergence_criterion': 'OFF',
+            'termination_threshold': 'OFF',
+            'execute_until_finished': 'OFF',
             'func_additive_param': 'OFF',
             'func_bounds': 'OFF',
+            'func_execute_until_finished': 'OFF',
             'func_has_initializers': 'OFF',
             'func_intercept': 'OFF',
+            'func_max_executions_before_finished': 'OFF',
             'func_multiplicative_param': 'OFF',
+            'func_num_executions_before_finished': 'OFF',
             'func_slope': 'OFF',
             'func_value': 'OFF',
             'func_variable': 'OFF',
@@ -288,50 +329,61 @@ class TestLog:
             'integration_rate': 'OFF',
             'integrator_function_value': 'OFF',
             'integrator_mode': 'OFF',
-            'max_passes': 'OFF',
-            'mod_convergence_criterion': 'OFF',
+            'max_executions_before_finished': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'OFF',
+            'num_executions_before_finished': 'OFF',
             'noise': 'OFF',
             'previous_value': 'OFF',
+            'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
         }
         assert PJ.loggable_items == {
+            'execute_until_finished': 'OFF',
             'exponent': 'OFF',
             'func_bounds': 'OFF',
+            'func_execute_until_finished': 'OFF',
             'func_has_initializers': 'OFF',
             'func_matrix': 'OFF',
+            'func_max_executions_before_finished': 'OFF',
+            'func_num_executions_before_finished': 'OFF',
             'func_value': 'OFF',
             'func_variable': 'OFF',
             'has_initializers': 'OFF',
             'matrix': 'OFF',
+            'max_executions_before_finished': 'OFF',
             'mod_matrix': 'OFF',
+            'num_executions_before_finished': 'OFF',
             'value': 'OFF',
             'variable': 'OFF',
             'weight': 'OFF'
         }
 
         T1.set_log_conditions('mod_slope')
-        T1.set_log_conditions(pnl.RESULTS)
+        T1.set_log_conditions(pnl.RESULT)
         T1.set_log_conditions(pnl.VALUE)
         PJ.set_log_conditions('mod_matrix')
         T2.set_log_conditions('mod_slope')
-        T2.set_log_conditions(pnl.RESULTS)
+        T2.set_log_conditions(pnl.RESULT)
         T2.set_log_conditions(pnl.VALUE)
 
         assert T1.loggable_items == {
             'InputPort-0': 'OFF',
-            'RESULTS': 'EXECUTION',
+            'RESULT': 'EXECUTION',
             'clip': 'OFF',
-            'convergence_criterion': 'OFF',
+            'termination_threshold': 'OFF',
+            'execute_until_finished': 'OFF',
             'func_additive_param': 'OFF',
             'func_bounds': 'OFF',
+            'func_execute_until_finished': 'OFF',
             'func_has_initializers': 'OFF',
             'func_intercept': 'OFF',
+            'func_max_executions_before_finished': 'OFF',
             'func_multiplicative_param': 'OFF',
+            'func_num_executions_before_finished': 'OFF',
             'func_slope': 'OFF',
             'func_value': 'OFF',
             'func_variable': 'OFF',
@@ -341,27 +393,32 @@ class TestLog:
             'integration_rate': 'OFF',
             'integrator_function_value': 'OFF',
             'integrator_mode': 'OFF',
-            'max_passes': 'OFF',
-            'mod_convergence_criterion': 'OFF',
+            'max_executions_before_finished': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'EXECUTION',
             'noise': 'OFF',
+            'num_executions_before_finished': 'OFF',
             'previous_value': 'OFF',
+            'termination_measure_value': 'OFF',
             'value': 'EXECUTION',
             'variable': 'OFF'
         }
         assert T2.loggable_items == {
             'InputPort-0': 'OFF',
-            'RESULTS': 'EXECUTION',
+            'RESULT': 'EXECUTION',
             'clip': 'OFF',
-            'convergence_criterion': 'OFF',
+            'termination_threshold': 'OFF',
+            'execute_until_finished': 'OFF',
             'func_additive_param': 'OFF',
             'func_bounds': 'OFF',
+            'func_execute_until_finished': 'OFF',
             'func_has_initializers': 'OFF',
             'func_intercept': 'OFF',
+            'func_max_executions_before_finished': 'OFF',
             'func_multiplicative_param': 'OFF',
+            'func_num_executions_before_finished': 'OFF',
             'func_slope': 'OFF',
             'func_value': 'OFF',
             'func_variable': 'OFF',
@@ -371,27 +428,34 @@ class TestLog:
             'integration_rate': 'OFF',
             'integrator_function_value': 'OFF',
             'integrator_mode': 'OFF',
-            'max_passes': 'OFF',
-            'mod_convergence_criterion': 'OFF',
+            'max_executions_before_finished': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'EXECUTION',
             'noise': 'OFF',
+            'num_executions_before_finished': 'OFF',
             'previous_value': 'OFF',
+            'termination_measure_value': 'OFF',
             'value': 'EXECUTION',
             'variable': 'OFF'
         }
         assert PJ.loggable_items == {
+            'execute_until_finished': 'OFF',
             'exponent': 'OFF',
             'func_bounds': 'OFF',
+            'func_execute_until_finished': 'OFF',
             'func_has_initializers': 'OFF',
             'func_matrix': 'OFF',
+            'func_max_executions_before_finished': 'OFF',
+            'func_num_executions_before_finished': 'OFF',
             'func_value': 'OFF',
             'func_variable': 'OFF',
             'has_initializers': 'OFF',
             'matrix': 'OFF',
+            'max_executions_before_finished': 'OFF',
             'mod_matrix': 'EXECUTION',
+            'num_executions_before_finished': 'OFF',
             'value': 'OFF',
             'variable': 'OFF',
             'weight': 'OFF'
@@ -401,15 +465,15 @@ class TestLog:
         PS.execute([3.0, 4.0])
         PS.execute([5.0, 6.0])
 
-        assert T1.logged_items == {'RESULTS': 'EXECUTION',
+        assert T1.logged_items == {'RESULT': 'EXECUTION',
                                    'mod_slope': 'EXECUTION',
                                    'value': 'EXECUTION'}
-        assert T2.logged_items == {'RESULTS': 'EXECUTION',
+        assert T2.logged_items == {'RESULT': 'EXECUTION',
                                    'mod_slope': 'EXECUTION',
                                    'value': 'EXECUTION'}
         assert PJ.logged_items == {'mod_matrix': 'EXECUTION'}
 
-        log_dict_T1 = T1.log.nparray_dictionary(entries=['value', 'mod_slope', 'RESULTS'])
+        log_dict_T1 = T1.log.nparray_dictionary(entries=['value', 'mod_slope', 'RESULT'])
 
         expected_values_T1 = [[[1.0, 2.0]], [[3.0, 4.0]], [[5.0, 6.0]]]
         expected_slopes_T1 = [[1.0], [1.0], [1.0]]
@@ -419,13 +483,13 @@ class TestLog:
 
         assert np.allclose(expected_values_T1, log_dict_T1[PS.default_execution_id]['value'])
         assert np.allclose(expected_slopes_T1, log_dict_T1[PS.default_execution_id]['mod_slope'])
-        assert np.allclose(expected_results_T1, log_dict_T1[PS.default_execution_id]['RESULTS'])
+        assert np.allclose(expected_results_T1, log_dict_T1[PS.default_execution_id]['RESULT'])
 
-        assert list(log_dict_T1[PS.default_execution_id].keys()) == ['Index', 'value', 'mod_slope', 'RESULTS']
+        assert list(log_dict_T1[PS.default_execution_id].keys()) == ['Index', 'value', 'mod_slope', 'RESULT']
 
-        log_dict_T1_reorder = T1.log.nparray_dictionary(entries=['mod_slope', 'value', 'RESULTS'])
+        log_dict_T1_reorder = T1.log.nparray_dictionary(entries=['mod_slope', 'value', 'RESULT'])
 
-        assert list(log_dict_T1_reorder[PS.default_execution_id].keys()) == ['Index', 'mod_slope', 'value', 'RESULTS']
+        assert list(log_dict_T1_reorder[PS.default_execution_id].keys()) == ['Index', 'mod_slope', 'value', 'RESULT']
 
     def test_run_resets(self):
         import psyneulink as pnl
@@ -459,14 +523,18 @@ class TestLog:
 
         assert T1.loggable_items == {
             'InputPort-0': 'OFF',
-            'RESULTS': 'OFF',
+            'RESULT': 'OFF',
             'clip': 'OFF',
-            'convergence_criterion': 'OFF',
+            'termination_threshold': 'OFF',
+            'execute_until_finished': 'OFF',
             'func_additive_param': 'OFF',
             'func_bounds': 'OFF',
+            'func_execute_until_finished': 'OFF',
             'func_has_initializers': 'OFF',
             'func_intercept': 'OFF',
+            'func_max_executions_before_finished': 'OFF',
             'func_multiplicative_param': 'OFF',
+            'func_num_executions_before_finished': 'OFF',
             'func_slope': 'OFF',
             'func_value': 'OFF',
             'func_variable': 'OFF',
@@ -476,27 +544,32 @@ class TestLog:
             'integration_rate': 'OFF',
             'integrator_function_value': 'OFF',
             'integrator_mode': 'OFF',
-            'max_passes': 'OFF',
-            'mod_convergence_criterion': 'OFF',
+            'max_executions_before_finished': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'OFF',
             'noise': 'OFF',
+            'num_executions_before_finished': 'OFF',
             'previous_value': 'OFF',
+            'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
         }
         assert T2.loggable_items == {
             'InputPort-0': 'OFF',
-            'RESULTS': 'OFF',
+            'RESULT': 'OFF',
             'clip': 'OFF',
-            'convergence_criterion': 'OFF',
+            'termination_threshold': 'OFF',
+            'execute_until_finished': 'OFF',
             'func_additive_param': 'OFF',
             'func_bounds': 'OFF',
+            'func_execute_until_finished': 'OFF',
             'func_has_initializers': 'OFF',
             'func_intercept': 'OFF',
+            'func_max_executions_before_finished': 'OFF',
             'func_multiplicative_param': 'OFF',
+            'func_num_executions_before_finished': 'OFF',
             'func_slope': 'OFF',
             'func_value': 'OFF',
             'func_variable': 'OFF',
@@ -506,32 +579,37 @@ class TestLog:
             'integration_rate': 'OFF',
             'integrator_function_value': 'OFF',
             'integrator_mode': 'OFF',
-            'max_passes': 'OFF',
-            'mod_convergence_criterion': 'OFF',
+            'max_executions_before_finished': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'OFF',
             'noise': 'OFF',
+            'num_executions_before_finished': 'OFF',
             'previous_value': 'OFF',
+            'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
         }
 
         T1.set_log_conditions('mod_slope')
-        T1.set_log_conditions(pnl.RESULTS)
+        T1.set_log_conditions(pnl.RESULT)
         T1.set_log_conditions(pnl.VALUE)
 
         assert T1.loggable_items == {
+            'execute_until_finished': 'OFF',
             'InputPort-0': 'OFF',
-            'RESULTS': 'EXECUTION',
+            'RESULT': 'EXECUTION',
             'clip': 'OFF',
-            'convergence_criterion': 'OFF',
+            'termination_threshold': 'OFF',
             'func_additive_param': 'OFF',
             'func_bounds': 'OFF',
+            'func_execute_until_finished': 'OFF',
             'func_has_initializers': 'OFF',
             'func_intercept': 'OFF',
+            'func_max_executions_before_finished': 'OFF',
             'func_multiplicative_param': 'OFF',
+            'func_num_executions_before_finished': 'OFF',
             'func_slope': 'OFF',
             'func_value': 'OFF',
             'func_variable': 'OFF',
@@ -541,32 +619,37 @@ class TestLog:
             'integration_rate': 'OFF',
             'integrator_function_value': 'OFF',
             'integrator_mode': 'OFF',
-            'max_passes': 'OFF',
-            'mod_convergence_criterion': 'OFF',
+            'max_executions_before_finished': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'EXECUTION',
             'noise': 'OFF',
+            'num_executions_before_finished': 'OFF',
             'previous_value': 'OFF',
+            'termination_measure_value': 'OFF',
             'value': 'EXECUTION',
             'variable': 'OFF'
         }
 
         T2.set_log_conditions('mod_slope')
-        T2.set_log_conditions(pnl.RESULTS)
+        T2.set_log_conditions(pnl.RESULT)
         T2.set_log_conditions(pnl.VALUE)
 
         assert T2.loggable_items == {
             'InputPort-0': 'OFF',
-            'RESULTS': 'EXECUTION',
+            'RESULT': 'EXECUTION',
             'clip': 'OFF',
-            'convergence_criterion': 'OFF',
+            'termination_threshold': 'OFF',
+            'execute_until_finished': 'OFF',
             'func_additive_param': 'OFF',
             'func_bounds': 'OFF',
+            'func_execute_until_finished': 'OFF',
             'func_has_initializers': 'OFF',
             'func_intercept': 'OFF',
+            'func_max_executions_before_finished': 'OFF',
             'func_multiplicative_param': 'OFF',
+            'func_num_executions_before_finished': 'OFF',
             'func_slope': 'OFF',
             'func_value': 'OFF',
             'func_variable': 'OFF',
@@ -576,14 +659,15 @@ class TestLog:
             'integration_rate': 'OFF',
             'integrator_function_value': 'OFF',
             'integrator_mode': 'OFF',
-            'max_passes': 'OFF',
-            'mod_convergence_criterion': 'OFF',
+            'max_executions_before_finished': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'EXECUTION',
             'noise': 'OFF',
+            'num_executions_before_finished': 'OFF',
             'previous_value': 'OFF',
+            'termination_measure_value': 'OFF',
             'value': 'EXECUTION',
             'variable': 'OFF'
         }
@@ -592,16 +676,16 @@ class TestLog:
 
         SYS.run(inputs={T1: [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]})
 
-        assert T1.logged_items == {'RESULTS': 'EXECUTION',
+        assert T1.logged_items == {'RESULT': 'EXECUTION',
                                    'mod_slope': 'EXECUTION',
                                    'value': 'EXECUTION'}
-        assert T2.logged_items == {'RESULTS': 'EXECUTION',
+        assert T2.logged_items == {'RESULT': 'EXECUTION',
                                    'mod_slope': 'EXECUTION',
                                    'value': 'EXECUTION'}
 
         # T1 log after zero-th run -------------------------------------------
 
-        log_dict_T1 = T1.log.nparray_dictionary(entries=['value', 'mod_slope', 'RESULTS'])
+        log_dict_T1 = T1.log.nparray_dictionary(entries=['value', 'mod_slope', 'RESULT'])
 
         expected_run_T1 = [[0], [0], [0]]
         expected_trial_T1 = [[0], [1], [2]]
@@ -618,11 +702,11 @@ class TestLog:
         assert np.allclose(expected_time_step_T1, sys_log_dict['Time_step'])
         assert np.allclose(expected_values_T1, sys_log_dict['value'])
         assert np.allclose(expected_slopes_T1, sys_log_dict['mod_slope'])
-        assert np.allclose(expected_results_T1, sys_log_dict['RESULTS'])
+        assert np.allclose(expected_results_T1, sys_log_dict['RESULT'])
 
         # T2 log after zero-th run --------------------------------------------
 
-        log_dict_T2 = T2.log.nparray_dictionary(entries=['value', 'mod_slope', 'RESULTS'])
+        log_dict_T2 = T2.log.nparray_dictionary(entries=['value', 'mod_slope', 'RESULT'])
 
         expected_run_T2 = [[0], [0], [0]]
         expected_trial_T2 = [[0], [1], [2]]
@@ -639,7 +723,7 @@ class TestLog:
         assert np.allclose(expected_time_step_T2, sys_log_dict['Time_step'])
         assert np.allclose(expected_values_T2, sys_log_dict['value'])
         assert np.allclose(expected_slopes_T2, sys_log_dict['mod_slope'])
-        assert np.allclose(expected_results_T2, sys_log_dict['RESULTS'])
+        assert np.allclose(expected_results_T2, sys_log_dict['RESULT'])
 
         # RUN ONE  |  TRIALS ZERO, ONE, TWO -------------------------------------
 
@@ -647,7 +731,7 @@ class TestLog:
 
         # T1 log after first run -------------------------------------------
 
-        log_dict_T1 = T1.log.nparray_dictionary(entries=['value', 'mod_slope', 'RESULTS'])
+        log_dict_T1 = T1.log.nparray_dictionary(entries=['value', 'mod_slope', 'RESULT'])
 
         assert list(log_dict_T1.keys()) == [SYS.default_execution_id]
         sys_log_dict = log_dict_T1[SYS.default_execution_id]
@@ -665,11 +749,11 @@ class TestLog:
         # assert np.allclose(expected_time_step_T1_2, sys_log_dict['Time_step'])
         assert np.allclose(expected_values_T1_2, sys_log_dict['value'])
         assert np.allclose(expected_slopes_T1_2, sys_log_dict['mod_slope'])
-        assert np.allclose(expected_results_T1_2, sys_log_dict['RESULTS'])
+        assert np.allclose(expected_results_T1_2, sys_log_dict['RESULT'])
 
         # T2 log after first run -------------------------------------------
 
-        log_dict_T2_2 = T2.log.nparray_dictionary(entries=['value', 'mod_slope', 'RESULTS'])
+        log_dict_T2_2 = T2.log.nparray_dictionary(entries=['value', 'mod_slope', 'RESULT'])
 
         assert list(log_dict_T2_2.keys()) == [SYS.default_execution_id]
         sys_log_dict = log_dict_T2_2[SYS.default_execution_id]
@@ -686,7 +770,7 @@ class TestLog:
         # assert np.allclose(expected_time_step_T2_2, sys_log_dict['Time_step'])
         assert np.allclose(expected_values_T2_2, sys_log_dict['value'])
         assert np.allclose(expected_slopes_T2_2, sys_log_dict['mod_slope'])
-        assert np.allclose(expected_results_T2_2, sys_log_dict['RESULTS'])
+        assert np.allclose(expected_results_T2_2, sys_log_dict['RESULT'])
 
     def test_log_dictionary_with_scheduler(self):
         T1 = pnl.TransferMechanism(name='log_test_T1',
@@ -710,27 +794,27 @@ class TestLog:
 
         T1.set_log_conditions(pnl.VALUE)
         T1.set_log_conditions('mod_slope')
-        T1.set_log_conditions(pnl.RESULTS)
+        T1.set_log_conditions(pnl.RESULT)
         T2.set_log_conditions(pnl.VALUE)
         T2.set_log_conditions('mod_slope')
 
         SYS.run(inputs={T1: [[1.0]]}, termination_processing=terminate_trial)
 
-        log_dict_T1 = T1.log.nparray_dictionary(entries=['RESULTS', 'mod_slope', 'value'])
+        log_dict_T1 = T1.log.nparray_dictionary(entries=['RESULT', 'mod_slope', 'value'])
         log_dict_T2 = T2.log.nparray_dictionary(entries=['value', 'mod_slope'])
 
         assert list(log_dict_T1.keys()) == [SYS.default_execution_id]
         sys_log_dict = log_dict_T1[SYS.default_execution_id]
 
         # Check order of keys (must match order of specification)
-        assert list(sys_log_dict.keys()) == ['Run', 'Trial', 'Pass', 'Time_step', 'RESULTS', 'mod_slope', 'value']
+        assert list(sys_log_dict.keys()) == ['Run', 'Trial', 'Pass', 'Time_step', 'RESULT', 'mod_slope', 'value']
         assert list(log_dict_T2[SYS.default_execution_id].keys()) == ['Run', 'Trial', 'Pass', 'Time_step', 'value', 'mod_slope']
 
         # Check values T1
         assert np.allclose(sys_log_dict["Run"], [[0], [0], [0]])
         assert np.allclose(sys_log_dict["Trial"], [[0], [0], [0]])
         assert np.allclose(sys_log_dict["Time_step"], [[0], [0], [0]])
-        assert np.allclose(sys_log_dict["RESULTS"], [[0.5], [0.75], [0.875]])
+        assert np.allclose(sys_log_dict["RESULT"], [[0.5], [0.75], [0.875]])
         assert np.allclose(sys_log_dict["value"], [[[0.5]], [[0.75]], [[0.875]]])
         assert np.allclose(sys_log_dict["mod_slope"], [[1], [1], [1]])
 
@@ -763,13 +847,13 @@ class TestLog:
 
         T1.set_log_conditions(pnl.VALUE)
         T1.set_log_conditions('mod_slope')
-        T1.set_log_conditions(pnl.RESULTS)
+        T1.set_log_conditions(pnl.RESULT)
         T2.set_log_conditions(pnl.VALUE)
         T2.set_log_conditions('mod_slope')
 
         SYS.run(inputs={T1: [[1.0]]}, termination_processing=terminate_trial)
 
-        log_array_T1 = T1.log.nparray(entries=['RESULTS', 'mod_slope', 'value'])
+        log_array_T1 = T1.log.nparray(entries=['RESULT', 'mod_slope', 'value'])
         log_array_T2 = T2.log.nparray(entries=['value', 'mod_slope'])
 
         context_results = [pnl.Log.context_header, SYS.default_execution_id]
@@ -778,7 +862,7 @@ class TestLog:
         trial_results = [["Trial"], [0], [0], [0]]
         pass_results = [["Pass"], [0], [1], [2]]
         time_step_results = [["Time_step"], [0], [0], [0]]
-        results_results = ["RESULTS", [0.5], [0.75], [0.875]]
+        results_results = ["RESULT", [0.5], [0.75], [0.875]]
         slope_results = ["mod_slope", [1], [1], [1]]
         value_results = ["value", [[0.5]], [[0.75]], [[0.875]]]
 
@@ -898,9 +982,9 @@ class TestClearLog:
 
         # Set log conditions on each component
         T_1.set_log_conditions('mod_noise')
-        T_1.set_log_conditions(pnl.RESULTS)
+        T_1.set_log_conditions(pnl.RESULT)
         T_2.set_log_conditions('mod_slope')
-        T_2.set_log_conditions(pnl.RESULTS)
+        T_2.set_log_conditions(pnl.RESULT)
         PJ.set_log_conditions('mod_matrix')
 
         # Run system
@@ -917,11 +1001,11 @@ class TestClearLog:
 
         # Confirm that values were logged correctly
         sys_log_dict = log_dict_T_1[SYS.default_execution_id]
-        assert np.allclose(sys_log_dict['RESULTS'], np.array([[1.0, 1.0]]))
+        assert np.allclose(sys_log_dict['RESULT'], np.array([[1.0, 1.0]]))
         assert np.allclose(sys_log_dict['mod_noise'], np.array([[0.0]]))
 
         sys_log_dict = log_dict_T_2[SYS.default_execution_id]
-        assert np.allclose(sys_log_dict['RESULTS'], np.array([[1.0, 1.0]]))
+        assert np.allclose(sys_log_dict['RESULT'], np.array([[1.0, 1.0]]))
         assert np.allclose(sys_log_dict['mod_slope'], np.array([[1.0]]))
 
         sys_log_dict = log_dict_PJ[SYS.default_execution_id]
@@ -960,14 +1044,14 @@ class TestClearLog:
 
         # Confirm that T_1 log values only include most recent run
         sys_log_dict = log_dict_T_1[SYS.default_execution_id]
-        assert np.allclose(sys_log_dict['RESULTS'], np.array([[2.0, 2.0]]))
+        assert np.allclose(sys_log_dict['RESULT'], np.array([[2.0, 2.0]]))
         assert np.allclose(sys_log_dict['mod_noise'], np.array([[0.0]]))
         # NOTE: "Run" value still incremented, but only the most recent one is returned (# runs does not reset to zero)
         assert np.allclose(sys_log_dict['Run'], np.array([[1]]))
 
         # Confirm that T_2 log values only include most recent run
         sys_log_dict = log_dict_T_2[SYS.default_execution_id]
-        assert np.allclose(sys_log_dict['RESULTS'], np.array([[2.0, 2.0]]))
+        assert np.allclose(sys_log_dict['RESULT'], np.array([[2.0, 2.0]]))
         assert np.allclose(sys_log_dict['mod_slope'], np.array([[1.0]]))
         assert np.allclose(sys_log_dict['Run'], np.array([[1]]))
 
@@ -1007,7 +1091,7 @@ class TestFiltering:
     def node_logged_in_simulation(self):
         Input = pnl.TransferMechanism(name='Input')
         reward = pnl.TransferMechanism(
-            output_ports=[pnl.RESULT, pnl.OUTPUT_MEAN, pnl.OUTPUT_VARIANCE], name='reward')
+            output_ports=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE], name='reward')
         Decision = pnl.DDM(
             function=pnl.DriftDiffusionAnalytical(
                 drift_rate=(1.0, pnl.ControlProjection(

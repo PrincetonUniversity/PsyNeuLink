@@ -9,6 +9,23 @@
 # *******************************************  LearningMechanism *******************************************************
 
 """
+
+Contents
+--------
+
+  * `LearningMechanism_Overview`
+  * `LearningMechanism_Creation`
+      - `LearningMechanism_Explicit_Creation`
+  * `LearningMechanism_Structure`
+      - `LearningMechanism_InputPorts`
+      - `LearningMechanism_Function`
+      - `LearningMechanism_OutputPorts`
+      - `LearningMechanism_Additional_Attributes`
+      - `LearningMechanism_Learning_Configurations`
+  * `LearningMechanism_Execution`
+  * `LearningMechanism_Class_Reference`
+
+
 .. _LearningMechanism_Overview:
 
 Overview
@@ -112,9 +129,9 @@ names and roles (shown in the `figure <LearningMechanism_Single_Layer_Learning_F
 
 .. _LearningMechanism_Activation_Input:
 
-* *ACTIVATION_INPUT* - receives the value of the input to the `primary_learned_projection`; that is, the
-  `value <MappingProjection.value>` of that MappingProjection's `sender <MappingProjection.sender>`.
-  The value is assigned as the first item of the LearningMechanism's `variable <LearningMechanism.variable>` attribute.
+* *ACTIVATION_INPUT* - receives the value of the input to the `primary_learned_projection`; that is, the `value
+  <Projection_Base.value>` of that MappingProjection's `sender <MappingProjection.sender>`. The value is assigned
+  as the first item of the LearningMechanism's `variable <LearningMechanism.variable>` attribute.
 
 .. _LearningMechanism_Activation_Output:
 
@@ -138,7 +155,7 @@ names and roles (shown in the `figure <LearningMechanism_Single_Layer_Learning_F
   that receives its input from a ComparatorMechanism. If the `primary_learned_projection` is part of a `multilayer
   learning sequence <LearningMechanism_Multilayer_Learning>`, then the LearningMechanism will have one or more
   *ERROR_SIGNAL* InputPorts, that receive their input from the next LearningMechanism(s) in the sequence;  that is,
-  the one(s) associated with the `efferents <OutputPort.efferents>` (outgoing Projections) of its `output_source`,
+  the one(s) associated with the `efferents <Port.efferents>` (outgoing Projections) of its `output_source`,
   with one *ERROR_SIGNAL* InputPort for each of those Projections.  The `value <InputPort.value>`\\s of the
   *ERROR_SIGNAL* InputPorts are summed by the LearningMechanism's `function <LearningMechanism.function>` to
   calculate the `learning_signal <LearningMechanism.learning_signal>` (see `below <LearningMechanism_Function>`);
@@ -320,21 +337,22 @@ refer to the Components being learned and/or its operation:
   before returning it as the `learning_signal <LearningMechanism.learning_signal>`.  This can be specified in the
   **learning_rate** argument of the LearningMechanism's constructor (or the constructor for its `function
   <LearningMechanism.function>`;  doing so supersedes specification of the **learning_rate** for a
-  `RecurrentTransferMechanism <Recurrent_Transfer_Learning>` used to implement `unsupervised learning
+  `RecurrentTransferMechanism <RecurrentTransferMechanism_Learning>` used to implement `unsupervised learning
   <Composition_Learning_Unsupervised>`, or a Composition's `learning method <Composition_Learning_Methods>` used to
   implement a `supervised learning sequence <Composition_Learning_Supervised>`.  The default value for a
   LearningMechanism's `learning_rate <LearningMechanism.learning_rate>` attribute is `None`, in which case the
   LearningMechanism (and its `function <LearningMechanism.function>`) inherit the learning_rate from the
-  `RecurrentTransferMechanism <Recurrent_Transfer_Learning>` or the `learning method <Composition_Learning_Methods>`
-  of a Composition in which learning was defined.    If that is `None`, then it inherits the learning_rate specified
-  in the constructor of the `RecurrentTransferMechanism <Recurrent_Transfer_Learning>` (for unsupervised learning) or
-  Composition's `learning method <Composition_Learning_Methods>` (for supervised learning).  If that is also `None`,
-  then it uses the value of the `default_learning_rate <LearningFunction.default_learning_rate>` parameter of its
-  `function <LearningMechanism.function>`. A :keyword:`learning_rate` parameter can also be specified for individual
-  `LearningSignals <LearningSignal>` and/or their associated `LearningProjections <LearningProjection>`.  Those have
-  a direct multiplicative effect on the `learning_signal <LearningProjection.learning_signal>` of the LearningSignal
-  and/or it LearningProjections (see `LearningSignal learning_rate <LearningSignal_Learning_Rate>` for additional
-  details).
+  `RecurrentTransferMechanism <RecurrentTransferMechanism_Learning>` or the `learning method
+  <Composition_Learning_Methods>` of a Composition in which learning was defined.  If that is `None`, then it inherits
+  the learning_rate specified in the constructor of the `RecurrentTransferMechanism
+  <RecurrentTransferMechanism_Learning>` (for unsupervised learning) or Composition's `learning method
+  <Composition_Learning_Methods>` (for supervised learning). If that is also `None`, then it uses the value of the
+  `default_learning_rate <LearningFunction.default_learning_rate>` parameter of its `function
+  <LearningMechanism.function>`. A :keyword:`learning_rate` parameter can also be specified for individual
+  `LearningSignals <LearningSignal>` and/or their associated `LearningProjections <LearningProjection>`.
+  Those have a direct multiplicative effect on the `learning_signal <LearningProjection.learning_signal>` of the
+  LearningSignal and/or it LearningProjections (see `LearningSignal learning_rate <LearningSignal_Learning_Rate>`
+  for additional details).
 
 .. _LearningMechanism_Learning_Configurations:
 
@@ -345,12 +363,12 @@ COMMENT
 *Learning Configurations*
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When learning is enabled for a `RecurrentTransferMechanism <Recurrent_Transfer_Learning>` (for `unsupervised learning
-<Composition_Learning_Unsupervised>`) or using the `learning method <Composition_Learning_Methods>` of a Composition,
-all of the Components required for learning are created automatically. The types of Components that are generated
-depend on the type of learning specified and the configuration of the `Composition <Composition>`, as described below.
-All of the learning Components of a Composition can be displayed using its `show_graph` method with the
-**show_learning** argument assigned `True` or *ALL*.
+When learning is enabled for a `RecurrentTransferMechanism <RecurrentTransferMechanism_Learning>` (for `unsupervised
+learning <Composition_Learning_Unsupervised>`) or using the `learning method <Composition_Learning_Methods>` of a
+Composition, all of the Components required for learning are created automatically. The types of Components that are
+generated depend on the type of learning specified and the configuration of the `Composition <Composition>`, as
+described below. All of the learning Components of a Composition can be displayed using its `show_graph` method with
+the **show_learning** argument assigned `True` or *ALL*.
 
 .. _LearningMechanism_Single_Layer_Learning:
 
@@ -648,19 +666,17 @@ def _learning_mechanism_learning_rate_setter(value, owning_component=None, conte
 
 class LearningMechanism(ModulatoryMechanism_Base):
     """
-    LearningMechanism(                        \
-        variable,                             \
-        error_sources,                        \
-        function=BackPropagation,             \
-        learning_rate=None,                   \
-        learning_signals=LEARNING_SIGNAL,     \
-        modulation=ADDITIVE,                  \
-        learning_enabled=True,                \
-        params=None,                          \
-        name=None,                            \
-        prefs=None)
+    LearningMechanism(                    \
+        variable,                         \
+        error_sources,                    \
+        function=BackPropagation,         \
+        learning_rate=None,               \
+        learning_signals=LEARNING_SIGNAL, \
+        modulation=ADDITIVE,              \
+        learning_enabled=True)
 
-    Implements a Mechanism that modifies the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`.
+    Subclass of ModulatoryMechanism that modifies the `matrix <MappingProjection.matrix>` parameter of a
+    `MappingProjection`. See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
 
     COMMENT:
         Description:
@@ -690,23 +706,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
             - activation_derivative:  get from FUNCTION of sample_activation_mechanism/receiver_mech
                                       assumes derivative of Logistic unless otherwise specified
             - error_derivative:  get from FUNCTION of error_sources/next_level_mech;  but handled in ObjectiveMechanism
-
-        Class attributes:
-            + className = LEARNING_MECHANISM
-            + componentType = ADAPTIVE_MECHANISM
-            + paramClassDefaults (dict):
-                + FUNCTION (Function): (default: BP)
-                + FUNCTION_PARAMS:
-                    + LEARNING_RATE (value): (default: 1)
-            + classPreference (PreferenceSet): LearningSignalPreferenceSet, instantiated in __init__()
-            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-
-        Class methods:
-            None
-
-        MechanismRegistry:
-            All instances of LearningMechanism are registered in MechanismRegistry, which maintains an
-              entry for the subclass, a count for all instances of it, and a dictionary of those instances
     COMMENT
 
     Arguments
@@ -749,18 +748,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
     learning_enabled : bool or Enum[ONLINE|AFTER] : True
         specifies whether and when the LearningMechanism's `LearningProjections <LearningProjection>` are executed
         (see `learning_enabled <LearningMechanism.learning_enabled>` for additional details).
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
-        Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
-        the Projection's default `function <LearningProjection.function>` and parameter assignments.  Values specified
-        for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default see `name <LearningMechanism.name>`
-        specifies the name of the LearningMechanism.
-
-    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the LearningMechanism; see `prefs <LearningMechanism.prefs>` for details.
 
 
     Attributes
@@ -889,15 +876,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
     modulation : ModulationParam
         the default form of modulation used by the LearningMechanism's `LearningSignal(s)
         <LearningMechanism_LearningSignal>`, unless they are `individually specified <LearningSignal_Specification>`.
-
-    name : str
-        the name of the LearningMechanism; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the LearningMechanism; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
 
     """
 
@@ -1353,7 +1331,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         if (self.in_composition and
                 isinstance(self.function, BackPropagation) and
                 self.initialization_status == ContextFlags.INITIALIZING):
-            return [0*summed_learning_signal, 0*summed_error_signal]
+            return [0 * summed_learning_signal, 0 * summed_error_signal]
 
         return [summed_learning_signal, summed_error_signal]
 

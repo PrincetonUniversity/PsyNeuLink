@@ -718,7 +718,7 @@ class EVCControlMechanism(ControlMechanism):
         `EVC_policies`;
 
     control_allocation : 2d np.array : [[defaultControlAllocation]]
-        determines the value assigned as the `variable <ControlSignal.variable>` for each `ControlSignal` and its
+        determines the value assigned as the `variable <Projection_Base.variable>` for each `ControlSignal` and its
         associated `ControlProjection`.  Each item of the array must be a 1d array (usually containing a scalar)
         that specifies an `allocation` for the corresponding ControlSignal, and the number of items must equal the
         number of ControlSignals in the EVCControlMechanism's `control_signals` attribute.
@@ -940,7 +940,7 @@ class EVCControlMechanism(ControlMechanism):
             control_signal = self._instantiate_control_signal(spec, context=context)
             control_signal._variable_spec = (OWNER_VALUE, i)
             self.control_signals[i] = control_signal
-        self.defaults.value = np.tile(control_signal.parameters.variable.default_value, (i+1, 1))
+        self.defaults.value = np.tile(control_signal.parameters.variable.default_value, (i + 1, 1))
         self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
 
     def _instantiate_prediction_mechanisms(self, system:System_Base, context=None):

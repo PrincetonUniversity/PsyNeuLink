@@ -140,9 +140,9 @@ class TestNaming:
         assert I1.name == 'InputPort-1'
         assert I2.name == 'InputPort-2'
         assert T2.input_ports[0].path_afferents[0].name == \
-               'MappingProjection from T1[RESULTS] to T2[InputPort-0]'
+               'MappingProjection from T1[RESULT] to T2[InputPort-0]'
         assert T2.input_ports[2].path_afferents[0].name == \
-               'MappingProjection from T1[RESULTS] to T2[InputPort-2]'
+               'MappingProjection from T1[RESULT] to T2[InputPort-2]'
 
     # ------------------------------------------------------------------------------------------------
     # TEST 10
@@ -175,7 +175,7 @@ class TestNaming:
         C2 = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS:[D1.parameter_ports[
                                                                          psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE],
                                                                      D1.parameter_ports[
-                                                                         psyneulink.core.components.functions.distributionfunctions.THRESHOLD]]}])
+                                                                         psyneulink.core.globals.keywords.THRESHOLD]]}])
         assert C2.control_signals[0].name == 'D1[drift_rate, threshold] ControlSignal'
         assert C2.control_signals[0].efferents[0].name == 'ControlProjection for D1[drift_rate]'
         assert C2.control_signals[0].efferents[1].name == 'ControlProjection for D1[threshold]'
@@ -216,7 +216,7 @@ class TestNaming:
 
         # GatingProjections to ProcessingMechanism from GatingSignals of existing GatingMechanism
         T5 = pnl.TransferMechanism(name='T5',
-                                   input_ports=[T3.output_ports[pnl.RESULTS],
+                                   input_ports=[T3.output_ports[pnl.RESULT],
                                                  G3.gating_signals['GatingSignal-0 divergent GatingSignal']],
                                    output_ports=[G3.gating_signals['GatingSignal-0 divergent GatingSignal']])
 

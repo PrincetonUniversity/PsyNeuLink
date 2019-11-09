@@ -35,15 +35,16 @@ import typecheck as tc
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function_Base, FunctionError
-from psyneulink.core.components.functions.distributionfunctions import DistributionFunction, THRESHOLD
+from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
 from psyneulink.core.components.functions.statefulfunctions.statefulfunction import StatefulFunction
 from psyneulink.core.globals.keywords import \
     ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ADDITIVE_PARAM, \
-    DECAY, DEFAULT_VARIABLE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, FITZHUGHNAGUMO_INTEGRATOR_FUNCTION, FUNCTION, \
+    DECAY, DEFAULT_VARIABLE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DUAL_ADAPTIVE_INTEGRATOR_FUNCTION, \
+    FITZHUGHNAGUMO_INTEGRATOR_FUNCTION, FUNCTION, \
     INCREMENT, INITIALIZER, INPUT_PORTS, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, \
     INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LEAKY_COMPETING_INTEGRATOR_FUNCTION, \
     MULTIPLICATIVE_PARAM, NOISE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_PORTS, PRODUCT, \
-    RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, DUAL_ADAPTIVE_INTEGRATOR_FUNCTION
+    RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, THRESHOLD
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import parameter_spec, all_within_range, iscompatible
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
@@ -366,6 +367,25 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 
     def _function(self, *args, **kwargs):
         raise FunctionError("IntegratorFunction is not meant to be called explicitly")
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+        # Get rid of 2d array.
+        # When part of a Mechanism, the input and output are 2d arrays.
+        arg_in = ctx.unwrap_2d_array(builder, arg_in)
+        arg_out = ctx.unwrap_2d_array(builder, arg_out)
+
+        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "integrate") as args:
+            self._gen_llvm_integrate(*args, ctx, arg_in, arg_out, params, state)
+
+        return builder
+
+    def _gen_llvm_load_param(self, ctx, builder, params, index, param):
+        param_p = ctx.get_param_ptr(self, builder, params, param)
+        if isinstance(param_p.type.pointee, pnlvm.ir.ArrayType) and param_p.type.pointee.count > 1:
+            param_p = builder.gep(param_p, [ctx.int32_ty(0), index])
+        return pnlvm.helpers.load_extract_scalar_array_one(builder, param_p)
+
+
 
 # *********************************************** INTEGRATOR FUNCTIONS *************************************************
 
@@ -805,7 +825,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
                  default_variable=None,
                  rate: parameter_spec = 1.0,
                  noise=0.0,
-                 offset=None,
+                 offset=0.0,
                  initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -853,8 +873,6 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         rate = np.array(self.get_current_function_param(RATE, context)).astype(float)
 
         offset = self.get_current_function_param(OFFSET, context)
-        if offset is None:
-            offset = 0.0
 
         # execute noise if it is a function
         noise = self._try_execute_param(self.get_current_function_param(NOISE, context), variable)
@@ -873,6 +891,33 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
 
         return self.convert_output_type(adjusted_value)
 
+    def _gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
+        rate = self._gen_llvm_load_param(ctx, builder, params, index, RATE)
+        noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE)
+        offset = self._gen_llvm_load_param(ctx, builder, params, index, OFFSET)
+
+        # Get the only context member -- previous value
+        prev_ptr = ctx.get_state_ptr(self, builder, state, "previous_value")
+        # Get rid of 2d array. When part of a Mechanism the input,
+        # (and output, and context) are 2d arrays.
+        prev_ptr = ctx.unwrap_2d_array(builder, prev_ptr)
+        assert len(prev_ptr.type.pointee) == len(vi.type.pointee)
+
+        prev_ptr = builder.gep(prev_ptr, [ctx.int32_ty(0), index])
+        prev_val = builder.load(prev_ptr)
+
+        vi_ptr = builder.gep(vi, [ctx.int32_ty(0), index])
+        vi_val = builder.load(vi_ptr)
+
+        new_val = builder.fmul(vi_val, rate)
+
+        ret = builder.fadd(prev_val, new_val)
+        ret = builder.fadd(ret, noise)
+        res = builder.fadd(ret, offset)
+
+        vo_ptr = builder.gep(vo, [ctx.int32_ty(0), index])
+        builder.store(res, vo_ptr)
+        builder.store(res, prev_ptr)
 
 class AdaptiveIntegrator(IntegratorFunction):  # -----------------------------------------------------------------------
     """
@@ -1118,20 +1163,10 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         if not all_within_range(rate, 0, 1):
             raise FunctionError(rate_value_msg.format(rate, self.name))
 
-    def __gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
-        rate_p = ctx.get_param_ptr(self, builder, params, RATE)
-        offset_p = ctx.get_param_ptr(self, builder, params, OFFSET)
-        noise_p = ctx.get_param_ptr(self, builder, params, NOISE)
-
-        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_p)
-
-        if isinstance(rate_p.type.pointee, pnlvm.ir.ArrayType) and rate_p.type.pointee.count > 1:
-            rate_p = builder.gep(rate_p, [ctx.int32_ty(0), index])
-        rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_p)
-
-        if isinstance(noise_p.type.pointee, pnlvm.ir.ArrayType) and noise_p.type.pointee.count > 1:
-            noise_p = builder.gep(noise_p, [ctx.int32_ty(0), index])
-        noise = pnlvm.helpers.load_extract_scalar_array_one(builder, noise_p)
+    def _gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
+        rate = self._gen_llvm_load_param(ctx, builder, params, index, RATE)
+        noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE)
+        offset = self._gen_llvm_load_param(ctx, builder, params, index, OFFSET)
 
         # Get the only context member -- previous value
         prev_ptr = ctx.get_state_ptr(self, builder, state, "previous_value")
@@ -1157,17 +1192,6 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         vo_ptr = builder.gep(vo, [ctx.int32_ty(0), index])
         builder.store(res, vo_ptr)
         builder.store(res, prev_ptr)
-
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
-        # Get rid of 2d array.
-        # When part of a Mechanism, the input and output are 2d arrays.
-        arg_in = ctx.unwrap_2d_array(builder, arg_in)
-        arg_out = ctx.unwrap_2d_array(builder, arg_out)
-
-        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "integrate") as args:
-            self.__gen_llvm_integrate(*args, ctx, arg_in, arg_out, params, state)
-
-        return builder
 
     def _function(self,
                  variable=None,
@@ -2321,10 +2345,9 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         positive or negative value of threshold (see hint).
 
         .. hint::
-           For a Mechanism to terminate execution when the DriftDiffusionIntegrator reaches its threshold, the
-           `function <DriftDiffusionIntegrator.function>`, the `Mechanism` to which it assigned must belong to a
-           `System` or `Composition` with a `Scheduler <Scheduler>` that applies the `WhenFinished <WhenFinished>`
-           `Condition <Condition>` to that Mechanism.
+           To terminate execution of the `Mechanism` to which the `function <DriftDiffusionIntegrator.function>` is
+           assigned, the Mechanism just belong to a `Composition` with a `scheduler <Composition.scheduler>` that
+           applies the `WhenFinished` `Condition` to that Mechanism.
 
     time_step_size : float
         determines the timing precision of the integration process and is used to scale the `noise

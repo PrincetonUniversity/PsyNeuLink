@@ -12,7 +12,7 @@ from psyneulink.core.components.projections.projection import ProjectionError
 from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.port import PortError
-from psyneulink.core.globals.keywords import FUNCTION, INPUT_PORTS, MECHANISM, NAME, OUTPUT_PORTS, PROJECTIONS, RESULTS, VARIABLE
+from psyneulink.core.globals.keywords import FUNCTION, INPUT_PORTS, MECHANISM, NAME, OUTPUT_PORTS, PROJECTIONS, RESULT, VARIABLE
 
 mismatches_specified_default_variable_error_text = 'not compatible with its specified default variable'
 mismatches_default_variable_format_error_text = 'is not compatible with its expected format'
@@ -563,7 +563,7 @@ class TestInputPortSpec:
         assert mismatches_specified_default_variable_error_text in str(error_text.value)
 
         with pytest.raises(FunctionError) as error_text:
-            m = TransferMechanism(size=3, output_ports=[pnl.TRANSFER_OUTPUT.MEAN])
+            m = TransferMechanism(size=3, output_ports=[pnl.MEAN])
             p = MappingProjection(sender=m, matrix=[[0,0,0], [0,0,0]])
             T = TransferMechanism(input_ports=[p])
         assert re.match(
@@ -572,7 +572,7 @@ class TestInputPortSpec:
         )
 
         with pytest.raises(FunctionError) as error_text:
-            m2 = TransferMechanism(size=2, output_ports=[pnl.TRANSFER_OUTPUT.MEAN])
+            m2 = TransferMechanism(size=2, output_ports=[pnl.MEAN])
             p2 = MappingProjection(sender=m2, matrix=[[1,1,1],[1,1,1]])
             T2 = TransferMechanism(input_ports=[p2])
         assert re.match(
@@ -710,8 +710,7 @@ class TestInputPortSpec:
         my_input_port = InputPort(projections=[T1])
         T2 = TransferMechanism(input_ports=[my_input_port])
         assert T2.input_ports[0].name == 'InputPort-0'
-        assert T2.input_ports[0].projections[0].sender.name == 'RESULTS'
-
+        assert T2.input_ports[0].projections[0].sender.name == 'RESULT'
 
     # ------------------------------------------------------------------------------------------------
     # TEST 33
@@ -721,17 +720,17 @@ class TestInputPortSpec:
         # T1 has OutputPorts of with same lengths,
         #    so T2 should use that length for its InputPort variable (since it is not otherwise specified)
         T1 = TransferMechanism(input_ports=[[0,0],[0,0]])
-        T2 = TransferMechanism(input_ports=[(['RESULT', 'RESULT-1'], T1)])
+        T2 = TransferMechanism(input_ports=[(['RESULT-0', 'RESULT-1'], T1)])
         assert len(T2.input_ports[0].value) == 2
-        assert T2.input_ports[0].path_afferents[0].sender.name == 'RESULT'
+        assert T2.input_ports[0].path_afferents[0].sender.name == 'RESULT-0'
         assert T2.input_ports[0].path_afferents[1].sender.name == 'RESULT-1'
 
         # T1 has OutputPorts with different lengths both of which are specified by T2 to project to a singe InputPort,
         #    so T2 should use its variable default as format for the InputPort (since it is not otherwise specified)
         T1 = TransferMechanism(input_ports=[[0,0],[0,0,0]])
-        T2 = TransferMechanism(input_ports=[(['RESULT', 'RESULT-1'], T1)])
+        T2 = TransferMechanism(input_ports=[(['RESULT-0', 'RESULT-1'], T1)])
         assert len(T2.input_ports[0].value) == 1
-        assert T2.input_ports[0].path_afferents[0].sender.name == 'RESULT'
+        assert T2.input_ports[0].path_afferents[0].sender.name == 'RESULT-0'
         assert T2.input_ports[0].path_afferents[1].sender.name == 'RESULT-1'
 
     # ------------------------------------------------------------------------------------------------
@@ -796,7 +795,7 @@ class TestInputPortSpec:
         ([0, 0], None, [transfer_mech], 2, 2),
         ([0, 0], None, [(transfer_mech, None)], 2, 2),
         ([0, 0], None, [(transfer_mech, 1, 1)], 2, 2),
-        ([0, 0], None, [((RESULTS, transfer_mech), 1, 1)], 2, 2),
+        ([0, 0], None, [((RESULT, transfer_mech), 1, 1)], 2, 2),
         ([0, 0], None, [(transfer_mech, 1, 1, None)], 2, 2),
         # size tests
         (None, 2, [transfer_mech], 2, 2),

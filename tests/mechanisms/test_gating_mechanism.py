@@ -6,12 +6,9 @@ from psyneulink.core.components.functions.statefulfunctions.integratorfunctions 
 from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.components.system import System
 from psyneulink.core.globals.keywords import \
-    DEFAULT_VARIABLE, FUNCTION, FUNCTION_PARAMS, INITIALIZER, LEARNING, RATE, SOFT_CLAMP, TARGET_MECHANISM, VALUE
-from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
+    DEFAULT_VARIABLE, FUNCTION, FUNCTION_PARAMS, INITIALIZER, RATE, TARGET_MECHANISM, VALUE
 from psyneulink.core.compositions.composition import Composition
 
 def test_gating_with_composition():

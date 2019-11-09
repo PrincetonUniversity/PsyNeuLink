@@ -1,6 +1,6 @@
 """
 
-Sections
+Contents
 --------
 
   * `JSON_Overview`
@@ -8,6 +8,7 @@ Sections
   * `JSON_Model_Specification`
 
 .. _JSON_Overview:
+
 
 Overview
 --------
@@ -218,14 +219,16 @@ class PNLJSONEncoder(json.JSONEncoder):
     def default(self, o):
         from psyneulink.core.components.component import Component, ComponentsMeta
 
-        if isinstance(o, type):
+        if isinstance(o, (type, types.BuiltinFunctionType)):
             if o.__module__ == 'builtins':
                 # just give standard type, like float or int
                 return f'{o.__name__}'
             elif o is numpy.ndarray:
                 return f'{o.__module__}.array'
             else:
-                return f'{o.__module__}.{o.__name__}'
+                # some builtin modules are internally "_module"
+                # but are imported with "module"
+                return f"{o.__module__.lstrip('_')}.{o.__name__}"
         elif isinstance(o, (enum.Enum, types.FunctionType)):
             return str(o)
         elif o is NotImplemented:
@@ -349,7 +352,7 @@ def _parse_parameter_value(value, component_identifiers=None):
             dill_str = base64.decodebytes(bytes(value, 'utf-8'))
             dill.loads(dill_str)
             return f'dill.loads({dill_str})'
-        except (binascii.Error, pickle.UnpicklingError):
+        except (binascii.Error, pickle.UnpicklingError, EOFError):
             pass
 
         # handle IO port specification
@@ -372,6 +375,13 @@ def _parse_parameter_value(value, component_identifiers=None):
         if identifier in component_identifiers:
             value = identifier
 
+        evaluates = False
+        try:
+            eval(value)
+            evaluates = True
+        except (TypeError, NameError, SyntaxError):
+            pass
+
         # handle generic string
         if (
             value not in component_identifiers
@@ -379,6 +389,7 @@ def _parse_parameter_value(value, component_identifiers=None):
             # string, this is definitely imperfect and can't handle the
             # legitimate case, but don't know how to distinguish..
             and '.' not in value
+            and not evaluates
         ):
             value = f"'{value}'"
 
@@ -920,8 +931,22 @@ def generate_script_from_json(model_input):
         'numpy': 'np'
     }
 
-    for module, friendly_name in module_friendly_name_mapping.items():
-        comp_str = re.sub(f'{module}\\.', f'{friendly_name}.', comp_str)
+    module_names = set()
+    potential_module_names = set(re.findall(r'([A-Za-z]+?)\.', comp_str))
+    for module in potential_module_names:
+        try:
+            exec(f'import {module}')
+            module_names.add(module)
+        except (ImportError, ModuleNotFoundError, SyntaxError):
+            pass
+
+    for module in module_names:
+        try:
+            friendly_name = module_friendly_name_mapping[module]
+            comp_str = re.sub(f'{module}\\.', f'{friendly_name}.', comp_str)
+        except KeyError:
+            friendly_name = module
+
         if f'{friendly_name}.' in comp_str:
             imports_str += 'import {0}{1}\n'.format(
                 module,

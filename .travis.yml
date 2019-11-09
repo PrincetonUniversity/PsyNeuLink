@@ -14,11 +14,12 @@ dist: bionic
 
 env:
   matrix:
+    - PYTHON=3.7.5
     - PYTHON=3.6.8
-    - PYTHON=3.7.4
   global:
     - PYTHONWARNINGS="ignore::DeprecationWarning"
     - PIP_PROGRESS_BAR="off"
+    - COVERALLS_PARALLEL=true
 
 # Cache downloaded(built) python packages
 # and homebrew downloads
@@ -32,7 +33,6 @@ addons:
   apt:
     packages:
       - graphviz
-      - python3-pip
 
 before_install:
   - |
@@ -55,7 +55,10 @@ before_install:
       echo "Deploying new python venv"
       python3 -m pip  install virtualenv
       python3 -m venv $HOME/venv
-    elif [ "$TRAVIS_OS_NAME" == "linux" ]; then
+    fi
+  - |
+    # Install venv on Linux using Ubuntu distributed python
+    if [ "$TRAVIS_OS_NAME" == "linux" ]; then
       sudo apt-get install -y python${PYTHON%.*}-dev python${PYTHON%.*}-venv
       python${PYTHON%.*} -m venv $HOME/venv
       # Provide fake xdg-open
@@ -64,9 +67,8 @@ before_install:
     fi
   - source $HOME/venv/bin/activate
 
-  # Upgrade pip
-  - pip install -U pip
   - python --version
+  - pip install -U pip
   - pip --version
 
 install:
@@ -76,10 +78,11 @@ install:
 
 
 script:
-  - pytest -n auto --strict-markers -p no:logging --cov=psyneulink
+  - if [ "x$RUN_COV" != "x" ] ; then echo "Running with coverage"; export COV_ARGS="--cov=psyneulink"; else echo "Running without coverage"; export COV_ARGS=""; fi
+  - pytest -n auto --strict-markers -p no:logging $COV_ARGS
 
 after_script:
-  - COVERALLS_PARALLEL=true coveralls
+  - if [ "x$RUN_COV" != "x" ] ; then coveralls; fi
 
 notifications:
   webhooks: https://coveralls.io/webhook

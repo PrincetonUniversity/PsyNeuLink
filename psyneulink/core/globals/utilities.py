@@ -39,6 +39,7 @@ CONTENTS
 * `is_unit_interval`
 * `is_same_function_spec`
 * `is_component`
+* `is_comparison_operator`
 
 *ENUM*
 ~~~~~~
@@ -106,12 +107,13 @@ from enum import Enum, EnumMeta, IntEnum
 import collections
 import numpy as np
 
-from psyneulink.core.globals.keywords import DISTANCE_METRICS, EXPONENTIAL, GAUSSIAN, LINEAR, MATRIX_KEYWORD_VALUES, NAME, SINUSOID, VALUE
+from psyneulink.core.globals.keywords import \
+    comparison_operators, DISTANCE_METRICS, EXPONENTIAL, GAUSSIAN, LINEAR, MATRIX_KEYWORD_VALUES, NAME, SINUSOID, VALUE
 
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
     'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'NodeRole', 'get_class_attributes', 'flatten_list', 'get_all_explicit_arguments',
-    'get_modulationOperation_name', 'get_value_from_array', 'is_component',
+    'get_modulationOperation_name', 'get_value_from_array', 'is_comparison_operator', 'is_component',
     'is_distance_metric', 'is_matrix',
     'insert_list', 'is_matrix_spec', 'all_within_range', 'is_iterable',
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
@@ -554,8 +556,8 @@ def iscompatible(candidate, reference=None, **kargs):
 # MATHEMATICAL  ********************************************************************************************************
 
 def normpdf(x, mu=0, sigma=1):
-    u = float((x-mu) / abs(sigma))
-    y = np.exp(-u*u/2) / (np.sqrt(2*np.pi) * abs(sigma))
+    u = float((x - mu) / abs(sigma))
+    y = np.exp(-u * u / 2) / (np.sqrt(2 * np.pi) * abs(sigma))
     return y
 
 def sinusoid(x, amplitude=1, frequency=1, phase=0):
@@ -565,9 +567,9 @@ def scalar_distance(measure, value, scale=1, offset=0):
     if measure is GAUSSIAN:
         return normpdf(value, offset, scale)
     if measure is LINEAR:
-        return scale*value+offset
+        return scale * value + offset
     if measure is EXPONENTIAL:
-        return np.exp(scale*value+offset)
+        return np.exp(scale * value + offset)
     if measure is SINUSOID:
         return sinusoid(value, frequency=scale, phase=offset)
 
@@ -575,7 +577,7 @@ from itertools import chain, combinations
 def powerset(iterable):
     """powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"""
     s = list(iterable)
-    return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
+    return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
 
 import typecheck as tc
 @tc.typecheck
@@ -597,7 +599,7 @@ def tensor_power(items, levels:tc.optional(range)=None, flat=False):
     if  max_spec > max_levels:
         raise UtilitiesError("range ({},{}) specified for {} arg of tensor_power() "
                              "exceeds max for items specified ({})".
-                             format(min_spec, max_spec+1, repr('levels'), max_levels+1))
+                             format(min_spec, max_spec + 1, repr('levels'), max_levels + 1))
 
     pp = []
     for s in ps:
@@ -608,11 +610,11 @@ def tensor_power(items, levels:tc.optional(range)=None, flat=False):
             pp.append(np.array(s[0]))
         else:
             i = 0
-            tp = np.tensordot(s[i],s[i+1],axes=0)
-            i+=2
+            tp = np.tensordot(s[i],s[i + 1],axes=0)
+            i += 2
             while i < order:
                 tp = np.tensordot(tp, s[i], axes=0)
-                i+=1
+                i += 1
             if flat is True:
                 pp.extend(tp.reshape(-1))
             else:
@@ -736,7 +738,7 @@ def multi_getattr(obj, attr, default = None):
 
 
 # based off the answer here https://stackoverflow.com/a/15774013/3131666
-def get_deepcopy_with_shared(shared_keys=None, shared_types=None):
+def get_deepcopy_with_shared(shared_keys=frozenset(), shared_types=()):
     """
         Arguments
         ---------
@@ -751,30 +753,20 @@ def get_deepcopy_with_shared(shared_keys=None, shared_types=None):
         -------
             a __deepcopy__ function
     """
-    try:
-        shared_types = tuple(shared_types)
-    except TypeError:
-        shared_types = ()
-
-    if shared_keys is None:
-        shared_keys = []
+    shared_types = tuple(shared_types)
+    shared_keys = frozenset(shared_keys)
 
     def __deepcopy__(self, memo):
         cls = self.__class__
         result = cls.__new__(cls)
         memo[id(self)] = result
 
-        for k in shared_keys:
-            if k in self.__dict__:
-                setattr(result, k, self.__dict__[k])
-
         for k, v in self.__dict__.items():
-            if isinstance(self.__dict__[k], shared_types):
-                res_val = self.__dict__[k]
-                setattr(result, k, res_val)
-            elif k not in shared_keys:
+            if k in shared_keys or isinstance(v, shared_types):
+                res_val = v
+            else:
                 res_val = copy.deepcopy(v, memo)
-                setattr(result, k, res_val)
+            setattr(result, k, res_val)
         return result
 
     return __deepcopy__
@@ -1395,6 +1387,17 @@ def is_instance_or_subclass(candidate, spec):
     """
     return isinstance(candidate, spec) or (inspect.isclass(candidate) and issubclass(candidate, spec))
 
+def is_comparison_operator(o):
+    """
+    Returns
+    -------
+
+    True if **o** is an entry in comparison_operators dictionary (in keywords)
+    """
+    if o in comparison_operators.values():
+        return True
+    return False
+
 
 def make_readonly_property(val, name=None):
     """Return property that provides read-only access to its value
@@ -1686,6 +1689,9 @@ class NodeRole(Enum):
     LEARNING
         A Node that is only executed when learning is enabled.
 
+    AUTOASSOCIATIVE_LEARNING
+        A Node that implements an AutoassociativeLearningMechanism
+
     TARGET
         A Node that receives the target for a learning sequence
     """
@@ -1699,7 +1705,8 @@ class NodeRole(Enum):
     FEEDBACK_RECEIVER = 7
     CYCLE = 8
     LEARNING = 9
-    TARGET = 10
+    AUTOASSOCIATIVE_LEARNING = 10
+    TARGET = 11
 
 def unproxy_weakproxy(proxy):
     """

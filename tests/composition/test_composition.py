@@ -17,14 +17,14 @@ from psyneulink.core.components.functions.userdefinedfunction import UserDefined
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
-from psyneulink.core.components.mechanisms.processing.transfermechanism import TRANSFER_OUTPUT, TransferMechanism
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.compositions.composition import Composition, CompositionError
 from psyneulink.core.compositions.pathwaycomposition import PathwayComposition
 from psyneulink.core.compositions.systemcomposition import SystemComposition
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, ALLOCATION_SAMPLES, DISABLE, INPUT_PORT, NAME, PROJECTIONS, OVERRIDE, TARGET_MECHANISM
+    ADDITIVE, ALLOCATION_SAMPLES, DISABLE, INPUT_PORT, NAME, PROJECTIONS, RESULT, OVERRIDE, TARGET_MECHANISM, VARIANCE
 from psyneulink.core.globals.utilities import NodeRole
 from psyneulink.core.scheduling.condition import AfterNCalls
 from psyneulink.core.scheduling.condition import EveryNCalls
@@ -32,7 +32,7 @@ from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism import LCControlMechanism
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
-    RECURRENT_OUTPUT, RecurrentTransferMechanism
+    RecurrentTransferMechanism
 
 logger = logging.getLogger(__name__)
 
@@ -325,6 +325,21 @@ class TestAddProjection:
         assert np.allclose(B.parameters.value.get(comp), [[22.4,  29.6]])
         assert np.allclose(proj.matrix, weights)
 
+    def test_add_linear_processing_pathway_with_noderole_specified_in_tuple(self):
+        comp = Composition()
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B')
+        C = TransferMechanism(name='composition-pytests-C')
+        comp.add_linear_processing_pathway([
+            (A,pnl.NodeRole.AUTOASSOCIATIVE_LEARNING),
+            (B,pnl.NodeRole.AUTOASSOCIATIVE_LEARNING),
+            C
+        ])
+        comp._analyze_graph()
+        autoassociative_learning_nodes = comp.get_nodes_by_role(pnl.NodeRole.AUTOASSOCIATIVE_LEARNING)
+        assert A in autoassociative_learning_nodes
+        assert B in autoassociative_learning_nodes
+
     def test_add_linear_processing_pathway_containing_nodes_with_existing_projections(self):
         """ Test that add_linear_processing_pathway uses MappingProjections already specified for
                 Hidden_layer_2 and Output_Layer in the pathway it creates within the Composition"""
@@ -548,7 +563,8 @@ class TestAnalyzeGraph:
         # disable controller
         comp.enable_controller = False
         comp._analyze_graph()
-        assert comp.controller.objective_mechanism in comp.get_nodes_by_role(NodeRole.OUTPUT)
+        # assert comp.controller.objective_mechanism in comp.get_nodes_by_role(NodeRole.OUTPUT)
+        assert comp.controller.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)
 
     def test_controller_objective_mech_not_terminal_fall_back(self):
         comp = Composition()
@@ -571,13 +587,21 @@ class TestAnalyzeGraph:
                                                                         )
                                        )
         comp._analyze_graph()
+        # ObjectiveMechanism associated with controller should not be considered an OUTPUT node
         assert comp.controller.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)
         assert B in comp.get_nodes_by_role(NodeRole.OUTPUT)
+
         # disable controller
         comp.enable_controller = False
         comp._analyze_graph()
-        assert comp.controller.objective_mechanism in comp.get_nodes_by_role(NodeRole.OUTPUT)
-        assert B not in comp.get_nodes_by_role(NodeRole.OUTPUT)
+
+        # assert comp.controller.objective_mechanism in comp.get_nodes_by_role(NodeRole.OUTPUT)
+        # assert B not in comp.get_nodes_by_role(NodeRole.OUTPUT)
+
+        # ObjectiveMechanism associated with controller should be treated the same (i.e., not be an OUTPUT node)
+        #    irrespective of whether the controller is enabled or disabled
+        assert comp.controller.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)
+        assert B in comp.get_nodes_by_role(NodeRole.OUTPUT)
 
 
 class TestGraphCycles:
@@ -1014,10 +1038,10 @@ class TestExecutionOrder:
         start = ProcessingMechanism(name="start")
         expected_consideration_sets = [{start}]
         for i in range(10):
-            A = ProcessingMechanism(name='A'+str(i))
-            B = ProcessingMechanism(name='B'+str(i))
-            C = ProcessingMechanism(name='C'+str(i))
-            D = ProcessingMechanism(name='D'+str(i))
+            A = ProcessingMechanism(name='A' + str(i))
+            B = ProcessingMechanism(name='B' + str(i))
+            C = ProcessingMechanism(name='C' + str(i))
+            D = ProcessingMechanism(name='D' + str(i))
 
             comp.add_linear_processing_pathway([start, A, B, C, D])
             comp.add_linear_processing_pathway([C, B])
@@ -2284,7 +2308,7 @@ class TestRun:
         R = RecurrentTransferMechanism(size=1,
                                        function=Logistic(),
                                        hetero=-2.0,
-                                       output_ports = [RECURRENT_OUTPUT.RESULT])
+                                       output_ports = [RESULT])
         comp.add_node(R)
         comp._analyze_graph()
         sched = Scheduler(composition=comp)
@@ -2317,7 +2341,7 @@ class TestRun:
                                        hetero=-2.0,
                                        integrator_mode=True,
                                        integration_rate=0.01,
-                                       output_ports = [RECURRENT_OUTPUT.RESULT])
+                                       output_ports = [RESULT])
         comp.add_node(R)
         comp._analyze_graph()
         sched = Scheduler(composition=comp)
@@ -2376,7 +2400,7 @@ class TestRun:
         R = RecurrentTransferMechanism(size=2,
                                        function=Logistic(),
                                        hetero=-2.0,
-                                       output_ports = [RECURRENT_OUTPUT.RESULT])
+                                       output_ports = [RESULT])
         comp.add_node(R)
         comp._analyze_graph()
         sched = Scheduler(composition=comp)
@@ -2409,7 +2433,7 @@ class TestRun:
                                        hetero=-2.0,
                                        integrator_mode=True,
                                        integration_rate=0.01,
-                                       output_ports = [RECURRENT_OUTPUT.RESULT])
+                                       output_ports = [RESULT])
         comp.add_node(R)
         comp._analyze_graph()
         sched = Scheduler(composition=comp)
@@ -4238,8 +4262,7 @@ class TestCompositionInterface:
                               function=Linear(slope=1.0))
         C = TransferMechanism(name="composition-pytests-C",
                               function=Linear(slope=2.0),
-                              output_ports=[TRANSFER_OUTPUT.RESULT,
-                                             TRANSFER_OUTPUT.VARIANCE])
+                              output_ports=[RESULT, VARIANCE])
         comp.add_node(A)
         comp.add_node(B)
         comp.add_node(C)
@@ -4273,8 +4296,7 @@ class TestCompositionInterface:
                               function=Linear(slope=3.0))
         E = TransferMechanism(name="composition-pytests-E",
                               function=Linear(slope=4.0),
-                              output_ports=[TRANSFER_OUTPUT.RESULT,
-                                             TRANSFER_OUTPUT.VARIANCE])
+                              output_ports=[RESULT, VARIANCE])
         comp.add_node(A)
         comp.add_node(B)
         comp.add_node(C)

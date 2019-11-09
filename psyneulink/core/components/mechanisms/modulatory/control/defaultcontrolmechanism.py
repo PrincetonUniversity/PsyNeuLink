@@ -230,7 +230,7 @@ class DefaultControlMechanism(ControlMechanism):
         else:
             self.defaults.variable = np.append(self.defaults.variable, np.atleast_2d(input_port_value), 0)
 
-        variable_item_index = self.defaults.variable.size-1
+        variable_item_index = self.defaults.variable.size - 1
 
         # Instantiate inputPort
         from psyneulink.core.components.ports.port import _instantiate_port
@@ -250,7 +250,7 @@ class DefaultControlMechanism(ControlMechanism):
             from psyneulink.core.components.ports.port import Port_Base
             self._input_ports = ContentAddressableList(component_type=Port_Base,
                                                         list=[input_port],
-                                                        name=self.name+'.input_ports')
+                                                        name=self.name + '.input_ports')
 
         # self.input_value = [port.value for port in self.input_ports]
 

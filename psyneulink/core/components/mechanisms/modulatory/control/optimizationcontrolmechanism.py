@@ -435,27 +435,24 @@ class OptimizationControlMechanismError(Exception):
 
 
 class OptimizationControlMechanism(ControlMechanism):
-    """OptimizationControlMechanism(     \
-    objective_mechanism=None,            \
-    monitor_for_control=None,            \
-    objective_mechanism=None,            \
-    origin_objective_mechanism=False     \
-    terminal_objective_mechanism=False   \
-    features=None,                       \
-    feature_function=None,               \
-    function=None,                       \
-    agent_rep=None,                      \
-    search_function=None,                \
-    search_termination_function=None,    \
-    search_space=None,                   \
-    control_signals=None,                \
-    modulation=MULTIPLICATIVE,           \
-    combine_costs=np.sum,                \
-    compute_reconfiguration_cost=None,   \
-    compute_net_outcome=lambda x,y:x-y,  \
-    params=None,                         \
-    name=None,                           \
-    prefs=None)
+    """OptimizationControlMechanism(         \
+        objective_mechanism=None,            \
+        monitor_for_control=None,            \
+        objective_mechanism=None,            \
+        origin_objective_mechanism=False     \
+        terminal_objective_mechanism=False   \
+        features=None,                       \
+        feature_function=None,               \
+        function=None,                       \
+        agent_rep=None,                      \
+        search_function=None,                \
+        search_termination_function=None,    \
+        search_space=None,                   \
+        control_signals=None,                \
+        modulation=MULTIPLICATIVE,           \
+        combine_costs=np.sum,                \
+        compute_reconfiguration_cost=None,   \
+        compute_net_outcome=lambda x,y:x-y)
 
     Subclass of `ControlMechanism <ControlMechanism>` that adjusts its `ControlSignals <ControlSignal>` to optimize
     performance of the `Composition` to which it belongs
@@ -516,19 +513,6 @@ class OptimizationControlMechanism(ControlMechanism):
         must take as its sole argument an array with the same shape as `control_allocation
         <ControlMechanism.control_allocation>`, and return a similar array (see `Function
         <OptimizationControlMechanism_Function>` for additional details).
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for the
-        OptimizationControlMechanism, its `function <OptimizationControlMechanism.function>`, and/or a custom function
-        and its parameters.  Values specified for parameters in the dictionary override any assigned to those
-        parameters in arguments of the constructor.
-
-    name : str : default see `name <OptimizationControlMechanism.name>`
-        specifies the name of the OptimizationControlMechanism.
-
-    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the OptimizationControlMechanism; see `prefs
-        <OptimizationControlMechanism.prefs>` for details.
 
     Attributes
     ----------
@@ -602,14 +586,6 @@ class OptimizationControlMechanism(ControlMechanism):
         if set to True, `simulations <OptimizationControlMechanism_Execution>` will be created normally for each
         `control allocation <control_allocation>`.
 
-    name : str
-        name of the OptimizationControlMechanism; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the OptimizationControlMechanism; if it is not specified in the **prefs** argument of
-        the constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
     """
 
     componentType = OPTIMIZATION_CONTROL_MECHANISM
@@ -818,7 +794,7 @@ class OptimizationControlMechanism(ControlMechanism):
             control_signal = self._instantiate_control_signal(spec, context=context)
             control_signal._variable_spec = (OWNER_VALUE, i)
             self.control_signals[i] = control_signal
-        self.defaults.value = np.tile(control_signal.parameters.variable.default_value, (i+1, 1))
+        self.defaults.value = np.tile(control_signal.parameters.variable.default_value, (i + 1, 1))
         self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
 
     def _instantiate_function(self, function, function_params=None, context=None):
@@ -855,7 +831,7 @@ class OptimizationControlMechanism(ControlMechanism):
     def _update_input_ports(self, context=None, runtime_params=None):
         """Update value for each InputPort in self.input_ports:
 
-        Call execute method for all (MappingProjection) Projections in InputPort.path_afferents
+        Call execute method for all (MappingProjection) Projections in Port.path_afferents
         Aggregate results (using InputPort execute method)
         Update InputPort.value
         """
@@ -1125,6 +1101,10 @@ class OptimizationControlMechanism(ControlMechanism):
                 idx = ctx.int32_ty(i)
                 sample_ptr = builder.gep(allocation_sample, [ctx.int32_ty(0), idx])
                 sample_dst = builder.gep(ocm_out, [ctx.int32_ty(0), idx, ctx.int32_ty(0)])
+                if sample_ptr.type != sample_dst.type:
+                    assert len(sample_dst.type.pointee) == 1
+                    sample_dst = builder.gep(sample_dst, [ctx.int32_ty(0),
+                                                          ctx.int32_ty(0)])
                 builder.store(builder.load(sample_ptr), sample_dst)
 
             # Construct input
@@ -1211,26 +1191,16 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return fun_out, builder
 
-    def _gen_llvm_output_port_parse_variable(self, ctx, builder, params, context, value, state):
-        i = self.output_ports.index(state)
-        os_input = builder.alloca(pnlvm.ir.ArrayType(ctx.float_ty, 1))
+    def _gen_llvm_output_port_parse_variable(self, ctx, builder, params, context, value, port):
+        i = self.output_ports.index(port)
+        # Allocate the only member of the port input struct
+        oport_input = builder.alloca(ctx.get_input_struct_type(port).elements[0])
+        # FIXME: workaround controller signals occasionally being 2d
+        dest_ptr = ctx.unwrap_2d_array(builder, oport_input)
+        dest_ptr = builder.gep(dest_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
         val_ptr = builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
-        dest_ptr = builder.gep(os_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
         builder.store(builder.load(val_ptr), dest_ptr)
-        return os_input
-
-    def apply_control_allocation(self, control_allocation, runtime_params, context):
-        """Update `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>` based on
-        specified `control_allocation <ControlMechanism.control_allocation>`.
-
-        Called by `evaluate <Composition.evaluate>` method of `Composition` when it is assigned as `agent_rep
-        <OptimizationControlMechanism.agent_rep>`.
-        """
-
-        value = [np.atleast_1d(a) for a in control_allocation]
-        self.parameters.value._set(value, context)
-        self._update_output_ports(context=context, runtime_params=runtime_params,
-                                   )
+        return oport_input
 
     # @property
     # def feature_values(self):

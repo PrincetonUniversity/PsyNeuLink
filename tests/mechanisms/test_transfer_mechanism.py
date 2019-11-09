@@ -319,7 +319,7 @@ class TestDistributionFunctions:
             function=Linear(),
             noise=ExponentialDist(),
             integration_rate=1.0,
-            integrator_mode=True
+            integrator_mode=True,
         )
         val = T.execute([0, 0, 0, 0])
         assert np.allclose(val, [[0.4836021009022533, 1.5688961399691683, 0.7526741095365884, 0.8394328467388229]])
@@ -402,7 +402,7 @@ class TestTransferMechanismFunctions:
 
     def tests_valid_udf_1d_variable(self):
         def double_all_elements(variable):
-            return np.array(variable)*2
+            return np.array(variable) * 2
 
         T = TransferMechanism(name='T-udf',
                               default_variable=[[0.0, 0.0]],
@@ -412,7 +412,7 @@ class TestTransferMechanismFunctions:
 
     def tests_valid_udf_2d_variable(self):
         def double_all_elements(variable):
-            return np.array(variable)*2
+            return np.array(variable) * 2
 
         T = TransferMechanism(name='T-udf',
                               default_variable=[[0.0, 0.0], [0.0, 0.0]],
@@ -550,7 +550,7 @@ class TestTransferMechanismFunctions:
         var = [0 for i in range(VECTOR_SIZE)]
         val = EX(var)
         benchmark(EX, var)
-        assert np.allclose(val, [[1.0/VECTOR_SIZE for i in range(VECTOR_SIZE)]])
+        assert np.allclose(val, [[1.0 / VECTOR_SIZE for i in range(VECTOR_SIZE)]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -632,7 +632,7 @@ class TestTransferMechanismIntegratorFunctionParams:
             default_variable=[0 for i in range(VECTOR_SIZE)],
             integrator_mode=True,
             integrator_function=AdaptiveIntegrator,
-            integration_rate=[i/10 for i in range(VECTOR_SIZE)]
+            integration_rate=[i / 10 for i in range(VECTOR_SIZE)]
         )
         if mode == 'Python':
             EX = T.execute
@@ -691,7 +691,7 @@ class TestTransferMechanismIntegratorFunctionParams:
                 default_variable=[0 for i in range(VECTOR_SIZE)],
                 integrator_mode=True,
                 integrator_function=AdaptiveIntegrator(rate=[i / 20 for i in range(VECTOR_SIZE)]),
-                integration_rate=[i/10 for i in range(VECTOR_SIZE)]
+                integration_rate=[i / 10 for i in range(VECTOR_SIZE)]
         )
         if mode == 'Python':
             EX = T.execute
@@ -715,7 +715,7 @@ class TestTransferMechanismIntegratorFunctionParams:
                     name='T',
                     default_variable=[0 for i in range(VECTOR_SIZE)],
                     integrator_mode=True,
-                    integration_rate=[i/10 for i in range(VECTOR_SIZE+1)]
+                    integration_rate=[i / 10 for i in range(VECTOR_SIZE + 1)]
             )
         assert (
             "integration_rate' arg for" in str(error_text.value)
@@ -749,7 +749,7 @@ class TestTransferMechanismIntegratorFunctionParams:
             name='T',
             default_variable=[0 for i in range(VECTOR_SIZE)],
             integrator_mode=True,
-            initial_value=[i/10 for i in range(VECTOR_SIZE)]
+            initial_value=[i / 10 for i in range(VECTOR_SIZE)]
         )
         if mode == 'Python':
             EX = T.execute
@@ -780,7 +780,7 @@ class TestTransferMechanismIntegratorFunctionParams:
             integrator_mode=True,
             integrator_function=AdaptiveIntegrator(
                     default_variable=[0 for i in range(VECTOR_SIZE)],
-                    initializer=[i/10 for i in range(VECTOR_SIZE)]
+                    initializer=[i / 10 for i in range(VECTOR_SIZE)]
             ),
         )
         if mode == 'Python':
@@ -813,9 +813,9 @@ class TestTransferMechanismIntegratorFunctionParams:
             integrator_mode=True,
             integrator_function=AdaptiveIntegrator(
                     default_variable=[0 for i in range(VECTOR_SIZE)],
-                    initializer=[i/10 for i in range(VECTOR_SIZE)]
+                    initializer=[i / 10 for i in range(VECTOR_SIZE)]
             ),
-            initial_value=[i/10 for i in range(VECTOR_SIZE)]
+            initial_value=[i / 10 for i in range(VECTOR_SIZE)]
         )
         if mode == 'Python':
             EX = T.execute
@@ -840,7 +840,7 @@ class TestTransferMechanismIntegratorFunctionParams:
                     name='T',
                     default_variable=[0 for i in range(VECTOR_SIZE)],
                     integrator_mode=True,
-                    initial_value=[i/10 for i in range(VECTOR_SIZE+1)]
+                    initial_value=[i / 10 for i in range(VECTOR_SIZE + 1)]
             )
         assert (
             "The format of the initial_value parameter" in str(error_text.value)
@@ -853,7 +853,7 @@ class TestTransferMechanismIntegratorFunctionParams:
                 name='T',
                 default_variable=[0 for i in range(VECTOR_SIZE)],
                 integrator_mode=True,
-                integrator_function=AdaptiveIntegrator(rate=[.1 + i/10 for i in range(VECTOR_SIZE)])
+                integrator_function=AdaptiveIntegrator(rate=[.1 + i / 10 for i in range(VECTOR_SIZE)])
         )
         result1 = T.execute([range(VECTOR_SIZE)])
         result2 = T.execute([range(VECTOR_SIZE)])
@@ -867,7 +867,7 @@ class TestTransferMechanismIntegratorFunctionParams:
                     name='T',
                     default_variable=[0 for i in range(VECTOR_SIZE)],
                     integrator_mode=True,
-                    integrator_function=AdaptiveIntegrator(default_variable=[0 for i in range(VECTOR_SIZE+1)])
+                    integrator_function=AdaptiveIntegrator(default_variable=[0 for i in range(VECTOR_SIZE + 1)])
             )
         error_msg_a = 'The length (5) of the \'variable\' or one of the parameters specified for '
         error_msg_b = 'the integrator_function of T doesn\'t match the size (4) of the '
@@ -881,7 +881,7 @@ class TestTransferMechanismIntegratorFunctionParams:
                     name='T',
                     default_variable=[0 for i in range(VECTOR_SIZE)],
                     integrator_mode=True,
-                    integrator_function=AdaptiveIntegrator(rate=[0 for i in range(VECTOR_SIZE+1)])
+                    integrator_function=AdaptiveIntegrator(rate=[0 for i in range(VECTOR_SIZE + 1)])
             )
         error_msg_a = 'The length (5) of the \'variable\' or one of the parameters specified for '
         error_msg_b = 'the integrator_function of T doesn\'t match the size (4) of the '
@@ -897,7 +897,7 @@ class TestTransferMechanismIntegratorFunctionParams:
     #                 name='T',
     #                 default_variable=[0 for i in range(VECTOR_SIZE)],
     #                 integrator_mode=True,
-    #                 integrator_function=AdaptiveIntegrator(initializer=[i/10 for i in range(VECTOR_SIZE+1)])
+    #                 integrator_function=AdaptiveIntegrator(initializer=[i / 10 for i in range(VECTOR_SIZE + 1)])
     #         )
     #     assert (
     #         "initializer' arg for" in str(error_text.value)
@@ -920,7 +920,7 @@ class TestTransferMechanismIntegratorFunctionParams:
             default_variable=[0 for i in range(VECTOR_SIZE)],
             integrator_mode=True,
             integrator_function=AdaptiveIntegrator,
-            noise=[i/10 for i in range(VECTOR_SIZE)]
+            noise=[i / 10 for i in range(VECTOR_SIZE)]
         )
         if mode == 'Python':
             EX = T.execute
@@ -981,7 +981,7 @@ class TestTransferMechanismIntegratorFunctionParams:
                 default_variable=[0 for i in range(VECTOR_SIZE)],
                 integrator_mode=True,
                 integrator_function=AdaptiveIntegrator(noise=[i / 20 for i in range(VECTOR_SIZE)]),
-                noise=[i/10 for i in range(VECTOR_SIZE)]
+                noise=[i / 10 for i in range(VECTOR_SIZE)]
         )
         if mode == 'Python':
             EX = T.execute
@@ -1006,7 +1006,7 @@ class TestTransferMechanismIntegratorFunctionParams:
                     name='T',
                     default_variable=[0 for i in range(VECTOR_SIZE)],
                     integrator_mode=True,
-                    noise=[i/10 for i in range(VECTOR_SIZE+1)]
+                    noise=[i / 10 for i in range(VECTOR_SIZE + 1)]
             )
         assert (
             "Noise parameter ([0.0, 0.1, 0.2, 0.3, 0.4])" in str(error_text.value) and
@@ -1508,12 +1508,12 @@ class TestTransferMechanismMultipleInputPorts:
     @pytest.mark.transfer_mechanism
     @pytest.mark.mimo
     def test_transfer_mech_2d_variable_mean(self):
-        from psyneulink.core.globals.keywords import OUTPUT_MEAN
+        from psyneulink.core.globals.keywords import MEAN
         T = TransferMechanism(
             name='T',
             function=Linear(slope=2.0, intercept=1.0),
             default_variable=[[0.0, 0.0], [0.0, 0.0]],
-            output_ports=[OUTPUT_MEAN]
+            output_ports=[MEAN]
         )
         val = T.execute([[1.0, 2.0], [3.0, 4.0]])
 
@@ -1590,6 +1590,15 @@ class TestTransferMechanismMultipleInputPorts:
 
 
 class TestIntegratorMode:
+    def test_integrator_mode_simple_on_and_off(self):
+        T = TransferMechanism(size=2)
+        assert np.allclose(T.execute([0.5, 1]), [[0.5, 1]])
+        T.integrator_mode=True
+        assert np.allclose(T.execute([0.5, 1]), [[0.25, 0.5 ]])
+        assert np.allclose(T.execute([0.5, 1]), [[0.375, 0.75 ]])
+        T.integrator_mode=False
+        assert np.allclose(T.execute([0.5, 1]), [[0.5, 1]])
+
     def test_previous_value_persistence_execute(self):
         T = TransferMechanism(name="T",
                               initial_value=0.5,
@@ -1816,7 +1825,7 @@ class TestIntegratorMode:
             T_not_integrator = TransferMechanism()
             T_not_integrator.execute(1.0)
             T_not_integrator.reinitialize(0.0)
-        assert "not allowed because this Mechanism is not stateful." in str(err_txt.value)
+        assert "not allowed because this Mechanism is not stateful;" in str(err_txt.value)
         assert "try setting the integrator_mode argument to True." in str(err_txt.value)
 
     def test_switch_mode(self):
@@ -1882,8 +1891,14 @@ class TestIntegratorMode:
         assert np.allclose(expected_result_s1, result[0])
         assert np.allclose(expected_result_s2, result[1])
 
+    def test_set_integrator_mode_after_init(self):
+        T = TransferMechanism()
+        T.integrator_mode = True
+        T.execute(1)
+
 
 class TestOnResumeIntegratorMode:
+
     def test_integrator_mode_value_spec(self):
         T = TransferMechanism(on_resume_integrator_mode=INTEGRATOR_MODE_VALUE,
                               integration_rate=0.5,

@@ -120,8 +120,8 @@ def register_category(entry,
 
     # IMPLEMENTATION NOTE:  Move to Port when that is implemented as ABC
     import inspect
-    from psyneulink.core.components.ports.port import Port, Port_Base
-    if inspect.isclass(entry) and issubclass(entry, Port) and not entry == Port_Base:
+    from psyneulink.core.components.shellclasses import Port
+    if inspect.isclass(entry) and issubclass(entry, Port):
         try:
            entry.portAttributes
         except AttributeError:
@@ -272,6 +272,60 @@ def register_instance(entry, name, base_class, registry, sub_dict):
         else:
             renamed_instance_counts[match.groups()[0]] += 1
 
+def rename_instance_in_registry(registry, category, name=None, component=None):
+    """Rename instance in category registry
+
+    Instance to be renamed can be specified by a reference to the component or its name.
+    COMMENT:
+    DEPRECACTED (SEE IMPLEMENTATION NOTE BELOW)
+    If the name of the instance was a default name, and it was the last in the sequence,
+        decrement renamed_instance_counts and if it was the only one, remove that name from the renamed_instance list
+    COMMENT
+    """
+
+    registry_entry = registry[category]
+
+    if not (name or component):
+        raise RegistryError("Must specify a name or component to remove an entry of {}".
+                            format(registry.__class__.__name__))
+    if (name and component) and name != component.name:
+        raise RegistryError("Conflicting  name ({}) and component ({}) specified for entry to remove from {}".
+                            format(name, component.name, registry.__class__.__name__))
+    if component and not name:
+        for n, c in registry_entry.instanceDict.items():
+            if component == c:
+                name = n
+
+    try:
+        clear_registry(registry_entry.instanceDict[name]._portRegistry)
+    except (AttributeError):
+        pass
+
+    # Delete instance
+    del registry_entry.instanceDict[name]
+
+    # Decrement count for instances in entry
+    instance_count = registry_entry.instanceCount - 1
+
+    # IMPLEMENTATION NOTE:
+    #    Don't decrement renamed_instance_counts as:
+    #        - doing so would require checking that the item being removed is the last in the sequence
+    #          (to avoid fouling subsequent indexing);
+    #        - it might be confusing for a subsequently added item to have the same name as one previously removed.
+    # # If instance's name was a duplicate with appended index, decrement the count for that item (and remove if it is 0)
+    # for base_name, count in registry_entry.renamed_instance_counts.items():
+    #     if base_name in name:
+    #         registry_entry.renamed_instance_counts[base_name] -= 1
+    #         if registry_entry.renamed_instance_counts[base_name] == 0:
+    #             del registry_entry.renamed_instance_counts[base_name]
+    #         break
+    # Reassign entry with new values
+    registry[category] = RegistryEntry(registry_entry.subclass,
+                                       registry_entry.instanceDict,
+                                       instance_count,
+                                       registry_entry.renamed_instance_counts,
+                                       registry_entry.default)
+
 def remove_instance_from_registry(registry, category, name=None, component=None):
     """Remove instance from registry category entry
 
@@ -324,7 +378,6 @@ def remove_instance_from_registry(registry, category, name=None, component=None)
                                        registry_entry.renamed_instance_counts,
                                        registry_entry.default)
 
-
 def clear_registry(registry):
     """Clear specified registry of all entries, but leave any categories created within it intact.
 
@@ -339,7 +392,6 @@ def clear_registry(registry):
         for name in instance_dict:
             remove_instance_from_registry(registry, category, name)
         registry[category].renamed_instance_counts.clear()
-
 
 def process_registry_object_instances(registry, func):
     for category in registry:

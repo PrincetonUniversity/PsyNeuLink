@@ -52,11 +52,11 @@ words_hidden_layer = pnl.TransferMechanism(size=2,
 #log hidden layer activation
 # colors_input_layer.set_log_conditions('value')
 # colors_hidden_layer.set_log_conditions('value')
-# colors_hidden_layer.set_log_conditions('RESULTS')
+# colors_hidden_layer.set_log_conditions('RESULT')
 #
 # words_input_layer.set_log_conditions('value')
 # words_hidden_layer.set_log_conditions('value')
-# words_hidden_layer.set_log_conditions('RESULTS')
+# words_hidden_layer.set_log_conditions('RESULT')
 
 
 
@@ -69,7 +69,7 @@ words_hidden_layer = pnl.TransferMechanism(size=2,
 response_layer = pnl.RecurrentTransferMechanism(size=2,  #Recurrent
                                                 function=psyneulink.core.components.functions.transferfunctions.Logistic,  #pnl.Stability(matrix=np.matrix([[0.0, -1.0], [-1.0, 0.0]])),
                                                 name='RESPONSE',
-                                                output_ports = [pnl.RECURRENT_OUTPUT.RESULT,
+                                                output_ports = [pnl.RESULT,
                                           {pnl.NAME: 'DECISION_ENERGY',
                                           pnl.VARIABLE: (pnl.OWNER_VALUE,0),
                                            pnl.FUNCTION: psyneulink.core.components.functions.objectivefunctions

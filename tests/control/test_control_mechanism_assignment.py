@@ -42,7 +42,7 @@ def test_control_mechanism_assignment():
 
     # Test for adding a monitored_output_port and control_signal
     C2 = pnl.EVCControlMechanism(name='C-2',
-                                 objective_mechanism = [T3.output_ports[pnl.RESULTS]],
+                                 objective_mechanism = [T3.output_ports[pnl.RESULT]],
                                  control_signals=[(pnl.GAIN, T4)])
     # Test use of assign_as_controller method
     C2.assign_as_controller(S)

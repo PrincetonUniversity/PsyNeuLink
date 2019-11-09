@@ -162,7 +162,7 @@ Examples
 --------
 
 The following example creates a Process with two `TransferMechanisms <TransferMechanism>`, one that projects to
-another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputPort` of the first and the
+another, and logs the `noise <TransferMechanism.noise>` and *RESULT* `OutputPort` of the first and the
 `MappingProjection` from the first to the second::
 
     # Create a Process with two TransferMechanisms, and get a reference for the Projection created between them:
@@ -177,14 +177,14 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputPor
     COMMENT
     # Show the loggable items (and current condition assignments) for each Mechanism and the Projection between them:
     >> my_mech_A.loggable_items
-    {'InputPort-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'integration_rate': 'OFF', 'intercept': 'OFF', 'noise': 'OFF'}
+    {'InputPort-0': 'OFF', 'slope': 'OFF', 'RESULT': 'OFF', 'integration_rate': 'OFF', 'intercept': 'OFF', 'noise': 'OFF'}
     >> my_mech_B.loggable_items
-    {'InputPort-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'integration_rate': 'OFF'}
+    {'InputPort-0': 'OFF', 'slope': 'OFF', 'RESULT': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'integration_rate': 'OFF'}
     >> proj_A_to_B.loggable_items
     {'value': 'OFF', 'matrix': 'OFF'}
 
-    # Assign the noise parameter and RESULTS OutputPort of my_mech_A, and the matrix of the Projection, to be logged
-    >>> my_mech_A.set_log_conditions([pnl.NOISE, pnl.RESULTS])
+    # Assign the noise parameter and RESULT OutputPort of my_mech_A, and the matrix of the Projection, to be logged
+    >>> my_mech_A.set_log_conditions([pnl.NOISE, pnl.RESULT])
     >>> proj_A_to_B.set_log_conditions(pnl.MATRIX)
 
 Note that since no `condition <Log_Conditions>` was specified, the default (LogCondition.EXECUTION) is used.
@@ -204,7 +204,7 @@ Executing the Process generates entries in the Logs, that can then be displayed 
     COMMENT
     # List the items of each Mechanism and the Projection that were actually logged:
     >> my_mech_A.logged_items
-    {'RESULTS': 'EXECUTION', 'noise': 'EXECUTION'}
+    {'RESULT': 'EXECUTION', 'noise': 'EXECUTION'}
     >> my_mech_B.logged_items
     {}
     >> proj_A_to_B.logged_items
@@ -224,8 +224,8 @@ method of a Log::
 
     Logged Item:   Time       Context                                                                   Value
 
-    'RESULTS'      0:0:0     " EXECUTING  System System-0| Mechanism: mech_A [in processes: ['Pro..."   [ 0.  0.]
-    'RESULTS'      0:1:0     " EXECUTING  System System-0| Mechanism: mech_A [in processes: ['Pro..."   [ 0.  0.]
+    'RESULT'      0:0:0     " EXECUTING  System System-0| Mechanism: mech_A [in processes: ['Pro..."   [ 0.  0.]
+    'RESULT'      0:1:0     " EXECUTING  System System-0| Mechanism: mech_A [in processes: ['Pro..."   [ 0.  0.]
 
 
     'noise'        0:0:0     " EXECUTING  System System-0| Mechanism: mech_A [in processes: ['Pro..."   [ 0.]
@@ -238,8 +238,8 @@ for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
     COMMENT:
     FIX: THESE EXAMPLES CAN'T BE EXECUTED AS THEY RETURN FORMATS ON JENKINS THAT DON'T MATCH THOSE ON LOCAL MACHINE(S)
     COMMENT
-    >> print(my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=False, quotes=None))
-    'Run', 'Trial', 'Time_step', 'noise', 'RESULTS'
+    >> print(my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULT], owner_name=False, quotes=None))
+    'Run', 'Trial', 'Time_step', 'noise', 'RESULT'
     0, 0, 0, 0.0, 0.0 0.0
     0, 1, 0, 0.0, 0.0 0.0
     COMMENT:
@@ -256,7 +256,7 @@ for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
     <BLANKLINE>
     COMMENT
 
-Note that since the `name <Projection.name>` attribute of the Projection was not assigned, its default name is
+Note that since the `name <Projection_Base.name>` attribute of the Projection was not assigned, its default name is
 reported.
 
 The following shows the Log of ``proj_A_to_B`` in numpy array format, with and without header information::
@@ -1136,7 +1136,7 @@ class Log:
             # header = header + value_spacer + VALUE.capitalize()
 
         print("\nLog for {0}:".format(self.owner.name))
-        print('\n'+header+'\n')
+        print('\n' + header + '\n')
 
         # Sort for consistency of reporting
         # entry_names_sorted = sorted(self.logged_entries.keys())
@@ -1169,13 +1169,13 @@ class Log:
                         if options.CONTEXT & option_flags:
                             context = repr(context)
                             if len(context) > context_width:
-                                context = context[:context_width-3] + "..."
+                                context = context[:context_width - 3] + "..."
                             data_str = data_str + context.ljust(context_width, spacer)
 
                         if options.VALUE & option_flags:
                             value = str(value).replace('\n',',')
                             if len(value) > value_width:
-                                value = value[:value_width-3].rstrip() + "..."
+                                value = value[:value_width - 3].rstrip() + "..."
                             format_str = "{{:2.{0}}}".format(value_width)
                             data_str = data_str + value_spacer + format_str.format(value).ljust(value_width)
 
@@ -1597,7 +1597,7 @@ class Log:
             time_step_increments.append(chain)
         for i in range(1, len(time_values)):
             update_tuple = list(time_values[i])
-            update_tuple[2] = update_tuple[2] + time_step_increments[i - 1]*0.01
+            update_tuple[2] = update_tuple[2] + time_step_increments[i - 1] * 0.01
             mod_time_values[i] = tuple(update_tuple)
         return mod_time_values
 

@@ -46,6 +46,7 @@ from enum import Enum, IntEnum
 
 import numpy as np
 import typecheck as tc
+import warnings
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import parameter_keywords, method_type
@@ -1077,7 +1078,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
             if not valid:
                 raise FunctionError("Value of {} arg passed to {} ({}) "
                                     "does not match the value expected for specified {} ({})".
-                                    format(repr('output'), self.__class__.__name__+'.'+'derivative', output,
+                                    format(repr('output'), self.__class__.__name__ + '.' + 'derivative', output,
                                            repr('input'), input))
 
         gain = self.get_current_function_param(GAIN, context)
@@ -1340,7 +1341,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         #   (since np.exp doesn't work)
         # result = 1. / (1 + np.tanh(-gain * (variable - bias) + offset))
         from math import e
-        exponent = -2*(gain * (variable + bias - x_0) + offset)
+        exponent = -2 * (gain * (variable + bias - x_0) + offset)
         result = (1 - e**exponent)/ (1 + e**exponent)
 
         return self.convert_output_type(result)
@@ -1370,7 +1371,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         scale = self.get_current_function_param(SCALE, context)
 
         from math import e
-        return gain*scale / ((1 + e**(-2*(gain*(input+bias-x_0)+offset))) / (2 * e**(-gain*(input+bias-x_0)+offset)))**2
+        return gain * scale / ((1 + e**(-2 * (gain * (input + bias - x_0) + offset))) / (2 * e**(-gain * (input + bias - x_0) + offset)))**2
 
 
 # **********************************************************************************************************************
@@ -1536,7 +1537,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         # KAM modified 2/15/19 to match https://en.wikipedia.org/wiki/Rectifier_(neural_networks)#Leaky_ReLUs
         x = gain * (variable - bias)
-        result = np.maximum(x, leak*x)
+        result = np.maximum(x, leak * x)
 
         return self.convert_output_type(result)
 
@@ -1585,7 +1586,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         leak = self.get_current_function_param(LEAK, context)
 
         if (input > 0): return gain
-        else: return gain*leak
+        else: return gain * leak
 
 
 # **********************************************************************************************************************
@@ -1821,7 +1822,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         offset = self.get_current_function_param(OFFSET, context)
 
         from math import e, pi, sqrt
-        gaussian = e**(-(variable-bias)**2/(2*standard_deviation**2)) / sqrt(2*pi*standard_deviation)
+        gaussian = e**(-(variable - bias)**2 / (2 * standard_deviation**2)) / sqrt(2 * pi * standard_deviation)
         result = scale * gaussian + offset
 
         return self.convert_output_type(result)
@@ -1850,8 +1851,8 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         bias = self.get_current_function_param(BIAS, context)
 
         from math import e, pi, sqrt
-        adjusted_input = input-bias
-        result = (-adjusted_input * e**(-(adjusted_input**2/(2*sigma**2)))) / sqrt(2*pi*sigma**3)
+        adjusted_input = input - bias
+        result = (-adjusted_input * e**(-(adjusted_input**2 / (2 * sigma**2)))) / sqrt(2 * pi * sigma**3)
 
         return self.convert_output_type(result)
 
@@ -2102,7 +2103,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         random_state = self.get_current_function_param('random_state', context)
 
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
-        result = scale * random_state.normal(variable+bias, variance) + offset
+        result = scale * random_state.normal(variable + bias, variance) + offset
 
         return self.convert_output_type(result)
 
@@ -2601,7 +2602,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         specifies matrix used to transform `variable <LinearMatrix.variable>`
         (see `matrix <LinearMatrix.matrix>` for specification details).
 
-        When LinearMatrix is the `function <Projection.function>` of a projection:
+        When LinearMatrix is the `function <Projection_Base.function>` of a projection:
 
             - the matrix specification must be compatible with the variables of the `sender <Projection_Base.sender>`
               and `receiver <Projection_Base.receiver>`
@@ -2997,10 +2998,15 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         else:
             return np.array(specification)
 
+
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
         # Restrict to 1d arrays
-        assert self.defaults.variable.ndim == 1
-        assert self.defaults.value.ndim == 1
+        if self.defaults.variable.ndim != 1:
+            warnings.warn("Unexpected data shape: {} got 2D input: {}".format(self, self.defaults.variable))
+            arg_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        if self.defaults.value.ndim != 1:
+            warnings.warn("Unexpected data shape: {} has 2D output: {}".format(self, self.defaults.value))
+            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         matrix = ctx.get_param_ptr(self, builder, params, MATRIX)
 
@@ -3154,13 +3160,13 @@ def get_matrix(specification, rows=1, cols=1, context=None):
         if rows != cols:
             raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
                                 format(rows, cols, specification))
-        return 1-np.identity(rows)
+        return 1 - np.identity(rows)
 
     if specification == INVERSE_HOLLOW_MATRIX:
         if rows != cols:
             raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
                                 format(rows, cols, specification))
-        return (1-np.identity(rows)) * -1
+        return (1 - np.identity(rows)) * -1
 
     if specification == RANDOM_CONNECTIVITY_MATRIX:
         return np.random.rand(rows, cols)
@@ -4177,7 +4183,13 @@ class TransferWithCosts(TransferFunction):
         trans_p = ctx.get_param_ptr(self, builder, params, transfer_f.name)
         trans_s = ctx.get_state_ptr(self, builder, state, transfer_f.name)
         trans_in = arg_in
+        if trans_in.type != trans_f.args[2].type:
+            warnings.warn("Unexpected data shape: {} input does not match the transfer function ({}): {} vs. {}".format(self, transfer_f.get(), self.defaults.variable, transfer_f.get().defaults.variable))
+            trans_in = builder.gep(trans_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
         trans_out = arg_out
+        if trans_out.type != trans_f.args[3].type:
+            warnings.warn("Unexpected data shape: {} output does not match the transfer function ({}): {} vs. {}".format(self, transfer_f.get(), self.defaults.value, transfer_f.get().defaults.value))
+            trans_out = builder.gep(trans_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         builder.call(trans_f, [trans_p, trans_s, trans_in, trans_out])
 
         # TODO: Implement cost calculations

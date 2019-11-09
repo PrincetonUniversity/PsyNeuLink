@@ -9,7 +9,19 @@
 # *******************************************  AutoAssociativeProjection ***********************************************
 
 """
-.. _Auto_Associative_Overview:
+
+Contents
+--------
+
+  * `AutoAssociative_Overview`
+  * `AutoAssociative_Creation`
+  * `AutoAssociative_Structure`
+      - `AutoAssociative_Configurable_Attributes`
+  * `AutoAssociative_Execution`
+  * `AutoAssociative_Class_Reference`
+
+
+.. _AutoAssociative_Overview:
 
 Overview
 --------
@@ -21,7 +33,13 @@ is that an AutoAssociativeProjection uses the `auto <RecurrentTransferMechanism.
 this allows for a `ControlMechanism <ControlMechanism>` to control the `auto <RecurrentTransferMechanism.auto>` and
 `hetero <RecurrentTransferMechanism.hetero>` parameters and thereby control the matrix.
 
-.. _Auto_Associative_Creation:
+AutoAssociativeProjection represents connections between nodes in a single-layer recurrent network. It multiplies
+the output of the `RecurrentTransferMechanism` by a matrix, then presents the product as input to the
+`RecurrentTransferMechanism`.
+
+
+
+.. _AutoAssociative_Creation:
 
 Creating an AutoAssociativeProjection
 -------------------------------------
@@ -30,9 +48,9 @@ An AutoAssociativeProjection is created automatically by a RecurrentTransferMech
 stored as the `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` parameter of the
 RecurrentTransferMechanism. It is not recommended to create an AutoAssociativeProjection on its own, because during
 execution an AutoAssociativeProjection references parameters owned by its RecurrentTransferMechanism (see
-`Execution <Auto_Associative_Execution>` below).
+`Execution <AutoAssociative_Execution>` below).
 
-.. _Auto_Associative_Structure:
+.. _AutoAssociative_Structure:
 
 Auto Associative Structure
 --------------------------
@@ -40,7 +58,7 @@ Auto Associative Structure
 In structure, the AutoAssociativeProjection is almost identical to a MappingProjection: the only additional attributes
 are `auto <AutoAssociativeProjection.auto>` and `hetero <AutoAssociativeProjection.hetero>`.
 
-.. _Auto_Associative_Configurable_Attributes:
+.. _AutoAssociative_Configurable_Attributes:
 
 *Configurable Attributes*
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -50,14 +68,14 @@ determined by the format of the output of the RecurrentTransferMechanism, the `f
 on. The only configurable parameter is the matrix, configured through the **matrix**, **auto**, and/or **hetero**
 arguments for a RecurrentTransferMechanism:
 
-.. _Auto_Associative_Matrix:
+.. _AutoAssociative_Matrix:
 
 * **matrix** - multiplied by the input to the AutoAssociativeProjection in order to produce the output. Specification of
   the **matrix**, **auto**, and/or **hetero** arguments determines the values of the matrix; **auto** determines the
   diagonal entries (representing the strength of the connection from each node to itself) and **hetero** determines
   the off-diagonal entries (representing connections between nodes).
 
-.. _Auto_Associative_Execution:
+.. _AutoAssociative_Execution:
 
 Execution
 ---------
@@ -75,7 +93,7 @@ its `sender <AutoAssociativeProjection.sender>`, and provide the result as input
      <RecurrentTransferMechanism.auto>` and `hetero <RecurrentTransferMechanism.hetero>` parameters on the
      RecurrentTransferMechanism is that this allows them to be modified by a `ControlMechanism <ControlMechanism>`.
 
-.. _Auto_Associative_Class_Reference:
+.. _AutoAssociative_Class_Reference:
 
 Class Reference
 ---------------
@@ -140,19 +158,12 @@ def _hetero_setter(value, owning_component=None, context=None):
 
 class AutoAssociativeProjection(MappingProjection):
     """
-    AutoAssociativeProjection(                              \
-        owner=None,                                         \
-        sender=None,                                        \
-        receiver=None,                                      \
-        matrix=DEFAULT_MATRIX,                              \
-        params=None,                                        \
-        name=None,                                          \
-        prefs=None)
+    AutoAssociativeProjection(
+        )
 
-    Implements a MappingProjection that is self-recurrent on a `RecurrentTransferMechanism`; an
-    AutoAssociativeProjection
-    represents connections between nodes in a single-layer recurrent network. It multiplies the output of the
-    `RecurrentTransferMechanism` by a matrix, then presents the product as input to the `RecurrentTransferMechanism`.
+    Subclass of `MappingProjection` that is self-recurrent on a `RecurrentTransferMechanism`.
+    See `MappingProjection <MappingProjection_Class_Reference>` and `Projection <Projection_Class_Reference>`
+    for additional arguments and attributes.
 
     COMMENT:
         JDC [IN GENERAL WE HAVE TRIED TO DISCOURAGE SUCH DEPENDENCIES;  BETTER TO HAVE IT ACCEPT ARGUMENTS THAT
@@ -167,79 +178,39 @@ class AutoAssociativeProjection(MappingProjection):
     Arguments
     ---------
 
-    owner : Optional[Mechanism]
-        simply specifies both the sender and receiver of the AutoAssociativeProjection. Setting owner=myMechanism is
-        identical to setting sender=myMechanism and receiver=myMechanism.
+    sender : OutputPort or Mechanism : default None
+        specifies the source of the Projection's input; must be (or belong to) the same Mechanism as **receiver**,
+        and the length of its `value <OutputPort.value>` must match that of the `variable <InputPort.variable>` of
+        the **receiver**.
 
-    sender : Optional[OutputPort or Mechanism]
-        specifies the source of the Projection's input. If a Mechanism is specified, its
-        `primary OutputPort <OutputPort_Primary>` will be used. If it is not specified, it will be assigned in
-        the context in which the Projection is used.
-
-    receiver : Optional[InputPort or Mechanism]
-        specifies the destination of the Projection's output.  If a Mechanism is specified, its
-        `primary InputPort <InputPort_Primary>` will be used. If it is not specified, it will be assigned in
-        the context in which the Projection is used.
+    receiver: InputPort or Mechanism : default None
+        specifies the destination of the Projection's output; must be (or belong to) the same Mechanism as **sender**,
+        and the length of its `variable <InputPort.variable>` must match the `value <OutputPort.value>` of **sender**.
 
     matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX
-        the matrix used by `function <AutoAssociativeProjection.function>` (default: `LinearCombination`) to transform
-        the value of the `sender <AutoAssociativeProjection.sender>`.
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
-        the Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
-        the Projection's default assignment (`LinearCombination`).  Values specified for parameters in the dictionary
-        override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default AutoAssociativeProjection-<index>
-        a string used for the name of the AutoAssociativeProjection. When an AutoAssociativeProjection is created by a
-        RecurrentTransferMechanism, its name is assigned "<name of RecurrentTransferMechanism> recurrent projection"
-        (see `Registry <LINK>` for conventions used in naming, including for default and duplicate names).
-
-    prefs : Optional[PreferenceSet or specification dict : Projection_Base.classPreferences]
-        the `PreferenceSet` for the MappingProjection; if it is not specified, a default is assigned using
-        `classPreferences` defined in __init__.py (see `PreferenceSet <LINK>` for details).
+        specifies the matrix used by `function <Projection_Base.function>` (default: `LinearCombination`) to
+        transform the `value <Projection_Base.value>` of the `sender <MappingProjection.sender>` into a value
+        provided to the `variable <InputPort.variable>` of the `receiver <MappingProjection.receiver>` `InputPort`;
+        must be a square matrix (i.e., have the same number of rows and columns).
 
     Attributes
     ----------
 
-    componentType : AUTO_ASSOCIATIVE_PROJECTION
-
     sender : OutputPort
-        identifies the source of the Projection's input.
+        the `OutputPort` of the `Mechanism <Mechanism>` that is the source of the Projection's input; in the case of
+        an AutoAssociativeProjection, it is an OutputPort of the same Mechanism to which the `receiver
+        <AutoAssociativeProjection.receiver>` belongs.
 
     receiver: InputPort
-        identifies the destination of the Projection.
-
-    learning_mechanism : LearningMechanism
-        source of error signal for that determine changes to the `matrix <AutoAssociativeProjection.matrix>` when
-        `learning <LearningProjection>` is used.
+        the `InputPort` of the `Mechanism <Mechanism>` that is the destination of the Projection's output; in the case
+        of an AutoAssociativeProjection, it is an InputPort of the same Mechanism to which the `sender
+        <AutoAssociativeProjection.sender>` belongs.
 
     matrix : 2d np.ndarray
-        matrix used by `function <AutoAssociativeProjection.function>` to transform input from the `sender
-        <MappingProjection.sender>` to the value provided to the `receiver <AutoAssociativeProjection.receiver>`.
+        square matrix used by `function <AutoAssociativeProjection.function>` to transform input from the `sender
+        <MappingProjection.sender>` to the value provided to the `receiver <AutoAssociativeProjection.receiver>`;
+        in the case of an AutoAssociativeProjection.
 
-    auto : number or 1d np.ndarray
-        diagonal terms of the `matrix <AutoAssociativeProjection.matrix>` used by the AutoAssociativeProjection: if auto
-        is a single number, it means the diagonal is uniform.
-
-    hetero : number or 2d np.ndarray
-        off-diagonal terms of the `matrix <AutoAssociativeProjection.matrix>` used by the AutoAssociativeProjection: if
-        hetero is a single number, it means the off-diagonal terms are all the same.
-
-    has_learning_projection : bool : None
-        identifies the `LearningProjection` assigned to the AutoAssociativeProjection's `MATRIX` `ParameterPort
-        <ParameterPort>`.
-
-    value : np.ndarray
-        Output of AutoAssociativeProjection, transmitted to `variable <InputPort.variable>` of `receiver`.
-
-    name : str
-        a string used for the name of the AutoAssociativeProjection (see `Registry <LINK>` for conventions used in
-        naming, including for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict : Projection_Base.classPreferences
-        the `PreferenceSet` for AutoAssociativeProjection (see :doc:`PreferenceSet <LINK>` for details).
     """
 
     componentType = AUTO_ASSOCIATIVE_PROJECTION

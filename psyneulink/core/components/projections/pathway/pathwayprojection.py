@@ -9,6 +9,19 @@
 # ******************************************  PathwayProjection *****************************************************
 
 """
+
+Contents
+--------
+
+  * `PathwayProjection_Overview`
+  * `PathwayProjection_Creation`
+  * `PathwayProjection_Structure`
+      - `PathwayProjection_Sender`
+      - `PathwayProjection_Receiver`
+  * `PathwayProjection_Execution`
+  * `PathwayProjection_Class_Reference`
+
+
 .. _PathwayProjection_Overview:
 
 Overview
@@ -19,29 +32,34 @@ PathwayProjections allow information to be passed between mechanisms.  A Pathway
 transmit that information to the `InputPort` of another Mechanism (its `receiver <Projection_Base.receiver>`).  The
 primary type of PathwayProjection is a `MappingProjection`.
 
-.. _Projection_Creation:
+.. _PathwayProjection_Creation:
 
 Creating a PathwayProjection
 ---------------------------------
 
-A PathwayProjection can be created on its own, by calling the constructor for the desired type of projection.  More
-commonly, however, projections are either specified in the context of creating a Port to or from which they project
- (see `Projection_Specification`, and `Port_Projections` in Port), or are `created automatically
- <Projection_Automatic_Creation>`, as described below.
-
-
+A PathwayProjection can is created in the same ways as a `Projection <Projection_Creation>`.
 
 .. _PathwayProjection_Structure:
 
 Structure
 ---------
 
+A PathwayProjection has the same structure as a `Projection <Projection_Structure>`.
+
+
 .. _PathwayProjection_Execution:
 
 Execution
 ---------
 
+A PathwayProjection executes in the same was as a `Projection <Projection_Execution>`.
+
 .. _PathwayProjection_Class_Reference:
+
+Class Reference
+---------------
+
+See `Projection <Projection_Class_Reference>`.
 
 """
 
@@ -59,9 +77,10 @@ class PathwayProjectionError(Exception):
 
 class PathwayProjection_Base(Projection_Base):
     """Subclass of `Projection <Projection>` that projects from an `OutputPort` to an `InputPort`
+    See `Projection <Projection_Class_Reference>` and subclasses for arguments and attributes.
 
     .. note::
-       PathwayProjection is an abstract class and should NEVER be instantiated by a call to its constructor.
+       PathwayProjection is an abstract class and should *never* be instantiated by a call to its constructor.
        It should be instantiated using the constructor for a `subclass <PathwayProjection_Subtypes>`.
 
     """

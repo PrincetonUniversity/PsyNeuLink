@@ -85,11 +85,11 @@ n_units=16
 
 #This number of hidden units is taken directly from Rumelhart's paper
 
-nouns_in = pnl.TransferMechanism(name="nouns_in", 
+nouns_in = pnl.TransferMechanism(name="nouns_in",
                                  default_variable=np.zeros(c_nouns)
                                 )
 
-rels_in = pnl.TransferMechanism(name="rels_in", 
+rels_in = pnl.TransferMechanism(name="rels_in",
                                 default_variable=np.zeros(c_rels)
                                )
 
@@ -208,46 +208,46 @@ RumelNet.add_projection(sender=hm, projection=map_hm_can, receiver=out_sig_can)
 RumelNet.show_graph(output_fmt='jupyter')
 
 # We wish to train our network on pairs of inputs: a noun and a relation.
-# On each run, we would like to set the targets for the RELEVANT outputs to be 
+# On each run, we would like to set the targets for the RELEVANT outputs to be
 # the associated truth tables and the targets for the IRRELEVANT outputs to be
-# a set of "neutral" targets, producing a somewhat "nonsense" response. 
+# a set of "neutral" targets, producing a somewhat "nonsense" response.
 
 # To get a better grasp on this concept:
 # Consider the case that a person asks you which out of the "has" list a robin
 # posseses. You will respond, likely correctly, with some of those attributes and
 # you will not list any of the "can" attributes, because they're not related to
-# the question. 
+# the question.
 
 # This is a skill we learn early in life. When asked a simple, closed-form
 # question in elementary school, we were not rewarded in the same way for giving
-# an answer that was related to the question, but did not actually answer it. 
-# If the question was, "can a canary fly?" and we gave the answer, "a canary is 
+# an answer that was related to the question, but did not actually answer it.
+# If the question was, "can a canary fly?" and we gave the answer, "a canary is
 # a yellow living thing with wings that can breathe air", we wouldn't technically
-# be wrong, but we would also not have answered the question. 
+# be wrong, but we would also not have answered the question.
 
 # We want to train the network in a similar fashion.
 
 # This block of code creates the targets that will be assigned to outputs irrelevant
-# to the input pairs. 
+# to the input pairs.
 
 
-irrel_is = np.ones((len(nouns), len(is_list)))*.5
-irrel_has = np.ones((len(nouns), len(has_list)))*.5
-irrel_can = np.ones((len(nouns), len(can_list)))*.5
+irrel_is = np.ones((len(nouns), len(is_list))) * .5
+irrel_has = np.ones((len(nouns), len(has_list))) * .5
+irrel_can = np.ones((len(nouns), len(can_list))) * .5
 
 # This block of code trains the network using a set of three loops. The innermost
 # pair of loops takes each noun and creates the appropriate training inputs and outputs associated
-# with its "is", "has", and "can" relations. It will also be associated with an 
-# identity output. 
+# with its "is", "has", and "can" relations. It will also be associated with an
+# identity output.
 
 # After constructing the dictionaries, the middle loop, associated with the nouns,
-# trains the network on the dictionaries for n_epochs. 
+# trains the network on the dictionaries for n_epochs.
 
 # The outermost loop simply repeats the training on each noun for a set number of
-# repetitions. 
+# repetitions.
 
-# You are encouraged to experiment with changing the number of repetitions and 
-# epochs to see how the network learns best. 
+# You are encouraged to experiment with changing the number of repetitions and
+# epochs to see how the network learns best.
 
 # You will find that this code takes a few minutes to run. We have placed flags
 # in the loops so you can see that it's not stuck.
@@ -256,7 +256,7 @@ n_epochs=5
 tot_reps=200
 
 for reps in range(tot_reps):
-  print('Training rep: ',reps+1, ' of: ',tot_reps)
+  print('Training rep: ',reps + 1, ' of: ', tot_reps)
   for noun in range(len(nouns)):
     
     inputs_dict = {}
@@ -322,8 +322,8 @@ for reps in range(tot_reps):
 
 ##################### THIS IS WHERE VISUALIZATION CODE STARTS ##################
 
-# As with previous nets, this cell prints the losses of the network over time. 
-# Make sure you understand why the losses are noisy. 
+# As with previous nets, this cell prints the losses of the network over time.
+# Make sure you understand why the losses are noisy.
 
 # If you find your loss isn't to your satisfaction, you can run the previous cell again
 # to train your network for another batch.
@@ -338,13 +338,13 @@ plt.plot(losses)
 print('last lost was: ',losses[-1])
 
 # This code block collects all output data from the network and sorts it into logs of
-# outputs from the runs on which each output type was relevant. 
+# outputs from the runs on which each output type was relevant.
 # This process retains only those outputs for "is" where the network will have been
-# training on a noun-is pair, and so on for all noun-relation pairs. 
+# training on a noun-is pair, and so on for all noun-relation pairs.
 
 # If you would like to access the outputs for irrelevant outputs (the "has" output
 # from an "is" or "can" run, for example) it is also available in the variables
-# created in this cell. 
+# created in this cell.
 
 data_I=out_sig_I.log.nparray()[1,1]
 data_is=out_sig_is.log.nparray()[1,1]
@@ -370,47 +370,47 @@ is_rel_log=data_is[0,:].T
 has_rel_log=data_has[1,:].T
 can_rel_log=data_can[2,:].T
 
-for i in range(int(log_length/len(relations))-1):
-  I_rel_log=np.append(I_rel_log,data_I[3*(i+1),:].T,1)
-  is_rel_log=np.append(is_rel_log,data_is[3*(i+1),:].T,1)
-  has_rel_log=np.append(has_rel_log,data_has[3*(i+1)+1,:].T,1)
-  can_rel_log=np.append(can_rel_log,data_can[3*(i+1)+2,:].T,1)
+for i in range(int(log_length / len(relations)) - 1):
+  I_rel_log = np.append(I_rel_log,data_I[3 * (i + 1), :].T, 1)
+  is_rel_log = np.append(is_rel_log,data_is[3 * (i + 1), :].T, 1)
+  has_rel_log = np.append(has_rel_log,data_has[3 * (i + 1) + 1, :].T, 1)
+  can_rel_log = np.append(can_rel_log,data_can[3 * (i + 1) + 2, :].T, 1)
   
   # This cell plots the last output values from the network for each noun/relation pair
-# This will show you what the network has learned with regards to the properties of 
+# This will show you what the network has learned with regards to the properties of
 # each noun.
 
 for i in range(len(nouns)):
   n=-i
   
-  plt.stem(I_rel_log[:,n-1])
+  plt.stem(I_rel_log[:, n - 1])
   
-  plt.title(nouns[n-1])
+  plt.title(nouns[n - 1])
   plt.ylabel('Strength of Association')
   plt.xticks(np.arange(len(nouns)), nouns,rotation=35)
   plt.yticks(np.arange(0,1.1,.1))
   plt.show()
 
   
-  plt.stem(is_rel_log[:,n-1])
+  plt.stem(is_rel_log[:, n - 1])
   
-  plt.title([nouns[n-1],' is:'])
+  plt.title([nouns[n - 1], ' is:'])
   plt.ylabel('Strength of Association')
   plt.xticks(np.arange(len(is_list)), is_list,rotation=35)
   plt.yticks(np.arange(0,1.1,.1))
   plt.show()
   
-  plt.stem(has_rel_log[:,n-1])
+  plt.stem(has_rel_log[:, n - 1])
   
-  plt.title([nouns[n-1],' has:'])
+  plt.title([nouns[n - 1], ' has:'])
   plt.ylabel('Strength of Association')
   plt.xticks(np.arange(len(has_list)), has_list,rotation=35)
   plt.yticks(np.arange(0,1.1,.1))
   plt.show()
 
-  plt.stem(can_rel_log[:,n-1])
+  plt.stem(can_rel_log[:, n - 1])
   
-  plt.title([nouns[n-1],' can:'])
+  plt.title([nouns[n - 1], ' can:'])
   plt.ylabel('Strength of Association')
   plt.xticks(np.arange(len(can_list)), can_list,rotation=35)
   plt.yticks(np.arange(0,1.1,.1))

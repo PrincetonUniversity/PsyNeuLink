@@ -536,17 +536,15 @@ class TestTrainingCorrectness:
         else:
             results = xor.run(inputs={"inputs": {xor_in:xor_inputs},
                                       "targets": {xor_out:xor_targets},
-                                      "epochs": 1}, bin_execute = mode
-                                      )
+                                      "epochs": 1}, bin_execute = mode)
 
-            for i in range(eps-1):
+            for i in range(eps - 1):
                 results = xor.run(inputs={"inputs": {xor_in:xor_inputs},
-                                      "targets": {xor_out:xor_targets},
-                                      "epochs": 1}, bin_execute = mode
-                                      )
+                                          "targets": {xor_out:xor_targets},
+                                          "epochs": 1}, bin_execute = mode)
 
-            for i in range(len(results[eps-1])):
-                assert np.allclose(np.round(results[eps-1][i][0]), xor_targets[i])
+            for i in range(len(results[eps - 1])):
+                assert np.allclose(np.round(results[eps - 1][i][0]), xor_targets[i])
 
 
     @pytest.mark.benchmark(group="Recurrent")
@@ -745,7 +743,10 @@ class TestTrainingCorrectness:
                                       'targets': targets_dict,
                                       'epochs': eps}, bin_execute=mode)
 
-    def test_pytorch_equivalence_with_autodiff_composition(self):
+    @pytest.mark.parametrize("mode", ["Python",
+                                pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                ])
+    def test_pytorch_equivalence_with_autodiff_composition(self,mode):
         iSs = np.array(
             [np.array([0.47360805, 0.8009108, 0.5204775, 0.53737324, 0.7586156,
                     0.1059076, 0.9025985, 0.44994998, 0.61306345, 0.75068617,
@@ -903,11 +904,13 @@ class TestTrainingCorrectness:
         mnet.run(
             inputs=input_set,
             minibatch_size=1,
+            bin_execute=mode
         )
         mnet.learning_enabled = False
 
         mnet.run(
-            inputs=input_set
+            inputs=input_set,
+            bin_execute=mode
         )
 
         output = np.array(mnet.parameters.results.get(mnet)[-15:]).reshape(225)
@@ -1059,7 +1062,7 @@ class TestTrainingTime:
         start = timeit.default_timer()
         results_sys = and_sys.run(inputs={and_in_sys:and_inputs},
                                   targets={and_out_sys:and_targets},
-                                  num_trials=(eps*and_inputs.shape[0]+1))
+                                  num_trials=(eps * and_inputs.shape[0] + 1))
         end = timeit.default_timer()
         sys_time = end - start
 
@@ -1075,7 +1078,7 @@ class TestTrainingTime:
         print("\n")
         logger.info(msg)
 
-        speedup = np.round((sys_time/comp_time), decimals=2)
+        speedup = np.round((sys_time / comp_time), decimals=2)
         msg = ('Training XOR model as AutodiffComposition for {0} epochs was {1} times faster than '
                'training it as System for {0} epochs.'.format(eps, speedup))
         print(msg)
@@ -1198,7 +1201,7 @@ class TestTrainingTime:
         start = timeit.default_timer()
         results_sys = xor_sys.run(inputs={xor_in_sys:xor_inputs},
                                   targets={xor_out_sys:xor_targets},
-                                  num_trials=(eps*xor_inputs.shape[0]+1))
+                                  num_trials=(eps * xor_inputs.shape[0] + 1))
         end = timeit.default_timer()
         sys_time = end - start
 
@@ -1214,7 +1217,7 @@ class TestTrainingTime:
         print("\n")
         logger.info(msg)
 
-        speedup = np.round((sys_time/comp_time), decimals=2)
+        speedup = np.round((sys_time / comp_time), decimals=2)
         msg = ('Training XOR model as AutodiffComposition for {0} epochs was {1} times faster than '
                'training it as System for {0} epochs.'.format(eps, speedup))
         print(msg)
@@ -1519,7 +1522,7 @@ class TestTrainingTime:
         start = timeit.default_timer()
         results = sem_net_sys.run(inputs=inputs_dict_sys,
                                   targets=targets_dict_sys,
-                                  num_trials=(len(inputs_dict[nouns_in])*eps + 1))
+                                  num_trials=(len(inputs_dict[nouns_in]) * eps + 1))
         end = timeit.default_timer()
         sys_time = end - start
 
@@ -1535,7 +1538,7 @@ class TestTrainingTime:
         print("\n")
         logger.info(msg)
 
-        speedup = np.round((sys_time/comp_time), decimals=2)
+        speedup = np.round((sys_time / comp_time), decimals=2)
         msg = ('Training Semantic net as AutodiffComposition for {0} epochs was {1} times faster than '
                'training it as System for {0} epochs.'.format(eps, speedup))
         print(msg)
@@ -1612,7 +1615,7 @@ class TestTrainingIdenticalness():
         xor = AutodiffComposition(param_init_from_pnl=True,
                                   learning_rate=10,
                                   optimizer_type=opt,
-                                  loss_spec= lambda x,y: custom_loss(x,y)/2
+                                  loss_spec=lambda x,y: custom_loss(x,y) / 2
                                   )
 
         xor.add_node(xor_in)
@@ -1657,7 +1660,7 @@ class TestTrainingIdenticalness():
         # TRAIN SYSTEM
         results_sys = xor_sys.run(inputs={xor_in_sys:xor_inputs},
                                   targets={xor_out_sys:xor_targets},
-                                  num_trials=(eps*xor_inputs.shape[0]))
+                                  num_trials=(eps * xor_inputs.shape[0]))
         # CHECK THAT PARAMETERS FOR COMPOSITION, SYSTEM ARE SAME
 
         assert np.allclose(comp_weights[hid_map], hid_map_sys.get_mod_matrix(xor_sys))
@@ -1968,7 +1971,7 @@ class TestTrainingIdenticalness():
 
         results = sem_net_sys.run(inputs=inputs_dict_sys,
                                   targets=targets_dict_sys,
-                                  num_trials=(len(inputs_dict_sys[nouns_in_sys])*eps))
+                                  num_trials=(len(inputs_dict_sys[nouns_in_sys]) * eps))
 
         # CHECK THAT PARAMETERS FOR COMPOSITION, SYSTEM ARE SAME
 

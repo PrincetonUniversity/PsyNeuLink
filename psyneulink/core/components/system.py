@@ -1703,7 +1703,7 @@ class System(System_Base):
                 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
                 proj = MappingProjection(sender=stimulus_input_port,
                                   receiver=origin_mech.input_ports[j],
-                                  name=self.name+' Input Projection to '+origin_mech.name+' Input Port '+str(j))
+                                  name=self.name + ' Input Projection to ' + origin_mech.name + ' Input Port ' + str(j))
                 proj._activate_for_compositions(self)
 
 
@@ -2050,8 +2050,8 @@ class System(System_Base):
                 # Add MappingProjection from system_target_input_port to TARGET mechanism's target inputPort
                 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
                 proj = MappingProjection(sender=system_target_input_port,
-                        receiver=TARGET_input_port,
-                        name=self.name+' Input Projection to '+TARGET_input_port.name)
+                                         receiver=TARGET_input_port,
+                                         name=self.name + ' Input Projection to ' + TARGET_input_port.name)
                 proj._activate_for_compositions(self)
 
         elif isinstance(self.targets, list):
@@ -2769,7 +2769,7 @@ class System(System_Base):
                     else:
                         logger.warning("Failed to find expected SystemInputPort "
                                        "for {} at InputPort number ({}), ({})".
-                              format(origin_mech.name, j+1, origin_mech.input_ports[j]))
+                              format(origin_mech.name, j + 1, origin_mech.input_ports[j]))
                         # raise SystemError("Failed to find expected SystemInputPort for {}".format(origin_mech.name))
 
         self.input = input
@@ -3291,7 +3291,7 @@ class System(System_Base):
                                     format='GIF',
                                     save_all=True,
                                     append_images=self._animation[1:],
-                                    duration=self._image_duration*1000,
+                                    duration=self._image_duration * 1000,
                                     loop=0)
             print('\nSaved movie for {}: {}'.format(self.name, self._movie_filename))
             if self._show_animation:
@@ -3835,14 +3835,14 @@ class System(System_Base):
         show_graph method::
 
             import psyneulink as pnl
-            mech_1 = pnl.TransferMechanism(name='Mech 1', size=3, output_ports=[pnl.RESULTS, pnl.OUTPUT_MEAN])
+            mech_1 = pnl.TransferMechanism(name='Mech 1', size=3, output_ports=[pnl.RESULT, pnl.MEAN])
             mech_2 = pnl.TransferMechanism(name='Mech 2', size=5)
             mech_3 = pnl.TransferMechanism(name='Mech 3', size=2, function=pnl.Logistic(gain=pnl.CONTROL))
             my_process_A = pnl.Process(pathway=[mech_1, mech_3], learning=pnl.ENABLED)
             my_process_B = pnl.Process(pathway=[mech_2, mech_3])
             my_system = pnl.System(processes=[my_process_A, my_process_B],
                                    controller=pnl.ControlMechanism(name='my_system Controller'),
-                                   monitor_for_control=[(pnl.OUTPUT_MEAN, mech_1)],
+                                   monitor_for_control=[(pnl.MEAN, mech_1)],
                                    enable_controller=True)
 
         .. _System_show_graph_figure:
@@ -4825,7 +4825,7 @@ class System(System_Base):
             process_intersections = {}
             subgraphs = {}  # Entries: Process:sg
             for process in self.processes:
-                subgraph_name = 'cluster_'+process.name
+                subgraph_name = 'cluster_' + process.name
                 subgraph_label = process.name
                 with G.subgraph(name=subgraph_name) as sg:
                     subgraphs[process.name]=sg
@@ -4875,7 +4875,7 @@ class System(System_Base):
 
             # Create a process for each unique intersection and assign rcvrs to that
             for intersection_name, mech_list in process_intersections.items():
-                with G.subgraph(name='cluster_'+intersection_name) as sg:
+                with G.subgraph(name='cluster_' + intersection_name) as sg:
                     sg.attr(label=intersection_name)
                     # get list of processes in the intersection (to pass to _assign_processing_components)
                     processes = [p for p in self.processes if p.name in intersection_name]

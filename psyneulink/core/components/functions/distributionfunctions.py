@@ -32,7 +32,7 @@ from psyneulink.core.components.functions.function import Function_Base, Functio
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, DIST_FUNCTION_TYPE, BETA, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_ANALYTICAL_FUNCTION, \
     EXPONENTIAL_DIST_FUNCTION, GAMMA_DIST_FUNCTION, HIGH, LOW, MULTIPLICATIVE_PARAM, NOISE, NORMAL_DIST_FUNCTION, \
-    SCALE, STANDARD_DEVIATION, UNIFORM_DIST_FUNCTION, WALD_DIST_FUNCTION
+    SCALE, STANDARD_DEVIATION, THRESHOLD, UNIFORM_DIST_FUNCTION, WALD_DIST_FUNCTION
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.utilities import parameter_spec
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -41,7 +41,7 @@ from psyneulink.core.globals.parameters import Parameter
 
 __all__ = [
     'DistributionFunction', 'DRIFT_RATE', 'DRIFT_RATE_VARIABILITY', 'DriftDiffusionAnalytical', 'ExponentialDist',
-    'GammaDist', 'NON_DECISION_TIME', 'NormalDist', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY', 'THRESHOLD',
+    'GammaDist', 'NON_DECISION_TIME', 'NormalDist', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY',
     'THRESHOLD_VARIABILITY', 'UniformDist', 'UniformToNormalDist', 'WaldDist',
 ]
 
@@ -818,7 +818,6 @@ class WaldDist(DistributionFunction):
 # Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()
 DRIFT_RATE = 'drift_rate'
 DRIFT_RATE_VARIABILITY = 'DDM_DriftRateVariability'
-THRESHOLD = 'threshold'
 THRESHOLD_VARIABILITY = 'DDM_ThresholdRateVariability'
 STARTING_POINT = 'starting_point'
 STARTING_POINT_VARIABILITY = "DDM_StartingPointVariability"
@@ -1247,7 +1246,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
             Z = 0.0001
 
         def coth(x):
-            return 1/np.tanh(x)
+            return 1 / np.tanh(x)
 
         def csch(x):
             return 1 / np.sinh(x)
@@ -1265,7 +1264,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                                (csch(Z + X))**2 - (Z + X) * coth(Z + X))
 
             moments["var_rt_minus"] = noise**4. / (drift_rate**4) * \
-                               (4 * Z**2. * (csch(2 * Z)) ** 2 + 2 * Z*coth(2 * Z) - (Z - X)**2. *
+                               (4 * Z**2. * (csch(2 * Z)) ** 2 + 2 * Z * coth(2 * Z) - (Z - X)**2. *
                                 (csch(Z - X))**2 - (Z - X) * coth(Z - X))
 
             moments["skew_rt_plus"] = noise**6. / (drift_rate** 6) * \
@@ -1277,7 +1276,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                                 (12 * Z**2. * (csch(2 * Z))**2 + 16 * Z**3. * coth(2 * Z) *
                                  (csch(2 * Z))**2 + 6 * Z * coth(2 * Z) - 3 * (Z - X)**2. *
                                  (csch(Z - X))**2 - 2 * (Z - X)**3. * coth(Z - X) *
-                                 (csch(Z - X))**2 - 3 * (Z - X)*coth(Z - X))
+                                 (csch(Z - X))**2 - 3 * (Z - X) * coth(Z - X))
 
             # divide third central moment by var_rt**1.5 to get skewness
             moments['skew_rt_plus'] /= moments['var_rt_plus']**1.5

@@ -9,6 +9,15 @@
 # *******************************************  AutoAssociativeProjection ***********************************************
 
 """
+Contents
+--------
+  * `Masked_MappingProjection_Overview`
+  * `Masked_MappingProjection_Creation`
+  * `Masked_MappingProjection_Structure`
+  * `Masked_MappingProjection_Execution`
+  * `Masked_MappingProjection_Class_Reference`
+
+
 .. _Masked_MappingProjection_Overview:
 
 Overview
@@ -93,33 +102,14 @@ class MaskedMappingProjectionError(Exception):
 class MaskedMappingProjection(MappingProjection):
     """
     MaskedMappingProjection(     \
-        sender=None,             \
-        receiver=None,           \
-        matrix=DEFAULT_MATRIX,   \
         mask=None,               \
-        mask_operation=MULTIPLY  \
-        params=None,             \
-        name=None,               \
-        prefs=None)
+        mask_operation=MULTIPLY)
 
-    Implement MappingProjection the `matrix <MaskedMappingProjection.matrix>` of which can be masked on each execution.
+    Subclass of `MappingProjection`, the `matrix <MaskedMappingProjection.matrix>` of which can be masked on each
+    execution.  See `MappingProjection <MappingProjection_Class_Reference>` for additional arguments and attributes.
 
     Arguments
     ---------
-
-    sender : Optional[OutputPort or Mechanism]
-        specifies the source of the Projection's input. If a Mechanism is specified, its
-        `primary OutputPort <OutputPort_Primary>` will be used. If it is not specified, it will be assigned in
-        the context in which the Projection is used.
-
-    receiver : Optional[InputPort or Mechanism]
-        specifies the destination of the Projection's output.  If a Mechanism is specified, its
-        `primary InputPort <InputPort_Primary>` will be used. If it is not specified, it will be assigned in
-        the context in which the Projection is used.
-
-    matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX
-        the matrix used by `function <MaskedMappingProjection.function>` (default: `LinearCombination`) to transform
-        the value of the `sender <MaskedMappingProjection.sender>`.
 
     mask : int, float, list, np.ndarray or np.matrix : default None
         specifies a mask to be applied to the `matrix <MaskedMappingProjection.matrix>` each time the Projection is
@@ -129,35 +119,9 @@ class MaskedMappingProjection(MappingProjection):
         specifies the manner in which the `mask <MaskedMappingProjection.mask>` is applied to the `matrix
         <MaskedMappingProjection.matrix>` each time the Projection is executed.
 
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
-        the Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
-        the Projection's default assignment (`LinearCombination`).  Values specified for parameters in the dictionary
-        override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default AutoAssociativeProjection-<index>
-        a string used for the name of the AutoAssociativeProjection. When an AutoAssociativeProjection is created by a
-        RecurrentTransferMechanism, its name is assigned "<name of RecurrentTransferMechanism> recurrent projection"
-        (see `Registry <LINK>` for conventions used in naming, including for default and duplicate names).
-
-    prefs : Optional[PreferenceSet or specification dict : Projection_Base.classPreferences]
-        the `PreferenceSet` for the MappingProjection; if it is not specified, a default is assigned using
-        `classPreferences` defined in __init__.py (see `PreferenceSet <LINK>` for details).
 
     Attributes
     ----------
-
-    componentType : MASKED_MAPPING_PROJECTION
-
-    sender : OutputPort
-        identifies the source of the Projection's input.
-
-    receiver: InputPort
-        identifies the destination of the Projection.
-
-    matrix : 2d np.ndarray
-        matrix used by `function <AutoAssociativeProjection.function>` to transform input from the `sender
-        <MappingProjection.sender>` to the value provided to the `receiver <AutoAssociativeProjection.receiver>`.
 
     mask : int, float, list, np.ndarray or np.matrix : default None
         mask applied to the `matrix <MaskedMappingProjection.matrix>` each time the Projection is executed,
@@ -167,15 +131,6 @@ class MaskedMappingProjection(MappingProjection):
         determines the manner in which the `mask <MaskedMappingProjection.mask>` is applied to the `matrix
         <MaskedMappingProjection.matrix>` when the Projection is executed.
 
-    value : np.ndarray
-        Output of AutoAssociativeProjection, transmitted to `variable <InputPort.variable>` of `receiver`.
-
-    name : str
-        a string used for the name of the AutoAssociativeProjection (see `Registry <LINK>` for conventions used in
-        naming, including for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict : Projection_Base.classPreferences
-        the `PreferenceSet` for AutoAssociativeProjection (see :doc:`PreferenceSet <LINK>` for details).
     """
 
     componentType = MASKED_MAPPING_PROJECTION

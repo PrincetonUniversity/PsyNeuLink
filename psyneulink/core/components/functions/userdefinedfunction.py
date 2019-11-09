@@ -34,8 +34,8 @@ class UserDefinedFunction(Function_Base):
     .. _UDF_Description:
 
     A UserDefinedFunction (UDF) is used to "wrap" a Python function or method, including a lamdba function,
-    as a PsyNeuLink `Function <Function>`, so that it can be used as the `function <Component.function>` of a `Component
-    <Component>`.  This is done automatically if a Python function or method is assigned as the `function
+    as a PsyNeuLink `Function <Function>`, so that it can be used as the `function <Component.function>` of a
+    `Component <Component>`.  This is done automatically if a Python function or method is assigned as the `function
     <Component.function>` attribute of a Component.  A Python function or method can also be wrapped explicitly,
     using the UserDefinedFunction constructor, and assigning the Python function or method to its **custom_function**
     argument.  A Python function or method wrapped as a UDF must obey the following conventions to be treated

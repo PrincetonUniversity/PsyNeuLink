@@ -9,6 +9,25 @@
 #  *********************************************  Port ********************************************************
 
 """
+Contents
+--------
+
+  * `Port_Overview`
+  * `Port_Creation`
+      - `Port_Specification`
+      - `Port_Projections`
+      - `Port_Deferred_Initialization`
+  * `Port_Structure`
+      - `Port_Strucure_Owner`
+      - `Port_Structure_Projections`
+      - `Port_Structure_Variable_Function_Value`
+      - `Port_Modulation`
+  * `Port_Execution`
+  * `Port_Examples`
+  * `Port_Class_Reference`
+
+
+.. _Port_Overview:
 
 Overview
 --------
@@ -26,19 +45,19 @@ used to send ModulatoryProjections), as summarized in the table below:
    +-------------------+----------------------+-----------------------+-----------------+------------------------------+
    | *Port Type*       | *Owner*              |      *Description*    | *Modulated by*  |       *Specification*        |
    +===================+======================+=======================+=================+==============================+
-   | `InputPort`       |  `Mechanism          |receives input from    | `GatingSignal`  |`InputPort` constructor;      |
-   |                   |  <Mechanism>`        |`MappingProjection`    |                 |`Mechanism <Mechanism>`       |
+   | `InputPort`       |  `Mechanism          |receives input from    |`ControlSignal`  |`InputPort` constructor;      |
+   |                   |  <Mechanism>`        |`MappingProjection`    |or `GatingSignal`|`Mechanism <Mechanism>`       |
    |                   |                      |                       |                 |constructor or its            |
    |                   |                      |                       |                 |`add_ports` method            |
    +-------------------+----------------------+-----------------------+-----------------+------------------------------+
-   |`ParameterPort`    |  `Mechanism          |represents parameter   | `LearningSignal`|Implicitly whenever a         |
-   |                   |  <Mechanism>` or     |value for a `Component | and/or          |parameter value is            |
-   |                   |  `Projection         |<Component>`           | `ControlSignal` |`specified                    |
+   |`ParameterPort`    |  `Mechanism          |represents parameter   |`ControlSignal`  |Implicitly whenever a         |
+   |                   |  <Mechanism>` or     |value for a `Component |and/or           |parameter value is            |
+   |                   |  `Projection         |<Component>`           |`LearningSignal` |`specified                    |
    |                   |  <Projection>`       |or its `function       |                 |<ParameterPort_Specification>`|
    |                   |                      |<Component.function>`  |                 |                              |
    +-------------------+----------------------+-----------------------+-----------------+------------------------------+
-   | `OutputPort`      |  `Mechanism          |provides output to     | `GatingSignal`  |`OutputPort` constructor;     |
-   |                   |  <Mechanism>`        |`MappingProjection`    |                 |`Mechanism <Mechanism>`       |
+   | `OutputPort`      |  `Mechanism          |provides output to     |`ControlSignal`  |`OutputPort` constructor;     |
+   |                   |  <Mechanism>`        |`MappingProjection`    |or `GatingSignal`|`Mechanism <Mechanism>`       |
    |                   |                      |                       |                 |constructor or its            |
    |                   |                      |                       |                 |`add_ports` method            |
    +-------------------+----------------------+-----------------------+-----------------+------------------------------+
@@ -86,7 +105,7 @@ COMMENT
 Creating a Port
 ----------------
 
-In general, Ports are created automatically by the objects to which they belong (their `owner <Port_Owner>`),
+In general, Ports are created automatically by the objects to which they belong (their `owner <Port_Strucure_Owner>`),
 or by specifying the Port in the constructor for its owner.  For example, unless otherwise specified, when a
 `Mechanism <Mechanism>` is created it creates a default `InputPort` and `OutputPort` for itself, and whenever any
 Component is created, it automatically creates a `ParameterPort` for each of its `configurable parameters
@@ -227,19 +246,19 @@ The following types of Projections can be specified for each type of Port:
         | *Port Type*      | *PROJECTIONS* specification   | *Assigned to Attribute*             |
         +==================+===============================+=====================================+
         |`InputPort`       | `PathwayProjection(s)         | `path_afferents                     |
-        |                  | <PathwayProjection>`          | <InputPort.path_afferents>`         |
+        |                  | <PathwayProjection>`          | <tPort.path_afferents>`             |
         |                  |                               |                                     |
         |                  | `ControlProjection(s)         | `mod_afferents                      |
-        |                  | <ControlProjection>`          | <InputPort.mod_afferents>`          |
+        |                  | <ControlProjection>`          | <Port.mod_afferents>`               |
         |                  |                               |                                     |
         |                  | `GatingProjection(s)          | `mod_afferents                      |
-        |                  | <GatingProjection>`           | <InputPort.mod_afferents>`          |
+        |                  | <GatingProjection>`           | <Port.mod_afferents>`               |
         +------------------+-------------------------------+-------------------------------------+
         |`ParameterPort`   | `ControlProjection(s)         | `mod_afferents                      |
         |                  | <ControlProjection>`          | <ParameterPort.mod_afferents>`      |
         +------------------+-------------------------------+-------------------------------------+
         |`OutputPort`      | `PathwayProjection(s)         | `efferents                          |
-        |                  | <PathwayProjection>`          | <OutputPort.efferents>`             |
+        |                  | <PathwayProjection>`          | <Port.efferents>`                   |
         |                  |                               |                                     |
         |                  | `ControlProjection(s)         | `mod_afferents                      |
         |                  | <ControlProjection>`          | <OutputPort.mod_afferents>`         |
@@ -267,7 +286,7 @@ assigned to it.
 *Deferred Initialization*
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If a Port is created on its own, and its `owner <Port_Owner>` Mechanism is specified, it is assigned to that
+If a Port is created on its own, and its `owner <Port_Strucure_Owner>` Mechanism is specified, it is assigned to that
 Mechanism; if its owner not specified, then its initialization is `deferred <Port_Deferred_Initialization>`.
 Its initialization is completed automatically when it is assigned to an owner `Mechanism <Mechanism>` using the
 owner's `add_ports <Mechanism_Base.add_ports>` method.  If the Port is not assigned to an owner, it will not be
@@ -280,7 +299,7 @@ functional (i.e., used during the execution of `Mechanisms <Mechanism_Execution>
 Structure
 ---------
 
-.. _Port_Owner:
+.. _Port_Strucure_Owner:
 
 *Owner*
 ~~~~~~~
@@ -295,6 +314,8 @@ specified explicitly in the **owner** argument of the constructor for the Port (
 assigned to the specified Mechanism).  If the **owner** argument is not specified, the Port's initialization is
 `deferred <Port_Deferred_Initialization>` until it has been assigned to an owner using the owner's `add_ports
 <Mechanism_Base.add_ports>` method.
+
+.. _Port_Structure_Projections:
 
 *Projections*
 ~~~~~~~~~~~~~
@@ -316,6 +337,8 @@ type of Port, listed below (and shown in the `table <Port_Projections_Table>`):
 In addition to these attributes, all of the Projections sent and received by a Port are listed in its `projections
 <Port_Base.projections>` attribute.
 
+
+.. _Port_Structure_Variable_Function_Value:
 
 *Variable, Function and Value*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -399,7 +422,7 @@ TransferMechanism::
 
 automatically creates an InputPort, ParameterPorts for its parameters, including the `slope <Linear.slope>` and
 `intercept <Linear.intercept>` parameters of its `Linear` `Function <Function>` (its default `function
-<TransferMechanism.function>`), and an OutputPort (named *RESULT*)::
+<Mechanism_Base.function>`), and an OutputPort (named *RESULT*)::
 
     print(my_mech.input_ports)
     > [(InputPort InputPort-0)]
@@ -475,13 +498,13 @@ than one InputPort.  OutputPorts can be specified in a similar way, using the **
 The following example specifies two OutputPorts for ``my_mech``, using its `Standard OutputPorts
 <OutputPort_Standard>`::
 
-    my_mech = pnl.TransferMechanism(output_ports=['RESULT', 'OUTPUT_MEAN'])
+    my_mech = pnl.TransferMechanism(output_ports=['RESULT', 'MEAN'])
 
 As with InputPorts, specification of OutputPorts in the **output_ports** argument suppresses the creation of any
 default OutputPorts that would have been created if no OutputPorts were specified (see `note
 <Mechanism_Default_Port_Suppression_Note>` above).  For example, TransferMechanisms create a *RESULT* OutputPort
 by default, that contains the result of their `function <OutputPort.function>`.  This default behavior is suppressed
-by any specifications in its **output_ports** argument.  Therefore, to retain a *RESULTS* OutputPort,
+by any specifications in its **output_ports** argument.  Therefore, to retain a *RESULT* OutputPort,
 it must be included in the **output_ports** argument along with any others that are specified, as in the example
 above.  If the name of a specified OutputPort matches the name of a Standard OutputPort <OutputPort_Standard>` for
 the type of Mechanism, then that is used (as is the case for both of the OutputPorts specified for the
@@ -769,7 +792,7 @@ from psyneulink.core.globals.keywords import \
     PARAMETER_PORTS, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, \
     PROJECTION_DIRECTION, PROJECTION, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, \
     RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, STANDARD_OUTPUT_PORTS, \
-    PORT, PORT_CONTEXT, Port_Name, Port_ParamS, PORT_PREFS, PORT_TYPE, port_value, VALUE, VARIABLE, WEIGHT, \
+    PORT, PORT_CONTEXT, Port_Name, port_params, PORT_PREFS, PORT_TYPE, port_value, VALUE, VARIABLE, WEIGHT, \
     PORT_COMPONENT_CATEGORY
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.basepreferenceset import VERBOSE_PREF
@@ -788,7 +811,7 @@ port_keywords = component_keywords.copy()
 port_keywords.update({MECHANISM,
                        PORT_TYPE,
                        port_value,
-                       Port_ParamS,
+                       port_params,
                        PATHWAY_PROJECTIONS,
                        MODULATORY_PROJECTIONS,
                        PROJECTION_TYPE,
@@ -853,113 +876,35 @@ class PortError(Exception):
 # DOCUMENT:  INSTANTATION CREATES AN ATTIRBUTE ON THE OWNER MECHANISM WITH THE PORT'S NAME + VALUE_SUFFIX
 #            THAT IS UPDATED BY THE PORT'S value setter METHOD (USED BY LOGGING OF MECHANISM ENTRIES)
 class Port_Base(Port):
-    """
-    Port_Base(        \
-    owner,             \
-    variable=None,     \
-    size=None,         \
-    projections=None,  \
-    params=None,       \
-    name=None,         \
-    prefs=None)
-
-    Base class for Port.
+    """Base class for Port.
+    The arguments below can be used in the constructor for any subclass of Port.
+    See `Component <Component_Class_Reference>` for additional arguments and attributes.
 
     .. note::
-       Port is an abstract class and should NEVER be instantiated by a call to its constructor.
-       It should be instantiated using the constructor for a `subclass <Port_Subtypes>`.
-
+       Port is an abstract class and should *never* be instantiated by a call to its constructor. It should be created
+       by calling the constructor for a `subclass <Port_Subtypes>`, or by using any of the other methods for `specifying
+       a Port <Port_Specification>`.
 
     COMMENT:
-        Description
-        -----------
-            Represents and updates the value of the input, output or parameter of a Mechanism
-                - receives inputs from projections (self.path_afferents, PROJECTIONS)
-                - input_ports and parameterPorts: combines inputs from all projections (mapping, control or learning)
-                    and uses this as variable of function to update the value attribute
-                - output_ports: represent values of output of function
-            Value attribute:
-                 - is updated by the execute method (which calls Port's function)
-                 - can be used as sender (input) to one or more projections
-                 - can be accessed by KVO
-            Constraints:
-                - value must be compatible with variable of function
-                - value must be compatible with receiver.value for all projections it receives
+    PortRegistry
+    -------------
+        Used by .__init__.py to assign default projection types to each Port subclass
+        Note:
+        * All Ports that belong to a given owner are registered in the owner's _portRegistry,
+            which maintains a dict for each Port type that it uses, a count for all instances of that type,
+            and a dictionary of those instances;  NONE of these are registered in the PortRegistry
+            This is so that the same name can be used for instances of a Port type by different owners
+                without adding index suffixes for that name across owners,
+                while still indexing multiple uses of the same base name within an owner
 
-            Subclasses:
-                Must implement:
-                    componentType
-                    ParamClassDefaults with:
-                        + FUNCTION (or <subclass>.function
-                        + FUNCTION_PARAMS (optional)
-                        + PROJECTION_TYPE - specifies type of projection to use for instantiation of default subclass
-                Standard subclasses and constraints:
-                    InputPort - used as input Port for Mechanism;  additional constraint:
-                        - value must be compatible with variable of owner's function method
-                    OutputPort - used as output Port for Mechanism;  additional constraint:
-                        - value must be compatible with the output of the owner's function
-                    MechanismsParameterPort - used as Port for Mechanism parameter;  additional constraint:
-                        - output of function must be compatible with the parameter's value
-
-        Class attributes
-        ----------------
-            + componentCategory = kwPortFunctionCategory
-            + className = PORT
-            + suffix
-            + classPreference (PreferenceSet): PortPreferenceSet, instantiated in __init__()
-            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-            + class_defaults.variable (value): [0]
-            + requiredParamClassDefaultTypes = {FUNCTION_PARAMS : [dict],    # Subclass function params
-                                               PROJECTION_TYPE: [str, Projection]})   # Default projection type
-            + paramClassDefaults (dict): {PROJECTIONS: []}             # Projections to Ports
-            + owner (Mechansim)
-            + FUNCTION (Function class or object, or method)
-
-        Class methods
-        -------------
-            - set_value(value) -
-                validates and assigns value, and updates observers
-                returns None
-            - _update(context) -
-                updates self.value by combining all projections and using them to compute new value
-                return None
-
-        PortRegistry
-        -------------
-            Used by .__init__.py to assign default projection types to each Port subclass
-            Note:
-            * All Ports that belong to a given owner are registered in the owner's _portRegistry,
-                which maintains a dict for each Port type that it uses, a count for all instances of that type,
-                and a dictionary of those instances;  NONE of these are registered in the PortRegistry
-                This is so that the same name can be used for instances of a Port type by different owners
-                    without adding index suffixes for that name across owners,
-                    while still indexing multiple uses of the same base name within an owner
-
-        Arguments
-        ---------
-        - value (value) - establishes type of value attribute and initializes it (default: [0])
-        - owner(Mechanism) - assigns Port to Mechanism (default: NotImplemented)
-        - params (dict):  (if absent, default Port is implemented)
-            + FUNCTION (method)         |  Implemented in subclasses; used in _update()
-            + FUNCTION_PARAMS (dict) |
-            + PROJECTIONS:<projection specification or list of ones>
-                if absent, no projections will be created
-                projection specification can be: (see Projection for details)
-                    + Projection object
-                    + Projection class
-                    + specification dict
-                    + a list containing any or all of the above
-                    if dict, must contain entries specifying a projection:
-                        + PROJECTION_TYPE:<Projection class>: must be a subclass of Projection
-                        + PROJECTION_PARAMS:<dict>? - must be dict of params for PROJECTION_TYPE
-        - name (str): if it is not specified, a default based on the class is assigned in register_category,
-                            of the form: className+n where n is the n'th instantiation of the class
-        - prefs (PreferenceSet or specification dict):
-             if it is omitted, a PreferenceSet will be constructed using the classPreferences for the subclass
-             dict entries must have a preference keyPath as their key, and a PreferenceEntry or setting as their value
-             (see Description under PreferenceSet for details)
-        - context (str): must be a reference to a subclass, or an exception will be raised
     COMMENT
+
+    Arguments
+    ---------
+
+    owner : Mechanism : default None
+        the Mechanism to which the Port belongs;  if it is not specified or determinable from the context in which
+        the Port is created, the Port's initialization is `deferred <Port_Deferred_Initialization>`.
 
     Attributes
     ----------
@@ -968,7 +913,7 @@ class Port_Base(Port):
         the Port's input, provided as the `variable <Port_Base.variable>` to its `function <Port_Base.function>`.
 
     owner : Mechanism or Projection
-        object to which the Port belongs (see `Port_Owner` for additional details).
+        object to which the Port belongs (see `Port_Strucure_Owner` for additional details).
 
     base_value : number, list or np.ndarray
         value with which the Port was initialized.
@@ -977,8 +922,9 @@ class Port_Base(Port):
         list of all Projections received by the Port (i.e., for which it is a `receiver <Projection_Base.receiver>`.
 
     path_afferents : Optional[List[Projection]]
-        list all `PathwayProjections <PathwayProjection>` received by the Port;
-        note:  only `InputPorts <InputPort>` have path_afferents;  the list is empty for other types of Ports.
+        list of all `PathwayProjections <PathwayProjection>` received by the Port (i.e., for which it is the
+        receiver <Projection_Base.receiver>` (note:  only `InputPorts <InputPort>` have path_afferents;  the list is
+        empty for other types of Ports).
 
     mod_afferents : Optional[List[GatingProjection]]
         list of all `ModulatoryProjections <ModulatoryProjection>` received by the Port.
@@ -1104,8 +1050,8 @@ class Port_Base(Port):
             - prefs (dict): dictionary containing system preferences (default: Prefs.DEFAULTS)
             - context (str)
             - **kargs (dict): dictionary of arguments using the following keywords for each of the above kargs:
-                # Port_ParamS is not handled here like the others are
-                + Port_ParamS = params
+                # port_params is not handled here like the others are
+                + port_params = params
                 + Port_Name = name
                 + PORT_PREFS = prefs
                 + PORT_CONTEXT = context
@@ -2279,18 +2225,17 @@ class Port_Base(Port):
         f_params = builder.alloca(state_f.args[0].type.pointee)
         builder.store(builder.load(base_params), f_params)
 
-        # FIXME: is this always true, by design?
+        # FIXME: Handle and combine multiple afferents
         assert len(self.mod_afferents) <= 1
 
         # Apply modulation
         for idx, afferent in enumerate(self.mod_afferents):
             # The first input is function data input
             # Modulatory projections are ordered after that
-            # FIXME: It's expected to be a single element array,
-            #        so why is the parameter below a scalar?
 
             # Get the modulation value
-            f_mod_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(idx + 1), ctx.int32_ty(0)])
+            f_mod_ptr = builder.gep(arg_in, [ctx.int32_ty(0),
+                                             ctx.int32_ty(idx + 1)])
 
             # Get name of the modulated parameter
             if afferent.sender.modulation is MULTIPLICATIVE:
@@ -2301,16 +2246,23 @@ class Port_Base(Port):
                 name = None
             elif afferent.sender.modulation is OVERRIDE:
                 # Directly store the value in the output array
-                output_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-                builder.store(builder.load(f_mod_ptr), output_ptr)
+                builder.store(builder.load(f_mod_ptr), arg_out)
                 return builder
             else:
                 assert False, "Unsupported modulation parameter: {}".format(afferent.sender.modulation)
 
             # Replace base param with the modulation value
             if name is not None:
-                f_mod_param_ptr = ctx.get_param_ptr(self.function, builder, f_params, name)
-                builder.store(builder.load(f_mod_ptr), f_mod_param_ptr)
+                f_mod_param_ptr = ctx.get_param_ptr(self.function,
+                                                    builder, f_params, name)
+                if f_mod_param_ptr.type != f_mod_ptr.type:
+                    warnings.warn("Shape mismatch between modulation and modulated parameter: {} vs. {}".format(
+                                  afferent.defaults.value,
+                                  getattr(self.function.parameters, name).get(None)))
+                    param_val = pnlvm.helpers.load_extract_scalar_array_one(builder, f_mod_ptr)
+                else:
+                    param_val = builder.load(f_mod_ptr)
+                builder.store(param_val, f_mod_param_ptr)
 
         # OutputPort returns 1D array even for scalar functions
         if arg_out.type != state_f.args[3].type:
@@ -2449,7 +2401,7 @@ def _instantiate_port_list(owner,
     # INSTANTIATE EACH PORT
 
     ports = ContentAddressableList(component_type=Port_Base,
-                                    name=owner.name+' ContentAddressableList of ' + port_Param_identifier)
+                                   name=owner.name + ' ContentAddressableList of ' + port_Param_identifier)
     # For each port, pass port_spec and the corresponding item of reference_value to _instantiate_port
 
     if not isinstance(port_types, list):
@@ -2509,13 +2461,13 @@ def _instantiate_port(port_type:_is_port_class,           # Port's type
         check owner is owner; if not, raise exception
     + 2-item tuple:
         assign first item to port_spec
-        assign second item to Port_ParamS{PROJECTIONS:<projection>}
+        assign second item to port_params{PROJECTIONS:<projection>}
     + Projection object:
         assign reference_value to value
-        assign projection to Port_ParamS{PROJECTIONS:<projection>}
+        assign projection to port_params{PROJECTIONS:<projection>}
     + Projection class (or keyword string constant for one):
         assign reference_value to value
-        assign projection class spec to Port_ParamS{PROJECTIONS:<projection>}
+        assign projection class spec to port_params{PROJECTIONS:<projection>}
     + specification dict for Port
         check compatibility of port_value with reference_value
 
@@ -2663,7 +2615,7 @@ def _parse_port_type(owner, port_spec):
         # Port keyword
         if port_spec in port_type_keywords:
             import sys
-            return getattr(sys.modules['PsyNeuLink.Components.Ports.'+port_spec], port_spec)
+            return getattr(sys.modules['PsyNeuLink.Components.Ports.' + port_spec], port_spec)
 
         # Try as name of Port
         for port_attr in [INPUT_PORTS, PARAMETER_PORTS, OUTPUT_PORTS]:

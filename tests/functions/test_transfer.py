@@ -21,10 +21,10 @@ softmax_helper = RAND1 * test_var
 softmax_helper = softmax_helper - np.max(softmax_helper)
 softmax_helper = np.exp(softmax_helper) / np.sum(np.exp(softmax_helper))
 
-tanh_helper = -2*(RAND1 * (test_var + RAND2 - RAND3) + RAND4)
+tanh_helper = -2 * (RAND1 * (test_var + RAND2 - RAND3) + RAND4)
 tanh_helper = (1 - e**tanh_helper)/ (1 + e**tanh_helper)
 
-gaussian_helper = e**(-(test_var-RAND2)**2/(2*RAND1**2)) / sqrt(2*pi*RAND1)
+gaussian_helper = e**(-(test_var - RAND2)**2 / (2 * RAND1**2)) / sqrt(2 * pi * RAND1)
 gaussian_helper = RAND3 * gaussian_helper + RAND4
 
 def gaussian_distort_helper(seed):

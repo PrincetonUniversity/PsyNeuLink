@@ -16,6 +16,12 @@ RAND0_1 = np.random.random()
 RAND2 = np.random.rand()
 RAND3 = np.random.rand()
 
+def SimpleIntFun(init, value, iterations, rate, noise, offset, **kwargs):
+    val = np.full_like(value, init)
+    for i in range(iterations):
+        val = val + (rate * value) + noise + offset
+    return val
+
 def AdaptiveIntFun(init, value, iterations, rate, noise, offset, **kwargs):
     val = np.full_like(value, init)
     for i in range(iterations):
@@ -27,6 +33,10 @@ test_data = [
     (Functions.AdaptiveIntegrator, test_var, {'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}, AdaptiveIntFun),
     (Functions.AdaptiveIntegrator, test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':RAND2, 'offset':RAND3}, AdaptiveIntFun),
     (Functions.AdaptiveIntegrator, test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}, AdaptiveIntFun),
+    (Functions.SimpleIntegrator, test_var, {'rate':RAND0_1, 'noise':RAND2, 'offset':RAND3}, SimpleIntFun),
+    (Functions.SimpleIntegrator, test_var, {'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}, SimpleIntFun),
+    (Functions.SimpleIntegrator, test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':RAND2, 'offset':RAND3}, SimpleIntFun),
+    (Functions.SimpleIntegrator, test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}, SimpleIntFun),
 ]
 
 # use list, naming function produces ugly names
@@ -35,6 +45,10 @@ names = [
     "AdaptiveIntegrator Noise Array",
     "AdaptiveIntegrator Initializer",
     "AdaptiveIntegrator Initializer Noise Array",
+    "SimpleIntegrator",
+    "SimpleIntegrator Noise Array",
+    "SimpleIntegrator Initializer",
+    "SimpleIntegrator Initializer Noise Array",
 ]
 
 GROUP_PREFIX="IntegratorFunction "
@@ -48,10 +62,9 @@ def test_basic(func, variable, params, expected, benchmark):
     benchmark.group = GROUP_PREFIX + func.componentName
     f(variable)
     f(variable)
-    res = benchmark(f, variable)
-    # This is rather hacky. it might break with pytest benchmark update
-    iterations = 3 if benchmark.disabled else benchmark.stats.stats.rounds + 2
-    assert np.allclose(res, expected(f.initializer, variable, iterations, **params))
+    res = f(variable)
+    assert np.allclose(res, expected(f.initializer, variable, 3, **params))
+    benchmark(f, variable)
 
 
 @pytest.mark.llvm
@@ -65,10 +78,9 @@ def test_llvm(func, variable, params, expected, benchmark):
     m = pnlvm.execution.FuncExecution(f)
     m.execute(variable)
     m.execute(variable)
-    res = benchmark(m.execute, variable)
-    # This is rather hacky. it might break with pytest benchmark update
-    iterations = 3 if benchmark.disabled else benchmark.stats.stats.rounds + 2
-    assert np.allclose(res, expected(f.initializer, variable, iterations, **params))
+    res = m.execute(variable)
+    assert np.allclose(res, expected(f.initializer, variable, 3, **params))
+    benchmark(m.execute, variable)
 
 @pytest.mark.llvm
 @pytest.mark.cuda
@@ -82,10 +94,9 @@ def test_ptx_cuda(func, variable, params, expected, benchmark):
     m = pnlvm.execution.FuncExecution(f)
     m.cuda_execute(variable)
     m.cuda_execute(variable)
-    res = benchmark(m.cuda_execute, variable)
-    # This is rather hacky. it might break with pytest benchmark update
-    iterations = 3 if benchmark.disabled else benchmark.stats.stats.rounds + 2
-    assert np.allclose(res, expected(f.initializer, variable, iterations, **params))
+    res = m.cuda_execute(variable)
+    assert np.allclose(res, expected(f.initializer, variable, 3, **params))
+    benchmark(m.cuda_execute, variable)
 
 def test_integrator_function_no_default_variable_and_params_len_more_than_1():
     I = AdaptiveIntegrator(rate=[.1, .2, .3])

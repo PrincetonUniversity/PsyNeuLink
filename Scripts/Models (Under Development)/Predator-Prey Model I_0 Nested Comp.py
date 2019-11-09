@@ -97,7 +97,7 @@ def diff_fct(variable):
 def test_fct(variable):
     if variable is None:
         return 0
-    return variable[1]-variable[0]
+    return variable[1] - variable[0]
 
 if PERCEPTUAL_DISTORT:
     CTL_PARAM = VARIANCE
@@ -212,7 +212,7 @@ def main():
                                                  },
                                          bin_execute=BIN_EXECUTE
                                          )
-            action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
+            action = np.where(run_results[0] == 0, 0, run_results[0] / np.abs(run_results[0]))
             # action = np.squeeze(np.where(greedy_action_mech.value==0,0,
             #                              greedy_action_mech.value[0]/np.abs(greedy_action_mech.value[0])))
             observation, reward, done, _ = env.step(action)

@@ -10,6 +10,16 @@
 
 """
 
+Contents
+--------
+
+  * `ModulatoryMechanism_Overview`
+  * `ModulatoryMechanism_Creation`
+  * `ModulatoryMechanism_Structure`
+  * `ModulatoryMechanism_Execution`
+  * `ModulatoryMechanism_Class_Reference`
+
+
 .. _ModulatoryMechanism_Overview:
 
 Overview
@@ -20,7 +30,6 @@ A ModulatoryMechanism is a type of `Mechanism <Mechanism>` that modifies the ope
 this need not be the case.
 
 .. _ModulatoryMechanism_Types:
-
 
 There are two primary types of ModulatoryMechanism:
 
@@ -135,17 +144,11 @@ class ModulatoryMechanismError(Exception):
 
 class ModulatoryMechanism_Base(Mechanism_Base):
     """Subclass of `Mechanism <Mechanism>` that modulates the value(s) of one or more other `Component(s) <Component>`.
+    See `Mechanism <Mechanism_Class_Reference>` and subclasses for arguments and additional attributes.
 
     .. note::
-       ModulatoryMechanism is an abstract class and should NEVER be instantiated by a call to its constructor.
+       ModulatoryMechanism is an abstract class and should *never* be instantiated by a call to its constructor.
        They should be instantiated using the constructor for a `subclass <ModulatoryMechanism_Subtypes>`.
-
-    COMMENT:
-
-    Description:
-        A ModulatoryMechanism is a Type of the `Mechanism <Mechanism>` Category of Component
-
-    COMMENT
 
 
     Attributes

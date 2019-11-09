@@ -501,7 +501,7 @@ class CompExecution(CUDAExecution):
     def _initialize_autodiff_param_struct(self, autodiff_stimuli):
         inputs = autodiff_stimuli.get("inputs", {})
         targets = autodiff_stimuli.get("targets", {})
-        epochs = autodiff_stimuli.get("epochs", 0)
+        epochs = autodiff_stimuli.get("epochs", 1)
 
         num_trials = len(next(iter(inputs.values())))
 
@@ -534,7 +534,7 @@ class CompExecution(CUDAExecution):
 
         return autodiff_values
 
-    def run(self, inputs, runs, num_input_sets, autodiff_stimuli={"targets" : {}, "epochs": 0}):
+    def run(self, inputs, runs, num_input_sets, autodiff_stimuli={"targets" : {}, "epochs": 1}):
         inputs = self._get_run_input_struct(inputs, num_input_sets)
         # Special casing for autodiff
         if hasattr(self._composition,"learning_enabled") and self._composition.learning_enabled is True:
@@ -542,8 +542,6 @@ class CompExecution(CUDAExecution):
             assert num_input_sets == len(next(iter(autodiff_stimuli["targets"].values())))
             keep_on_stack = self._initialize_autodiff_param_struct(autodiff_stimuli)
 
-        if "force_runs" in debug_env:
-            runs = max(runs, int(debug_env["force_runs"]))
         ct_vo = self._bin_run_func.byref_arg_types[4] * runs
         if len(self._execution_ids) > 1:
             ct_vo = ct_vo * len(self._execution_ids)
@@ -566,8 +564,6 @@ class CompExecution(CUDAExecution):
         data_in = self.upload_ctype(inputs)
 
         # Create output buffer
-        if "force_runs" in debug_env:
-            runs = max(runs, int(debug_env["force_runs"]))
         output_type = (self._bin_run_func.byref_arg_types[4] * runs)
         if len(self._execution_ids) > 1:
             output_type = output_type * len(self._execution_ids)

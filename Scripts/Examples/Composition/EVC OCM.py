@@ -3,17 +3,21 @@ import numpy as np
 
 # Mechanisms
 Input = TransferMechanism(name='Input')
-reward = TransferMechanism(output_ports=[RESULT, OUTPUT_MEAN, OUTPUT_VARIANCE],
+reward = TransferMechanism(output_ports=[RESULT, MEAN, VARIANCE],
                                name='reward')
 Decision = DDM(function=DriftDiffusionAnalytical(drift_rate=(1.0,
-                                                                     ControlProjection(function=Linear,
-                                                                                           control_signal_params={ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)})),
-                                                         threshold=(1.0,
-                                                                    ControlProjection(function=Linear,
-                                                                                          control_signal_params={ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)})),
-                                                         noise=0.5,
-                                                         starting_point=0,
-                                                         t0=0.45),
+                                                             ControlProjection(function=Linear,
+                                                                               control_signal_params={
+                                                                                   ALLOCATION_SAMPLES:
+                                                                                       np.arange(0.1, 1.01, 0.3)})),
+                                                 threshold=(1.0,
+                                                            ControlProjection(function=Linear,
+                                                                              control_signal_params={
+                                                                                  ALLOCATION_SAMPLES:
+                                                                                      np.arange(0.1, 1.01, 0.3)})),
+                                                 noise=0.5,
+                                                 starting_point=0,
+                                                 t0=0.45),
                    output_ports=[DECISION_VARIABLE,
                                 RESPONSE_TIME,
                                 PROBABILITY_UPPER_THRESHOLD],

@@ -9,6 +9,25 @@
 # ******************************************  ControlSignal *****************************************************
 
 """
+
+Contents:
+---------
+
+  * `Control_signal_Overview`
+  * `ControlSignal_Creation`
+      - `ControlSignal_Specification`
+  * `ControlSignal_Structure`
+      - `ControlSignal_Projections`
+      - `ControlSignal_Modulation`
+      - `ControlSignal_Allocation_and_Intensity`
+      - `ControlSignal_Costs`
+  * `ControlSignal_Execution`
+  * `ControlSignal_Examples`
+  * `ControlSignal_Class_Reference`
+
+
+.. _Control_Signal_Overview:
+
 Overview
 --------
 
@@ -94,7 +113,7 @@ that are described below.
 
 When a ControlSignal is created, it can be assigned one or more `ControlProjections <ControlProjection>`, using either
 the **projections** argument of its constructor, or in an entry of a dictionary assigned to the **params** argument
-with the key *PROJECTIONS*.  These will be assigned to its `efferents  <ControlSignal.efferents>` attribute.  See
+with the key *PROJECTIONS*.  These will be assigned to its `efferents  <ModulatorySignal.efferents>` attribute.  See
 `Port Projections <Port_Projections>` for additional details concerning the specification of Projections when
 creating a Port.
 
@@ -110,15 +129,15 @@ creating a Port.
 *Modulation*
 ~~~~~~~~~~~~
 
-A ControlSignal has a `modulation <GatingSignal.modulation>` attribute that determines how its ControlSignal's
+A ControlSignal has a `modulation <ModulatorySignal.modulation>` attribute that determines how its ControlSignal's
 `value <ControlSignal.value>` is used by the Ports to which it projects to modify their `value <Port_Base.value>` \\s
-(see `ModulatorySignal_Modulation` for an explanation of how the `modulation <ControlSignal.modulation>`  attribute is
-specified and used to modulate the `value <Port_Base.value>` of a Port). The `modulation <ControlSignal.modulation>`
+(see `ModulatorySignal_Modulation` for an explanation of how the `modulation <ModulatorySignal.modulation>` attribute is
+specified and used to modulate the `value <Port_Base.value>` of a Port). The `modulation <ModulatorySignal.modulation>`
 attribute can be specified in the **modulation** argument of the constructor for a ControlSignal, or in a specification
 dictionary as described `above <ControlSignal_Specification>`. The value must be a value of `ModulationParam`;  if it
 is not specified, its default is the value of the `modulation <ControlMechanism.modulation>` attribute of the
 ControlMechanism to which the ControlSignal belongs (which is the same for all of the ControlSignals belonging to that
-ControlMechanism).  The value of the `modulation <ControlSignal.modulation>` attribute of a ControlSignal is used by
+ControlMechanism).  The value of the `modulation <ModulatorySignal.modulation>` attribute of a ControlSignal is used by
 all of the `ControlProjections <ControlProjection>` that project from that ControlSignal.
 
 .. _ControlSignal_Allocation_and_Intensity
@@ -141,12 +160,13 @@ FIX: 8/30/19 -- ADD DESCRIPTION OF function AS ACTUALLY IMPLEMENTED AS TransferW
                 - cost functions can be specified, but attributes are pointers to function's cost functions
                 - cost attributes get value of corresponding attributes of cost function
                 - ?handling of cost_options
-*Function*. A ControlSignal's `allocation <ControlSignal.alloction>` serves as its`variable <ControlSignal.variable>`,
-and is used by its `function <ControlSignal.function>` to generate an `intensity`. The default `function
-<ControlSignal.function>` for a ControlSignal is an identity function (`Linear` with `slope <Linear.slope>` \\=1 and
-`intercept <Linear.intercept>`\\=0), that simply assigns the `allocation <ControlSignal.allocation>` as the
-ControlSignal's `intensity <ControlSignal.intensity>`. However, another `TransferFunction` can be assigned
-(e.g., `Exponential`), or any other function that takes and returns a scalar value or 1d array.
+*Function*. A ControlSignal's `allocation <ControlSignal.allocation>` serves as its`variable
+<ModulatorySignal.variable>`, and is used by its `function <ControlSignal.function>` to generate an `intensity`.
+The default `function <ControlSignal.function>` for a ControlSignal is an identity function (`Linear` with `slope
+<Linear.slope>` \\=1 and `intercept <Linear.intercept>`\\=0), that simply assigns the `allocation
+<ControlSignal.allocation>` as the ControlSignal's `intensity <ControlSignal.intensity>`. However,
+another `TransferFunction` can be assigned (e.g., `Exponential`), or any other function that takes and returns a
+scalar value or 1d array.
 
 *Intensity (value)*. The result of the function is assigned as the value of the ControlSignal's `intensity`
 attribute, which serves as the ControlSignal's `value <ControlSignal.value>` (also referred to as `control_signal`).
@@ -192,9 +212,6 @@ the enabled cost components are summed, however this can be modified by specifyi
     disabled for a ControlSignal, it cannot be re-enabled using `toggle_cost_function`.
     COMMENT
 
-.. note:: The `index <OutputPort.OutputPort.index>` and `assign <OutputPort.OutputPort.assign>`
-        attributes of a ControlSignal are automatically assigned and should not be modified.
-
 .. _ControlSignal_Execution:
 
 Execution
@@ -235,14 +252,14 @@ ControlSignal to the `bias <Logistic.gain>` parameter of the `Logistic` Function
 
 Note that the ControlSignal is specified by it class.  This will create a default ControlSignal,
 with a ControlProjection that projects to the TransferMechanism's `ParameterPort` for the `bias <Logistic.bias>`
-parameter of its `Logistic` Function.  The default value of a ControlSignal's `modulation <ControlSignal.modulation>`
+parameter of its `Logistic` Function.  The default value of a ControlSignal's `modulation <ModulatorySignal.modulation>`
 attribute is *MULTIPLICATIVE*, so that it will multiply the value of the `bias <Logistic.bias>` parameter.
 When the TransferMechanism executes, the Logistic Function will use the value of the ControlSignal as its
 bias parameter.
 
 *Specify attributes of a ControlSignal*.  Ordinarily, ControlSignals modify the *MULTIPLICATIVE_PARAM* of a
 ParameterPort's `function <ParameterPort.function>` to modulate the parameter's value.
-In the example below, this is changed by specifying the `modulation <ControlSignal.modulation>` attribute of a
+In the example below, this is changed by specifying the `modulation <ModulatorySignal.modulation>` attribute of a
 `ControlSignal` for the `Logistic` Function of the `TransferMechanism`.  It is changed so that the value of the
 ControlSignal adds to, rather than multiplies, the value of the `gain <Logistic.gain>` parameter of the Logistic
 function::
@@ -263,10 +280,10 @@ COMMENT:
 
     my_mech_A = TransferMechanism(function=Logistic)
     my_mech_B = TransferMechanism(function=Linear,
-                                 output_ports=[RESULT, OUTPUT_MEAN])
+                                 output_ports=[RESULT, MEAN])
 
     my_ocm = OptimizationControlMechanism(monitor_for_control=[my_mech_A.output_ports[RESULT],
-                                                               my_mech_B.output_ports[OUTPUT_MEAN]],
+                                                               my_mech_B.output_ports[MEAN]],
                                           control_signals=[(GAIN, my_mech_A),
                                                            {NAME: INTERCEPT,
                                                             MECHANISM: my_mech_B,
@@ -279,14 +296,14 @@ the `gain <Logistic.gain>` parameter of the `Logistic` function for ``my_mech_A`
 
     >>> my_mech_A = TransferMechanism(function=Logistic)
     >>> my_mech_B = TransferMechanism(function=Linear,
-    ...                                   output_ports=[RESULT, OUTPUT_MEAN])
+    ...                                   output_ports=[RESULT, MEAN])
 
     >>> process_a = Process(pathway=[my_mech_A])
     >>> process_b = Process(pathway=[my_mech_B])
 
     >>> my_system = System(processes=[process_a, process_b],
-    ...                        monitor_for_control=[my_mech_A.output_ports[RESULTS],
-    ...                                             my_mech_B.output_ports[OUTPUT_MEAN]],
+    ...                        monitor_for_control=[my_mech_A.output_ports[RESULT],
+    ...                                             my_mech_B.output_ports[MEAN]],
     ...                        control_signals=[(GAIN, my_mech_A),
     ...                                         {NAME: INTERCEPT,
     ...                                          MECHANISM: my_mech_B,
@@ -295,6 +312,7 @@ the `gain <Logistic.gain>` parameter of the `Logistic` function for ``my_mech_A`
 
 COMMENT
 
+.. _ControlSignal_Class_Reference:
 
 Class Reference
 ---------------
@@ -315,7 +333,7 @@ import typecheck as tc
 from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
-from psyneulink.core.components.functions.transferfunctions import Exponential, Linear, CostFunctions
+from psyneulink.core.components.functions.transferfunctions import Exponential, Linear, CostFunctions, TransferWithCosts
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.ports.outputport import SEQUENTIAL, _output_port_variable_getter
 from psyneulink.core.components.ports.port import Port_Base
@@ -386,6 +404,34 @@ def _cost_getter(owning_component=None, context=None):
         return None
 
 
+def _intensity_cost_function_getter(owning_component=None, context=None):
+    try:
+        return owning_component.function.parameters.intensity_cost_fct._get(context)
+    except (TypeError, IndexError):
+        return None
+
+
+def _adjustment_cost_function_getter(owning_component=None, context=None):
+    try:
+        return owning_component.function.parameters.adjustment_cost_fct._get(context)
+    except (TypeError, IndexError):
+        return None
+
+
+def _duration_cost_function_getter(owning_component=None, context=None):
+    try:
+        return owning_component.function.parameters.duration_cost_fct._get(context)
+    except (TypeError, IndexError):
+        return None
+
+
+def _combine_costs_function_getter(owning_component=None, context=None):
+    try:
+        return owning_component.function.parameters.combine_costs_fct._get(context)
+    except (TypeError, IndexError):
+        return None
+
+
 class ControlSignalError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -398,9 +444,7 @@ class ControlSignalError(Exception):
 class ControlSignal(ModulatorySignal):
     """
     ControlSignal(                                                 \
-        owner,                                                     \
         default_allocation=defaultControlAllocation,               \
-        index=SEQUENTIAL,                                          \
         function=TransferWithCosts,                                \
         costs_options=None,                                        \
         intensity_cost_function=Exponential,                       \
@@ -409,52 +453,18 @@ class ControlSignal(ModulatorySignal):
         combine_costs_function=Reduce(operation=SUM),              \
         allocation_samples=self.class_defaults.allocation_samples, \
         modulation=MULTIPLICATIVE                                  \
-        projections=None                                           \
-        params=None,                                               \
-        name=None,                                                 \
-        prefs=None)
+        projections=None)
 
     A subclass of `ModulatorySignal <ModulatorySignal>` used by a `ControlMechanism <ControlMechanism>` to
-    modulate the parameter(s) of one or more other `Mechanisms <Mechanism>`.
-
-    COMMENT:
-
-        Description
-        -----------
-            The ControlSignal class is a subtype of the OutputPort type in the Port category of Component,
-            It is used as the sender for ControlProjections
-            Its FUNCTION updates its value:
-                note:  currently, this is the identity function, that simply maps variable to self.value
-
-        Class attributes:
-            + componentType (str) = CONTROL_SIGNAL
-            + paramClassDefaults (dict)
-                + FUNCTION (Linear)
-                + FUNCTION_PARAMS   (Operation.PRODUCT)
-
-        Class methods:
-            function (executes function specified in params[FUNCTION];  default: Linear)
-
-        PortRegistry
-        -------------
-            All OutputPorts are registered in PortRegistry, which maintains an entry for the subclass,
-              a count for all instances of it, and a dictionary of those instances
-    COMMENT
-
+    modulate the parameter(s) of one or more other `Mechanisms <Mechanism>`.  See `ModulatorySignal
+    <ModulatorySignal_Class_Reference>` for additional arguments and attributes.
 
     Arguments
     ---------
 
-    owner : ControlMechanism
-        specifies the `ControlMechanism <ControlMechanism>` to which to assign the ControlSignal.
-
     default_allocation : scalar, list or np.ndarray : defaultControlAllocation
         specifies the template and default value used for `allocation <ControlSignal.allocation>`;  must match the
         shape of each item specified in `allocation_samples <ControlSignal.allocation_samples>`.
-
-    index : int : default SEQUENTIAL
-        specifies the item of the owner ControlMechanism's `control_allocation <ControlMechanism.control_allocation>`
-        used as the ControlSignal's `value <ControlSignal.value>`.
 
     function : Function or method : default TransferWithCosts(transfer_fct=Linear(slope=1, intercept=0))
         specifies the function used to determine the `intensity` of the ControlSignal from its `allocation`;
@@ -481,54 +491,31 @@ class ControlSignal(ModulatorySignal):
         which is assigned as the ControlSignal's `cost <ControlSignal.cost>` attribute.
 
     allocation_samples : list, 1d array, or SampleSpec : default SampleSpec(0.1, 1, 0.1)
-        specifies the values used by the ControlSignal's `owner <ControlSignal.owner>` to determine its
+        specifies the values used by the ControlSignal's `owner <ModulatorySignal.owner>` to determine its
         `control_allocation <ControlMechanism.control_allocation>` (see `ControlSignal_Execution`).
-
-    modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
-        specifies the way in which the `value <ControlSignal.value>` the ControlSignal is used to modify the value of
-        the parameter(s) that it controls.
 
     modulates : list of Projection specifications
         specifies the `ControlProjection(s) <ControlProjection>` to be assigned to the ControlSignal, and that will be
-        listed in its `efferents <ControlSignal.efferents>` attribute (see `ControlSignal_Projections` for additional
+        listed in its `efferents <ModulatorySignal.efferents>` attribute (see `ControlSignal_Projections` for additional
         details).
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
-        the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
-        override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default see ModulatorySignal `name <ModulatorySignal.name>`
-        specifies the name of the ControlSignal; see ControlSignal `name <ModulatorySignal.name>` for additional
-        details.
-
-    prefs : PreferenceSet or specification dict : default Port.classPreferences
-        specifies the `PreferenceSet` for the ControlSignal; see `prefs <ControlSignal.prefs>` for details.
-
 
     Attributes
     ----------
 
-    owner : ControlMechanism
-        the `ControlMechanism <ControlMechanism>` to which the ControlSignal belongs.
-
-    variable : scalar, list or np.ndarray
-        same as `allocation <ControlSignal.allocation>`.
-
     allocation : float : default: defaultControlAllocation
-        value assigned by the ControlSignal's `owner <ControlSignal.owner>`, and used as the `variable
-        <ControlSignal.variable>` of its `function <ControlSignal.function>` to determine the ControlSignal's
+        value assigned by the ControlSignal's `owner <ModulatorySignal.owner>`, and used as the `variable
+        <Projection_Base.variable>` of its `function <ControlSignal.function>` to determine the ControlSignal's
         `ControlSignal.intensity`.
     COMMENT:
     FOR DEVELOPERS:  Implemented as an alias of the ControlSignal's variable Parameter
     COMMENT
 
     last_allocation : float
-        value of `allocation` in the previous execution of ControlSignal's `owner <ControlSignal.owner>`.
+        value of `allocation` in the previous execution of ControlSignal's `owner <ModulatorySignal.owner>`.
 
     allocation_samples : SampleIterator
         `SampleIterator` created from **allocation_samples** specification and used to generate a set of values to
-        sample by the ControlSignal's `owner <ControlSignal.owner>` when determining its `control_allocation
+        sample by the ControlSignal's `owner <ModulatorySignal.owner>` when determining its `control_allocation
         <ControlMechanism.control_allocation>`.
 
     function : TransferWithCosts
@@ -545,11 +532,7 @@ class ControlSignal(ModulatorySignal):
         to which the ControlSignal is assigned; same as `control_signal <ControlSignal.control_signal>`.
 
     last_intensity : float
-        the `intensity` of the ControlSignal on the previous execution of its `owner <ControlSignal.owner>`.
-
-    index : int
-        the item of the owner ControlMechanism's `control_allocation <ControlMechanism.control_allocation>` used as the
-        ControlSignal's `value <ControlSignal.value>`.
+        the `intensity` of the ControlSignal on the previous execution of its `owner <ModulatorySignal.owner>`.
 
     control_signal : float
         result of the ControlSignal's `function <ControlSignal.function>`; same as `intensity`.
@@ -597,27 +580,8 @@ class ControlSignal(ModulatorySignal):
     cost : float
         combined result of all `cost functions <ControlSignal_Costs>` that are enabled.
 
-    modulation : ModulationParam
-        specifies the way in which the `value <ControlSignal.value>` the ControlSignal is used to modify the value of
-        the parameter(s) that it controls.
-
     efferents : [List[ControlProjection]]
         a list of the `ControlProjections <ControlProjection>` assigned to (i.e., that project from) the ControlSignal.
-
-    name : str
-        name of the ControlSignal; if it is not specified in the **name** argument of its constructor, a default name
-        is assigned (see `name <ModulatorySignal.name>`).
-
-        .. note::
-            Unlike other PsyNeuLink components, Port names are "scoped" within a Mechanism, meaning that Ports with
-            the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
-            Mechanism: Ports within a Mechanism with the same base name are appended an index in the order of their
-            creation.
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the ControlSignal; if it is not specified in the **prefs** argument of the constructor,
-        a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet <LINK>` for
-        details).
 
     """
 
@@ -632,7 +596,7 @@ class ControlSignal(ModulatorySignal):
             ----------
 
                 variable
-                    see `variable <ControlSignal.variable>`
+                    see `variable <ModulatorySignal.variable>`
 
                     :default value: numpy.array([1.])
                     :type: numpy.ndarray
@@ -715,9 +679,7 @@ class ControlSignal(ModulatorySignal):
             pnl_internal=True, constructor_argument='default_variable'
         )
 
-        # # FIX: DOESN'T WORK, SINCE DON'T HAVE ACCESS TO OTHER ARGS
-        # function = Parameter(TransferWithCosts, stateful=False, loggable=False, )
-        # _parse_function = _function_parser
+        function = Parameter(TransferWithCosts, stateful=False, loggable=False)
 
         value = Parameter(
             np.array([defaultControlAllocation]),
@@ -734,10 +696,30 @@ class ControlSignal(ModulatorySignal):
         duration_cost = Parameter(0, read_only=True, getter=_duration_cost_getter)
         cost = Parameter(None, read_only=True, getter=_cost_getter)
 
-        intensity_cost_function = Parameter(Exponential, stateful=False, loggable=False)
-        adjustment_cost_function = Parameter(Linear, stateful=False, loggable=False)
-        duration_cost_function = Parameter(SimpleIntegrator, stateful=False, loggable=False)
-        combine_costs_function = Parameter(Reduce(operation=SUM), stateful=False, loggable=False)
+        intensity_cost_function = Parameter(
+            Exponential,
+            stateful=False,
+            loggable=False,
+            getter=_intensity_cost_function_getter
+        )
+        adjustment_cost_function = Parameter(
+            Linear,
+            stateful=False,
+            loggable=False,
+            getter=_adjustment_cost_function_getter
+        )
+        duration_cost_function = Parameter(
+            SimpleIntegrator,
+            stateful=False,
+            loggable=False,
+            getter=_duration_cost_function_getter
+        )
+        combine_costs_function = Parameter(
+            Reduce(operation=SUM),
+            stateful=False,
+            loggable=False,
+            getter=_combine_costs_function_getter
+        )
         modulation = None
         _validate_cost_options = get_validator_by_type_only([CostFunctions, list])
         _validate_intensity_cost_function = get_validator_by_function(is_function_type)
@@ -782,7 +764,6 @@ class ControlSignal(ModulatorySignal):
                  reference_value=None,
                  default_allocation=None,
                  size=None,
-                 index=None,
                  function=Linear,
                  cost_options:tc.optional(tc.any(CostFunctions, list))=None,
                  intensity_cost_function:(is_function_type)=Exponential,
@@ -797,26 +778,13 @@ class ControlSignal(ModulatorySignal):
                  prefs:is_pref_set=None,
                  **kwargs):
 
-        from psyneulink.core.components.functions.transferfunctions import TransferWithCosts
-        function = TransferWithCosts(default_variable=self.defaults.variable,
-                                     transfer_fct=function,
-                                     enabled_cost_functions=cost_options,
-                                     intensity_cost_fct=intensity_cost_function,
-                                     adjustment_cost_fct=adjustment_cost_function,
-                                     duration_cost_fct=duration_cost_function,
-                                     combine_costs_fct=combine_costs_function)
-
         # This is included in case ControlSignal was created by another Component (such as ControlProjection)
         #    that specified ALLOCATION_SAMPLES in params
         if params and ALLOCATION_SAMPLES in params and params[ALLOCATION_SAMPLES] is not None:
             allocation_samples = params[ALLOCATION_SAMPLES]
 
-        # Note index and assign are not used by ControlSignal, but included here for consistency with OutputPort
-        # If index has not been specified, but the owner has, control_allocation has been determined, so use that
-        index = index or SEQUENTIAL
-
         # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
+        params = self._assign_args_to_param_dicts(
                                                   cost_options=cost_options,
                                                   intensity_cost_function=intensity_cost_function,
                                                   adjustment_cost_function=adjustment_cost_function,
@@ -835,7 +803,6 @@ class ControlSignal(ModulatorySignal):
                          reference_value=reference_value,
                          default_allocation=default_allocation,
                          size=size,
-                         index=index,
                          assign=None,
                          function=function,
                          modulation=modulation,
@@ -954,8 +921,24 @@ class ControlSignal(ModulatorySignal):
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
         super()._instantiate_attributes_before_function(function=function, context=context)
-        self._instantiate_cost_functions(context=context)
         self._instantiate_allocation_samples(context=context)
+
+    def _instantiate_function(self, function, function_params=None, context=None):
+        # unsure this is the correct way to go about this...
+        # should probably just have the user instantiate this function with
+        # their desired parameter values rather than trying to handle it in the
+        # constructor here
+        function = TransferWithCosts(
+            default_variable=self.defaults.variable,
+            transfer_fct=function,
+            enabled_cost_functions=self.defaults.cost_options,
+            intensity_cost_fct=self.defaults.intensity_cost_function,
+            adjustment_cost_fct=self.defaults.adjustment_cost_function,
+            duration_cost_fct=self.defaults.duration_cost_function,
+            combine_costs_fct=self.defaults.combine_costs_function,
+        )
+
+        super()._instantiate_function(function, function_params, context)
 
     def _instantiate_allocation_samples(self, context=None):
         """Assign specified `allocation_samples <ControlSignal.allocation_samples>` to a `SampleIterator`."""
@@ -987,11 +970,6 @@ class ControlSignal(ModulatorySignal):
             self.adjustment_cost = 0
             self.duration_cost = 0
             self.cost = self.defaults.cost = self.intensity_cost
-
-    def _instantiate_cost_functions(self, context=None):
-
-        for cost_function_name in costFunctionNames:
-            self.paramsCurrent[cost_function_name.replace('fct','function')] = getattr(self.function,cost_function_name)
 
     def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
         """Get ControlSignal specified for a parameter or in a 'control_signals' argument

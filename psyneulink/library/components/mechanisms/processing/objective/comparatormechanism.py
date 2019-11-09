@@ -9,6 +9,19 @@
 
 """
 
+Contents
+--------
+
+  * `ComparatorMechanism_Overview`
+  * `ComparatorMechanism_Creation`
+  * `ComparatorMechanism_Structure`
+  * `ComparatorMechanism_Execution`
+  * `ComparatorMechanism_Example`
+  * `ComparatorMechanism_Class_Reference`
+
+
+.. _ComparatorMechanism_Overview:
+
 Overview
 --------
 
@@ -67,14 +80,14 @@ it is replaced with one that takes two arrays with the same format as its inputs
 result. The result is assigned as the value of the Comparator Mechanism's *OUTCOME* (`primary <OutputPort_Primary>`)
 OutputPort.
 
-.. _ComparatorMechanism_Function:
+.. _ComparatorMechanism_Execution:
 
 Execution
 ---------
 
 When a ComparatorMechanism is executed, it updates its input_ports with the values of the OutputPorts specified
 in its **sample** and **target** arguments, and then uses its `function <ComparatorMechanism.function>` to
-compare these.  By default, the result is assigned to the `value <ComparatorMechanism.value>` of its *OUTCOME*
+compare these.  By default, the result is assigned to the `value <Mechanism_Base.value>` of its *OUTCOME*
 `output_port <ComparatorMechanism.output_port>`, and as the first item of the Mechanism's
 `output_values <ComparatorMechanism.output_values>` attribute.
 
@@ -184,38 +197,13 @@ class ComparatorMechanism(ObjectiveMechanism):
     ComparatorMechanism(                                \
         sample,                                         \
         target,                                         \
-        input_ports=[SAMPLE,TARGET]                    \
+        input_ports=[SAMPLE,TARGET]                     \
         function=LinearCombination(weights=[[-1],[1]],  \
-        output_ports=OUTCOME                           \
-        params=None,                                    \
-        name=None,                                      \
-        prefs=None)
+        output_ports=OUTCOME)
 
     Subclass of `ObjectiveMechanism` that compares the values of two `OutputPorts <OutputPort>`.
+    See `ObjectiveMechanism <ObjectiveMechanism_Class_Reference>` for additional arguments and attributes.
 
-    COMMENT:
-        Description:
-            ComparatorMechanism is a subtype of the ObjectiveMechanism Subtype of the ProcssingMechanism Type
-            of the Mechanism Category of the Component class.
-            By default, it's function uses the LinearCombination Function to compare two input variables.
-            COMPARISON_OPERATION (functionParams) determines whether the comparison is subtractive or divisive
-            The function returns an array with the Hadamard (element-wise) differece/quotient of target vs. sample,
-                as well as the mean, sum, sum of squares, and mean sum of squares of the comparison array
-
-        Class attributes:
-            + componentType (str): ComparatorMechanism
-            + classPreference (PreferenceSet): Comparator_PreferenceSet, instantiated in __init__()
-            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
-            + class_defaults.variable (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
-            + paramClassDefaults (dict): {FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}
-
-        Class methods:
-            None
-
-        MechanismRegistry:
-            All instances of ComparatorMechanism are registered in MechanismRegistry, which maintains an
-              entry for the subclass, a count for all instances of it, and a dictionary of those instances
-    COMMENT
 
     Arguments
     ---------
@@ -234,21 +222,6 @@ class ComparatorMechanism(ObjectiveMechanism):
 
     function :  Function, function or method : default Distance(metric=DIFFERENCE)
         specifies the `function <Comparator.function>` used to compare the `sample` with the `target`.
-
-    output_ports :  List[OutputPort, value, str or dict] or Dict[] : default [OUTCOME]
-        specifies the OutputPorts for the Mechanism;
-
-    params :  Optional[Dict[param keyword: param value]]
-        a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
-        the Mechanism, its function, and/or a custom function and its parameters. Values specified for parameters in
-        the dictionary override any assigned to those parameters in arguments of the
-        constructor.
-
-    name : str : default see `name <ComparatorMechanism.name>`
-        specifies the name of the ComparatorMechanism.
-
-    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the ComparatorMechanism; see `prefs <ComparatorMechanism.prefs>` for details.
 
 
     Attributes
@@ -274,9 +247,6 @@ class ComparatorMechanism(ObjectiveMechanism):
         or a python function that takes a 2d array with two items and returns a 1d array of the same length
         as the two input items.
 
-    value : 1d np.array
-        the result of the comparison carried out by the `function <ComparatorMechanism.function>`.
-
     output_port : OutputPort
         contains the `primary <OutputPort_Primary>` OutputPort of the ComparatorMechanism; the default is
         its *OUTCOME* OutputPort, the value of which is equal to the `value <ComparatorMechanism.value>`
@@ -287,16 +257,6 @@ class ComparatorMechanism(ObjectiveMechanism):
 
     output_values : 2d np.array
         contains one item that is the value of the *OUTCOME* OutputPort.
-
-    name : str
-        the name of the ComparatorMechanism; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the ComparatorMechanism; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
-
 
     """
     componentType = COMPARATOR_MECHANISM
@@ -313,7 +273,7 @@ class ComparatorMechanism(ObjectiveMechanism):
             ----------
 
                 variable
-                    see `variable <ComparatorMechanism.variable>`
+                    see `variable <Mechanism_Base.variable>`
 
                     :default value: numpy.array([[0], [0]])
                     :type: numpy.ndarray
@@ -350,9 +310,9 @@ class ComparatorMechanism(ObjectiveMechanism):
     standard_output_ports = ObjectiveMechanism.standard_output_ports.copy()
 
     standard_output_ports.extend([{NAME: SSE,
-                                    FUNCTION: lambda x: np.sum(x*x)},
-                                   {NAME: MSE,
-                                    FUNCTION: lambda x: np.sum(x * x) / safe_len(x)}])
+                                   FUNCTION: lambda x: np.sum(x * x)},
+                                  {NAME: MSE,
+                                   FUNCTION: lambda x: np.sum(x * x) / safe_len(x)}])
 
     @tc.typecheck
     def __init__(self,
@@ -382,12 +342,6 @@ class ComparatorMechanism(ObjectiveMechanism):
         # IMPLEMENTATION NOTE: The following prevents the default from being updated by subsequent assignment
         #                     (in this case, to [OUTCOME, {NAME= MSE}]), but fails to expose default in IDE
         # output_ports = output_ports or [OUTCOME, MSE]
-
-        # Create a StandardOutputPorts object from the list of stand_output_ports specified for the class
-        if not isinstance(self.standard_output_ports, StandardOutputPorts):
-            self.standard_output_ports = StandardOutputPorts(self,
-                                                               self.standard_output_ports,
-                                                               indices=PRIMARY)
 
         super().__init__(monitor=input_ports,
                          function=function,

@@ -6,7 +6,7 @@ from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmecha
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.modulatorysignals.gatingsignal import GatingSignal
 
-from psyneulink.core.globals.keywords import SLOPE, RESULTS
+from psyneulink.core.globals.keywords import SLOPE, RESULT
 
 class TestControlSignals:
     def test_alias_equivalence_for_modulates_and_projections(self):
@@ -15,7 +15,7 @@ class TestControlSignals:
         tMech1 = TransferMechanism()
         tMech2 = TransferMechanism()
         cMech1 = ControlMechanism(control_signals=ControlSignal(modulates=(SLOPE, tMech2)),
-                                  objective_mechanism=ObjectiveMechanism(monitor=(RESULTS, tMech2)))
+                                  objective_mechanism=ObjectiveMechanism(monitor=(RESULT, tMech2)))
         comp1.add_nodes([tMech1, tMech2, cMech1])
         comp1.add_linear_processing_pathway([cMech1, tMech1, tMech2])
         comp1.run(inputs=inputs)
@@ -23,7 +23,7 @@ class TestControlSignals:
         tMech3 = TransferMechanism()
         tMech4 = TransferMechanism()
         cMech2 = ControlMechanism(control_signals=ControlSignal(projections=(SLOPE, tMech4)),
-                                  objective_mechanism=ObjectiveMechanism(monitor=(RESULTS, tMech4)))
+                                  objective_mechanism=ObjectiveMechanism(monitor=(RESULT, tMech4)))
         comp2.add_nodes([tMech3, tMech4, cMech2])
         comp2.add_linear_processing_pathway([cMech2, tMech3, tMech4])
         comp2.run(inputs=inputs)

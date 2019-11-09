@@ -362,8 +362,8 @@ class TestReinitialize:
             I_not_integrator = IntegratorMechanism(function=Linear)
             I_not_integrator.execute(1.0)
             I_not_integrator.reinitialize(0.0)
-        assert "not allowed because this Mechanism is not stateful." in str(err_txt.value)
-        assert "(It does not have an accumulator to reinitialize)" in str(err_txt.value)
+        assert "not allowed because this Mechanism is not stateful;" in str(err_txt.value)
+        assert "it does not have an accumulator to reinitialize" in str(err_txt.value)
 
 
 VECTOR_SIZE=4
@@ -1015,7 +1015,7 @@ class TestIntegratorRate:
         # Need to break up error message because length value returned ([10.0] vs. [ 10.0]) may differ by Python vers.
         error_msg_a1 = 'Length (1) of input'
         error_msg_a2 = 'does not match required length (3) for input to '
-        error_msg_b = 'InputPort-0 InputPort of IntegratorMechanism'
+        error_msg_b = "InputPort 'InputPort-0' of IntegratorMechanism"
         assert [msg in returned_error_msg for msg in {error_msg_a1, error_msg_a2, '10'}]
         assert error_msg_b in str(error_text.value)
 

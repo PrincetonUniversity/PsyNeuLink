@@ -20,16 +20,16 @@ class Loss():
 
 class MSELoss(Loss):
     """Implements compiled MSE Loss"""
-    def __init__(self,pytorch_model, reduction='sum'):
+    def __init__(self, pytorch_model, reduction='sum'):
         if reduction not in ['sum']:
-            raise Exception("Unsupported compiled reduction type "+reduction)
+            raise Exception("Unsupported compiled reduction type " + reduction)
         
         super().__init__(pytorch_model)
         self.reduction = reduction
 
-    # creates a bin func that returns the mse loss 
+    # creates a bin func that returns the mse loss
     def _gen_call_function(self,ctx):
-        name = self._composition.name+"_MSE_CALL"
+        name = self._composition.name + "_MSE_CALL"
 
         # args:
         # 1) pointer to network output

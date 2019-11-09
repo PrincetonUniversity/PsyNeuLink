@@ -361,7 +361,12 @@ class TestControlMechanisms:
     #                               Ty: [4, 4]})
     #     assert np.allclose(result, [[[4.], [4.]],
     #                                 [[4.], [4.]]])
-    def test_multilevel_ocm_gridsearch_conflicting_directions(self):
+
+    @pytest.mark.control
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="Multilevel GridSearch")
+    @pytest.mark.parametrize("mode", ["Python"])
+    def test_multilevel_ocm_gridsearch_conflicting_directions(self, mode, benchmark):
         oa = pnl.TransferMechanism(name='oa')
         ob = pnl.TransferMechanism(name='ob')
         ocomp = pnl.Composition(name='ocomp', controller_mode=pnl.BEFORE)
@@ -416,11 +421,15 @@ class TestControlMechanisms:
                                                    intensity_cost_function=pnl.Linear(slope=0.0),
                                                    allocation_samples=pnl.SampleSpec(start=1.0, stop=5.0, num=5))])
         )
-        results = ocomp.run([5])
+        results = ocomp.run([5], bin_execute=mode)
         assert np.allclose(results, [[50]])
-        return ocomp
+        benchmark(ocomp.run, [5], bin_execute=mode)
 
-    def test_multilevel_ocm_gridsearch_maximize(self):
+    @pytest.mark.control
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="Multilevel GridSearch")
+    @pytest.mark.parametrize("mode", ["Python"])
+    def test_multilevel_ocm_gridsearch_maximize(self, mode, benchmark):
         oa = pnl.TransferMechanism(name='oa')
         ob = pnl.TransferMechanism(name='ob')
         ocomp = pnl.Composition(name='ocomp', controller_mode=pnl.BEFORE)
@@ -479,17 +488,21 @@ class TestControlMechanisms:
                                                                                      stop=5.0,
                                                                                      num=5))])
         )
-        results = ocomp.run([5])
+        results = ocomp.run([5], bin_execute=mode)
         assert np.allclose(results, [[70]])
-        return ocomp
+        benchmark(ocomp.run, [5], bin_execute=mode)
 
-    def test_multilevel_ocm_gridsearch_minimize(self):
+    @pytest.mark.control
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="Multilevel GridSearch")
+    @pytest.mark.parametrize("mode", ["Python"])
+    def test_multilevel_ocm_gridsearch_minimize(self, mode, benchmark):
         oa = pnl.TransferMechanism(name='oa')
         ob = pnl.TransferMechanism(name='ob')
         ocomp = pnl.Composition(name='ocomp', controller_mode=pnl.BEFORE)
         ia = pnl.TransferMechanism(name='ia')
         ib = pnl.ProcessingMechanism(name='ib',
-                                     function=lambda x: abs(x - 75))
+                                     function=lambda x: abs(x - 70))
         icomp = pnl.Composition(name='icomp', controller_mode=pnl.BEFORE)
         ocomp.add_node(oa, required_roles=pnl.NodeRole.INPUT)
         ocomp.add_node(ob)
@@ -542,9 +555,9 @@ class TestControlMechanisms:
                                                                                      stop=5.0,
                                                                                      num=5))])
         )
-        results = ocomp.run([5])
-        assert np.allclose(results, [[0]])
-        return ocomp
+        results = ocomp.run([5], bin_execute=mode)
+        assert np.allclose(results, [[5]])
+        benchmark(ocomp.run, [5], bin_execute=mode)
 
     def test_two_tier_ocm(self):
         integrationConstant = 0.8  # Time Constant
@@ -720,7 +733,15 @@ class TestControlMechanisms:
                             [[0.1], [0.64721378], [0.98737278], [0.01262722]],
                             [[0.1], [0.60232676], [0.9925894], [0.0074106]]])
 
-    def test_multilevel_control(self):
+    @pytest.mark.control
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="Multilevel")
+    @pytest.mark.parametrize("mode", ["Python",
+                                      pytest.param("LLVM", marks=pytest.mark.llvm),
+                                      pytest.param("LLVMExec", marks=pytest.mark.llvm),
+                                      pytest.param("LLVMRun", marks=pytest.mark.llvm),
+                                     ])
+    def test_multilevel_control(self, mode, benchmark):
         oA = pnl.TransferMechanism(
             name='OuterA',
         )
@@ -768,14 +789,16 @@ class TestControlMechanisms:
         iComp.add_controller(iController)
         assert iComp.controller == iController
         assert oComp.controller == oController
-        assert oComp.run(inputs=[5]) == [40]
+        res = oComp.run(inputs=[5], bin_execute=mode)
+        assert np.allclose(res, [40])
+        benchmark(oComp.run, [5], bin_execute=mode)
 
 class TestModelBasedOptimizationControlMechanisms:
 
     def test_evc(self):
         # Mechanisms
         Input = pnl.TransferMechanism(name='Input')
-        reward = pnl.TransferMechanism(output_ports=[pnl.RESULT, pnl.OUTPUT_MEAN, pnl.OUTPUT_VARIANCE],
+        reward = pnl.TransferMechanism(output_ports=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE],
                                        name='reward')
         Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate=(1.0,
                                                                              pnl.ControlProjection(function=pnl.Linear,
@@ -1057,7 +1080,7 @@ class TestModelBasedOptimizationControlMechanisms:
         # Mechanisms
         Input = pnl.TransferMechanism(name='Input')
         reward = pnl.TransferMechanism(
-            output_ports=[pnl.RESULT, pnl.OUTPUT_MEAN, pnl.OUTPUT_VARIANCE],
+            output_ports=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE],
             name='reward'
         )
         Decision = pnl.DDM(
@@ -1179,7 +1202,7 @@ class TestModelBasedOptimizationControlMechanisms:
         # Mechanisms
         Input = pnl.TransferMechanism(name='Input', integrator_mode=True)
         reward = pnl.TransferMechanism(
-            output_ports=[pnl.RESULT, pnl.OUTPUT_MEAN, pnl.OUTPUT_VARIANCE],
+            output_ports=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE],
             name='reward'
         )
         Decision = pnl.DDM(
@@ -1314,7 +1337,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
     @pytest.mark.control
     @pytest.mark.composition
-    @pytest.mark.benchmark
+    @pytest.mark.benchmark(group="Model Based OCM")
     @pytest.mark.parametrize("mode", ["Python",
                                       pytest.param("LLVM", marks=pytest.mark.llvm),
                                       pytest.param("LLVMExec", marks=pytest.mark.llvm),
@@ -1355,7 +1378,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
     @pytest.mark.control
     @pytest.mark.composition
-    @pytest.mark.benchmark
+    @pytest.mark.benchmark(group="Model Based OCM")
     @pytest.mark.parametrize("mode", ["Python",
                                       pytest.param("LLVM", marks=pytest.mark.llvm),
                                       pytest.param("LLVMExec", marks=pytest.mark.llvm),

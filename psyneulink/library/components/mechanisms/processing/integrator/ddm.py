@@ -9,22 +9,32 @@
 # ***************************************************  DDM *************************************************************
 
 """
-..
-Sections
+
+Contents
 --------
   * `DDM_Overview`
   * `DDM_Creation`
+  * `DDM_Structure`
+      - `DDM_Input`
+      - `DDM_Output`
+      - `DDM_Modes`
+          • `DDM_Analytic_Mode`
+          • `DDM_Integration_Mode`
   * `DDM_Execution`
   * `DDM_Class_Reference`
+
 
 .. _DDM_Overview:
 
 Overview
 --------
 The DDM Mechanism implements the "Drift Diffusion Model" (also know as the Diffusion Decision, Accumulation to Bound,
-Linear IntegratorFunction, and Wiener Process First Passage Time Model [REFS]). This corresponds to a continuous version of
-the sequential probability ratio test (SPRT [REF]), that is the statistically optimal procedure for two alternative
-forced choice (TAFC) decision making ([REF]).
+Linear IntegratorFunction, and `First Passage Time Model <https://en.wikipedia.org/wiki/First-hitting-time_model>`_
+for a `Wiener Process <https://en.wikipedia.org/wiki/Wiener_process>`_. This corresponds to a continuous version
+of the `sequential probability ratio test (SPRT) <https://en.wikipedia.org/wiki/Sequential_probability_ratio_test>`_,
+that is the statistically optimal procedure for `two alternative forced choice (TAFC) decision making
+<https://en.wikipedia.org/wiki/Two-alternative_forced_choice>`_ (see `drift-diffusion model
+<https://en.wikipedia.org/wiki/Two-alternative_forced_choice#Drift-diffusion_model>`_ in partciular).
 
 The DDM Mechanism may be constructed with a choice of several functions that fall into to general categories: analytic
 solutions and path integration (see `DDM_Modes` below for more about these options.)
@@ -175,13 +185,14 @@ The Drift Diffusion Model `Functions <Function>` that calculate analytic solutio
 `function <DDM.function>`, the mechanism generates a single estimate of the outcome for the decision process (see
 `DDM_Execution` for details). In addition to `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and
 `RESPONSE_TIME <DDM_RESPONSE_TIME>`, the Function returns an accuracy value (represented in the
-`PROBABILITY_UPPER_THRESHOLD <DDM_PROBABILITY_UPPER_THRESHOLD>` OutputPort), and an error rate value (in the `PROBABILITY_LOWER_THRESHOLD <DDM_PROBABILITY_LOWER_THRESHOLD>`
-OutputPort, and moments (mean, variance, and skew) for conditional (correct\\positive or incorrect\\negative) response time distributions.
-These are; the mean RT for correct responses  (`RT_CORRECT_MEAN <DDM_RT_CORRECT_MEAN>`, the RT variance for correct responses
-(`RT_CORRECT_VARIANCE <DDM_RT_CORRECT_VARIANCE>`, the RT skew for correct responses (`RT_CORRECT_SKEW <DDM_RT_CORRECT_SKEW>`,
-the mean RT for incorrect responses  (`RT_INCORRECT_MEAN <DDM_RT_INCORRECT_MEAN>`, the RT variance for incorrect
-responses (`RT_INCORRECT_VARIANCE <DDM_RT_INCORRECT_VARIANCE>`, the RT skew for incorrect responses
-(`RT_INCORRECT_SKEW <DDM_RT_INCORRECT_SKEW>`.
+`PROBABILITY_UPPER_THRESHOLD <DDM_PROBABILITY_UPPER_THRESHOLD>` OutputPort), and an error rate value (in the
+`PROBABaILITY_LOWER_THRESHOLD <DDM_PROBABILITY_LOWER_THRESHOLD>` OutputPort, and moments (mean, variance, and skew)
+for conditional (correct\\positive or incorrect\\negative) response time distributions. These are; the mean RT for
+correct responses  (`RT_CORRECT_MEAN <DDM_RT_CORRECT_MEAN>`, the RT variance for correct responses
+(`RT_CORRECT_VARIANCE <DDM_RT_CORRECT_VARIANCE>`, the RT skew for correct responses
+(`RT_CORRECT_SKEW <DDM_RT_CORRECT_SKEW>`, the mean RT for incorrect responses  (`RT_INCORRECT_MEAN
+<DDM_RT_INCORRECT_MEAN>`, the RT variance for incorrect responses (`RT_INCORRECT_VARIANCE
+<DDM_RT_INCORRECT_VARIANCE>`, the RT skew for incorrect responses (`RT_INCORRECT_SKEW <DDM_RT_INCORRECT_SKEW>`.
 
 An example that illustrate all of the parameters is shown below:
 
@@ -227,8 +238,8 @@ each item in the `default_variable` argument, corresponding to each of the decis
 (see :ref:`Input <DDM_Input>` above). The decision process can be configured to execute in different modes.  The
 `function <DDM.function>` parameters is the primary determinants of how the
 decision process is executed, and what information is returned. The `function <DDM.function>` parameter specifies
-the analytical solution to use. The number of `OutputPorts <OutputPort>` is determined by the `function <DDM.function>` in use (see
-:ref:`list of output values <DDM_Results>` below).
+the analytical solution to use. The number of `OutputPorts <OutputPort>` is determined by the `function <DDM.function>`
+in use (see :ref:`list of output values <DDM_Results>` below).
 
 [TBI - average_output_ports ARGUMENT/OPTION AFTER IMPLEMENTING MULTIPROCESS DDM]
 OUTPUT MEASURE?? OUTCOME MEASURE?? RESULT?? TYPE OF RESULT??
@@ -328,9 +339,8 @@ References
 ----------
 
 *   Bogacz, R., Brown, E., Moehlis, J., Holmes, P., & Cohen, J. D. (2006).
-    The physics of optimal decision making: A formal analysis of models of performance in two-alternative forced-choice tasks.
-    Psychological Review, 113(4), 700-765.
-    http://dx.doi.org/10.1037/0033-295X.113.4.700
+    The physics of optimal decision making: A formal analysis of models of performance in two-alternative forced-choice
+    tasks. Psychological Review, 113(4), 700-765.   http://dx.doi.org/10.1037/0033-295X.113.4.700
 
 *   Srivastava, V., Holmes, P., Simen., P. (2016).
     Explicit moments of decision times for single- and double-threshold drift-diffusion processes,
@@ -355,7 +365,7 @@ import typecheck as tc
 from psyneulink.core.components.component import method_type
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import \
     DriftDiffusionIntegrator, IntegratorFunction
-from psyneulink.core.components.functions.distributionfunctions import THRESHOLD, STARTING_POINT, \
+from psyneulink.core.components.functions.distributionfunctions import STARTING_POINT, \
     DriftDiffusionAnalytical
 from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import _is_control_spec
@@ -364,7 +374,9 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.outputport import SEQUENTIAL, StandardOutputPorts
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INPUT_PORT_VARIABLES, NAME, OUTPUT_PORTS, OWNER_VALUE, VARIABLE, PREFERENCE_SET_NAME
+from psyneulink.core.globals.keywords import \
+    ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INPUT_PORT_VARIABLES, NAME, OUTPUT_PORTS, OWNER_VALUE, \
+    THRESHOLD, VARIABLE, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -531,9 +543,9 @@ class DDM_OUTPUT():
 
     *RT_CORRECT_VARIANCE* : float
       (only applicable if `function <DDM.function>` is `DriftDiffusionAnalytical`) \n
-      • `analytic mode <DDM_Analytic_Mode>`:  the variance of reaction time (in seconds) for responses in which the decision
-        variable reached the positive value of the DDM `function <DDM.function>`'s threshold attribute as estimated by
-        closed form analytic solutions from Srivastava et al. (https://arxiv.org/abs/1601.06420) \n
+      • `analytic mode <DDM_Analytic_Mode>`:  the variance of reaction time (in seconds) for responses in which the
+        decision variable reached the positive value of the DDM `function <DDM.function>`'s threshold attribute as
+        estimated by closed form analytic solutions from Srivastava et al. (https://arxiv.org/abs/1601.06420) \n
       • `integration mode <DDM_Integration_Mode>`: `None`.
       Corresponds to the 6th item of the DDM's `value <DDM.value>`.
 
@@ -561,9 +573,9 @@ class DDM_OUTPUT():
 
     *RT_INCORRECT_VARIANCE* : float
       (only applicable if `function <DDM.function>` is `DriftDiffusionAnalytical`) \n
-      • `analytic mode <DDM_Analytic_Mode>`:  the variance of reaction time (in seconds) for responses in which the decision
-        variable reached the negative value of the DDM `function <DDM.function>`'s threshold attribute as estimated by
-        closed form analytic solutions from Srivastava et al. (https://arxiv.org/abs/1601.06420) \n
+      • `analytic mode <DDM_Analytic_Mode>`:  the variance of reaction time (in seconds) for responses in which the
+        decision variable reached the negative value of the DDM `function <DDM.function>`'s threshold attribute as
+        estimated by closed form analytic solutions from Srivastava et al. (https://arxiv.org/abs/1601.06420) \n
       • `integration mode <DDM_Integration_Mode>`: `None`.
       Corresponds to the 6th item of the DDM's `value <DDM.value>`.
 
@@ -616,52 +628,11 @@ class DDM(ProcessingMechanism):
     name=None,                         \
     prefs=None)
 
-    Implement a Drift Diffusion Process, either by calculating an `analytic solution <DDM_Analytic_Mode>` or carrying
-    out `step-wise numerical integration <DDM_Integration_Mode>`.
+    Implements a drift diffusion process (also known as the `Diffusion Decision Model
+    <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2474742/>`_, either by calculating an `analytic solution
+    <DDM_Analytic_Mode>` or carrying out `step-wise numerical integration <DDM_Integration_Mode>`.
+    See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
 
-    COMMENT:
-        Description
-        -----------
-            DDM is a subclass Type of the Mechanism Category of the Component class
-            It implements a Mechanism for several forms of the Drift Diffusion Model (DDM) for
-                two alternative forced choice (2AFC) decision making:
-                - analytical solution [Bogacz et al. (2006), Srivastava et al. (2016)]
-                     - stochastically estimated decion outcome (convert mean ER into value between 1 and -1)
-                     - mean ER
-                     - mean RT
-                     - mean, variance, and skew of RT for correct (posititive threshold) responses
-                     - mean, variance, and skew of RT for incorrect (negative threshold) responses
-                - stepwise integrator that simulates each step of the integration process
-        Class attributes
-        ----------------
-            + componentType (str): DDM
-            + classPreference (PreferenceSet): DDM_PreferenceSet, instantiated in __init__()
-            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-            + paramClassDefaults (dict): {
-                                          kwDDM_AnalyticSolution: kwDriftDiffusionAnalytical,
-                                          FUNCTION_PARAMS: {DRIFT_RATE:<>
-                                                                  STARTING_POINT:<>
-                                                                  THRESHOLD:<>
-                                                                  NOISE:<>
-                                                                  NON_DECISION_TIME:<>},
-                                          OUTPUT_PORTS: [DDM_DECISION_VARIABLE,
-                                                          DDM_RESPONSE_TIME,
-                                                          DDM_PROBABILITY_UPPER_THRESHOLD,
-                                                          DDM_PROBABILITY_LOWER_THRESHOLD,
-                                                          DDM_RT_CORRECT_MEAN,
-                                                          DDM_RT_CORRECT_VARIANCE,
-                                                          DDM_RT_CORRECT_SKEW,
-                                                          DDM_RT_INCORRECT_MEAN,
-                                                          DDM_RT_INCORRECT_VARIANCE,
-                                                          DDM_RT_INCORRECT_SKEW,
-        Class methods
-        -------------
-            - plot() : generates a dynamic plot of the DDM
-        MechanismRegistry
-        -----------------
-            All instances of DDM are registered in MechanismRegistry, which maintains an entry for the subclass,
-              a count for all instances of it, and a dictionary of those instances
-    COMMENT
 
     Arguments
     ---------
@@ -672,27 +643,9 @@ class DDM(ProcessingMechanism):
         <DDM.variable>` for its `function <DDM.function>`, and the `primary OutputPort <OuputState_Primary>` of the
         DDM (see `Input` <DDM_Creation>` for how an input with a length of greater than 1 is handled).
 
-    size : int, list or np.ndarray of ints
-        specifies the `default_variable <DDM.default_variable>` as array(s) of zeros if **default_variable** is not
-        passed as an argument; if **default_variable** is specified, it takes precedence over the specification of
-        **size**. As an example, the following mechanisms are equivalent::
-            T1 = TransferMechanism(size = [3, 2])
-            T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
-
     function : IntegratorFunction : default DriftDiffusionAnalytical
         specifies the function to use to `execute <DDM_Execution>` the decision process; determines the mode of
         execution (see `function <DDM.function>` and `DDM_Modes` for additional information).
-
-    params : Dict[param keyword: param value] : default None
-        a dictionary that can be used to specify parameters of the Mechanism, parameters of its `function
-        <DDM.function>`, and/or  a custom function and its parameters (see `Mechanism <Mechanism>` for specification of
-        a params dict).
-
-    name : str : default see `name <DDM.name>`
-        specifies the name of the DDM.
-
-    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the DDM; see `prefs <DDM.prefs>` for details.
 
     COMMENT:
     context=componentType+INITIALIZING):
@@ -710,8 +663,8 @@ class DDM(ProcessingMechanism):
         the function used to `execute <DDM_Execution>` the decision process; determines the mode of execution.
         If it is `DriftDiffusionAnalytical <DriftDiffusionAnalytical>`, an `analytic solution
         <DDM_Analytic_Mode>` is calculated (note:  the latter requires that the MatLab engine is installed); if it is
-        an `IntegratorFunction` Function with an `integration_type <IntegratorFunction.integration_type>` of *DIFFUSION*,
-        then `numerical step-wise integration <DDM_Integration_Mode>` is carried out.  See `DDM_Modes` and
+        an `IntegratorFunction` Function with an `integration_type <IntegratorFunction.integration_type>` of
+        *DIFFUSION*, then `numerical step-wise integration <DDM_Integration_Mode>` is carried out.  See `DDM_Modes` and
         `DDM_Execution` for additional information.
         COMMENT:
            IS THIS MORE CORRECT FOR ABOVE:
@@ -740,14 +693,6 @@ class DDM(ProcessingMechanism):
         ones may be included, based on the `function <DDM.function>` and any specifications made in the
         **output_ports** argument of the DDM's constructor (see `DDM Standard OutputPorts
         <DDM_Standard_OutputPorts>`).
-
-    name : str
-        the name of the DDM; if it is not specified in the **name** argument of the constructor, a default is
-        assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the DDM; if it is not specified in the **prefs** argument of the constructor, a default
-        is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
 
     COMMENT:
         MOVE TO METHOD DEFINITIONS:
@@ -878,7 +823,7 @@ class DDM(ProcessingMechanism):
                            # per VARIABLE assignment above, items of v of lambda function below are:
                            #    v[0]=self.value[self.DECISION_VARIABLE_INDEX]
                            #    v[1]=self.parameter_ports[THRESHOLD]
-                 FUNCTION: lambda v: [float(v[0]), 0] if (v[1]-v[0]) < (v[1]+v[0]) else [0, float(v[0])]},
+                 FUNCTION: lambda v: [float(v[0]), 0] if (v[1] - v[0]) < (v[1] + v[0]) else [0, float(v[0])]},
                 # Provides a 1d 2-item array with:
                 #    input value in position corresponding to threshold crossed by decision variable, and 0 in the other
                 {NAME: SELECTED_INPUT_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
@@ -888,8 +833,8 @@ class DDM(ProcessingMechanism):
                  #    v[1]=self.parameter_ports[THRESHOLD]
                  #    v[2]=self.input_ports[0].variable
                  FUNCTION: lambda v: [float(v[2][0][0]), 0] \
-                                      if (v[1]-v[0]) < (v[1]+v[0]) \
-                                      else [0,float(v[2][0][1])]
+                                      if (v[1] - v[0]) < (v[1] + v[0]) \
+                                      else [0, float(v[2][0][1])]
 
                  }
 
@@ -922,6 +867,8 @@ class DDM(ProcessingMechanism):
 
         # # Conflict with above
         # self.size = size
+
+        self.parameters.execute_until_finished.default_value = False
 
         super(DDM, self).__init__(default_variable=default_variable,
                                   input_ports=input_ports,

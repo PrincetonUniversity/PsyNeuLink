@@ -357,7 +357,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         if controller.prefs.reportOutputPref:
             progress_bar_rate_str = ""
             search_space_size = len(control_signal_search_space)
-            progress_bar_rate = int(10 ** (np.log10(search_space_size)-2))
+            progress_bar_rate = int(10**(np.log10(search_space_size) - 2))
             if progress_bar_rate > 1:
                 progress_bar_rate_str = str(progress_bar_rate) + " "
             print("\n{0} evaluating EVC for {1} (one dot for each {2}of {3} samples): ".
@@ -385,10 +385,10 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                 rank = Comm.Get_rank()
                 size = Comm.Get_size()
 
-                chunk_size = (len(control_signal_search_space) + (size-1)) // size
+                chunk_size = (len(control_signal_search_space) + (size - 1)) // size
                 print("Rank: {}\nSize: {}\nChunk size: {}".format(rank, size, chunk_size))
                 start = chunk_size * rank
-                end = chunk_size * (rank+1)
+                end = chunk_size * (rank + 1)
                 if start > len(control_signal_search_space):
                     start = len(control_signal_search_space)
                 if end > len(control_signal_search_space):
@@ -633,7 +633,7 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context):
     for mechanism in reinitialization_values:
         mechanism.reinitialize(*reinitialization_values[mechanism], context=context)
 
-    EVC_avg = list(map(lambda x: (sum(x))/num_trials, zip(*EVC_list)))
+    EVC_avg = list(map(lambda x: (sum(x)) / num_trials, zip(*EVC_list)))
 
     # TEST PRINT EVC:
     # print("EVC_avg: {}".format(EVC_avg[0]))
@@ -944,7 +944,7 @@ class PredictionMechanism(IntegratorMechanism):
             if len(value) > 1:
                 if self.input_type is AVERAGE_INPUTS:
                     # Compute average input over window_size
-                    value = np.sum(value)/value.shape[0]
+                    value = np.sum(value) / value.shape[0]
 
                 elif self.input_type is INPUT_SEQUENCE:
                     if self.filter_function:

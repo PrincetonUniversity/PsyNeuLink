@@ -162,7 +162,7 @@ class ConditionGenerator:
 
         # run, pass, step
         for idx in range(3):
-            if idx == 0 or all(v == 0 for v in count[:idx]) == 0:
+            if idx == 0 or not all(v == 0 for v in count[:idx]):
                 el = builder.extract_value(ts, idx)
                 el = builder.add(el, self.ctx.int32_ty(count[idx]))
             else:

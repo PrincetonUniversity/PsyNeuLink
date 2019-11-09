@@ -4,7 +4,7 @@ import psyneulink as pnl
 # Mechanisms
 Input = pnl.TransferMechanism(name='Input')
 reward = pnl.TransferMechanism(
-    output_ports=[pnl.RESULT, pnl.OUTPUT_MEAN, pnl.OUTPUT_VARIANCE], name='reward'
+    output_ports=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE], name='reward'
 )
 Decision = pnl.DDM(
     function=pnl.DriftDiffusionAnalytical(

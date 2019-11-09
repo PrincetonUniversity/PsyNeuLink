@@ -86,7 +86,7 @@ its elements has changed in value more than a specified amount since the previou
     my_scheduler.add_condition(mech_A, NWhen(Condition(converge, mech_B, epsilon), 1))
 
 In the example, a function `converge` is defined that references the `delta <TransferMechanism.delta>` attribute of
-a `TransferMechanism` (which reports the change in its `value <TransferMechanism.value>`). The function is assigned to
+a `TransferMechanism` (which reports the change in its `value <Mechanism_Base.value>`). The function is assigned to
 the standard `Condition()` with `mech_A` and `epsilon` as its arguments, and `composite Condition <Conditions_Composite>`
 `NWhen` (which is satisfied the first N times after its condition becomes true),  The Condition is assigned to `mech_B`,
 thus scheduling it to execute one time when all of the elements of `mech_A` have changed by less than `epsilon`.

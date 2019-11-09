@@ -6,6 +6,8 @@ from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import SOFT_CLAMP
 from psyneulink.core.globals.utilities import NodeRole
 
+"""To be deprecated
+"""
 
 __all__ = [
     'PathwayComposition', 'PathwayCompositionError'

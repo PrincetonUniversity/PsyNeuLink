@@ -36,14 +36,14 @@ output = pnl.TransferMechanism(
 # weights
 w_ih = pnl.MappingProjection(
     name='input_to_hidden',
-    matrix=np.random.randn(n_input, n_hidden)*wts_init_scale,
+    matrix=np.random.randn(n_input, n_hidden) * wts_init_scale,
     sender=input,
     receiver=hidden
 )
 
 w_ho = pnl.MappingProjection(
     name='hidden_to_output',
-    matrix=np.random.randn(n_hidden, n_output)*wts_init_scale,
+    matrix=np.random.randn(n_hidden, n_output) * wts_init_scale,
     sender=hidden,
     receiver=output
 )
@@ -56,14 +56,14 @@ ContentAddressableMemory = pnl.EpisodicMemoryMechanism(
 
 w_hdc = pnl.MappingProjection(
     name='hidden_to_cue',
-    matrix=np.random.randn(n_hidden, n_hidden)*wts_init_scale,
+    matrix=np.random.randn(n_hidden, n_hidden) * wts_init_scale,
     sender=hidden,
     receiver=ContentAddressableMemory.input_ports[pnl.CUE_INPUT]
 )
 
 w_hda = pnl.MappingProjection(
     name='hidden_to_assoc',
-    matrix=np.random.randn(n_hidden, n_hidden)*wts_init_scale,
+    matrix=np.random.randn(n_hidden, n_hidden) * wts_init_scale,
     sender=hidden,
     receiver=ContentAddressableMemory.input_ports[pnl.ASSOC_INPUT]
 )
@@ -71,7 +71,7 @@ w_hda = pnl.MappingProjection(
 
 w_dh = pnl.MappingProjection(
     name='em_to_hidden',
-    matrix=np.random.randn(n_hidden, n_hidden)*wts_init_scale,
+    matrix=np.random.randn(n_hidden, n_hidden) * wts_init_scale,
     sender=ContentAddressableMemory,
     receiver=hidden
 )

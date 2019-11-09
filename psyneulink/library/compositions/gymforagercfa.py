@@ -10,10 +10,19 @@
 
 """
 
-GymForagerCFA
--------------
+Contents
+--------
 
-A `GymForagerCFA` is a subclass of `CompositionFunctionApproximator` that uses the `gym-forager
+  * `GymForagerCFA_Overview`
+  * `GymForagerCFA_Class_Reference`
+
+
+.. GymForagerCFA_Overview:
+
+Overview
+--------
+
+A `GymForagerCFA` is a subclass of `RegressionCFA` that uses the `gym-forager
 <https://github.com/IntelPNI/gym-forager>`_ as an agent to predict the `net_outcome <ControlMechanism.net_outcome>`
 for a `Composition` (or part of one) controlled by an `OptimizationControlMechanism`.
 
@@ -22,47 +31,10 @@ It instantiates an agent with an interface to the gym-forager envirnoment and a 
 At present its `adapt <CompositionFunctionApproximator.adapt>` method is not implemented.
 
 Its `evaluate <CompositionFunctionApproximator.evaluate>` method calls the DQN to generate an action, and then
-calls the gym-forager agent with a specified
-action and returns the reward associated with that action.
-
-It is assumed that the action
+calls the gym-forager agent with a specified action and returns the reward associated with that action.
 
 
-COMMENT:
-.. note::
-  The RegressionCFA's `update_weights <RegressionCFA.update_weights>` is provided the `feature_values
-  <OptimizationControlMechanism.feature_values>` and `net_outcome <ControlMechanism.net_outcome>` from the
-  *previous* trial to update its parameters.  Those are then used to determine the `control_allocation
-  <ControlMechanism.control_allocation>` predicted to yield the greatest `EVC <OptimizationControlMechanism_EVC>`
-  based on the `feature_values <OptimizationControlMechanism.feature_values>` for the current trial.
-COMMENT
-
-"""
-
-import itertools
-import numpy as np
-import typecheck as tc
-
-import gym_forager
-
-from enum import Enum
-from itertools import product
-
-from psyneulink.core.components.functions.learningfunctions import BayesGLM
-from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
-from psyneulink.core.globals.keywords import DEFAULT_VARIABLE
-from psyneulink.core.globals.parameters import Parameter
-
-__all__ = ['GymForagerCFA']
-
-
-class GymForagerCFAError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-
-class GymForagerCFA(CompositionFunctionApproximator):
-    """Parameterizes weights of a `update_weights <RegressorCFA.update_weights>` used by its `evaluate
+    Parameterizes weights of a `update_weights <RegressorCFA.update_weights>` used by its `evaluate
     <CompositionFunctionApproximator.evaluate>` method to predict the `net_outcome <ControlMechanism.net_outcome>`
     for a `Composition` (or part of one) controlled by an `OptimiziationControlMechanism`, from a set of `feature_values
     <OptimizationControlMechanism.feature_values>` and a `control_allocation <ControlMechanism.control_allocation>`
@@ -85,25 +57,67 @@ class GymForagerCFA(CompositionFunctionApproximator):
     predict the `net_outcome <ControlMechanism.net_outcome>` from the
     `prediction_vector <RegressorCFA.prediction_vector>`.
 
+
+
+COMMENT:
+.. note::
+  The RegressionCFA's `update_weights <RegressionCFA.update_weights>` is provided the `feature_values
+  <OptimizationControlMechanism.feature_values>` and `net_outcome <ControlMechanism.net_outcome>` from the
+  *previous* trial to update its parameters.  Those are then used to determine the `control_allocation
+  <ControlMechanism.control_allocation>` predicted to yield the greatest `EVC <OptimizationControlMechanism_EVC>`
+  based on the `feature_values <OptimizationControlMechanism.feature_values>` for the current trial.
+COMMENT
+
+.. _GymForagerCFA_Class_Reference:
+
+Class Reference
+---------------
+
+"""
+
+import itertools
+import numpy as np
+import typecheck as tc
+
+import gym_forager
+
+from enum import Enum
+from itertools import product
+
+from psyneulink.library.compositions.regressioncfa import RegressionCFA
+from psyneulink.core.components.functions.learningfunctions import BayesGLM
+from psyneulink.core.globals.keywords import DEFAULT_VARIABLE
+from psyneulink.core.globals.parameters import Parameter
+
+__all__ = ['GymForagerCFA']
+
+
+class GymForagerCFAError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
+
+
+class GymForagerCFA(RegressionCFA):
+    """
+    GymForagerCFA(
+        name=None,
+        update_weights=BayesGLM,
+        prediction_terms=None)
+
+    Subclass of `RegressionCFA` that implements a CompositionFunctionApproximator as the
+    `agent_rep <OptimizationControlmechanism.agent>` of an `OptimizationControlmechanism`.
+
+    See `RegressionCFA <rRegressionCFA_Class_Reference>` for arguments and attributes.
+
     """
 
-    class Parameters(CompositionFunctionApproximator.Parameters):
+    class Parameters(RegressionCFA.Parameters):
         update_weights = Parameter(BayesGLM, stateful=False, loggable=False)
 
     def __init__(self,
                  name=None,
                  update_weights=BayesGLM,
                  prediction_terms:tc.optional(list)=None):
-        """
-
-        Arguments
-        ---------
-
-
-        Attributes
-        ----------
-
-        """
 
         self.update_weights = update_weights
         self._instantiate_prediction_terms(prediction_terms)
