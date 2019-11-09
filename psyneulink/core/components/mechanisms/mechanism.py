@@ -1217,7 +1217,7 @@ class Mechanism_Base(Mechanism):
         of an OutputPort does not have a corresponding label, then its numeric value is used instead.
 
     standard_output_ports : list[dict]
-        list of the dictionary specifications for `StandardOutputPorts <OutputPort_Standard>` that can be assigend as
+        list of the dictionary specifications for `StandardOutputPorts <OutputPort_Standard>` that can be assigned as
         `OutputPorts <OutputPort>`; subclasses may extend this list to include additional ones.
 
         *RESULT* : 1d np.array

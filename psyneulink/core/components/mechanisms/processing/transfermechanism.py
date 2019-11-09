@@ -770,8 +770,9 @@ class TransferMechanism(ProcessingMechanism_Base):
         TransferMechanism is complete if `execute_until_finished <Component.execute_until_finished>` is True.
 
     standard_output_ports : list[dict]
-        list of `Standard OutputPort <OutputPort_Standard>` that includes the following in addition to
-        the `standard_output_ports <ProcessingMechanism.standard_output_ports>` of a `ProcessingMechanism`:
+        list of `Standard OutputPort <OutputPort_Standard>` that includes the following in addition to the
+        `standard_output_ports <ProcessingMechanism.standard_output_ports>` of a
+        `ProcessingMechanism <ProcessingMechanism>`:
 
         .. _COMBINE:
 

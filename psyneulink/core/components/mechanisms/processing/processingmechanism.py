@@ -67,7 +67,7 @@ Structure
 
 A ProcessingMechanism has the same structure as a `Mechanism <Mechanism>`, with the addition of several
 `StandardOutputPorts <OutputPort_Standard>` to its `standard_output_ports
-<ProcessingMechanism_Base.standard_output_ports>` attribute.
+<ProcessingMechanism.standard_output_ports>` attribute.
 
 See documentation for individual subtypes of ProcessingMechanism for more specific information about their structure.
 
@@ -133,55 +133,15 @@ class ProcessingMechanismError(Exception):
 
 
 class ProcessingMechanism_Base(Mechanism_Base):
-    # DOCUMENTATION: this is a TYPE and subclasses are SUBTYPES
-    #                primary purpose is to implement TYPE level preferences for all processing mechanisms
-    #                inherits all attributes and methods of Mechanism -- see Mechanism for documentation
-    """Subclass of `Mechanism <Mechanism>` that implements processing in a `Pathway`.
-    See `Mechanism <Mechanism_Class_Reference>` and `subclasses <ProcessingMechanism_Subtypes>` of ProcessingMechanism
-    for arguments and additional attributes.
+    """Subclass of `Mechanism <Mechanism>`.
+
+    This is a TYPE and subclasses are SUBTYPES.  its primary purpose is to implement TYPE level preferences for all
+    processing mechanisms.
 
     .. note::
        ProcessingMechanism_Base is an abstract class and should *never* be instantiated by a call to its constructor.
        It should be instantiated using the constructor for `ProcessingMechanism` or one of its  `subclasses
        <ProcessingMechanism_Subtypes>`.
-
-    Attributes
-    ----------
-
-    standard_output_ports : list[dict]
-      list of the dictionary specifications for `StandardOutputPorts <OutputPort_Standard>` that can be assigned as
-      `OutputPorts <OutputPort>`, in addition to the `standard_output_ports <Mechanism_Base.standard_output_ports>`
-      of a `Mechanism`; each assigns as the `value <OutputPort.value>` of the OutputPort a quantity calculated over
-      the elements of the first item in the outermost dimension (axis 0) of the Mechanism`s `value
-      <Mechanism_Base.value>`. `Subclasses <ProcessingMechanism_Subtypes>` of ProcessingMechanism may extend this
-      list to include additional `StandardOutputPorts <OutputPort_Standard>`.
-
-     *MEAN* : float
-       mean of the elements.
-
-     *MEDIAN* : float
-       median of the elements.
-
-     *STANDARD_DEVIATION* : float
-       standard deviation of the elements.
-
-     *VARIANCE* : float
-       variance of the elements.
-
-     *MAX_VAL* : float
-       maximum value among the elements.
-
-     *MAX_ABS_VAL* : float
-       absolute value of *MAX_VAL*.
-
-     *MAX_INDICATOR* : 1d array
-       element with the greatest value is assigned 1, all others are assigned 0.
-
-    *MAX_ABS_INDICATOR* : 1d array
-      element with the greatest absolute value is assigned 1, all others are assigned 0.
-
-    *PROB* : float
-      probability of the element chosen probabilistically based on softmax distribution, all others are assigned 0.
 
    """
 
@@ -276,8 +236,48 @@ class ProcessingMechanismError(Exception):
 
 class ProcessingMechanism(ProcessingMechanism_Base):
     """
-    Implementation of `ProcessingMechanism <ProcessingMechanism>` that does not have any specialized features.
-    See ProcessingMechanism `ProcessingMechanism_Class_Reference` for arguments of constructor and attributes.
+    Implements instance of `ProcessingMechanism_Base <ProcessingMechanism>` subclass of `Mechanism`.
+    See `Mechanism <Mechanism_Class_Reference>` and `subclasses <ProcessingMechanism_Subtypes>` of ProcessingMechanism
+    for arguments and additional attributes.
+
+    Attributes
+    ----------
+
+    standard_output_ports : list[dict]
+      list of the dictionary specifications for `StandardOutputPorts <OutputPort_Standard>` that can be assigned as
+      `OutputPorts <OutputPort>`, in addition to the `standard_output_ports <Mechanism_Base.standard_output_ports>`
+      of a `Mechanism`; each assigns as the `value <OutputPort.value>` of the OutputPort a quantity calculated over
+      the elements of the first item in the outermost dimension (axis 0) of the Mechanism`s `value
+      <Mechanism_Base.value>`. `Subclasses <ProcessingMechanism_Subtypes>` of ProcessingMechanism may extend this
+      list to include additional `StandardOutputPorts <OutputPort_Standard>`.
+
+     *MEAN* : float
+       mean of the elements.
+
+     *MEDIAN* : float
+       median of the elements.
+
+     *STANDARD_DEVIATION* : float
+       standard deviation of the elements.
+
+     *VARIANCE* : float
+       variance of the elements.
+
+     *MAX_VAL* : float
+       maximum value among the elements.
+
+     *MAX_ABS_VAL* : float
+       absolute value of *MAX_VAL*.
+
+     *MAX_INDICATOR* : 1d array
+       element with the greatest value is assigned 1, all others are assigned 0.
+
+     *MAX_ABS_INDICATOR* : 1d array
+       element with the greatest absolute value is assigned 1, all others are assigned 0.
+
+     *PROB* : float
+       probability of the element chosen probabilistically based on softmax distribution, all others are assigned 0.
+
     """
 
     componentType = PROCESSING_MECHANISM
