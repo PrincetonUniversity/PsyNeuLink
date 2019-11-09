@@ -1765,9 +1765,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.initialization_status = ContextFlags.INITIALIZED
 
-    def __repr__(self):
-        return '({0} {1})'.format(type(self).__name__, self.name)
-
     @property
     def graph_processing(self):
         """
