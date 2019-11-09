@@ -96,9 +96,9 @@ task_decision = pnl.DDM(
                 t0=.4
         ),
         output_ports=[
-            pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
-            pnl.DDM_OUTPUT.PROBABILITY_LOWER_THRESHOLD,
-            pnl.DDM_OUTPUT.RESPONSE_TIME
+            pnl.PROBABILITY_UPPER_THRESHOLD,
+            pnl.PROBABILITY_LOWER_THRESHOLD,
+            pnl.RESPONSE_TIME
         ]
 )
 

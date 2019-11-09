@@ -469,8 +469,8 @@ the OutputPort is assigned to a Mechanism, by including *INDEX* and *ASSIGN* ent
 COMMENT
 
     >>> my_mech = pnl.DDM(function=pnl.DriftDiffusionAnalytical(),
-    ...                   output_ports=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
-    ...                                  pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
+    ...                   output_ports=[pnl.DECISION_VARIABLE,
+    ...                                  pnl.PROBABILITY_UPPER_THRESHOLD,
     ...                                  {pnl.NAME: 'DECISION ENTROPY',
     ...                                   pnl.VARIABLE: (pnl.OWNER_VALUE, 2),
     ...                                   pnl.FUNCTION: pnl.Stability(metric=pnl.ENTROPY) }])
@@ -500,8 +500,8 @@ the ``DECISION ENTROPY`` OutputPort could be created as follows::
 and then assigned either as::
 
     >>> my_mech = pnl.DDM(function=pnl.DriftDiffusionAnalytical(),
-    ...                   output_ports=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
-    ...                                  pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
+    ...                   output_ports=[pnl.DECISION_VARIABLE,
+    ...                                  pnl.PROBABILITY_UPPER_THRESHOLD,
     ...                                  decision_entropy_output_port])
 
 or::
@@ -510,8 +510,8 @@ or::
     ...                                                variable=(OWNER_VALUE, 2),
     ...                                                function=pnl.Stability(metric=pnl.ENTROPY))
     >>> my_mech2 = pnl.DDM(function=pnl.DriftDiffusionAnalytical(),
-    ...                    output_ports=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
-    ...                                   pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD])
+    ...                    output_ports=[pnl.DECISION_VARIABLE,
+    ...                                   pnl.PROBABILITY_UPPER_THRESHOLD])
 
     >>> my_mech2.add_ports(another_decision_entropy_output_port) # doctest: +SKIP
 
