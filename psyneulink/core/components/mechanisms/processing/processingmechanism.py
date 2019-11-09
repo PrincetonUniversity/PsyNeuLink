@@ -149,9 +149,6 @@ class ProcessingMechanism_Base(Mechanism_Base):
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
 
-    standard_output_ports = Mechanism_Base.standard_output_ports.copy()
-    standard_output_port_names = Mechanism_Base.standard_output_port_names.copy()
-
     def __init__(self,
                  default_variable=None,
                  size=None,

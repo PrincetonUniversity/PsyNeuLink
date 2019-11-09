@@ -971,7 +971,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                     VARIABLE:PLUS_PHASE_ACTIVITY_ATTR},
                                    ])
     standard_output_port_names = RecurrentTransferMechanism.standard_output_port_names.copy()
-    standard_output_port_names.extend([i['name'] for i in standard_output_ports])
+    standard_output_port_names = [i['name'] for i in standard_output_ports]
 
     @tc.typecheck
     def __init__(self,

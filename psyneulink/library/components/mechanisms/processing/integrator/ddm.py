@@ -160,7 +160,6 @@ depending on the `function <DDM.function>` that has been assigned to the DDM, as
 | <DDM_RT_INCORRECT_SKEW>`           |       X                    |                            |
 +------------------------------------+----------------------------+----------------------------+
 
-
 .. _DDM_Custom_OutputPorts:
 
 The `output_ports <DDM.output_ports>` assigned to a DDM can explicilty determined by specifying ones from the list

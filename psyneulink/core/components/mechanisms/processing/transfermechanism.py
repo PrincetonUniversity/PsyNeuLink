@@ -787,10 +787,6 @@ class TransferMechanism(ProcessingMechanism_Base):
     paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({NOISE: None})
 
-    standard_output_ports = ProcessingMechanism_Base.standard_output_ports.copy()
-    standard_output_port_names = ProcessingMechanism_Base.standard_output_port_names.copy()
-
-
     class Parameters(ProcessingMechanism_Base.Parameters):
         """
             Attributes

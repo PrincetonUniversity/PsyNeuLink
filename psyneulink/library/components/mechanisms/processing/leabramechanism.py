@@ -445,9 +445,6 @@ class LeabraMechanism(ProcessingMechanism_Base):
                                INPUT_PORTS: input_port_names,
                                OUTPUT_PORTS: output_port_name})
 
-    standard_output_ports = ProcessingMechanism_Base.standard_output_ports.copy()
-    standard_output_port_names = ProcessingMechanism_Base.standard_output_port_names.copy()
-
     class Parameters(ProcessingMechanism_Base.Parameters):
         """
             Attributes
