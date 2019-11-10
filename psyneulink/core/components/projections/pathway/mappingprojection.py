@@ -328,9 +328,9 @@ class MappingProjection(PathwayProjection_Base):
         receiver=None,         \
         matrix=DEFAULT_MATRIX)
 
-    Subclass of `Projection` that transmits the `value <OutputPort.value>` of the `OutputPort` of one `Mechanism`
-    to the `InputPort` of another (or possibly itself).  See `Projection <Projection_Class_Reference>` for additional
-    arguments and attributes.
+    Subclass of `Projection` that transmits the `value <OutputPort.value>` of the `OutputPort` of one `Mechanism
+    <Mechanism>` to the `InputPort` of another (or possibly itself).  See `Projection <Projection_Class_Reference>`
+    for additional arguments and attributes.
 
     Arguments
     ---------

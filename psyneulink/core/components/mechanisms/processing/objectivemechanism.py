@@ -374,23 +374,22 @@ from collections import namedtuple
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.core.components.ports.outputport import OutputPort, PRIMARY
+from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.inputport import InputPort, INPUT_PORT
 from psyneulink.core.components.ports.port import _parse_port_spec
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    CONTEXT, CONTROL, EXPONENT, EXPONENTS, FUNCTION, LEARNING, MATRIX, NAME, \
-    OBJECTIVE_MECHANISM, OUTCOME, PARAMS, PROJECTION, PROJECTIONS, PORT_TYPE, VARIABLE, WEIGHT, WEIGHTS, \
-    PREFERENCE_SET_NAME
+    CONTROL, EXPONENT, EXPONENTS, FUNCTION, LEARNING, MATRIX, NAME, OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, \
+    PARAMS, PREFERENCE_SET_NAME, PROJECTION, PROJECTIONS, PORT_TYPE, VARIABLE, WEIGHT, WEIGHTS
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.core.globals.utilities import ContentAddressableList, type_match
+from psyneulink.core.globals.utilities import ContentAddressableList
 
 __all__ = [
     'DEFAULT_MONITORED_PORT_WEIGHT', 'DEFAULT_MONITORED_PORT_EXPONENT', 'DEFAULT_MONITORED_PORT_MATRIX',
     'MONITOR', 'MONITOR_SUFFIX', 'MONITORED_OUTPUT_PORT_NAME_SUFFIX', 'MONITORED_OUTPUT_PORTS',
-    'OBJECTIVE_OUTPUT', 'ObjectiveMechanism', 'ObjectiveMechanismError', 'OUTCOME', 'ROLE'
+    'ObjectiveMechanism', 'ObjectiveMechanismError', 'OUTCOME', 'ROLE'
 ]
 
 ROLE = 'role'
@@ -402,22 +401,6 @@ MONITORED_OUTPUT_PORT_NAME_SUFFIX = '_Monitor'
 DEFAULT_MONITORED_PORT_WEIGHT = None
 DEFAULT_MONITORED_PORT_EXPONENT = None
 DEFAULT_MONITORED_PORT_MATRIX = None
-
-# This is a convenience class that provides list of standard_output_port names in IDE
-class OBJECTIVE_OUTPUT():
-    """
-    .. _ObjectiveMechanism_Standard_OutputPorts:
-
-    `Standard OutputPorts <OutputPort_Standard>` for `ObjectiveMechanism`:
-
-    .. _OBJECTIVE_MECHANISM_OUTCOME
-
-    *OUTCOME* : 1d np.array
-        the value of the objective or "loss" function computed based on the
-        ObjectiveMechanism's `function <ObjectiveMechanism.function>`
-
-    """
-    OUTCOME=OUTCOME
 
 
 class ObjectiveMechanismError(Exception):
@@ -503,6 +486,16 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     output_values : 2d np.array
         contains one item that is the value of the *OUTCOME* `OutputPort <ObjectiveMechanism_Output>`.
 
+    standard_output_ports : list[str]
+        list of `Standard OutputPort <OutputPort_Standard>` that includes the following in addition to
+        the `standard_output_ports <Mechanism_Base.standard_output_ports>` of a `Mechanism <Mechanism>`:
+
+        .. _OBJECTIVE_MECHANISM_OUTCOME
+
+        *OUTCOME* : 1d np.array
+            the value of the objective or "loss" function computed by the
+            ObjectiveMechanism's `function <ObjectiveMechanism.function>`
+
     """
 
     componentType = OBJECTIVE_MECHANISM
@@ -547,6 +540,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         })
 
     standard_output_ports = ProcessingMechanism_Base.standard_output_ports.copy()
+    standard_output_ports.extend([{NAME:OUTCOME, VARIABLE:(OWNER_VALUE, 0)}])
+    standard_output_port_names = ProcessingMechanism_Base.standard_output_ports.copy()
+    standard_output_port_names.extend([OUTCOME])
 
     # FIX:  TYPECHECK MONITOR TO LIST OR ZIP OBJECT
     @tc.typecheck
@@ -668,7 +664,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         Used by other Components to add a `Port` or list of Ports to be monitored by the ObjectiveMechanism.
         The **monitor_spec** can be any of the following:
         - MonitoredOutputPortTuple
-        - `Mechanism`;
+        - `Mechanism <Mechanism>`;
         - `OutputPort`;
         - `tuple specification <InputPort_Tuple_Specification>`;
         - `Port specification dictionary <InputPort_Specification_Dictionary>`;

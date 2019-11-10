@@ -327,7 +327,7 @@ An attribute is logged if:
 
 Entry values are added by the setter method for the attribute being logged.
 
-The following entries are automatically included in the `loggable_items` of a `Mechanism` object:
+The following entries are automatically included in the `loggable_items` of a `Mechanism <Mechanism>` object:
     - the `value <Mechanism_Base.value>` of the Mechanism;
     - the value attribute of every Port for which the Mechanism is an owner
     - value of every projection that sends to those Ports]

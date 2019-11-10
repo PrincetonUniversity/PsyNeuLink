@@ -930,8 +930,8 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
     COMMENT:
     activation_function : Function or function : SoftMax
-        specifies the `function <Mechanism_Base.function>` of the `Mechanism` that generated the array of activations
-        in `variable <Hebbian.variable>`.
+        specifies the `function <Mechanism_Base.function>` of the `Mechanism <Mechanism>` that generated the array of
+        activations in `variable <Hebbian.variable>`.
     COMMENT
 
     learning_rate : scalar or list, 1d or 2d array, or np.matrix of numeric values: default default_learning_rate
@@ -961,8 +961,8 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
     COMMENT:
     activation_function : Function or function : SoftMax
-        the `function <Mechanism_Base.function>` of the `Mechanism` that generated the array of activations in
-        `variable <Hebbian.variable>`.
+        the `function <Mechanism_Base.function>` of the `Mechanism <Mechanism>` that generated the array of activations
+        in `variable <Hebbian.variable>`.
     COMMENT
 
     learning_rate : float, 1d or 2d array
@@ -1168,8 +1168,8 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
     COMMENT:
     activation_function : Function or function : SoftMax
-        specifies the `function <Mechanism_Base.function>` of the `Mechanism` that generated the array of activations
-        in `variable <ContrastiveHebbian.variable>`.
+        specifies the `function <Mechanism_Base.function>` of the `Mechanism <Mechanism>` that generated the array of
+        activations in `variable <ContrastiveHebbian.variable>`.
     COMMENT
 
     learning_rate : scalar or list, 1d or 2d array, or np.matrix of numeric values: default default_learning_rate
@@ -1199,8 +1199,8 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
     COMMENT:
     activation_function : Function or function : SoftMax
-        the `function <Mechanism_Base.function>` of the `Mechanism` that generated the array of activations in
-        `variable <ContrastiveHebbian.variable>`.
+        the `function <Mechanism_Base.function>` of the `Mechanism <Mechanism>` that generated the array of activations
+        in `variable <ContrastiveHebbian.variable>`.
     COMMENT
 
     learning_rate : float, 1d or 2d array

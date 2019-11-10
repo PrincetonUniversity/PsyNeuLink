@@ -81,7 +81,7 @@ with a `matrix <LCAMechanism.matrix>` in which the diagonal consists of uniform 
 **self_excitation** and the off-diagonal consists of uniform weights specified by the *negative* of the
 **competition** argument.
 
-.. _LCAMechanism_Integrator_Mode
+.. _LCAMechanism_Integrator_Mode:
 
 *Integration*
 ~~~~~~~~~~~~~
@@ -155,25 +155,21 @@ Function by default (in place of the `AdaptiveIntegrator` used as the default by
 <LCAMechanism.competition>` off diagonal.
 
 Like any RecurrentTransferMechanism, by default an LCAMechanism has a single `primary OutputPort <OutputPort_Primary>`
-named *RESULT* that contains the Mechanism's current `value <Mechanism_Base.value>`.  The `StandardOutputPorts
-<OutputPort_Standard>` of a `RecurrentTransferMechanism <RecurrentTransferMechanism_Standard_OutputPorts>`,
-are also available for assignment, as well as two additional ones:
-
-    - `MAX_VS_NEXT <LCAMechanism_MAX_VS_NEXT_OUTPUT_PORT>`
-
-    - `MAX_VS_AVG <LCAMechanism_MAX_VS_AVG_OUTPUT_PORT>`
+named *RESULT* that contains the Mechanism's current `value <Mechanism_Base.value>`.  It also has two
+`StandardOutputPorts <OutputPort_Standard>` in its `standard_output_ports <LCAMechanism.standard_output_ports>`
+attribute -- *MAX_VS_NEXT* and *MAX_VS_AVG* that are available for assignment, in addition to the
+`standard_output_ports <RecurrentTransferMechanism.standard_output_ports>` of a `RecurrentTransferMechanism`:
 
 COMMENT:
-The two elements of the `MAX_VS_NEXT <LCAMechanism_MAX_VS_NEXT_OUTPUT_PORT>` OutputPort contain, respectively, the
-index of the LCAMechanism element with the greatest value, and the difference between its value and the next highest
-one. `MAX_VS_AVG <LCAMechanism_MAX_VS_AVG_OUTPUT_PORT>` contains the index of the LCAMechanism element with the
-greatest value, and the difference between its  value and the average of all the others.
+The two elements of the **MAX_VS_NEXT** OutputPort contain, respectively, the index of the LCAMechanism element with
+the greatest value, and the difference between its value and the next highest one. **MAX_VS_AVG** OutputPort contains
+the index of the LCAMechanism element with the greatest value, and the difference between its  value and the average
+of all the others.
 COMMENT
-The `value <OutputPort.value>` of the `MAX_VS_NEXT <LCAMechanism_MAX_VS_NEXT_OUTPUT_PORT>` OutputPort contains the
-difference between the two elements of the LCAMechanism’s `value <Mechanism_Base.value>` with the highest values, and
-the `value <OutputPort.value>` of the `MAX_VS_AVG <LCAMechanism_MAX_VS_AVG_OUTPUT_PORT>` OutputPort contains the
-difference between the element with the highest value and the average of all the others (see `above
-<LCAMechanism_DDM_APPROXIMATION>` for their relationship to the output of a `DDM` Mechanism).
+The `value <OutputPort.value>` of the *MAX_VS_NEXT* OutputPort contains the difference between the two elements of
+the LCAMechanism’s `value <Mechanism_Base.value>` with the highest values, and the `value <OutputPort.value>` of the
+*MAX_VS_AVG* OutputPort contains the difference between the element with the highest value and the average of all
+the others (see `above <LCAMechanism_DDM_APPROXIMATION>` for their relationship to the output of a `DDM` Mechanism).
 
 .. _LCAMechanism_Execution:
 
@@ -203,7 +199,6 @@ from psyneulink.core.components.functions.objectivefunctions import Distance, MA
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import LeakyCompetingIntegrator
 from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
-from psyneulink.core.components.ports.outputport import PRIMARY, StandardOutputPorts
 from psyneulink.core.globals.keywords import \
     BETA, CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, INITIALIZER, LCA_MECHANISM, LESS_THAN_OR_EQUAL, NAME, NOISE, \
     RATE, RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, TIME_STEP_SIZE, VALUE
@@ -213,7 +208,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferMechanism
 
-__all__ = ['LCAMechanism', 'LCAMechanism_OUTPUT', 'LCAError', 'CONVERGENCE']
+__all__ = ['LCAMechanism', 'LCAError', 'CONVERGENCE']
 
 
 logger = logging.getLogger(__name__)
@@ -227,30 +222,6 @@ class LCAError(Exception):
         return repr(self.error_value)
 
 
-# This is a convenience class that provides list of standard_output_port names in IDE
-class LCAMechanism_OUTPUT():
-        """
-            .. _LCAMechanism_Standard_OutputPorts:
-
-            An LCAMechanism has the following `Standard OutputPorts <OutputPort_Standard>` in addition to those of a
-            `RecurrentTransferMechanism <RecurrentTransferMechanism_Standard_OutputPorts>`:
-
-            .. _LCAMechanism_MAX_VS_NEXT_OUTPUT_PORT:
-
-            *MAX_VS_NEXT* : float
-                the difference between the two elements of the LCAMechanism's `value <Mechanism_Base.value>`
-                with the highest values.
-
-            .. _LCAMechanism_MAX_VS_AVG_OUTPUT_PORT:
-
-            *MAX_VS_AVG* : float
-                the difference between the element of the LCAMechanism's `value <Mechanism_Base.value>`
-                and the average of all of the other elements.
-
-        """
-        MAX_VS_NEXT=MAX_VS_NEXT
-        MAX_VS_AVG=MAX_VS_AVG
-
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class LCAMechanism(RecurrentTransferMechanism):
@@ -259,13 +230,13 @@ class LCAMechanism(RecurrentTransferMechanism):
         leak=0.5,                    \
         competition=1.0,             \
         self_excitation=0.0,         \
+        time_step_size=0.1,          \
         threshold = None             \
         threshold_criterion = VALUE)
 
     Subclass of `RecurrentTransferMechanism` that implements a Leaky Competitive Accumulator.
     See `RecurrentTransferMechanism <RecurrentTransferMechanism_Class_Reference>` for additional
     arguments and attributes.
-
 
     Arguments
     ---------
@@ -283,6 +254,10 @@ class LCAMechanism(RecurrentTransferMechanism):
         specifies the magnidute of the diagonal terms in the LCAMechanism's `recurrent_projection
         <RecurrentTransferMechanism.recurrent_projection>` (see `self_excitation <LCAMechanism.self_excitation>` for
         additional details).
+
+    time_step_size : float : default 0.1
+        assigned as the `time_step_size <LeakyCompetingIntegrator.time_step_size>` parameter of the
+        `LeakyCompetingIntegrator` Function (see `time_step_size <LCAMechanism.time_step_size>` for additional details).
 
     threshold : float or None : default None
         specifes the value at which the Mechanism's `is_finished` attribute is set to True
@@ -308,19 +283,40 @@ class LCAMechanism(RecurrentTransferMechanism):
         accumulation of its `variable <LeakyCompetingIntegrator.variable>` (:math:`x_{i}`) on each time step (see
         `LeakyCompetingIntegrator` for additional details.
 
-    competition : value : default 1.0
+    competition : value
         determines the magnitude of the off-diagonal terms in the LCAMechanism's `recurrent_projection
         <RecurrentTransferMechanism.recurrent_projection>`, thereby scaling the contributions of the competing unit
         (all :math:`f(x)_{j}` where :math:`j \\neq i`) to the accumulation of the `LeakyCompetingIntegrator's
         <LeakyCompetingIntegrator>` `variable <LeakyCompetingIntegrator.variable>` (:math:`x_{i}`) on each time step
         (see `LeakyCompetingIntegrator` for additional details.
 
-    self_excitation : value : default 0.0
+    self_excitation : value
         determines the diagonal terms in the LCAMechanism's `recurrent_projection
         <RecurrentTransferMechanism.recurrent_projection>`, thereby scaling the contributions of each unit's own
         recurrent value (:math:`f(x)_{i}`) to the accumulation of the `LeakyCompetingIntegrator's
         <LeakyCompetingIntegrator>` `variable <LeakyCompetingIntegrator.value>` (:math:`x_{i}`) on each time step
         (see `LeakyCompetingIntegrator` for additional details.
+
+    time_step_size : float
+        parameter of the `LeakyCompetingIntegrator` Function that determines the timing precision of the integration
+        process it implements, and used to scale its `noise <LeakyCompetingIntegrator.noise>` parameter appropriately.
+
+    standard_output_ports : list[str]
+        list of `Standard OutputPorts <OutputPort_Standard>` that includes the following in addition to the
+        `standard_output_ports <RecurrentTransferMechanism.standard_output_ports>` of a `RecurrentTransferMechanism`:
+
+        .. _MAX_VS_NEXT:
+
+        *MAX_VS_NEXT* : float
+            the difference between the two elements of the LCAMechanism's `value <Mechanism_Base.value>`
+            with the highest values.
+
+        .. _MAX_VS_AVG:
+
+        *MAX_VS_AVG* : float
+            the difference between the element of the LCAMechanism's `value <Mechanism_Base.value>`
+            and the average of all of the other elements.
+
 
     Returns
     -------

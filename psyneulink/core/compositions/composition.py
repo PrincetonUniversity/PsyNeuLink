@@ -988,11 +988,11 @@ trained, and then used to execute the trained Composition like any other.
 =====================================
 
 If execution efficiency is critical and the `AutodiffComposition` is too restrictive, a function from any Python
-environment that supports learning can be assigned as the `function <Mechanism_Base.function>` of a `Mechanism`,
-in which case it is automatically  wrapped as `UserDefinedFunction`.  For example, the `forward and backward methods
-<https://pytorch.org/docs/master/notes/extending.html>`_ of a PyTorch object can be assigned in this way.  The
-advanatage of this approach is that it can be applied to any Python function that adheres to the requirements of a
-`UserDefinedFunction`.  The disadvantage is that it can't be `compiled`, so efficiency may be compromised.  It must
+environment that supports learning can be assigned as the `function <Mechanism_Base.function>` of a `Mechanism
+<Mechanism>`, in which case it is automatically  wrapped as `UserDefinedFunction`.  For example, the `forward and
+backward methods <https://pytorch.org/docs/master/notes/extending.html>`_ of a PyTorch object can be assigned in this
+way.  The advanatage of this approach is that it can be applied to any Python function that adheres to the requirements
+of a `UserDefinedFunction`.  The disadvantage is that it can't be `compiled`, so efficiency may be compromised.  It must
 also be carefully coordinated with the execution of other learning-related Components in the Composition, to insure
 that each function is called at the appropriate times during execution.  Furthermore, as with an `AutodiffComposition`,
 the internal constituents of the object (e.g., intermediates layers of a neural network model) are not accessible to
@@ -1912,12 +1912,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def add_node(self, node, required_roles=None, context=None):
         """
-            Add a Composition Node (`Mechanism` or `Composition`) to the Composition, if it is not already added
+            Add a Composition Node (`Mechanism <Mechanism>` or `Composition`) to Composition, if it is not already added
 
             Arguments
             ---------
 
-            node : `Mechanism` or `Composition`
+            node : `Mechanism <Mechanism>` or `Composition`
                 the node to be added to the Composition
 
             required_roles : `NodeRole` or list of NodeRoles
@@ -2052,13 +2052,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def add_nodes(self, nodes, required_roles=None):
         """
-            Add a list of Composition Nodes (`Mechanism` or `Composition`) to the Composition,
+            Add a list of Composition Nodes (`Mechanism <Mechanism>` or `Composition`) to the Composition,
 
             Arguments
             ---------
 
             nodes : list
-                the nodes to be added to the Composition.  Each item of the list must be a `Mechanism`,
+                the nodes to be added to the Composition.  Each item of the list must be a `Mechanism <Mechanism>`,
                 a `Composition` or a role-specification tuple with a Mechanism or Composition as the first item,
                 and a `NodeRole` or list of those as the second item;  any NodeRoles in a role-specification tuple
                 are applied in addition to those specified in the **required_roles** argument.
@@ -4700,8 +4700,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         show_node_structure : bool, VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS, STATE_FUNCTION_PARAMS, ROLES, \
         or ALL : default False
-            show a detailed representation of each `Mechanism` in the graph, including its `Ports <Port>`;  can
-            have any of the following settings alone or in a list:
+            show a detailed representation of each `Mechanism <Mechanism>` in the graph, including its `Ports <Port>`;
+            can have any of the following settings alone or in a list:
 
             * `True` -- show Ports of Mechanism, but not information about the `value
               <Component.value>` or `function <Component.function>` of the Mechanism or its Ports.
@@ -4769,8 +4769,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             <Component.value>` of each Component in the graph (and/or MappingProjections when show_learning
             is `True`);  can have the following settings:
 
-            * *MECHANISMS* -- shows `Mechanism` input and output dimensions.  Input dimensions are shown in parentheses
-              below the name of the Mechanism; each number represents the dimension of the `variable
+            * *MECHANISMS* -- shows `Mechanism <Mechanism>` input and output dimensions.  Input dimensions are shown
+              in parentheses below the name of the Mechanism; each number represents the dimension of the `variable
               <InputPort.variable>` for each `InputPort` of the Mechanism; Output dimensions are shown above
               the name of the Mechanism; each number represents the dimension for `value <OutputPort.value>` of each
               of `OutputPort` of the Mechanism.

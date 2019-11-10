@@ -56,13 +56,13 @@ class UserDefinedFunction(Function_Base):
     * It may have have **any number of additional arguments** (positional and/or keyword);  these are treated as
       parameters of the UDF, and can be modulated by `ModulatorySignals <ModulatorySignal>` like the parameters of
       ordinary PsyNeuLink `Functions <Function>`.  If the UDF is assigned to (or automatically created for) a
-      `Mechanism` or `Projection <Projection>`, these parameters are each automatically assigned a `ParameterPort`
-      so that they can be modulated by `ControlSignals <ControlSignal>` or `LearningSignals <LearningSignal>`,
-      respectively.  If the UDF is assigned to (or automatically created for) an `InputPort` or `OutputPort`,
-      and any of the parameters are specified as `Function_Modulatory_Params` (see `below <UDF_Modulatory_Params>`),
-      then they can be modulated by `GatingSignals <GatingSignal>`. The function or method wrapped by the UDF is called
-      with these parameters by their name and with their current values (i.e., as determined by any
-      `ModulatorySignals <ModulatorySignal>` assigned to them).
+      `Mechanism <Mechanism>` or `Projection <Projection>`, these parameters are each automatically assigned a
+      `ParameterPort` so that they can be modulated by `ControlSignals <ControlSignal>` or `LearningSignals
+      <LearningSignal>`, respectively.  If the UDF is assigned to (or automatically created for) an `InputPort` or
+      `OutputPort`, and any of the parameters are specified as `Function_Modulatory_Params` (see `below
+      <UDF_Modulatory_Params>`), then they can be modulated by `GatingSignals <GatingSignal>`. The function or method
+      wrapped by the UDF is called with these parameters by their name and with their current values (i.e.,
+      as determined by any `ModulatorySignals <ModulatorySignal>` assigned to them).
     ..
     .. _UDF_Params_Context:
 

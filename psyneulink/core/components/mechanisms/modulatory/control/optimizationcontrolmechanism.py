@@ -205,8 +205,8 @@ Features can be of two types:
   created on the OptimziationControlMechanism for each feature, that receives a `Projection` paralleling
   the input to be shadowed.
 ..
-* *Output Features* -- these are the `value <OutputPort.value>` of an `OutputPort` of some other `Mechanism` in
-  the Composition.  These too are specified in the **features** argument of the OptimizationControlMechanism's
+* *Output Features* -- these are the `value <OutputPort.value>` of an `OutputPort` of some other `Mechanism <Mechanism>`
+  in the Composition.  These too are specified in the **features** argument of the OptimizationControlMechanism's
   constructor (see `OptimizationControlMechanism_Creation`), and each is assigned a `Projection` from the specified
   OutputPort(s) to the InputPort of the OptimizationControlMechanism for that feature.
 

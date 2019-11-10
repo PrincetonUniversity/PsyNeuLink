@@ -807,7 +807,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
     system : System_Base
         The `System` for which the ControlMechanism is a `controller <System>`.  Note that this is distinct from
         a Mechanism's `systems <Mechanism_Base.systems>` attribute, which lists all of the Systems to which a
-        `Mechanism` belongs -- a ControlMechanism can belong to but not be the `controller of a System
+        `Mechanism <Mechanism>` belongs -- a ControlMechanism can belong to but not be the `controller of a System
         <ControlMechanism_Composition_Controller>`.
 
     objective_mechanism : ObjectiveMechanism
@@ -1622,7 +1622,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         <ControlMechanism.objective_mechanism>`.
 
         **monitored_output_ports** can be any of the following:
-            - `Mechanism`;
+            - `Mechanism <Mechanism>`;
             - `OutputPort`;
             - `tuple specification <InputPort_Tuple_Specification>`;
             - `Port specification dictionary <InputPort_Specification_Dictionary>`;

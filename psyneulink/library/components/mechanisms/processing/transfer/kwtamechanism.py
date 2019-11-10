@@ -339,8 +339,6 @@ class KWTAMechanism(RecurrentTransferMechanism):
     paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({'function': Logistic})  # perhaps hacky? not sure (7/10/17 CW)
 
-    standard_output_ports = RecurrentTransferMechanism.standard_output_ports.copy()
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
