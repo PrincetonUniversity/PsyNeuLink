@@ -44,7 +44,7 @@ Compiled code dump:
 import os
 from typing import Any, Dict
 
-debug_env:Dict[str, Any] = dict()
+debug_env: Dict[str, Any] = dict()
 
 
 def _update() -> None:

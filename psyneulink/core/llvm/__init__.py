@@ -26,7 +26,7 @@ from .jit_engine import *
 __all__ = ['LLVMBuilderContext']
 
 
-_compiled_modules:Set[ir.Module] = set()
+_compiled_modules: Set[ir.Module] = set()
 _binary_generation = 0
 
 
@@ -50,7 +50,7 @@ def _llvm_build(target_generation=_binary_generation + 1):
 
 
 class LLVMBinaryFunction:
-    def __init__(self, name:str):
+    def __init__(self, name: str):
         self.name = name
 
         self.__c_func = None
@@ -102,7 +102,7 @@ class LLVMBinaryFunction:
 
     @staticmethod
     @functools.lru_cache(maxsize=32)
-    def get(name:str):
+    def get(name: str):
         _llvm_build(LLVMBuilderContext._llvm_generation)
         return LLVMBinaryFunction(name)
 

@@ -507,6 +507,7 @@ class CompExecution(CUDAExecution):
 
         # autodiff_values keeps the ctype values on the stack, so it doesn't get gc'd
         autodiff_values = []
+
         def make_node_data(dictionary, node):
             values = dictionary[node]
             assert len(values) == num_trials
@@ -534,10 +535,10 @@ class CompExecution(CUDAExecution):
 
         return autodiff_values
 
-    def run(self, inputs, runs, num_input_sets, autodiff_stimuli={"targets" : {}, "epochs": 1}):
+    def run(self, inputs, runs, num_input_sets, autodiff_stimuli={"targets": {}, "epochs": 1}):
         inputs = self._get_run_input_struct(inputs, num_input_sets)
         # Special casing for autodiff
-        if hasattr(self._composition,"learning_enabled") and self._composition.learning_enabled is True:
+        if hasattr(self._composition, "learning_enabled") and self._composition.learning_enabled is True:
             assert num_input_sets == len(next(iter(autodiff_stimuli["inputs"].values())))
             assert num_input_sets == len(next(iter(autodiff_stimuli["targets"].values())))
             keep_on_stack = self._initialize_autodiff_param_struct(autodiff_stimuli)
