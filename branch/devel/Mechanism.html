@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanisms &mdash; PsyNeuLink 0.7.1.0+1.g4fecede documentation</title>
+  <title>Mechanisms &mdash; PsyNeuLink 0.7.1.0+2.g2abfca3 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.1.0+1.g4fecede',
+              VERSION:'0.7.1.0+2.g2abfca3',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.7.1.0+1
+                0.7.1.0+2
               </div>
             
           
@@ -1110,24 +1110,15 @@ of an OutputPort does not have a corresponding label, then its numeric value is 
 <dl class="attribute">
 <dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports">
 <code class="descname">standard_output_ports</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list[dict]</em> – list of the dictionary specifications for <code class="xref any docutils literal"><span class="pre">StandardOutputPorts</span></code> that can
-be assigned as <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>; subclasses may extend this list to include</p>
-<blockquote>
-<div>(the type for the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each is listed</div></blockquote>
-<p>next to its name):</p>
+<dd><p><em>list[dict]</em> – list of the dictionary specifications for <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">StandardOutputPorts</span></a> that can be assigned as
+<a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>; subclasses may extend this list to include additional ones.</p>
 <dl class="docutils">
 <dt><em>RESULT</em> <span class="classifier-delimiter">:</span> <span class="classifier">1d np.array</span></dt>
 <dd>first item in the outermost dimension (axis 0) of the Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</dd>
-<dt><em>MEAN</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
-<dd>mean of the elements in the first item of Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</dd>
-<dt><em>MEDIAN</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
-<dd>median of the elements in the first item of Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</dd>
-<dt><em>STANDARD_DEVIATION</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
-<dd>standard deviation of the elements in the first item of Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</dd>
-<dt><em>VARIANCE</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
-<dd>variance of the elements in the first item of Mechanism’s <code class="xref any docutils literal"><span class="pre">output_port.value</span></code>.</dd>
-<dt><em>MECHANISM_VALUE</em> <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dt><em>OWNER_VALUE</em> <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
 <dd>Full ndarray of Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</dd>
+<dt><em>MECHANISM_VALUE</em> <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd>Synonym for <em>OWNER_VALUE</em>.</dd>
 </dl>
 </dd></dl>
 
@@ -1135,8 +1126,8 @@ be assigned as <a class="reference internal" href="OutputPort.html"><span class=
 <dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_port_names">
 <code class="descname">standard_output_port_names</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_port_names" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>list[str]</em> – list of the names of the <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a> that can be used to
-specify a <code class="xref any docutils literal"><span class="pre">StandardOutputPort</span></code> in the <strong>output_ports</strong> argument of the Mechanism’s constructor, and to
-reference it in Mechanism’s list of <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a>.</p>
+specify a <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">StandardOutputPort</span></a> in the <strong>output_ports</strong> argument of the Mechanism’s
+constructor, and to reference it in Mechanism’s list of <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">

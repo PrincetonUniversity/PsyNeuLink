@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.7.1.0+1.g4fecede documentation</title>
+  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.7.1.0+2.g2abfca3 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.1.0+1.g4fecede',
+              VERSION:'0.7.1.0+2.g2abfca3',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.7.1.0+1
+                0.7.1.0+2
               </div>
             
           
@@ -427,17 +427,6 @@ specified, as it is not used.  However it, and the <a class="reference internal"
 <div class="section" id="class-reference">
 <span id="objectivemechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.OBJECTIVE_OUTPUT">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.mechanisms.processing.objectivemechanism.</code><code class="descname">OBJECTIVE_OUTPUT</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.OBJECTIVE_OUTPUT" title="Permalink to this definition">¶</a></dt>
-<dd><p id="objectivemechanism-standard-outputports"><a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPorts</span></a> for <a class="reference internal" href="#"><span class="doc">ObjectiveMechanism</span></a>:</p>
-<dl class="docutils">
-<dt><em>OUTCOME</em> <span class="classifier-delimiter">:</span> <span class="classifier">1d np.array</span></dt>
-<dd>the value of the objective or “loss” function computed based on the
-ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a></dd>
-</dl>
-</dd></dl>
-
-<dl class="class">
 <dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism">
 <em class="property">class </em><code class="descclassname">psyneulink.core.components.mechanisms.processing.objectivemechanism.</code><code class="descname">ObjectiveMechanism</code><span class="sig-paren">(</span><em>monitor</em>, <em>function=LinearCombination</em>, <em>output_ports=OUTCOME</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that evaluates the value(s) of one or more <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>.  See <a class="reference internal" href="Mechanism.html#mechanism-class-reference"><span class="std std-ref">Mechanism</span></a> for additional arguments and attributes.</p>
@@ -525,6 +514,18 @@ its <em>OUTCOME</em> <a class="reference internal" href="#objectivemechanism-out
 <dd><p><em>2d np.array</em> – contains one item that is the value of the <em>OUTCOME</em> <a class="reference internal" href="#objectivemechanism-output"><span class="std std-ref">OutputPort</span></a>.</p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.standard_output_ports">
+<code class="descname">standard_output_ports</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.standard_output_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list[str]</em> – list of <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPort</span></a> that includes the following in addition to
+the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a> of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>:</p>
+<dl class="docutils">
+<dt><em>OUTCOME</em> <span class="classifier-delimiter">:</span> <span class="classifier">1d np.array</span></dt>
+<dd>the value of the objective or “loss” function computed by the
+ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a></dd>
+</dl>
+</dd></dl>
+
 <dl class="method">
 <dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.add_to_monitor">
 <code class="descname">add_to_monitor</code><span class="sig-paren">(</span><em>monitor_specs</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.add_to_monitor" title="Permalink to this definition">¶</a></dt>
@@ -532,7 +533,7 @@ its <em>OUTCOME</em> <a class="reference internal" href="#objectivemechanism-out
 <p>Used by other Components to add a <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> or list of Ports to be monitored by the ObjectiveMechanism.
 The <strong>monitor_spec</strong> can be any of the following:
 - MonitoredOutputPortTuple
-- <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>;
+- <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>;
 - <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>;
 - <a class="reference internal" href="InputPort.html#inputport-tuple-specification"><span class="std std-ref">tuple specification</span></a>;
 - <a class="reference internal" href="InputPort.html#inputport-specification-dictionary"><span class="std std-ref">Port specification dictionary</span></a>;

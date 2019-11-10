@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>System &mdash; PsyNeuLink 0.7.1.0+1.g4fecede documentation</title>
+  <title>System &mdash; PsyNeuLink 0.7.1.0+2.g2abfca3 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.1.0+1.g4fecede',
+              VERSION:'0.7.1.0+2.g2abfca3',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.7.1.0+1
+                0.7.1.0+2
               </div>
             
           
@@ -931,8 +931,8 @@ Component names, but includes the control Components (using the show_control opt
 to which they belong, with each Process shown in its own box.  If a Component belongs to more than one
 Process, it is shown in a separate box along with any others that belong to the same combination of
 Processes;  these represent intersections of Processes within the System.</li>
-<li><strong>show_mechanism_structure</strong> (<em>bool</em><em>, </em><em>VALUES</em><em>, </em><em>FUNCTIONS</em><em> or </em><em>ALL : default False</em>) – <p>specifies whether or not to show a detailed representation of each <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> in the graph, including its
-<code class="xref any docutils literal"><span class="pre">Ports</span></code>;  can have the following settings:</p>
+<li><strong>show_mechanism_structure</strong> (<em>bool</em><em>, </em><em>VALUES</em><em>, </em><em>FUNCTIONS</em><em> or </em><em>ALL : default False</em>) – <p>specifies whether or not to show a detailed representation of each <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> in the graph,
+including its <code class="xref any docutils literal"><span class="pre">Ports</span></code>;  can have the following settings:</p>
 <ul>
 <li><code class="xref any docutils literal"><span class="pre">True</span></code> – shows Ports of Mechanism, but not information about the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> or <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism or its Ports.</li>
 <li><em>VALUES</em> – shows the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism and the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each of its Ports.</li>
@@ -968,8 +968,8 @@ by the <strong>origin_color</strong>, <strong>terminal_color</strong> and <stron
 <li><strong>show_dimensions</strong> (<em>bool</em><em>, </em><em>MECHANISMS</em><em>, </em><em>PROJECTIONS</em><em> or </em><em>ALL : default False</em>) – <p>specifies whether or not to show dimensions of Mechanisms (and/or MappingProjections when show_learning
 is <code class="xref any docutils literal"><span class="pre">True</span></code>);  can have the following settings:</p>
 <ul>
-<li><em>MECHANISMS</em> – shows <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> input and output dimensions.  Input dimensions are shown in parentheses
-below the name of the Mechanism; each number represents the dimension of the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for each <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> of the Mechanism; Output dimensions are shown above
+<li><em>MECHANISMS</em> – shows <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> input and output dimensions.  Input dimensions are shown
+in parentheses below the name of the Mechanism; each number represents the dimension of the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for each <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> of the Mechanism; Output dimensions are shown above
 the name of the Mechanism; each number represents the dimension for <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each
 of <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of the Mechanism.</li>
 <li><em>PROJECTIONS</em> – shows <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> dimensions.  Each is

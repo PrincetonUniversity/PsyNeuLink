@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OutputPort &mdash; PsyNeuLink 0.7.1.0+1.g4fecede documentation</title>
+  <title>OutputPort &mdash; PsyNeuLink 0.7.1.0+2.g2abfca3 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.1.0+1.g4fecede',
+              VERSION:'0.7.1.0+2.g2abfca3',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.7.1.0+1
+                0.7.1.0+2
               </div>
             
           
@@ -491,13 +491,16 @@ their <a class="reference internal" href="Component.html#psyneulink.core.compone
 </div>
 <div class="section" id="standard-outputports">
 <span id="outputport-standard"></span><h4>Standard OutputPorts<a class="headerlink" href="#standard-outputports" title="Permalink to this headline">¶</a></h4>
-<p>Mechanisms have a <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a> attribute, that contains a list of
-<a class="reference internal" href="#psyneulink.core.components.ports.outputport.StandardOutputPorts" title="psyneulink.core.components.ports.outputport.StandardOutputPorts"><code class="xref any py py-class docutils literal"><span class="pre">StandardOutputPorts</span></code></a>:  predefined OutputPorts that can be assigned as <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a>.
-Every Mechanism has a base set of StandardOutputPorts. Subclasses of Mechanisms may add ones that are specific to
-that type of Mechanism (for example, the <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> class has <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.standard_output_ports" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a> for calculating the energy and entropy of its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.  The names of the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a> are listed in the Mechanism’s
-<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_port_names" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_port_names"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_port_names</span></code></a> attribute. These can be used to specify the
-<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a> of a Mechanism, as in the following example for a
-<a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>:</p>
+<p># FIX: 11/9/19: REPLACE RECURRENTTRANSFERMECHNISM EXAMPLE WITH TRANSFERMECHANISM
+Mechanisms have a <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a> attribute, that contains a list of
+<a class="reference internal" href="#psyneulink.core.components.ports.outputport.StandardOutputPorts" title="psyneulink.core.components.ports.outputport.StandardOutputPorts"><code class="xref any py py-class docutils literal"><span class="pre">StandardOutputPorts</span></code></a>: <a class="reference internal" href="#outputport-specification-dictionary"><span class="std std-ref">OutputPort specification dictionaries</span></a> that can be
+assigned as <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a>. There is a base set of StandardOutputPorts for all
+Mechanisms. Subclasses of Mechanisms may add ones that are specific to that type of Mechanism (for example, the
+<a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> class has <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.standard_output_ports" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a>
+for calculating the energy and entropy of its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.  The names of the <a class="reference internal" href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.standard_output_ports" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a>
+are listed in the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_port_names" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_port_names"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_port_names</span></code></a> attribute.
+These can be used to specify the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a> of a Mechanism, as in the following
+example for a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">default_variable</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
 <span class="gp">... </span>                                  <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Logistic</span><span class="p">,</span>
@@ -547,8 +550,8 @@ OutputPort’s <a class="reference internal" href="#psyneulink.core.components.p
 <p class="rubric">Examples</p>
 <p>In the following example, a <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a> Mechanism named <code class="docutils literal"><span class="pre">my_mech</span></code> is configured with three OutputPorts:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">DriftDiffusionAnalytical</span><span class="p">(),</span>
-<span class="gp">... </span>                  <span class="n">output_ports</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">DDM_OUTPUT</span><span class="o">.</span><span class="n">DECISION_VARIABLE</span><span class="p">,</span>
-<span class="gp">... </span>                                 <span class="n">pnl</span><span class="o">.</span><span class="n">DDM_OUTPUT</span><span class="o">.</span><span class="n">PROBABILITY_UPPER_THRESHOLD</span><span class="p">,</span>
+<span class="gp">... </span>                  <span class="n">output_ports</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">DECISION_VARIABLE</span><span class="p">,</span>
+<span class="gp">... </span>                                 <span class="n">pnl</span><span class="o">.</span><span class="n">PROBABILITY_UPPER_THRESHOLD</span><span class="p">,</span>
 <span class="gp">... </span>                                 <span class="p">{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;DECISION ENTROPY&#39;</span><span class="p">,</span>
 <span class="gp">... </span>                                  <span class="n">pnl</span><span class="o">.</span><span class="n">VARIABLE</span><span class="p">:</span> <span class="p">(</span><span class="n">pnl</span><span class="o">.</span><span class="n">OWNER_VALUE</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
 <span class="gp">... </span>                                  <span class="n">pnl</span><span class="o">.</span><span class="n">FUNCTION</span><span class="p">:</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Stability</span><span class="p">(</span><span class="n">metric</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">ENTROPY</span><span class="p">)</span> <span class="p">}])</span>
@@ -571,8 +574,8 @@ the <code class="docutils literal"><span class="pre">DECISION</span> <span class
 </div>
 <p>and then assigned either as:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">DriftDiffusionAnalytical</span><span class="p">(),</span>
-<span class="gp">... </span>                  <span class="n">output_ports</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">DDM_OUTPUT</span><span class="o">.</span><span class="n">DECISION_VARIABLE</span><span class="p">,</span>
-<span class="gp">... </span>                                 <span class="n">pnl</span><span class="o">.</span><span class="n">DDM_OUTPUT</span><span class="o">.</span><span class="n">PROBABILITY_UPPER_THRESHOLD</span><span class="p">,</span>
+<span class="gp">... </span>                  <span class="n">output_ports</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">DECISION_VARIABLE</span><span class="p">,</span>
+<span class="gp">... </span>                                 <span class="n">pnl</span><span class="o">.</span><span class="n">PROBABILITY_UPPER_THRESHOLD</span><span class="p">,</span>
 <span class="gp">... </span>                                 <span class="n">decision_entropy_output_port</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -581,8 +584,8 @@ the <code class="docutils literal"><span class="pre">DECISION</span> <span class
 <span class="gp">... </span>                                               <span class="n">variable</span><span class="o">=</span><span class="p">(</span><span class="n">OWNER_VALUE</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
 <span class="gp">... </span>                                               <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Stability</span><span class="p">(</span><span class="n">metric</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">ENTROPY</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech2</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">DriftDiffusionAnalytical</span><span class="p">(),</span>
-<span class="gp">... </span>                   <span class="n">output_ports</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">DDM_OUTPUT</span><span class="o">.</span><span class="n">DECISION_VARIABLE</span><span class="p">,</span>
-<span class="gp">... </span>                                  <span class="n">pnl</span><span class="o">.</span><span class="n">DDM_OUTPUT</span><span class="o">.</span><span class="n">PROBABILITY_UPPER_THRESHOLD</span><span class="p">])</span>
+<span class="gp">... </span>                   <span class="n">output_ports</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">DECISION_VARIABLE</span><span class="p">,</span>
+<span class="gp">... </span>                                  <span class="n">pnl</span><span class="o">.</span><span class="n">PROBABILITY_UPPER_THRESHOLD</span><span class="p">])</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech2</span><span class="o">.</span><span class="n">add_ports</span><span class="p">(</span><span class="n">another_decision_entropy_output_port</span><span class="p">)</span> 
 </pre></div>
@@ -752,7 +755,7 @@ If the OutputPort has been assigned to:
 
 <dl class="class">
 <dt id="psyneulink.core.components.ports.outputport.StandardOutputPorts">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.ports.outputport.</code><code class="descname">StandardOutputPorts</code><span class="sig-paren">(</span><em>owner: psyneulink.core.components.component.Component</em>, <em>output_port_dicts: list</em>, <em>indices: &lt;typecheck.framework.optional object at 0x11f096278&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.StandardOutputPorts" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.ports.outputport.</code><code class="descname">StandardOutputPorts</code><span class="sig-paren">(</span><em>owner: psyneulink.core.components.component.Component</em>, <em>output_port_dicts: list</em>, <em>indices: &lt;typecheck.framework.optional object at 0x11e02d048&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.StandardOutputPorts" title="Permalink to this definition">¶</a></dt>
 <dd><p>Collection of OutputPort specification dicts for <a class="reference internal" href="#outputport-standard"><span class="std std-ref">standard OutputPorts</span></a> of a class.</p>
 <p>Parses specification of VARIABLE, assigning indices to OWNER_VALUE if specified.
 Adds &lt;NAME_INDEX&gt; of each OutputPort as property of the owner’s class, that returns the index of the OutputPort

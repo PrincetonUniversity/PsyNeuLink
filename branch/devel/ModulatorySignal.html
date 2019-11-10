@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Modulatory Signals &mdash; PsyNeuLink 0.7.1.0+1.g4fecede documentation</title>
+  <title>Modulatory Signals &mdash; PsyNeuLink 0.7.1.0+2.g2abfca3 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.1.0+1.g4fecede',
+              VERSION:'0.7.1.0+2.g2abfca3',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.7.1.0+1
+                0.7.1.0+2
               </div>
             
           
@@ -338,11 +338,11 @@ is not specified when a ModulatorySignal is created, it is assigned the value of
 ModulatorySignals used and the type of Port modulated:</p>
 <blockquote>
 <div><ul class="simple">
-<li><strong>modulation of a</strong> <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>s &lt;function &lt;Mechanism_Base.function&gt; – a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> must be used; this
-modulates the <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> for a parameter of the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> which,
-in turn, determines how it computes the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>;</li>
-<li><strong>modulation of a</strong> <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>s input or output – a <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a> is specialized for this purpose, though a
-<a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> can also be used;  these modulate an <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> of the Mechanism, that determines the
+<li><strong>modulation of a</strong> <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>s &lt;function &lt;Mechanism_Base.function&gt; – a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> must be
+used; this modulates the <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> for a parameter of the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
+which, in turn, determines how it computes the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>;</li>
+<li><strong>modulation of a</strong> <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>s input or output – a <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a> is specialized for this purpose,
+though a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> can also be used;  these modulate an <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> of the Mechanism, that determines the
 Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> used as the input to its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>,
 or an <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of the Mechanism, that determines how the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism
 (i.e., the result of its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>) is used to generate the output of the Mechanism.</li>
@@ -356,8 +356,8 @@ modulate. The mechanics of modulation are described in greater detail in <a clas
 and shown in the <a class="reference internal" href="#modulatorysignal-anatomy-figure"><span class="std std-ref">figure below</span></a>.</p>
 <p>Colors listed are those used in the <a class="reference internal" href="#modulatorysignal-anatomy-figure"><span class="std std-ref">figure</span></a> below.</p>
 <p>It is important to emphasize that, although the purpose of a ModulatorySignal is to modify the functioning of a
-<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> or a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, it does this indirectly by modifying a Port that determines the input or
-output of a Mechanism, or the parameters of a Mechanism or Projection’s <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, rather than directly modifying
+<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, it does this indirectly by modifying a Port that determines the input
+or output of a Mechanism, or the parameters of a Mechanism or Projection’s <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, rather than directly modifying
 the function of the Mechanism or Projection itself.  This is shown in the following figure, and described in greater
 detail under <a class="reference internal" href="#modulatorysignal-implementation"><span class="std std-ref">Implementation of Modulation</span></a>.</p>
 <p id="modulatorysignal-anatomy-figure"><strong>Anatomy of Modulation</strong></p>
@@ -408,8 +408,7 @@ the <a class="reference internal" href="MappingProjection.html"><span class="doc
 </div>
 <div class="section" id="implementation-of-modulation">
 <span id="modulatorysignal-implementation"></span><h4>Implementation of Modulation<a class="headerlink" href="#implementation-of-modulation" title="Permalink to this headline">¶</a></h4>
-<p>Although the <a class="reference internal" href="#modulatorysignal-uses"><span class="std std-ref">purpose of a ModulatorySignal</span></a> is to modify the operation of
-a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> or <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, it does not do this <em>directly</em>; rather, it does it by way of a <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> that
+<p>Although the <a class="reference internal" href="#modulatorysignal-uses"><span class="std std-ref">purpose of a ModulatorySignal</span></a> is to modify the operation of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, it does not do this <em>directly</em>; rather, it does it by way of a <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> that
 modulates the input, function parameter, or output of the Mechanism or MappingProjeciton to be regulated. More
 specifically, a ModulatorySignal modulates the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a <em>Port</em> responsible for
 generating those values, by modifying a parameter of that Port’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  This is shown

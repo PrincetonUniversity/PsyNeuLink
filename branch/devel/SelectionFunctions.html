@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>SelectionFunctions &mdash; PsyNeuLink 0.7.1.0+1.g4fecede documentation</title>
+  <title>SelectionFunctions &mdash; PsyNeuLink 0.7.1.0+2.g2abfca3 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.1.0+1.g4fecede',
+              VERSION:'0.7.1.0+2.g2abfca3',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.7.1.0+1
+                0.7.1.0+2
               </div>
             
           
@@ -190,36 +190,19 @@
 <em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.selectionfunctions.</code><code class="descname">OneHot</code><span class="sig-paren">(</span><em>default_variable</em>, <em>mode=MAX_VAL</em>, <em>params=None</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return an array with one non-zero value.</p>
 <p id="onehot"><code class="xref any docutils literal"><span class="pre">function</span></code> returns an array the same length as the first item in <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.variable" title="psyneulink.core.components.functions.selectionfunctions.OneHot.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>,
-with all of its values zeroed except one as specified by <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a>:</p>
+with all of its values zeroed except one identified in first item <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.variable" title="psyneulink.core.components.functions.selectionfunctions.OneHot.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> as specified by
+<a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a>:</p>
 <blockquote>
 <div><ul class="simple">
-<li><em>MAX_VAL</em>: element with the maximum signed value in first item of <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.variable" title="psyneulink.core.components.functions.selectionfunctions.OneHot.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;</li>
-</ul>
-<ul class="simple">
-<li><em>MAX_ABS_VAL</em>: element with the maximum absolute value;</li>
-</ul>
-<ul class="simple">
+<li><em>MAX_VAL</em>: signed value of the element with the maximum signed value;</li>
+<li><em>MAX_ABS_VAL</em>: absolute value of the element with the maximum absolute value;</li>
 <li><em>MAX_INDICATOR</em>: 1 in place of the element with the maximum signed value;</li>
-</ul>
-<ul class="simple">
 <li><em>MAX_ABS_INDICATOR</em>: 1 in place of the element with the maximum absolute value;</li>
-</ul>
-<ul class="simple">
-<li><em>MIN_VAL</em>: element with the minimum signed value in first item of <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.variable" title="psyneulink.core.components.functions.selectionfunctions.OneHot.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;</li>
-</ul>
-<ul class="simple">
-<li><em>MIN_ABS_VAL</em>: element with the minimum absolute value;</li>
-</ul>
-<ul class="simple">
+<li><em>MIN_VAL</em>: signed value of the element with the minimum signed value;</li>
+<li><em>MIN_ABS_VAL</em>: absolute value of element with the minimum absolute value;</li>
 <li><em>MIN_INDICATOR</em>: 1 in place of the element with the minimum signed value;</li>
-</ul>
-<ul class="simple">
 <li><em>MIN_ABS_INDICATOR</em>: 1 in place of the element with the minimum absolute value;</li>
-</ul>
-<ul class="simple">
-<li><em>PROB</em>: probabilistically chosen element based on probabilities passed in second item of variable;</li>
-</ul>
-<ul class="simple">
+<li><em>PROB</em>: value of probabilistically chosen element based on probabilities passed in second item of variable;</li>
 <li><em>PROB_INDICATOR</em>: same as <em>PROB</em> but chosen item is assigned a value of 1.</li>
 </ul>
 </div></blockquote>

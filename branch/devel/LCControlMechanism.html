@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCControlMechanism &mdash; PsyNeuLink 0.7.1.0+1.g4fecede documentation</title>
+  <title>LCControlMechanism &mdash; PsyNeuLink 0.7.1.0+2.g2abfca3 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.1.0+1.g4fecede',
+              VERSION:'0.7.1.0+2.g2abfca3',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.7.1.0+1
+                0.7.1.0+2
               </div>
             
           
@@ -399,7 +399,7 @@ See <a class="reference internal" href="ControlMechanism.html#controlmechanism-c
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>modulated_mechanisms</strong> (List[<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>] or <em>ALL</em>) – specifies the Mechanisms to be modulated by the LCControlMechanism. If it is a list, every item must be a
+<li><strong>modulated_mechanisms</strong> (List[<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>] or <em>ALL</em>) – specifies the Mechanisms to be modulated by the LCControlMechanism. If it is a list, every item must be a
 Mechanism with a <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> that implements a <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a>;  alternatively the keyword <em>ALL</em> can be used to specify all of the
 <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> in the Composition(s) to which the LCControlMechanism  belongs.</li>
 <li><strong>initial_w_FitzHughNagumo</strong> (<em>float : default 0.0</em>) – sets <code class="xref any docutils literal"><span class="pre">initial_w</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</li>

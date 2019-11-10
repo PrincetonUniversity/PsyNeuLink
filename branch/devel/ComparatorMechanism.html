@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ComparatorMechanism &mdash; PsyNeuLink 0.7.1.0+1.g4fecede documentation</title>
+  <title>ComparatorMechanism &mdash; PsyNeuLink 0.7.1.0+2.g2abfca3 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.1.0+1.g4fecede',
+              VERSION:'0.7.1.0+2.g2abfca3',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.7.1.0+1
+                0.7.1.0+2
               </div>
             
           
@@ -302,20 +302,6 @@ more than one OutputPort, and one of those was desired, it would have had to be 
 <div class="section" id="class-reference">
 <span id="comparatormechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.COMPARATOR_OUTPUT">
-<em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.</code><code class="descname">COMPARATOR_OUTPUT</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.COMPARATOR_OUTPUT" title="Permalink to this definition">¶</a></dt>
-<dd><p id="comparatormechanism-standard-outputports"><a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPorts</span></a> for <a class="reference internal" href="#"><span class="doc">ComparatorMechanism</span></a></p>
-<dl class="docutils">
-<dt><em>SSE</em></dt>
-<dd>the value of the sum squared error of the Mechanism’s function</dd>
-</dl>
-<dl class="docutils">
-<dt><em>MSE</em></dt>
-<dd>the value of the mean squared error of the Mechanism’s function</dd>
-</dl>
-</dd></dl>
-
-<dl class="class">
 <dt id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism">
 <em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.</code><code class="descname">ComparatorMechanism</code><span class="sig-paren">(</span><em>                                        sample,                                                 target,                                                 input_ports=[SAMPLE,TARGET]                             function=LinearCombination(weights=[[-1],[1]],          output_ports=OUTCOME</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that compares the values of two <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>.
@@ -383,6 +369,21 @@ attribute of the ComparatorMechanism.</p>
 <dt id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_values">
 <code class="descname">output_values</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_values" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>2d np.array</em> – contains one item that is the value of the <em>OUTCOME</em> OutputPort.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.standard_output_ports">
+<code class="descname">standard_output_ports</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.standard_output_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list[str]</em> – list of <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPorts</span></a> that includes the following in addition to the
+<a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.standard_output_ports" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a> of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>:</p>
+<dl class="docutils">
+<dt><em>SSE</em></dt>
+<dd>the value of the sum squared error of the Mechanism’s function</dd>
+</dl>
+<dl class="docutils">
+<dt><em>MSE</em></dt>
+<dd>the value of the mean squared error of the Mechanism’s function</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>

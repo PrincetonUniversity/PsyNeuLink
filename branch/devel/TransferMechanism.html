@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferMechanism &mdash; PsyNeuLink 0.7.1.0+1.g4fecede documentation</title>
+  <title>TransferMechanism &mdash; PsyNeuLink 0.7.1.0+2.g2abfca3 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.1.0+1.g4fecede',
+              VERSION:'0.7.1.0+2.g2abfca3',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.7.1.0+1
+                0.7.1.0+2
               </div>
             
           
@@ -347,7 +347,7 @@ therefore only one item in Mechanism’s <a class="reference internal" href="Mec
 more than one item in <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, then an OuputPort is assigned for each;  the name of the first
 is <em>RESULT-0</em>, and the names of the subsequent ones are suffixed with an integer that is incremented for each successive
 one (e.g., <em>RESULT-1</em>, <em>RESULT-2</em>, etc.).  Additional OutputPorts can be assigned using the TransferMechanism’s
-<code class="xref any docutils literal"><span class="pre">Standard</span> <span class="pre">OutputPorts</span></code> (see <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPorts</span></a>) or by creating <a class="reference internal" href="OutputPort.html#outputport-customization"><span class="std std-ref">custom
+<a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.standard_output_ports" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a> (see <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPorts</span></a>) or by creating <a class="reference internal" href="OutputPort.html#outputport-customization"><span class="std std-ref">custom
 OutputPorts</span></a> (but see note below).   Like any OutputPorts, the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of
 any or all of these can be modulated by one or more <a class="reference internal" href="ControlSignal.html#controlsignal-modulation"><span class="std std-ref">ControlSignals</span></a> or <a class="reference internal" href="GatingSignal.html#gatingsignal-modulation"><span class="std std-ref">GatingSignals</span></a>.</p>
 <blockquote>
@@ -739,6 +739,19 @@ determine when execution of TransferMechanism is complete if <a class="reference
 <dd><p><em>Comparator</em> – used to compare <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure_value" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure_value"><code class="xref any py py-attr docutils literal"><span class="pre">termination_measure_value</span></code></a> with
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold"><code class="xref any py py-attr docutils literal"><span class="pre">termination_threshold</span></code></a> to determine when execution of
 TransferMechanism is complete if <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.execute_until_finished" title="psyneulink.core.components.component.Component.execute_until_finished"><code class="xref any py py-attr docutils literal"><span class="pre">execute_until_finished</span></code></a> is True.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.standard_output_ports">
+<code class="descname">standard_output_ports</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.standard_output_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list[dict]</em> – list of <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPort</span></a> that includes the following in addition to the
+<a class="reference internal" href="ProcessingMechanism.html#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.standard_output_ports" title="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a> of a
+<a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>:</p>
+<dl class="docutils" id="combine">
+<dt><em>COMBINE</em> <span class="classifier-delimiter">:</span> <span class="classifier">1d array</span></dt>
+<dd>Element-wise (Hadamard) sum of all items of the TransferMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
+(requires that they all have the same dimensionality).</dd>
+</dl>
 </dd></dl>
 
 <table class="docutils field-list" frame="void" rules="none">

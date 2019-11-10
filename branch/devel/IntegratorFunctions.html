@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>IntegratorFunctions &mdash; PsyNeuLink 0.7.1.0+1.g4fecede documentation</title>
+  <title>IntegratorFunctions &mdash; PsyNeuLink 0.7.1.0+2.g2abfca3 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.1.0+1.g4fecede',
+              VERSION:'0.7.1.0+2.g2abfca3',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.7.1.0+1
+                0.7.1.0+2
               </div>
             
           
@@ -510,9 +510,8 @@ terminate when the result of <code class="xref any docutils literal"><span class
 positive or negative value of threshold (see hint).</p>
 <div class="admonition hint">
 <p class="first admonition-title">Hint</p>
-<p class="last">To terminate execution of the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> to which the <code class="xref any docutils literal"><span class="pre">function</span></code> is
-assigned, the Mechanism just belong to a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> with a <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.scheduler" title="psyneulink.core.compositions.composition.Composition.scheduler"><code class="xref any py py-attr docutils literal"><span class="pre">scheduler</span></code></a> that
-applies the <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.WhenFinished" title="psyneulink.core.scheduling.condition.WhenFinished"><code class="xref any py py-class docutils literal"><span class="pre">WhenFinished</span></code></a> <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> to that Mechanism.</p>
+<p class="last">To terminate execution of the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> to which the <code class="xref any docutils literal"><span class="pre">function</span></code> is assigned, a <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.WhenFinished" title="psyneulink.core.scheduling.condition.WhenFinished"><code class="xref any py py-class docutils literal"><span class="pre">WhenFinished</span></code></a> <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> should be assigned for that
+Mechanism to <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.scheduler" title="psyneulink.core.compositions.composition.Composition.scheduler"><code class="xref any py py-attr docutils literal"><span class="pre">scheduler</span></code></a> of the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> to which the Mechanism belongs.</p>
 </div>
 </dd></dl>
 
@@ -1141,7 +1140,7 @@ if it is a list or array, it must be the same length as <a class="reference inte
 <li><strong>offset</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies a constant value added to integral in each call to <code class="xref any docutils literal"><span class="pre">function</span></code>;
 if it is a list or array, it must be the same length as <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator.variable" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
 (see <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator.offset" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator.offset"><code class="xref any py py-attr docutils literal"><span class="pre">offset</span></code></a> for details).</li>
-<li><strong>time_step_size</strong> (<em>float : default 0.0</em>) – determines the timing precision of the integration process (see <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator.time_step_size" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator.time_step_size"><code class="xref any py py-attr docutils literal"><span class="pre">time_step_size</span></code></a> for details.</li>
+<li><strong>time_step_size</strong> (<em>float : default 0.0</em>) – specifies the timing precision of the integration process (see <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator.time_step_size" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator.time_step_size"><code class="xref any py py-attr docutils literal"><span class="pre">time_step_size</span></code></a> for details.</li>
 <li><strong>initializer</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code> (see <code class="xref any docutils literal"><span class="pre">initializer</span></code>
 for details).</li>

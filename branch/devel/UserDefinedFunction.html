@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>UserDefinedFunction &mdash; PsyNeuLink 0.7.1.0+1.g4fecede documentation</title>
+  <title>UserDefinedFunction &mdash; PsyNeuLink 0.7.1.0+2.g2abfca3 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.7.1.0+1.g4fecede',
+              VERSION:'0.7.1.0+2.g2abfca3',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.7.1.0+1
+                0.7.1.0+2
               </div>
             
           
@@ -198,13 +198,11 @@ argument of the function or method is compatible with the circumstances in which
 <li>It may have have <strong>any number of additional arguments</strong> (positional and/or keyword);  these are treated as
 parameters of the UDF, and can be modulated by <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignals</span></a> like the parameters of
 ordinary PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a>.  If the UDF is assigned to (or automatically created for) a
-<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> or <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>, these parameters are each automatically assigned a <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a>
-so that they can be modulated by <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a> or <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignals</span></a>,
-respectively.  If the UDF is assigned to (or automatically created for) an <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> or <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>,
-and any of the parameters are specified as <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">Modulatory Parameters</span></a> (see <a class="reference internal" href="#udf-modulatory-params"><span class="std std-ref">below</span></a>),
-then they can be modulated by <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignals</span></a>. The function or method wrapped by the UDF is called
-with these parameters by their name and with their current values (i.e., as determined by any
-<a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignals</span></a> assigned to them).</li>
+<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>, these parameters are each automatically assigned a
+<a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> so that they can be modulated by <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a> or <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignals</span></a>, respectively.  If the UDF is assigned to (or automatically created for) an <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> or
+<a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>, and any of the parameters are specified as <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">Modulatory Parameters</span></a> (see <a class="reference internal" href="#udf-modulatory-params"><span class="std std-ref">below</span></a>), then they can be modulated by <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignals</span></a>. The function or method
+wrapped by the UDF is called with these parameters by their name and with their current values (i.e.,
+as determined by any <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignals</span></a> assigned to them).</li>
 </ul>
 <ul class="simple" id="udf-params-context">
 <li>It may include <strong>self</strong>, <strong>owner</strong>, <strong>context</strong>, and/or <strong>params</strong> arguments;  none of these are
