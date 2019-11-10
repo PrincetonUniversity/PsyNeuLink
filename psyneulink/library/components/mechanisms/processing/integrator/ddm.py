@@ -1065,7 +1065,7 @@ class DDM(ProcessingMechanism):
 
             # Convert ER to decision variable:
             threshold = float(self.function.get_current_function_param(THRESHOLD, context))
-            if random.random() < return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]:
+            if np.random.rand() < return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]:
                 return_value[self.DECISION_VARIABLE_INDEX] = np.atleast_1d(-1 * threshold)
             else:
                 return_value[self.DECISION_VARIABLE_INDEX] = threshold
