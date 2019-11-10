@@ -18,7 +18,7 @@ from psyneulink.core.components.process import Process
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.system import System
 from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.globals.keywords import INSTANTANEOUS_MODE_VALUE, INTEGRATOR_MODE_VALUE, REINITIALIZE
+from psyneulink.core.globals.keywords import INSTANTANEOUS_MODE_VALUE, INTEGRATOR_MODE_VALUE, REINITIALIZE, COMBINE
 from psyneulink.core.globals.utilities import UtilitiesError
 from psyneulink.core.scheduling.condition import Never
 
@@ -2022,6 +2022,11 @@ class TestOutputPorts:
         print(T.input_ports, "\n\n")
         print("Number of output ports: ", len(T.output_ports))
         print(T.output_ports)
+
+    def test_combine_standard_output_port(self):
+        T = TransferMechanism(default_variable=[[0,0,0],[0,0,0]], output_ports=[COMBINE])
+        T.execute([[1,2,1],[5,0,4]])
+        assert np.allclose(T.output_ports[0].value, [6,2,5])
 
         # assert len(T.input_ports) == 4
         # assert len(T.output_ports) == 4

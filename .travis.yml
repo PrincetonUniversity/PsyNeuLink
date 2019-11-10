@@ -19,6 +19,7 @@ env:
   global:
     - PYTHONWARNINGS="ignore::DeprecationWarning"
     - PIP_PROGRESS_BAR="off"
+    - COVERALLS_PARALLEL=true
 
 # Cache downloaded(built) python packages
 # and homebrew downloads
@@ -77,10 +78,11 @@ install:
 
 
 script:
-  - pytest -n auto --strict-markers -p no:logging --cov=psyneulink
+  - if [ "x$RUN_COV" != "x" ] ; then echo "Running with coverage"; export COV_ARGS="--cov=psyneulink"; else echo "Running without coverage"; export COV_ARGS=""; fi
+  - pytest -n auto --strict-markers -p no:logging $COV_ARGS
 
 after_script:
-  - COVERALLS_PARALLEL=true coveralls
+  - if [ "x$RUN_COV" != "x" ] ; then coveralls; fi
 
 notifications:
   webhooks: https://coveralls.io/webhook

@@ -28,10 +28,10 @@ Overview
 --------
 
 A GatingMechanism is a subclass of `ControlMechanism` that is restricted to using only `GatingSignals <GatingSignal>`,
-which modulate the `input <Mechanism_InputPorts>` or `output <Mechanism_InputPorts>` of a `Mechanism`, but not the
-paramaters of its `function <Mechanism_Base.function>`.  Accordingly, its constructor has a **gate** argument in place
-of a **control** argument.  It also lacks several attributes related to control, including those related to costs
-and net_outcome.  In all other respects it is identical to its parent class, ControlMechanism.
+which modulate the `input <Mechanism_InputPorts>` or `output <Mechanism_InputPorts>` of a `Mechanism <Mechanism>`,
+but not the paramaters of its `function <Mechanism_Base.function>`.  Accordingly, its constructor has a **gate**
+argument in place of a **control** argument.  It also lacks several attributes related to control, including those
+related to costs and net_outcome.  In all other respects it is identical to its parent class, ControlMechanism.
 
 .. _GatingMechanism_Creation:
 

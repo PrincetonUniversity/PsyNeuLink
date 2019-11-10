@@ -191,7 +191,7 @@ therefore only one item in Mechanism's `value <Mechanism_Base.value>`), the Outp
 more than one item in `value <Mechanism_Base.value>`, then an OuputPort is assigned for each;  the name of the first
 is *RESULT-0*, and the names of the subsequent ones are suffixed with an integer that is incremented for each successive
 one (e.g., *RESULT-1*, *RESULT-2*, etc.).  Additional OutputPorts can be assigned using the TransferMechanism's
-`Standard OutputPorts <TransferMechanism_Standard_OutputPorts>` (see `OutputPort_Standard`) or by creating `custom
+`standard_output_ports <TransferMechanism.standard_output_ports>` (see `OutputPort_Standard`) or by creating `custom
 OutputPorts <OutputPort_Customization>` (but see note below).   Like any OutputPorts, the `value <OutputPort.value>` of
 any or all of these can be modulated by one or more `ControlSignals <ControlSignal_Modulation>` or `GatingSignals
 <GatingSignal_Modulation>`.
@@ -472,16 +472,17 @@ from psyneulink.core.components.functions.function import Function, is_function_
 from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.components.functions.selectionfunctions import SelectionFunction
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, TransferFunction
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination, SUM
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import _is_control_spec
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort
-from psyneulink.core.components.ports.outputport import OutputPort, StandardOutputPorts
+from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    comparison_operators, FUNCTION, INITIALIZER, INSTANTANEOUS_MODE_VALUE, LESS_THAN_OR_EQUAL, \
-    MAX_ABS_DIFF, NAME, NOISE, OUTPUT_PORT, OWNER_VALUE, RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, \
+    COMBINE, comparison_operators, FUNCTION, INITIALIZER, INSTANTANEOUS_MODE_VALUE, LESS_THAN_OR_EQUAL, \
+    MAX_ABS_DIFF, NAME, NOISE, OWNER_VALUE, RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, \
     TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -768,6 +769,17 @@ class TransferMechanism(ProcessingMechanism_Base):
         `termination_threshold <TransferMechanism.termination_threshold>` to determine when execution of
         TransferMechanism is complete if `execute_until_finished <Component.execute_until_finished>` is True.
 
+    standard_output_ports : list[dict]
+        list of `Standard OutputPort <OutputPort_Standard>` that includes the following in addition to the
+        `standard_output_ports <ProcessingMechanism.standard_output_ports>` of a
+        `ProcessingMechanism <ProcessingMechanism>`:
+
+        .. _COMBINE:
+
+        *COMBINE* : 1d array
+          Element-wise (Hadamard) sum of all items of the TransferMechanism's `value <Mechanism_Base.value>`
+          (requires that they all have the same dimensionality).
+
     Returns
     -------
     instance of TransferMechanism : TransferMechanism
@@ -788,8 +800,11 @@ class TransferMechanism(ProcessingMechanism_Base):
     paramClassDefaults.update({NOISE: None})
 
     standard_output_ports = ProcessingMechanism_Base.standard_output_ports.copy()
+    standard_output_ports.extend([{NAME: COMBINE,
+                                   VARIABLE: OWNER_VALUE,
+                                   FUNCTION: LinearCombination(operation=SUM).function}])
     standard_output_port_names = ProcessingMechanism_Base.standard_output_port_names.copy()
-
+    standard_output_port_names.extend([COMBINE])
 
     class Parameters(ProcessingMechanism_Base.Parameters):
         """
@@ -963,18 +978,15 @@ class TransferMechanism(ProcessingMechanism_Base):
         # to True after initialization
         self._needs_integrator_function_init = False
 
-        super(TransferMechanism, self).__init__(
-                default_variable=default_variable,
-                size=size,
-                input_ports=input_ports,
-                output_ports=output_ports,
-                function=function,
-                params=params,
-                name=name,
-                prefs=prefs,
-
-                **kwargs
-        )
+        super(TransferMechanism, self).__init__(default_variable=default_variable,
+                                                size=size,
+                                                input_ports=input_ports,
+                                                output_ports=output_ports,
+                                                function=function,
+                                                params=params,
+                                                name=name,
+                                                prefs=prefs,
+                                                **kwargs)
 
     def _parse_arg_initial_value(self, initial_value):
         return self._parse_arg_variable(initial_value)

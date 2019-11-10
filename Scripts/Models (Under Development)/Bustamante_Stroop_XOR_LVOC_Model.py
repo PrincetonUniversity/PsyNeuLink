@@ -68,8 +68,8 @@ task_decision = pnl.DDM(
     name='Task Decision',
     # function=pnl.NavarroAndFuss,
     output_ports=[
-        pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
-        pnl.DDM_OUTPUT.PROBABILITY_LOWER_THRESHOLD
+        pnl.PROBABILITY_UPPER_THRESHOLD,
+        pnl.PROBABILITY_LOWER_THRESHOLD
     ]
 )
 
