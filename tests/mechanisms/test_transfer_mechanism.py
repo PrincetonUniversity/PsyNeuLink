@@ -18,7 +18,7 @@ from psyneulink.core.components.process import Process
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.system import System
 from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.globals.keywords import INSTANTANEOUS_MODE_VALUE, INTEGRATOR_MODE_VALUE, REINITIALIZE
+from psyneulink.core.globals.keywords import INSTANTANEOUS_MODE_VALUE, INTEGRATOR_MODE_VALUE, REINITIALIZE, COMBINE
 from psyneulink.core.globals.utilities import UtilitiesError
 from psyneulink.core.scheduling.condition import Never
 

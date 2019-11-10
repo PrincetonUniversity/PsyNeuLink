@@ -112,14 +112,15 @@ from psyneulink.core.components.functions.transferfunctions import Linear, SoftM
 from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.globals.keywords import \
-    FUNCTION, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MEDIAN, NAME, \
-    PROB, PROCESSING_MECHANISM, PREFERENCE_SET_NAME, STANDARD_DEVIATION, VARIANCE
+    FUNCTION, MAX_ABS_INDICATOR, MAX_ABS_ONE_HOT, MAX_ABS_VAL, MAX_INDICATOR, MAX_ONE_HOT, MAX_VAL, MEAN, MEDIAN, \
+    NAME, PROB, PROCESSING_MECHANISM, PREFERENCE_SET_NAME, STANDARD_DEVIATION, VARIANCE
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
 __all__ = [
     'ProcessingMechanismError',
 ]
+
 
 class ProcessingMechanismError(Exception):
     def __init__(self, error_value):
@@ -168,8 +169,12 @@ class ProcessingMechanism_Base(Mechanism_Base):
                                   {NAME: VARIANCE,
                                    FUNCTION:lambda x: np.var(x)},
                                   {NAME: MAX_VAL,
-                                   FUNCTION: OneHot(mode=MAX_VAL).function},
+                                   FUNCTION:lambda x: np.max(x)},
                                   {NAME: MAX_ABS_VAL,
+                                   FUNCTION:lambda x: np.max(np.absolute(x))},
+                                  {NAME: MAX_ONE_HOT,
+                                   FUNCTION: OneHot(mode=MAX_VAL).function},
+                                  {NAME: MAX_ABS_ONE_HOT,
                                    FUNCTION: OneHot(mode=MAX_ABS_VAL).function},
                                   {NAME: MAX_INDICATOR,
                                    FUNCTION: OneHot(mode=MAX_INDICATOR).function},
@@ -264,13 +269,19 @@ class ProcessingMechanism(ProcessingMechanism_Base):
        variance of the elements.
 
      *MAX_VAL* : float
-       element with the greatest value is assigned its value, all others are assigned 0.
+       greatest signed value of the elements.
 
      *MAX_ABS_VAL* : float
-       element with the greatest absolute value is assigned its value, all others are assigned 0.
+       greatest absolute value of the elements.
+
+     *MAX_ONE_HOT* : float
+       element with the greatest signed value is assigned that value, all others are assigned 0.
+
+     *MAX_ABS_ONE_HOT* : float
+       element with the greatest absolute value is assigned that value, all others are assigned 0.
 
      *MAX_INDICATOR* : 1d array
-       element with the greatest value is assigned 1, all others are assigned 0.
+       element with the greatest signed value is assigned 1, all others are assigned 0.
 
      *MAX_ABS_INDICATOR* : 1d array
        element with the greatest absolute value is assigned 1, all others are assigned 0.
