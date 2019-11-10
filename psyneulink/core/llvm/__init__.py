@@ -27,10 +27,10 @@ __all__ = ['LLVMBuilderContext']
 
 
 _compiled_modules:Set[ir.Module] = set()
-_binary_generation:int = 0
+_binary_generation = 0
 
 
-def _llvm_build(target_generation:int=_binary_generation + 1):
+def _llvm_build(target_generation=_binary_generation + 1):
     global _binary_generation
     if target_generation <= _binary_generation:
         if "compile" in debug_env:

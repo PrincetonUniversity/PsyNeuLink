@@ -18,7 +18,7 @@ from llvmlite import ir
 import numpy as np
 import os
 import re
-from typing import Optional, Set
+from typing import Set
 import weakref
 try:
     import torch
@@ -38,7 +38,7 @@ __all__ = ['LLVMBuilderContext', '_modules', '_find_llvm_function']
 
 _modules:Set[ir.Module] = set()
 _all_modules:Set[ir.Module] = set()
-_struct_count:int = 0
+_struct_count = 0
 
 
 @atexit.register
@@ -53,8 +53,8 @@ _builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'printf'))
 
 class LLVMBuilderContext:
     __global_context = None
-    __uniq_counter:int = 0
-    _llvm_generation:int = 0
+    __uniq_counter = 0
+    _llvm_generation = 0
     int32_ty = ir.IntType(32)
     float_ty = ir.DoubleType()
 
