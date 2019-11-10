@@ -1071,8 +1071,8 @@ class ContentAddressableList(UserList):
 
     The key with which it is created is also assigned as a property of the class, that returns a list
     with the keyed attribute of its entries.  For example, the `output_ports <Mechanism_Base.output_ports>` attribute
-    of a `Mechanism` is a ContentAddressableList of the Mechanism's `OutputPorts <OutputPort>`, keyed by their
-    names.  Therefore, ``my_mech.output_ports.names`` returns the names of all of the Mechanism's OutputPorts::
+    of a `Mechanism <Mechanism>` is a ContentAddressableList of the Mechanism's `OutputPorts <OutputPort>`, keyed by
+    their names.  Therefore, ``my_mech.output_ports.names`` returns the names of all of the Mechanism's OutputPorts::
 
         >>> import psyneulink as pnl
         >>> print(pnl.DDM().output_ports.names)

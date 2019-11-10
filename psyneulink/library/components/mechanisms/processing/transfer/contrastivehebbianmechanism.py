@@ -64,7 +64,7 @@ Creating a ContrastiveHebbianMechanism
 ~~~~~~
 
 The **input_size** argument of the constructor must always be specified (this is comparable to specifying the
-**size** or *default_variable** arugments of other types of `Mechanism`).  If it is specified on its own,
+**size** or *default_variable** arguments of other types of `Mechanism`).  If it is specified on its own,
 it determines the total number of processing units.  If either the **hidden_size** and/or **target_size** arguments
 are specified, then those units are treated as distinct from the input units (see `ContrastiveHebbian_Execution` for
 details).

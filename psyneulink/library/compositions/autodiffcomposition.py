@@ -68,8 +68,8 @@ arguments that are specific to the AutodiffComposition, as described below.
       the tensor of the parameter object corresponding to a particular MappingProjection not only has the same
       dimensionality as its `matrix <MappingProjection.matrix>`, it also has the exact same values;
 
-    * Pytorch functions representing the `function <Mechanism_Base.function>` of each `Mechanism` in the Composition
-      incorporate their scalar, untrainable biases.
+    * Pytorch functions representing the `function <Mechanism_Base.function>` of each `Mechanism <Mechanism>` in the
+      Composition incorporate their scalar, untrainable biases.
 
     If it is set to False:
 

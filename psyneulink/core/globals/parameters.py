@@ -484,8 +484,8 @@ class Parameter(types.SimpleNamespace):
             :default: True
 
         modulable
-            if True, the parameter can be modulated; if the Parameter belongs to a `Mechanism` or `Projection`,
-            it is assigned a `ParameterPort`.
+            if True, the parameter can be modulated; if the Parameter belongs to a `Mechanism <Mechanism>` or
+            `Projection <Projection>`, it is assigned a `ParameterPort`.
 
             :default: False
 

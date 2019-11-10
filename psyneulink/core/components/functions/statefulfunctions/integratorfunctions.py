@@ -2345,9 +2345,9 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         positive or negative value of threshold (see hint).
 
         .. hint::
-           To terminate execution of the `Mechanism` to which the `function <DriftDiffusionIntegrator.function>` is
-           assigned, the Mechanism just belong to a `Composition` with a `scheduler <Composition.scheduler>` that
-           applies the `WhenFinished` `Condition` to that Mechanism.
+           To terminate execution of the `Mechanism <Mechanism>` to which the `function
+           <DriftDiffusionIntegrator.function>` is assigned, a `WhenFinished` `Condition` should be assigned for that
+           Mechanism to `scheduler <Composition.scheduler>` of the `Composition` to which the Mechanism belongs.
 
     time_step_size : float
         determines the timing precision of the integration process and is used to scale the `noise

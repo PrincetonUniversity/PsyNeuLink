@@ -357,7 +357,7 @@ class LCControlMechanism(ControlMechanism):
     Arguments
     ---------
 
-    modulated_mechanisms : List[`Mechanism`] or *ALL*
+    modulated_mechanisms : List[`Mechanism <Mechanism>`] or *ALL*
         specifies the Mechanisms to be modulated by the LCControlMechanism. If it is a list, every item must be a
         Mechanism with a `function <Mechanism_Base.function>` that implements a `multiplicative_param
         <Function_Modulatory_Params>`;  alternatively the keyword *ALL* can be used to specify all of the

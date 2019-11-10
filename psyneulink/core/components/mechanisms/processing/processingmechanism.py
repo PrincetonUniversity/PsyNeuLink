@@ -251,8 +251,8 @@ class ProcessingMechanism(ProcessingMechanism_Base):
     standard_output_ports : list[dict]
       list of the dictionary specifications for `StandardOutputPorts <OutputPort_Standard>` that can be assigned as
       `OutputPorts <OutputPort>`, in addition to the `standard_output_ports <Mechanism_Base.standard_output_ports>`
-      of a `Mechanism`; each assigns as the `value <OutputPort.value>` of the OutputPort a quantity calculated over
-      the elements of the first item in the outermost dimension (axis 0) of the Mechanism`s `value
+      of a `Mechanism <Mechanism>`; each assigns as the `value <OutputPort.value>` of the OutputPort a quantity
+      calculated over the elements of the first item in the outermost dimension (axis 0) of the Mechanism`s `value
       <Mechanism_Base.value>`. `Subclasses <ProcessingMechanism_Subtypes>` of ProcessingMechanism may extend this
       list to include additional `StandardOutputPorts <OutputPort_Standard>`.
 

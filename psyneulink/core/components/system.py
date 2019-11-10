@@ -3876,8 +3876,8 @@ class System(System_Base):
             Processes;  these represent intersections of Processes within the System.
 
         show_mechanism_structure : bool, VALUES, FUNCTIONS or ALL : default False
-            specifies whether or not to show a detailed representation of each `Mechanism` in the graph, including its
-            `Ports`;  can have the following settings:
+            specifies whether or not to show a detailed representation of each `Mechanism <Mechanism>` in the graph,
+            including its `Ports`;  can have the following settings:
 
             * `True` -- shows Ports of Mechanism, but not information about the `value
               <Component.value>` or `function <Component.function>` of the Mechanism or its Ports.
@@ -3953,8 +3953,8 @@ class System(System_Base):
             specifies whether or not to show dimensions of Mechanisms (and/or MappingProjections when show_learning
             is `True`);  can have the following settings:
 
-            * *MECHANISMS* -- shows `Mechanism` input and output dimensions.  Input dimensions are shown in parentheses
-              below the name of the Mechanism; each number represents the dimension of the `variable
+            * *MECHANISMS* -- shows `Mechanism <Mechanism>` input and output dimensions.  Input dimensions are shown
+              in parentheses below the name of the Mechanism; each number represents the dimension of the `variable
               <InputPort.variable>` for each `InputPort` of the Mechanism; Output dimensions are shown above
               the name of the Mechanism; each number represents the dimension for `value <OutputPort.value>` of each
               of `OutputPort` of the Mechanism.

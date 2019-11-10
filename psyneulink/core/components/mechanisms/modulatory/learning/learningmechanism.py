@@ -603,7 +603,7 @@ class LearningTiming(Enum):
     EXECUTION_PHASE
         LearningMechanism (and associated `LearningProjections(s) <LearningProjection>`) executed during the
         `execution phase <System_Execution>` of the System to which they belong, usually immediately after execution of
-        the `Mechanism` that receives the `primary_learned_projection`
+        the `Mechanism <Mechanism>` that receives the `primary_learned_projection`
 
     LEARNING_PHASE
         LearningMechanism (and associated `LearningProjections(s) <LearningProjection>`) executed during the

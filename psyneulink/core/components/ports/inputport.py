@@ -34,9 +34,9 @@ Contents
 Overview
 --------
 
-The purpose of an InputPort is to receive and combine inputs to a `Mechanism`, allow them to be modified, and provide
-them to the Mechanism's `function <Mechanism_Base.function>`. An InputPort receives input to a `Mechanism`
-provided by the `Projections <Projection>` to that Mechanism from others in a `Process` or `System`.  If the
+The purpose of an InputPort is to receive and combine inputs to a `Mechanism <Mechanism>`, allow them to be modified,
+and provide them to the Mechanism's `function <Mechanism_Base.function>`. An InputPort receives input to a Mechanism
+provided by the `Projections <Projection>` to that Mechanism from others in a `Composition`.  If the
 InputPort belongs to an `ORIGIN` Mechanism (see `role of Mechanisms in Processes and Systems
 <Mechanism_Role_In_Processes_And_Systems>`), then it receives the input specified when that Process or System is
 `run <Run>`.  The `PathwayProjections <PathWayProjection>` received by an InputPort are listed in its `path_afferents
@@ -53,12 +53,12 @@ for additional details about the role of InputPorts in Mechanisms, and their ass
 Creating an InputPort
 ----------------------
 
-An InputPort can be created by calling its constructor, but in general this is not necessary as a `Mechanism` can
-usually automatically create the InputPort(s) it needs when it is created.  For example, if the Mechanism is
-being created within the `pathway <Process.pathway>` of a `Process`, its InputPort is created and  assigned as the
-`receiver <MappingProjection.receiver>` of a `MappingProjection` from the  preceding Mechanism in the `pathway
-<Process.pathway>`.  InputPorts can also be specified in the **input_ports** argument of a Mechanism's
-constructor (see `below <InputPort_Specification>`).
+An InputPort can be created by calling its constructor, but in general this is not necessary as a `Mechanism
+<Mechanism>` can usually automatically create the InputPort(s) it needs when it is created.  For example, if the
+Mechanism isbeing created within the `pathway <Process.pathway>` of a `Process`, its InputPort is created and assigned
+as the `receiver <MappingProjection.receiver>` of a `MappingProjection` from the  preceding Mechanism in the `pathway
+<Process.pathway>`.  InputPorts can also be specified in the **input_ports** argument of a Mechanism's constructor
+(see `below <InputPort_Specification>`).
 
 The `variable <InputPort.variable>` of an InputPort can be specified using the **variable** or **size** arguments of
 its constructor.  It can also be specified using the **projections** argument, if neither **variable** nor **size** is

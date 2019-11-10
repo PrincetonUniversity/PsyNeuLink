@@ -664,7 +664,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         Used by other Components to add a `Port` or list of Ports to be monitored by the ObjectiveMechanism.
         The **monitor_spec** can be any of the following:
         - MonitoredOutputPortTuple
-        - `Mechanism`;
+        - `Mechanism <Mechanism>`;
         - `OutputPort`;
         - `tuple specification <InputPort_Tuple_Specification>`;
         - `Port specification dictionary <InputPort_Specification_Dictionary>`;
