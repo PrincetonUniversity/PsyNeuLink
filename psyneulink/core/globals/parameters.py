@@ -315,6 +315,41 @@ def parse_context(context):
         return context
 
 
+def copy_parameter_value(value, shared_types=None, memo=None):
+    """
+        Returns a copy of **value** used as the value or spec of a
+        Parameter, with exceptions.
+
+        For example, we assume that if we have a Component in an
+        iterable, it is meant to be a pointer rather than something
+        used in computation requiring it to be a "real" instance
+        (like `Component.function`)
+
+        e.g. in spec attribute or Parameter `Mechanism.input_ports_spec`
+    """
+    from psyneulink.core.components.component import Component, ComponentsMeta
+
+    if shared_types is None:
+        shared_types = (Component, ComponentsMeta, types.MethodType)
+    else:
+        shared_types = tuple(shared_types)
+
+    try:
+        return copy_iterable_with_shared(
+            value,
+            shared_types=shared_types,
+            memo=memo
+        )
+    except TypeError:
+        # this will attempt to copy the current object if it
+        # is referenced in a parameter, such as
+        # ComparatorMechanism, which does this for input_ports
+        if not isinstance(value, shared_types):
+            return copy.deepcopy(value, memo)
+        else:
+            return value
+
+
 class ParametersTemplate:
     _deepcopy_shared_keys = ['_parent', '_params', '_owner', '_children']
     _values_default_excluded_attrs = {'user': False}
@@ -730,7 +765,14 @@ class Parameter(types.SimpleNamespace):
             return super().__str__()
 
     def __deepcopy__(self, memo):
-        result = Parameter(**{k: copy.deepcopy(getattr(self, k)) for k in self._param_attrs}, _owner=self._owner, _inherited=self._inherited)
+        result = Parameter(
+            **{
+                k: copy_parameter_value(getattr(self, k), memo=memo)
+                for k in self._param_attrs
+            },
+            _owner=self._owner,
+            _inherited=self._inherited
+        )
         memo[id(self)] = result
 
         return result
