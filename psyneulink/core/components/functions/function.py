@@ -154,7 +154,7 @@ from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
-from psyneulink.core.globals.utilities import object_has_single_value, parameter_spec, safe_len
+from psyneulink.core.globals.utilities import object_has_single_value, parameter_spec, safe_len, get_global_seed
 
 __all__ = [
     'ArgumentTherapy', 'EPSILON', 'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType',
@@ -521,6 +521,11 @@ class Function_Base(Function):
         new = super().__deepcopy__(memo)
         # ensure copy does not have identical name
         register_category(new, Function_Base, new.name, FunctionRegistry)
+        try:
+            # HACK: Make sure any copies are re-seeded to avoid dependent RNG.
+            new.random_state.seed([get_global_seed()])
+        except:
+            pass
         return new
 
     @handle_external_context()
