@@ -32,7 +32,9 @@ install:
   - pip install --user -U pip
   - pip --version
   # certifi upgrade is needed by pytest-profiling (it does not set the dependencies right)
-  - pip install --user -U certifi
+  # Restrict pywin32 to <226 to work around appveyor issue:
+  # https://help.appveyor.com/discussions/problems/25404-pywin32226-the-specified-module-could-not-be-found
+  - pip install --user -U certifi "pywin32<226"
   - pip install --user git+https://github.com/benureau/leabra.git@master
 
   # pytorch does not distribute windows packages over pypi. Install it directly.
