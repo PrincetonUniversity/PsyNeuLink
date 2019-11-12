@@ -157,12 +157,12 @@ def is_modulation_operation(val):
     return get_modulationOperation_name(val)
 
 def get_modulationOperation_name(operation):
-        x = operation(1,2)
-        if x is 1:
+        x = operation(1, 2)
+        if x == 1:
             return MODULATION_OVERRIDE
-        elif x is 2:
+        elif x == 2:
             return MODULATION_MULTIPLY
-        elif x is 3:
+        elif x == 3:
             return MODULATION_ADD
         else:
             return False
@@ -914,7 +914,7 @@ def convert_to_np_array(value, dimension):
     if value is None:
         return None
 
-    if dimension is 1:
+    if dimension == 1:
         # KAM 6/28/18: added for cases when even np does not recognize the shape/dtype
         # Needed this specifically for the following shape: variable = [[0.0], [0.0], np.array([[0.0, 0.0]])]
         # Which is due to a custom OutputPort variable that includes an owner value, owner param, and owner input
@@ -931,7 +931,7 @@ def convert_to_np_array(value, dimension):
         except ValueError:
             return value
 
-    elif dimension is 2:
+    elif dimension == 2:
         from numpy import ndarray
         # if isinstance(value, ndarray) and value.dtype==object and len(value) == 2:
         value = np.array(value)

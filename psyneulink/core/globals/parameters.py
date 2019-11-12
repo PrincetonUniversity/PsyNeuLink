@@ -352,7 +352,7 @@ class ParametersTemplate:
         return iter([getattr(self, k) for k in self.values(show_all=True).keys()])
 
     def _is_parameter(self, param_name):
-        if param_name[0] is '_':
+        if param_name[0] == '_':
             return False
         else:
             try:

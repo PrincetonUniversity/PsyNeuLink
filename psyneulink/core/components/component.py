@@ -1123,7 +1123,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             self.componentName = self.componentType
 
         # ENFORCE REGISRY
-        if self.__class__.__bases__[0].__bases__[0].__bases__[0].__name__ is 'ShellClass':
+        if self.__class__.__bases__[0].__bases__[0].__bases__[0].__name__ == 'ShellClass':
             try:
                 self.__class__.__bases__[0].registry
             except AttributeError:
@@ -2846,7 +2846,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         ALLOWABLE_TUPLE_SPEC_CLASSES = (ModulatoryProjection_Base, ModulatorySignal, ModulatoryMechanism_Base)
 
         # If the 2nd item is a CONTROL or LEARNING SPEC, return the first item as the value
-        if (isinstance(param_spec, tuple) and len(param_spec) is 2 and
+        if (isinstance(param_spec, tuple) and len(param_spec) == 2 and
                 not isinstance(param_spec[1], (dict, list, np.ndarray)) and
                 (param_spec[1] in ALLOWABLE_TUPLE_SPEC_KEYWORDS or
                  isinstance(param_spec[1], ALLOWABLE_TUPLE_SPEC_CLASSES) or
