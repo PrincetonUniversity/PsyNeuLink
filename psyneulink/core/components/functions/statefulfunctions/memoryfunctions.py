@@ -783,7 +783,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         # PRNG
         rand_struct = ctx.get_state_ptr(self, builder, state, "random_state")
-        uniform_f = ctx.get_llvm_function("__pnl_builtin_mt_rand_double")
+        uniform_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
 
         # Ring buffer
         buffer_ptr = ctx.get_state_ptr(self, builder, state, "previous_value")
@@ -831,7 +831,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         retr = builder.load(retr_ptr)
         with builder.if_then(retr, likely=True):
             # Determine distances
-            distance_f = ctx.get_llvm_function(self.distance_function)
+            distance_f = ctx.import_llvm_function(self.distance_function)
             distance_params = ctx.get_param_ptr(self, builder, params, "distance_function")
             distance_state = ctx.get_state_ptr(self, builder, state, "distance_function")
             distance_arg_in = builder.alloca(distance_f.args[2].type.pointee)
@@ -847,7 +847,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                 b.call(distance_f, [distance_params, distance_state,
                                     distance_arg_in, distance_arg_out])
 
-            selection_f = ctx.get_llvm_function(self.selection_function)
+            selection_f = ctx.import_llvm_function(self.selection_function)
             selection_params = ctx.get_param_ptr(self, builder, params, "selection_function")
             selection_state = ctx.get_state_ptr(self, builder, state, "selection_function")
             selection_arg_out = builder.alloca(selection_f.args[3].type.pointee)

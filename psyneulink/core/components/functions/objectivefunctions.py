@@ -408,11 +408,11 @@ class Stability(ObjectiveFunction):
 
         input_length = ctx.int32_ty(arg_in.type.pointee.count)
         output_length = ctx.int32_ty(arg_in.type.pointee.count)
-        builtin = ctx.get_llvm_function("__pnl_builtin_vxm")
+        builtin = ctx.import_llvm_function("__pnl_builtin_vxm")
         builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
 
         # Prepare metric function
-        metric_fun = ctx.get_llvm_function(self.metric_fct)
+        metric_fun = ctx.import_llvm_function(self.metric_fct)
         metric_in = builder.alloca(metric_fun.args[2].type.pointee)
 
         # Transfer Function if configured
