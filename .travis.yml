@@ -13,7 +13,7 @@ os:
 dist: bionic
 
 env:
-  matrix:
+  jobs:
     - PYTHON=3.8.0
     - PYTHON=3.7.5
     - PYTHON=3.6.8
@@ -22,7 +22,7 @@ env:
     - PIP_PROGRESS_BAR="off"
     - COVERALLS_PARALLEL=true
 
-matrix:
+jobs:
   exclude:
     - env: PYTHON=3.8.0
       os: osx
