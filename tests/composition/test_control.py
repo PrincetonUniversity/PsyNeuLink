@@ -8,6 +8,7 @@ import re
 from psyneulink.core.components.functions.optimizationfunctions import OptimizationFunctionError
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleIteratorError, SampleSpec
 from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, PROJECTIONS
+from psyneulink.core.globals.log import LogCondition
 
 class TestControlSpecification:
     # These test the coordination of adding a node with a control specification to a Composition
@@ -1729,7 +1730,15 @@ class TestModelBasedOptimizationControlMechanisms:
         # initial 1 + each allocation sample (1, 2, 3) integrated
         assert B.parameters.value.get(comp) == 7
 
-    def test_grid_search_random_selection(self):
+    @pytest.mark.control
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="Multilevel")
+    @pytest.mark.parametrize("mode", ["Python",
+                                      pytest.param("LLVM", marks=pytest.mark.llvm),
+                                      pytest.param("LLVMExec", marks=pytest.mark.llvm),
+                                      pytest.param("LLVMRun", marks=pytest.mark.llvm),
+                                     ])
+    def test_grid_search_random_selection(self, mode, benchmark):
         A = pnl.ProcessingMechanism(name='A')
 
         A.log.set_log_conditions(items="mod_slope")
@@ -1757,16 +1766,21 @@ class TestModelBasedOptimizationControlMechanisms:
 
         inputs = {A: [[[1.0]]]}
 
-        comp.run(inputs=inputs,
-                 num_trials=10,
-                 context='outer_comp')
-
-        log_arr = A.log.nparray_dictionary()
+        comp.run(inputs=inputs, num_trials=10, context='outer_comp', bin_execute=mode)
+        assert np.allclose(comp.results, [[[0.7310585786300049]], [[0.999999694097773]], [[0.999999694097773]], [[0.9999999979388463]], [[0.9999999979388463]], [[0.999999694097773]], [[0.9999999979388463]], [[0.999999999986112]], [[0.999999694097773]], [[0.9999999999999993]]])
 
         # control signal value (mod slope) is chosen randomly from all of the control signal values
         # that correspond to a net outcome of 1
-        assert np.allclose([[1.], [15.], [15.], [20.], [20.], [15.], [20.], [25.], [15.], [35.]],
-                           log_arr['outer_comp']['mod_slope'])
+        if mode == "Python":
+            log_arr = A.log.nparray_dictionary()
+            assert np.allclose([[1.], [15.], [15.], [20.], [20.], [15.], [20.], [25.], [15.], [35.]],
+                               log_arr['outer_comp']['mod_slope'])
+
+        # Disable logging for the benchmark run
+        A.log.set_log_conditions(items="mod_slope", log_condition=LogCondition.OFF)
+        A.log.clear_entries()
+        benchmark(comp.run, inputs=inputs, num_trials=10, context='bench_outer_comp', bin_execute=mode)
+        assert len(A.log.get_logged_entries()) == 0
 
 class TestSampleIterator:
 
