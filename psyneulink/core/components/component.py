@@ -526,17 +526,18 @@ class ResetMode(Enum):
     .. _CURRENT_TO_INSTANCE_DEFAULTS:
 
     *CURRENT_TO_INSTANCE_DEFAULTS*
-      • resets all paramsCurrent values to paramInstanceDefaults values.
+      • resets all current values to instance default values.
 
     .. _INSTANCE_TO_CLASS:
 
     *INSTANCE_TO_CLASS*
-      • resets all paramInstanceDefaults values to paramClassDefaults values.
+      • resets all instance default values to class default values.
 
     .. _ALL_TO_CLASS_DEFAULTS:
 
     *ALL_TO_CLASS_DEFAULTS*
-      • resets all paramsCurrent and paramInstanceDefaults values to paramClassDefafults values
+      • resets all current values and instance default values to \
+      class default values
 
     """
     CURRENT_TO_INSTANCE_DEFAULTS = 0
@@ -2441,7 +2442,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # MODIFIED 5/5/17 END
             self._instantiate_attributes_after_function(context=context)
 
-    def reset_params(self, mode=ResetMode.INSTANCE_TO_CLASS):
+    @handle_external_context()
+    def reset_params(self, mode=ResetMode.INSTANCE_TO_CLASS, context=None):
         """Reset current and/or instance defaults
 
         If called with:
@@ -2452,28 +2454,28 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         :param mode: (ResetMode) - determines which params are reset
         :return none:
         """
-        # if not isinstance(mode, ResetMode):
-        #     raise ComponentError("Must be called with a valid ResetMode")
-        #
+
         if not isinstance(mode, ResetMode):
             warnings.warn("No ResetMode specified for reset_params; CURRENT_TO_INSTANCE_DEFAULTS will be used")
 
-        if mode == ResetMode.CURRENT_TO_INSTANCE_DEFAULTS:
-            for param in self.paramsCurrent:
-                # if param is FUNCTION_PARAMS:
-                #     for function_param in param:
-                #         self.paramsCurrent[FUNCTION_PARAMS].__additem__(
-                #                 function_param,
-                #                 self.paramInstanceDefaults[FUNCTION_PARAMS][
-                #                     function_param])
-                #     continue
-                self.paramsCurrent[param] = self.paramInstanceDefaults[param]
-            # self.params_current = self.paramInstanceDefaults.copy()
-        elif mode == ResetMode.INSTANCE_TO_CLASS:
-            self.paramInstanceDefaults = self.paramClassDefaults.copy()
-        elif mode == ResetMode.ALL_TO_CLASS_DEFAULTS:
-            self.params_current = self.paramClassDefaults.copy()
-            self.paramInstanceDefaults = self.paramClassDefaults.copy()
+        for param in self.parameters:
+            if mode == ResetMode.CURRENT_TO_INSTANCE_DEFAULTS:
+                param._set(
+                    copy_parameter_value(param.default_value),
+                    context=context,
+                    skip_history=True,
+                    skip_log=True,
+                )
+            elif mode == ResetMode.INSTANCE_TO_CLASS:
+                param.reset()
+            elif mode == ResetMode.ALL_TO_CLASS_DEFAULTS:
+                param.reset()
+                param._set(
+                    copy_parameter_value(param.default_value),
+                    context=context,
+                    skip_history=True,
+                    skip_log=True,
+                )
 
     def _initialize_from_context(self, context, base_context=Context(execution_id=None), override=True, visited=None):
         if visited is None:
