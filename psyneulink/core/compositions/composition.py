@@ -2148,7 +2148,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             List of Composition Nodes with `NodeRole` *role* : List(`Mechanisms <Mechanism>` and
             `Compositions <Composition>`)
         """
-        if role not in NodeRole:
+        if role is None or role not in NodeRole:
             raise CompositionError('Invalid NodeRole: {0}'.format(role))
 
         try:

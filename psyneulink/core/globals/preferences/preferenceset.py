@@ -641,7 +641,8 @@ class PreferenceSet(object):
                 if OK:
                     continue
                 # Skip validation of value of these, as they may differ for different LogEntry classes
-                elif (log_entry_attribute is 'ALL' or log_entry_attribute is 'DEFAULTS'):
+                elif (log_entry_attribute == 'ALL' or
+                      log_entry_attribute == 'DEFAULTS'):
                     continue
                 else:
                     # Value of attribute from candidate's LogEntry does not match the value in Globals.Log.LogEntry

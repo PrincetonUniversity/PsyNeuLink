@@ -13,13 +13,19 @@ os:
 dist: bionic
 
 env:
-  matrix:
+  jobs:
+    - PYTHON=3.8.0
     - PYTHON=3.7.5
     - PYTHON=3.6.8
   global:
     - PYTHONWARNINGS="ignore::DeprecationWarning"
     - PIP_PROGRESS_BAR="off"
     - COVERALLS_PARALLEL=true
+
+jobs:
+  exclude:
+    - env: PYTHON=3.8.0
+      os: osx
 
 # Cache downloaded(built) python packages
 # and homebrew downloads
@@ -59,7 +65,20 @@ before_install:
   - |
     # Install venv on Linux using Ubuntu distributed python
     if [ "$TRAVIS_OS_NAME" == "linux" ]; then
-      sudo apt-get install -y python${PYTHON%.*}-dev python${PYTHON%.*}-venv
+      if [ ${PYTHON%.*} == "3.8" ]; then
+        # There are a lot fewer wheels distributed for python3.8.
+        # We end up building a lot of them locally. Install the dev packages
+        EXTRA_PKGS="gfortran llvm-8-dev liblapack-dev python3.8-distutils"
+        sudo apt-add-repository -y ppa:deadsnakes/ppa
+        sudo apt-get update
+        export LLVM_CONFIG=llvm-config-8
+        export CXXFLAGS=-fPIC
+        # Drop torch for now
+        sed -i '/torch/d' requirements.txt
+        # Cython is needed to build scikit-learn
+        EXTRA_PIP="cython"
+      fi
+      sudo apt-get install -y python${PYTHON%.*}-dev python${PYTHON%.*}-venv $EXTRA_PKGS
       python${PYTHON%.*} -m venv $HOME/venv
       # Provide fake xdg-open
       echo "#!/bin/sh" > $HOME/venv/bin/xdg-open
@@ -70,6 +89,11 @@ before_install:
   - python --version
   - pip install -U pip
   - pip --version
+  - |
+    # Install undeclared dependencies
+    if [ "x$EXTRA_PIP" != "x" ]; then
+      pip install $EXTRA_PIP
+    fi
 
 install:
   - pip install coveralls

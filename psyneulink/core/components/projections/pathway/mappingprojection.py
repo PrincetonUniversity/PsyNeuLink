@@ -637,7 +637,7 @@ class MappingProjection(PathwayProjection_Base):
         # *LEARNING* or *LEARNING_PROJECTION* keyword, LearningProjection subclass, or instance of a LearningPojection
         from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
         if (isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX], tuple) and
-                    len(self.paramsCurrent[FUNCTION_PARAMS][MATRIX]) is 2 and
+                    len(self.paramsCurrent[FUNCTION_PARAMS][MATRIX]) == 2 and
                 (self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1] in {LEARNING, LEARNING_PROJECTION}
                  or isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], LearningProjection) or
                      (inspect.isclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]) and
