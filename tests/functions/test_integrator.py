@@ -4,7 +4,6 @@ import pytest
 
 import psyneulink.core.components.functions.statefulfunctions.integratorfunctions as Functions
 import psyneulink.core.llvm as pnlvm
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.function import FunctionError
 
 SIZE=1000
@@ -99,12 +98,12 @@ def test_ptx_cuda(func, variable, params, expected, benchmark):
     benchmark(m.cuda_execute, variable)
 
 def test_integrator_function_no_default_variable_and_params_len_more_than_1():
-    I = AdaptiveIntegrator(rate=[.1, .2, .3])
+    I = Functions.AdaptiveIntegrator(rate=[.1, .2, .3])
     I.defaults.variable = np.array([0,0,0])
 
 def test_integrator_function_default_variable_len_1_but_user_specified_and_params_len_more_than_1():
     with pytest.raises(FunctionError) as error_text:
-        AdaptiveIntegrator(default_variable=[1], rate=[.1, .2, .3])
+        Functions.AdaptiveIntegrator(default_variable=[1], rate=[.1, .2, .3])
     error_msg_a = 'The length (3) of the array specified for the rate parameter'
     error_msg_b = 'must match the length (1) of the default input ([1])'
     assert error_msg_a in str(error_text.value)
@@ -112,7 +111,7 @@ def test_integrator_function_default_variable_len_1_but_user_specified_and_param
 
 def test_integrator_function_default_variable_and_params_len_more_than_1_error():
     with pytest.raises(FunctionError) as error_text:
-        AdaptiveIntegrator(default_variable=[0,0], rate=[.1, .2, .3])
+        Functions.AdaptiveIntegrator(default_variable=[0,0], rate=[.1, .2, .3])
     error_msg_a = 'The length (3) of the array specified for the rate parameter'
     error_msg_b = 'must match the length (2) of the default input ([0 0])'
     assert error_msg_a in str(error_text.value)
@@ -120,7 +119,7 @@ def test_integrator_function_default_variable_and_params_len_more_than_1_error()
 
 def test_integrator_function_with_params_of_different_lengths():
     with pytest.raises(FunctionError) as error_text:
-        AdaptiveIntegrator(rate=[.1, .2, .3], offset=[.4,.5])
+        Functions.AdaptiveIntegrator(rate=[.1, .2, .3], offset=[.4,.5])
     error_msg_a = "The parameters with len>1 specified for AdaptiveIntegrator Function"
     error_msg_b = "(['rate', 'offset']) don't all have the same length"
     assert error_msg_a in str(error_text.value)
@@ -128,7 +127,7 @@ def test_integrator_function_with_params_of_different_lengths():
 
 def test_integrator_function_with_default_variable_and_params_of_different_lengths():
     with pytest.raises(FunctionError) as error_text:
-        AdaptiveIntegrator(default_variable=[0,0,0], rate=[.1, .2, .3], offset=[.4,.5])
+        Functions.AdaptiveIntegrator(default_variable=[0,0,0], rate=[.1, .2, .3], offset=[.4,.5])
     error_msg_a = "The following parameters with len>1 specified for AdaptiveIntegrator Function"
     error_msg_b = "don't have the same length as its 'default_variable' (3): ['offset']."
     assert error_msg_a in str(error_text.value)
