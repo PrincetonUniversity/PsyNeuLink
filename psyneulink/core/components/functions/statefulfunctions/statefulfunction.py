@@ -455,10 +455,11 @@ class StatefulFunction(Function_Base): #  --------------------------------------
 
         # create all stateful attributes and initialize their values to the current values of their
         # corresponding initializer attributes
-        for i in range(len(self.stateful_attributes)):
-            attr_name = self.stateful_attributes[i]
-            initializer_value = getattr(self, self.initializers[i]).copy()
-            setattr(self, attr_name, initializer_value)
+        for i, attr_name in enumerate(self.stateful_attributes):
+            # FIXME: HACK: Do not reinitialize random_state
+            if attr_name != "random_state":
+                initializer_value = getattr(self, self.initializers[i]).copy()
+                setattr(self, attr_name, initializer_value)
 
         self.has_initializers = True
 
@@ -557,12 +558,13 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         # rebuilding value rather than simply returning reinitialization_values in case any of the stateful
         # attrs are modified during assignment
         value = []
-        for i in range(len(self.stateful_attributes)):
-            setattr(self, self.stateful_attributes[i], reinitialization_values[i])
-            getattr(self.parameters, self.stateful_attributes[i]).set(reinitialization_values[i],
-                                                                      context,
-                                                                      override=True)
-            value.append(getattr(self, self.stateful_attributes[i]))
+        for i, attr in enumerate(self.stateful_attributes):
+            # FIXME: HACK: Do not reinitialize random_state
+            if attr != "random_state":
+                setattr(self, attr, reinitialization_values[i])
+                getattr(self.parameters, attr).set(reinitialization_values[i],
+                                                   context, override=True)
+                value.append(getattr(self, self.stateful_attributes[i]))
 
         self.parameters.value.set(value, context, override=True)
         return value

@@ -46,7 +46,7 @@ from psyneulink.core.globals.keywords import \
     MULTIPLICATIVE_PARAM, NOISE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_PORTS, PRODUCT, \
     RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, THRESHOLD
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.utilities import parameter_spec, all_within_range, iscompatible
+from psyneulink.core.globals.utilities import parameter_spec, all_within_range, iscompatible, get_global_seed
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 
@@ -2429,6 +2429,8 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         threshold = Parameter(100.0, modulable=True)
         time_step_size = Parameter(1.0, modulable=True)
         previous_time = Parameter(None, pnl_internal=True)
+        seed = Parameter(None, read_only=True)
+        random_state = Parameter(None, pnl_internal=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -2446,15 +2448,21 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
                  threshold=100.0,
                  time_step_size=1.0,
                  initializer=None,
+                 seed=None,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
 
+        if seed is None:
+            seed = get_global_seed()
+
         if not hasattr(self, "initializers"):
-            self.initializers = ["initializer", "starting_point"]
+            self.initializers = ["initializer", "starting_point", "seed"]
 
         if not hasattr(self, "stateful_attributes"):
-            self.stateful_attributes = ["previous_value", "previous_time"]
+            self.stateful_attributes = ["previous_value", "previous_time", "random_state"]
+
+        random_state = np.random.RandomState([seed])
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
@@ -2464,6 +2472,8 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
                                                   threshold=threshold,
                                                   noise=noise,
                                                   offset=offset,
+                                                  seed=seed,
+                                                  random_state=random_state,
                                                   params=params)
 
         # Assign here as default, for use in initialization of function
@@ -2523,11 +2533,12 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         offset = self.get_current_function_param(OFFSET, context)
         threshold = self.get_current_function_param(THRESHOLD, context)
         time_step_size = self.get_current_function_param(TIME_STEP_SIZE, context)
+        random_state = self.get_current_function_param("random_state", context)
 
         previous_value = np.atleast_2d(self.get_previous_value(context))
 
         value = previous_value + rate * variable * time_step_size \
-                + np.sqrt(time_step_size * noise) * np.random.normal()
+                + np.sqrt(time_step_size * noise) * random_state.normal()
 
         if np.all(abs(value) < threshold):
             adjusted_value = value + offset

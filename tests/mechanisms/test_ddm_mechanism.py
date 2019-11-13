@@ -17,7 +17,7 @@ class TestReinitialize:
     def test_valid(self):
         D = DDM(
             name='DDM',
-            function=DriftDiffusionIntegrator(),
+            function=DriftDiffusionIntegrator(seed=0),
         )
 
         #  returns previous_value + rate * variable * time_step_size  + noise
@@ -28,7 +28,7 @@ class TestReinitialize:
         assert np.allclose(D.output_ports[1].value[0][0], 1.0)
 
         # reinitialize function
-        D.function.reinitialize(2.0, 0.1)
+        D.function.reinitialize(2.0, 0.1, 0)
         assert np.allclose(D.function.value[0], 2.0)
         assert np.allclose(D.function.previous_value, 2.0)
         assert np.allclose(D.function.previous_time, 0.1)
@@ -46,7 +46,7 @@ class TestReinitialize:
         assert np.allclose(D.output_ports[1].value[0][0], 1.0)
 
         # reinitialize mechanism
-        D.reinitialize(2.0, 0.1)
+        D.reinitialize(2.0, 0.1, 0)
         assert np.allclose(D.function.value[0], 2.0)
         assert np.allclose(D.function.previous_value, 2.0)
         assert np.allclose(D.function.previous_time, 0.1)
@@ -262,7 +262,7 @@ def test_DDM_noise_0_5():
 
     val = float(T.execute(stim)[0])
 
-    assert val == 10.67181396275914
+    assert val == 8.194383551861414
 
 # ------------------------------------------------------------------------------------------------
 # TEST 3
@@ -280,7 +280,7 @@ def test_DDM_noise_2_0():
         )
     )
     val = float(T.execute(stim)[0])
-    assert val == 11.34362792551828
+    assert val == 6.388767103722829
 
 # ------------------------------------------------------------------------------------------------
 
