@@ -969,7 +969,6 @@ def run(obj,
 
     return obj.results
 
-
 @tc.typecheck
 def _input_matches_external_input_port_values(input, value_to_compare):
     # input ports are uniform

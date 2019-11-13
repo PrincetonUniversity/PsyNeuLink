@@ -602,9 +602,6 @@ class Projection_Base(Projection):
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
 
-    requiredParamClassDefaultTypes = Component.requiredParamClassDefaultTypes.copy()
-    requiredParamClassDefaultTypes.update({PROJECTION_SENDER: [str, Mechanism, Port]}) # Default sender type
-
     @abc.abstractmethod
     def __init__(self,
                  receiver,
@@ -726,7 +723,7 @@ class Projection_Base(Projection):
             if self not in self.receiver.afferents_info:
                 self.receiver.afferents_info[self] = ConnectionInfo()
 
-       # Validate variable, function and params, and assign params to paramInstanceDefaults
+       # Validate variable, function and params
         # Note: pass name of Projection (to override assignment of componentName in super.__init__)
         super(Projection_Base, self).__init__(default_variable=variable,
                                               function=function,
@@ -741,10 +738,10 @@ class Projection_Base(Projection):
 
         Check:
         - that PROJECTION_SENDER is a Mechanism or Port
-        - if it is different from paramClassDefaults[PROJECTION_SENDER], use it
+        - if it is different from .projection_sender, use it
         - if it is the same or is invalid, check if sender arg was provided to __init__ and is valid
         - if sender arg is valid use it (if PROJECTION_SENDER can't be used);
-        - if both were not provided, use paramClassDefaults[PROJECTION_SENDER]
+        - if both were not provided, use .projection_sender
         - otherwise, if one was not provided and the other is invalid, generate error
         - when done, sender is assigned to self.sender
 
@@ -762,7 +759,7 @@ class Projection_Base(Projection):
         # FIX:         PROJECTION_TYPE SPECIFIED BY THE CORRESPONDING PORT TYPES
 
         if (PROJECTION_SENDER in target_set and
-                not (target_set[PROJECTION_SENDER] in {None, self.paramClassDefaults[PROJECTION_SENDER]})):
+                not (target_set[PROJECTION_SENDER] in {None, self.projection_sender})):
             # If PROJECTION_SENDER is specified it will be the sender
             sender = target_set[PROJECTION_SENDER]
             sender_string = PROJECTION_SENDER
@@ -804,7 +801,7 @@ class Projection_Base(Projection):
         ):
             assert False, \
                 f"PROGRAM ERROR: Invalid specification for {SENDER} ({sender}) of {self.name} " \
-                f"(including paramClassDefaults: {self.paramClassDefaults[PROJECTION_SENDER]})."
+                f"(including class default: {self.projection_sender})."
 
         # If self.sender is specified as a Mechanism (rather than a Port),
         #     get relevant OutputPort and assign it to self.sender
@@ -1033,7 +1030,6 @@ class Projection_Base(Projection):
             **socket_dict
         }
 
-
 @tc.typecheck
 def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_spec=True):
     """Evaluate whether spec is a valid Projection specification
@@ -1199,13 +1195,13 @@ def _parse_projection_spec(projection_spec,
     # Port object or class
     elif (isinstance(projection_spec, Port)
           or (isinstance(projection_spec, type) and issubclass(projection_spec, Port))):
-        proj_spec_dict[PROJECTION_TYPE] = projection_spec.paramClassDefaults[PROJECTION_TYPE]
+        proj_spec_dict[PROJECTION_TYPE] = projection_spec.projection_type
         port_type = projection_spec.__class__
 
     # Mechanism object or class
     elif (isinstance(projection_spec, Mechanism)
           or (isinstance(projection_spec, type) and issubclass(projection_spec, Mechanism))):
-        proj_spec_dict[PROJECTION_TYPE] = projection_spec.outputPortTypes.paramClassDefaults[PROJECTION_TYPE]
+        proj_spec_dict[PROJECTION_TYPE] = projection_spec.outputPortTypes.projection_type
 
     # Dict
     elif isinstance(projection_spec, dict):
@@ -1222,7 +1218,7 @@ def _parse_projection_spec(projection_spec,
     # None
     if not proj_spec_dict[PROJECTION_TYPE]:
         # Assign default type
-        proj_spec_dict[PROJECTION_TYPE] = port_type.paramClassDefaults[PROJECTION_TYPE]
+        proj_spec_dict[PROJECTION_TYPE] = port_type.projection_type
 
         # prefs is not always created when this is called, so check
         try:

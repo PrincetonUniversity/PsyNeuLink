@@ -196,11 +196,6 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         previous_value = Parameter(np.array([0]), pnl_internal=True)
         initializer = Parameter(np.array([0]), pnl_internal=True)
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        NOISE: None,
-        RATE: None
-    })
 
     @handle_external_context()
     @tc.typecheck
@@ -296,11 +291,6 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                                 # self.defaults.variable,
                             )
                         )
-                        # OLD:
-                        # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
-
-                        # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator functions
-                        # to have a rate parameter of type ndarray/list
 
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,

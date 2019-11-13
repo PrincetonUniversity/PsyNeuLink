@@ -305,6 +305,7 @@ class LearningSignal(ModulatorySignal):
     connectsWithAttribute = [PARAMETER_PORTS]
     projectionSocket = RECEIVER
     modulators = []
+    projection_type = LEARNING_PROJECTION
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
@@ -313,11 +314,6 @@ class LearningSignal(ModulatorySignal):
     #     PREFERENCE_SET_NAME: 'OutputPortCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
-    paramClassDefaults = Port_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        PROJECTION_TYPE: LEARNING_PROJECTION,
-        LEARNED_PARAM:None
-    })
     #endregion
 
     class Parameters(ModulatorySignal.Parameters):
@@ -369,7 +365,7 @@ class LearningSignal(ModulatorySignal):
         # Consider adding self to owner.output_ports here (and removing from LearningProjection._instantiate_sender)
         #  (test for it, and create if necessary, as per OutputPorts in LearningProjection._instantiate_sender),
 
-        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
+        # Validate sender (as variable) and params
         super().__init__(owner=owner,
                          reference_value=reference_value,
                          variable=variable,

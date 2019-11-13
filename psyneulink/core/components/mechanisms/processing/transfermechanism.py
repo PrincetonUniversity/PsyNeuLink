@@ -6,7 +6,6 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 # NOTES:
-#  * COULD NOT IMPLEMENT integrator_function in paramClassDefaults (see notes below)
 #  * NOW THAT NOISE AND INTEGRATION_RATE ARE PROPRETIES THAT DIRECTLY REFERERNCE integrator_function,
 #      SHOULD THEY NOW BE VALIDATED ONLY THERE (AND NOT IN TransferMechanism)??
 #  * ARE THOSE THE ONLY TWO integrator PARAMS THAT SHOULD BE PROPERTIES??
@@ -797,8 +796,6 @@ class TransferMechanism(ProcessingMechanism_Base):
     #     }
 
     # TransferMechanism parameter and control signal assignments):
-    paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({NOISE: None})
 
     standard_output_ports = ProcessingMechanism_Base.standard_output_ports.copy()
     standard_output_ports.extend([{NAME: COMBINE,

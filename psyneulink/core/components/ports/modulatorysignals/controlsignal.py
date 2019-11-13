@@ -746,6 +746,7 @@ class ControlSignal(ModulatorySignal):
     connectsWithAttribute = [PARAMETER_PORTS, INPUT_PORTS, OUTPUT_PORTS]
     projectionSocket = RECEIVER
     modulators = []
+    projection_type = CONTROL_PROJECTION
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
@@ -754,12 +755,6 @@ class ControlSignal(ModulatorySignal):
     #     PREFERENCE_SET_NAME: 'OutputPortCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
-    paramClassDefaults = Port_Base.paramClassDefaults.copy()
-    # paramClassDefaults = OutputPort.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        PROJECTION_TYPE: CONTROL_PROJECTION,
-        CONTROLLED_PARAMS:None
-    })
     #endregion
 
     @tc.typecheck
@@ -802,7 +797,7 @@ class ControlSignal(ModulatorySignal):
         # Consider adding self to owner.output_ports here (and removing from ControlProjection._instantiate_sender)
         #  (test for it, and create if necessary, as per OutputPorts in ControlProjection._instantiate_sender),
 
-        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
+        # Validate sender (as variable) and params
         super().__init__(owner=owner,
                          reference_value=reference_value,
                          default_allocation=default_allocation,

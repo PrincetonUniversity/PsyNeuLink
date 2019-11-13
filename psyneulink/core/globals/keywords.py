@@ -87,7 +87,7 @@ __all__ = [
     'OUTPUT_PORT', 'OUTPUT_PORT_PARAMS', 'output_port_spec_to_parameter_name', 'OUTPUT_PORTS', 'OUTPUT_TYPE',
     'OVERRIDE', 'OVERRIDE_PARAM', 'OVERWRITE',
     'OWNER', 'OWNER_EXECUTION_COUNT', 'OWNER_EXECUTION_TIME', 'OWNER_VALUE', 'OWNER_VARIABLE',
-    'PARAM_CLASS_DEFAULTS', 'PARAM_INSTANCE_DEFAULTS', 'PARAMETER_PORT', 'PARAMETER_PORT_PARAMS',
+    'PARAMETER_PORT', 'PARAMETER_PORT_PARAMS',
     'PARAMETER_PORTS', 'PARAMS', 'PARAMS_DICT', 'PATHWAY', 'PATHWAY_PROJECTION', 'PEARSON',
     'PREDICTION_MECHANISM', 'PREDICTION_MECHANISMS', 'PREDICTION_MECHANISM_OUTPUT', 'PREDICTION_MECHANISM_PARAMS',
     'PREDICTION_MECHANISM_TYPE', 'PREFS_ARG', 'PREF_BASE_VALUE', 'PREF_CURRENT_VALUE', 'PREFERENCE_SET',
@@ -510,9 +510,6 @@ DEFERRED_DEFAULT_NAME = 'DEFERRED_DEFAULT_NAME'
 USER_PARAMS = 'user_params' # Parameters available to user for inspection in user_params dict
 FUNCTION = "function" # Parameter name for function, method, or type to instantiate and assign to self.execute
 FUNCTION_PARAMS  = "function_params" # Parameters used to instantiate or assign to a FUNCTION
-
-PARAM_CLASS_DEFAULTS = "paramClassDefaults"        # "Factory" default params for a Function
-PARAM_INSTANCE_DEFAULTS = "paramInstanceDefaults" # Parameters used to instantiate a Function; supercede paramClassDefaults
 
 FUNCTION_CHECK_ARGS = 'super._check_args' # Use for "context" arg
 FUNCTION_OUTPUT_TYPE_CONVERSION = "enable_output_type_conversion"  # Used in Function Components to set output type

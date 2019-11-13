@@ -151,11 +151,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         """
         function = Parameter(AdaptiveIntegrator(rate=0.5), stateful=False, loggable=False)
 
-    paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({
-    #     OUTPUT_PORTS:[PREDICTION_MECHANISM_OUTPUT]
-    # })
-
+        #
     @tc.typecheck
     def __init__(self,
                  default_variable=None,

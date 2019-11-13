@@ -260,9 +260,6 @@ class KohonenMechanism(TransferMechanism):
             structural=True,
         )
 
-    paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
-    paramClassDefaults.update({'function': Linear})  # perhaps hacky? not sure (7/10/17 CW)
-
     standard_output_ports = TransferMechanism.standard_output_ports.copy()
     standard_output_ports.extend([{NAME:MAXIMUM_ACTIVITY,
                                     VARIABLE:(OWNER_VALUE,0),

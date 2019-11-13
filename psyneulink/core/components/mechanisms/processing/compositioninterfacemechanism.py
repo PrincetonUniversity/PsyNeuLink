@@ -104,10 +104,6 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         PREFERENCE_SET_NAME: 'CompositionInterfaceMechanismCustomClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({})
-    paramNames = paramClassDefaults.keys()
-
     class Parameters(ProcessingMechanism_Base.Parameters):
         function = Identity
 

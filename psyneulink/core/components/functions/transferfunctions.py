@@ -225,8 +225,6 @@ class Identity(TransferFunction):  # -------------------------------------------
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -421,11 +419,6 @@ class Linear(TransferFunction):  # ---------------------------------------------
         """
         slope = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         intercept = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        PARAMETER_PORT_PARAMS: None
-    })
 
     @tc.typecheck
     def __init__(self,
@@ -645,8 +638,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
     componentName = EXPONENTIAL_FUNCTION
 
     bounds = (0, None)
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Parameters(TransferFunction.Parameters):
         """
@@ -909,7 +900,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
     bounds = (0, 1)
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     _model_spec_class_name_is_generic = True
 
@@ -1212,8 +1202,6 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
     bounds = (0, 1)
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     class Parameters(TransferFunction.Parameters):
         """
             Attributes
@@ -1459,7 +1447,6 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
     bounds = (None,None)
 
-
     class Parameters(TransferFunction.Parameters):
         """
             Attributes
@@ -1487,7 +1474,6 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         leak = Parameter(0.0, modulable=True)
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
@@ -1694,8 +1680,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     # parameter_keywords.update({STANDARD_DEVIATION, BIAS, SCALE, OFFSET})
 
     bounds = (None,None)
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Parameters(TransferFunction.Parameters):
         """
@@ -1966,8 +1950,6 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
     # parameter_keywords.update({VARIANCE, BIAS, SCALE, OFFSET})
 
     bounds = (None,None)
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Parameters(TransferFunction.Parameters):
         """
@@ -2251,7 +2233,6 @@ class SoftMax(TransferFunction):
 
     bounds = (0, 1)
 
-
     class Parameters(TransferFunction.Parameters):
         """
             Attributes
@@ -2301,8 +2282,6 @@ class SoftMax(TransferFunction):
                 return None
             else:
                 return 'not one of {0}'.format(options)
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
@@ -2669,8 +2648,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     DEFAULT_FILLER_VALUE = 0
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     class Parameters(TransferFunction.Parameters):
         """
             Attributes
@@ -2910,8 +2887,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                                    self.owner_name,
                                                    MATRIX_KEYWORD_NAMES))
                 else:
-                    message += "Unrecognized param ({}) specified for the {} function of {}\n". \
-                        format(param_name, self.componentName, self.owner_name)
                     continue
             if message:
                 raise FunctionError(message)

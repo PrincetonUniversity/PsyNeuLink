@@ -669,7 +669,6 @@ def _instantiate_error_signal_projection(sender, receiver):
                              matrix=IDENTITY_MATRIX,
                              name=sender.owner.name + ' to ' + ERROR_SIGNAL)
 
-
 @tc.typecheck
 def _get_learning_mechanisms(mech:Mechanism, composition=None):
     """Return LearningMechanisms for all Projections to and from the specified Mechanism.

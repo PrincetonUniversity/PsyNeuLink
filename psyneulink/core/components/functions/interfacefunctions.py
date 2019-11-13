@@ -95,12 +95,6 @@ class InterfacePortMap(InterfaceFunction):
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        FUNCTION_OUTPUT_TYPE_CONVERSION: True,
-        PARAMETER_PORT_PARAMS: None
-    })
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,

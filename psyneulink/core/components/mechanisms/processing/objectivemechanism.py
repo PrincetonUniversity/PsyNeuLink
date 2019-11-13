@@ -551,10 +551,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         )
 
     # ObjectiveMechanism parameter and control signal assignments):
-    paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        FUNCTION: LinearCombination,
-        })
 
     standard_output_ports = ProcessingMechanism_Base.standard_output_ports.copy()
     standard_output_ports.extend([{NAME:OUTCOME, VARIABLE:(OWNER_VALUE, 0)}])

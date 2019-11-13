@@ -192,11 +192,6 @@ class OneHot(SelectionFunction):
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        PARAMETER_PORT_PARAMS: None
-    })
-
     class Parameters(SelectionFunction.Parameters):
         """
             Attributes

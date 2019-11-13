@@ -264,9 +264,6 @@ class AutoAssociativeProjection(MappingProjection):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
-    # necessary?
-    paramClassDefaults = MappingProjection.paramClassDefaults.copy()
-
     @tc.typecheck
     def __init__(self,
                  owner=None,

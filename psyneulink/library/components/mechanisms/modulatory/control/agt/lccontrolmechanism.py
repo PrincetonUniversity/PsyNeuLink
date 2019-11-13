@@ -652,10 +652,7 @@ class LCControlMechanism(ControlMechanism):
         base_level_gain = Parameter(0.5, modulable=True)
         scaling_factor_gain = Parameter(3.0, modulable=True)
 
-    paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
-    paramClassDefaults.update({FUNCTION:FitzHughNagumoIntegrator,
-                               CONTROL_PROJECTIONS: None,
-                               })
+        modulated_mechanisms = None
 
     @tc.typecheck
     def __init__(self,

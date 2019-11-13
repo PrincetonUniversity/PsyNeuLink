@@ -72,7 +72,7 @@ ParameterPorts for the parameters of a Mechanism or Projection are listed in its
 COMMENT:
     FOR DEVELOPERS: The instantiation of ParameterPorts for all of the `user_params` of a Component can be
                     suppressed if a *PARAMETER_PORTS* entry is included and set to `NotImplemented` in the
-                    paramClassDefaults dictionary of its class definition;  the instantiation of a ParameterPort
+                    default of its class Parameters;  the instantiation of a ParameterPort
                     for an individual parameter in user_params can be suppressed by including it in
                     exclude_from_parameter_ports for the class (or one of its parent classes)
                     (see LearningProjection and EVCControlMechanism for examples, and `note
@@ -481,6 +481,7 @@ class ParameterPort(Port_Base):
     projectionSocket = SENDER
     modulators = [CONTROL_SIGNAL, LEARNING_SIGNAL]
     canReceive = modulators
+    projection_type = CONTROL_PROJECTION
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
@@ -489,8 +490,6 @@ class ParameterPort(Port_Base):
     #     PREFERENCE_SET_NAME: 'ParameterPortCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
-    paramClassDefaults = Port_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_TYPE: CONTROL_PROJECTION})
     #endregion
 
     tc.typecheck
@@ -523,7 +522,7 @@ class ParameterPort(Port_Base):
 
         self.reference_value = reference_value
 
-        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
+        # Validate sender (as variable) and params
         # Note: pass name of Mechanism (to override assignment of componentName in super.__init__)
         super(ParameterPort, self).__init__(owner,
                                             variable=variable,
@@ -608,7 +607,6 @@ class ParameterPort(Port_Base):
                           f' of {projection.sender.owner.name} to {self.name} {self.__class__.__name__} of '
                           f'{self.owner.name} already exists; will ignore additional one specified ({projection.name}).')
         return duplicate
-
 
     @tc.typecheck
     def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
@@ -806,7 +804,6 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
                                                      name=owner.name + '.parameter_ports')
 
     # Check that all ParameterPorts for owner have not been explicitly suppressed
-    #    (by assigning `NotImplemented` to PARAMETER_PORTS entry of paramClassDefaults)
     try:
         if owner.parameter_ports is NotImplemented:
             return
@@ -848,7 +845,7 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
                 a dict with the name FUNCTION_PARAMS (otherwise exclude)
         function or method
             IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
-            (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
+            (this is because self.defaults.function could be a class rather than an bound method;
             i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
     # FIX: UPDATE WITH MODULATION_MODS
     # FIX:    CHANGE TO IntegratorFunction FUnction ONCE LearningProjection MODULATES ParameterPort Function:
@@ -944,7 +941,7 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
             # IMPLEMENTATION NOTE:
             # The following is necessary since, if ANY parameters of a function are specified, entries are made
             #    in the FUNCTION_PARAMS dict of its owner for ALL of the function's params;  however, their values
-            #    will be set to None (and there may not be any relevant paramClassDefaults or a way to determine a
+            #    will be set to None (and there may not be a way to determine a
             #    default; e.g., the length of the array for the weights or exponents params for LinearCombination).
             #    Therefore, None will be passed as the reference_value, which will cause validation of the
             #    ParameterPort's function (in _instantiate_function()) to fail.

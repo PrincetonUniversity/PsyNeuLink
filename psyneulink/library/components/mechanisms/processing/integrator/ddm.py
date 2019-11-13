@@ -711,9 +711,6 @@ class DDM(ProcessingMechanism):
 
         initializer = np.array([[0]])
 
-    paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        OUTPUT_PORTS: None})
 
     standard_output_ports =[{NAME: DECISION_VARIABLE,},           # Upper or lower threshold for Analtyic function
                             {NAME: RESPONSE_TIME},                # TIME_STEP within TRIAL for Integrator function

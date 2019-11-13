@@ -986,17 +986,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
             structural=True,
         )
 
-    paramClassDefaults = ModulatoryMechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        CONTROL_PROJECTIONS: None,
-        INPUT_PORTS:input_port_names,
-        OUTPUT_PORTS:[{NAME:ERROR_SIGNAL,
-                        PORT_TYPE:OUTPUT_PORT,
-                        VARIABLE: (OWNER_VALUE, 1)},
-                       {NAME:LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
-                        VARIABLE: (OWNER_VALUE, 0)}
-                       ]})
-
     @tc.typecheck
     def __init__(self,
                  # default_variable:tc.any(list, np.ndarray),
@@ -1222,7 +1211,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
         # Instantiate LearningSignals if they are specified, and assign to self.output_ports
         # Notes:
         #    - if any LearningSignals are specified they will replace the default LEARNING_SIGNAL OutputPort
-        #        in the OUTPUT_PORTS entry of paramClassDefaults;
         #    - the LearningSignals are appended to _output_ports, leaving ERROR_SIGNAL as the first entry.
 
         # Instantiate LearningSignals and assign to self.output_ports

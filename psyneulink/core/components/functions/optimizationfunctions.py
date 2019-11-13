@@ -843,8 +843,6 @@ class GradientOptimization(OptimizationFunction):
         direction = ASCENT
         convergence_criterion = Parameter(VALUE, pnl_internal=True)
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -1246,8 +1244,6 @@ class GridSearch(OptimizationFunction):
         random_state = Parameter(None, modulable=False, stateful=True, pnl_internal=True)
 
         direction = MAXIMIZE
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     # TODO: should save_values be in the constructor if it's ignored?
     # is False or True the correct value?
@@ -1915,8 +1911,6 @@ class GaussianProcess(OptimizationFunction):
 
         direction = MAXIMIZE
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     # TODO: should save_values be in the constructor if it's ignored?
     # is False or True the correct value?
     @tc.typecheck
@@ -2179,8 +2173,6 @@ class ParamEstimationFunction(OptimizationFunction):
         variable = Parameter([[0], [0]], read_only=True)
         save_samples = True
         save_values = True
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,

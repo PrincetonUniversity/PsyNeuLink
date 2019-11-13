@@ -563,7 +563,6 @@ class Process(Process_Base):
         classPreference : PreferenceSet : default ProcessPreferenceSet instantiated in __init__()
         classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + class_defaults.variable = inputValueSystemDefault                     # Used as default input value to Process)
-        + paramClassDefaults = {PATHWAY: []}
 
         Class methods
         -------------
@@ -852,18 +851,13 @@ class Process(Process_Base):
         target_input_ports = []
         systems = []
 
-    paramClassDefaults = Component.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        '_context': None,
-        PATHWAY: None,
-        'input':[],
-        'process_input_ports': [],
-        'targets': None,
-        'target_input_ports': [],
-        'systems': [],
-        '_phaseSpecMax': 0,
-        '_isControllerProcess': False
-    })
+        initial_values = None
+        clamp_input = None
+        default_projection_matrix = DEFAULT_PROJECTION_MATRIX
+        learning = None
+
+        learning_rate = None
+        target = None
 
     @tc.typecheck
     def __init__(self,
@@ -907,6 +901,8 @@ class Process(Process_Base):
             default_variable = pathway[0].defaults.variable
 
         self.default_execution_id = self.name
+        self._phaseSpecMax = 0
+        self._isControllerProcess = False
 
         super(Process, self).__init__(default_variable=default_variable,
                                       size=size,

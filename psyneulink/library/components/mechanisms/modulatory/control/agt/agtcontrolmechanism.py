@@ -245,11 +245,6 @@ class AGTControlMechanism(ControlMechanism):
     #     PREFERENCE_SET_NAME: 'ControlMechanismClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
-    paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
-    paramClassDefaults.update({CONTROL_SIGNALS: None,
-                               CONTROL_PROJECTIONS: None
-                               })
-
     @tc.typecheck
     def __init__(self,
                  system:tc.optional(System_Base)=None,

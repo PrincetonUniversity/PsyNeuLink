@@ -702,10 +702,6 @@ class OptimizationControlMechanism(ControlMechanism):
         # search_space = None
         control_allocation_search_space = None
 
-    paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
-    paramClassDefaults.update({PARAMETER_PORTS: NotImplemented}) # This suppresses parameterPorts
-
-
     @tc.typecheck
     def __init__(self,
                  agent_rep=None,

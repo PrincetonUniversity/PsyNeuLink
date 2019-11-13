@@ -120,8 +120,6 @@ class NormalDist(DistributionFunction):
 
     componentName = NORMAL_DIST_FUNCTION
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     class Parameters(DistributionFunction.Parameters):
         """
             Attributes
@@ -295,8 +293,6 @@ class UniformToNormalDist(DistributionFunction):
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -397,8 +393,6 @@ class ExponentialDist(DistributionFunction):
 
     """
     componentName = EXPONENTIAL_DIST_FUNCTION
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Parameters(DistributionFunction.Parameters):
         """
@@ -506,8 +500,6 @@ class UniformDist(DistributionFunction):
 
     """
     componentName = UNIFORM_DIST_FUNCTION
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Parameters(DistributionFunction.Parameters):
         """
@@ -633,8 +625,6 @@ class GammaDist(DistributionFunction):
 
     componentName = GAMMA_DIST_FUNCTION
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     class Parameters(DistributionFunction.Parameters):
         """
             Attributes
@@ -757,8 +747,6 @@ class WaldDist(DistributionFunction):
      """
 
     componentName = WALD_DIST_FUNCTION
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Parameters(DistributionFunction.Parameters):
         """
@@ -950,8 +938,6 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
     """
 
     componentName = DRIFT_DIFFUSION_ANALYTICAL_FUNCTION
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Parameters(DistributionFunction.Parameters):
         """

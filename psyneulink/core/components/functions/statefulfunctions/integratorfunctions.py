@@ -212,8 +212,6 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         previous_value = Parameter(np.array([0]), pnl_internal=True)
         initializer = Parameter(np.array([0]), pnl_internal=True)
 
-    paramClassDefaults = StatefulFunction.paramClassDefaults.copy()
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -538,13 +536,6 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         rate = Parameter(None, modulable=True, aliases=[MULTIPLICATIVE_PARAM], function_arg=True)
         increment = Parameter(None, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        RATE: None,
-        INCREMENT: None,
-        NOISE: None,
-    })
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -786,13 +777,6 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
 
     componentName = SIMPLE_INTEGRATOR_FUNCTION
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        RATE: None,
-        NOISE: None,
-        OFFSET: None
-    })
-
 
     class Parameters(IntegratorFunction.Parameters):
         """
@@ -1031,13 +1015,6 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
     """
 
     componentName = ADAPTIVE_INTEGRATOR_FUNCTION
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        RATE: None,
-        NOISE: None,
-        OFFSET: None
-    })
 
     class Parameters(IntegratorFunction.Parameters):
         """
@@ -1454,7 +1431,6 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
 
     componentName = DUAL_ADAPTIVE_INTEGRATOR_FUNCTION
 
-
     class Parameters(IntegratorFunction.Parameters):
         """
             Attributes
@@ -1568,13 +1544,6 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         long_term_logistic = None
 
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        RATE: None,
-        # NOISE: None,
-        OFFSET: None
-    })
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -1670,11 +1639,6 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                                 self.defaults.variable,
                             )
                         )
-                        # OLD:
-                        # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
-
-                        # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator functions
-                        # to have a rate parameter of type ndarray/list
 
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
@@ -1997,14 +1961,6 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
     """
 
     componentName = INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        RATE: None,
-        DECAY: None,
-        REST: None,
-        NOISE: None,
-    })
 
 
     class Parameters(IntegratorFunction.Parameters):
@@ -2374,7 +2330,6 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
 
     componentName = DRIFT_DIFFUSION_INTEGRATOR_FUNCTION
 
-
     class Parameters(IntegratorFunction.Parameters):
         """
             Attributes
@@ -2424,12 +2379,6 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         threshold = Parameter(100.0, modulable=True)
         time_step_size = Parameter(1.0, modulable=True)
         previous_time = Parameter(None, pnl_internal=True)
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        NOISE: None,
-        RATE: None
-    })
 
     @tc.typecheck
     def __init__(self,
@@ -2722,7 +2671,6 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
 
     componentName = ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION
 
-
     class Parameters(IntegratorFunction.Parameters):
         """
             Attributes
@@ -2772,12 +2720,6 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         time_step_size = Parameter(1.0, modulable=True)
         starting_point = 0.0
         previous_time = Parameter(0.0, pnl_internal=True)
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        NOISE: None,
-        RATE: None
-    })
 
     @tc.typecheck
     def __init__(self,
@@ -3050,13 +2992,6 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM], function_arg=True)
         offset = Parameter(None, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
         time_step_size = Parameter(0.1, modulable=True, function_arg=True)
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        RATE: None,
-        OFFSET: None,
-        NOISE: None
-    })
 
     @tc.typecheck
     def __init__(self,
@@ -3684,12 +3619,6 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         previous_w = Parameter(np.array([1.0]), pnl_internal=True)
         previous_v = Parameter(np.array([1.0]), pnl_internal=True)
         previous_time = Parameter(0.0, pnl_internal=True)
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        NOISE: None,
-        INCREMENT: None,
-    })
 
     @tc.typecheck
     def __init__(self,

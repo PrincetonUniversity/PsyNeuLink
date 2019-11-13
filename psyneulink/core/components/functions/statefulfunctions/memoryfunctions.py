@@ -192,12 +192,6 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         history = None
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        NOISE: None,
-        RATE: None
-    })
-
 
     @tc.typecheck
     def __init__(self,
@@ -684,14 +678,6 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        NOISE: None,
-        RATE: None,
-        RETRIEVAL_PROB: 1.0,
-        STORAGE_PROB: 1.0
-    })
 
 
     @tc.typecheck

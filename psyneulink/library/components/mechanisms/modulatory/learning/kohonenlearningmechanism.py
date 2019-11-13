@@ -330,14 +330,6 @@ class KohonenLearningMechanism(LearningMechanism):
         learning_timing = LearningTiming.EXECUTION_PHASE
         modulation = ADDITIVE
 
-    paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        CONTROL_PROJECTIONS: None,
-        INPUT_PORTS:input_port_names,
-        OUTPUT_PORTS:[{NAME:LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
-                        VARIABLE: (OWNER_VALUE,0)}
-                       ]})
-
     @tc.typecheck
     def __init__(self,
                  default_variable:tc.any(list, np.ndarray),

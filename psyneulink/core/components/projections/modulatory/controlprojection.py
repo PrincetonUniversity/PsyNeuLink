@@ -247,10 +247,8 @@ class ControlProjection(ModulatoryProjection_Base):
             pnl_internal=True
         )
 
-    paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        PROJECTION_SENDER: ControlMechanism,
-    })
+
+    projection_sender = ControlMechanism
 
     @tc.typecheck
     def __init__(self,
@@ -275,7 +273,7 @@ class ControlProjection(ModulatoryProjection_Base):
                     receiver.initialization_status == ContextFlags.DEFERRED_INIT):
             self.initialization_status = ContextFlags.DEFERRED_INIT
 
-        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
+        # Validate sender (as variable) and params, and assign to variable
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
         # super(ControlSignal_Base, self).__init__(sender=sender,
         super(ControlProjection, self).__init__(sender=sender,

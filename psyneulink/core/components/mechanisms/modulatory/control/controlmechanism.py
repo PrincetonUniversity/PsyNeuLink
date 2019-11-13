@@ -1097,6 +1097,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         modulation = Parameter(MULTIPLICATIVE, pnl_internal=True)
 
         objective_mechanism = Parameter(None, stateful=False, loggable=False, structural=True)
+        system = None
 
         input_ports = Parameter(
             [OUTCOME],
@@ -1176,10 +1177,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
             if input_ports is None:
                 return
             validate_monitored_port_spec(self._owner._owner, input_ports)
-
-    paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        CONTROL_PROJECTIONS: None})
 
 
     @tc.typecheck
@@ -1280,8 +1277,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
         if SYSTEM in target_set:
             if not isinstance(target_set[SYSTEM], System_Base):
                 raise KeyError
-            else:
-                self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
 
         if OBJECTIVE_MECHANISM in target_set and \
                 target_set[OBJECTIVE_MECHANISM] is not None and\
@@ -1593,7 +1588,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 return
 
             # Warn if *any* projections from control_signal are identical to ones in an existing control_signal
-            projection_type = existing_ctl_sig.paramClassDefaults[PROJECTION_TYPE]
+            projection_type = existing_ctl_sig.projection_type
             if any(
                     any(new_p.receiver == existing_p.receiver
                         for existing_p in existing_ctl_sig.efferents) for new_p in control_signal.efferents):

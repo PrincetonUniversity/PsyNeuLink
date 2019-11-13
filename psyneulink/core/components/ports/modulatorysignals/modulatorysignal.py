@@ -24,7 +24,7 @@ Contents
   * `ModulatorySignal_Execution`
   * `ModulatorySignal_Examples`
   * `ModulatorySignal_Class_Reference`
-  
+
 
 .. _ModulatorySignal_Overview:
 
@@ -558,8 +558,6 @@ class ModulatorySignal(OutputPort):
     # classPreferences = {
     #     PREFERENCE_SET_NAME: 'OutputPortCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
-
-    paramClassDefaults = Port_Base.paramClassDefaults.copy()
 
     def __init__(self,
                  owner=None,
