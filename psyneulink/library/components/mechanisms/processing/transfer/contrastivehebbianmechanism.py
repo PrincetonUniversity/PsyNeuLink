@@ -1344,3 +1344,11 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     @property
     def recurrent_activity(self):
         return self.current_activity
+
+    @property
+    def recurrent_size(self):
+        return self._recurrent_size
+
+    @recurrent_size.setter
+    def recurrent_size(self, value):
+        self._recurrent_size = value

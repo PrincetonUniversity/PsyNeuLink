@@ -1021,6 +1021,10 @@ class RecurrentTransferMechanism(TransferMechanism):
             value = self.defaults.value
         self.parameters.previous_value._set(value, context)
 
+    @property
+    def recurrent_size(self):
+        return len(self.defaults.variable[0])
+
     # 8/2/17 CW: this property is not optimal for performance: if we want to optimize performance we should create a
     # single flag to check whether to get matrix from auto and hetero?
     @property
