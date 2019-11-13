@@ -6,7 +6,8 @@ import psyneulink.core.components.functions.statefulfunctions.integratorfunction
 import psyneulink.core.llvm as pnlvm
 from psyneulink.core.components.functions.function import FunctionError
 
-SIZE=1000
+np.random.seed(0)
+SIZE=10
 test_var = np.random.rand(SIZE)
 test_initializer = np.random.rand(SIZE)
 test_noise_arr = np.random.rand(SIZE)
@@ -21,11 +22,24 @@ def SimpleIntFun(init, value, iterations, rate, noise, offset, **kwargs):
         val = val + (rate * value) + noise + offset
     return val
 
+
 def AdaptiveIntFun(init, value, iterations, rate, noise, offset, **kwargs):
     val = np.full_like(value, init)
     for i in range(iterations):
         val = (1 - rate) * val + rate * value + noise + offset
     return val
+
+
+def DriftIntFun(init, value, iterations, **kwargs):
+    assert iterations == 3
+    if "initializer" not in kwargs:
+        return ([0.52012043, 0.65216743, 0.56293865, 0.51700106, 0.42078612,
+                 0.59717009, 0.43184381, 0.79231601, 0.84937253, 0.38887017],
+                [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.])
+    else:
+        return ([1.31184547, 1.18106235, 1.13098321, 1.4425977 , 0.49182217,
+                 0.68429939, 0.45206221, 1.62493585, 1.62752928, 1.25888232],
+                [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.])
 
 
 GROUP_PREFIX="IntegratorFunction "
@@ -42,6 +56,7 @@ GROUP_PREFIX="IntegratorFunction "
 @pytest.mark.parametrize("func", [
     (Functions.AdaptiveIntegrator, AdaptiveIntFun),
     (Functions.SimpleIntegrator, SimpleIntFun),
+    (Functions.DriftDiffusionIntegrator, DriftIntFun),
     ], ids=lambda x: x[0])
 @pytest.mark.parametrize("mode", [
     "Python",
@@ -49,8 +64,11 @@ GROUP_PREFIX="IntegratorFunction "
     pytest.param("PTX", marks=[pytest.mark.llvm, pytest.mark.cuda])])
 @pytest.mark.benchmark
 def test_execute(func, mode, variable, params, benchmark):
-    f = func[0](default_variable=variable, **params)
     benchmark.group = GROUP_PREFIX + func[0].componentName
+    # Filter out illegal combinations
+    if func[0] is Functions.DriftDiffusionIntegrator and not np.isscalar(params["noise"]):
+        pytest.skip("DDI needs scalar noise")
+    f = func[0](default_variable=variable, **params)
     if mode == "Python":
         ex = f
     elif mode == "LLVM":
@@ -60,7 +78,9 @@ def test_execute(func, mode, variable, params, benchmark):
     ex(variable)
     ex(variable)
     res = ex(variable)
-    assert np.allclose(res, func[1](f.initializer, variable, 3, **params))
+    expected = func[1](f.initializer, variable, 3, **params)
+    for r, e in zip(res, expected):
+        assert np.allclose(r, e)
     benchmark(ex, variable)
 
 
