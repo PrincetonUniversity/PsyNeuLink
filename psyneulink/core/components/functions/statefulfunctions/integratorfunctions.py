@@ -2540,12 +2540,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         value = previous_value + rate * variable * time_step_size \
                 + np.sqrt(time_step_size * noise) * random_state.normal()
 
-        if np.all(abs(value) < threshold):
-            adjusted_value = value + offset
-        elif np.all(value >= threshold):
-            adjusted_value = np.atleast_2d(threshold)
-        elif np.all(value <= -threshold):
-            adjusted_value = np.atleast_2d(-threshold)
+        adjusted_value = np.clip(value + offset, -threshold, threshold)
 
         # If this NOT an initialization run, update the old value and time
         # If it IS an initialization run, leave as is
