@@ -1533,12 +1533,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             except KeyError:
                 pass
 
-            # Delete reference to dict created by paramsCurrent -> ParamsDict
-            try:
-                del self._init_args['__pydevd_ret_val_dict']
-            except KeyError:
-                pass
-
             self._init_args['context'] = context
 
             # Complete initialization
