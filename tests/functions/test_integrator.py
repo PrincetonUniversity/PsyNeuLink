@@ -27,75 +27,42 @@ def AdaptiveIntFun(init, value, iterations, rate, noise, offset, **kwargs):
         val = (1 - rate) * val + rate * value + noise + offset
     return val
 
-test_data = [
-    (Functions.AdaptiveIntegrator, test_var, {'rate':RAND0_1, 'noise':RAND2, 'offset':RAND3}, AdaptiveIntFun),
-    (Functions.AdaptiveIntegrator, test_var, {'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}, AdaptiveIntFun),
-    (Functions.AdaptiveIntegrator, test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':RAND2, 'offset':RAND3}, AdaptiveIntFun),
-    (Functions.AdaptiveIntegrator, test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}, AdaptiveIntFun),
-    (Functions.SimpleIntegrator, test_var, {'rate':RAND0_1, 'noise':RAND2, 'offset':RAND3}, SimpleIntFun),
-    (Functions.SimpleIntegrator, test_var, {'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}, SimpleIntFun),
-    (Functions.SimpleIntegrator, test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':RAND2, 'offset':RAND3}, SimpleIntFun),
-    (Functions.SimpleIntegrator, test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}, SimpleIntFun),
-]
-
-# use list, naming function produces ugly names
-names = [
-    "AdaptiveIntegrator",
-    "AdaptiveIntegrator Noise Array",
-    "AdaptiveIntegrator Initializer",
-    "AdaptiveIntegrator Initializer Noise Array",
-    "SimpleIntegrator",
-    "SimpleIntegrator Noise Array",
-    "SimpleIntegrator Initializer",
-    "SimpleIntegrator Initializer Noise Array",
-]
 
 GROUP_PREFIX="IntegratorFunction "
 
+
 @pytest.mark.function
 @pytest.mark.integrator_function
-@pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
+@pytest.mark.parametrize("variable, params", [
+    (test_var, {'rate':RAND0_1, 'noise':RAND2, 'offset':RAND3}),
+    (test_var, {'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}),
+    (test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':RAND2, 'offset':RAND3}),
+    (test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}),
+    ], ids=["SNOISE", "VNOISE", "Initializer-SNOISE", "Initializer-VNOISE"])
+@pytest.mark.parametrize("func", [
+    (Functions.AdaptiveIntegrator, AdaptiveIntFun),
+    (Functions.SimpleIntegrator, SimpleIntFun),
+    ], ids=lambda x: x[0])
+@pytest.mark.parametrize("mode", [
+    "Python",
+    pytest.param("LLVM", marks=pytest.mark.llvm),
+    pytest.param("PTX", marks=[pytest.mark.llvm, pytest.mark.cuda])])
 @pytest.mark.benchmark
-def test_basic(func, variable, params, expected, benchmark):
-    f = func(default_variable=variable, **params)
-    benchmark.group = GROUP_PREFIX + func.componentName
-    f(variable)
-    f(variable)
-    res = f(variable)
-    assert np.allclose(res, expected(f.initializer, variable, 3, **params))
-    benchmark(f, variable)
+def test_execute(func, mode, variable, params, benchmark):
+    f = func[0](default_variable=variable, **params)
+    benchmark.group = GROUP_PREFIX + func[0].componentName
+    if mode == "Python":
+        ex = f
+    elif mode == "LLVM":
+        ex = pnlvm.execution.FuncExecution(f).execute
+    elif mode == "PTX":
+        ex = pnlvm.execution.FuncExecution(f).cuda_execute
+    ex(variable)
+    ex(variable)
+    res = ex(variable)
+    assert np.allclose(res, func[1](f.initializer, variable, 3, **params))
+    benchmark(ex, variable)
 
-
-@pytest.mark.llvm
-@pytest.mark.function
-@pytest.mark.integrator_function
-@pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
-@pytest.mark.benchmark
-def test_llvm(func, variable, params, expected, benchmark):
-    benchmark.group = GROUP_PREFIX + func.componentName
-    f = func(default_variable=variable, **params)
-    m = pnlvm.execution.FuncExecution(f)
-    m.execute(variable)
-    m.execute(variable)
-    res = m.execute(variable)
-    assert np.allclose(res, expected(f.initializer, variable, 3, **params))
-    benchmark(m.execute, variable)
-
-@pytest.mark.llvm
-@pytest.mark.cuda
-@pytest.mark.function
-@pytest.mark.integrator_function
-@pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
-@pytest.mark.benchmark
-def test_ptx_cuda(func, variable, params, expected, benchmark):
-    benchmark.group = GROUP_PREFIX + func.componentName
-    f = func(default_variable=variable, **params)
-    m = pnlvm.execution.FuncExecution(f)
-    m.cuda_execute(variable)
-    m.cuda_execute(variable)
-    res = m.cuda_execute(variable)
-    assert np.allclose(res, expected(f.initializer, variable, 3, **params))
-    benchmark(m.cuda_execute, variable)
 
 def test_integrator_function_no_default_variable_and_params_len_more_than_1():
     I = Functions.AdaptiveIntegrator(rate=[.1, .2, .3])
