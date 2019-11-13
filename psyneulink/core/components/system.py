@@ -628,8 +628,7 @@ class System(System_Base):
         + classPreference (PreferenceSet): ProcessPreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + class_defaults.variable = inputValueSystemDefault                     # Used as default input value to Process)
-        + paramClassDefaults = {PROCESSES: [Mechanism_Base.default_mechanism],
-                                CONTROLLER: None}
+
        Class methods
        -------------
         - _validate_variable(variable, context):  insures that variable is 3D np.array (one 2D for each Process)
@@ -871,18 +870,13 @@ class System(System_Base):
         """
         variable = Parameter(None, pnl_internal=True, constructor_argument='default_variable')
 
-    paramClassDefaults = Component.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        'outputPorts': None,
-        '_phaseSpecMax': 0,
-        'stimulusInputPorts': None,
-        'inputs': None,
-        'current_input': None,
-        'target_input_ports': None,
-        'targets': None,
-        'current_targets': None,
-        'learning': False
-    })
+        processes = None
+        initial_values = None
+        enable_controller = None
+        monitor_for_control = None
+        learning_rate = None
+        targets = None
+
 
     # FIX 5/23/17: ADD control_signals ARGUMENT HERE (AND DOCUMENT IT ABOVE)
     @tc.typecheck
@@ -947,6 +941,9 @@ class System(System_Base):
         self.scheduler = scheduler
         self.scheduler_learning = None
         self.termination_learning = None
+
+        self._phaseSpecMax = 0
+        self.learning = False
 
         register_category(entry=self,
                           base_class=System,
@@ -2246,7 +2243,7 @@ class System(System_Base):
         else:
             controller_specs = []
 
-        # Get system's MONITOR_FOR_CONTROL specifications (specified in paramClassDefaults, so must be there)
+        # Get system's MONITOR_FOR_CONTROL specifications
         system_specs = self.monitor_for_control.copy()
 
         # If controller_specs has a MonitoredOutputPortsOption specification, remove any such spec from system specs

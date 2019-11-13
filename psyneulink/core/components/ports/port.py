@@ -1006,11 +1006,6 @@ class Port_Base(Port):
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
 
-    requiredParamClassDefaultTypes = Component.requiredParamClassDefaultTypes.copy()
-    requiredParamClassDefaultTypes.update({PROJECTION_TYPE: [str, Projection]})   # Default projection type
-    paramClassDefaults = Component.paramClassDefaults.copy()
-    paramClassDefaults.update({PORT_TYPE: None})
-
     @tc.typecheck
     @abc.abstractmethod
     def __init__(self,
@@ -1217,7 +1212,7 @@ class Port_Base(Port):
 
         if PROJECTIONS in request_set and request_set[PROJECTIONS] is not None:
             # if projection specification is an object or class reference, needs to be wrapped in a list
-            #    to be consistent with paramClassDefaults and for consistency of treatment below
+            #    to be consistent with defaults and for consistency of treatment below
             projections = request_set[PROJECTIONS]
             if not isinstance(projections, list):
                 projections = [projections]
@@ -1331,7 +1326,7 @@ class Port_Base(Port):
         from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.core.components.projections.projection import _parse_connection_specs
 
-        default_projection_type = self.paramClassDefaults[PROJECTION_TYPE]
+        default_projection_type = self.projection_type
 
         # If specification is not a list, wrap it in one for consistency of treatment below
         # (since specification can be a list, so easier to treat any as a list)
@@ -1573,8 +1568,8 @@ class Port_Base(Port):
         from psyneulink.core.components.projections.projection import ProjectionTuple, _parse_connection_specs
 
         # FIX: 10/3/17 THIS NEEDS TO BE MADE SPECIFIC TO EFFERENT PROJECTIONS (I.E., FOR WHICH IT CAN BE A SENDER)
-        # default_projection_type = ProjectionRegistry[self.paramClassDefaults[PROJECTION_TYPE]].subclass
-        default_projection_type = self.paramClassDefaults[PROJECTION_TYPE]
+        # default_projection_type = ProjectionRegistry[self.projection_type].subclass
+        default_projection_type = self.projection_type
 
         # projection_object = None # flags whether projection object has been instantiated; doesn't store object
         # projection_type = None   # stores type of projection to instantiate
@@ -2433,7 +2428,6 @@ def _instantiate_port_list(owner,
         ports[port.name] = port
 
     return ports
-
 
 @tc.typecheck
 def _instantiate_port(port_type:_is_port_class,           # Port's type

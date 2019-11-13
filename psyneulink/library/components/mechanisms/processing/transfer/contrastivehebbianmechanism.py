@@ -951,7 +951,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         minus_phase_termination_threshold = Parameter(0.01, modulable=True)
         plus_phase_termination_threshold = Parameter(0.01, modulable=True)
 
-    paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
 
     standard_output_ports = RecurrentTransferMechanism.standard_output_ports.copy()
     standard_output_ports.extend([{NAME:OUTPUT_ACTIVITY,

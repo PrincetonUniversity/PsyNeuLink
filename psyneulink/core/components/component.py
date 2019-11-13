@@ -263,15 +263,6 @@ FIX: STATEMENT ABOVE ABOUT MODIFYING EXECUTION COUNT VIOLATES THIS DEFINITION, A
     (e.g., EXECUTION_COUNT)
 COMMENT
 
-..
-COMMENT:
-  FOR DEVELOPERS:
-    * **paramClassDefaults**
-
-    * **paramInstanceDefaults**
-COMMENT
-
-
 .. _Component_Methods:
 
 *Component Methods*
@@ -703,16 +694,12 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             + Component subclasses can define the param FUNCTION:<method or Function class>
         The instance defaults can be assigned at initialization or using the _instantiate_defaults class method;
             - if instance defaults are not assigned on initialization, the corresponding class defaults are assigned
-        Parameters can be REQUIRED to be in paramClassDefaults (for which there is no default value to assign)
-            - for all classes, by listing the name and type in requiredParamClassDefaultTypes dict of the Function class
-            - in subclasses, by inclusion in requiredParamClassDefaultTypes (via copy and update) in class definition
-            * NOTE: inclusion in requiredParamClasssDefault simply acts as a template;  it does NOT implement the param
         Each Component child class must initialize itself by calling super(childComponentName).__init__()
             with a default value for its variable, and optionally an instance default paramList.
 
         A subclass MUST either:
             - implement a <class>.function method OR
-            - specify paramClassDefaults[FUNCTION:<Function>];
+            - specify a default Function
             - this is checked in Component._instantiate_function()
             - if params[FUNCTION] is NOT specified, it is assigned to self.function (so that it can be referenced)
             - if params[FUNCTION] IS specified, it assigns it's value to self.function (superceding existing value):
@@ -723,9 +710,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                             it is instantiated using self.defaults.variable and FUNCTION_PARAMS (if they are there too)
                             this works, since _validate_params is always called after _validate_variable
                             so self.defaults.variable can be used to initialize function
-                            to the method referenced by paramInstanceDefaults[FUNCTION] (see below)
-                    if paramClassDefaults[FUNCTION] is not found, it's value is assigned to self.function
-                    if neither paramClassDefaults[FUNCTION] nor self.function is found, an exception is raised
+                            to the method referenced by self.defaults.function
+                    if self.function is found, an exception is raised
 
         NOTES:
             * In the current implementation, validation is:
@@ -1009,15 +995,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     #     PREFERENCE_SET_NAME: 'ComponentCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
-    # Names and types of params required to be implemented in all subclass paramClassDefaults:
-    # Notes:
-    # *  entry values here do NOT implement the param; they are simply used as type specs for checking (in __init__)
-    # * FUNCTION_COMPONENT_CATEGORY (below) is used as placemarker for Component.Function class; replaced in __init__ below
-    #              (can't reference own class directly class block)
-    requiredParamClassDefaultTypes = {}
-
-    paramClassDefaults = {}
-
     exclude_from_parameter_ports = [INPUT_PORTS, OUTPUT_PORTS]
 
     # IMPLEMENTATION NOTE: This is needed so that the Port class can be used with ContentAddressableList,
@@ -1048,7 +1025,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         Initialization arguments:
         - default_variable (anything): establishes type for the variable, used for validation
         - size (int or list/array of ints): if specified, establishes variable if variable was not already specified
-        - params_default (dict): assigned as paramInstanceDefaults
+        - params_default (dict): assigned as default
         Note: if parameter_validation is off, validation is suppressed (for efficiency) (Component class default = on)
 
         """
@@ -1088,9 +1065,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             default_variable = v
             self.defaults.variable = default_variable
 
-        # These ensure that subclass values are preserved, while allowing them to be referred to below
-        self.paramInstanceDefaults = {}
-
         self.parameters.has_initializers._set(False, context)
 
         if reinitialize_when is not None:
@@ -1123,41 +1097,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # Used by run to store return value of execute
         self.results = []
 
-        # CHECK FOR REQUIRED PARAMS
-
-        # All subclasses must implement, in their paramClassDefaults, params of types specified in
-        #     requiredClassParams (either above or in subclass defintion)
-        # Do the check here, as _validate_params might be overridden by subclass
-        for required_param, type_requirements in self.requiredParamClassDefaultTypes.items():
-            # # Replace 'Function' placemarker with class reference:
-            # type_requirements = [self.__class__ if item=='Function' else item for item in type_requirements]
-
-            # get type for FUNCTION_COMPONENT_CATEGORY specification
-            from psyneulink.core.components.functions.function import Function_Base
-            if FUNCTION_COMPONENT_CATEGORY in type_requirements:
-               type_requirements[type_requirements.index(FUNCTION_COMPONENT_CATEGORY)] = \
-                   type(Function_Base)
-
-            if required_param not in self.paramClassDefaults.keys():
-                raise ComponentError("Parameter \'{}\' must be in paramClassDefaults for {}".
-                                    format(required_param, self.name))
-
-            # If the param does not match any of the types specified for it in type_requirements
-            # (either as a subclass or instance of the specified subclass):
-            try:
-                required_param_value = self.paramClassDefaults[required_param]
-                if inspect.isclass(required_param_value):
-                    OK = (any(issubclass(required_param_value, type_spec) for type_spec in type_requirements))
-                else:
-                    OK = (any(isinstance(required_param_value, type_spec) for type_spec in type_requirements))
-                if not OK:
-                    type_names = format(" or ".join("{!s}".format(type.__name__) for (type) in type_requirements))
-                    raise ComponentError("Value ({}) of param {} is not appropriate for {};"
-                                        "  requires one of the following types: {}".
-                                        format(required_param_value.__name__, required_param, self.name, type_names))
-            except TypeError:
-                pass
-
         if function is None:
             if FUNCTION in param_defaults and param_defaults[FUNCTION] is not None:
                 function = param_defaults[FUNCTION]
@@ -1174,13 +1113,12 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # at least in stateless parameters. Possibly more. Below should be
         # removed eventually
 
-        # Validate the set passed in and assign to paramInstanceDefaults
-        # By calling with assign_missing, this also populates any missing params with ones from paramClassDefaults
+        # Validate the set passed in
         self._instantiate_defaults(variable=default_variable,
                request_set=param_defaults,            # requested set
                assign_missing=True,                   # assign missing params from classPreferences to instanceDefaults
-               target_set=self.paramInstanceDefaults, # destination set to which params are being assigned
-               default_set=self.paramClassDefaults,   # source set from which missing params are assigned
+               target_set=self.defaults.values(), # destination set to which params are being assigned
+               default_set=self.class_defaults.values(),   # source set from which missing params are assigned
                context=context,
                )
 
@@ -1555,7 +1493,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         """Assign args passed in __init__() to params
 
         Get args and their corresponding values in call to constructor
-        - get default values for all args and assign to class.paramClassDefaults if they have not already been
         - assign arg values to local copy of params dict
         - override those with any values specified in params dict passed as "params" arg
 
@@ -1592,8 +1529,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 name = arg
             return name
 
-        # ASSIGN DEFAULTS TO paramClassDefaults
-        # Check if defaults have been assigned to paramClassDefaults, and if not do so
         for arg in kwargs:
 
             arg_name = parse_arg(arg)
@@ -1606,33 +1541,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
             # The params arg is never a default (nor is anything in it)
             if arg_name is PARAMS or arg_name is VARIABLE:
-                continue
-
-            # Check if param exists in paramClassDefaults
-            try:
-                self.paramClassDefaults[arg]
-
-            # param corresponding to arg is NOT in paramClassDefaults, so add it
-            except KeyError:
-                # Get defaults values for args listed in FUNCTION_PARAMS
-                # Note:  is not an arg, but rather used to package args that belong to a non-instantiated function
-                if arg is FUNCTION_PARAMS:
-                    self.paramClassDefaults[FUNCTION_PARAMS] = {}
-                    for item in kwargs[arg]:
-                        self.paramClassDefaults[FUNCTION_PARAMS][item] = default(item)
-                else:
-                    default_arg = default(arg)
-                    if inspect.isclass(default_arg) and issubclass(default_arg,inspect._empty):
-                        raise ComponentError("PROGRAM ERROR: \'{}\' parameter of {} must be assigned a default value "
-                                             "in its constructor or in paramClassDefaults (it can be \'None\')".
-                                             format(arg, self.__class__.__name__))
-                    self.paramClassDefaults[arg] = default_arg
-
-            # param corresponding to arg IS already in paramClassDefaults
-            else:
-                # param has a value but paramClassDefaults is None, so assign param's value to paramClassDefaults
-                if self.paramClassDefaults[arg] is None and arg in defaults_dict and defaults_dict[arg] is not None:
-                    self.paramClassDefaults[arg] = defaults_dict[arg]
                 continue
 
         # ASSIGN ARG VALUES TO params dicts
@@ -1733,7 +1641,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             elif arg in {INPUT_PORTS, OUTPUT_PORTS} and kwargs[arg] is None:
                 continue
 
-            # For all other params, assign arg and its default value to paramClassDefaults
             else:
                 params[arg] = kwargs[arg]
 
@@ -1846,26 +1753,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         self._create_attributes_for_params(make_as_properties=True, **self.user_params)
 
-        # Create attribute on self for each parameter in paramClassDefaults not in user_params:
-        #    these will NOT be validated when they are assigned a value.
-        # IMPLEMENTATION NOTE:
-        #    These must be created here, so that attributes in user_params that need to can reference them
-        #    (e.g., TransferMechanism noise property references noise param of integrator_function,
-        #           which is declared in paramClassDefaults);
-        #    previously the order was not guaranteed, the user_param may be assigned before one from paramClassDefaults
-        params_class_defaults_only = dict(item for item in self.paramClassDefaults.items()
-                                          if not any(hasattr(parent_class, item[0])
-                                                     for parent_class in self.__class__.mro()))
-        self._create_attributes_for_params(make_as_properties=False, **params_class_defaults_only)
-
         # Return params only for args:
         return params
 
     def _filter_params(self, params):
         """This provides an opportunity for subclasses to modify the final set of params in a class-specific way.
-
-        Note:
-        The default (here) allows user-specified params to override entries in paramClassDefaults with the same name
         """
         pass
 
@@ -1990,23 +1882,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         """Validate variable and/or param defaults in requested set and assign values to params in target set
 
           Variable can be any type other than a dictionary (reserved for use as params)
-          request_set must contain a dict of params to be assigned to target_set (??and paramInstanceDefaults??)
+          request_set must contain a dict of params to be assigned to target_set
           If assign_missing option is set, then any params defined for the class
               but not included in the requested set are assigned values from the default_set;
               if request_set is None, then all values in the target_set are assigned from the default_set
-              if the default set is not specified, then paramInstanceDefaults is used (see below)
-          If target_set and/or default_set is not specified, paramInstanceDefaults is used for whichever is missing
-              NOTES:
-              * this is the most common case, used for updating of instance defaults:
-                  neither target_set nor default_set are specified, and params in request_set are (after validation)
-                   assigned to paramInstanceDefaults; any params not specified in the request set will stay the same
-                   (even if assign_missing is set)
-              * individual instance default values can be set to class defaults by
-                  calling with a request_set that has the values from paramInstanceDefaults to be preserved,
-                  paramInstanceDefaults as target_set, and paramClassDefaults as default_set
-              * all paramInstanceDefaults can be set to class ("factory") defaults by
-                  calling with an empty request_set (or =None), paramInstanceDefaults for target_set,
-                  and paramClassDefaults as default_set (although reset_params does the same thing)
           Class defaults can not be passed as target_set
               IMPLEMENTATION NOTE:  for now, treating class defaults as hard coded;
                                     could be changed in the future simply by commenting out code below
@@ -2071,153 +1950,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         if request_set is None and target_set is None and default_set is None:
             return
 
-        # GET AND VALIDATE PARAMS
-
-        # Assign param defaults for target_set and default_set
-        if target_set is None:
-            target_set = self.paramInstanceDefaults
-        if target_set is self.paramClassDefaults:
-            raise ComponentError("Altering paramClassDefaults not permitted")
-
-        if default_set is None:
-            if context.source & (ContextFlags.COMMAND_LINE | ContextFlags.PROPERTY):
-                default_set = {}
-                for param_name in request_set:
-                    try:
-                        default_set[param_name] = self.paramInstanceDefaults[param_name]
-                    except KeyError:
-                        pass
-        # Otherwise, use paramInstanceDefaults (i.e., full set of implemented params)
-            else:
-                default_set = self.paramInstanceDefaults
-
-        # IMPLEMENT: IF not context, DO RECURSIVE UPDATE OF DEFAULT WITH REQUEST, THEN SKIP NEXT IF (MAKE IT elif)
-        #            (update default_set with request_set)
-        #            BUT STILL NEED TO ADDRESS POSSIBLE MISMATCH OF FUNCTION AND FUNCTION_PARAMS (PER BELOW)
-        #            IF FUNCTION_PARAMS ARE NOT IN REQUEST SET, AS ONES FROM DEFAULT WILL BE FOR DIFFERENT FUNCTION
-        #            AND SHOULD BE CHECKED ANYHOW
-        #
-        # FROM: http://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
-        # import collections
-        #
-        # def update(d, u):
-        #     for k, v in u.items():
-        #         if isinstance(v, collections.Mapping):
-        #             r = update(d.get(k, {}), v)
-        #             d[k] = r
-        #         else:
-        #             d[k] = u[k]
-        #     return d
-
-
-        # If assign_missing option is set,
-        #  assign value from specified default set to any params missing from request set
-        # Note:  do this before validating execute method and params, as some params may depend on others being present
-        if assign_missing:
-            if not request_set:
-                request_set = {}
-
-            # FIX: DO ALL OF THIS IN VALIDATE PARAMS?
-            # FIX:    ?? HOWEVER, THAT MEANS MOVING THE ENTIRE IF STATEMENT BELOW TO THERE
-            # FIX:    BECAUSE OF THE NEED TO INTERCEPT THE ASSIGNMENT OF functionParams FROM paramClassDefaults
-            # FIX:    ELSE DON'T KNOW WHETHER THE ONES IN request_set CAME FROM CALL TO __init__() OR paramClassDefaults
-            # FIX: IF functionParams ARE SPECIFIED, NEED TO FLAG THAT function != defaultFunction
-            # FIX:    TO SUPPRESS VALIDATION OF functionParams IN _validate_params (THEY WON'T MATCH paramclassDefaults)
-            # Check if function matches one in paramClassDefaults;
-            #    if not, suppress assignment of functionParams from paramClassDefaults, as they don't match the function
-            # Note: this still allows functionParams included as arg in call to __init__ to be assigned
-
-            # REFERENCE: Conditions for assignment of default function and functionParams
-            #     A) default function, default functionParams
-            #         example: Projection.__inits__
-            #     B) default function, no default functionParams
-            #         example: none??
-            #     C) no default function, default functionParams
-            #         example: ??DDM
-            #     D) no default function, no default functionParams
-            #         example: System, Process, ??ComparatorMechanism, ??LearningMechanism
-
-            self.assign_default_FUNCTION_PARAMS = True
-
-            if FUNCTION in request_set:
-                # Get function class:
-                function = request_set[FUNCTION]
-                if inspect.isclass(function):
-                    function_class = function
-                else:
-                    function_class = function.__class__
-                # Get default function (from ParamClassDefaults)
-                if not FUNCTION in default_set:
-                    # This occurs if a function has been specified as an arg in the call to __init__()
-                    #     but there is no function spec in paramClassDefaults;
-                    # This will be caught, and an exception raised, in _validate_params()
-                    pass
-                else:
-                    default_function = default_set[FUNCTION]
-                    # Get default function class
-                    if inspect.isclass(function):
-                        default_function_class = default_function
-                    else:
-                        default_function_class = default_function.__class__
-
-                    # If function's class != default function's class, suppress assignment of default functionParams
-                    if function_class != default_function_class:
-                        self.assign_default_FUNCTION_PARAMS = False
-
-            # Sort to be sure FUNCTION is processed before FUNCTION_PARAMS,
-            #    so that latter are evaluated in context of former
-            for param_name, param_value in sorted(default_set.items()):
-
-                # FUNCTION class has changed, so replace rather than update FUNCTION_PARAMS
-                if param_name is FUNCTION:
-                    try:
-                        if function_class != default_function_class and context.source & ContextFlags.COMMAND_LINE:
-                            from psyneulink.core.components.functions.function import Function_Base
-                            if isinstance(function, Function_Base):
-                                request_set[FUNCTION] = function.__class__
-                            default_set[FUNCTION_PARAMS] = function.user_params
-                    # function not yet defined, so allow FUNCTION_PARAMS)
-                    except UnboundLocalError:
-                        pass
-                # FIX: MAY NEED TO ALSO ALLOW assign_default_FUNCTION_PARAMS FOR COMMAND_LINE IN CONTEXT
-
-                if param_name is FUNCTION_PARAMS and not self.assign_default_FUNCTION_PARAMS:
-                    continue
-
-                # Don't replace requested entry with default
-                if param_name in request_set:
-                    continue
-
-                # Add to request_set any entries it is missing fron the default_set
-                request_set.setdefault(param_name, param_value)
-                # Update any values in a dict
-                if isinstance(param_value, dict):
-                    for dict_entry_name, dict_entry_value in param_value.items():
-                        # Don't replace requested entries
-                        if dict_entry_name in request_set[param_name]:
-                            continue
-                        request_set[param_name].setdefault(dict_entry_name, dict_entry_value)
-
         # VALIDATE PARAMS
 
         # if request_set has been passed or created then validate and, if OK, assign params to target_set
         if request_set:
-            # For params that are a 2-item tuple, extract the value; and get value of single item modulatory specs
-            # Do this both for validation and assignment;
-            #   tuples and modulatory specs are left intact in user_params_for_instantiation dict
-            #   which are used to instantiate the specified Components
-            # IMPLEMENTATION NOTE:  Do this here rather than in _validate_params, as it needs to be done before
-            #                       any override of _validate_params, which (should not, but) may process params
-            #                       before calling super()._validate_params
-            for param_name, param_value in request_set.items():
-                if isinstance(param_value, tuple):
-                    param_value = self._get_param_value_from_tuple(param_value)
-                elif isinstance(param_value, (str, Component, type)):
-                    param_value = self._get_param_value_for_modulatory_spec(param_name, param_value)
-                else:
-                    continue
-                request_set[param_name] = param_value
-
             try:
                 self._validate_params(variable=variable,
                                       request_set=request_set,
@@ -2352,10 +2088,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     @handle_external_context()
     def assign_params(self, request_set=None, context=None):
-        """Validates specified params, adds them TO paramInstanceDefaults, and instantiates any if necessary
+        """Validates specified params, and instantiates any if necessary
 
         Call _instantiate_defaults with context = COMMAND_LINE, and "validated_set" as target_set.
-        Update paramInstanceDefaults with validated_set so that any instantiations (below) are done in proper context.
         Instantiate any items in request set that require it (i.e., function or ports).
 
         """
@@ -2377,8 +2112,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                                    target_set=validated_set,
                                     assign_missing=False,
                                    context=context)
-
-        self.paramInstanceDefaults.update(validated_set)
 
         # Turn off paramValidationPref to prevent recursive loop
         #     (since setter for attrib of param calls assign_params if validationPref is True)
@@ -2645,12 +2378,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate params and assign validated values to targets,
 
-        This performs top-level type validation of params against the paramClassDefaults specifications:
-            - checks that param is listed in paramClassDefaults
-            - checks that param value is compatible with on in paramClassDefaults
-            - if param is a dict, checks entries against corresponding entries paramClassDefaults
-            - if all is OK, the value is assigned to the target_set (if it has been provided)
-            - otherwise, an exception is raised
+        This performs top-level type validation of params
 
         This can be overridden by a subclass to perform more detailed checking (e.g., range, recursive, etc.)
         It is called only if the parameter_validation attribute is `True` (which it is by default)
@@ -2667,45 +2395,42 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         for param_name, param_value in request_set.items():
             # setattr(self, "_"+param_name, param_value)
 
-            # Check that param is in paramClassDefaults (if not, it is assumed to be invalid for this object)
-            if not param_name in self.paramClassDefaults:
-                # these are always allowable since they are attribs of every Component
-                if param_name in {VARIABLE, NAME, VALUE, PARAMS, SIZE, LOG_ENTRIES, FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS}:
-                    continue
-                raise ComponentError(f"{param_name} is not a valid parameter for {self.__class__.__name__}.")
+            # Check that param is in self.defaults (if not, it is assumed to be invalid for this object)
+            if not param_name in self.defaults.names(show_all=True):
+                continue
 
-            # The value of the param is None in paramClassDefaults: suppress type checking
+            # The default value of the param is None: suppress type checking
             # IMPLEMENTATION NOTE: this can be used for params with multiple possible types,
             #                      until type lists are implemented (see below)
-            if self.paramClassDefaults[param_name] is None or self.paramClassDefaults[param_name] is NotImplemented:
+            if getattr(self.defaults, param_name) is None or getattr(self.defaults, param_name) is NotImplemented:
                 if self.prefs.verbosePref:
                     warnings.warn(f"{param_name} is specified as None for {self.name} which suppresses type checking.")
                 if target_set is not None:
                     target_set[param_name] = param_value
                 continue
 
-            # If the value in paramClassDefault is a type, check if param value is an instance of it
-            if inspect.isclass(self.paramClassDefaults[param_name]):
-                if isinstance(param_value, self.paramClassDefaults[param_name]):
+            # If the value in self.defaults is a type, check if param value is an instance of it
+            if inspect.isclass(getattr(self.defaults, param_name)):
+                if isinstance(param_value, getattr(self.defaults, param_name)):
                     target_set[param_name] = param_value
                     continue
                 # If the value is a Function class, allow any instance of Function class
                 from psyneulink.core.components.functions.function import Function_Base
-                if issubclass(self.paramClassDefaults[param_name], Function_Base):
+                if issubclass(getattr(self.defaults, param_name), Function_Base):
                     # if isinstance(param_value, (function_type, Function_Base)):  <- would allow function of any kind
                     if isinstance(param_value, Function_Base):
                         target_set[param_name] = param_value
                         continue
 
-            # If the value in paramClassDefault is an object, check if param value is the corresponding class
+            # If the value in self.defaults is an object, check if param value is the corresponding class
             # This occurs if the item specified by the param has not yet been implemented (e.g., a function)
             if inspect.isclass(param_value):
-                if isinstance(self.paramClassDefaults[param_name], param_value):
+                if isinstance(getattr(self.defaults, param_name), param_value):
                     continue
 
             # If the value is a projection, projection class, or a keyword for one, for anything other than
             #    the FUNCTION param (which is not allowed to be specified as a projection)
-            #    then simply assign value to paramClassDefault (implication of not specifying it explicitly);
+            #    then simply assign value (implication of not specifying it explicitly);
             #    this also allows it to pass the test below and function execution to occur for initialization;
             from psyneulink.core.components.shellclasses import Projection
             if (((isinstance(param_value, str) and
@@ -2713,31 +2438,27 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 isinstance(param_value, Projection) or  # These should be just ControlProjection or LearningProjection
                 inspect.isclass(param_value) and issubclass(param_value,(Projection)))
                 and not param_name is FUNCTION):
-                param_value = self.paramClassDefaults[param_name]
+                param_value = getattr(self.defaults, param_name)
 
             # If self is a Function and param is a class ref for function, instantiate it as the function
             from psyneulink.core.components.functions.function import Function_Base
             if (isinstance(self, Function_Base) and
                     inspect.isclass(param_value) and
-                    issubclass(param_value, self.paramClassDefaults[param_name])):
+                    inspect.isclass(getattr(self.defaults, param_name))
+                    and issubclass(param_value, getattr(self.defaults, param_name))):
                     # Assign instance to target and move on
                     #  (compatiblity check no longer needed and can't handle function)
                     target_set[param_name] = param_value()
                     continue
 
-            # Check if param value is of same type as one with the same name in paramClassDefaults;
+            # Check if param value is of same type as one with the same name in defaults
             #    don't worry about length
-            if iscompatible(param_value, self.paramClassDefaults[param_name], **{kwCompatibilityLength:0}):
-                # If param is a dict, check that entry exists in paramClassDefaults
-                # IMPLEMENTATION NOTE:
-                #    - currently doesn't check compatibility of value with paramClassDefaults
-                #      since params can take various forms (e.g., value, tuple, etc.)
-                #    - re-instate once paramClassDefaults includes type lists (as per requiredClassParams)
+            if iscompatible(param_value, getattr(self.defaults, param_name), **{kwCompatibilityLength:0}):
                 if isinstance(param_value, dict):
 
                     # If assign_default_FUNCTION_PARAMS is False, it means that function's class is
-                    #     compatible but different from the one in paramClassDefaults;
-                    #     therefore, FUNCTION_PARAMS will not match paramClassDefaults;
+                    #     compatible but different from the one in defaults;
+                    #     therefore, FUNCTION_PARAMS will not match defaults;
                     #     instead, check that functionParams are compatible with the function's default params
                     if param_name is FUNCTION_PARAMS:
                         if not self.assign_default_FUNCTION_PARAMS:
@@ -2752,7 +2473,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                             else:
                                 for entry_name, entry_value in param_value.items():
                                     try:
-                                        function.paramClassDefaults[entry_name]
+                                        getattr(function.defaults, entry_name)
                                     except KeyError:
                                         raise ComponentError("{0} is not a valid entry in {1} for {2} ".
                                                             format(entry_name, param_name, self.name))
@@ -2771,19 +2492,19 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                             # if param_name != FUNCTION_PARAMS:
                             #     assert True
                             for entry_name, entry_value in param_value.items():
-                                # Make sure [entry_name] entry is in [param_name] dict in paramClassDefaults
+                                # Make sure [entry_name] is in self.defaults
                                 try:
-                                    self.paramClassDefaults[param_name][entry_name]
+                                    getattr(self.defaults, param_name)[entry_name]
                                 except KeyError:
                                     raise ComponentError("{0} is not a valid entry in {1} for {2} ".
                                                         format(entry_name, param_name, self.name))
                                 # TBI: (see above)
                                 # if not iscompatible(entry_value,
-                                #                     self.paramClassDefaults[param_name][entry_name],
+                                #                     getattr(self.defaults, param_name)[entry_name],
                                 #                     **{kwCompatibilityLength:0}):
                                 #     raise ComponentError("{0} ({1}) in {2} of {3} must be a {4}".
                                 #         format(entry_name, entry_value, param_name, self.name,
-                                #                type(self.paramClassDefaults[param_name][entry_name]).__name__))
+                                #                type(getattr(self.defaults, param_name)[entry_name]).__name__))
                                 else:
                                     # add [entry_name] entry to [param_name] dict
                                     try:
@@ -2802,7 +2523,24 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     if not isinstance(param_value, Iterable) or isinstance(param_value, str):
                         target_set[param_name] = param_value
                     else:
-                        target_set[param_name] = param_value.copy()
+                        # hack for validation until it's streamlined
+                        # parse modulable parameter values
+                        if getattr(self.parameters, param_name).modulable:
+                            try:
+                                target_set[param_name] = param_value.copy()
+                            except AttributeError:
+                                try:
+                                    modulable_param_parser = self.parameters._get_prefixed_method(
+                                        parse=True,
+                                        modulable=True
+                                    )
+                                    param_value = modulable_param_parser(param_name, param_value)
+                                    target_set[param_name] = param_value
+                                except AttributeError:
+                                    target_set[param_name] = param_value.copy()
+
+                        else:
+                            target_set[param_name] = param_value.copy()
 
             # If param is a function_type (or it has a function attribute that is one), allow any other function_type
             elif callable(param_value):
@@ -2816,9 +2554,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 # FIX: 10/3/17 - THIS IS A HACK;  IT SHOULD BE HANDLED EITHER
                 # FIX:           MORE GENERICALLY OR LOCALLY (E.G., IN OVERRIDE OF _validate_params)
                 if param_name == 'matrix':
-                    if is_matrix(self.paramClassDefaults[param_name]):
+                    if is_matrix(getattr(self.defaults, param_name)):
                         # FIX:  ?? ASSIGN VALUE HERE, OR SIMPLY ALLOW AND ASSUME IT WILL BE PARSED ELSEWHERE
-                        # param_value = self.paramClassDefaults[param_name]
+                        # param_value = getattr(self.defaults, param_name)
                         # target_set[param_name] = param_value
                         target_set[param_name] = param_value
                     else:
@@ -2828,8 +2566,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
             # Parameter is not a valid type
             else:
-                if type(self.paramClassDefaults[param_name]) is type:
-                    type_name = 'the name of a subclass of ' + self.paramClassDefaults[param_name].__base__.__name__
+                if type(getattr(self.defaults, param_name)) is type:
+                    type_name = 'the name of a subclass of ' + getattr(self.defaults, param_name).__base__.__name__
                 raise ComponentError("Value of {} param for {} ({}) is not compatible with {}".
                                     format(param_name, self.name, param_value, type_name))
 
@@ -2848,7 +2586,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             return(param_value)
 
         try:
-            param_default_value = self.paramClassDefaults[param_name]
+            param_default_value = getattr(self.defaults, param_name)
             # Only assign default value if it is not None
             if param_default_value is not None:
                 return param_default_value
@@ -2917,9 +2655,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 function = self.function
             except AttributeError:
                 # self.function is also missing, so raise exception
-                raise ComponentError("{} must either implement a function method, specify one as the FUNCTION param in"
-                                    " paramClassDefaults, or as the default for the function argument in its init".
-                                    format(self.__class__.__name__, FUNCTION))
+                raise ComponentError("{0} must either implement a function method or specify one in {0}.Parameters".
+                                    format(self.__class__.__name__))
 
         # self.function is None
         # IMPLEMENTATION NOTE:  This is a coding error;  self.function should NEVER be assigned None
@@ -3617,23 +3354,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     def get_constructor_defaults(cls):
         return {arg_name: arg.default for (arg_name, arg) in inspect.signature(cls.__init__).parameters.items()}
 
-    @classmethod
-    def get_param_class_defaults(cls):
-        try:
-            return cls._param_class_defaults
-        except AttributeError:
-            excluded_keys = ['self', 'args', 'kwargs']
-
-            cls._param_class_defaults = {}
-            for klass in reversed(cls.__mro__):
-                try:
-                    cls._param_class_defaults.update({k: v for (k, v) in klass.get_constructor_defaults().items() if k not in excluded_keys})
-                except AttributeError:
-                    # skip before Component
-                    pass
-
-            return cls._param_class_defaults
-
     @property
     def function(self):
         # TODO: make sure all functions are stateless
@@ -3764,7 +3484,6 @@ def make_property(name):
             and self.paramValidationPref
             and hasattr(self, 'user_params_for_instantiation')
             and hasattr(self, 'user_params')
-            and hasattr(self, 'paramInstanceDefaults')
         ):
             self._assign_params(request_set={name:val}, context=Context(source=ContextFlags.PROPERTY))
 

@@ -289,7 +289,7 @@ COMMENT:
         the value of the parameter with the same name in params[FUNCTION_PARAMS] (EMP)
     + FUNCTION_PARAMS (dict):
         NOTE: function parameters can be specified either as arguments in the Mechanism's __init__ method,
-        or by assignment of the function_params attribute for paramClassDefaults.
+        or by assignment of the function_params attribute.
         Only one of these methods should be used, and should be chosen using the following principle:
         - if the Mechanism implements one function, then its parameters should be provided as arguments in the __init__
         - if the Mechanism implements several possible functions and they do not ALL share the SAME parameters,
@@ -906,22 +906,22 @@ Port keyword: dict for Port's params
         - dicts can contain the following embedded dicts:
             + FUNCTION_PARAMS:<dict>:
                  will be passed the Port's execute method,
-                     overriding its paramInstanceDefaults for that call
+                     overriding its current values for that call
             + PROJECTION_PARAMS:<dict>:
                  entry will be passed to all of the Port's Projections, and used by
-                 by their execute methods, overriding their paramInstanceDefaults for that call
+                 by their execute methods, overriding their current values for that call
             + MAPPING_PROJECTION_PARAMS:<dict>:
                  entry will be passed to all of the Port's MappingProjections,
-                 along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
+                 along with any in a PROJECTION_PARAMS dict, and override current values
             + LEARNING_PROJECTION_PARAMS:<dict>:
                  entry will be passed to all of the Port's LearningProjections,
-                 along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
+                 along with any in a PROJECTION_PARAMS dict, and override current values
             + CONTROL_PROJECTION_PARAMS:<dict>:
                  entry will be passed to all of the Port's ControlProjections,
-                 along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
+                 along with any in a PROJECTION_PARAMS dict, and override current values
             + GATING_PROJECTION_PARAMS:<dict>:
                  entry will be passed to all of the Port's GatingProjections,
-                 along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
+                 along with any in a PROJECTION_PARAMS dict, and override current values
             + <ProjectionName>:<dict>:
                  entry will be passed to the Port's Projection with the key's name,
                  along with any in the PROJECTION_PARAMS and MappingProjection or ControlProjection dicts
@@ -1363,17 +1363,6 @@ class Mechanism_Base(Mechanism):
                      OutputPort:OUTPUT_PORTS}
 
     # Category specific defaults:
-    paramClassDefaults = Component.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        MONITOR_FOR_CONTROL: NotImplemented,  # This has to be here to "register" it as a valid param for the class
-                                              # but is set to NotImplemented so that it is ignored if it is not
-                                              # assigned;  setting it to None actively disallows assignment
-                                              # (see EVCControlMechanism_instantiate_input_ports for more details)
-        MONITOR_FOR_LEARNING: None,
-        INPUT_LABELS_DICT: {},
-        TARGET_LABELS_DICT: {},
-        OUTPUT_LABELS_DICT: {}
-        })
 
     standard_output_ports = [{NAME: RESULT},
                              {NAME: MECHANISM_VALUE,
@@ -1543,7 +1532,7 @@ class Mechanism_Base(Mechanism):
 
         NOTES:
         * Since Mechanism is a subclass of Component, it calls super.__init__
-            to validate size and default_variable and param_defaults, and assign params to paramInstanceDefaults;
+            to validate size and default_variable and param_defaults;
             it uses INPUT_PORT as the default_variable
         * registers Mechanism with MechanismRegistry
 
@@ -1554,6 +1543,7 @@ class Mechanism_Base(Mechanism):
         self.processes = ReadOnlyOrderedDict() # Note: use _add_process method to add item to processes property
         self.systems = ReadOnlyOrderedDict() # Note: use _add_system method to add item to systems property
         self.aux_components = []
+        self.monitor_for_learning = None
         # Register with MechanismRegistry or create one
         register_category(entry=self,
                           base_class=Mechanism_Base,
@@ -1808,72 +1798,6 @@ class Mechanism_Base(Mechanism):
 
         return variable
 
-    def _filter_params(self, params):
-        """Add rather than override INPUT_PORTS and/or OUTPUT_PORTS
-
-        Allows specification of INPUT_PORTS or OUTPUT_PORTS in params dictionary to be added to,
-        rather than override those in paramClassDefaults (the default behavior)
-        """
-
-        import copy
-
-        # try:
-        #     input_ports_spec = params[INPUT_PORTS]
-        # except KeyError:
-        #     pass
-        # else:
-        #     # Convert input_ports_spec to list if it is not one
-        #     if not isinstance(input_ports_spec, list):
-        #         input_ports_spec = [input_ports_spec]
-        #     # # Get input_ports specified in paramClassDefaults
-        #     # if self.paramClassDefaults[INPUT_PORTS] is not None:
-        #     #     default_input_ports = self.paramClassDefaults[INPUT_PORTS].copy()
-        #     # else:
-        #     #     default_input_ports = None
-        #     # # Convert input_ports from paramClassDefaults to a list if it is not one
-        #     # if default_input_ports is not None and not isinstance(default_input_ports, list):
-        #     #     default_input_ports = [default_input_ports]
-        #     # # Add InputPort specified in params to those in paramClassDefaults
-        #     # #    Note: order is important here;  new ones should be last, as paramClassDefaults defines the
-        #     # #          the primary InputPort which must remain first for the input_ports ContentAddressableList
-        #     # default_input_ports.extend(input_ports_spec)
-        #     # # Assign full set back to params_arg
-        #     # params[INPUT_PORTS] = default_input_ports
-        #
-        #     # Get inputPorts specified in paramClassDefaults
-        #     if self.paramClassDefaults[INPUT_PORTS] is not None:
-        #         default_input_ports = self.paramClassDefaults[INPUT_PORTS].copy()
-        #         # Convert inputPorts from paramClassDefaults to a list if it is not one
-        #         if not isinstance(default_input_ports, list):
-        #             default_input_ports = [default_input_ports]
-        #         # Add input_ports specified in params to those in paramClassDefaults
-        #         #    Note: order is important here;  new ones should be last, as paramClassDefaults defines the
-        #         #          the primary InputPort which must remain first for the input_ports ContentAddressableList
-        #         default_input_ports.extend(input_ports_spec)
-        #         # Assign full set back to params_arg
-        #         params[INPUT_PORTS] = default_input_ports
-
-        # # OUTPUT_PORTS:
-        # try:
-        #     output_ports_spec = params[OUTPUT_PORTS]
-        # except KeyError:
-        #     pass
-        # else:
-        #     # Convert output_ports_spec to list if it is not one
-        #     if not isinstance(output_ports_spec, list):
-        #         output_ports_spec = [output_ports_spec]
-        #     # Get OutputPorts specified in paramClassDefaults
-        #     default_output_ports = self.paramClassDefaults[OUTPUT_PORTS].copy()
-        #     # Convert OutputPorts from paramClassDefaults to a list if it is not one
-        #     if not isinstance(default_output_ports, list):
-        #         default_output_ports = [default_output_ports]
-        #     # Add output_ports specified in params to those in paramClassDefaults
-        #     #    Note: order is important here;  new ones should be last, as paramClassDefaults defines the
-        #     #          the primary OutputPort which must remain first for the output_ports ContentAddressableList
-        #     default_output_ports.extend(output_ports_spec)
-        #     # Assign full set back to params_arg
-        #     params[OUTPUT_PORTS] = default_output_ports
-
     def _validate_params(self, request_set, target_set=None, context=None):
         """validate TimeScale, INPUT_PORTS, FUNCTION_PARAMS, OUTPUT_PORTS and MONITOR_FOR_CONTROL
 
@@ -1885,7 +1809,7 @@ class Mechanism_Base(Mechanism):
             + FUNCTION_PARAMS:  <dict>, every entry of which must be one of the following:
                 ParameterPort or Projection object or class, specification dict for one, 2-item tuple, or numeric
                 value(s);
-                if invalid, default (from paramInstanceDefaults or paramClassDefaults) is assigned
+                if invalid, default is assigned
             + OUTPUT_PORTS:
                 <MechanismsOutputPort object or class, specification dict, or numeric value(s);
                 if it is missing or not one of the above types, it is set to None here;
@@ -1907,7 +1831,6 @@ class Mechanism_Base(Mechanism):
         from psyneulink.core.components.ports.inputport import InputPort
 
         # Perform first-pass validation in Function.__init__():
-        # - returns full set of params based on subclass paramClassDefaults
         super(Mechanism, self)._validate_params(request_set,target_set,context)
 
         params = target_set
@@ -1939,11 +1862,6 @@ class Mechanism_Base(Mechanism):
 
             from psyneulink.core.components.ports.parameterport import ParameterPort
             for param_name, param_value in function_param_specs.items():
-                try:
-                    self.defaults.value = self.paramInstanceDefaults[FUNCTION_PARAMS][param_name]
-                except KeyError:
-                    raise MechanismError("{0} not recognized as a param of execute method for {1}".
-                                         format(param_name, self.__class__.__name__))
                 if not ((isclass(param_value) and
                              (issubclass(param_value, ParameterPort) or
                               issubclass(param_value, Projection))) or

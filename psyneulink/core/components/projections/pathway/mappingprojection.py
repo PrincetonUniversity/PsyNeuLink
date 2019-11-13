@@ -429,10 +429,8 @@ class MappingProjection(PathwayProjection_Base):
         sender=[OUTPUT_PORT, PROCESS_INPUT_PORT, SYSTEM_INPUT_PORT]
         receiver=[INPUT_PORT]
 
-    paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({FUNCTION: LinearMatrix,
-                               PROJECTION_SENDER: OutputPort,
-                               })
+
+    projection_sender = OutputPort
 
     @tc.typecheck
     def __init__(self,
@@ -464,7 +462,7 @@ class MappingProjection(PathwayProjection_Base):
         if sender is None or receiver is None:
             self.initialization_status = ContextFlags.DEFERRED_INIT
 
-        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
+        # Validate sender (as variable) and params
         super().__init__(sender=sender,
                          receiver=receiver,
                          weight=weight,

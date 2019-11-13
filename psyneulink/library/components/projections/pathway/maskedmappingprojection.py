@@ -176,9 +176,6 @@ class MaskedMappingProjection(MappingProjection):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
-    # necessary?
-    paramClassDefaults = MappingProjection.paramClassDefaults.copy()
-
     @tc.typecheck
     def __init__(self,
                  sender=None,

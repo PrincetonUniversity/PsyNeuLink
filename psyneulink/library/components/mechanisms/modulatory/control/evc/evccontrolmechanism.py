@@ -433,9 +433,6 @@ class EVCControlMechanism(ControlMechanism):
     COMMENT:
         Class attributes:
             + componentType (str): System Default Mechanism
-            + paramClassDefaults (dict):
-                + SYSTEM (System)
-                + MONITORED_OUTPUT_PORTS (list of Mechanisms and/or OutputPorts)
 
         Class methods:
             None
@@ -859,9 +856,10 @@ class EVCControlMechanism(ControlMechanism):
         control_signal_search_space = Parameter(None, read_only=True)
         predicted_input = Parameter(None, read_only=True)
 
-    # from Components.__init__ import DefaultSystem
-    paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
-    paramClassDefaults.update({PARAMETER_PORTS: NotImplemented}) # This suppresses parameterPorts
+        prediction_mechanisms = None
+        origin_objective_mechanism = None
+        terminal_objective_mechanism = None
+        system = None
 
     @tc.typecheck
     def __init__(self,

@@ -693,7 +693,7 @@ class InputPort(Port_Base):
     projectionSocket = SENDER
     modulators = [GATING_SIGNAL, CONTROL_SIGNAL]
     canReceive = modulators + [MAPPING_PROJECTION]
-
+    projection_type = MAPPING_PROJECTION
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
@@ -757,11 +757,6 @@ class InputPort(Port_Base):
         internal_only = Parameter(False, stateful=False, loggable=False, pnl_internal=True)
         shadow_inputs = Parameter(None, stateful=False, loggable=False, read_only=True, pnl_internal=True, structural=True)
 
-    paramClassDefaults = Port_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
-                               MECHANISM: None,     # These are used to specifiy InputPorts by projections to them
-                               OUTPUT_PORTS: None  # from the OutputPorts of a particular Mechanism (see docs)
-                               })
     #endregion
 
     @handle_external_context()
@@ -816,7 +811,7 @@ class InputPort(Port_Base):
 
         self.reference_value = reference_value
 
-        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
+        # Validate sender (as variable) and params, and assign to variable
         # Note: pass name of owner (to override assignment of componentName in super.__init__)
         super(InputPort, self).__init__(owner,
                                         variable=variable,
@@ -857,7 +852,7 @@ class InputPort(Port_Base):
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate weights and exponents
 
-        This needs to be done here, since paramClassDefault declarations assign None as default
+        This needs to be done here
             (so that they can be ignored if not specified here or in the function)
         """
 

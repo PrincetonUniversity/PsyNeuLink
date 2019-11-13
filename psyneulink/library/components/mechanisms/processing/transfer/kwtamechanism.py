@@ -336,9 +336,6 @@ class KWTAMechanism(RecurrentTransferMechanism):
         average_based = False
         inhibition_only = True
 
-    paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
-    paramClassDefaults.update({'function': Logistic})  # perhaps hacky? not sure (7/10/17 CW)
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,

@@ -859,6 +859,7 @@ class PredictionMechanism(IntegratorMechanism):
         """
         window_size = Parameter(1, stateful=False, loggable=False)
         filter_function = Parameter(None, stateful=False, loggable=False)
+        input_type = None
 
         rate = Parameter(1.0, modulable=True)
 

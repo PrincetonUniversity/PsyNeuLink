@@ -227,10 +227,8 @@ class GatingProjection(ModulatoryProjection_Base):
         function = Parameter(Linear(params={FUNCTION_OUTPUT_TYPE: FunctionOutputType.RAW_NUMBER}), stateful=False, loggable=False)
         gating_signal = Parameter(None, read_only=True, getter=_gating_signal_getter, setter=_gating_signal_setter, pnl_internal=True)
 
-    paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        PROJECTION_SENDER: GatingMechanism,
-    })
+
+    projection_sender = GatingMechanism
 
     @tc.typecheck
     def __init__(self,
@@ -255,7 +253,7 @@ class GatingProjection(ModulatoryProjection_Base):
             # Flag for deferred initialization
             self.initialization_status = ContextFlags.DEFERRED_INIT
 
-        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
+        # Validate sender (as variable) and params, and assign to variable
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
         super().__init__(sender=sender,
                          receiver=receiver,

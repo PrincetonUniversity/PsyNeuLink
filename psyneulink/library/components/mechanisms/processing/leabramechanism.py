@@ -198,8 +198,6 @@ class LeabraFunction(Function_Base):
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     class Parameters(Function_Base.Parameters):
         """
             Attributes
@@ -440,10 +438,6 @@ class LeabraMechanism(ProcessingMechanism_Base):
     }
 
     # LeabraMechanism parameter and control signal assignments):
-    paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({FUNCTION: LeabraFunction,
-                               INPUT_PORTS: input_port_names,
-                               OUTPUT_PORTS: output_port_name})
 
     class Parameters(ProcessingMechanism_Base.Parameters):
         """

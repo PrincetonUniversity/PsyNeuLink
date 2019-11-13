@@ -432,14 +432,8 @@ class LearningProjection(ModulatoryProjection_Base):
         learning_signal = Parameter(None, read_only=True, getter=_learning_signal_getter, setter=_learning_signal_setter, pnl_internal=True)
         learning_enabled = None
 
-    paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_SENDER: LearningMechanism,
-                               PARAMETER_PORTS: NotImplemented, # This suppresses parameterPorts
-                               FUNCTION: Linear,
-                               FUNCTION_PARAMS:
-                                   {SLOPE: 1,
-                                    INTERCEPT: 0},
-                               })
+
+    projection_sender = LearningMechanism
 
     @tc.typecheck
     def __init__(self,

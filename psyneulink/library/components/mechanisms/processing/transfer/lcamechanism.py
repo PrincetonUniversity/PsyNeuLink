@@ -6,7 +6,6 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 # NOTES:
-#  * COULD NOT IMPLEMENT integrator_function in paramClassDefaults (see notes below)
 #  * NOW THAT NOISE AND BETA ARE PROPRETIES THAT DIRECTLY REFERERNCE integrator_function,
 #      SHOULD THEY NOW BE VALIDATED ONLY THERE (AND NOT IN TransferMechanism)??
 #  * ARE THOSE THE ONLY TWO integrator PARAMS THAT SHOULD BE PROPERTIES??
@@ -324,13 +323,6 @@ class LCAMechanism(RecurrentTransferMechanism):
 
     """
     componentType = LCA_MECHANISM
-
-    paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        NOISE: None,
-        # RATE: None,
-        BETA: None
-    })
 
     class Parameters(RecurrentTransferMechanism.Parameters):
         """

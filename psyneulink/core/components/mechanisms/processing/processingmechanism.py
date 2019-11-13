@@ -157,7 +157,6 @@ class ProcessingMechanism_Base(Mechanism_Base):
     #     PREFERENCE_SET_NAME: 'ProcessingMechanismClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
-    paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
 
     standard_output_ports = Mechanism_Base.standard_output_ports.copy()
     standard_output_ports.extend([{NAME:MEAN,
@@ -298,8 +297,6 @@ class ProcessingMechanism(ProcessingMechanism_Base):
     classPreferences = {
         PREFERENCE_SET_NAME: 'ProcessingMechanismCustomClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
-
-    paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,

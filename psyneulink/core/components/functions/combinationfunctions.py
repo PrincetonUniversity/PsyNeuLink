@@ -203,8 +203,6 @@ class Concatenate(CombinationFunction):  # -------------------------------------
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -426,8 +424,6 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
         arrangement = Parameter(None, modulable=False)
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
@@ -732,8 +728,6 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         operation = SUM
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
@@ -1069,8 +1063,6 @@ class LinearCombination(
         PREFERENCE_SET_NAME: 'LinearCombinationCustomClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Parameters(CombinationFunction.Parameters):
         """
@@ -1648,7 +1640,6 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
-
     class Parameters(CombinationFunction.Parameters):
         """
             Attributes
@@ -1690,8 +1681,6 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         operation = SUM
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
@@ -1954,8 +1943,6 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         """
         variable = Parameter(np.array([[1], [1]]), pnl_internal=True, constructor_argument='default_variable')
         gamma = Parameter(1.0, modulable=True)
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,

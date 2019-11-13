@@ -348,7 +348,6 @@ class Function_Base(Function):
             + registry (dict): FunctionRegistry
             + classPreference (PreferenceSet): BasePreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-            + paramClassDefaults (dict): {FUNCTION_OUTPUT_TYPE_CONVERSION: :keyword:`False`}
 
         Class methods:
             none
@@ -357,7 +356,6 @@ class Function_Base(Function):
             + componentType (str):  assigned by subclasses
             + componentName (str):   assigned by subclasses
             + variable (value) - used as input to function's execute method
-            + paramInstanceDefaults (dict) - defaults for instance (created and validated in Components init)
             + value (value) - output of execute method
             + name (str) - if not specified as an arg, a default based on the class is assigned in register_category
             + prefs (PreferenceSet) - if not specified as an arg, default is created by copying BasePreferenceSet
@@ -450,14 +448,10 @@ class Function_Base(Function):
         """
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
+        enable_output_type_conversion = Parameter(False, stateful=False, loggable=False, pnl_internal=True)
     # Note: the following enforce encoding as 1D np.ndarrays (one array per variable)
     variableEncodingDim = 1
 
-    paramClassDefaults = Function.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        FUNCTION_OUTPUT_TYPE_CONVERSION: False,  # Enable/disable output type conversion
-        FUNCTION_OUTPUT_TYPE: None  # Default is to not convert
-    })
 
     @abc.abstractmethod
     def __init__(self,
@@ -472,11 +466,10 @@ class Function_Base(Function):
 
         Initialization arguments:
         - default_variable (anything): establishes type for the variable, used for validation
-        - params_default (dict): assigned as paramInstanceDefaults
         Note: if parameter_validation is off, validation is suppressed (for efficiency) (Function class default = on)
 
         :param default_variable: (anything but a dict) - value to assign as self.defaults.variable
-        :param params: (dict) - params to be assigned to paramInstanceDefaults
+        :param params: (dict) - params to be assigned as instance defaults
         :param log: (ComponentLog enum) - log entry types set in self.componentLog
         :param name: (string) - optional, overrides assignment of default (componentName of subclass)
         :return:
@@ -489,7 +482,6 @@ class Function_Base(Function):
 
 
         self._output_type = None
-        self.enable_output_type_conversion = False
 
         register_category(entry=self,
                           base_class=Function_Base,
@@ -804,13 +796,6 @@ class ArgumentTherapy(Function_Base):
     # Parameter class defaults
     # These are used both to type-cast the params, and as defaults if none are assigned
     #  in the initialization call or later (using either _instantiate_defaults or during a function call)
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-                               PARAMETER_PORT_PARAMS: None
-                               # PROPENSITY: Manner.CONTRARIAN,
-                               # PERTINACITY:  10
-                               })
 
     def __init__(self,
                  default_variable=None,

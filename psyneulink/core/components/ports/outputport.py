@@ -871,7 +871,7 @@ class OutputPort(Port_Base):
     projectionSocket = RECEIVER
     modulators = [GATING_SIGNAL, CONTROL_SIGNAL]
     canReceive = modulators
-
+    projection_type = MAPPING_PROJECTION
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
@@ -895,10 +895,6 @@ class OutputPort(Port_Base):
         """
         variable = Parameter(np.array([0]), read_only=True, getter=_output_port_variable_getter, pnl_internal=True, constructor_argument='default_variable')
 
-    paramClassDefaults = Port_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
-                               # DEFAULT_VARIABLE_SPEC: [(OWNER_VALUE, 0)]
-                               })
     #endregion
 
     @tc.typecheck
@@ -966,7 +962,7 @@ class OutputPort(Port_Base):
         # Consider adding self to owner.output_ports here (and removing from ControlProjection._instantiate_sender)
         #  (test for it, and create if necessary, as per OutputPorts in ControlProjection._instantiate_sender),
 
-        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
+        # Validate sender (as variable) and params
         super().__init__(owner,
                          variable=variable,
                          size=size,
@@ -1660,7 +1656,6 @@ def _parse_output_port_function(owner, output_port_name, function, params_dict_a
                                      OutputPort.name, owner.name, owner.name, VALUE))
             return lambda x: function(x[OWNER_VALUE][0])
     return function
-
 
 @tc.typecheck
 def _maintain_backward_compatibility(d:dict, name, owner):

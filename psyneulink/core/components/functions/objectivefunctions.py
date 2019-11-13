@@ -174,8 +174,6 @@ class Stability(ObjectiveFunction):
 
     componentName = STABILITY_FUNCTION
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     class Parameters(ObjectiveFunction.Parameters):
         """
             Attributes
@@ -270,15 +268,13 @@ class Stability(ObjectiveFunction):
         """
 
         # Validate matrix specification
-        if MATRIX in target_set:
+        # (str can be automatically transformed to variable shape)
+        if MATRIX in target_set and not isinstance(target_set[MATRIX], str):
 
             from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
             from psyneulink.core.components.ports.parameterport import ParameterPort
 
             matrix = target_set[MATRIX]
-
-            if isinstance(matrix, str):
-                matrix = get_matrix(matrix)
 
             if isinstance(matrix, MappingProjection):
                 try:
@@ -308,7 +304,14 @@ class Stability(ObjectiveFunction):
                                     format(param_type_string, MATRIX, self.name, matrix))
             rows = matrix.shape[0]
             cols = matrix.shape[1]
-            size = len(self.defaults.variable)
+
+            # this mirrors the transformation in _function
+            # it is a hack, and a general solution should be found
+            squeezed = np.array(self.defaults.variable)
+            if squeezed.ndim > 1:
+                squeezed = np.squeeze(squeezed)
+
+            size = safe_len(squeezed)
 
             if rows != size:
                 raise FunctionError("The value of the {} specified for the {} arg of {} is the wrong size;"
@@ -777,8 +780,6 @@ class Distance(ObjectiveFunction):
         """
         variable = Parameter(np.array([[0], [0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         metric = Parameter(DIFFERENCE, stateful=False)
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,

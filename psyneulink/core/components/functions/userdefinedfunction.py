@@ -356,14 +356,6 @@ class UserDefinedFunction(Function_Base):
     componentName = USER_DEFINED_FUNCTION
     componentType = USER_DEFINED_FUNCTION_TYPE
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        PARAMETER_PORT_PARAMS: None,
-        CUSTOM_FUNCTION: None,
-        MULTIPLICATIVE_PARAM: None,
-        ADDITIVE_PARAM: None
-    })
-
     @tc.typecheck
     def __init__(self,
                  custom_function=None,
@@ -405,7 +397,7 @@ class UserDefinedFunction(Function_Base):
 
                 # Use definition from the function as default;
                 #    this allows UDF to assign a value for this instance (including a MODULATORY spec)
-                #    while assigning an actual value to paramClassDefaults (in _assign_args_to_params_dicts);
+                #    while assigning an actual value to current/defaults (in _assign_args_to_params_dicts);
                 if arg.default is _empty:
                     defaults[arg_name] = None
 
@@ -482,6 +474,9 @@ class UserDefinedFunction(Function_Base):
                          owner=owner,
                          prefs=prefs,
                          )
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        pass
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         super()._instantiate_attributes_before_function(function=function, context=context)
