@@ -103,37 +103,41 @@ class TestThreshold:
         D.execute(2.0)   # 5.0 = threshold
         assert D.is_finished()
 
-    def test_threshold_stops_accumulation(self):
+    @pytest.mark.ddm_mechanism
+    @pytest.mark.mechanism
+    @pytest.mark.benchmark(group="DDM")
+    @pytest.mark.parametrize("variable, expected", [
+        (2., [2.0, 4.0, 5.0, 5.0, 5.0]),
+        (-2., [-2.0, -4.0, -5.0, -5.0, -5.0]),
+        ], ids=["POSITIVE", "NEGATIVE"])
+    @pytest.mark.parametrize("mode", [
+        "Python",
+        pytest.param("LLVM", marks=pytest.mark.llvm),
+        pytest.param("PTX", marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    ])
+    def test_threshold_stops_accumulation(self, mode, variable, expected, benchmark):
         D = DDM(name='DDM',
                 function=DriftDiffusionIntegrator(threshold=5.0))
+        if mode == "Python":
+            ex = D.execute
+        elif mode == "LLVM":
+            ex = pnlvm.execution.MechExecution(D).execute
+        elif mode == "PTX":
+            ex = pnlvm.execution.MechExecution(D).cuda_execute
+
         decision_variables = []
         time_points = []
         for i in range(5):
-            output = D.execute(2.0)
+            output = ex([variable])
             decision_variables.append(output[0][0][0])
             time_points.append(output[1][0][0])
 
         # decision variable accumulation stops
-        assert np.allclose(decision_variables, [2.0, 4.0, 5.0, 5.0, 5.0])
+        assert np.allclose(decision_variables, expected)
 
         # time accumulation does not stop
         assert np.allclose(time_points, [1.0, 2.0, 3.0, 4.0, 5.0])
-
-    def test_threshold_stops_accumulation_negative(self):
-        D = DDM(name='DDM',
-                function=DriftDiffusionIntegrator(threshold=5.0))
-        decision_variables = []
-        time_points = []
-        for i in range(5):
-            output = D.execute(-2.0)
-            decision_variables.append(output[0][0][0])
-            time_points.append(output[1][0][0])
-
-        # decision variable accumulation stops
-        assert np.allclose(decision_variables, [-2.0, -4.0, -5.0, -5.0, -5.0])
-
-        # time accumulation does not stop
-        assert np.allclose(time_points, [1.0, 2.0, 3.0, 4.0, 5.0])
+        benchmark(ex, [variable])
 
     # def test_threshold_stops_accumulation_multiple_variables(self):
     #     D = IntegratorMechanism(name='DDM',
