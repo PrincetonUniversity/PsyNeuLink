@@ -2569,6 +2569,10 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         threshold = self._gen_llvm_load_param(ctx, builder, params, index, THRESHOLD)
         time_step_size = self._gen_llvm_load_param(ctx, builder, params, index, TIME_STEP_SIZE)
 
+        if isinstance(rate.type, pnlvm.ir.ArrayType):
+            assert len(rate.type) == 1
+            rate = builder.extract_value(rate, 0)
+
         # Get state pointers
         prev_ptr = ctx.get_state_ptr(self, builder, state, "previous_value")
         prev_time_ptr = ctx.get_state_ptr(self, builder, state, "previous_time")
@@ -2579,6 +2583,9 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
                                               ctx.int32_ty(0), index])
         prev_val = builder.load(prev_val_ptr)
         val = builder.load(builder.gep(vi, [ctx.int32_ty(0), index]))
+        if isinstance(val.type, pnlvm.ir.ArrayType):
+            assert len(val.type) == 1
+            val = builder.extract_value(val, 0)
         val = builder.fmul(val, rate)
         val = builder.fmul(val, time_step_size)
         val = builder.fadd(val, prev_val)
