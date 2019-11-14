@@ -2033,12 +2033,15 @@ class Mechanism_Base(Mechanism):
         self._instantiate_output_ports(context=context)
         # instantiate parameter ports from UDF custom parameters if necessary
         try:
-            cfp = self.function.cust_fct_params
-            udf_parameters_lacking_ports = {param_name: cfp[param_name]
-                                            for param_name in cfp if param_name not in self.parameter_ports.names}
-
-            _instantiate_parameter_port(self, FUNCTION_PARAMS, udf_parameters_lacking_ports,
-                                        context=context, function=self.function)
+            for param_name, param_value in self.function.cust_fct_params.items():
+                if param_name not in self.parameter_ports.names:
+                    _instantiate_parameter_port(
+                        self,
+                        param_name,
+                        param_value,
+                        context=context,
+                        function=self.function
+                    )
             self._parse_param_port_sources()
         except AttributeError:
             pass
@@ -2517,8 +2520,11 @@ class Mechanism_Base(Mechanism):
                 continue
             if port.name in self.user_params:
                 self.user_params.__additem__(port.name, port.value)
-            if port.name in self.function_params:
-                self.function_params.__additem__(port.name, port.value)
+            try:
+                if port.name in self.function_params:
+                    self.function_params.__additem__(port.name, port.value)
+            except KeyError:
+                pass
 
     def _update_output_ports(self, context=None, runtime_params=None):
         """Execute function for each OutputPort and assign result of each to corresponding item of self.output_values
