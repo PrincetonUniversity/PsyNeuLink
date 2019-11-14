@@ -2,6 +2,8 @@ import numpy as np
 import pytest
 import typecheck
 
+import psyneulink.core.llvm as pnlvm
+
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.distributionfunctions import DriftDiffusionAnalytical, NormalDist
 from psyneulink.core.components.functions.function import FunctionError
@@ -227,30 +229,20 @@ def test_DDM_Integrator_Bogacz():
 # VALID NOISE:
 
 # ------------------------------------------------------------------------------------------------
-# TEST 1
-# noise = Single float
-
-
-def test_DDM_zero_noise():
-    stim = 10
-    T = DDM(
-        name='DDM',
-        function=DriftDiffusionIntegrator(
-            noise=0.0,
-            rate=1.0,
-            time_step_size=1.0
-        ),
-    )
-    val = float(T.execute(stim)[0])
-    assert val == 10
-
-# ------------------------------------------------------------------------------------------------
-# TEST 2
-# noise = Single float
-
-
-def test_DDM_noise_0_5():
-    stim = 10
+@pytest.mark.ddm_mechanism
+@pytest.mark.mechanism
+@pytest.mark.benchmark(group="DDM")
+@pytest.mark.parametrize("noise, expected", [
+    (0., 10),
+    (0.5, 8.194383551861414),
+    (2, 6.388767103722829),
+    ], ids=["0", "0.5", "2.0"])
+@pytest.mark.parametrize("mode", [
+    "Python",
+    pytest.param("LLVM", marks=pytest.mark.llvm),
+    pytest.param("PTX", marks=[pytest.mark.llvm, pytest.mark.cuda]),
+])
+def test_DDM_noise(mode, benchmark, noise, expected):
     T = DDM(
         name='DDM',
         function=DriftDiffusionIntegrator(
@@ -259,28 +251,16 @@ def test_DDM_noise_0_5():
             time_step_size=1.0
         )
     )
+    if mode == "Python":
+        ex = T.execute
+    elif mode == "LLVM":
+        ex = pnlvm.execution.MechExecution(T).execute
+    elif mode == "PTX":
+        ex = pnlvm.execution.MechExecution(T).cuda_execute
 
-    val = float(T.execute(stim)[0])
-
-    assert val == 8.194383551861414
-
-# ------------------------------------------------------------------------------------------------
-# TEST 3
-# noise = Single float
-
-
-def test_DDM_noise_2_0():
-    stim = 10
-    T = DDM(
-        name='DDM',
-        function=DriftDiffusionIntegrator(
-            noise=2.0,
-            rate=1.0,
-            time_step_size=1.0
-        )
-    )
-    val = float(T.execute(stim)[0])
-    assert val == 6.388767103722829
+    val = ex([10])
+    assert np.allclose(val[0][0][0], 8.194383551861414)
+    benchmark(ex, [10])
 
 # ------------------------------------------------------------------------------------------------
 
