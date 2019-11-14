@@ -1071,6 +1071,10 @@ class DDM(ProcessingMechanism):
                 return_value[self.DECISION_VARIABLE_INDEX] = threshold
             return return_value
 
+    def _gen_llvm_function_body(self, *args, **kwargs):
+        assert isinstance(self.function, IntegratorFunction)
+        return super()._gen_llvm_function_body(*args, **kwargs)
+
     @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, *args, context=None):
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
