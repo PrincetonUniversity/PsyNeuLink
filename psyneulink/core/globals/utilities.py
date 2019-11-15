@@ -1493,10 +1493,11 @@ def flatten_list(l):
     return [item for sublist in l for item in sublist]
 
 
-_seed = int(time.monotonic())
+_seed = np.int32((time.time() * 1000) % 2**31)
 def get_global_seed(offset=1):
     global _seed
     _seed += offset
+    _seed %= 2**31
     return _seed - offset
 
 
