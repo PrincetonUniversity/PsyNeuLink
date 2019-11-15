@@ -8,7 +8,7 @@ branches:
     - appveyor
     - /devel.*/
     - /.*-avy/
-    - /.*-ci/
+    - /ci-.*/
 
 environment:
   PYTHONWARNINGS: ignore::DeprecationWarning
