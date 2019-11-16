@@ -1202,7 +1202,7 @@ class Process(Process_Base):
         else:
             matrix_spec = self.default_projection_matrix
 
-        projection_params = {FUNCTION_PARAMS: {MATRIX: matrix_spec}}
+        projection_params = {FUNCTION_PARAMS: {MATRIX: matrix_spec}, MATRIX: matrix_spec}
 
         for i in range(len(pathway)):
             item = pathway[i]
@@ -1552,7 +1552,7 @@ class Process(Process_Base):
                                 )
 
                         # Check if it is specified for learning
-                        matrix_spec = item.function_params[MATRIX]
+                        matrix_spec = item._init_args['kwargs'][MATRIX]
                         if (
                             isinstance(matrix_spec, tuple)
                             and (

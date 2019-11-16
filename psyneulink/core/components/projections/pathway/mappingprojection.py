@@ -411,7 +411,7 @@ class MappingProjection(PathwayProjection_Base):
 
         """
         function = Parameter(LinearMatrix, stateful=False, loggable=False)
-        matrix = Parameter(DEFAULT_MATRIX, modulable=True, getter=_mapping_projection_matrix_getter, setter=_mapping_projection_matrix_setter)
+        matrix = Parameter(DEFAULT_MATRIX, modulable=True, function_parameter=True, getter=_mapping_projection_matrix_getter, setter=_mapping_projection_matrix_setter)
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
@@ -467,6 +467,7 @@ class MappingProjection(PathwayProjection_Base):
                          receiver=receiver,
                          weight=weight,
                          exponent=exponent,
+                         matrix=matrix,
                          function=function,
                          params=params,
                          name=name,
@@ -532,15 +533,13 @@ class MappingProjection(PathwayProjection_Base):
         except TypeError:
             mapping_output_len = 1
 
-        # FIX: CONVERT ALL REFS TO matrix_spec TO self._matrix_spec
-        # FIX: CREATE @PROPERTY FOR self._learning_spec AND ASSIGN IN INIT??
-        # FIX: HOW DOES mapping_output_len RELATE TO receiver_len?/
+        matrix_spec = self.defaults.matrix
 
-        if self._matrix_spec is AUTO_ASSIGN_MATRIX:
+        if matrix_spec is AUTO_ASSIGN_MATRIX:
             if mapping_input_len == receiver_len:
-                self._matrix_spec = IDENTITY_MATRIX
+                matrix_spec = IDENTITY_MATRIX
             else:
-                self._matrix_spec = FULL_CONNECTIVITY_MATRIX
+                matrix_spec = FULL_CONNECTIVITY_MATRIX
 
         # Length of the output of the Projection doesn't match the length of the receiving InputPort
         #    so consider reshaping the matrix
@@ -557,7 +556,7 @@ class MappingProjection(PathwayProjection_Base):
                 states_string = "from \'{}\' OuputState of \'{}\' to \'{}\'".format(self.sender.name,
                                                                                     self.sender.owner.name,
                                                                                     self.receiver.owner.name)
-            if not isinstance(self._matrix_spec, str):
+            if not isinstance(matrix_spec, str):
                 # if all(string in self.name for string in {'from', 'to'}):
 
                 raise ProjectionError("Width ({}) of the {} of \'{}{}\'{} "
@@ -570,7 +569,7 @@ class MappingProjection(PathwayProjection_Base):
                                              self.receiver.name,
                                              receiver_len))
 
-            elif self._matrix_spec == IDENTITY_MATRIX or self._matrix_spec == HOLLOW_MATRIX:
+            elif matrix_spec == IDENTITY_MATRIX or matrix_spec == HOLLOW_MATRIX:
                 # Identity matrix is not reshapable
                 raise ProjectionError("Output length ({}) of \'{}{}\' from {} to Mechanism \'{}\'"
                                       " must equal length of it InputPort ({}) to use {}".
@@ -580,7 +579,7 @@ class MappingProjection(PathwayProjection_Base):
                                              self.sender.name,
                                              self.receiver.owner.name,
                                              receiver_len,
-                                             self._matrix_spec))
+                                             matrix_spec))
             else:
                 # Flag that matrix is being reshaped
                 self.reshapedWeightMatrix = True
@@ -594,7 +593,7 @@ class MappingProjection(PathwayProjection_Base):
                                  receiver_len,
                                  self.receiver.owner.name))
 
-                self.matrix = get_matrix(self._matrix_spec, mapping_input_len, receiver_len, context=context)
+                self.matrix = get_matrix(matrix_spec, mapping_input_len, receiver_len, context=context)
 
                 # Since matrix shape has changed, output of self.function may have changed, so update value
                 self._instantiate_value(context=context)
@@ -612,37 +611,6 @@ class MappingProjection(PathwayProjection_Base):
                 )
 
         return value
-
-    @property
-    def _matrix_spec(self):
-        """Returns matrix specification in self.function_params[MATRIX]
-
-        Returns matrix param for MappingProjection, getting second item if it is
-         an unnamed (matrix, projection) tuple
-        """
-        return self._get_param_value_from_tuple(self.function_params[MATRIX])
-
-    @_matrix_spec.setter
-    def _matrix_spec(self, value):
-        """Assign matrix specification for self.function_params[MATRIX]
-
-        Assigns matrix param for MappingProjection, assigning second item if it is
-         a 2-item tuple or unnamed (matrix, projection) tuple
-        """
-
-        # Specification is a two-item tuple, so validate that 2nd item is:
-        # *LEARNING* or *LEARNING_PROJECTION* keyword, LearningProjection subclass, or instance of a LearningPojection
-        from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
-        if (isinstance(self.function_params[MATRIX], tuple) and
-                    len(self.function_params[MATRIX]) == 2 and
-                (self.function_params[MATRIX][1] in {LEARNING, LEARNING_PROJECTION}
-                 or isinstance(self.function_params[MATRIX][1], LearningProjection) or
-                     (inspect.isclass(self.function_params[MATRIX][1]) and
-                          issubclass(self.function_params[MATRIX][1], LearningProjection)))):
-            self.function_params.__additem__(MATRIX, (value, self.function_params[MATRIX][1]))
-
-        else:
-            self.function_params.__additem__(MATRIX, value)
 
     @property
     def logPref(self):
