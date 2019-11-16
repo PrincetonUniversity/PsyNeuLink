@@ -2822,17 +2822,15 @@ class Mechanism_Base(Mechanism):
 
     def _gen_llvm_output_port_parse_variable(self, ctx, builder,
                                              mech_params, mech_state, value, port):
-            os_in_spec = port._variable_spec
-            if os_in_spec == OWNER_VALUE:
+            port_spec = port._variable_spec
+            if port_spec == OWNER_VALUE:
                 return value
-            elif isinstance(os_in_spec, tuple) and os_in_spec[0] == OWNER_VALUE:
-                return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(os_in_spec[1])])
-            #FIXME: For some reason this can be wrapped in a list
-            elif isinstance(os_in_spec, list) and len(os_in_spec) == 1 and isinstance(os_in_spec[0], tuple) and os_in_spec[0][0] == OWNER_VALUE:
-                return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(os_in_spec[0][1])])
+            elif isinstance(port_spec, tuple) and port_spec[0] == OWNER_VALUE:
+                assert port_spec[1] < len(value.type.pointee)
+                return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(port_spec[1])])
             else:
                 #TODO: support more spec options
-                assert False, "Unsupported OutputPort spec: {} ({})".format(os_in_spec, value.type)
+                assert False, "Unsupported OutputPort spec: {} ({})".format(port_spec, value.type)
 
     def _gen_llvm_output_ports(self, ctx, builder, value,
                                mech_params, mech_state, mech_in, mech_out):
