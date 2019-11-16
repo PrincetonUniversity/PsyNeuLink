@@ -26,7 +26,7 @@ Overview
 --------
 
 ParameterPorts belong to either a `Mechanism <Mechanism>` or a `Projection <Projection>`. A ParameterPort is created
-to represent each `modulatable parameter <ParameterPort_Configurable_Parameters>` of the `Mechanism
+to represent each `modulatable parameter <ParameterPort_Modulable_Parameters>` of the `Mechanism
 <Mechanism>` or a `Projection <Projection>`, as well as those of the component's `function <Component_Function>`. A
 ParameterPort provides the current value of the parameter it represents during any relevant computations, and serves as
 an interface for parameter modulation.
@@ -63,9 +63,10 @@ Creating a ParameterPort
 ParameterPorts are created automatically when the `Mechanism <Mechanism>` or `Projection <Projection>` to which they
 belong is created.  The `owner <Port.owner>` of a ParameterPort must be a `Mechanism <Mechanism>` or `MappingProjection`
 (the initialization of a ParameterPort cannot be `deferred <Port_Deferred_Initialization>`). One ParameterPort is
-created for each configurable parameter of its owner, as well as for each configurable parameter of the owner's
-`function <Component.function>` (the `configurable parameters <ParameterPort_Configurable_Parameters>` of a Component
-are listed in its `user_params <Component.user_params>` and function_params <Component.function_params>` dictionaries.
+created for each modulable Parameter of its owner, as well as for each modulable Parameter of the owner's
+`function <Component.function>` (modulable Parameters of a Component
+are listed in its `Parameters` class, and have the attribute
+`modulable <Parameter.modulable>` set to True.)
 Each ParameterPort is created using the value specified for the corresponding parameter, as described below.  The
 ParameterPorts for the parameters of a Mechanism or Projection are listed in its `parameter_ports` attribute.
 
@@ -109,7 +110,7 @@ Parameters can be specified in one of several places:
       assigned to the argument for the parameter in the Component's constructor.
     ..
     * By direct assignment to the Component's attribute for the parameter
-      (see `below <ParameterPort_Configurable_Parameters>`).
+      (see `below <ParameterPort_Modulable_Parameters>`).
     ..
     * In the `assign_params <Component.assign_params>` method for the Component.
     ..
@@ -317,13 +318,11 @@ following core attributes:
 * `value <ParameterPort.value>` - the result of `function <ParameterPort.function>`; used by the ParameterPort's
   owner as the value of the parameter for which the ParameterPort is responsible.
 
-.. _ParameterPort_Configurable_Parameters:
+.. _ParameterPort_Modulable_Parameters:
 
-All of the configurable parameters of a Component -- that is, for which it has ParameterPorts -- are listed in its
-`user_params <Component.user_params>` attribute, which is a read-only dictionary with an entry for each parameter.
-The parameters for a Component's `function <Component.function>` are listed both in a *FUNCTION_PARAMS* entry of the
-`user_params <Component.user_params>` dictionary, and in their own `function_params <Component.function_params>`
-attribute, which is also a read-only dictionary (with an entry for each of its function's parameters).  The
+All of the modulable parameters of a Component -- that is, for which it has ParameterPorts --
+are listed in its `Parameters` class, and have the attribute
+`modulable <Parameter.modulable>` set to True.  The
 ParameterPorts for a Mechanism or Projection are listed in its :keyword:`parameter_ports` attribute, which is also
 read-only.
 
@@ -837,7 +836,7 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
         for p in owner.function.parameters:
             if not skip_parameter_port(p):
                 try:
-                    value = owner.function_params[p.name]
+                    value = owner.initial_function_parameters[p.name]
                 except (KeyError, TypeError):
                     if p.spec is not None:
                         value = p.spec
@@ -874,7 +873,7 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
 def _instantiate_parameter_port(owner, param_name, param_value, context, function=None):
     """Call _instantiate_port for allowable params, to instantiate a ParameterPort for it
 
-    Include ones in owner.user_params[FUNCTION_PARAMS] (nested iteration through that dict)
+    Include ones in function.parameters
     Exclude if it is a:
         ParameterPort that already exists (e.g., in case of a call from Component.assign_params)
         non-numeric value (including NotImplemented, False or True)
@@ -995,16 +994,6 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
 
         if not _is_legal_param_value(owner, function_param_value):
             return
-
-        # Raise exception if the function parameter's name is the same as one that already exists for its owner
-        if function_param_name in owner.user_params:
-            if inspect.isclass(function):
-                function_name = function.__name__
-            else:
-                function_name= function.name
-            raise ParameterPortError("PROGRAM ERROR: the function ({}) of a component ({}) has a parameter ({}) "
-                                      "with the same name as a parameter of the component itself".
-                                      format(function_name, owner.name, function_param_name))
 
         elif (_is_modulatory_spec(function_param_value, include_matrix_spec=False)
               and not isinstance(function_param_value, tuple)):

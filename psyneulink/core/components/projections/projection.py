@@ -539,7 +539,7 @@ class Projection_Base(Projection):
 
     parameter_ports : ContentAddressableList[str, ParameterPort]
         a read-only list of the Projection's `ParameterPorts <Mechanism_ParameterPorts>`, one for each of its
-        `configurable parameters <ParameterPort_Configurable_Parameters>`, including those of its `function
+        `modulable parameters <ParameterPort_Modulable_Parameters>`, including those of its `function
         <Projection_Base.function>`.  The value of the parameters of the Projection and its `function
         <Projection_Base.function>` are also accessible as (and can be modified using) attributes of the Projection,
         in the same manner as they can for a `Mechanism <Mechanism_ParameterPorts>`).
@@ -613,6 +613,7 @@ class Projection_Base(Projection):
                  name=None,
                  prefs=None,
                  context=None,
+                 **kwargs
                  ):
         """Assign sender, receiver, and execute method and register Mechanism with ProjectionRegistry
 
@@ -729,7 +730,9 @@ class Projection_Base(Projection):
                                               function=function,
                                               param_defaults=params,
                                               name=self.name,
-                                              prefs=prefs)
+                                              prefs=prefs,
+                                              **kwargs
+                                              )
 
         self._assign_default_projection_name()
 
@@ -1000,6 +1003,16 @@ class Projection_Base(Projection):
 
     def _delete_projection(projection):
         raise ProjectionError(f"{Projection.__name__} class {type(projection)} does not implement _delete method.")
+
+    @property
+    def _model_spec_parameter_blacklist(self):
+        """
+            A set of Parameter names that should not be added to the generated
+            constructor string
+        """
+        return super()._model_spec_parameter_blacklist.union(
+            {'variable'}
+        )
 
     @property
     def _dict_summary(self):

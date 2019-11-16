@@ -582,11 +582,6 @@ see `ParameterPort_Specification`).  Note that the attributes for the parameters
 <Component.function>` attribute, not the Mechanism itself, and therefore must be assigned to the Function
 Component (see `Mechanism_Function` above).
 
-All of the Mechanism's parameters are listed in a dictionary in its `user_params` attribute; that dictionary contains
-a *FUNCTION_PARAMS* entry that contains a sub-dictionary with the parameters of the Mechanism's `function
-<Mechanism_Base.function>`.  The *FUNCTION_PARAMS* sub-dictionary is also accessible directly from the Mechanism's
-`function_params <Mechanism_Base.function_params>` attribute.
-
 .. _Mechanism_OutputPorts:
 
 OutputPorts
@@ -1143,13 +1138,13 @@ class Mechanism_Base(Mechanism):
 
     parameter_ports : ContentAddressableList[str, ParameterPort]
         a read-only list of the Mechanism's `ParameterPorts <Mechanism_ParameterPorts>`, one for each of its
-        `configurable parameters <ParameterPort_Configurable_Parameters>`, including those of its `function
+        `modulable parameters <ParameterPort_Modulable_Parameters>`, including those of its `function
         <Mechanism_Base.function>`.  The value of the parameters of the Mechanism and its `function
         <Mechanism_Base.function>` are also accessible as (and can be modified using) attributes of the Mechanism
         (see `Mechanism_ParameterPorts`).
 
     COMMENT:
-       MOVE function and function_params (and add user_params) to Component docstring
+       MOVE function to Component docstring
     COMMENT
 
     function : Function, function or method
@@ -2498,11 +2493,6 @@ class Mechanism_Base(Mechanism):
                 continue
             if port.name in self.user_params:
                 self.user_params.__additem__(port.name, port.value)
-            try:
-                if port.name in self.function_params:
-                    self.function_params.__additem__(port.name, port.value)
-            except (KeyError, TypeError):
-                pass
 
     def _update_output_ports(self, context=None, runtime_params=None):
         """Execute function for each OutputPort and assign result of each to corresponding item of self.output_values

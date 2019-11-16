@@ -220,22 +220,10 @@ A Component defines its `parameters <Parameters>` in its *parameters* attribute,
 
 .. _Component_Function_Params:
 
-* **function_params** - the `function_params <Component.function>` attribute contains a dictionary of the parameters
-  for the Component's `function <Component.function>` and their values.  Each entry is the name of a parameter, and its
-  value is the value of that parameter.  The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python
-  class `UserList <https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict>`_). The
-  value of an entry can be accessed in the standard manner (e.g., ``my_component.function_params[`PARAMETER NAME`]``);
-  as can its  full list of its entries (e.g., ``my_component.function_params``).  However, because it is read-only,
-  it cannot be used to make assignments. Rather, changes to the value of a function's parameters must be made by
-  assigning a value to the corresponding attribute of the Component's `function <Component.function>`
-  attribute (e.g., ``my_component.function.my_parameter``), or in a FUNCTION_PARAMS dict using its
-  `assign_params` method.  The parameters for a function can be specified when the Component is created in one of
+* **initial_function_parameters** - the `initial_function_parameters <Component.function>` attribute contains a dictionary of the parameters
+  for the Component's `function <Component.function>` and their values, to be used to instantiate the function.  Each entry is the name of a parameter, and its
+  value is the value of that parameter. The parameters for a function can be specified when the Component is created in one of
   the following ways:
-
-      * in the **constructor** for a Function -- if that is used to specify the `function <Component.function>`
-        argument, as in the following example::
-
-            my_component = SomeComponent(function=SomeFunction(some_param=1, some_param=2)
 
       * in an argument of the **Component's constructor** -- if all of the allowable functions for a Component's
         `function <Component.function>` share some or all of their parameters in common, the shared paramters may appear
@@ -769,9 +757,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     function : Function, function or method
         see `function <Component_Function>`
 
-    function_params : Dict[param_name: param_value]
-        see `function_params <Component_Function_Params>`
-
     user_params : Dict[param_name: param_value]
         see `user_params <Component_User_Params>`
 
@@ -1044,10 +1029,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         )
 
         try:
-            function_params = param_defaults[FUNCTION_PARAMS]
+            function_params = copy.copy(param_defaults[FUNCTION_PARAMS])
         except KeyError:
-            function_params = None
-        self.function_params = function_params
+            function_params = {}
 
         # allow override of standard arguments with arguments specified in
         # params (here, param_defaults) argument
@@ -1058,6 +1042,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 pass
 
         self._initialize_parameters(context=context, **param_defaults, **kwargs)
+
+        combined_args = {**param_defaults, **kwargs}
+        self.initial_function_parameters = {
+            k: v for k, v in combined_args.items() if k in self.parameters.names() and getattr(self.parameters, k).function_parameter
+        }
 
         v = self._handle_default_variable(default_variable, size)
         if v is None:
@@ -1455,6 +1444,12 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 pass
 
             self._init_args['context'] = context
+
+            try:
+                self._init_args.update(self._init_args['kwargs'])
+                del self._init_args['kwargs']
+            except KeyError:
+                pass
 
             # Complete initialization
             # MODIFIED 10/27/18 OLD:
@@ -1976,10 +1971,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             k: copy.deepcopy(v) for (k, v) in self.class_defaults.values(show_all=True).items()
             if not k in alias_names
         }
-        try:
-            function_params = param_defaults[FUNCTION_PARAMS]
-        except KeyError:
-            function_params = None
 
         if param_defaults is not None:
             # Exclude any function_params from the items to set on this Component
@@ -2538,7 +2529,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                                     target_set[param_name] = param_value.copy()
 
                         else:
-                            target_set[param_name] = param_value.copy()
+                            target_set[param_name] = copy.copy(param_value)
 
             # If param is a function_type (or it has a function attribute that is one), allow any other function_type
             elif callable(param_value):
@@ -2734,9 +2725,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                                                 custom_function=function,
                                                 owner=self,
                                                 context=context)
-            self.function_params = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
-            for param_name in self.function.cust_fct_params:
-                self.function_params.__additem__(param_name, self.function.cust_fct_params[param_name])
 
         # Specification is an already implemented Function
         elif isinstance(function, Function):
