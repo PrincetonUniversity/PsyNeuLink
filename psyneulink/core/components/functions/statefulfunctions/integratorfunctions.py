@@ -2310,8 +2310,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
 
     noise : float
         scales the normally distributed random value added to integral in each call to `function
-        <DriftDiffusionIntegrator.function>`.  A single random term is generated each execution, and applied to all
-        elements of `variable <DriftDiffusionIntegrator.variable>` if that is an array with more than one element.
+        <DriftDiffusionIntegrator.function>`. One random term is generated per element each execution.
 
     COMMENT:
     FIX: REPLACE ABOVE WITH THIS ONCE LIST/ARRAY SPECIFICATION OF NOISE IS FULLY IMPLEMENTED
@@ -2537,8 +2536,9 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
 
         previous_value = np.atleast_2d(self.get_previous_value(context))
 
+        random_draw = np.array([random_state.normal() for _ in list(variable)])
         value = previous_value + rate * variable * time_step_size \
-                + np.sqrt(time_step_size * noise) * random_state.normal()
+                + np.sqrt(time_step_size * noise) * random_draw
 
         adjusted_value = np.clip(value + offset, -threshold, threshold)
 
@@ -2560,14 +2560,19 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         self.parameters.previous_value._set(previous_value, context)
         return previous_value, previous_time
 
-    def _gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state,
-                            rand_val):
+    def _gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
         # Get parameter pointers
         rate = self._gen_llvm_load_param(ctx, builder, params, index, RATE)
         noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE)
         offset = self._gen_llvm_load_param(ctx, builder, params, index, OFFSET)
         threshold = self._gen_llvm_load_param(ctx, builder, params, index, THRESHOLD)
         time_step_size = self._gen_llvm_load_param(ctx, builder, params, index, TIME_STEP_SIZE)
+
+        random_state = ctx.get_state_ptr(self, builder, state, "random_state")
+        rand_val_ptr = builder.alloca(ctx.float_ty)
+        rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_normal")
+        builder.call(rand_f, [random_state, rand_val_ptr])
+        rand_val = builder.load(rand_val_ptr)
 
         if isinstance(rate.type, pnlvm.ir.ArrayType):
             assert len(rate.type) == 1
@@ -2616,19 +2621,6 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
 
         time_vo_ptr = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(1), index])
         builder.store(curr_time, time_vo_ptr)
-
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
-        random_state = ctx.get_state_ptr(self, builder, state, "random_state")
-        rand_val_ptr = builder.alloca(ctx.float_ty)
-        rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_normal")
-        builder.call(rand_f, [random_state, rand_val_ptr])
-        rand_val = builder.load(rand_val_ptr)
-
-        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "integrate") as args:
-            self._gen_llvm_integrate(*args, ctx, arg_in, arg_out, params, state,
-                                     rand_val)
-
-        return builder
 
 
 class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # --------------------------------------------------------------
