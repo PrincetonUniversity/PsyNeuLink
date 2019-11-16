@@ -838,7 +838,7 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
             if not skip_parameter_port(p):
                 try:
                     value = owner.function_params[p.name]
-                except KeyError:
+                except (KeyError, TypeError):
                     if p.spec is not None:
                         value = p.spec
                     else:

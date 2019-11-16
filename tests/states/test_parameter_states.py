@@ -79,7 +79,7 @@ class TestConfigurableParameters:
 
         # SLOPE - - - - - - - -
 
-        assert np.allclose(T.user_params["function_params"]["slope"], old_value)
+        assert np.allclose(T.function_params["slope"], old_value)
         assert np.allclose(T.function.slope, old_value)
         assert np.allclose(T.mod_slope, old_value)
 
@@ -87,13 +87,13 @@ class TestConfigurableParameters:
 
         # KAM changed 3/2/18 --
         # function_params looks at ParameterPort value, so this will not update until next execution
-        assert np.allclose(T.user_params["function_params"]["slope"], old_value)
+        assert np.allclose(T.function_params["slope"], old_value)
         assert np.allclose(T.function.slope, new_value)
         assert np.allclose(T.mod_slope, old_value)
 
         # INTERCEPT - - - - - - - -
 
-        assert np.allclose(T.user_params["function_params"]["intercept"], old_value)
+        assert np.allclose(T.function_params["intercept"], old_value)
         assert np.allclose(T.function.intercept, old_value)
         assert np.allclose(T.mod_intercept, old_value)
 
@@ -101,7 +101,7 @@ class TestConfigurableParameters:
 
         # KAM changed 3/2/18 --
         # function_params looks at ParameterPort value, so this will not update until next execution
-        assert np.allclose(T.user_params["function_params"]["intercept"], old_value)
+        assert np.allclose(T.function_params["intercept"], old_value)
         assert np.allclose(T.function.intercept, new_value)
         assert np.allclose(T.mod_intercept, old_value)
 
@@ -135,11 +135,11 @@ class TestConfigurableParameters:
 
         T.execute(1.0)
 
-        assert np.allclose(T.user_params["function_params"]["slope"], new_value)
+        assert np.allclose(T.function_params["slope"], new_value)
         assert np.allclose(T.function.slope, new_value)
         assert np.allclose(T.mod_slope, new_value)
 
-        assert np.allclose(T.user_params["function_params"]["intercept"], new_value)
+        assert np.allclose(T.function_params["intercept"], new_value)
         assert np.allclose(T.function.intercept, new_value)
         assert np.allclose(T.mod_intercept, new_value)
 
