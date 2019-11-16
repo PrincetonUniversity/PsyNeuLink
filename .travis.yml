@@ -4,6 +4,7 @@ branches:
     - devel
     - /devel-.*/
     - /travis.*/
+    - /ci-.*/
 
 language: shell
 
