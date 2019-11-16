@@ -215,7 +215,7 @@ class MaskedMappingProjection(MappingProjection):
             if isinstance(mask, (int, float)):
                 return
             mask_shape = np.array(mask).shape
-            matrix = get_matrix(self.user_params[FUNCTION_PARAMS][MATRIX],
+            matrix = get_matrix(self.function_params[MATRIX],
                                 len(self.sender.defaults.value), len(self.receiver.defaults.value))
             matrix_shape = matrix.shape
             if mask_shape != matrix_shape:

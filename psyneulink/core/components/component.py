@@ -1047,6 +1047,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             function_params = param_defaults[FUNCTION_PARAMS]
         except KeyError:
             function_params = None
+        self.function_params = function_params
 
         # allow override of standard arguments with arguments specified in
         # params (here, param_defaults) argument
@@ -3364,14 +3365,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # TODO: currently no validation, should replicate from _instantiate_function
         self.parameters.function._set(value, Context())
         self._parse_param_port_sources()
-
-    @property
-    def function_params(self):
-        return self.user_params[FUNCTION_PARAMS]
-
-    @function_params.setter
-    def function_params(self, val):
-        self.user_params.__additem__(FUNCTION_PARAMS, val)
 
     @property
     def class_parameters(self):

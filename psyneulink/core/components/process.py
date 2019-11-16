@@ -448,6 +448,7 @@ Class Reference
 
 """
 
+import copy
 import inspect
 import itertools
 import numbers
@@ -1420,7 +1421,7 @@ class Process(Process_Base):
                     projection = MappingProjection(
                         sender=preceding_item,
                         receiver=receiver,
-                        params=projection_params,
+                        params=copy.copy(projection_params),
                         name='{} from {} to {}'.format(MAPPING_PROJECTION, preceding_item.name, item.name)
                     )
 

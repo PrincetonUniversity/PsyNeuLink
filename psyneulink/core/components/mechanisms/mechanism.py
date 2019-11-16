@@ -2523,7 +2523,7 @@ class Mechanism_Base(Mechanism):
             try:
                 if port.name in self.function_params:
                     self.function_params.__additem__(port.name, port.value)
-            except KeyError:
+            except (KeyError, TypeError):
                 pass
 
     def _update_output_ports(self, context=None, runtime_params=None):
