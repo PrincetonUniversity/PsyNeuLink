@@ -32,14 +32,24 @@ def AdaptiveIntFun(init, value, iterations, rate, noise, offset, **kwargs):
 
 def DriftIntFun(init, value, iterations, **kwargs):
     assert iterations == 3
-    if "initializer" not in kwargs:
-        return ([0.35782281, 4.03326927, 4.90427264, 0.90944534, 1.45943493,
-                 2.31791882, 3.05580281, 1.20089146, 2.8408554 , 1.93964773],
-                [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.])
+    if np.isscalar(kwargs["noise"]):
+        if "initializer" not in kwargs:
+            return ([0.35782281, 4.03326927, 4.90427264, 0.90944534, 1.45943493,
+                     2.31791882, 3.05580281, 1.20089146, 2.8408554 , 1.93964773],
+                    [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.])
+        else:
+            return ([1.14954785, 4.56216419, 5.4723172 , 1.83504198, 1.53047099,
+                     2.40504812, 3.07602121, 2.0335113 , 3.61901215, 2.80965988],
+                    [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.])
     else:
-        return ([1.14954785, 4.56216419, 5.4723172 , 1.83504198, 1.53047099,
-                 2.40504812, 3.07602121, 2.0335113 , 3.61901215, 2.80965988],
-                [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.])
+        if "initializer" not in kwargs:
+            return ([0.17810305, 4.06675934, 4.20730295, 0.90582833, 1.60883329,
+                     2.27822395, 2.2923697 , 1.10933472, 2.71418965, 1.86808107],
+                    [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.])
+        else:
+            return ([0.96982809, 4.59565426, 4.77534751, 1.83142497, 1.67986935,
+                     2.36535325, 2.3125881 , 1.94195457, 3.4923464 , 2.73809322],
+                    [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.])
 
 
 GROUP_PREFIX="IntegratorFunction "
@@ -65,9 +75,6 @@ GROUP_PREFIX="IntegratorFunction "
 @pytest.mark.benchmark
 def test_execute(func, mode, variable, params, benchmark):
     benchmark.group = GROUP_PREFIX + func[0].componentName
-    # Filter out illegal combinations
-    if func[0] is Functions.DriftDiffusionIntegrator and not np.isscalar(params["noise"]):
-        pytest.skip("DDI needs scalar noise")
     f = func[0](default_variable=variable, **params)
     if mode == "Python":
         ex = f

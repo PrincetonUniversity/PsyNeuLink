@@ -2308,12 +2308,6 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         *MULTIPLICATIVE_PARAM* for `modulation <ModulatorySignal_Modulation>` of `function
         <DriftDiffusionIntegrator.function>`.
 
-    noise : float
-        scales the normally distributed random value added to integral in each call to `function
-        <DriftDiffusionIntegrator.function>`. One random term is generated per element each execution.
-
-    COMMENT:
-    FIX: REPLACE ABOVE WITH THIS ONCE LIST/ARRAY SPECIFICATION OF NOISE IS FULLY IMPLEMENTED
     noise : float or 1d array
         scales the normally distributed random value added to integral in each call to `function
         <DriftDiffusionIntegrator.function>`. If `variable <DriftDiffusionIntegrator.variable>` is a list or array,
@@ -2497,10 +2491,10 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         self._output_type = None
 
     def _validate_noise(self, noise):
-        if not isinstance(noise, float):
+        if not isinstance(noise, float) and not(isinstance(noise, np.ndarray) and np.issubdtype(noise.dtype, np.floating)):
             raise FunctionError(
-                "Invalid noise parameter for {}. DriftDiffusionIntegrator requires noise parameter to be a float. Noise"
-                " parameter is used to construct the standard DDM noise distribution".format(self.name))
+                "Invalid noise parameter for {}: {}. DriftDiffusionIntegrator requires noise parameter to be a float or float array."
+                " Noise parameter is used to construct the standard DDM noise distribution".format(self.name, type(noise)))
 
     def _function(self,
                  variable=None,
