@@ -28,6 +28,7 @@ from enum import IntEnum
 import numpy as np
 import typecheck as tc
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function_Base, FunctionError
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, DIST_FUNCTION_TYPE, BETA, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_ANALYTICAL_FUNCTION, \
@@ -1285,6 +1286,269 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
 
 
         return moments
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+
+        def load_scalar_param(name):
+            param_ptr = ctx.get_param_ptr(self, builder, params, name)
+            return pnlvm.helpers.load_extract_scalar_array_one(builder, param_ptr)
+
+        attentional_drift_rate = load_scalar_param(DRIFT_RATE)
+        threshold = load_scalar_param(THRESHOLD)
+        starting_point = load_scalar_param(STARTING_POINT)
+        noise = load_scalar_param(NOISE)
+        t0 = load_scalar_param(NON_DECISION_TIME)
+
+        noise_sqr = builder.fmul(noise, noise)
+
+        stimulus_drift_rate = pnlvm.helpers.load_extract_scalar_array_one(builder, arg_in)
+        drift_rate = builder.fmul(attentional_drift_rate, stimulus_drift_rate)
+
+        threshold_2 = builder.fmul(threshold, threshold.type(2))
+        bias = builder.fadd(starting_point, threshold)
+        bias = builder.fdiv(bias, threshold_2)
+
+        bias = pnlvm.helpers.fclamp(builder, bias, 1e-8, 1 - 1e-8)
+
+        rt_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        er_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(1)])
+
+        abs_f = ctx.get_builtin("fabs", [bias.type])
+        abs_drift_rate = builder.call(abs_f, [drift_rate])
+        small_drift_rate = builder.fcmp_ordered("<", abs_drift_rate,
+                                                abs_drift_rate.type(1e-8))
+
+        with builder.if_else(small_drift_rate) as (then, otherwise):
+            with then:
+                bias_abs = builder.fmul(bias, bias.type(2))
+                bias_abs = builder.fmul(bias_abs, threshold)
+                bias_abs = builder.fsub(bias_abs, threshold)
+
+                bias_abs_sqr = builder.fmul(bias_abs, bias_abs)
+                threshold_sqr = builder.fmul(threshold, threshold)
+                rt = builder.fsub(threshold_sqr, bias_abs_sqr)
+                rt = builder.fdiv(rt, noise_sqr)
+                rt = builder.fadd(t0, rt)
+                builder.store(rt, rt_ptr)
+
+                er = builder.fsub(threshold, bias_abs)
+                er = builder.fdiv(er, threshold_2)
+                builder.store(er, er_ptr)
+            with otherwise:
+                drift_rate_normed = builder.call(abs_f, [drift_rate])
+                ztilde = builder.fdiv(threshold, drift_rate_normed)
+                atilde = builder.fdiv(drift_rate_normed, noise)
+                atilde = builder.fmul(atilde, atilde)
+
+                is_neg_drift = builder.fcmp_ordered("<", drift_rate,
+                                                    drift_rate.type(0))
+                bias_rev = builder.fsub(bias.type(1), bias)
+                bias_adj = builder.select(is_neg_drift, bias_rev, bias)
+
+                noise_tmp = builder.fdiv(noise_sqr, noise_sqr.type(2))
+
+                log_f = ctx.get_builtin("log", [bias_adj.type])
+                bias_tmp = builder.fsub(bias_adj.type(1), bias_adj)
+                bias_tmp = builder.fdiv(bias_adj, bias_tmp)
+                bias_log = builder.call(log_f, [bias_tmp])
+                y0tilde = builder.fmul(noise_tmp, bias_log)
+
+                assert not self.shenhav_et_al_compat_mode
+                threshold_neg = pnlvm.helpers.fneg(builder, threshold)
+                new_y0tilde = builder.select(is_neg_drift, threshold_neg,
+                                                           threshold)
+                abs_y0tilde = builder.call(abs_f, [y0tilde])
+                abs_y0tilde_above_threshold = \
+                    builder.fcmp_ordered(">", abs_y0tilde, threshold)
+                y0tilde = builder.select(abs_y0tilde_above_threshold,
+                                         new_y0tilde, y0tilde)
+
+                x0tilde = builder.fdiv(y0tilde, drift_rate_normed)
+
+                exp_f = ctx.get_builtin("exp", [bias_adj.type])
+                # Precompute the same values as Python above
+                neg2_x0tilde_atilde = builder.fmul(x0tilde.type(-2), x0tilde)
+                neg2_x0tilde_atilde = builder.fmul(neg2_x0tilde_atilde, atilde)
+                exp_neg2_x0tilde_atilde = builder.call(exp_f, [neg2_x0tilde_atilde])
+
+                n2_ztilde_atilde = builder.fmul(ztilde.type(2), ztilde)
+                n2_ztilde_atilde = builder.fmul(n2_ztilde_atilde, atilde)
+                exp_2_ztilde_atilde = builder.call(exp_f, [n2_ztilde_atilde])
+
+                neg2_ztilde_atilde = builder.fmul(ztilde.type(-2), ztilde)
+                neg2_ztilde_atilde = builder.fmul(neg2_ztilde_atilde, atilde)
+                exp_neg2_ztilde_atilde = builder.call(exp_f, [neg2_ztilde_atilde])
+                # The final computation er
+                er_tmp1 = builder.fadd(exp_2_ztilde_atilde.type(1),
+                                       exp_2_ztilde_atilde)
+                er_tmp1 = builder.fdiv(er_tmp1.type(1), er_tmp1)
+                er_tmp2 = builder.fsub(exp_neg2_x0tilde_atilde.type(1),
+                                       exp_neg2_x0tilde_atilde)
+                er_tmp3 = builder.fsub(exp_2_ztilde_atilde,
+                                       exp_neg2_ztilde_atilde)
+                er_tmp = builder.fdiv(er_tmp2, er_tmp3)
+                er = builder.fsub(er_tmp1, er_tmp)
+                comp_er = builder.fsub(er.type(1), er)
+                er = builder.select(is_neg_drift, comp_er, er)
+                builder.store(er, er_ptr)
+
+                # The final computation rt
+                rt_tmp0 = builder.fmul(ztilde, atilde)
+                rt_tmp0 = pnlvm.helpers.tanh(ctx, builder, rt_tmp0)
+                rt_tmp0 = builder.fmul(ztilde, rt_tmp0)
+
+                rt_tmp1a = builder.fmul(ztilde.type(2), ztilde)
+                rt_tmp1b = builder.fsub(exp_neg2_x0tilde_atilde.type(1),
+                                       exp_neg2_x0tilde_atilde)
+                rt_tmp1 = builder.fmul(rt_tmp1a, rt_tmp1b)
+
+                rt_tmp2 = builder.fsub(exp_2_ztilde_atilde,
+                                       exp_neg2_ztilde_atilde)
+
+                rt = builder.fdiv(rt_tmp1, rt_tmp2)
+                rt = builder.fsub(rt, x0tilde)
+                rt = builder.fadd(rt_tmp0, rt)
+                rt = builder.fadd(rt, t0)
+                builder.store(rt, rt_ptr)
+
+        # Calculate moments
+        mean_rt_plus_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        var_rt_plus_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(3)])
+        skew_rt_plus_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(4)])
+        mean_rt_minus_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(5)])
+        var_rt_minus_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(6)])
+        skew_rt_minus_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(7)])
+        # Transform starting point to be centered at 0
+        starting_point = bias
+        starting_point = builder.fsub(starting_point, starting_point.type(0.5))
+        starting_point = builder.fmul(starting_point, starting_point.type(2))
+        starting_point = builder.fmul(starting_point, threshold)
+
+        abs_drift_rate = builder.call(abs_f, [drift_rate])
+        drift_rate_limit = abs_drift_rate.type(0.01)
+        small_drift = builder.fcmp_ordered("<", abs_drift_rate, drift_rate_limit)
+        drift_rate = builder.select(small_drift, drift_rate_limit, drift_rate)
+
+        X = builder.fmul(drift_rate, starting_point)
+        X = builder.fdiv(X, noise_sqr)
+        X = pnlvm.helpers.fclamp(builder, X, X.type(-100), X.type(100))
+
+        Z = builder.fmul(drift_rate, threshold)
+        Z = builder.fdiv(Z, noise_sqr)
+        Z = pnlvm.helpers.fclamp(builder, Z, Z.type(-100), Z.type(100))
+
+        abs_Z = builder.call(abs_f, [Z])
+        tiny_Z = builder.fcmp_ordered("<", Z, Z.type(0.0001))
+        Z = builder.select(tiny_Z, Z.type(0.0001), Z)
+
+        # Mean helpers
+        drift_rate_sqr = builder.fmul(drift_rate, drift_rate)
+        Z2 = builder.fmul(Z, Z.type(2))
+        coth_Z2 = pnlvm.helpers.coth(ctx, builder, Z2)
+        Z2_coth_Z2 = builder.fmul(Z2, coth_Z2)
+        ZpX = builder.fadd(Z, X)
+        coth_ZpX = pnlvm.helpers.coth(ctx, builder, ZpX)
+        ZpX_coth_ZpX = builder.fmul(ZpX, coth_ZpX)
+        ZmX = builder.fsub(Z, X)
+        coth_ZmX = pnlvm.helpers.coth(ctx, builder, ZmX)
+        ZmX_coth_ZmX = builder.fmul(ZmX, coth_ZmX)
+
+        # Mean plus
+        mrtp_tmp = builder.fsub(Z2_coth_Z2, ZpX_coth_ZpX)
+        m_rt_p = builder.fdiv(noise_sqr, drift_rate_sqr)
+        m_rt_p = builder.fmul(m_rt_p, mrtp_tmp)
+        m_rt_p = builder.fadd(m_rt_p, t0)
+        builder.store(m_rt_p, mean_rt_plus_ptr)
+
+        # Mean minus
+        mrtm_tmp = builder.fsub(Z2_coth_Z2, ZmX_coth_ZmX)
+        m_rt_m = builder.fdiv(noise_sqr, drift_rate_sqr)
+        m_rt_m = builder.fmul(m_rt_m, mrtm_tmp)
+        m_rt_m = builder.fadd(m_rt_m, t0)
+        builder.store(m_rt_m, mean_rt_minus_ptr)
+
+        # Variance helpers
+        noise_q = builder.fmul(noise_sqr, noise_sqr)
+        drift_rate_q = builder.fmul(drift_rate_sqr, drift_rate_sqr)
+        noise_q_drift_q = builder.fdiv(noise_q, drift_rate_q)
+
+        Z2_sqr = builder.fmul(Z2, Z2)
+        csch_Z2 = pnlvm.helpers.csch(ctx, builder, Z2)
+        csch_Z2_sqr = builder.fmul(csch_Z2, csch_Z2)
+        Z2_sqr_csch_Z2_sqr = builder.fmul(Z2_sqr, csch_Z2_sqr)
+
+        ZpX_sqr = builder.fmul(ZpX, ZpX)
+        csch_ZpX = pnlvm.helpers.csch(ctx, builder, ZpX)
+        csch_ZpX_sqr = builder.fmul(csch_ZpX, csch_ZpX)
+        ZpX_sqr_csch_ZpX_sqr = builder.fmul(ZpX_sqr, csch_ZpX_sqr)
+
+        ZmX_sqr = builder.fmul(ZmX, ZmX)
+        csch_ZmX = pnlvm.helpers.csch(ctx, builder, ZmX)
+        csch_ZmX_sqr = builder.fmul(csch_ZmX, csch_ZmX)
+        ZmX_sqr_csch_ZmX_sqr = builder.fmul(ZmX_sqr, csch_ZmX_sqr)
+
+        # Variance plus
+        v_rt_p = builder.fadd(Z2_sqr_csch_Z2_sqr, Z2_coth_Z2)
+        v_rt_p = builder.fsub(v_rt_p, ZpX_sqr_csch_ZpX_sqr)
+        v_rt_p = builder.fsub(v_rt_p, ZpX_coth_ZpX)
+        v_rt_p = builder.fmul(noise_q_drift_q, v_rt_p)
+        builder.store(v_rt_p, var_rt_plus_ptr)
+
+        pow_f = ctx.get_builtin("pow", [v_rt_p.type, v_rt_p.type])
+        v_rt_p_1_5 = builder.call(pow_f, [v_rt_p, v_rt_p.type(1.5)])
+
+        # Variance minus
+        v_rt_m = builder.fadd(Z2_sqr_csch_Z2_sqr, Z2_coth_Z2)
+        v_rt_m = builder.fsub(v_rt_m, ZmX_sqr_csch_ZmX_sqr)
+        v_rt_m = builder.fsub(v_rt_m, ZmX_coth_ZmX)
+        v_rt_m = builder.fmul(noise_q_drift_q, v_rt_m)
+        builder.store(v_rt_m, var_rt_minus_ptr)
+
+        pow_f = ctx.get_builtin("pow", [v_rt_m.type, v_rt_m.type])
+        v_rt_m_1_5 = builder.call(pow_f, [v_rt_m, v_rt_m.type(1.5)])
+
+        # Skew helpers
+        noise_6 = builder.fmul(noise_q, noise_sqr)
+        drift_rate_6 = builder.fmul(drift_rate_q, drift_rate_sqr)
+
+        srt_tmp0 = builder.fdiv(noise_6, drift_rate_6)
+        srt_tmp1a = builder.fmul(Z2_sqr_csch_Z2_sqr.type(3),
+                                  Z2_sqr_csch_Z2_sqr)
+        srt_tmp2a = builder.fmul(Z2_coth_Z2, Z2_sqr_csch_Z2_sqr)
+        srt_tmp2a = builder.fmul(srt_tmp2a.type(2), srt_tmp2a)
+        srt_tmp3a = builder.fmul(Z2_coth_Z2.type(3), Z2_coth_Z2)
+        s_rt = builder.fadd(srt_tmp1a, srt_tmp2a)
+        s_rt = builder.fadd(s_rt, srt_tmp3a)
+
+        # Skew plus
+        srtp_tmp1b = builder.fmul(ZpX_sqr_csch_ZpX_sqr.type(3),
+                                  ZpX_sqr_csch_ZpX_sqr)
+        srtp_tmp2b = builder.fmul(ZpX_coth_ZpX, ZpX_sqr_csch_ZpX_sqr)
+        srtp_tmp2b = builder.fmul(srtp_tmp2b.type(2), srtp_tmp2b)
+        srtp_tmp3b = builder.fmul(ZpX_coth_ZpX.type(3), ZpX_coth_ZpX)
+
+        s_rt_p = builder.fsub(s_rt, srtp_tmp1b)
+        s_rt_p = builder.fsub(s_rt_p, srtp_tmp2b)
+        s_rt_p = builder.fsub(s_rt_p, srtp_tmp3b)
+        s_rt_p = builder.fmul(srt_tmp0, s_rt_p)
+        s_rt_p = builder.fdiv(s_rt_p, v_rt_p_1_5)
+        builder.store(s_rt_p, skew_rt_plus_ptr)
+
+        # Skew minus
+        srtm_tmp1b = builder.fmul(ZmX_sqr_csch_ZmX_sqr.type(3),
+                                  ZmX_sqr_csch_ZmX_sqr)
+        srtm_tmp2b = builder.fmul(ZmX_coth_ZmX, ZmX_sqr_csch_ZmX_sqr)
+        srtm_tmp2b = builder.fmul(srtm_tmp2b.type(2), srtm_tmp2b)
+        srtm_tmp3b = builder.fmul(ZmX_coth_ZmX.type(3), ZmX_coth_ZmX)
+
+        s_rt_m = builder.fsub(s_rt, srtm_tmp1b)
+        s_rt_m = builder.fsub(s_rt_m, srtm_tmp2b)
+        s_rt_m = builder.fsub(s_rt_m, srtm_tmp3b)
+        s_rt_m = builder.fmul(srt_tmp0, s_rt_m)
+        s_rt_m = builder.fdiv(s_rt_m, v_rt_m_1_5)
+        builder.store(s_rt_m, skew_rt_minus_ptr)
+
+        return builder
 
     def derivative(self, output=None, input=None, context=None):
         """

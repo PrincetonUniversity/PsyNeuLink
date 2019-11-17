@@ -16,31 +16,34 @@ RAND4 = np.random.rand()
 RAND5 = np.random.rand()
 
 test_data = [
-    (Functions.DriftDiffusionAnalytical, test_var, {}, "Not Implemented",
+    (Functions.DriftDiffusionAnalytical, test_var, {}, None,
      (1.9774974807292212, 0.012242689689501842, 1.9774974807292207, 1.3147677945132479, 1.7929299891370192, 1.9774974807292207, 1.3147677945132479, 1.7929299891370192)),
-    (Functions.DriftDiffusionAnalytical, test_var, {"drift_rate": RAND1, "threshold": RAND2, "starting_point": RAND3, "t0":RAND4, "noise": RAND5}, "Not Implemented",
+    (Functions.DriftDiffusionAnalytical, test_var, {"drift_rate": RAND1, "threshold": RAND2, "starting_point": RAND3, "t0":RAND4, "noise": RAND5}, None,
      (0.4236547993389047, -2.7755575615628914e-17, 0.5173675420165031, 0.06942854144616283, 6.302631815990666, 1.4934079600147951, 0.4288991185241868, 1.7740760781361433)),
+    (Functions.DriftDiffusionAnalytical, 1e-4, {"drift_rate": 1e-5, "threshold": RAND2, "starting_point": RAND3, "t0":RAND4, "noise": RAND5}, "Rounding errors",
+     (0.5828813465336954, 0.04801236718458773, 0.532471083815943, 0.09633801362499317, 6.111833139205608, 1.5821207676710864, 0.5392724012504414, 1.8065252817609618)),
 ]
 
 # use list, naming function produces ugly names
 names = [
     "DriftDiffusionAnalytical-DefaultParameters",
     "DriftDiffusionAnalytical-RandomParameters",
+    "DriftDiffusionAnalytical-SmallDriftRate",
 ]
 
 @pytest.mark.function
 @pytest.mark.transfer_function
 @pytest.mark.benchmark
-@pytest.mark.parametrize("func, variable, params, llvm_fail, expected", test_data, ids=names)
+@pytest.mark.parametrize("func, variable, params, llvm_skip, expected", test_data, ids=names)
 @pytest.mark.parametrize("mode", [
     "Python",
     pytest.param("LLVM", marks=pytest.mark.llvm),
     pytest.param("PTX", marks=[pytest.mark.llvm, pytest.mark.cuda])])
-def test_execute(func, variable, params, llvm_fail, expected, benchmark, mode):
-    if mode == "LLVM" and llvm_fail:
-        pytest.xfail(llvm_fail)
-    f = func(default_variable=variable, **params)
+def test_execute(func, variable, params, llvm_skip, expected, benchmark, mode):
     benchmark.group = "TransferFunction " + func.componentName
+    if mode != "Python" and llvm_skip:
+        pytest.skip(llvm_skip)
+    f = func(default_variable=variable, **params)
     if mode == "Python":
         ex = f
     elif mode == "LLVM":
