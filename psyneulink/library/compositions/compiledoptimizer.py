@@ -61,7 +61,7 @@ class Optimizer():
     def zero_grad(self, ctx):
         name = self._composition.name + "_ZERO_GRAD"
         # try:
-        #     llvm_func = ctx.get_llvm_function(name)
+        #     llvm_func = ctx.import_llvm_function(name)
         #     return llvm_func
         # except Exception as e:
         #     pass
@@ -135,7 +135,7 @@ class AdamOptimizer(Optimizer):
     def step(self, ctx):
         name = self._composition.name + "_ADAM_STEP"
         # try:
-        #     llvm_func = ctx.get_llvm_function(name)
+        #     llvm_func = ctx.import_llvm_function(name)
         #     return llvm_func
         # except Exception as e:
         #     pass
@@ -156,7 +156,7 @@ class AdamOptimizer(Optimizer):
         t = builder.gep(optim_struct, [zero, ctx.int32_ty(self._T_NUM)])
 
         # get methods needed
-        pow = ctx.get_llvm_function("__pnl_builtin_pow")
+        pow = ctx.import_llvm_function("__pnl_builtin_pow")
         sqrt = ctx.get_builtin("sqrt", [ctx.float_ty])
 
         lr = ctx.float_ty(self.lr)
@@ -304,7 +304,7 @@ class SGDOptimizer(Optimizer):
     def step(self, ctx):
         name = self._composition.name + "_SGD_STEP"
         # try:
-        #     llvm_func = ctx.get_llvm_function(name)
+        #     llvm_func = ctx.import_llvm_function(name)
         #     return llvm_func
         # except Exception as e:
         #     pass

@@ -112,8 +112,6 @@ except ImportError:
 from psyneulink.core.components.functions.function import Function_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.core.components.ports.outputport import PRIMARY, StandardOutputPorts
-from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import FUNCTION, INPUT_PORTS, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, NETWORK, OUTPUT_PORTS, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
@@ -444,9 +442,6 @@ class LeabraMechanism(ProcessingMechanism_Base):
     paramClassDefaults.update({FUNCTION: LeabraFunction,
                                INPUT_PORTS: input_port_names,
                                OUTPUT_PORTS: output_port_name})
-
-    standard_output_ports = ProcessingMechanism_Base.standard_output_ports.copy()
-    standard_output_port_names = ProcessingMechanism_Base.standard_output_port_names.copy()
 
     class Parameters(ProcessingMechanism_Base.Parameters):
         """

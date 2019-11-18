@@ -996,7 +996,7 @@ class Projection_Base(Projection):
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         mf_state = ctx.get_state_ptr(self, builder, state, self.parameters.function.name)
         mf_params = ctx.get_param_ptr(self, builder, params, self.parameters.function.name)
-        main_function = ctx.get_llvm_function(self.function)
+        main_function = ctx.import_llvm_function(self.function)
         builder.call(main_function, [mf_params, mf_state, arg_in, arg_out])
 
         return builder

@@ -112,7 +112,7 @@ def test_dot_llvm_constant_dim(benchmark, mode):
         func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, double_ptr_ty))
 
         # get builtin IR
-        builtin = ctx.get_llvm_function("__pnl_builtin_vxm")
+        builtin = ctx.import_llvm_function("__pnl_builtin_vxm")
 
         # Create square vector matrix multiply
         function = ir.Function(ctx.module, func_ty, name=custom_name)
@@ -176,7 +176,7 @@ def test_dot_transposed_llvm_constant_dim(benchmark, mode):
         func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, double_ptr_ty))
 
         # get builtin IR
-        builtin = ctx.get_llvm_function("__pnl_builtin_vxm_transposed")
+        builtin = ctx.import_llvm_function("__pnl_builtin_vxm_transposed")
 
         # Create square vector matrix multiply
         function = ir.Function(ctx.module, func_ty, name=custom_name)

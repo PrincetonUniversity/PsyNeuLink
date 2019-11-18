@@ -115,24 +115,6 @@ MAXIMUM_ACTIVITY = 'MAXIMUM_ACTIVITY'
 INPUT_PATTERN = 'INPUT_PATTERN'
 
 
-# This is a convenience class that provides list of standard_output_port names in IDE
-class KohonenMechanism_OUTPUT():
-        """
-            .. _KohonenMechanism_Standard_OutputPorts:
-
-            A KohonenMechanism has the following `Standard OutputPorts <OutputPort_Standard>` in addition to those of a
-            `TransferMechanism <TransferMechanism_Standard_OutputPorts>`:
-
-            .. _KohonenMechanism_MAXIMUM_ACTIVITY:
-
-            *MAXIMUM_ACTIVITY* : 1d array
-                 "one hot" encoding of the most active element of the Mechanism's `value <Mechanisms_Base.value>` in
-                 the last execution.
-
-        """
-        MAXIMUM_ACTIVITY=MAXIMUM_ACTIVITY
-
-
 class KohonenMechanism(TransferMechanism):
     """
     KohonenMechanism(                                          \
@@ -215,6 +197,17 @@ class KohonenMechanism(TransferMechanism):
         * *INPUT_PATTERN* -- `value <OutputPort.value>` is the value of the KohonenMechanism's `variable
           <Mechanisms_Base.variable>`, which is provided to the *ACTIVATION_OUTPUT* InputPort of its
           `learning_mechanism <KohonenMechanisms.learning_mechanism>`.
+
+    standard_output_ports : list[dict]
+        list of `Standard OutputPort <OutputPort_Standard>` that includes the following in addition to
+        the `standard_output_ports <TransferMechanism.standard_output_ports>` of a `TransferMechanism`:
+
+        .. _MAXIMUM_ACTIVITY:
+
+        *MAXIMUM_ACTIVITY* : 1d array
+             "one hot" encoding of the most active element of the Mechanism's `value <Mechanism_Base.value>` in
+             the last execution.
+
 
     Returns
     -------

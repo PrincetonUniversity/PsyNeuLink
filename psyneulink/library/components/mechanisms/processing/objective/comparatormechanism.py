@@ -149,9 +149,9 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.ports.inputport import InputPort
-from psyneulink.core.components.ports.outputport import OutputPort, PRIMARY, StandardOutputPorts
+from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.port import _parse_port_spec
-from psyneulink.core.globals.context import Context, ContextFlags
+from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import COMPARATOR_MECHANISM, FUNCTION, INPUT_PORTS, NAME, OUTCOME, SAMPLE, TARGET, VARIABLE, PREFERENCE_SET_NAME, MSE, SSE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
@@ -160,28 +160,8 @@ from psyneulink.core.globals.utilities import is_numeric, is_value_spec, iscompa
 from psyneulink.core.globals.utilities import safe_len
 
 __all__ = [
-    'COMPARATOR_OUTPUT', 'ComparatorMechanism', 'ComparatorMechanismError'
+    'ComparatorMechanism', 'ComparatorMechanismError'
 ]
-
-class COMPARATOR_OUTPUT():
-    """
-    .. _ComparatorMechanism_Standard_OutputPorts:
-
-    `Standard OutputPorts <OutputPort_Standard>` for `ComparatorMechanism`
-
-    .. _COMPARATOR_MECHANISM_SSE
-
-    *SSE*
-        the value of the sum squared error of the Mechanism's function
-
-    .. _COMPARATOR_MECHANISM_MSE
-
-    *MSE*
-        the value of the mean squared error of the Mechanism's function
-
-    """
-    SSE = SSE
-    MSE = MSE
 
 
 class ComparatorMechanismError(Exception):
@@ -258,6 +238,20 @@ class ComparatorMechanism(ObjectiveMechanism):
     output_values : 2d np.array
         contains one item that is the value of the *OUTCOME* OutputPort.
 
+    standard_output_ports : list[str]
+        list of `Standard OutputPorts <OutputPort_Standard>` that includes the following in addition to the
+        `standard_output_ports <ObjectiveMechanism.standard_output_ports>` of an `ObjectiveMechanism`:
+
+        .. _COMPARATOR_MECHANISM_SSE
+
+        *SSE*
+            the value of the sum squared error of the Mechanism's function
+
+        .. _COMPARATOR_MECHANISM_MSE
+
+        *MSE*
+            the value of the mean squared error of the Mechanism's function
+
     """
     componentType = COMPARATOR_MECHANISM
 
@@ -308,11 +302,12 @@ class ComparatorMechanism(ObjectiveMechanism):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
 
     standard_output_ports = ObjectiveMechanism.standard_output_ports.copy()
-
     standard_output_ports.extend([{NAME: SSE,
                                    FUNCTION: lambda x: np.sum(x * x)},
                                   {NAME: MSE,
                                    FUNCTION: lambda x: np.sum(x * x) / safe_len(x)}])
+    standard_output_port_names = ObjectiveMechanism.standard_output_port_names.copy()
+    standard_output_port_names.extend([SSE, MSE])
 
     @tc.typecheck
     def __init__(self,
@@ -366,13 +361,9 @@ class ComparatorMechanism(ObjectiveMechanism):
             # Validate that there are exactly two input_ports (for sample and target)
             num_input_ports = len(input_ports)
             if num_input_ports != 2:
-                raise ComparatorMechanismError("{} arg is specified for {} ({}), so it must have exactly 2 items, "
-                                               "one each for {} and {}".
-                                               format(INPUT_PORTS,
-                                                      self.__class__.__name__,
-                                                      len(input_ports),
-                                                      SAMPLE,
-                                                      TARGET))
+                raise ComparatorMechanismError(f"{INPUT_PORTS} arg is specified for {self.__class__.__name__} "
+                                               f"({len(input_ports)}), so it must have exactly 2 items, "
+                                               f"one each for {SAMPLE} and {TARGET}.")
 
             # Validate that input_ports are specified as dicts
             if not all(isinstance(input_port,dict) for input_port in input_ports):
@@ -382,19 +373,16 @@ class ComparatorMechanism(ObjectiveMechanism):
             # Validate length of variable for sample = target
             if VARIABLE in input_ports[0]:
                 # input_ports arg specified in standard port specification dict format
-                lengths = [len(input_port[VARIABLE]) for input_port in input_ports]
+                lengths = [len(input_port[VARIABLE]) if input_port[VARIABLE] is not None else 0
+                           for input_port in input_ports]
             else:
                 # input_ports arg specified in {<Port_Name>:<PORT SPECIFICATION DICT>} format
                 lengths = [len(list(input_port_dict.values())[0][VARIABLE]) for input_port_dict in input_ports]
 
             if lengths[0] != lengths[1]:
-                raise ComparatorMechanismError("Length of value specified for {} InputPort of {} ({}) must be "
-                                               "same as length of value specified for {} ({})".
-                                               format(SAMPLE,
-                                                      self.__class__.__name__,
-                                                      lengths[0],
-                                                      TARGET,
-                                                      lengths[1]))
+                raise ComparatorMechanismError(f"Length of value specified for {SAMPLE} InputPort "
+                                               f"of {self.__class__.__name__} ({lengths[0]}) must be "
+                                               f"same as length of value specified for {TARGET} ({lengths[1]}).")
 
         elif SAMPLE in request_set and TARGET in request_set:
 
@@ -421,12 +409,9 @@ class ComparatorMechanism(ObjectiveMechanism):
             if sample is not None and target is not None:
                 if not iscompatible(sample, target, **{kwCompatibilityLength: True,
                                                        kwCompatibilityNumeric: True}):
-                    raise ComparatorMechanismError("The length of the sample ({}) must be the same as for the target ({})"
-                                                   "for {} {}".
-                                                   format(len(sample),
-                                                          len(target),
-                                                          self.__class__.__name__,
-                                                          self.name))
+                    raise ComparatorMechanismError(f"The length of the sample ({len(sample)}) "
+                                                   f"must be the same as for the target ({len(target)})"
+                                                   f"for {self.__class__.__name__} {self.name}.")
 
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
@@ -455,19 +440,17 @@ class ComparatorMechanism(ObjectiveMechanism):
             input_ports = input_ports[INPUT_PORTS]
             # print("type input_ports = {}".format(type(input_ports)))
             if not isinstance(input_ports, list):
-                raise ComparatorMechanismError("If an \'{}\' argument is included in the constructor for a {} "
-                                               "it must be a list with two {} specifications.".
-                                               format(INPUT_PORTS, ComparatorMechanism.__name__, InputPort.__name__))
+                raise ComparatorMechanismError(f"If an '{INPUT_PORTS}' argument is included in the constructor "
+                                               f"for a {ComparatorMechanism.__name__} it must be a list with "
+                                               f"two {InputPort.__name__} specifications.")
 
         input_ports = input_ports or default_variable
 
         if input_ports is not None:
             if len(input_ports)!=2:
-                raise ComparatorMechanismError("If an \'input_ports\' arg is "
-                                               "included in the constructor for "
-                                               "a {}, it must be a list with "
-                                               "exactly two items (not {})".
-                                               format(ComparatorMechanism.__name__, len(input_ports)))
+                raise ComparatorMechanismError(f"If an \'input_ports\' arg is included in the constructor for a "
+                                               f"{ComparatorMechanism.__name__}, it must be a list with exactly "
+                                               f"two items (not {len(input_ports)}).")
 
             sample_input_port_dict = _parse_port_spec(owner=self,
                                                         port_type=InputPort,

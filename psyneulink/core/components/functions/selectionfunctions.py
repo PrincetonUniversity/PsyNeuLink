@@ -31,11 +31,9 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function, Function_Base, FunctionError
 from psyneulink.core.globals.keywords import \
-    ADDITIVE_PARAM, MULTIPLICATIVE_PARAM, MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, \
-    MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR, \
+    MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR, \
     MODE, ONE_HOT_FUNCTION, PARAMETER_PORT_PARAMS, PROB, PROB_INDICATOR, SELECTION_FUNCTION_TYPE, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
 from psyneulink.core.globals.utilities import get_global_seed
@@ -107,26 +105,27 @@ class OneHot(SelectionFunction):
     .. _OneHot:
 
     `function <Selection.function>` returns an array the same length as the first item in `variable <OneHot.variable>`,
-    with all of its values zeroed except one as specified by `mode <OneHot.mode>`:
+    with all of its values zeroed except one identified in first item `variable <OneHot.variable>` as specified by
+    `mode <OneHot.mode>`:
 
-        * *MAX_VAL*: element with the maximum signed value in first item of `variable <OneHot.variable>`;
-        ..
-        * *MAX_ABS_VAL*: element with the maximum absolute value;
-        ..
+        * *MAX_VAL*: signed value of the element with the maximum signed value;
+
+        * *MAX_ABS_VAL*: absolute value of the element with the maximum absolute value;
+
         * *MAX_INDICATOR*: 1 in place of the element with the maximum signed value;
-        ..
+
         * *MAX_ABS_INDICATOR*: 1 in place of the element with the maximum absolute value;
-        ..
-        * *MIN_VAL*: element with the minimum signed value in first item of `variable <OneHot.variable>`;
-        ..
-        * *MIN_ABS_VAL*: element with the minimum absolute value;
-        ..
+
+        * *MIN_VAL*: signed value of the element with the minimum signed value;
+
+        * *MIN_ABS_VAL*: absolute value of element with the minimum absolute value;
+
         * *MIN_INDICATOR*: 1 in place of the element with the minimum signed value;
-        ..
+
         * *MIN_ABS_INDICATOR*: 1 in place of the element with the minimum absolute value;
-        ..
-        * *PROB*: probabilistically chosen element based on probabilities passed in second item of variable;
-        ..
+
+        * *PROB*: value of probabilistically chosen element based on probabilities passed in second item of variable;
+
         * *PROB_INDICATOR*: same as *PROB* but chosen item is assigned a value of 1.
 
 
@@ -297,7 +296,7 @@ class OneHot(SelectionFunction):
         builder.store(ctx.int32_ty(0), idx_ptr)
 
         if self.mode in {PROB, PROB_INDICATOR}:
-            rng_f = ctx.get_llvm_function("__pnl_builtin_mt_rand_double")
+            rng_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
             dice_ptr = builder.alloca(ctx.float_ty)
             mt_state_ptr = ctx.get_state_ptr(self, builder, state, "random_state")
             builder.call(rng_f, [mt_state_ptr, dice_ptr])
@@ -419,11 +418,11 @@ class OneHot(SelectionFunction):
 
         if self.mode is MAX_VAL:
             max_value = np.max(variable)
-            result = np.where(variable == max_value, max_value, 0)
+            result = np.where(variable == max_value, variable, 0)
 
         elif self.mode is MAX_ABS_VAL:
             max_value = np.max(np.absolute(variable))
-            result = np.where(variable == max_value, max_value, 0)
+            result = np.where(np.absolute(variable)==max_value, np.absolute(variable), 0)
 
         elif self.mode is MAX_INDICATOR:
             max_value = np.max(variable)
@@ -431,7 +430,7 @@ class OneHot(SelectionFunction):
 
         elif self.mode is MAX_ABS_INDICATOR:
             max_value = np.max(np.absolute(variable))
-            result = np.where(variable == max_value, 1, 0)
+            result = np.where(np.absolute(variable) == max_value, 1, 0)
 
         if self.mode is MIN_VAL:
             min_value = np.min(variable)
@@ -439,7 +438,7 @@ class OneHot(SelectionFunction):
 
         elif self.mode is MIN_ABS_VAL:
             min_value = np.min(np.absolute(variable))
-            result = np.where(variable == min_value, min_value, 0)
+            result = np.where(np.absolute(variable) == min_value, np.absolute(variable), 0)
 
         elif self.mode is MIN_INDICATOR:
             min_value = np.min(variable)
@@ -447,7 +446,7 @@ class OneHot(SelectionFunction):
 
         elif self.mode is MIN_ABS_INDICATOR:
             min_value = np.min(np.absolute(variable))
-            result = np.where(variable == min_value, 1, 0)
+            result = np.where(np.absolute(variable) == min_value, 1, 0)
 
         elif self.mode in {PROB, PROB_INDICATOR}:
             # 1st item of variable should be data, and 2nd a probability distribution for choosing

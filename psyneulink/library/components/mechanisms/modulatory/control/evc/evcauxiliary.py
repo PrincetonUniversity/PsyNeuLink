@@ -827,7 +827,7 @@ class PredictionMechanism(IntegratorMechanism):
         input to its `origin_mechanism <PredictionMechanism.origin_mechanism>`.  The format conforms to that of a
         System's `run <System.run>` method: items in the outermost dimension (axis 0) correspond to the inputs for
         each trial of a simulation, each of which is a 2d np.array containing the input for each `InputPort` of the
-        `Mechanism`.
+        `Mechanism <Mechanism>`.
 
     """
 

@@ -34,8 +34,8 @@ this need not be the case.
 There are two primary types of ModulatoryMechanism:
 
 * `ControlMechanism`
-    modulates the `value <Port_Base.value>` of a `Port` of a `Mechanism`.  Takes an evaluative signal (generally
-    received from an `ObjectiveMechanism`) and generates a `control_allocation
+    modulates the `value <Port_Base.value>` of a `Port` of a `Mechanism <Mechanism>`.  Takes an evaluative signal
+    (generally received from an `ObjectiveMechanism`) and generates a `control_allocation
     <ControlMechanism.control_allocation>`, each item of which is assigned to one of its `ControlSignals
     <ControlSignal>`;  each of those generates a `control_signal <ControlSignal.control_signal>` that is used by its
     `ControlProjection(s) <ControlProjection>` to modulate the parameter of a `function <Port_Base.function>` (and
@@ -49,8 +49,8 @@ There are two primary types of ModulatoryMechanism:
 COMMENT:
 ..
 * `GatingMechanism`
-    a subclsass of `ModulatoryMechanism` that is specialized for modulating the input to or ouput from a `Mechanism`;
-    it takes an evaluative signal (generally received from an `ObjectiveMechanism`) and generates a
+    a subclsass of `ModulatoryMechanism` that is specialized for modulating the input to or output from a `Mechanism
+    <Mechanism>`; it takes an evaluative signal (generally received from an `ObjectiveMechanism`) and generates a
     `gating_allocation <GatingMechanism.gating_allocation>`, each item of which is assigned to one of its
     `GatingSignals <ControlSignal>`;  each of those generates a `gating_signal <ControlSignal.control_signal>`
     that is used by its `GatingProjection(s) <ControlProjection>` to modulate the parameter of a `function

@@ -17,6 +17,7 @@ Contents
   * `ProcessingMechanism_Creation`
   * `ProcessingMechanism_Structure`
   * `ProcessingMechanism_Execution`
+  * `ProcessingMechanism_Class_Reference`
 
 
 .. _ProcessingMechanism_Overview:
@@ -64,8 +65,11 @@ for the Function's parameters:
 Structure
 ---------
 
-A ProcessingMechanism has the same basic structure as a `Mechanism <Mechanism>`.  See the documentation for
-individual subtypes of ProcessingMechanism for more specific information about their structure.
+A ProcessingMechanism has the same structure as a `Mechanism <Mechanism>`, with the addition of several
+`StandardOutputPorts <OutputPort_Standard>` to its `standard_output_ports
+<ProcessingMechanism.standard_output_ports>` attribute.
+
+See documentation for individual subtypes of ProcessingMechanism for more specific information about their structure.
 
 .. _ProcessingMechanism_Execution:
 
@@ -92,6 +96,11 @@ A ProcessingMechanism may be executed by calling its execute method directly:
 This option is intended for testing and debugging purposes.  More commonly, a mechanism is executed when the
 `Composition` to which it belongs is `run <Composition_Run>`.
 
+.. _ProcessingMechanism_Class_Reference:
+
+Class Reference
+---------------
+
 """
 
 from collections.abc import Iterable
@@ -99,9 +108,12 @@ from collections.abc import Iterable
 import typecheck as tc
 import numpy as np
 
-from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink.core.components.functions.transferfunctions import Linear, SoftMax
+from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
-from psyneulink.core.globals.keywords import PROCESSING_MECHANISM, PREFERENCE_SET_NAME
+from psyneulink.core.globals.keywords import \
+    FUNCTION, MAX_ABS_INDICATOR, MAX_ABS_ONE_HOT, MAX_ABS_VAL, MAX_INDICATOR, MAX_ONE_HOT, MAX_VAL, MEAN, MEDIAN, \
+    NAME, PROB, PROCESSING_MECHANISM, PREFERENCE_SET_NAME, STANDARD_DEVIATION, VARIANCE
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
@@ -109,31 +121,29 @@ __all__ = [
     'ProcessingMechanismError',
 ]
 
-# ControlMechanismRegistry = {}
-
 
 class ProcessingMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
 
-
 # # These are defined here because STANDARD_DEVIATION AND VARIANCE
 # #    are already defined in Keywords in lower case (used as arg for Functions).
 # STD_DEV_OUTPUT_PORT_NAME = 'STANDARD_DEVIATION'
-# VARIANCE_OUTPUT_PORT_NAME = 'variance'
+# VARIANCE_OUTPUT_PORT_NAME = 'VARIANCE'
 
 
 class ProcessingMechanism_Base(Mechanism_Base):
-    # DOCUMENTATION: this is a TYPE and subclasses are SUBTYPES
-    #                primary purpose is to implement TYPE level preferences for all processing mechanisms
-    #                inherits all attributes and methods of Mechanism -- see Mechanism for documentation
-    """Subclass of `Mechanism <Mechanism>` that implements processing in a `Pathway`.
+    """Subclass of `Mechanism <Mechanism>`.
+
+    This is a TYPE and subclasses are SUBTYPES.  its primary purpose is to implement TYPE level preferences for all
+    processing mechanisms.
 
     .. note::
        ProcessingMechanism_Base is an abstract class and should *never* be instantiated by a call to its constructor.
        It should be instantiated using the constructor for `ProcessingMechanism` or one of its  `subclasses
        <ProcessingMechanism_Subtypes>`.
+
    """
 
     componentType = "ProcessingMechanism"
@@ -150,7 +160,29 @@ class ProcessingMechanism_Base(Mechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
 
     standard_output_ports = Mechanism_Base.standard_output_ports.copy()
-    standard_output_port_names = Mechanism_Base.standard_output_port_names.copy()
+    standard_output_ports.extend([{NAME:MEAN,
+                                   FUNCTION:lambda x: np.mean(x)},
+                                  {NAME: MEDIAN,
+                                   FUNCTION:lambda x: np.median(x)},
+                                  {NAME: STANDARD_DEVIATION,
+                                   FUNCTION:lambda x: np.std(x)},
+                                  {NAME: VARIANCE,
+                                   FUNCTION:lambda x: np.var(x)},
+                                  {NAME: MAX_VAL,
+                                   FUNCTION:lambda x: np.max(x)},
+                                  {NAME: MAX_ABS_VAL,
+                                   FUNCTION:lambda x: np.max(np.absolute(x))},
+                                  {NAME: MAX_ONE_HOT,
+                                   FUNCTION: OneHot(mode=MAX_VAL).function},
+                                  {NAME: MAX_ABS_ONE_HOT,
+                                   FUNCTION: OneHot(mode=MAX_ABS_VAL).function},
+                                  {NAME: MAX_INDICATOR,
+                                   FUNCTION: OneHot(mode=MAX_INDICATOR).function},
+                                  {NAME: MAX_ABS_INDICATOR,
+                                   FUNCTION: OneHot(mode=MAX_ABS_INDICATOR).function},
+                                  {NAME: PROB,
+                                   FUNCTION: SoftMax(output=PROB).function}])
+    standard_output_port_names = [i['name'] for i in standard_output_ports]
 
     def __init__(self,
                  default_variable=None,
@@ -209,8 +241,54 @@ class ProcessingMechanismError(Exception):
 
 class ProcessingMechanism(ProcessingMechanism_Base):
     """
-    Subclass of `ProcessingMechanism <ProcessingMechanism>` that does not have any specialized features.
-    See Mechanism `Mechanism_Class_Reference` for arguments of constructor and attributes.
+    Implements instance of `ProcessingMechanism_Base <ProcessingMechanism>` subclass of `Mechanism <Mechanism>`.
+    See `Mechanism <Mechanism_Class_Reference>` and `subclasses <ProcessingMechanism_Subtypes>` of ProcessingMechanism
+    for arguments and additional attributes.
+
+    Attributes
+    ----------
+
+    standard_output_ports : list[dict]
+      list of the dictionary specifications for `StandardOutputPorts <OutputPort_Standard>` that can be assigned as
+      `OutputPorts <OutputPort>`, in addition to the `standard_output_ports <Mechanism_Base.standard_output_ports>`
+      of a `Mechanism <Mechanism>`; each assigns as the `value <OutputPort.value>` of the OutputPort a quantity
+      calculated over the elements of the first item in the outermost dimension (axis 0) of the Mechanism`s `value
+      <Mechanism_Base.value>`. `Subclasses <ProcessingMechanism_Subtypes>` of ProcessingMechanism may extend this
+      list to include additional `StandardOutputPorts <OutputPort_Standard>`.
+
+     *MEAN* : float
+       mean of the elements.
+
+     *MEDIAN* : float
+       median of the elements.
+
+     *STANDARD_DEVIATION* : float
+       standard deviation of the elements.
+
+     *VARIANCE* : float
+       variance of the elements.
+
+     *MAX_VAL* : float
+       greatest signed value of the elements.
+
+     *MAX_ABS_VAL* : float
+       greatest absolute value of the elements.
+
+     *MAX_ONE_HOT* : float
+       element with the greatest signed value is assigned that value, all others are assigned 0.
+
+     *MAX_ABS_ONE_HOT* : float
+       element with the greatest absolute value is assigned that value, all others are assigned 0.
+
+     *MAX_INDICATOR* : 1d array
+       element with the greatest signed value is assigned 1, all others are assigned 0.
+
+     *MAX_ABS_INDICATOR* : 1d array
+       element with the greatest absolute value is assigned 1, all others are assigned 0.
+
+     *PROB* : float
+       element chosen probabilistically based on softmax distribution is assigned its value, all others are assigned 0.
+
     """
 
     componentType = PROCESSING_MECHANISM

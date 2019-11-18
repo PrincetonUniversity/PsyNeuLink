@@ -268,7 +268,7 @@ class PytorchModelCreator(torch.nn.Module):
         vec_in = builder.gep(vector, [ctx.int32_ty(0), ctx.int32_ty(0)])
         vec_out = builder.gep(output_vec, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        builtin = ctx.get_llvm_function("__pnl_builtin_vec_copy")
+        builtin = ctx.import_llvm_function("__pnl_builtin_vec_copy")
         builder.call(builtin, [vec_in, ctx.int32_ty(dim), vec_out])
         return output_vec
 
@@ -284,7 +284,7 @@ class PytorchModelCreator(torch.nn.Module):
         vec_v = builder.gep(v, [ctx.int32_ty(0), ctx.int32_ty(0)])
         vec_out = builder.gep(output_vec, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        builder.call(ctx.get_llvm_function(op), [vec_u, vec_v, ctx.int32_ty(dim), vec_out])
+        builder.call(ctx.import_llvm_function(op), [vec_u, vec_v, ctx.int32_ty(dim), vec_out])
         return output_vec
 
     def _gen_inject_vec_add(self, ctx, builder, u, v, output_vec=None):
@@ -308,7 +308,7 @@ class PytorchModelCreator(torch.nn.Module):
         assert len(output_mat.type.pointee) == x
         assert len(output_mat.type.pointee.element) == y
 
-        builtin = ctx.get_llvm_function(op)
+        builtin = ctx.import_llvm_function(op)
         builder.call(builtin, [builder.bitcast(m1, ctx.float_ty.as_pointer()),
                                builder.bitcast(m2, ctx.float_ty.as_pointer()),
                                ctx.int32_ty(x), ctx.int32_ty(y),
@@ -334,7 +334,7 @@ class PytorchModelCreator(torch.nn.Module):
         assert len(output_mat.type.pointee) == x
         assert len(output_mat.type.pointee.element) == y
 
-        builtin = ctx.get_llvm_function("__pnl_builtin_mat_scalar_mult")
+        builtin = ctx.import_llvm_function("__pnl_builtin_mat_scalar_mult")
         builder.call(builtin, [builder.bitcast(m1, ctx.float_ty.as_pointer()),
                                s, ctx.int32_ty(x), ctx.int32_ty(y),
                                builder.bitcast(output_mat, ctx.float_ty.as_pointer())])
@@ -353,7 +353,7 @@ class PytorchModelCreator(torch.nn.Module):
         v = builder.gep(m1, [ctx.int32_ty(0), ctx.int32_ty(0)])
         out = builder.gep(output_vec, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        builtin = ctx.get_llvm_function("__pnl_builtin_vxm")
+        builtin = ctx.import_llvm_function("__pnl_builtin_vxm")
         builder.call(builtin, [v, builder.bitcast(m2, ctx.float_ty.as_pointer()),
                                ctx.int32_ty(y), ctx.int32_ty(z), out])
         return output_vec
@@ -371,7 +371,7 @@ class PytorchModelCreator(torch.nn.Module):
         v = builder.gep(m1, [ctx.int32_ty(0), ctx.int32_ty(0)])
         out = builder.gep(output_vec, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        builtin = ctx.get_llvm_function("__pnl_builtin_vxm_transposed")
+        builtin = ctx.import_llvm_function("__pnl_builtin_vxm_transposed")
         builder.call(builtin, [v, builder.bitcast(m2, ctx.float_ty.as_pointer()),
                                ctx.int32_ty(y), ctx.int32_ty(z), out])
         return output_vec
@@ -441,7 +441,7 @@ class PytorchModelCreator(torch.nn.Module):
                 # Apply Activation Func to values
                 if store_z_values is True:
                     z_values[component] = self._gen_inject_vec_copy(ctx, builder, cmp_arg)
-                bin_func = ctx.get_llvm_function(self.bin_function_creator(ctx,component).name)
+                bin_func = ctx.import_llvm_function(self.bin_function_creator(ctx,component).name)
                 self._gen_inject_bin_function_call(ctx, builder, bin_func, cmp_arg, value)
 
                 # TODO: Add bias to value
@@ -518,7 +518,7 @@ class PytorchModelCreator(torch.nn.Module):
         for node in output_nodes:
             backprop_queue.append(node)
 
-        loss_fn = ctx.get_llvm_function(loss._gen_call_function(ctx).name)
+        loss_fn = ctx.import_llvm_function(loss._gen_call_function(ctx).name)
         total_loss = builder.alloca(ctx.float_ty)
         builder.store(ctx.float_ty(0),total_loss)
 
@@ -533,7 +533,7 @@ class PytorchModelCreator(torch.nn.Module):
             node_idx = composition._get_node_index(node)
 
 
-            activation_func_derivative_bin_func = ctx.get_llvm_function(self.bin_function_derivative_creator(ctx,node).name)
+            activation_func_derivative_bin_func = ctx.import_llvm_function(self.bin_function_derivative_creator(ctx,node).name)
             activation_func_derivative = self._gen_inject_bin_function_call(ctx, builder, activation_func_derivative_bin_func, z_values[node])
 
             error_val = builder.alloca(z_values[node].type.pointee)
@@ -693,9 +693,9 @@ class PytorchModelCreator(torch.nn.Module):
 
         optimizer_struct = builder.alloca(optimizer._get_optimizer_struct_type(ctx))
         optimizer.initialize_optimizer_struct(ctx,builder,optimizer_struct)
-        backprop = ctx.get_llvm_function(self._gen_llvm_training_backprop(ctx,optimizer,loss).name)
-        optimizer_step = ctx.get_llvm_function(optimizer.step(ctx).name)
-        optimizer_zero_grad = ctx.get_llvm_function(optimizer.zero_grad(ctx).name)
+        backprop = ctx.import_llvm_function(self._gen_llvm_training_backprop(ctx,optimizer,loss).name)
+        optimizer_step = ctx.import_llvm_function(optimizer.step(ctx).name)
+        optimizer_zero_grad = ctx.import_llvm_function(optimizer.zero_grad(ctx).name)
         with pnlvm.helpers.for_loop_zero_inc(builder, epochs, "epoch_loop") as (b1, epoch_idx):
             ctx.inject_printf(builder, "\033[0;32mEPOCH %d\033[0m\n", epoch_idx)
             with pnlvm.helpers.for_loop_zero_inc(b1, num_trials, "input_loop") as (b2, trial_num):
@@ -804,7 +804,7 @@ class PytorchModelCreator(torch.nn.Module):
         # first try to get cached func
         name = node.name + "_" + node.function.name
         try:
-            llvm_func = ctx.get_llvm_function(name)
+            llvm_func = ctx.import_llvm_function(name)
             return llvm_func
         except Exception as e:
             pass
@@ -842,7 +842,7 @@ class PytorchModelCreator(torch.nn.Module):
             bias = get_fct_param_value('bias')
             offset = get_fct_param_value('offset')
             one = ctx.float_ty(1)
-            exp = ctx.get_llvm_function("__pnl_builtin_exp")
+            exp = ctx.import_llvm_function("__pnl_builtin_exp")
             def modify_value(x):
                 arg = builder.fadd(x, bias)
                 arg = builder.fmul(gain, arg)
@@ -875,7 +875,7 @@ class PytorchModelCreator(torch.nn.Module):
         # first try to get cached func
         name = node.name + "_" + node.function.name + "_derivative"
         try:
-            llvm_func = ctx.get_llvm_function(name)
+            llvm_func = ctx.import_llvm_function(name)
             return llvm_func
         except Exception as e:
             pass
@@ -911,7 +911,7 @@ class PytorchModelCreator(torch.nn.Module):
             bias = get_fct_param_value('bias')
             offset = get_fct_param_value('offset')
             one = ctx.float_ty(1)
-            exp = ctx.get_llvm_function("__pnl_builtin_exp")
+            exp = ctx.import_llvm_function("__pnl_builtin_exp")
 
             def modify_value(x):
                 arg = builder.fadd(x, bias)

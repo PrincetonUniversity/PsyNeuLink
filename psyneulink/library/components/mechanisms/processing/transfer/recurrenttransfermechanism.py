@@ -251,29 +251,6 @@ class RecurrentTransferError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-# # This is a convenience class that provides list of standard_output_port names in IDE
-# class RECURRENT_OUTPUT(TRANSFER_OUTPUT):
-#     """
-#         .. _RecurrentTransferMechanism_Standard_OutputPorts:
-#
-#         A RecurrentTransferMechanism has the following `Standard OutputPorts <OutputPort_Standard>` in addition to
-#         those of a `TransferMechanism <TransferMechanism_Standard_OutputPorts>`:
-#
-#         .. _RecurrentTransferMechanism_Standard_OutputPorts:
-#
-#         *ENERGY* : float
-#             the energy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,
-#             calculated using the `Stability` Function using the `ENERGY` metric.
-#
-#         .. _LCAMechanism_ENTROPY:
-#
-#         *ENTROPY* : float
-#             the entropy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,
-#             calculated using the `Stability` Function using the `ENTROPY <CROSS_ENTROPY>` metric.
-#
-#         """
-#     ENERGY=ENERGY_OUTPUT_PORT_NAME
-#     ENTROPY=ENTROPY_OUTPUT_PORT_NAME
 
 def _recurrent_transfer_mechanism_matrix_getter(owning_component=None, context=None):
     from psyneulink.library.components.projections.pathway.autoassociativeprojection import get_auto_matrix, get_hetero_matrix
@@ -546,11 +523,8 @@ class RecurrentTransferMechanism(TransferMechanism):
             `learning phase <System_Execution>` of a System's execution
 
     standard_output_ports : list[str]
-
-        the following `Standard OutputPorts <OutputPort_Standard>` are available to assign in addition to
-        those of a `TransferMechanism <TransferMechanism_Standard_OutputPorts>`:
-
-        .. _RecurrentTransferMechanism_Standard_OutputPorts:
+        list of `Standard OutputPorts <OutputPort_Standard>` that includes the following in addition to the
+        `standard_output_ports <TransferMechanism.standard_output_ports>` of a `TransferMechanism`:
 
         *ENERGY* : float
             the energy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,
@@ -561,7 +535,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         *ENTROPY* : float
             the entropy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,
             calculated using the `Stability` Function using the `ENTROPY <CROSS_ENTROPY>` metric.
-
 
     Returns
     -------
@@ -1354,7 +1327,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             last_idx = len(is_real_input.type.pointee) - 1
             real_last_ptr = builder.gep(is_real_input, [ctx.int32_ty(0), ctx.int32_ty(last_idx)])
 
-            recurrent_f = ctx.get_llvm_function(self.recurrent_projection)
+            recurrent_f = ctx.import_llvm_function(self.recurrent_projection)
             recurrent_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
             recurrent_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
             # FIXME: Why does this have a wrapper struct?

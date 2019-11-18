@@ -374,15 +374,16 @@ below, starting with constraints that are given the highest precedence:
 Standard OutputPorts
 ^^^^^^^^^^^^^^^^^^^^^
 
+# FIX: 11/9/19: REPLACE RECURRENTTRANSFERMECHNISM EXAMPLE WITH TRANSFERMECHANISM
 Mechanisms have a `standard_output_ports <Mechanism_Base.standard_output_ports>` attribute, that contains a list of
-`StandardOutputPorts`:  predefined OutputPorts that can be assigned as `output_ports <Mechanism_Base.output_ports>`.
-Every Mechanism has a base set of StandardOutputPorts. Subclasses of Mechanisms may add ones that are specific to
-that type of Mechanism (for example, the `RecurrentTransferMechanism` class has `standard_output_ports
-<RecurrentTransferMechanism.standard_output_ports>` for calculating the energy and entropy of its `value
-<Mechanism_Base.value>`.  The names of the `standard_output_ports` are listed in the Mechanism's
-`standard_output_port_names <Mechanism_Base.standard_output_port_names>` attribute. These can be used to specify the
-`output_ports <Mechanism_Base.output_ports>` of a Mechanism, as in the following example for a
-`ProcessingMechanism <ProcessingMechanism>`::
+`StandardOutputPorts`: `OutputPort specification dictionaries <OutputPort_Specification_Dictionary>` that can be
+assigned as `output_ports <Mechanism_Base.output_ports>`. There is a base set of StandardOutputPorts for all
+Mechanisms. Subclasses of Mechanisms may add ones that are specific to that type of Mechanism (for example, the
+`RecurrentTransferMechanism` class has `standard_output_ports <RecurrentTransferMechanism.standard_output_ports>`
+for calculating the energy and entropy of its `value <Mechanism_Base.value>`.  The names of the `standard_output_ports`
+are listed in the Mechanism's `standard_output_port_names <Mechanism_Base.standard_output_port_names>` attribute.
+These can be used to specify the `output_ports <Mechanism_Base.output_ports>` of a Mechanism, as in the following
+example for a `ProcessingMechanism <ProcessingMechanism>`::
 
     >>> import psyneulink as pnl
     >>> my_mech = pnl.ProcessingMechanism(default_variable=[0,0],
@@ -469,8 +470,8 @@ the OutputPort is assigned to a Mechanism, by including *INDEX* and *ASSIGN* ent
 COMMENT
 
     >>> my_mech = pnl.DDM(function=pnl.DriftDiffusionAnalytical(),
-    ...                   output_ports=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
-    ...                                  pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
+    ...                   output_ports=[pnl.DECISION_VARIABLE,
+    ...                                  pnl.PROBABILITY_UPPER_THRESHOLD,
     ...                                  {pnl.NAME: 'DECISION ENTROPY',
     ...                                   pnl.VARIABLE: (pnl.OWNER_VALUE, 2),
     ...                                   pnl.FUNCTION: pnl.Stability(metric=pnl.ENTROPY) }])
@@ -500,8 +501,8 @@ the ``DECISION ENTROPY`` OutputPort could be created as follows::
 and then assigned either as::
 
     >>> my_mech = pnl.DDM(function=pnl.DriftDiffusionAnalytical(),
-    ...                   output_ports=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
-    ...                                  pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
+    ...                   output_ports=[pnl.DECISION_VARIABLE,
+    ...                                  pnl.PROBABILITY_UPPER_THRESHOLD,
     ...                                  decision_entropy_output_port])
 
 or::
@@ -510,8 +511,8 @@ or::
     ...                                                variable=(OWNER_VALUE, 2),
     ...                                                function=pnl.Stability(metric=pnl.ENTROPY))
     >>> my_mech2 = pnl.DDM(function=pnl.DriftDiffusionAnalytical(),
-    ...                    output_ports=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
-    ...                                   pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD])
+    ...                    output_ports=[pnl.DECISION_VARIABLE,
+    ...                                   pnl.PROBABILITY_UPPER_THRESHOLD])
 
     >>> my_mech2.add_ports(another_decision_entropy_output_port) # doctest: +SKIP
 
@@ -1365,12 +1366,8 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
                 if output_port.initialization_status == ContextFlags.DEFERRED_INIT:
                     try:
                         output_port_value = OutputPort._get_port_function_value(owner,
-                                                                                  # MODIFIED 9/22/19 OLD:
-                                                                                  # output_port.function,
-                                                                                  # MODIFIED 9/22/19 NEW: [JDC]
-                                                                                  output_port._init_args[FUNCTION],
-                                                                                  # MODIFIED 9/22/19 END
-                                                                                  output_port._init_args[VARIABLE])
+                                                                                output_port._init_args[FUNCTION],
+                                                                                output_port._init_args[VARIABLE])
                     # For backward compatibility with INDEX and ASSIGN
                     except AttributeError:
                         index = output_port.index

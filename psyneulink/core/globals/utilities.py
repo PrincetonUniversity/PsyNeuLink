@@ -157,12 +157,12 @@ def is_modulation_operation(val):
     return get_modulationOperation_name(val)
 
 def get_modulationOperation_name(operation):
-        x = operation(1,2)
-        if x is 1:
+        x = operation(1, 2)
+        if x == 1:
             return MODULATION_OVERRIDE
-        elif x is 2:
+        elif x == 2:
             return MODULATION_MULTIPLY
-        elif x is 3:
+        elif x == 3:
             return MODULATION_ADD
         else:
             return False
@@ -914,7 +914,7 @@ def convert_to_np_array(value, dimension):
     if value is None:
         return None
 
-    if dimension is 1:
+    if dimension == 1:
         # KAM 6/28/18: added for cases when even np does not recognize the shape/dtype
         # Needed this specifically for the following shape: variable = [[0.0], [0.0], np.array([[0.0, 0.0]])]
         # Which is due to a custom OutputPort variable that includes an owner value, owner param, and owner input
@@ -931,7 +931,7 @@ def convert_to_np_array(value, dimension):
         except ValueError:
             return value
 
-    elif dimension is 2:
+    elif dimension == 2:
         from numpy import ndarray
         # if isinstance(value, ndarray) and value.dtype==object and len(value) == 2:
         value = np.array(value)
@@ -1071,8 +1071,8 @@ class ContentAddressableList(UserList):
 
     The key with which it is created is also assigned as a property of the class, that returns a list
     with the keyed attribute of its entries.  For example, the `output_ports <Mechanism_Base.output_ports>` attribute
-    of a `Mechanism` is a ContentAddressableList of the Mechanism's `OutputPorts <OutputPort>`, keyed by their
-    names.  Therefore, ``my_mech.output_ports.names`` returns the names of all of the Mechanism's OutputPorts::
+    of a `Mechanism <Mechanism>` is a ContentAddressableList of the Mechanism's `OutputPorts <OutputPort>`, keyed by
+    their names.  Therefore, ``my_mech.output_ports.names`` returns the names of all of the Mechanism's OutputPorts::
 
         >>> import psyneulink as pnl
         >>> print(pnl.DDM().output_ports.names)
@@ -1493,10 +1493,11 @@ def flatten_list(l):
     return [item for sublist in l for item in sublist]
 
 
-_seed = int(time.monotonic())
+_seed = np.int32((time.time() * 1000) % 2**31)
 def get_global_seed(offset=1):
     global _seed
     _seed += offset
+    _seed %= 2**31
     return _seed - offset
 
 

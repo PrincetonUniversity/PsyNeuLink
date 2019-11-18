@@ -950,7 +950,6 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, function_type, method_type
 from psyneulink.core.components.functions.function import FunctionOutputType
 from psyneulink.core.components.functions.transferfunctions import Linear
-from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.shellclasses import Function, Mechanism, Projection, Port
 from psyneulink.core.components.ports.inputport import DEFER_VARIABLE_SPEC_TO_MECH_MSG, InputPort
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
@@ -962,12 +961,11 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, EXECUTION_PHASE, EXPONENT, FUNCTION, FUNCTION_PARAMS, \
     INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, \
     INPUT_LABELS_DICT, INPUT_PORT, INPUT_PORTS, INPUT_PORT_VARIABLES, \
-    MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MECHANISM, MECHANISM_VALUE, \
-    MECHANISM_COMPONENT_CATEGORY, MEDIAN, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
+    MECHANISM, MECHANISM_VALUE, MECHANISM_COMPONENT_CATEGORY, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
     MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, MULTIPLICATIVE_PARAM, \
     NAME, OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_EXECUTION_TIME, OWNER_VALUE, \
-    PARAMETER_PORT, PARAMETER_PORTS, PREVIOUS_VALUE, PROB, PROJECTIONS, REFERENCE_VALUE, RESULT, \
-    STANDARD_DEVIATION, TARGET_LABELS_DICT, VALUE, VARIABLE, VARIANCE, WEIGHT
+    PARAMETER_PORT, PARAMETER_PORTS, PREVIOUS_VALUE, PROJECTIONS, REFERENCE_VALUE, RESULT, \
+    TARGET_LABELS_DICT, VALUE, VARIABLE, WEIGHT
 
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.scheduling.condition import Condition
@@ -1219,39 +1217,22 @@ class Mechanism_Base(Mechanism):
         of an OutputPort does not have a corresponding label, then its numeric value is used instead.
 
     standard_output_ports : list[dict]
-        list of the dictionary specifications for `StandardOutputPorts <StandardOutputPort>` that can
-        be assigned as `OutputPorts <OutputPort>`; subclasses may extend this list to include
-         (the type for the `value <OutputPort.value>` of each is listed
-        next to its name):
+        list of the dictionary specifications for `StandardOutputPorts <OutputPort_Standard>` that can be assigned as
+        `OutputPorts <OutputPort>`; subclasses may extend this list to include additional ones.
 
         *RESULT* : 1d np.array
           first item in the outermost dimension (axis 0) of the Mechanism's `value <Mechanism_Base.value>`.
 
-        *MEAN* : float
-          mean of the elements in the first item of Mechanism's `value <Mechanism_Base.value>`.
-
-        *MEDIAN* : float
-          median of the elements in the first item of Mechanism's `value <Mechanism_Base.value>`.
-
-        *STANDARD_DEVIATION* : float
-          standard deviation of the elements in the first item of Mechanism's `value <Mechanism_Base.value>`.
-
-        *VARIANCE* : float
-          variance of the elements in the first item of Mechanism's `output_port.value`.
-
-        *MECHANISM_VALUE* : list
+        *OWNER_VALUE* : list
           Full ndarray of Mechanism's `value <Mechanism_Base.value>`.
 
-        COMMENT:
-        *COMBINE* : scalar or numpy array
-          linear combination of the `value <Mechanism_Base.value>` of all items of the TransferMechanism's `value
-          <Mechanism_Base.value>` (requires that they all have the same dimensionality).
-        COMMENT
+        *MECHANISM_VALUE* : list
+          Synonym for *OWNER_VALUE*.
 
     standard_output_port_names : list[str]
         list of the names of the `standard_output_ports <Mechanism_Base.standard_output_ports>` that can be used to
-        specify a `StandardOutputPort` in the **output_ports** argument of the Mechanism's constructor, and to
-        reference it in Mechanism's list of `output_ports <Mechanism_Base.output_ports>`.
+        specify a `StandardOutputPort <OutputPort_Standard>` in the **output_ports** argument of the Mechanism's
+        constructor, and to reference it in Mechanism's list of `output_ports <Mechanism_Base.output_ports>`.
 
     ports : ContentAddressableList
         a list of all of the Mechanism's `Ports <Port>`, composed from its `input_ports
@@ -1397,28 +1378,10 @@ class Mechanism_Base(Mechanism):
         })
 
     standard_output_ports = [{NAME: RESULT},
-                             {NAME:MEAN,
-                              FUNCTION:lambda x: np.mean(x)},
-                             {NAME: MEDIAN,
-                              FUNCTION:lambda x: np.median(x)},
-                             {NAME: STANDARD_DEVIATION,
-                              FUNCTION:lambda x: np.std(x)},
-                             {NAME: VARIANCE,
-                              FUNCTION:lambda x: np.var(x)},
                              {NAME: MECHANISM_VALUE,
                               VARIABLE: OWNER_VALUE},
                              {NAME: OWNER_VALUE,
-                              VARIABLE: OWNER_VALUE},
-                             {NAME: MAX_VAL,
-                              FUNCTION: OneHot(mode=MAX_VAL).function},
-                             {NAME: MAX_ABS_VAL,
-                              FUNCTION: OneHot(mode=MAX_ABS_VAL).function},
-                             {NAME: MAX_INDICATOR,
-                              FUNCTION: OneHot(mode=MAX_INDICATOR).function},
-                             {NAME: MAX_ABS_INDICATOR,
-                              FUNCTION: OneHot(mode=MAX_ABS_INDICATOR).function},
-                             {NAME: PROB,
-                              FUNCTION: OneHot(mode=PROB).function}]
+                              VARIABLE: OWNER_VALUE}]
     standard_output_port_names = [i['name'] for i in standard_output_ports]
 
     class Parameters(Mechanism.Parameters):
@@ -2766,7 +2729,7 @@ class Mechanism_Base(Mechanism):
         all_ports = self.ports
         mod_afferents = self.mod_afferents
         for i, port in enumerate(ports):
-            s_function = ctx.get_llvm_function(port)
+            s_function = ctx.import_llvm_function(port)
 
             # Find output location
             builder, p_output = get_output_ptr(builder, i)
@@ -2805,7 +2768,7 @@ class Mechanism_Base(Mechanism):
         # of InputPort results should match the main function input.
         is_output_list = []
         for port in self.input_ports:
-            is_function = ctx.get_llvm_function(port)
+            is_function = ctx.import_llvm_function(port)
             is_output_list.append(is_function.args[3].type.pointee)
 
         # Check if all elements are the same. Function input will be array type if yes.
@@ -2894,7 +2857,7 @@ class Mechanism_Base(Mechanism):
         return builder
 
     def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable):
-        fun = ctx.get_llvm_function(function)
+        fun = ctx.import_llvm_function(function)
         fun_in, builder = self._gen_llvm_function_input_parse(builder, ctx, fun, variable)
         fun_out = builder.alloca(fun.args[3].type.pointee)
 

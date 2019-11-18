@@ -351,7 +351,7 @@ The following example implements a System with an EVCControlMechanism (and two p
     >>> mySystem = pnl.System(processes=[myRewardProcess, myDecisionProcess],           #doctest: +SKIP
     ...                       controller=pnl.EVCControlMechanism,                       #doctest: +SKIP
     ...                       monitor_for_control=[Reward,                              #doctest: +SKIP
-    ...                                            pnl.DDM_OUTPUT.DECISION_VARIABLE,    #doctest: +SKIP
+    ...                                            pnl.DECISION_VARIABLE,    #doctest: +SKIP
     ...                                            (pnl.RESPONSE_TIME, 1, -1)],         #doctest: +SKIP
 
 It uses the System's **monitor_for_control** argument to assign three OutputPorts to be monitored.  The first one

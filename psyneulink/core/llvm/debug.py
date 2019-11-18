@@ -42,11 +42,12 @@ Compiled code dump:
 """
 
 import os
+from typing import Any, Dict
 
-debug_env = dict()
+debug_env: Dict[str, Any] = dict()
 
 
-def _update():
+def _update() -> None:
     """Update debug_env variable with the latest state of PNL_LLVM_DEBUG env var."""
     global debug_env
     debug_env.clear()

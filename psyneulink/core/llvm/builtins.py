@@ -39,7 +39,6 @@ def setup_vxm(ctx):
     builder = _setup_builtin_func_builder(ctx, "vxm", (double_ptr_ty, double_ptr_ty, ctx.int32_ty, ctx.int32_ty, double_ptr_ty))
     v, m, x, y, o = builder.function.args
 
-
     # zero the output array
     with helpers.for_loop_zero_inc(builder, y, "zero") as (b1, index):
         ptr = b1.gep(o, [index])
@@ -87,7 +86,7 @@ def setup_vxm_transposed(ctx):
     # Multiplication
     with helpers.for_loop_zero_inc(builder, x, "trans_vxm_outer") as (b1, index_j):
         with helpers.for_loop_zero_inc(b1, y, "trans_vxm_inner") as (b2, index_i):
-            
+
             # Multiplication and accumulation
             vector_ptr = builder.gep(v, [index_i])
             matrix_index = builder.mul(index_j, y)
@@ -109,9 +108,9 @@ def setup_vxm_transposed(ctx):
 
 # Setup vector addition builtin
 def setup_vec_add(ctx):
-     # Setup types
+    # Setup types
     double_ptr_ty = ctx.float_ty.as_pointer()
-    
+
     # builtin vector addition func
     # param1: ptr to vector 1
     # param2: ptr to vector 2
@@ -127,8 +126,8 @@ def setup_vec_add(ctx):
         o_ptr = b1.gep(o, [index])
         u_val = b1.load(u_ptr)
         v_val = b1.load(v_ptr)
-        
-        u_v_sum = b1.fadd(u_val,v_val)
+
+        u_v_sum = b1.fadd(u_val, v_val)
         b1.store(u_v_sum, o_ptr)
 
     builder.ret_void()
@@ -136,9 +135,9 @@ def setup_vec_add(ctx):
 
 # Setup vector copy builtin
 def setup_vec_copy(ctx):
-     # Setup types
+    # Setup types
     double_ptr_ty = ctx.float_ty.as_pointer()
-    
+
     # builtin vector copy func
     # param1: ptr to vector 1
     # param2: sizeof vector
@@ -151,7 +150,7 @@ def setup_vec_copy(ctx):
         u_ptr = b1.gep(u, [index])
         o_ptr = b1.gep(o, [index])
         u_val = b1.load(u_ptr)
-        
+
         b1.store(u_val, o_ptr)
 
     builder.ret_void()
@@ -161,7 +160,7 @@ def setup_vec_copy(ctx):
 def setup_vec_sub(ctx):
     # Setup types
     double_ptr_ty = ctx.float_ty.as_pointer()
-   
+
     # builtin vector addition func
     # param1: ptr to vector 1
     # param2: ptr to vector 2
@@ -177,8 +176,8 @@ def setup_vec_sub(ctx):
         o_ptr = b1.gep(o, [index])
         u_val = b1.load(u_ptr)
         v_val = b1.load(v_ptr)
-       
-        u_v_sum = b1.fsub(u_val,v_val)
+
+        u_v_sum = b1.fsub(u_val, v_val)
         b1.store(u_v_sum, o_ptr)
 
     builder.ret_void()
@@ -188,7 +187,7 @@ def setup_vec_sub(ctx):
 def setup_vec_hadamard(ctx):
     # Setup types
     double_ptr_ty = ctx.float_ty.as_pointer()
-   
+
     # builtin vector addition func
     # param1: ptr to vector 1
     # param2: ptr to vector 2
@@ -199,13 +198,13 @@ def setup_vec_hadamard(ctx):
 
     # Hadamard
     with helpers.for_loop_zero_inc(builder, x, "mult") as (b1, index):
-        u_ptr = b1.gep(u,[index])
-        v_ptr = b1.gep(v,[index])
+        u_ptr = b1.gep(u, [index])
+        v_ptr = b1.gep(v, [index])
         o_ptr = b1.gep(o, [index])
         u_val = b1.load(u_ptr)
         v_val = b1.load(v_ptr)
-       
-        u_v_product = b1.fmul(u_val,v_val)
+
+        u_v_product = b1.fmul(u_val, v_val)
         b1.store(u_v_product, o_ptr)
 
     builder.ret_void()
@@ -214,25 +213,25 @@ def setup_vec_hadamard(ctx):
 # vec multiply by scalar constant
 def setup_vec_scalar_mult(ctx):
     # Setup types
-   double_ptr_ty = ctx.float_ty.as_pointer()
-   
-   # builtin vector addition func
-   # param1: ptr to vector 1
-   # param2: scalar to multiply by
-   # param3: sizeof vectors (must be the same)
-   # param4: ptr to output vector (make sure this is same size as param3)
-   builder = _setup_builtin_func_builder(ctx, "vec_scalar_mult", (double_ptr_ty, ctx.float_ty, ctx.int32_ty, double_ptr_ty))
-   u, s, x, o = builder.function.args
+    double_ptr_ty = ctx.float_ty.as_pointer()
 
-   # mult
-   with helpers.for_loop_zero_inc(builder, x, "scalar_mult_loop") as (b1, index):
-       u_ptr = b1.gep(u, [index])
-       o_ptr = b1.gep(o, [index])
-       u_val = b1.load(u_ptr)
-       u_product = b1.fmul(u_val, s)
-       b1.store(u_product, o_ptr)
+    # builtin vector addition func
+    # param1: ptr to vector 1
+    # param2: scalar to multiply by
+    # param3: sizeof vectors (must be the same)
+    # param4: ptr to output vector (make sure this is same size as param3)
+    builder = _setup_builtin_func_builder(ctx, "vec_scalar_mult", (double_ptr_ty, ctx.float_ty, ctx.int32_ty, double_ptr_ty))
+    u, s, x, o = builder.function.args
 
-   builder.ret_void()
+    # mult
+    with helpers.for_loop_zero_inc(builder, x, "scalar_mult_loop") as (b1, index):
+        u_ptr = b1.gep(u, [index])
+        o_ptr = b1.gep(o, [index])
+        u_val = b1.load(u_ptr)
+        u_product = b1.fmul(u_val, s)
+        b1.store(u_product, o_ptr)
+
+    builder.ret_void()
 
 
 # hadamard multiplication for matrices
@@ -247,20 +246,20 @@ def setup_mat_scalar_mult(ctx):
     # param4: dim_y of matrix
     # param5: output ptr
     builder = _setup_builtin_func_builder(ctx, "mat_scalar_mult", (double_ptr_ty, ctx.float_ty, ctx.int32_ty, ctx.int32_ty, double_ptr_ty))
-    m1, s, dim_x, dim_y, o  = builder.function.args
+    m1, s, dim_x, dim_y, o = builder.function.args
 
     with helpers.for_loop_zero_inc(builder, dim_x, "zero") as (b1, x):
         with helpers.for_loop_zero_inc(b1, dim_y, "zero_inner") as (b2, y):
             matrix_index = b2.mul(x, dim_y)
             matrix_index = b2.add(matrix_index, y)
-            
+
             m1_ptr = b2.gep(m1, [matrix_index])
             o_ptr = b2.gep(o, [matrix_index])
-            
-            m1_val = b2.load(m1_ptr)
-            o_val = b2.fmul(s,m1_val)
 
-            b2.store(o_val,o_ptr)
+            m1_val = b2.load(m1_ptr)
+            o_val = b2.fmul(s, m1_val)
+
+            b2.store(o_val, o_ptr)
 
     builder.ret_void()
 
@@ -277,20 +276,20 @@ def setup_mat_scalar_add(ctx):
     # param4: dim_y of matrix
     # param5: output ptr
     builder = _setup_builtin_func_builder(ctx, "mat_scalar_add", (double_ptr_ty, ctx.float_ty, ctx.int32_ty, ctx.int32_ty, double_ptr_ty))
-    m1, s, dim_x, dim_y, o  = builder.function.args
+    m1, s, dim_x, dim_y, o = builder.function.args
 
     with helpers.for_loop_zero_inc(builder, dim_x, "mat_scalar_add_outer") as (b1, x):
         with helpers.for_loop_zero_inc(b1, dim_y, "mat_scalar_add_inner") as (b2, y):
             matrix_index = b2.mul(x, dim_y)
             matrix_index = b2.add(matrix_index, y)
-            
+
             m1_ptr = b2.gep(m1, [matrix_index])
             o_ptr = b2.gep(o, [matrix_index])
-            
-            m1_val = b2.load(m1_ptr)
-            o_val = b2.fadd(s,m1_val)
 
-            b2.store(o_val,o_ptr)
+            m1_val = b2.load(m1_ptr)
+            o_val = b2.fadd(s, m1_val)
+
+            b2.store(o_val, o_ptr)
 
     builder.ret_void()
 
@@ -319,8 +318,8 @@ def setup_mat_hadamard(ctx):
 
             m1_val = b2.load(m1_ptr)
             m2_val = b2.load(m2_ptr)
-            o_val = b2.fmul(m1_val,m2_val)
-            b2.store(o_val,o_ptr)
+            o_val = b2.fmul(m1_val, m2_val)
+            b2.store(o_val, o_ptr)
 
     builder.ret_void()
 
@@ -349,8 +348,8 @@ def setup_mat_sub(ctx):
 
             m1_val = b2.load(m1_ptr)
             m2_val = b2.load(m2_ptr)
-            o_val = b2.fsub(m1_val,m2_val)
-            b2.store(o_val,o_ptr)
+            o_val = b2.fsub(m1_val, m2_val)
+            b2.store(o_val, o_ptr)
 
     builder.ret_void()
 
@@ -379,8 +378,8 @@ def setup_mat_add(ctx):
 
             m1_val = b2.load(m1_ptr)
             m2_val = b2.load(m2_ptr)
-            o_val = b2.fadd(m1_val,m2_val)
-            b2.store(o_val,o_ptr)
+            o_val = b2.fadd(m1_val, m2_val)
+            b2.store(o_val, o_ptr)
 
     builder.ret_void()
 
@@ -719,7 +718,7 @@ def _setup_mt_rand_float(ctx, state_ty, gen_int):
     val = builder.fadd(val, bf)                                # Combine
     val = builder.fdiv(val, ctx.float_ty(9007199254740992.0))  # Scale
 
-    # The value is in interval [0,1)
+    # The value is in interval [0, 1)
     lower_bound = builder.fcmp_ordered(">=", val, val.type(0.0))
     builder.assume(lower_bound)
     upper_bound = builder.fcmp_ordered("<", val, val.type(1.0))

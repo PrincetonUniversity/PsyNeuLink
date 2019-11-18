@@ -10,7 +10,7 @@
 
 from llvmlite import binding
 
-from .builder_context import _find_llvm_function, _gen_cuda_kernel_wrapper_module, _float_ty
+from .builder_context import LLVMBuilderContext, _find_llvm_function, _gen_cuda_kernel_wrapper_module
 from .builtins import _generate_cpu_builtins_module
 from .debug import debug_env
 
@@ -84,7 +84,7 @@ def _cpu_jit_constructor():
     __pass_manager_builder.populate(__cpu_pass_manager)
 
     # And an execution engine with a builtins backing module
-    builtins_module = _generate_cpu_builtins_module(_float_ty)
+    builtins_module = _generate_cpu_builtins_module(LLVMBuilderContext.float_ty)
     if "llvm" in debug_env:
         with open(builtins_module.name + '.parse.ll', 'w') as dump_file:
             dump_file.write(str(builtins_module))
@@ -252,7 +252,7 @@ class ptx_jit_engine(jit_engine):
             self._target_machine = tm
 
             # -dc option tells the compiler that the code will be used for linking
-            self._generated_builtins = pycuda.compiler.compile(_ptx_builtin_source.format(type=str(_float_ty)), target='cubin', options=['-dc'])
+            self._generated_builtins = pycuda.compiler.compile(_ptx_builtin_source.format(type=str(LLVMBuilderContext.float_ty)), target='cubin', options=['-dc'])
 
         def set_object_cache(cache):
             pass

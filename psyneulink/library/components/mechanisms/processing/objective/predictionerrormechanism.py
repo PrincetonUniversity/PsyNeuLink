@@ -284,10 +284,6 @@ class PredictionErrorMechanism(ComparatorMechanism):
         sample = None
         target = None
 
-    # paramClassDefaults = ComparatorMechanism.paramClassDefaults.copy()
-    # standard_output_ports = ComparatorMechanism.standard_output_ports.copy()
-    # standard_output_port_names = ComparatorMechanism.standard_output_port_names.copy()
-
     @tc.typecheck
     def __init__(self,
                  sample: tc.optional(tc.any(OutputPort, Mechanism_Base, dict,

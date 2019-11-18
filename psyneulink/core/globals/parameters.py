@@ -352,7 +352,7 @@ class ParametersTemplate:
         return iter([getattr(self, k) for k in self.values(show_all=True).keys()])
 
     def _is_parameter(self, param_name):
-        if param_name[0] is '_':
+        if param_name[0] == '_':
             return False
         else:
             try:
@@ -484,8 +484,8 @@ class Parameter(types.SimpleNamespace):
             :default: True
 
         modulable
-            if True, the parameter can be modulated; if the Parameter belongs to a `Mechanism` or `Projection`,
-            it is assigned a `ParameterPort`.
+            if True, the parameter can be modulated; if the Parameter belongs to a `Mechanism <Mechanism>` or
+            `Projection <Projection>`, it is assigned a `ParameterPort`.
 
             :default: False
 

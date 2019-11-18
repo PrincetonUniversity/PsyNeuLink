@@ -189,7 +189,7 @@ class FuncExecution(CUDAExecution):
         new_variable = np.asfarray(variable)
 
         if len(self._execution_ids) > 1:
-            # wrap_call casts the arguments so we only need contiguaous data
+            # wrap_call casts the arguments so we only need contiguous data
             # layout
             ct_vi = np.ctypeslib.as_ctypes(new_variable)
             self._bin_multirun.wrap_call(self._param_struct,
@@ -418,8 +418,8 @@ class CompExecution(CUDAExecution):
         if node is not self._composition.input_CIM and self.__frozen_vals is None:
             self.freeze_values()
 
-        self._bin_func.wrap_call(self._state_struct, self._param_struct,
-                                 inputs, self.__frozen_vals, self._data_struct)
+        self._bin_func(self._state_struct, self._param_struct,
+                       inputs, self.__frozen_vals, self._data_struct)
 
         if "comp_node_debug" in self.__debug_env:
             print("RAN: {}. CTX: {}".format(node, self.extract_node_state(node)))
@@ -450,10 +450,10 @@ class CompExecution(CUDAExecution):
                                                 self._data_struct,
                                                 self._conditions, self._ct_len)
         else:
-            self._bin_exec_func.wrap_call(self._state_struct,
-                                          self._param_struct,
-                                          self._get_input_struct(inputs),
-                                          self._data_struct, self._conditions)
+            self._bin_exec_func(self._state_struct,
+                                self._param_struct,
+                                self._get_input_struct(inputs),
+                                self._data_struct, self._conditions)
 
     def cuda_execute(self, inputs):
         # NOTE: Make sure that input struct generation is inlined.
@@ -507,6 +507,7 @@ class CompExecution(CUDAExecution):
 
         # autodiff_values keeps the ctype values on the stack, so it doesn't get gc'd
         autodiff_values = []
+
         def make_node_data(dictionary, node):
             values = dictionary[node]
             assert len(values) == num_trials
@@ -534,10 +535,10 @@ class CompExecution(CUDAExecution):
 
         return autodiff_values
 
-    def run(self, inputs, runs, num_input_sets, autodiff_stimuli={"targets" : {}, "epochs": 1}):
+    def run(self, inputs, runs, num_input_sets, autodiff_stimuli={"targets": {}, "epochs": 1}):
         inputs = self._get_run_input_struct(inputs, num_input_sets)
         # Special casing for autodiff
-        if hasattr(self._composition,"learning_enabled") and self._composition.learning_enabled is True:
+        if hasattr(self._composition, "learning_enabled") and self._composition.learning_enabled is True:
             assert num_input_sets == len(next(iter(autodiff_stimuli["inputs"].values())))
             assert num_input_sets == len(next(iter(autodiff_stimuli["targets"].values())))
             keep_on_stack = self._initialize_autodiff_param_struct(autodiff_stimuli)

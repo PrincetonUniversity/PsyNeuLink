@@ -205,8 +205,8 @@ Features can be of two types:
   created on the OptimziationControlMechanism for each feature, that receives a `Projection` paralleling
   the input to be shadowed.
 ..
-* *Output Features* -- these are the `value <OutputPort.value>` of an `OutputPort` of some other `Mechanism` in
-  the Composition.  These too are specified in the **features** argument of the OptimizationControlMechanism's
+* *Output Features* -- these are the `value <OutputPort.value>` of an `OutputPort` of some other `Mechanism <Mechanism>`
+  in the Composition.  These too are specified in the **features** argument of the OptimizationControlMechanism's
   constructor (see `OptimizationControlMechanism_Creation`), and each is assigned a `Projection` from the specified
   OutputPort(s) to the InputPort of the OptimizationControlMechanism for that feature.
 
@@ -1031,7 +1031,7 @@ class OptimizationControlMechanism(ControlMechanism):
             # FIXME: Add support for other cost types
             assert os.cost_options == CostFunctions.INTENSITY
 
-            func = ctx.get_llvm_function(os.intensity_cost_function)
+            func = ctx.import_llvm_function(os.intensity_cost_function)
             func_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
             func_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
             func_out = builder.alloca(func.args[3].type.pointee)
@@ -1082,7 +1082,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
             params, state, allocation_sample, arg_out, arg_in, comp_params, base_comp_state, base_comp_data = llvm_func.args
 
-            sim_f = ctx.get_llvm_function(self.agent_rep._llvm_sim_run.name)
+            sim_f = ctx.import_llvm_function(self.agent_rep._llvm_sim_run.name)
 
             # Create a simulation copy of composition state
             comp_state = builder.alloca(base_comp_state.type.pointee, name="state_copy")
@@ -1178,7 +1178,7 @@ class OptimizationControlMechanism(ControlMechanism):
         return f
 
     def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable):
-        fun = ctx.get_llvm_function(function)
+        fun = ctx.import_llvm_function(function)
         fun_in, builder = self._gen_llvm_function_input_parse(builder, ctx, fun, variable)
         fun_out = builder.alloca(fun.args[3].type.pointee)
 

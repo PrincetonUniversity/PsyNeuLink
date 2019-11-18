@@ -153,12 +153,12 @@ Uses of Modulation
 There are three broad categories of modulation that serve different purposes, and differ according to the
 ModulatorySignals used and the type of Port modulated:
 
-  * **modulation of a** `Mechanism`\\s <function <Mechanism_Base.function> -- a `ControlSignal` must be used; this
-    modulates the `ParameterPort` for a parameter of the Mechanism's `function <Mechanism_Base.function>` which,
-    in turn, determines how it computes the Mechanism's `value <Mechanism_Base.value>`;
+  * **modulation of a** `Mechanism  <Mechanism>`\\s <function <Mechanism_Base.function> -- a `ControlSignal` must be
+    used; this modulates the `ParameterPort` for a parameter of the Mechanism's `function <Mechanism_Base.function>`
+    which, in turn, determines how it computes the Mechanism's `value <Mechanism_Base.value>`;
 
-  * **modulation of a** `Mechanism`\\s input or output -- a `GatingSignal` is specialized for this purpose, though a
-    `ControlSignal` can also be used;  these modulate an `InputPort` of the Mechanism, that determines the
+  * **modulation of a** `Mechanism <Mechanism>`\\s input or output -- a `GatingSignal` is specialized for this purpose,
+    though a `ControlSignal` can also be used;  these modulate an `InputPort` of the Mechanism, that determines the
     Mechanism's `variable <Mechanism_Base.variable>` used as the input to its `function <Mechanism_Base.function>`,
     or an `OutputPort` of the Mechanism, that determines how the `value <Mechanism_Base.value>` of the Mechanism
     (i.e., the result of its `function <Mechanism_Base.function>`) is used to generate the output of the Mechanism.
@@ -196,8 +196,8 @@ and shown in the `figure below <ModulatorySignal_Anatomy_Figure>`.
 Colors listed are those used in the `figure <ModulatorySignal_Anatomy_Figure>` below.
 
 It is important to emphasize that, although the purpose of a ModulatorySignal is to modify the functioning of a
-`Mechanism` or a `MappingProjection`, it does this indirectly by modifying a Port that determines the input or
-output of a Mechanism, or the parameters of a Mechanism or Projection's `function`, rather than directly modifying
+`Mechanism <Mechanism>` or a `MappingProjection`, it does this indirectly by modifying a Port that determines the input
+or output of a Mechanism, or the parameters of a Mechanism or Projection's `function`, rather than directly modifying
 the function of the Mechanism or Projection itself.  This is shown in the following figure, and described in greater
 detail under `ModulatorySignal_Implementation`.
 
@@ -274,8 +274,8 @@ the `MappingProjection` being learned).
 Implementation of Modulation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Although the `purpose of a ModulatorySignal <ModulatorySignal_Uses>` is to modify the operation of
-a `Mechanism` or `MappingProjection`, it does not do this *directly*; rather, it does it by way of a `Port` that
+Although the `purpose of a ModulatorySignal <ModulatorySignal_Uses>` is to modify the operation of a `Mechanism
+<Mechanism>` or `MappingProjection`, it does not do this *directly*; rather, it does it by way of a `Port` that
 modulates the input, function parameter, or output of the Mechanism or MappingProjeciton to be regulated. More
 specifically, a ModulatorySignal modulates the `function <Port_Base.function>` of a *Port* responsible for
 generating those values, by modifying a parameter of that Port's `function <Port_Base.function>`.  This is shown

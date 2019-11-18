@@ -43,7 +43,7 @@ def for_loop(builder, start, stop, inc, id):
 
     builder.position_at_end(out_block)
 
-# Helper that builds a for loop starting at 0, stopping at stop, and incremented by 1
+
 def for_loop_zero_inc(builder, stop, id):
     start = stop.type(0)
     inc = stop.type(1)

@@ -1071,7 +1071,7 @@ class GradientOptimization(OptimizationFunction):
         previous_variable = self.parameters.previous_variable._get(context)
         previous_value = self.parameters.previous_value._get(context)
 
-        if iteration is 0:
+        if iteration == 0:
             # self._convergence_metric = self.convergence_threshold + EPSILON
             self.parameters.previous_variable._set(variable, context)
             self.parameters.previous_value._set(value, context)
@@ -1471,12 +1471,12 @@ class GridSearch(OptimizationFunction):
         ocm = getattr(self.objective_function, '__self__', None)
         if ocm is not None:
             assert ocm.function is self
-            obj_func = ctx.get_llvm_function(ocm._gen_llvm_evaluate_function().name)
+            obj_func = ctx.import_llvm_function(ocm._gen_llvm_evaluate_function().name)
             sample_t = ocm._get_evaluate_alloc_struct_type(ctx)
             value_t = ocm._get_evaluate_output_struct_type(ctx)
             extra_args = [arg_in] + list(builder.function.args[-3:])
         else:
-            obj_func = ctx.get_llvm_function(self.objective_function)
+            obj_func = ctx.import_llvm_function(self.objective_function)
             sample_t = obj_func.args[2].type.pointee
             value_t = obj_func.args[3].type.pointee
             extra_args = []
@@ -1556,7 +1556,7 @@ class GridSearch(OptimizationFunction):
                         prob = b.fdiv(opt_count.type(1), opt_count)
                         # reuse opt_count location. it will be overwritten later anyway
                         res_ptr = opt_count_ptr
-                        rand_f = ctx.get_llvm_function("__pnl_builtin_mt_rand_double")
+                        rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
                         b.call(rand_f, [random_state, res_ptr])
                         res = b.load(res_ptr)
                         b.store(opt_count, opt_count_ptr)
