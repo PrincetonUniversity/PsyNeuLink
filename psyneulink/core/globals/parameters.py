@@ -651,13 +651,15 @@ class Parameter(types.SimpleNamespace):
     # for user convenience - these attributes will be hidden from the repr
     # display if the function is True based on the value of the attribute
     _hidden_if_unset_attrs = {
-        'aliases', 'getter', 'setter', 'constructor_argument', 'spec'
+        'aliases', 'getter', 'setter', 'constructor_argument', 'spec',
+        'modulation_combination_function'
     }
     _hidden_if_false_attrs = {'read_only', 'modulable', 'fallback_default', 'retain_old_simulation_data'}
     _hidden_when = {
         **{k: lambda self, val: val is None for k in _hidden_if_unset_attrs},
         **{k: lambda self, val: val is False for k in _hidden_if_false_attrs},
-        **{k: lambda self, val: self.loggable is False or self.log_condition is LogCondition.OFF for k in ['log', 'log_condition']}
+        **{k: lambda self, val: self.loggable is False or self.log_condition is LogCondition.OFF for k in ['log', 'log_condition']},
+        **{k: lambda self, val: self.modulable is False for k in ['modulation_combination_function']},
     }
 
     # for user convenience - these "properties" (see note below in _set_history_max_length)
