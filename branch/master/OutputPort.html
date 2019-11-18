@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
@@ -8,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OutputPort &mdash; PsyNeuLink 0.7.1.0 documentation</title>
+  <title>OutputPort &mdash; PsyNeuLink 0.7.1.0+44.g83772c8 documentation</title>
   
 
   
@@ -17,77 +18,107 @@
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript">
-          var DOCUMENTATION_OPTIONS = {
-              URL_ROOT:'./',
-              VERSION:'0.7.1.0',
-              LANGUAGE:'None',
-              COLLAPSE_INDEX:false,
-              FILE_SUFFIX:'.html',
-              HAS_SOURCE:  true,
-              SOURCELINK_SUFFIX: '.txt'
-          };
-      </script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
 
+  
+  
     
 
   
+
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Modulatory Signals" href="ModulatorySignal.html" />
     <link rel="prev" title="ParameterPort" href="ParameterPort.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+  <!-- Preload the theme fonts -->
+
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-book.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium-italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-SemiBold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+<!-- Preload the katex fonts -->
+
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Math-Italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size1-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size4-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size2-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size3-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Caligraphic-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
 </head>
 
-<body class="wy-body-for-nav">
+<div class="container-fluid header-holder tutorials-header" id="header-holder">
+  <div class="container">
+    <div class="header-container">
+      <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/"></a>
+<!--      <a class="header-logo"></a>-->
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+
+      <a class="main-menu-open-button" href="#" data-behavior="open-mobile-menu"></a>
+    </div>
+
+  </div>
+</div>
+
+
+<body class="psyneulink-body">
 
    
-  <div class="wy-grid-for-nav">
+
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
-          
 
-          
-            <a href="index.html" class="icon icon-home"> PsyNeuLink
-          
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
 
-          
-          </a>
-
-          
+    <nav data-toggle="wy-nav-shift" class="psyneulink-left-menu" id="psyneulink-left-menu">
+      <div class="psyneulink-side-scroll">
+        <div class="psyneulink-menu psyneulink-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="psyneulink-left-menu-search">
             
-            
-              <div class="version">
-                0.7.1.0
-              </div>
-            
-          
 
-          
+            
+              
+              
+                <div class="version">
+                  0.7.1.0+44
+                </div>
+              
+            
+
+            
+
+
+  
+
+
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search Docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
 
-          
-        </div>
+            
+          </div>
 
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
             
@@ -98,24 +129,7 @@
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Projection.html">Projections</a></li>
-<li class="toctree-l3 current"><a class="reference internal" href="Port.html">Ports</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="InputPort.html">InputPort</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ParameterPort.html">ParameterPort</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">OutputPort</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignals</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="Functions.html">Functions</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="Composition.html">Compositions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
-</ul>
-</li>
+<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
 </ul>
@@ -126,21 +140,9 @@
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">PsyNeuLink</a>
-        
-      </nav>
-
-
-      <div class="wy-nav-content">
-        
-        <div class="rst-content">
-        
+    <div class="psyneulink-container">
+      <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
+        <div class="psyneulink-breadcrumbs-wrapper">
           
 
 
@@ -159,35 +161,46 @@
 
 <div role="navigation" aria-label="breadcrumbs navigation">
 
-  <ul class="wy-breadcrumbs">
+  <ul class="psyneulink-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li>
+        <a href="index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
         
-          <li><a href="Core.html">Core</a> &raquo;</li>
+          <li><a href="Core.html">Core</a> &gt;</li>
         
-          <li><a href="Component.html">Component</a> &raquo;</li>
+          <li><a href="Component.html">Component</a> &gt;</li>
         
-          <li><a href="Port.html">Ports</a> &raquo;</li>
+          <li><a href="Port.html">Ports</a> &gt;</li>
         
       <li>OutputPort</li>
-    
-    
-      <li class="wy-breadcrumbs-aside">
-        
-            
-            <a href="_sources/OutputPort.rst.txt" rel="nofollow"> View page source</a>
-          
-        
-      </li>
     
   </ul>
 
   
-  <hr/>
 </div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-            
+        </div>
+
+        <div class="psyneulink-shortcuts-wrapper" id="psyneulink-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="psyneulink-content-wrap" class="psyneulink-content-wrap">
+        <div class="psyneulink-content-left">
+
+        
+          
+          <div class="rst-content">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
+              
   <div class="section" id="module-psyneulink.core.components.ports.outputport">
 <span id="outputport"></span><h1>OutputPort<a class="headerlink" href="#module-psyneulink.core.components.ports.outputport" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="contents">
@@ -491,13 +504,16 @@ their <a class="reference internal" href="Component.html#psyneulink.core.compone
 </div>
 <div class="section" id="standard-outputports">
 <span id="outputport-standard"></span><h4>Standard OutputPorts<a class="headerlink" href="#standard-outputports" title="Permalink to this headline">¶</a></h4>
-<p>Mechanisms have a <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a> attribute, that contains a list of
-<a class="reference internal" href="#psyneulink.core.components.ports.outputport.StandardOutputPorts" title="psyneulink.core.components.ports.outputport.StandardOutputPorts"><code class="xref any py py-class docutils literal"><span class="pre">StandardOutputPorts</span></code></a>:  predefined OutputPorts that can be assigned as <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a>.
-Every Mechanism has a base set of StandardOutputPorts. Subclasses of Mechanisms may add ones that are specific to
-that type of Mechanism (for example, the <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> class has <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.standard_output_ports" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a> for calculating the energy and entropy of its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.  The names of the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a> are listed in the Mechanism’s
-<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_port_names" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_port_names"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_port_names</span></code></a> attribute. These can be used to specify the
-<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a> of a Mechanism, as in the following example for a
-<a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>:</p>
+<p># FIX: 11/9/19: REPLACE RECURRENTTRANSFERMECHNISM EXAMPLE WITH TRANSFERMECHANISM
+Mechanisms have a <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a> attribute, that contains a list of
+<a class="reference internal" href="#psyneulink.core.components.ports.outputport.StandardOutputPorts" title="psyneulink.core.components.ports.outputport.StandardOutputPorts"><code class="xref any py py-class docutils literal"><span class="pre">StandardOutputPorts</span></code></a>: <a class="reference internal" href="#outputport-specification-dictionary"><span class="std std-ref">OutputPort specification dictionaries</span></a> that can be
+assigned as <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a>. There is a base set of StandardOutputPorts for all
+Mechanisms. Subclasses of Mechanisms may add ones that are specific to that type of Mechanism (for example, the
+<a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> class has <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.standard_output_ports" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a>
+for calculating the energy and entropy of its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.  The names of the <a class="reference internal" href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.standard_output_ports" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a>
+are listed in the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_port_names" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_port_names"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_port_names</span></code></a> attribute.
+These can be used to specify the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a> of a Mechanism, as in the following
+example for a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">default_variable</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
 <span class="gp">... </span>                                  <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Logistic</span><span class="p">,</span>
@@ -547,8 +563,8 @@ OutputPort’s <a class="reference internal" href="#psyneulink.core.components.p
 <p class="rubric">Examples</p>
 <p>In the following example, a <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a> Mechanism named <code class="docutils literal"><span class="pre">my_mech</span></code> is configured with three OutputPorts:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">DriftDiffusionAnalytical</span><span class="p">(),</span>
-<span class="gp">... </span>                  <span class="n">output_ports</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">DDM_OUTPUT</span><span class="o">.</span><span class="n">DECISION_VARIABLE</span><span class="p">,</span>
-<span class="gp">... </span>                                 <span class="n">pnl</span><span class="o">.</span><span class="n">DDM_OUTPUT</span><span class="o">.</span><span class="n">PROBABILITY_UPPER_THRESHOLD</span><span class="p">,</span>
+<span class="gp">... </span>                  <span class="n">output_ports</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">DECISION_VARIABLE</span><span class="p">,</span>
+<span class="gp">... </span>                                 <span class="n">pnl</span><span class="o">.</span><span class="n">PROBABILITY_UPPER_THRESHOLD</span><span class="p">,</span>
 <span class="gp">... </span>                                 <span class="p">{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;DECISION ENTROPY&#39;</span><span class="p">,</span>
 <span class="gp">... </span>                                  <span class="n">pnl</span><span class="o">.</span><span class="n">VARIABLE</span><span class="p">:</span> <span class="p">(</span><span class="n">pnl</span><span class="o">.</span><span class="n">OWNER_VALUE</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
 <span class="gp">... </span>                                  <span class="n">pnl</span><span class="o">.</span><span class="n">FUNCTION</span><span class="p">:</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Stability</span><span class="p">(</span><span class="n">metric</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">ENTROPY</span><span class="p">)</span> <span class="p">}])</span>
@@ -571,8 +587,8 @@ the <code class="docutils literal"><span class="pre">DECISION</span> <span class
 </div>
 <p>and then assigned either as:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">DriftDiffusionAnalytical</span><span class="p">(),</span>
-<span class="gp">... </span>                  <span class="n">output_ports</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">DDM_OUTPUT</span><span class="o">.</span><span class="n">DECISION_VARIABLE</span><span class="p">,</span>
-<span class="gp">... </span>                                 <span class="n">pnl</span><span class="o">.</span><span class="n">DDM_OUTPUT</span><span class="o">.</span><span class="n">PROBABILITY_UPPER_THRESHOLD</span><span class="p">,</span>
+<span class="gp">... </span>                  <span class="n">output_ports</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">DECISION_VARIABLE</span><span class="p">,</span>
+<span class="gp">... </span>                                 <span class="n">pnl</span><span class="o">.</span><span class="n">PROBABILITY_UPPER_THRESHOLD</span><span class="p">,</span>
 <span class="gp">... </span>                                 <span class="n">decision_entropy_output_port</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -581,8 +597,8 @@ the <code class="docutils literal"><span class="pre">DECISION</span> <span class
 <span class="gp">... </span>                                               <span class="n">variable</span><span class="o">=</span><span class="p">(</span><span class="n">OWNER_VALUE</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
 <span class="gp">... </span>                                               <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Stability</span><span class="p">(</span><span class="n">metric</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">ENTROPY</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech2</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">DriftDiffusionAnalytical</span><span class="p">(),</span>
-<span class="gp">... </span>                   <span class="n">output_ports</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">DDM_OUTPUT</span><span class="o">.</span><span class="n">DECISION_VARIABLE</span><span class="p">,</span>
-<span class="gp">... </span>                                  <span class="n">pnl</span><span class="o">.</span><span class="n">DDM_OUTPUT</span><span class="o">.</span><span class="n">PROBABILITY_UPPER_THRESHOLD</span><span class="p">])</span>
+<span class="gp">... </span>                   <span class="n">output_ports</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">DECISION_VARIABLE</span><span class="p">,</span>
+<span class="gp">... </span>                                  <span class="n">pnl</span><span class="o">.</span><span class="n">PROBABILITY_UPPER_THRESHOLD</span><span class="p">])</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech2</span><span class="o">.</span><span class="n">add_ports</span><span class="p">(</span><span class="n">another_decision_entropy_output_port</span><span class="p">)</span> 
 </pre></div>
@@ -752,7 +768,7 @@ If the OutputPort has been assigned to:
 
 <dl class="class">
 <dt id="psyneulink.core.components.ports.outputport.StandardOutputPorts">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.ports.outputport.</code><code class="descname">StandardOutputPorts</code><span class="sig-paren">(</span><em>owner: psyneulink.core.components.component.Component</em>, <em>output_port_dicts: list</em>, <em>indices: &lt;typecheck.framework.optional object at 0x11b6fb588&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.StandardOutputPorts" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.ports.outputport.</code><code class="descname">StandardOutputPorts</code><span class="sig-paren">(</span><em>owner: psyneulink.core.components.component.Component</em>, <em>output_port_dicts: list</em>, <em>indices: &lt;typecheck.framework.optional object at 0x11dfbd208&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.StandardOutputPorts" title="Permalink to this definition">¶</a></dt>
 <dd><p>Collection of OutputPort specification dicts for <a class="reference internal" href="#outputport-standard"><span class="std std-ref">standard OutputPorts</span></a> of a class.</p>
 <p>Parses specification of VARIABLE, assigning indices to OWNER_VALUE if specified.
 Adds &lt;NAME_INDEX&gt; of each OutputPort as property of the owner’s class, that returns the index of the OutputPort
@@ -819,52 +835,181 @@ ignoring any VARIABLE entries previously specified for individual OutputPorts;</
 </div>
 
 
-           </div>
-           
-          </div>
-          <footer>
+             </article>
+             
+            </div>
+            <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="ModulatorySignal.html" class="btn btn-neutral float-right" title="Modulatory Signals" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="ModulatorySignal.html" class="btn btn-neutral float-right" title="Modulatory Signals" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="ParameterPort.html" class="btn btn-neutral float-left" title="ParameterPort" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="ParameterPort.html" class="btn btn-neutral" title="ParameterPort" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
 
-  <hr/>
+  
+
+    <hr>
+
+  
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2016, Jonathan D. Cohen
+        &copy; Copyright 2016, Jonathan D. Cohen.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
 
 </footer>
 
+          </div>
         </div>
-      </div>
 
-    </section>
+        <div class="psyneulink-content-right" id="psyneulink-content-right">
+          <div class="psyneulink-right-menu" id="psyneulink-right-menu">
+            <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
+              <ul>
+<li><a class="reference internal" href="#">OutputPort</a><ul>
+<li><a class="reference internal" href="#contents">Contents</a></li>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#creating-an-outputport">Creating an OutputPort</a><ul>
+<li><a class="reference internal" href="#owner-assignment-and-deferred-initialization"><em>Owner Assignment and Deferred Initialization</em></a></li>
+<li><a class="reference internal" href="#primary-outputport"><em>Primary OutputPort</em></a></li>
+<li><a class="reference internal" href="#outputport-specification"><em>OutputPort Specification</em></a><ul>
+<li><a class="reference internal" href="#specifying-outputports-when-a-mechanism-is-created">Specifying OutputPorts when a Mechanism is created</a></li>
+<li><a class="reference internal" href="#adding-outputports-to-a-mechanism-after-it-is-created">Adding OutputPorts to a Mechanism after it is created</a><ul>
+<li><a class="reference internal" href="#outputports-variable-and-value"><em>OutputPorts</em> <code class="docutils literal"><span class="pre">variable</span></code> <em>and</em> <code class="docutils literal"><span class="pre">value</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#forms-of-specification">Forms of Specification</a></li>
+<li><a class="reference internal" href="#outputport-variable-and-value-compatibility-and-constraints">OutputPort <code class="docutils literal"><span class="pre">variable</span></code> and <code class="docutils literal"><span class="pre">value</span></code>: Compatibility and Constraints</a></li>
+<li><a class="reference internal" href="#standard-outputports">Standard OutputPorts</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#custom-outputports"><em>Custom OutputPorts</em></a><ul>
+<li><a class="reference internal" href="#outputport-variable"><em>OutputPort</em> <code class="docutils literal"><span class="pre">variable</span></code></a></li>
+<li><a class="reference internal" href="#outputport-function"><em>OutputPort</em> <code class="docutils literal"><span class="pre">function</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#structure">Structure</a></li>
+<li><a class="reference internal" href="#execution">Execution</a></li>
+<li><a class="reference internal" href="#class-reference">Class Reference</a></li>
+</ul>
+</li>
+</ul>
 
-  </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
   
 
+
+  
+
+     
+       <script type="text/javascript">
+           var DOCUMENTATION_OPTIONS = {
+               URL_ROOT:'./',
+               VERSION:'0.7.1.0+44.g83772c8',
+               LANGUAGE:'None',
+               COLLAPSE_INDEX:false,
+               FILE_SUFFIX:'.html',
+               HAS_SOURCE:  true,
+               SOURCELINK_SUFFIX: '.txt'
+           };
+       </script>
+         <script type="text/javascript" src="_static/jquery.js"></script>
+         <script type="text/javascript" src="_static/underscore.js"></script>
+         <script type="text/javascript" src="_static/doctools.js"></script>
+         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+     
+
+  
+
+  <script type="text/javascript" src="_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="_static/js/vendor/bootstrap.min.js"></script>
+  <script type="text/javascript" src="_static/js/theme.js"></script>
 
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
+  </script> 
+
+  <!-- Begin Footer -->
+
+  <footer class="site-footer">
+    <div class="container footer-container">
+      <div class="footer-logo-wrapper">
+        <a href="https://princetonuniversity.github.io/PsyNeuLink/" class="footer-logo"></a>
+      </div>
+
+  </footer>
+
+  <div class="cookie-banner-wrapper">
+  <div class="container">
+    <p class="gdpr-notice">To analyze traffic and optimize your experience, we serve cookies on this site. By clicking or navigating, you agree to allow our usage of cookies. As the current maintainers of this site, Facebook’s Cookies Policy applies. Learn more, including about available controls: <a href="https://www.facebook.com/policies/cookies/">Cookies Policy</a>.</p>
+    <img class="close-button" src="_static/images/psyneulink-x.svg">
+  </div>
+</div>
+
+  <!-- End Footer -->
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container mobile-logo-container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/" aria-label="PsyNeuLink"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      psyneulinkAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.psyneulink-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
   </script>
-
-  
-  
-    
-   
-
 </body>
 </html>

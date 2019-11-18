@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
@@ -8,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCAMechanism &mdash; PsyNeuLink 0.7.1.0 documentation</title>
+  <title>LCAMechanism &mdash; PsyNeuLink 0.7.1.0+44.g83772c8 documentation</title>
   
 
   
@@ -17,77 +18,107 @@
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript">
-          var DOCUMENTATION_OPTIONS = {
-              URL_ROOT:'./',
-              VERSION:'0.7.1.0',
-              LANGUAGE:'None',
-              COLLAPSE_INDEX:false,
-              FILE_SUFFIX:'.html',
-              HAS_SOURCE:  true,
-              SOURCELINK_SUFFIX: '.txt'
-          };
-      </script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
 
+  
+  
     
 
   
+
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="KWTAMechanism" href="KWTAMechanism.html" />
     <link rel="prev" title="RecurrentTransferMechanism" href="RecurrentTransferMechanism.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+  <!-- Preload the theme fonts -->
+
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-book.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium-italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-SemiBold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+<!-- Preload the katex fonts -->
+
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Math-Italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size1-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size4-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size2-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size3-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Caligraphic-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
 </head>
 
-<body class="wy-body-for-nav">
+<div class="container-fluid header-holder tutorials-header" id="header-holder">
+  <div class="container">
+    <div class="header-container">
+      <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/"></a>
+<!--      <a class="header-logo"></a>-->
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+
+      <a class="main-menu-open-button" href="#" data-behavior="open-mobile-menu"></a>
+    </div>
+
+  </div>
+</div>
+
+
+<body class="psyneulink-body">
 
    
-  <div class="wy-grid-for-nav">
+
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
-          
 
-          
-            <a href="index.html" class="icon icon-home"> PsyNeuLink
-          
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
 
-          
-          </a>
-
-          
+    <nav data-toggle="wy-nav-shift" class="psyneulink-left-menu" id="psyneulink-left-menu">
+      <div class="psyneulink-side-scroll">
+        <div class="psyneulink-menu psyneulink-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="psyneulink-left-menu-search">
             
-            
-              <div class="version">
-                0.7.1.0
-              </div>
-            
-          
 
-          
+            
+              
+              
+                <div class="version">
+                  0.7.1.0+44
+                </div>
+              
+            
+
+            
+
+
+  
+
+
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search Docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
 
-          
-        </div>
+            
+          </div>
 
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
             
@@ -99,27 +130,7 @@
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="Components.html">Components</a><ul class="current">
-<li class="toctree-l3 current"><a class="reference internal" href="Mechanisms.html">Mechanisms</a><ul class="current">
-<li class="toctree-l4 current"><a class="reference internal" href="ProcessingMechanisms.html">Processing Mechanisms</a><ul class="current">
-<li class="toctree-l5 current"><a class="reference internal" href="TransferMechanisms.html">Transfer Mechanisms</a></li>
-<li class="toctree-l5"><a class="reference internal" href="IntegratorMechanisms.html">IntegratorMechanisms</a></li>
-<li class="toctree-l5"><a class="reference internal" href="ObjectiveMechanisms.html">Objective Mechanisms</a></li>
-<li class="toctree-l5"><a class="reference internal" href="LeabraMechanism.html">LeabraMechanism</a></li>
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="ModulatoryMechanisms.html">Modulatory Mechanisms</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="Projections.html">Projections</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="Compositions.html">Compositions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Subystems.html">Subsystems</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Models.html">Models</a></li>
-</ul>
-</li>
+<li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
 </ul>
 
@@ -129,21 +140,9 @@
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">PsyNeuLink</a>
-        
-      </nav>
-
-
-      <div class="wy-nav-content">
-        
-        <div class="rst-content">
-        
+    <div class="psyneulink-container">
+      <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
+        <div class="psyneulink-breadcrumbs-wrapper">
           
 
 
@@ -162,39 +161,50 @@
 
 <div role="navigation" aria-label="breadcrumbs navigation">
 
-  <ul class="wy-breadcrumbs">
+  <ul class="psyneulink-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li>
+        <a href="index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
         
-          <li><a href="Library.html">Library</a> &raquo;</li>
+          <li><a href="Library.html">Library</a> &gt;</li>
         
-          <li><a href="Components.html">Components</a> &raquo;</li>
+          <li><a href="Components.html">Components</a> &gt;</li>
         
-          <li><a href="Mechanisms.html">Mechanisms</a> &raquo;</li>
+          <li><a href="Mechanisms.html">Mechanisms</a> &gt;</li>
         
-          <li><a href="ProcessingMechanisms.html">Processing Mechanisms</a> &raquo;</li>
+          <li><a href="ProcessingMechanisms.html">Processing Mechanisms</a> &gt;</li>
         
-          <li><a href="TransferMechanisms.html">Transfer Mechanisms</a> &raquo;</li>
+          <li><a href="TransferMechanisms.html">Transfer Mechanisms</a> &gt;</li>
         
       <li>LCAMechanism</li>
-    
-    
-      <li class="wy-breadcrumbs-aside">
-        
-            
-            <a href="_sources/LCAMechanism.rst.txt" rel="nofollow"> View page source</a>
-          
-        
-      </li>
     
   </ul>
 
   
-  <hr/>
 </div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-            
+        </div>
+
+        <div class="psyneulink-shortcuts-wrapper" id="psyneulink-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="psyneulink-content-wrap" class="psyneulink-content-wrap">
+        <div class="psyneulink-content-left">
+
+        
+          
+          <div class="rst-content">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
+              
   <div class="section" id="module-psyneulink.library.components.mechanisms.processing.transfer.lcamechanism">
 <span id="lcamechanism"></span><h1>LCAMechanism<a class="headerlink" href="#module-psyneulink.library.components.mechanisms.processing.transfer.lcamechanism" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="contents">
@@ -205,7 +215,7 @@
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#lcamechanism-creation"><span class="std std-ref">Creating an LCAMechanism</span></a></dt>
 <dd><ul class="first last">
-<li><code class="xref any docutils literal"><span class="pre">LCAMechanism_Integrator_Mode</span></code></li>
+<li><a class="reference internal" href="#lcamechanism-integrator-mode"><span class="std std-ref">Integration</span></a></li>
 <li><a class="reference internal" href="#lcamechanism-threshold"><span class="std std-ref">Thresholding</span></a></li>
 </ul>
 </dd>
@@ -248,7 +258,7 @@ with a <a class="reference internal" href="#psyneulink.library.components.mechan
 <strong>self_excitation</strong> and the off-diagonal consists of uniform weights specified by the <em>negative</em> of the
 <strong>competition</strong> argument.</p>
 <div class="section" id="integration">
-<h3><em>Integration</em><a class="headerlink" href="#integration" title="Permalink to this headline">¶</a></h3>
+<span id="lcamechanism-integrator-mode"></span><h3><em>Integration</em><a class="headerlink" href="#integration" title="Permalink to this headline">¶</a></h3>
 <p>The <strong>noise</strong>, <strong>leak</strong>, <strong>initial_value</strong>, and <strong>time_step_size</strong> arguments are used to implement the
 <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">LeakyCompetingIntegrator</span></code></a> as the LCAMechanism’s <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a>.
 This is only used used when <a class="reference internal" href="TransferMechanism.html#transfermechanism-integrator-mode"><span class="std std-ref">integrator_mode</span></a> is True (which it is by default).  If
@@ -296,18 +306,14 @@ specified directly as arguments of the LCAMechanism’s constructor in order to 
 Function by default (in place of the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AdaptiveIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AdaptiveIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">AdaptiveIntegrator</span></code></a> used as the default by other <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanisms</span></a>).</p>
 <p>2. its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.matrix" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> consisting of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation"><code class="xref any py py-attr docutils literal"><span class="pre">self_excitation</span></code></a> and <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.competition" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.competition"><code class="xref any py py-attr docutils literal"><span class="pre">competition</span></code></a> off diagonal.</p>
 <p>Like any RecurrentTransferMechanism, by default an LCAMechanism has a single <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a>
-named <em>RESULT</em> that contains the Mechanism’s current <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.  The <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">StandardOutputPorts</span></a> of a <a class="reference internal" href="RecurrentTransferMechanism.html#recurrenttransfermechanism-standard-outputports"><span class="std std-ref">RecurrentTransferMechanism</span></a>,
-are also available for assignment, as well as two additional ones:</p>
-<blockquote>
-<div><ul class="simple">
-<li><a class="reference internal" href="#lcamechanism-max-vs-next-output-port"><span class="std std-ref">MAX_VS_NEXT</span></a></li>
-<li><a class="reference internal" href="#lcamechanism-max-vs-avg-output-port"><span class="std std-ref">MAX_VS_AVG</span></a></li>
-</ul>
-</div></blockquote>
-<p>The <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the <a class="reference internal" href="#lcamechanism-max-vs-next-output-port"><span class="std std-ref">MAX_VS_NEXT</span></a> OutputPort contains the
-difference between the two elements of the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> with the highest values, and
-the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the <a class="reference internal" href="#lcamechanism-max-vs-avg-output-port"><span class="std std-ref">MAX_VS_AVG</span></a> OutputPort contains the
-difference between the element with the highest value and the average of all the others (see <a class="reference internal" href="#lcamechanism-ddm-approximation"><span class="std std-ref">above</span></a> for their relationship to the output of a <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a> Mechanism).</p>
+named <em>RESULT</em> that contains the Mechanism’s current <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.  It also has two
+<a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">StandardOutputPorts</span></a> in its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.standard_output_ports" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a>
+attribute – <em>MAX_VS_NEXT</em> and <em>MAX_VS_AVG</em> that are available for assignment, in addition to the
+<a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.standard_output_ports" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a> of a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a>:</p>
+<p>The <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the <em>MAX_VS_NEXT</em> OutputPort contains the difference between the two elements of
+the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> with the highest values, and the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the
+<em>MAX_VS_AVG</em> OutputPort contains the difference between the element with the highest value and the average of all
+the others (see <a class="reference internal" href="#lcamechanism-ddm-approximation"><span class="std std-ref">above</span></a> for their relationship to the output of a <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a> Mechanism).</p>
 </div>
 <div class="section" id="execution">
 <span id="lcamechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
@@ -317,7 +323,7 @@ difference between the element with the highest value and the average of all the
 <span id="lcamechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism">
-<em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.</code><code class="descname">LCAMechanism</code><span class="sig-paren">(</span><em>leak=0.5</em>, <em>competition=1.0</em>, <em>self_excitation=0.0</em>, <em>threshold = None                     threshold_criterion = VALUE</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.</code><code class="descname">LCAMechanism</code><span class="sig-paren">(</span><em>leak=0.5</em>, <em>competition=1.0</em>, <em>self_excitation=0.0</em>, <em>time_step_size=0.1</em>, <em>threshold = None                     threshold_criterion = VALUE</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> that implements a Leaky Competitive Accumulator.
 See <a class="reference internal" href="RecurrentTransferMechanism.html#recurrenttransfermechanism-class-reference"><span class="std std-ref">RecurrentTransferMechanism</span></a> for additional
 arguments and attributes.</p>
@@ -332,6 +338,8 @@ arguments and attributes.</p>
 additional details).</li>
 <li><strong>self_excitation</strong> (<em>value : default 0.0</em>) – specifies the magnidute of the diagonal terms in the LCAMechanism’s <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a> (see <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation"><code class="xref any py py-attr docutils literal"><span class="pre">self_excitation</span></code></a> for
 additional details).</li>
+<li><strong>time_step_size</strong> (<em>float : default 0.1</em>) – assigned as the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator.time_step_size" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator.time_step_size"><code class="xref any py py-attr docutils literal"><span class="pre">time_step_size</span></code></a> parameter of the
+<a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">LeakyCompetingIntegrator</span></code></a> Function (see <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.time_step_size" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.time_step_size"><code class="xref any py py-attr docutils literal"><span class="pre">time_step_size</span></code></a> for additional details).</li>
 <li><strong>threshold</strong> (<em>float</em><em> or </em><em>None : default None</em>) – specifes the value at which the Mechanism’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> attribute is set to True
 (see <a class="reference internal" href="#lcamechanism-threshold"><span class="std std-ref">Thresholding</span></a> for additional details).</li>
 <li><strong>threshold_criterion</strong> (<em>VALUE</em>, <em>MAX_VS_NEXT</em>, <em>MAX_VS_AVG</em>, or <em>CONVERGENCE</em>) – specifies the criterion that is used to evaluate whether the threshold has been reached. If <em>MAX_VS_NEXT</em> or
@@ -360,7 +368,7 @@ accumulation of its <a class="reference internal" href="IntegratorFunctions.html
 <dl class="attribute">
 <dt id="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.competition">
 <code class="descname">competition</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.competition" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>value : default 1.0</em> – determines the magnitude of the off-diagonal terms in the LCAMechanism’s <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a>, thereby scaling the contributions of the competing unit
+<dd><p><em>value</em> – determines the magnitude of the off-diagonal terms in the LCAMechanism’s <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a>, thereby scaling the contributions of the competing unit
 (all <span class="math">\(f(x)_{j}\)</span> where <span class="math">\(j \neq i\)</span>) to the accumulation of the <a class="reference internal" href="IntegratorFunctions.html#leakycompetingintegrator"><span class="std std-ref">LeakyCompetingIntegrator's</span></a> <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator.variable" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> (<span class="math">\(x_{i}\)</span>) on each time step
 (see <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">LeakyCompetingIntegrator</span></code></a> for additional details.</p>
 </dd></dl>
@@ -368,9 +376,33 @@ accumulation of its <a class="reference internal" href="IntegratorFunctions.html
 <dl class="attribute">
 <dt id="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation">
 <code class="descname">self_excitation</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>value : default 0.0</em> – determines the diagonal terms in the LCAMechanism’s <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a>, thereby scaling the contributions of each unit’s own
+<dd><p><em>value</em> – determines the diagonal terms in the LCAMechanism’s <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a>, thereby scaling the contributions of each unit’s own
 recurrent value (<span class="math">\(f(x)_{i}\)</span>) to the accumulation of the <a class="reference internal" href="IntegratorFunctions.html#leakycompetingintegrator"><span class="std std-ref">LeakyCompetingIntegrator's</span></a> <code class="xref any docutils literal"><span class="pre">variable</span></code> (<span class="math">\(x_{i}\)</span>) on each time step
 (see <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">LeakyCompetingIntegrator</span></code></a> for additional details.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.time_step_size">
+<code class="descname">time_step_size</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.time_step_size" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – parameter of the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">LeakyCompetingIntegrator</span></code></a> Function that determines the timing precision of the integration
+process it implements, and used to scale its <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator.noise" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> parameter appropriately.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.standard_output_ports">
+<code class="descname">standard_output_ports</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.standard_output_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list[str]</em> – list of <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPorts</span></a> that includes the following in addition to the
+<a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.standard_output_ports" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a> of a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a>:</p>
+<dl class="docutils" id="max-vs-next">
+<dt><em>MAX_VS_NEXT</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>the difference between the two elements of the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
+with the highest values.</dd>
+</dl>
+<dl class="docutils" id="max-vs-avg">
+<dt><em>MAX_VS_AVG</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>the difference between the element of the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
+and the average of all of the other elements.</dd>
+</dl>
 </dd></dl>
 
 <table class="docutils field-list" frame="void" rules="none">
@@ -385,73 +417,169 @@ recurrent value (<span class="math">\(f(x)_{i}\)</span>) to the accumulation of 
 </table>
 </dd></dl>
 
-<dl class="class">
-<dt id="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism_OUTPUT">
-<em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.</code><code class="descname">LCAMechanism_OUTPUT</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism_OUTPUT" title="Permalink to this definition">¶</a></dt>
-<dd><p id="lcamechanism-standard-outputports">An LCAMechanism has the following <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPorts</span></a> in addition to those of a
-<a class="reference internal" href="RecurrentTransferMechanism.html#recurrenttransfermechanism-standard-outputports"><span class="std std-ref">RecurrentTransferMechanism</span></a>:</p>
-<dl class="docutils" id="lcamechanism-max-vs-next-output-port">
-<dt><em>MAX_VS_NEXT</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
-<dd>the difference between the two elements of the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
-with the highest values.</dd>
-</dl>
-<dl class="docutils" id="lcamechanism-max-vs-avg-output-port">
-<dt><em>MAX_VS_AVG</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
-<dd>the difference between the element of the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
-and the average of all of the other elements.</dd>
-</dl>
-</dd></dl>
-
 </div>
 </div>
 
 
-           </div>
-           
-          </div>
-          <footer>
+             </article>
+             
+            </div>
+            <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="KWTAMechanism.html" class="btn btn-neutral float-right" title="KWTAMechanism" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="KWTAMechanism.html" class="btn btn-neutral float-right" title="KWTAMechanism" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="RecurrentTransferMechanism.html" class="btn btn-neutral float-left" title="RecurrentTransferMechanism" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="RecurrentTransferMechanism.html" class="btn btn-neutral" title="RecurrentTransferMechanism" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
 
-  <hr/>
+  
+
+    <hr>
+
+  
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2016, Jonathan D. Cohen
+        &copy; Copyright 2016, Jonathan D. Cohen.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
 
 </footer>
 
+          </div>
         </div>
-      </div>
 
-    </section>
+        <div class="psyneulink-content-right" id="psyneulink-content-right">
+          <div class="psyneulink-right-menu" id="psyneulink-right-menu">
+            <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
+              <ul>
+<li><a class="reference internal" href="#">LCAMechanism</a><ul>
+<li><a class="reference internal" href="#contents">Contents</a></li>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#creating-an-lcamechanism">Creating an LCAMechanism</a><ul>
+<li><a class="reference internal" href="#integration"><em>Integration</em></a></li>
+<li><a class="reference internal" href="#thresholding"><em>Thresholding</em></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#structure">Structure</a></li>
+<li><a class="reference internal" href="#execution">Execution</a></li>
+<li><a class="reference internal" href="#class-reference">Class Reference</a></li>
+</ul>
+</li>
+</ul>
 
-  </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
   
 
+
+  
+
+     
+       <script type="text/javascript">
+           var DOCUMENTATION_OPTIONS = {
+               URL_ROOT:'./',
+               VERSION:'0.7.1.0+44.g83772c8',
+               LANGUAGE:'None',
+               COLLAPSE_INDEX:false,
+               FILE_SUFFIX:'.html',
+               HAS_SOURCE:  true,
+               SOURCELINK_SUFFIX: '.txt'
+           };
+       </script>
+         <script type="text/javascript" src="_static/jquery.js"></script>
+         <script type="text/javascript" src="_static/underscore.js"></script>
+         <script type="text/javascript" src="_static/doctools.js"></script>
+         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+     
+
+  
+
+  <script type="text/javascript" src="_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="_static/js/vendor/bootstrap.min.js"></script>
+  <script type="text/javascript" src="_static/js/theme.js"></script>
 
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
+  </script> 
+
+  <!-- Begin Footer -->
+
+  <footer class="site-footer">
+    <div class="container footer-container">
+      <div class="footer-logo-wrapper">
+        <a href="https://princetonuniversity.github.io/PsyNeuLink/" class="footer-logo"></a>
+      </div>
+
+  </footer>
+
+  <div class="cookie-banner-wrapper">
+  <div class="container">
+    <p class="gdpr-notice">To analyze traffic and optimize your experience, we serve cookies on this site. By clicking or navigating, you agree to allow our usage of cookies. As the current maintainers of this site, Facebook’s Cookies Policy applies. Learn more, including about available controls: <a href="https://www.facebook.com/policies/cookies/">Cookies Policy</a>.</p>
+    <img class="close-button" src="_static/images/psyneulink-x.svg">
+  </div>
+</div>
+
+  <!-- End Footer -->
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container mobile-logo-container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/" aria-label="PsyNeuLink"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      psyneulinkAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.psyneulink-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
   </script>
-
-  
-  
-    
-   
-
 </body>
 </html>
