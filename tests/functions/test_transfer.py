@@ -85,7 +85,7 @@ def test_execute(func, variable, params, fail, expected, benchmark, mode):
     elif mode == "LLVM":
         ex = pnlvm.execution.FuncExecution(f).execute
     elif mode == "PTX":
-        ex = pnlvm.execution.FuncExecution(f).cude_execute
+        ex = pnlvm.execution.FuncExecution(f).cuda_execute
     res = ex(variable)
     assert np.allclose(res, expected)
     benchmark(f.function, variable)
