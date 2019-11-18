@@ -643,6 +643,12 @@ class Parameter(types.SimpleNamespace):
 
             :default: None
 
+        valid_types
+            if not None, this contains a tuple of `type`\\ s that are acceptable
+            for values of this Parameter
+
+            :default: None
+
     """
     # The values of these attributes will never be inherited from parent Parameters
     # KDM 7/12/18: consider inheriting ONLY default_value?
@@ -652,7 +658,7 @@ class Parameter(types.SimpleNamespace):
     # display if the function is True based on the value of the attribute
     _hidden_if_unset_attrs = {
         'aliases', 'getter', 'setter', 'constructor_argument', 'spec',
-        'modulation_combination_function'
+        'modulation_combination_function', 'valid_types'
     }
     _hidden_if_false_attrs = {'read_only', 'modulable', 'fallback_default', 'retain_old_simulation_data'}
     _hidden_when = {
@@ -693,6 +699,7 @@ class Parameter(types.SimpleNamespace):
         retain_old_simulation_data=False,
         constructor_argument=None,
         spec=None,
+        valid_types=None,
         _owner=None,
         _inherited=False,
         _user_specified=False,
@@ -708,6 +715,12 @@ class Parameter(types.SimpleNamespace):
 
         if loggable and log is None:
             log = {}
+
+        if valid_types is not None:
+            if isinstance(valid_types, list):
+                valid_types = tuple(valid_types)
+            else:
+                valid_types = (valid_types, )
 
         super().__init__(
             default_value=default_value,
@@ -733,6 +746,7 @@ class Parameter(types.SimpleNamespace):
             retain_old_simulation_data=retain_old_simulation_data,
             constructor_argument=constructor_argument,
             spec=spec,
+            valid_types=valid_types,
             _inherited=_inherited,
             _user_specified=_user_specified,
         )
@@ -1377,26 +1391,35 @@ class ParametersBase(ParametersTemplate):
         return getattr(self, '{0}{1}'.format(prefix, suffix))
 
     def _validate(self, attr, value):
+        err_msg = None
+
+        valid_types = getattr(self, attr).valid_types
+        if valid_types is not None:
+            if not isinstance(value, valid_types):
+                err_msg = '{0} is an invalid type. Valid types are: {1}'.format(
+                    type(value),
+                    valid_types
+                )
+
         try:
             validation_method = self._get_prefixed_method(validate=True, parameter_name=attr)
             err_msg = validation_method(value)
             if err_msg is False:
                 err_msg = '{0} returned False'.format(validation_method)
-            elif err_msg is True:
-                err_msg = None
 
-            if err_msg is not None:
-                raise ParameterError(
-                    "Value ({0}) assigned to parameter '{1}' of {2}.parameters is not valid: {3}".format(
-                        value,
-                        attr,
-                        self._owner,
-                        err_msg
-                    )
-                )
         except AttributeError:
             # parameter does not have a validation method
             pass
+
+        if err_msg is not None:
+            raise ParameterError(
+                "Value ({0}) assigned to parameter '{1}' of {2}.parameters is not valid: {3}".format(
+                    value,
+                    attr,
+                    self._owner,
+                    err_msg
+                )
+            )
 
     def _parse(self, attr, value):
         try:
