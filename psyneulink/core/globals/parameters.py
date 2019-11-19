@@ -1295,8 +1295,6 @@ class ParametersBase(ParametersTemplate):
             super().__setattr__(attr, value)
         else:
             if isinstance(value, Parameter):
-                self._validate(attr, value.default_value)
-
                 if value.name is None:
                     value.name = attr
 
@@ -1325,7 +1323,6 @@ class ParametersBase(ParametersTemplate):
                         )
                 super().__setattr__(attr, value)
             else:
-                self._validate(attr, value)
                 # assign value to default_value
                 if hasattr(self, attr) and isinstance(getattr(self, attr), Parameter):
                     current_param = getattr(self, attr)
@@ -1340,6 +1337,7 @@ class ParametersBase(ParametersTemplate):
 
                 super().__setattr__(attr, new_param)
 
+            self._validate(attr, getattr(self, attr).default_value)
             self._register_parameter(attr)
 
     def _get_prefixed_method(
