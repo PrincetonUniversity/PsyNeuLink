@@ -988,6 +988,15 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         noise = Parameter(0.5, modulable=True)
         t0 = .200
         bias = Parameter(0.5, read_only=True, getter=_DriftDiffusionAnalytical_bias_getter)
+        # this is read only because conversion is disabled for this function
+        # this occurs in other places as well
+        enable_output_type_conversion = Parameter(
+            False,
+            stateful=False,
+            loggable=False,
+            pnl_internal=True,
+            read_only=True
+        )
 
     @tc.typecheck
     def __init__(self,
@@ -1017,16 +1026,6 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                          owner=owner,
                          prefs=prefs,
                          )
-
-    @property
-    def output_type(self):
-        return self._output_type
-
-    @output_type.setter
-    def output_type(self, value):
-        # disabled because it happens during normal execution, may be confusing
-        # warnings.warn('output_type conversion disabled for {0}'.format(self.__class__.__name__))
-        self._output_type = None
 
     @property
     def shenhav_et_al_compat_mode(self):

@@ -2379,6 +2379,13 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         threshold = Parameter(100.0, modulable=True)
         time_step_size = Parameter(1.0, modulable=True)
         previous_time = Parameter(None, pnl_internal=True)
+        enable_output_type_conversion = Parameter(
+            False,
+            stateful=False,
+            loggable=False,
+            pnl_internal=True,
+            read_only=True
+        )
 
     @tc.typecheck
     def __init__(self,
@@ -2420,16 +2427,6 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
             )
 
         self.has_initializers = True
-
-    @property
-    def output_type(self):
-        return self._output_type
-
-    @output_type.setter
-    def output_type(self, value):
-        # disabled because it happens during normal execution, may be confusing
-        # warnings.warn('output_type conversion disabled for {0}'.format(self.__class__.__name__))
-        self._output_type = None
 
     def _validate_noise(self, noise):
         if not isinstance(noise, float):
@@ -2720,6 +2717,13 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         time_step_size = Parameter(1.0, modulable=True)
         starting_point = 0.0
         previous_time = Parameter(0.0, pnl_internal=True)
+        enable_output_type_conversion = Parameter(
+            False,
+            stateful=False,
+            loggable=False,
+            pnl_internal=True,
+            read_only=True
+        )
 
     @tc.typecheck
     def __init__(self,
@@ -2771,16 +2775,6 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
             raise FunctionError(
                 "Invalid noise parameter for {}. OrnsteinUhlenbeckIntegrator requires noise parameter to be a float. "
                 "Noise parameter is used to construct the standard DDM noise distribution".format(self.name))
-
-    @property
-    def output_type(self):
-        return self._output_type
-
-    @output_type.setter
-    def output_type(self, value):
-        # disabled because it happens during normal execution, may be confusing
-        # warnings.warn('output_type conversion disabled for {0}'.format(self.__class__.__name__))
-        self._output_type = None
 
     def _function(self,
                  variable=None,
@@ -3620,6 +3614,14 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         previous_v = Parameter(np.array([1.0]), pnl_internal=True)
         previous_time = Parameter(0.0, pnl_internal=True)
 
+        enable_output_type_conversion = Parameter(
+            False,
+            stateful=False,
+            loggable=False,
+            pnl_internal=True,
+            read_only=True
+        )
+
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -3695,16 +3697,6 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
             owner=owner,
             prefs=prefs,
             )
-
-    @property
-    def output_type(self):
-        return self._output_type
-
-    @output_type.setter
-    def output_type(self, value):
-        # disabled because it happens during normal execution, may be confusing
-        # warnings.warn('output_type conversion disabled for {0}'.format(self.__class__.__name__))
-        self._output_type = None
 
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set=request_set,
