@@ -63,7 +63,7 @@ from psyneulink.core.globals.keywords import \
     RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM,\
     TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import \
-    Parameter, ParameterError, get_validator_by_type_only, get_validator_by_function
+    Parameter, ParameterError, get_validator_by_function
 from psyneulink.core.globals.utilities import parameter_spec, get_global_seed
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.preferences.basepreferenceset import \
@@ -3785,8 +3785,10 @@ class TransferWithCosts(TransferFunction):
                                            getter=_transfer_fct_add_param_getter,
                                            setter=_transfer_fct_add_param_setter)
 
-        enabled_cost_functions = CostFunctions.DEFAULTS
-        _validate_cost_functions = get_validator_by_type_only([CostFunctions, list])
+        enabled_cost_functions = Parameter(
+            CostFunctions.DEFAULTS,
+            valid_types=(CostFunctions, list)
+        )
 
         # Create versions of cost functions' modulation params for TransferWithCosts
 

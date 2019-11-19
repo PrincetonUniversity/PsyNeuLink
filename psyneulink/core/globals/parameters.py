@@ -251,7 +251,7 @@ from psyneulink.core.globals.log import LogCondition, LogEntry, LogError
 from psyneulink.core.globals.utilities import call_with_pruned_args, copy_iterable_with_shared, get_alias_property_getter, get_alias_property_setter, get_deepcopy_with_shared, unproxy_weakproxy
 
 __all__ = [
-    'Defaults', 'get_validator_by_function', 'get_validator_by_type_only', 'Parameter', 'ParameterAlias', 'ParameterError',
+    'Defaults', 'get_validator_by_function', 'Parameter', 'ParameterAlias', 'ParameterError',
     'ParametersBase', 'parse_context',
 ]
 
@@ -260,24 +260,6 @@ logger = logging.getLogger(__name__)
 
 class ParameterError(Exception):
     pass
-
-
-def get_validator_by_type_only(valid_types):
-    """
-        :return: A validation method for use with Parameters classes that rejects any assignment that is not one of the **valid_types**
-        :rtype: types.FunctionType
-    """
-    if not isinstance(valid_types, collections.abc.Iterable):
-        valid_types = [valid_types]
-
-    def validator(self, value):
-        for t in valid_types:
-            if isinstance(value, t):
-                return None
-        else:
-            return 'valid types: {0}'.format(valid_types)
-
-    return validator
 
 
 def get_validator_by_function(function):
