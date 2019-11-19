@@ -182,6 +182,7 @@ class FunctionOutputType(IntEnum):
     RAW_NUMBER = 0
     NP_1D_ARRAY = 1
     NP_2D_ARRAY = 2
+    DEFAULT = 3
 
 
 # Typechecking *********************************************************************************************************
@@ -285,6 +286,46 @@ def get_param_value_for_function(owner, function):
 #         result = func(*args, **kwargs)
 #         return convert_output_type(result)
 #     return wrapper
+
+# this should eventually be moved to a unified validation method
+def _output_type_setter(value, owning_component):
+    # Can't convert from arrays of length > 1 to number
+    if (
+        owning_component.defaults.variable is not None
+        and safe_len(owning_component.defaults.variable) > 1
+        and owning_component.output_type is FunctionOutputType.RAW_NUMBER
+    ):
+        raise FunctionError(
+            f"{owning_component.__class__.__name__} can't be set to return a "
+            "single number since its variable has more than one number."
+        )
+
+    # warn if user overrides the 2D setting for mechanism functions
+    # may be removed when
+    # https://github.com/PrincetonUniversity/PsyNeuLink/issues/895 is solved
+    # properly(meaning Mechanism values may be something other than 2D np array)
+    try:
+        # import here because if this package is not installed, we can assume
+        # the user is probably not dealing with compilation so no need to warn
+        # unecessarily
+        import llvmlite
+        if (
+            isinstance(owning_component.owner, Mechanism)
+            and (
+                value == FunctionOutputType.RAW_NUMBER
+                or value == FunctionOutputType.NP_1D_ARRAY
+            )
+        ):
+            warnings.warn(
+                f'Functions that are owned by a Mechanism but do not return a '
+                '2D numpy array may cause unexpected behavior if llvm '
+                'compilation is enabled.'
+            )
+    except (AttributeError, ImportError):
+        pass
+
+    return value
+
 
 class Function_Base(Function):
     """
@@ -448,7 +489,15 @@ class Function_Base(Function):
         """
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
+        output_type = Parameter(
+            FunctionOutputType.DEFAULT,
+            stateful=False,
+            loggable=False,
+            pnl_internal=True,
+            valid_types=FunctionOutputType
+        )
         enable_output_type_conversion = Parameter(False, stateful=False, loggable=False, pnl_internal=True)
+
     # Note: the following enforce encoding as 1D np.ndarrays (one array per variable)
     variableEncodingDim = 1
 
@@ -479,9 +528,6 @@ class Function_Base(Function):
             self._assign_deferred_init_name(name, context)
             self._init_args[NAME] = name
             return
-
-
-        self._output_type = None
 
         register_category(entry=self,
                           base_class=Function_Base,
@@ -642,41 +688,6 @@ class Function_Base(Function):
                 raise FunctionError(f"Can't convert value ({value}) with more than a single number to a raw number.")
 
         return value
-
-    @property
-    def output_type(self):
-        return self._output_type
-
-    @output_type.setter
-    def output_type(self, value):
-        # Bad outputType specification
-        if value is not None and not isinstance(value, FunctionOutputType):
-            raise FunctionError(f"value ({self.output_type}) of output_type attribute "
-                                f"must be FunctionOutputType for {self.__class__.__name__}.")
-
-        # Can't convert from arrays of length > 1 to number
-        if (
-            self.defaults.variable is not None
-            and safe_len(self.defaults.variable) > 1
-            and self.output_type is FunctionOutputType.RAW_NUMBER
-        ):
-            raise FunctionError(f"{self.__class__.__name__} can't be set to return a single number "
-                                f"since its variable has more than one number.")
-
-        # warn if user overrides the 2D setting for mechanism functions
-        # may be removed when https://github.com/PrincetonUniversity/PsyNeuLink/issues/895 is solved properly
-        # (meaning Mechanism values may be something other than 2D np array)
-        try:
-            # import here because if this package is not installed, we can assume the user is probably not dealing with compilation
-            # so no need to warn unecessarily
-            import llvmlite
-            if (isinstance(self.owner, Mechanism) and (value == FunctionOutputType.RAW_NUMBER or value == FunctionOutputType.NP_1D_ARRAY)):
-                warnings.warn(f'Functions that are owned by a Mechanism but do not return a 2D numpy array '
-                              f'may cause unexpected behavior if llvm compilation is enabled.')
-        except (AttributeError, ImportError):
-            pass
-
-        self._output_type = value
 
     def show_params(self):
         print("\nParams for {} ({}):".format(self.name, self.componentName))

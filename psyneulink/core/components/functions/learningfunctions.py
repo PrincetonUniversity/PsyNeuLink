@@ -1535,6 +1535,13 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         activation_input = Parameter([0], read_only=True, getter=_activation_input_getter)
         activation_output = Parameter([0], read_only=True, getter=_activation_output_getter)
         error_signal = Parameter([0], read_only=True, getter=_error_signal_getter)
+        enable_output_type_conversion = Parameter(
+            False,
+            stateful=False,
+            loggable=False,
+            pnl_internal=True,
+            read_only=True
+        )
 
     def __init__(self,
                  default_variable=None,
@@ -1554,16 +1561,6 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                          owner=owner,
                          prefs=prefs,
                          )
-
-    @property
-    def output_type(self):
-        return self._output_type
-
-    @output_type.setter
-    def output_type(self, value):
-        # disabled because it happens during normal execution, may be confusing
-        # warnings.warn('output_type conversion disabled for {0}'.format(self.__class__.__name__))
-        self._output_type = None
 
     def _validate_variable(self, variable, context=None):
         variable = super()._validate_variable(variable, context)
