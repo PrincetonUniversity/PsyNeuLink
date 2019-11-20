@@ -1133,15 +1133,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                          matrix=matrix,
                                          name=mech.name + ' recurrent projection')
 
-    def _instantiate_attributes_after_function(self, context=None):
-
-        # Assign these after instantiation of function, since they are initialized in _execute (see below)
-        self.attributes_dict_entries.update({OUTPUT_ACTIVITY_ATTR:OUTPUT_ACTIVITY_ATTR,
-                                             CURRENT_ACTIVITY_ATTR:CURRENT_ACTIVITY_ATTR,
-                                             MINUS_PHASE_ACTIVITY_ATTR:MINUS_PHASE_ACTIVITY_ATTR,
-                                             PLUS_PHASE_ACTIVITY_ATTR:PLUS_PHASE_ACTIVITY_ATTR})
-        super()._instantiate_attributes_after_function(context=context)
-
     def _execute(self,
                  variable=None,
                  context=None,

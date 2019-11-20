@@ -811,14 +811,6 @@ System's `show_graph <System.show_graph>` method with the keyword **LABELS**.
     corresponding InputPort. For example, the label 'red', may translate to different values on different InputPorts
     of the same Mechanism, and on different Mechanisms of a System.
 
-.. Mechanism_Attribs_Dicts:
-
-Attribute Dictionary
-^^^^^^^^^^^^^^^^^^^^
-
-A Mechanism has an `attributes_dict` attribute containing a dictionary of its attributes that can be used to
-specify the `variable <OutputPort.variable>` of its OutputPorts (see `OutputPort_Customization`).
-
 
 .. _Mechanism_Role_In_Processes_And_Systems:
 
@@ -1290,10 +1282,6 @@ class Mechanism_Base(Mechanism):
         a dictionary of the `Systems <System>` to which the Mechanism belongs, that designates its `role
         <Mechanism_Role_In_Processes_And_Systems>` in each. The key of each entry is a System to which the Mechanism
         belongs, and its value is the Mechanism's `role in that System <System_Mechanisms>`.
-
-    attributes_dict : Dict[keyword, value]
-        a dictionary containing the attributes (and their current values) that can be used to specify the
-        `variable <OutputPort.variable>` of the Mechanism's `OutputPort` (see `OutputPort_Customization`).
 
     condition : Condition : None
         condition to be associated with the Mechanism in the `Scheduler` responsible for executing it in each
@@ -1969,16 +1957,6 @@ class Mechanism_Base(Mechanism):
         self._instantiate_input_ports(context=context)
         self._instantiate_parameter_ports(function=function, context=context)
         super()._instantiate_attributes_before_function(function=function, context=context)
-
-        # Assign attributes to be included in attributes_dict
-        #   keys are keywords exposed to user for assignment
-        #   values are names of corresponding attributes
-        self.attributes_dict_entries = dict(OWNER_VARIABLE = VARIABLE,
-                                            OWNER_VALUE = VALUE,
-                                            OWNER_EXECUTION_COUNT = OWNER_EXECUTION_COUNT,
-                                            OWNER_EXECUTION_TIME = OWNER_EXECUTION_TIME)
-        if hasattr(self, PREVIOUS_VALUE):
-            self.attributes_dict_entries.update({'PREVIOUS_VALUE': PREVIOUS_VALUE})
 
     def _instantiate_function(self, function, function_params=None, context=None):
         """Assign weights and exponents if specified in input_ports
@@ -3631,29 +3609,6 @@ class Mechanism_Base(Mechanism):
         return ContentAddressableList(component_type=Mechanism,
                                       list=[p.sender.owner for p in self.mod_afferents
                                             if isinstance(p.sender.owner, Mechanism_Base)])
-
-    @property
-    def attributes_dict(self):
-        """Note: this needs to be updated each time it is called, as it must be able to report current values"""
-
-        # Construct attributes_dict from entries specified in attributes_dict_entries
-        #   (which is assigned in _instantiate_attributes_before_function)
-        attribs_dict = MechParamsDict({key:getattr(self, value) for key,value in self.attributes_dict_entries.items()})
-        attribs_dict.update({INPUT_PORT_VARIABLES: [input_port.variable for input_port in self.input_ports]})
-
-        attribs_dict.update(self.user_params)
-        del attribs_dict[FUNCTION]
-        try:
-            del attribs_dict[FUNCTION_PARAMS]
-        except KeyError:
-            pass
-        del attribs_dict[INPUT_PORTS]
-        del attribs_dict[OUTPUT_PORTS]
-        try:
-            attribs_dict.update(self.function_params)
-        except KeyError:
-            pass
-        return attribs_dict
 
     @property
     def _dependent_components(self):
