@@ -426,14 +426,17 @@ using the following:
     <Mechanism_Base.value>` indexed by the int;  indexing begins with 0 (e.g.; 1 references the 2nd item).
 
     *<attribute name>* -- the name of an attribute of the OutputPort's `owner <Port.owner>` (must be one
-    in the `owner <Port.owner>`\\'s `params_dict <Mechanism.attributes_dict>` dictionary); returns the value
+    in the `owner <Port.owner>`\\'s `Parameters <Mechanism.Parameters>` class); returns the value
     of the named attribute for use in the OutputPort's `variable <OutputPort.variable>`.
 
-    *PARAMS_DICT* -- keyword specifying the `owner <Port.owner>` Mechanism's entire `params_dict
-    <Mechanism.attributes_dict>` dictionary, that contains entries for all of it accessible attributes.  The
+    *PARAMS_DICT* -- keyword specifying the `owner <Port.owner>` Mechanism's
+    entire dictionary of Parameters, that contains its own Parameters, its
+    `function <Mechanism.function`\\'s Parameters, and the current `variable`
+    for the Mechanism's `input_ports <Mechanism.input_ports>`. The
     OutputPort's `function <OutputPort.function>` must be able to parse the dictionary.
     COMMENT
     ??WHERE CAN THE USER GET THE LIST OF ALLOWABLE ATTRIBUTES?  USER_PARAMS?? aTTRIBUTES_DICT?? USER ACCESSIBLE PARAMS??
+    <obj>.parameters
     COMMENT
 
     *List[<any of the above items>]* -- this assigns the value of each item in the list to the corresponding item of
@@ -626,7 +629,7 @@ from psyneulink.core.globals.keywords import \
     NAME, OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, \
     OWNER_VALUE, PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, PROJECTION_TYPE, \
     RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_PORTS, PORT, VALUE, VARIABLE, VARIANCE, \
-    output_port_spec_to_parameter_name
+    output_port_spec_to_parameter_name, INPUT_PORT_VARIABLES
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -698,7 +701,17 @@ def _parse_output_port_variable(variable, owner, context=None, output_port_name=
 
         elif isinstance(spec, str) and spec == PARAMS_DICT:
             # Specifies passing owner's params_dict as variable
-            return owner.attributes_dict
+            return {
+                **{p.name: p._get(context) for p in owner.parameters},
+                **{p.name: p._get(context) for p in owner.function.parameters},
+                **{
+                    INPUT_PORT_VARIABLES:
+                    [
+                        input_port.parameters.variable._get(context)
+                        for input_port in owner.input_ports
+                    ]
+                }
+            }
         elif isinstance(spec, str):
             # Owner's full value or attribute other than its value
             try:
