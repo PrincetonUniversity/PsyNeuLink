@@ -969,10 +969,14 @@ class DDM(ProcessingMechanism):
 
     def _instantiate_plotting_functions(self, context=None):
         if "DriftDiffusionIntegrator" in str(self.function):
-            self.get_axes_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
-                                                              noise=self.function_params['noise']).function
-            self.plot_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
-                                                          noise=self.function_params['noise']).function
+            self.get_axes_function = DriftDiffusionIntegrator(
+                rate=self.function.defaults.rate,
+                noise=self.function.defaults.noise
+            ).function
+            self.plot_function = DriftDiffusionIntegrator(
+                rate=self.function.defaults.rate,
+                noise=self.function.defaults.noise
+            ).function
 
     def _execute(
         self,
