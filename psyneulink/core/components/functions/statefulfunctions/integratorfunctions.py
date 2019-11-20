@@ -54,7 +54,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 __all__ = ['SimpleIntegrator', 'AdaptiveIntegrator', 'DriftDiffusionIntegrator',
            'OrnsteinUhlenbeckIntegrator', 'FitzHughNagumoIntegrator', 'AccumulatorIntegrator',
            'LeakyCompetingIntegrator', 'DualAdaptiveIntegrator', 'InteractiveActivationIntegrator',
-           'S_MINUS_L', 'L_MINUS_S'
+           'S_MINUS_L', 'L_MINUS_S', 'IntegratorFunction'
            ]
 
 
