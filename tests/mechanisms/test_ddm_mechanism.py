@@ -271,38 +271,20 @@ def test_DDM_noise(mode, benchmark, noise, expected):
 # INVALID NOISE:
 
 # ------------------------------------------------------------------------------------------------
-# TEST 1
-# noise = Single int
-
-
-def test_DDM_noise_int():
+@pytest.mark.ddm_mechanism
+@pytest.mark.mechanism
+@pytest.mark.benchmark(group="DDM")
+@pytest.mark.parametrize("noise", [
+    2, NormalDist(),
+    ], ids=["int", "functions"])
+def test_DDM_noise_invalid(noise):
     with pytest.raises(FunctionError) as error_text:
         stim = 10
         T = DDM(
             name='DDM',
             function=DriftDiffusionIntegrator(
 
-                noise=2,
-                rate=1.0,
-                time_step_size=1.0
-            ),
-        )
-        float(T.execute(stim)[0])
-    assert "DriftDiffusionIntegrator requires noise parameter to be a float" in str(error_text.value)
-
-# ------------------------------------------------------------------------------------------------
-# TEST 2
-# noise = Single fn
-
-
-def test_DDM_noise_fn():
-    with pytest.raises(FunctionError) as error_text:
-        stim = 10
-        T = DDM(
-            name='DDM',
-            function=DriftDiffusionIntegrator(
-
-                noise=NormalDist(),
+                noise=noise,
                 rate=1.0,
                 time_step_size=1.0
             ),
@@ -315,12 +297,13 @@ def test_DDM_noise_fn():
 # VALID INPUTS:
 
 # ------------------------------------------------------------------------------------------------
-# TEST 1
-# input = Int
-
-
-def test_DDM_input_int():
-    stim = 10
+@pytest.mark.ddm_mechanism
+@pytest.mark.mechanism
+@pytest.mark.benchmark(group="DDM")
+@pytest.mark.parametrize("stim", [
+    10, 10.0, [10],
+    ], ids=["int", "float", "list"])
+def test_DDM_input(stim):
     T = DDM(
         name='DDM',
         function=DriftDiffusionIntegrator(
@@ -331,42 +314,6 @@ def test_DDM_input_int():
     )
     val = float(T.execute(stim)[0])
     assert val == 10
-
-# ------------------------------------------------------------------------------------------------
-# TEST 2
-# input = List len 1
-
-
-def test_DDM_input_list_len_1():
-    stim = [10]
-    T = DDM(
-        name='DDM',
-        function=DriftDiffusionIntegrator(
-            noise=0.0,
-            rate=1.0,
-            time_step_size=1.0
-        ),
-    )
-    val = float(T.execute(stim)[0])
-    assert val == 10
-
-# ------------------------------------------------------------------------------------------------
-# TEST 3
-# input = Float
-
-
-def test_DDM_input_float():
-    stim = 10.0
-    T = DDM(
-        name='DDM',
-        function=DriftDiffusionIntegrator(
-            noise=0.0,
-            rate=1.0,
-            time_step_size=1.0
-        ),
-    )
-    val = float(T.execute(stim)[0])
-    assert val == 10.0
 
 # ------------------------------------------------------------------------------------------------
 
@@ -423,86 +370,41 @@ def test_DDM_input_fn():
 
 # VALID RATES:
 
-# ------------------------------------------------------------------------------------------------
-# TEST 1
-# rate = Int
-
-def test_DDM_rate_int():
-    stim = 10
-    T = DDM(
-        name='DDM',
-        function=DriftDiffusionIntegrator(
-            noise=0.0,
-            rate=5,
-            time_step_size=1.0
-        ),
-    )
-    val = float(T.execute(stim)[0])
-    assert val == 50
-
-#  The rate -- ndarray/list bug is fixed on devel but hasn't been pulled into scheduler yet
-#  Leaving commented out for now
-#
-# ------------------------------------------------------------------------------------------------
-# TEST 2
-# rate = list len 1
-#
-def test_DDM_rate_list_len_1():
-    stim = 10
-    T = DDM(
-        name='DDM',
-        function=DriftDiffusionIntegrator(
-            noise=0.0,
-            rate=[5],
-            time_step_size=1.0
-        ),
-    )
-    val = float(T.execute(stim)[0])
-    assert val == 50
-#
-# ------------------------------------------------------------------------------------------------
-# TEST 3
-# rate = float
-
-
-def test_DDM_rate_float():
-    stim = 10
-    T = DDM(
-        name='DDM',
-        function=DriftDiffusionIntegrator(
-            noise=0.0,
-            rate=5,
-            time_step_size=1.0
-        ),
-    )
-    val = float(T.execute(stim)[0])
-    assert val == 50
-
-# ------------------------------------------------------------------------------------------------
-# TEST 4
-# rate = negative
-
+@pytest.mark.ddm_mechanism
+@pytest.mark.mechanism
+@pytest.mark.benchmark(group="DDM")
+@pytest.mark.parametrize("rate, expected", [
+    (5, 50), (5., 50), ([5], 50), (-5.0, -50),
+    ], ids=["int", "float", "list", "negative"])
+@pytest.mark.parametrize("mode", [
+    "Python",
+    pytest.param("LLVM", marks=pytest.mark.llvm),
+    pytest.param("PTX", marks=[pytest.mark.llvm, pytest.mark.cuda]),
+])
 # ******
-# Should this pass?
+# Should negative pass?
 # ******
-
-
-def test_DDM_input_rate_negative():
+def test_DDM_rate(benchmark, rate, expected, mode):
     stim = [10]
     T = DDM(
         name='DDM',
-        default_variable=[0],
         function=DriftDiffusionIntegrator(
             noise=0.0,
-            rate=-5.0,
+            rate=rate,
             time_step_size=1.0
         ),
     )
-    val = float(T.execute(stim)[0])
-    assert val == -50
+    if mode == "Python":
+        ex = T.execute
+    elif mode == "LLVM":
+        ex = pnlvm.execution.MechExecution(T).execute
+    elif mode == "PTX":
+        ex = pnlvm.execution.MechExecution(T).cuda_execute
+    val = float(ex(stim)[0][0][0])
+    assert val == expected
+    benchmark(ex, stim)
 
 # ------------------------------------------------------------------------------------------------
-
 # INVALID RATES:
 
 # ------------------------------------------------------------------------------------------------
