@@ -1266,6 +1266,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         return '({0} {1})'.format(type(self).__name__, self.name)
         #return '{1}'.format(type(self).__name__, self.name)
 
+    def __lt__(self, other):
+        return self.name < other.name
+
     def __deepcopy__(self, memo):
         fun = get_deepcopy_with_shared_Components(self._deepcopy_shared_keys)
         newone = fun(self, memo)
