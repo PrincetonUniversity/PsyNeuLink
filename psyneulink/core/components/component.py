@@ -1993,10 +1993,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                         k not in defaults
                         and k not in alias_names
                     )
-                    or (
-                        (function_params is None or k not in function_params)
-                        and v is not None
-                    )
+                    or v is not None
                 )
             }
             for p in d:
