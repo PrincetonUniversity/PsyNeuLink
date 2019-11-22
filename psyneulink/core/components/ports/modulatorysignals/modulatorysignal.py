@@ -406,6 +406,8 @@ Class Reference
 ---------------
 """
 
+import itertools
+
 from psyneulink.core.components.component import component_keywords
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.port import Port_Base
@@ -645,9 +647,16 @@ class ModulatorySignal(OutputPort):
         # If the name is not a default name for the class,
         #    or the ModulatorySignal has no projections (which are used to name it)
         #    then return
-        if (not (self.name is self.__class__.__name__
-                 or self.__class__.__name__ + '-' in self.name) or
-                    len(self.efferents)==0):
+        if (
+            (
+                not (
+                    self.name is self.__class__.__name__
+                    or self.__class__.__name__ + '-' in self.name
+                )
+                or len(self.efferents) == 0
+            )
+            and self.name not in [p.receiver.name for p in self.efferents]
+        ):
             return self.name
 
         # Construct default name
