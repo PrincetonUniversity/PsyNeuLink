@@ -891,7 +891,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         expected_results_array = [
             [[20.0], [20.0], [0.0], [1.0], [2.378055160151634], [0.9820137900379085]],
-            [[20.0], [20.0], [0.0], [0.1], [0.48999967725112503], [0.5024599801509442]]
+            [[20.0], [20.0], [0.0], [-0.1], [0.48999967725112503], [0.5024599801509442]]
         ]
 
         for trial in range(len(expected_results_array)):
@@ -1186,7 +1186,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         expected_results_array = [
             [[20.0], [20.0], [0.0], [1.0], [2.378055160151634], [0.9820137900379085]],
-            [[20.0], [20.0], [0.0], [0.1], [0.48999967725112503], [0.5024599801509442]]
+            [[20.0], [20.0], [0.0], [-0.1], [0.48999967725112503], [0.5024599801509442]]
         ]
 
         for trial in range(len(expected_results_array)):
@@ -1325,7 +1325,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         expected_results_array = [
             [[20.0], [20.0], [0.0], [1.0], [3.4963766238230596], [0.8807970779778824]],
-            [[20.0], [20.0], [0.0], [0.1], [0.4899992579951842], [0.503729930808051]]
+            [[20.0], [20.0], [0.0], [-0.1], [0.4899992579951842], [0.503729930808051]]
         ]
 
         for trial in range(len(expected_results_array)):

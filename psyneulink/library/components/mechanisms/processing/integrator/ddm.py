@@ -384,7 +384,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.core.globals.utilities import is_numeric, is_same_function_spec, object_has_single_value
+from psyneulink.core.globals.utilities import is_numeric, is_same_function_spec, object_has_single_value, get_global_seed
 
 __all__ = [
     'ARRAY', 'DDM', 'DDMError', 'DECISION_VARIABLE', 'DECISION_VARIABLE_ARRAY',
@@ -695,6 +695,9 @@ class DDM(ProcessingMechanism):
                     :default value: `SCALAR`
                     :type: str
 
+                random_state
+                    :type: np.random.RandomState
+
         """
         function = Parameter(
             DriftDiffusionAnalytical(
@@ -708,8 +711,8 @@ class DDM(ProcessingMechanism):
             loggable=False
         )
         input_format = Parameter(SCALAR, stateful=False, loggable=False)
-
         initializer = np.array([[0]])
+        random_state = Parameter("random_state", loggable=False)
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -740,6 +743,7 @@ class DDM(ProcessingMechanism):
                                                    t0=.200),
                  input_ports=None,
                  output_ports:tc.optional(tc.any(str, Iterable))=(DECISION_VARIABLE, RESPONSE_TIME),
+                 seed=None,
                  params=None,
                  name=None,
                  prefs: is_pref_set = None,
@@ -748,6 +752,9 @@ class DDM(ProcessingMechanism):
         # Override instantiation of StandardOutputPorts usually done in _instantiate_output_ports
         #    in order to use SEQUENTIAL indices
         self.standard_output_ports = StandardOutputPorts(self, self.standard_output_ports, indices=SEQUENTIAL)
+
+        if seed is None:
+            seed = get_global_seed()
 
         if input_format is not None and input_ports is not None:
             raise DDMError(
@@ -807,11 +814,15 @@ class DDM(ProcessingMechanism):
         if isinstance(output_ports, (str, tuple)):
             output_ports = list(output_ports)
 
+        # Instantiate RandomState
+        random_state = np.random.RandomState([seed])
+
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
                                                   # input_format=input_format,
                                                   input_ports=input_ports,
                                                   output_ports=output_ports,
+                                                  random_state=random_state,
                                                   params=params)
 
         # IMPLEMENTATION NOTE: this manner of setting default_variable works but is idiosyncratic
@@ -1065,7 +1076,8 @@ class DDM(ProcessingMechanism):
 
             # Convert ER to decision variable:
             threshold = float(self.function.get_current_function_param(THRESHOLD, context))
-            if random.random() < return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]:
+            random_state = self.get_current_mechanism_param("random_state", context)
+            if random_state.rand() < return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]:
                 return_value[self.DECISION_VARIABLE_INDEX] = np.atleast_1d(-1 * threshold)
             else:
                 return_value[self.DECISION_VARIABLE_INDEX] = threshold
