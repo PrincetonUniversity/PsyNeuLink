@@ -2729,13 +2729,13 @@ class Mechanism_Base(Mechanism):
         all_ports = self.ports
         mod_afferents = self.mod_afferents
         for i, port in enumerate(ports):
-            s_function = ctx.import_llvm_function(port)
+            p_function = ctx.import_llvm_function(port)
 
             # Find output location
             builder, p_output = get_output_ptr(builder, i)
 
             # Allocate the input structure (data + modulation)
-            p_input = builder.alloca(s_function.args[2].type.pointee)
+            p_input = builder.alloca(p_function.args[2].type.pointee)
 
             # Copy input data to input structure
             builder = fill_input_data(builder, p_input, i)
@@ -2758,7 +2758,7 @@ class Mechanism_Base(Mechanism):
                                                ctx.int32_ty(0),
                                                ctx.int32_ty(port_idx)])
 
-            builder.call(s_function, [p_params, p_state, p_input, p_output])
+            builder.call(p_function, [p_params, p_state, p_input, p_output])
 
         return builder
 
@@ -2766,33 +2766,34 @@ class Mechanism_Base(Mechanism):
                                mech_params, mech_state, mech_input):
         # Allocate temporary storage. We rely on the fact that series
         # of InputPort results should match the main function input.
-        is_output_list = []
+        ip_output_list = []
         for port in self.input_ports:
-            is_function = ctx.import_llvm_function(port)
-            is_output_list.append(is_function.args[3].type.pointee)
+            ip_function = ctx.import_llvm_function(port)
+            ip_output_list.append(ip_function.args[3].type.pointee)
 
         # Check if all elements are the same. Function input will be array type if yes.
-        if len(set(is_output_list)) == 1:
-            is_output_type = pnlvm.ir.ArrayType(is_output_list[0], len(is_output_list))
+        if len(set(ip_output_list)) == 1:
+            ip_output_type = pnlvm.ir.ArrayType(ip_output_list[0], len(ip_output_list))
         else:
-            is_output_type = pnlvm.ir.LiteralStructType(is_output_list)
+            ip_output_type = pnlvm.ir.LiteralStructType(ip_output_list)
 
-        is_output = builder.alloca(is_output_type)
+        ip_output = builder.alloca(ip_output_type)
+
         def _get_output_ptr(b, i):
-            ptr = b.gep(is_output, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            ptr = b.gep(ip_output, [ctx.int32_ty(0), ctx.int32_ty(i)])
             return b, ptr
 
-        def _fill_input(b, s_input, i):
-            is_in = builder.gep(mech_input, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            data_ptr = builder.gep(s_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            b.store(b.load(is_in), data_ptr)
+        def _fill_input(b, p_input, i):
+            ip_in = builder.gep(mech_input, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            data_ptr = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            b.store(b.load(ip_in), data_ptr)
             return b
 
         builder = self._gen_llvm_ports(ctx, builder, self.input_ports,
                                        _get_output_ptr, _fill_input,
                                        mech_params, mech_state, mech_input)
 
-        return is_output, builder
+        return ip_output, builder
 
     def _gen_llvm_param_ports(self, func, f_params_in, ctx, builder,
                                mech_params, mech_state, mech_input):
