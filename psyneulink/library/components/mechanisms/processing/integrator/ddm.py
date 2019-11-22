@@ -1075,6 +1075,25 @@ class DDM(ProcessingMechanism):
         assert isinstance(self.function, IntegratorFunction)
         return super()._gen_llvm_function_body(*args, **kwargs)
 
+    def _gen_llvm_function_postprocess(self, builder, ctx, mf_out):
+        mech_out_ty = ctx.convert_python_struct_to_llvm_ir(self.defaults.value)
+        mech_out = builder.alloca(mech_out_ty)
+
+        if isinstance(self.function, IntegratorFunction):
+            # Integrator version of the DDM mechanism converts the
+            # second element to a 2d array
+            builder.store(builder.load(builder.gep(mf_out, [ctx.int32_ty(0),
+                                                            ctx.int32_ty(0)])),
+                          builder.gep(mech_out, [ctx.int32_ty(0),
+                                                 ctx.int32_ty(0)]))
+            builder.store(builder.load(builder.gep(mf_out, [ctx.int32_ty(0),
+                                                            ctx.int32_ty(1)])),
+                          builder.gep(mech_out, [ctx.int32_ty(0),
+                                                 ctx.int32_ty(1),
+                                                 ctx.int32_ty(0)]))
+            return mech_out, builder
+        return mf_out, builder
+
     @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, *args, context=None):
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
