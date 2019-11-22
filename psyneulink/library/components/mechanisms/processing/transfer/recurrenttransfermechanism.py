@@ -624,7 +624,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         smoothing_factor = Parameter(0.5, modulable=True)
         enable_learning = False
         learning_function = Parameter(Hebbian, stateful=False, loggable=False)
-        learning_rate = Parameter(None, modulable=True, setter=_recurrent_transfer_mechanism_learning_rate_setter)
+        learning_rate = Parameter(None, setter=_recurrent_transfer_mechanism_learning_rate_setter)
         learning_condition = Parameter(None, stateful=False, loggable=False)
 
     paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
