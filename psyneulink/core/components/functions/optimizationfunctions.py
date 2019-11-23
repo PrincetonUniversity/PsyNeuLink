@@ -1243,7 +1243,7 @@ class GridSearch(OptimizationFunction):
         grid = Parameter(None)
         save_samples = Parameter(True, pnl_internal=True)
         save_values = Parameter(True, pnl_internal=True)
-        random_state = Parameter(None, modulable=False, stateful=True, pnl_internal=True)
+        random_state = Parameter(None, stateful=True, loggable=False)
 
         direction = MAXIMIZE
 
@@ -2169,7 +2169,7 @@ class ParamEstimationFunction(OptimizationFunction):
 
         """
         variable = Parameter([[0], [0]], read_only=True)
-        random_state = Parameter(None, read_only=True)
+        random_state = Parameter(None, stateful=True, loggable=False)
         save_samples = True
         save_values = True
 
