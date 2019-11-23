@@ -8,10 +8,13 @@
 
 # ********************************************* PNL LLVM builtins **************************************************************
 
+import ctypes
 from llvmlite import ir
 from . import helpers
 from .builder_context import LLVMBuilderContext, _BUILTIN_PREFIX
 from psyneulink.core import llvm as pnlvm
+
+
 debug = pnlvm.debug
 debug_env = debug.debug_env
 
@@ -421,7 +424,8 @@ def _generate_cpu_printf_wrapper(module):
 
     try:
         import llvmlite.binding as llvm
-        llvm.load_library_permanently("libc.so.6")
+        libc = ctypes.util.find_library("c")
+        llvm.load_library_permanently(libc)
         # Address will be none if the symbol is not found
         printf_address = llvm.address_of_symbol("printf")
     except:
