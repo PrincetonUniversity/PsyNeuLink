@@ -3665,7 +3665,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         """
         variable = Parameter(np.array([1.0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         time_step_size = Parameter(0.05, modulable=True)
-        a_v = Parameter(1.0 / 3, modulable=True)
+        a_v = Parameter(-1.0 / 3, modulable=True)
         b_v = Parameter(0.0, modulable=True)
         c_v = Parameter(1.0, modulable=True)
         d_v = Parameter(0.0, modulable=True)
@@ -3683,8 +3683,8 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         # FIX: make an integration_method enum class for RK4/EULER
         integration_method = Parameter("RK4", stateful=False)
 
-        initial_w = np.array([1.0])
-        initial_v = np.array([1.0])
+        initial_w = 0.0
+        initial_v = 0.0
         t_0 = 0.0
         previous_w = Parameter(np.array([1.0]), pnl_internal=True)
         previous_v = Parameter(np.array([1.0]), pnl_internal=True)
