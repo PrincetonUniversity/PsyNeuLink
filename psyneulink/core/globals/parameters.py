@@ -315,6 +315,41 @@ def parse_context(context):
         return context
 
 
+def copy_parameter_value(value, shared_types=None, memo=None):
+    """
+        Returns a copy of **value** used as the value or spec of a
+        Parameter, with exceptions.
+
+        For example, we assume that if we have a Component in an
+        iterable, it is meant to be a pointer rather than something
+        used in computation requiring it to be a "real" instance
+        (like `Component.function`)
+
+        e.g. in spec attribute or Parameter `Mechanism.input_ports_spec`
+    """
+    from psyneulink.core.components.component import Component, ComponentsMeta
+
+    if shared_types is None:
+        shared_types = (Component, ComponentsMeta, types.MethodType)
+    else:
+        shared_types = tuple(shared_types)
+
+    try:
+        return copy_iterable_with_shared(
+            value,
+            shared_types=shared_types,
+            memo=memo
+        )
+    except TypeError:
+        # this will attempt to copy the current object if it
+        # is referenced in a parameter, such as
+        # ComparatorMechanism, which does this for input_ports
+        if not isinstance(value, shared_types):
+            return copy.deepcopy(value, memo)
+        else:
+            return value
+
+
 class ParametersTemplate:
     _deepcopy_shared_keys = ['_parent', '_params', '_owner', '_children']
     _values_default_excluded_attrs = {'user': False}
@@ -615,7 +650,9 @@ class Parameter(types.SimpleNamespace):
 
     # for user convenience - these attributes will be hidden from the repr
     # display if the function is True based on the value of the attribute
-    _hidden_if_unset_attrs = {'aliases', 'getter', 'setter', 'constructor_argument'}
+    _hidden_if_unset_attrs = {
+        'aliases', 'getter', 'setter', 'constructor_argument', 'spec'
+    }
     _hidden_if_false_attrs = {'read_only', 'modulable', 'fallback_default', 'retain_old_simulation_data'}
     _hidden_when = {
         **{k: lambda self, val: val is None for k in _hidden_if_unset_attrs},
@@ -653,6 +690,7 @@ class Parameter(types.SimpleNamespace):
         fallback_default=False,
         retain_old_simulation_data=False,
         constructor_argument=None,
+        spec=None,
         _owner=None,
         _inherited=False,
         _user_specified=False,
@@ -692,6 +730,7 @@ class Parameter(types.SimpleNamespace):
             fallback_default=fallback_default,
             retain_old_simulation_data=retain_old_simulation_data,
             constructor_argument=constructor_argument,
+            spec=spec,
             _inherited=_inherited,
             _user_specified=_user_specified,
         )
@@ -726,7 +765,14 @@ class Parameter(types.SimpleNamespace):
             return super().__str__()
 
     def __deepcopy__(self, memo):
-        result = Parameter(**{k: copy.deepcopy(getattr(self, k)) for k in self._param_attrs}, _owner=self._owner, _inherited=self._inherited)
+        result = Parameter(
+            **{
+                k: copy_parameter_value(getattr(self, k), memo=memo)
+                for k in self._param_attrs
+            },
+            _owner=self._owner,
+            _inherited=self._inherited
+        )
         memo[id(self)] = result
 
         return result
@@ -1294,19 +1340,41 @@ class ParametersBase(ParametersTemplate):
 
             self._register_parameter(attr)
 
-    def _get_prefixed_method(self, parse=False, validate=False, parameter_name=None):
+    def _get_prefixed_method(
+        self,
+        parse=False,
+        validate=False,
+        modulable=False,
+        parameter_name=None
+    ):
         """
-            Returns the method named **prefix**\\ **parameter_name**, used to simplify
-            pluggable methods for parsing and validation of `Parameter`\\ s
+            Returns the parsing or validation method for the Parameter named
+            **parameter_name** or for any modulable Parameter
         """
+
+        if (
+            parse and validate
+            or (not parse and not validate)
+        ):
+            raise ValueError('Exactly one of parse or validate must be True')
+
         if parse:
             prefix = self._parsing_method_prefix
         elif validate:
             prefix = self._validation_method_prefix
-        else:
-            return None
 
-        return getattr(self, '{0}{1}'.format(prefix, parameter_name))
+        if (
+            modulable and parameter_name is not None
+            or not modulable and parameter_name is None
+        ):
+            raise ValueError('modulable must be True or parameter_name must be specified, but not both.')
+
+        if modulable:
+            suffix = 'modulable'
+        elif parameter_name is not None:
+            suffix = parameter_name
+
+        return getattr(self, '{0}{1}'.format(prefix, suffix))
 
     def _validate(self, attr, value):
         try:

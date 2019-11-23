@@ -1025,6 +1025,19 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         def _validate_variable(self, variable):
             return None
 
+        def _parse_modulable(self, modulable_param):
+            # assume 2-tuple with class/instance as second item is a proper
+            # modulatory spec, can possibly add in a flag on acceptable
+            # classes in the future
+            if (
+                isinstance(modulable_param, tuple)
+                and len(modulable_param) == 2
+                and is_instance_or_subclass(modulable_param[1], Component)
+            ):
+                return modulable_param[0]
+            else:
+                return modulable_param
+
     initMethod = INIT_FULL_EXECUTE_METHOD
 
     classPreferenceLevel = PreferenceLevel.SYSTEM
@@ -2304,11 +2317,30 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 )
             }
             for p in d:
-                if d[p] is not None:
-                    try:
-                        getattr(self.parameters, p)._user_specified = True
-                    except AttributeError:
-                        pass
+                try:
+                    parameter_obj = getattr(self.parameters, p)
+                    if parameter_obj.modulable:
+                        # later, validate this
+                        try:
+                            modulable_param_parser = self.parameters._get_prefixed_method(
+                                parse=True,
+                                modulable=True
+                            )
+                            parsed = modulable_param_parser(d[p])
+
+                            if parsed is not d[p]:
+                                # we have a modulable param spec
+                                parameter_obj.spec = d[p]
+                                d[p] = parsed
+                        except AttributeError:
+                            pass
+
+                    if d[p] is not None:
+                        parameter_obj._user_specified = True
+                except AttributeError:
+                    # p in param_defaults does not correspond to a Parameter
+                    pass
+
             defaults.update(d)
 
         self.defaults = Defaults(owner=self, **defaults)
