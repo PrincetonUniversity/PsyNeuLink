@@ -6,14 +6,11 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
-      max-parallel: 7
       matrix:
         python-version: [3.6, 3.7, 3.8]
         os: [ubuntu-latest, macos-latest, windows-latest]
         exclude:
           - os: windows-latest
-            python-version: 3.8
-          - os: macos-latest
             python-version: 3.8
 
     steps:
@@ -34,15 +31,14 @@ jobs:
       run: |
         choco install --no-progress -y graphviz
         python -m pip install --upgrade pip
-        pip install torch -f https://download.pytorch.org/whl/cpu/torch_stable.html
+        if ($Env:PY_VER -ne '3.8') { pip install torch -f https://download.pytorch.org/whl/cpu/torch_stable.html }
       if: matrix.os == 'windows-latest'
+      env:
+        PY_VER: ${{ matrix.python-version }}
     - name: Python3.8 dependencies setup
       run: |
-        sed -i.tmp "/torch/d" requirements.txt
-        pip install cython llvmlite==0.26
+        sed "-i.tmp" "/torch/d" requirements.txt
       if: matrix.python-version == '3.8'
-      env:
-        LLVM_CONFIG: llvm-config-6.0
     - name: Shared dependencies
       shell: bash
       run: |
