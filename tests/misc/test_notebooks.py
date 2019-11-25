@@ -34,7 +34,14 @@ def _find_ipynbs():
 
 @pytest.mark.parametrize("filepath", _find_ipynbs(), ids=os.path.basename)
 def test_ipynb(filepath):
+    old_python_path = os.getenv("PYTHONPATH")
+    # pytest populates sys.path to access the tested module
+    os.environ["PYTHONPATH"] = os.pathsep.join(sys.path)
     _notebook_run(filepath)
+    if old_python_path is not None:
+        os.environ["PYTHONPATH"] = old_python_path
+    else:
+        del os.environ["PYTHONPATH"]
 
 if __name__ == '__main__':
     for filepath in _find_ipynbs():
