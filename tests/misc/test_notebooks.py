@@ -1,6 +1,7 @@
 """Test that all notebooks in the tutorial run without error"""
 import os
 import subprocess
+import sys
 
 
 def _notebook_run(filepath):
@@ -11,7 +12,7 @@ def _notebook_run(filepath):
     # name = os.path.splitext(name)[0]
 
     # outfilename = os.path.join(outdir, '{}.ipynb'.format(name))
-    args = ['jupyter', 'nbconvert', '--log-level', 'WARN',
+    args = [sys.executable, '-m', 'jupyter', 'nbconvert', '--log-level', 'WARN',
             '--to', 'notebook', '--execute',
             '--ExecutePreprocessor.timeout=300', # 5 min max for executing
             '--stdout', filepath]
