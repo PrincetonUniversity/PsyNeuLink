@@ -1,5 +1,6 @@
 """Test that all notebooks in the tutorial run without error"""
 import os
+import pytest
 import subprocess
 import sys
 
@@ -30,11 +31,12 @@ def _find_ipynbs():
 
     return ipynb_filepaths
 
-def test_ipynb():
+
+@pytest.mark.parametrize("filepath", _find_ipynbs(), ids=os.path.basename)
+def test_ipynb(filepath):
+    _notebook_run(filepath)
+
+if __name__ == '__main__':
     for filepath in _find_ipynbs():
         print('Running {}'.format(filepath))
         _notebook_run(filepath)
-
-
-if __name__ == '__main__':
-    test_ipynb()
