@@ -610,6 +610,7 @@ class ModulatorySignal(OutputPort):
                          index=index,
                          assign=assign,
                          function=function,
+                         modulation=modulation,
                          params=params,
                          name=name,
                          prefs=prefs,

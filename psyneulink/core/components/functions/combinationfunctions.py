@@ -79,32 +79,6 @@ class CombinationFunction(Function_Base):
         # variable = np.array([0, 0])
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
-    # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
-    def __init__(self, default_variable,
-                 params=None,
-                 owner=None,
-                 prefs=None,
-                 context=None):
-
-        # # FIX: 9/3/19 - DON'T IMPLEMENT, SINCE PredictionErrorDeltaFunction DOESN"T IMPLEMENT MODULATORY PARAMS
-        # try:
-        #     self.parameters.multiplicative_param
-        # except:
-        #     raise FunctionError(f"PROGRAM ERROR: {self.__class__.__name__} must implement "
-        #                         f"a {repr(MULTIPLICATIVE_PARAM)} Parameter or alias to one.")
-        #
-        # try:
-        #     self.parameters.additive_param
-        # except:
-        #     raise FunctionError(f"PROGRAM ERROR: {self.__class__.__name__} must implement "
-        #                         f"a {repr(ADDITIVE_PARAM)} Parameter or alias to one.")
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
-
 
 class Concatenate(CombinationFunction):  # ------------------------------------------------------------------------
     """
@@ -217,11 +191,14 @@ class Concatenate(CombinationFunction):  # -------------------------------------
                                                   offset=offset,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            scale=scale,
+            offset=offset,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_variable(self, variable, context=None):
         """Insure that list or array is 1d and that all elements are numeric
@@ -441,11 +418,15 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
                                                   offset=offset,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            arrangement=arrangement,
+            scale=scale,
+            offset=offset,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _handle_default_variable(self, default_variable=None, size=None, input_ports=None, function=None, params=None):
         if default_variable is not None:
@@ -751,11 +732,17 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                                                   offset=offset,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            weights=weights,
+            exponents=exponents,
+            operation=operation,
+            scale=scale,
+            offset=offset,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_variable(self, variable, context=None):
         """Insure that list or array is 1d and that all elements are numeric
@@ -1129,11 +1116,17 @@ class LinearCombination(
                                                   offset=offset,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            weights=weights,
+            exponents=exponents,
+            operation=operation,
+            scale=scale,
+            offset=offset,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_variable(self, variable, context=None):
         """Insure that all items of list or np.ndarray in variable are of the same length
@@ -1704,11 +1697,17 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                                                   offset=offset,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            weights=weights,
+            exponents=exponents,
+            operation=operation,
+            scale=scale,
+            offset=offset,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
         if self.weights is not None:
             self.weights = np.atleast_2d(self.weights).reshape(-1, 1)
@@ -1956,11 +1955,13 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         params = self._assign_args_to_param_dicts(gamma=gamma,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            gamma=gamma,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
         self.gamma = gamma
 

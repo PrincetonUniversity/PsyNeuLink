@@ -696,22 +696,31 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                   params=params,
                                                   )
 
-        super().__init__(default_variable=default_variable,
-                         size=size,
-                         input_ports=input_ports,
-                         function=function,
-                         integrator_function=integrator_function,
-                         initial_value=initial_value,
-                         noise=noise,
-                         integrator_mode=integrator_mode,
-                         integration_rate=integration_rate,
-                         clip=clip,
-                         output_ports=output_ports,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         **kwargs)
-
+        super().__init__(
+            default_variable=default_variable,
+            size=size,
+            input_ports=input_ports,
+            function=function,
+            integrator_function=integrator_function,
+            initial_value=initial_value,
+            noise=noise,
+            matrix=matrix,
+            integrator_mode=integrator_mode,
+            integration_rate=integration_rate,
+            learning_rate=learning_rate,
+            learning_function=learning_function,
+            learning_condition=learning_condition,
+            auto=auto,
+            hetero=hetero,
+            has_recurrent_input_port=has_recurrent_input_port,
+            combination_function=combination_function,
+            clip=clip,
+            output_ports=output_ports,
+            params=params,
+            name=name,
+            prefs=prefs,
+            **kwargs
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate shape and size of auto, hetero, matrix.

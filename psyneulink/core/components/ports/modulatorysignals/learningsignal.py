@@ -375,6 +375,7 @@ class LearningSignal(ModulatorySignal):
                          assign=None,
                          function=function,
                          modulates=modulates,
+                         learning_rate=learning_rate,
                          params=params,
                          name=name,
                          prefs=prefs,

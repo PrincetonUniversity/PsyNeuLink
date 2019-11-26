@@ -276,15 +276,18 @@ class ControlProjection(ModulatoryProjection_Base):
         # Validate sender (as variable) and params, and assign to variable
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
         # super(ControlSignal_Base, self).__init__(sender=sender,
-        super(ControlProjection, self).__init__(sender=sender,
-                                                receiver=receiver,
-                                                weight=weight,
-                                                exponent=exponent,
-                                                function=function,
-                                                params=params,
-                                                name=name,
-                                                prefs=prefs,
-                                                **kwargs)
+        super(ControlProjection, self).__init__(
+            sender=sender,
+            receiver=receiver,
+            weight=weight,
+            exponent=exponent,
+            function=function,
+            control_signal_params=control_signal_params,
+            params=params,
+            name=name,
+            prefs=prefs,
+            **kwargs
+        )
 
     def _instantiate_sender(self, sender, params=None, context=None):
         """Check if DefaultController is being assigned and if so configure it for the requested ControlProjection

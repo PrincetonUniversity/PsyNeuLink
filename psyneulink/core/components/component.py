@@ -476,7 +476,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import BasePreference
 from psyneulink.core.globals.preferences.preferenceset import \
     PreferenceEntry, PreferenceLevel, PreferenceSet, _assign_prefs
 from psyneulink.core.globals.registry import register_category
-from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, copy_iterable_with_shared, get_deepcopy_with_shared, is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, unproxy_weakproxy
+from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, copy_iterable_with_shared, get_deepcopy_with_shared, is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, unproxy_weakproxy, get_all_explicit_arguments
 from psyneulink.core.scheduling.condition import Never
 
 __all__ = [
@@ -1014,14 +1014,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         Note: if parameter_validation is off, validation is suppressed (for efficiency) (Component class default = on)
 
         """
-
-        illegal_args = [arg for arg in kwargs.keys() if arg not in self.standard_constructor_args + self.parameters.names(show_all=True)]
-        if illegal_args:
-            plural = ''
-            if len(illegal_args)>1:
-                plural = 's'
-            raise ComponentError(f"Unrecognized argument{plural} in constructor for {self.name} "
-                                 f"(type: {self.__class__.__name__}): {repr(', '.join(illegal_args))}")
+        self._handle_illegal_kwargs(**kwargs)
 
         context = Context(
             source=ContextFlags.COMPONENT,
@@ -1425,6 +1418,27 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                                               format(self.name, size[i], variable[i], i))
 
         return variable
+
+    def _handle_illegal_kwargs(self, **kwargs):
+        illegal_args = [
+            arg
+            for arg in kwargs.keys()
+            if arg not in (
+                self.standard_constructor_args
+                + self.parameters.names(show_all=True)
+                # arguments to constructor
+                + list(get_all_explicit_arguments(self.__class__, '__init__'))
+            )
+        ]
+
+        if illegal_args:
+            plural = ''
+            if len(illegal_args) > 1:
+                plural = 's'
+            raise ComponentError(
+                f"Unrecognized argument{plural} in constructor for {self.name} "
+                f"(type: {self.__class__.__name__}): {repr(', '.join(illegal_args))}"
+            )
 
     @handle_external_context()
     def _deferred_init(self, context=None):

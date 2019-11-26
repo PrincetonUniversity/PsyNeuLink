@@ -798,19 +798,26 @@ class ControlSignal(ModulatorySignal):
         #  (test for it, and create if necessary, as per OutputPorts in ControlProjection._instantiate_sender),
 
         # Validate sender (as variable) and params
-        super().__init__(owner=owner,
-                         reference_value=reference_value,
-                         default_allocation=default_allocation,
-                         size=size,
-                         assign=None,
-                         function=function,
-                         modulation=modulation,
-                         modulates=modulates,
-                         allocation_samples=allocation_samples,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         **kwargs)
+        super().__init__(
+            owner=owner,
+            reference_value=reference_value,
+            default_allocation=default_allocation,
+            size=size,
+            assign=None,
+            function=function,
+            modulation=modulation,
+            modulates=modulates,
+            cost_options=cost_options,
+            intensity_cost_function=intensity_cost_function,
+            adjustment_cost_function=adjustment_cost_function,
+            duration_cost_function=duration_cost_function,
+            combine_costs_function=combine_costs_function,
+            allocation_samples=allocation_samples,
+            params=params,
+            name=name,
+            prefs=prefs,
+            **kwargs
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate cost functions and allocation_samples

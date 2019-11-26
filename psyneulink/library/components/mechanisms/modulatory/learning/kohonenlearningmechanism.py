@@ -361,15 +361,18 @@ class KohonenLearningMechanism(LearningMechanism):
 
         # self._learning_rate = learning_rate
 
-        super().__init__(default_variable=default_variable,
-                         size=size,
-                         function=function,
-                         modulation=modulation,
-                         learning_rate=learning_rate,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            size=size,
+            function=function,
+            modulation=modulation,
+            learning_rate=learning_rate,
+            matrix=matrix,
+            learning_signals=learning_signals,
+            params=params,
+            name=name,
+            prefs=prefs,
+        )
 
     def _validate_variable(self, variable, context=None):
         """Validate that variable has only one item: activation_input.

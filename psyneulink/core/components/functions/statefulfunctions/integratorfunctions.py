@@ -215,13 +215,14 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate: parameter_spec = 1.0,
+                 rate=1.0,
                  noise=0.0,
                  initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
-                 context=None):
+                 context=None,
+                 **kwargs):
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(params=params)
@@ -229,14 +230,17 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         # # does not actually get set in _assign_args_to_param_dicts but we need it as an instance_default
         # params[INITIALIZER] = initializer
 
-        super().__init__(default_variable=default_variable,
-                         initializer=initializer,
-                         rate=rate,
-                         noise=noise,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
+        super().__init__(
+            default_variable=default_variable,
+            initializer=initializer,
+            rate=rate,
+            noise=noise,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=context,
+            **kwargs
+        )
 
         self.has_initializers = True
 
@@ -556,11 +560,14 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
 
         super().__init__(
             default_variable=default_variable,
+            rate=rate,
+            increment=increment,
+            noise=noise,
             initializer=initializer,
             params=params,
             owner=owner,
             prefs=prefs,
-            )
+        )
 
         self.has_initializers = True
 
@@ -818,11 +825,14 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
                                                   params=params)
         super().__init__(
             default_variable=default_variable,
+            rate=rate,
+            noise=noise,
+            offset=offset,
             initializer=initializer,
             params=params,
             owner=owner,
             prefs=prefs,
-            )
+        )
 
         self.has_initializers = True
 
@@ -1057,11 +1067,14 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
 
         super().__init__(
             default_variable=default_variable,
+            rate=rate,
+            noise=noise,
+            offset=offset,
             initializer=initializer,
             params=params,
             owner=owner,
             prefs=prefs,
-            )
+        )
 
         self.has_initializers = True
 
@@ -1586,16 +1599,25 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                                                   operation=operation,
                                                   params=params)
 
-        self.previous_long_term_avg = self.initial_long_term_avg
-        self.previous_short_term_avg = self.initial_short_term_avg
-
         super().__init__(
             default_variable=default_variable,
             initializer=initializer,
+            offset=offset,
+            previous_long_term_avg=initial_long_term_avg,
+            previous_short_term_avg=initial_short_term_avg,
+            initial_short_term_avg=initial_short_term_avg,
+            initial_long_term_avg=initial_long_term_avg,
+            short_term_gain=short_term_gain,
+            long_term_gain=long_term_gain,
+            short_term_bias=short_term_bias,
+            long_term_bias=long_term_bias,
+            short_term_rate=short_term_rate,
+            long_term_rate=long_term_rate,
+            operation=operation,
             params=params,
             owner=owner,
             prefs=prefs,
-            )
+        )
 
         self.has_initializers = True
 
@@ -2050,11 +2072,17 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
 
         super().__init__(
             default_variable=default_variable,
+            rate=rate,
+            decay=decay,
+            rest=rest,
+            max_val=max_val,
+            min_val=min_val,
             initializer=initializer,
+            noise=noise,
             params=params,
             owner=owner,
             prefs=prefs,
-            )
+        )
 
         self.has_initializers = True
 
@@ -2420,11 +2448,17 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         # Assign here as default, for use in initialization of function
         super().__init__(
             default_variable=default_variable,
+            rate=rate,
+            time_step_size=time_step_size,
+            starting_point=starting_point,
             initializer=initializer,
+            threshold=threshold,
+            noise=noise,
+            offset=offset,
             params=params,
             owner=owner,
             prefs=prefs,
-            )
+        )
 
         self.has_initializers = True
 
@@ -2761,11 +2795,17 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
 
         super().__init__(
             default_variable=default_variable,
+            rate=rate,
+            decay=decay,
+            noise=noise,
+            offset=offset,
+            starting_point=starting_point,
+            time_step_size=time_step_size,
             initializer=initializer,
             params=params,
             owner=owner,
             prefs=prefs,
-            )
+        )
 
         self.previous_time = self.starting_point
         self.has_initializers = True
@@ -3009,11 +3049,15 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
 
         super().__init__(
             default_variable=default_variable,
+            rate=rate,
+            noise=noise,
+            offset=offset,
+            time_step_size=time_step_size,
             initializer=initializer,
             params=params,
             owner=owner,
             prefs=prefs,
-            )
+        )
 
         self.has_initializers = True
 
@@ -3693,10 +3737,29 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
         super().__init__(
             default_variable=default_variable,
+            initial_v=initial_v,
+            initial_w=initial_w,
+            time_step_size=time_step_size,
+            t_0=t_0,
+            a_v=a_v,
+            b_v=b_v,
+            c_v=c_v,
+            d_v=d_v,
+            e_v=e_v,
+            f_v=f_v,
+            time_constant_v=time_constant_v,
+            a_w=a_w,
+            b_w=b_w,
+            c_w=c_w,
+            threshold=threshold,
+            mode=mode,
+            uncorrelated_activity=uncorrelated_activity,
+            integration_method=integration_method,
+            time_constant_w=time_constant_w,
             params=params,
             owner=owner,
             prefs=prefs,
-            )
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set=request_set,

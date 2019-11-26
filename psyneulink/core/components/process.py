@@ -905,11 +905,20 @@ class Process(Process_Base):
         self._phaseSpecMax = 0
         self._isControllerProcess = False
 
-        super(Process, self).__init__(default_variable=default_variable,
-                                      size=size,
-                                      param_defaults=params,
-                                      name=self.name,
-                                      prefs=prefs)
+        super(Process, self).__init__(
+            default_variable=default_variable,
+            size=size,
+            param_defaults=params,
+            name=self.name,
+            pathway=pathway,
+            initial_values=initial_values,
+            clamp_input=clamp_input,
+            default_projection_matrix=default_projection_matrix,
+            learning=learning,
+            learning_rate=learning_rate,
+            target=target,
+            prefs=prefs
+        )
 
     def _parse_arg_variable(self, variable):
         if variable is None:

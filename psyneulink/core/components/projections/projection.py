@@ -726,13 +726,16 @@ class Projection_Base(Projection):
 
        # Validate variable, function and params
         # Note: pass name of Projection (to override assignment of componentName in super.__init__)
-        super(Projection_Base, self).__init__(default_variable=variable,
-                                              function=function,
-                                              param_defaults=params,
-                                              name=self.name,
-                                              prefs=prefs,
-                                              **kwargs
-                                              )
+        super(Projection_Base, self).__init__(
+            default_variable=variable,
+            function=function,
+            param_defaults=params,
+            weight=weight,
+            exponent=exponent,
+            name=self.name,
+            prefs=prefs,
+            **kwargs
+        )
 
         self._assign_default_projection_name()
 

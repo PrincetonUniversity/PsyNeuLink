@@ -591,8 +591,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         self._learning_role = None
 
-        super().__init__(default_variable=default_variable,
-                         size=size,
+        super().__init__(
+            default_variable=default_variable,
+            size=size,
                          input_ports=input_ports,
                          output_ports=output_ports,
                          function=function,

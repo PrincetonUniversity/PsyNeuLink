@@ -237,11 +237,16 @@ class Stability(ObjectiveFunction):
                                                   normalize=normalize,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            matrix=matrix,
+            metric=metric,
+            transfer_fct=transfer_fct,
+            normalize=normalize,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
         # MODIFIED 6/12/19 NEW: [JDC]
         self._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
@@ -571,8 +576,9 @@ class Energy(Stability):
                  owner=None,
                  prefs=None):
 
-        super().__init__(default_variable=default_variable,
-                         size=size,
+        super().__init__(
+            default_variable=default_variable,
+            size=size,
                          metric=ENERGY,
                          matrix=matrix,
                          # transfer_fct=transfer_fct,
@@ -677,8 +683,9 @@ class Entropy(Stability):
                  owner=None,
                  prefs=None):
 
-        super().__init__(default_variable=default_variable,
-                         # matrix=matrix,
+        super().__init__(
+            default_variable=default_variable,
+            # matrix=matrix,
                          metric=ENTROPY,
                          transfer_fct=transfer_fct,
                          normalize=normalize,
@@ -794,11 +801,14 @@ class Distance(ObjectiveFunction):
                                                   normalize=normalize,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            metric=metric,
+            normalize=normalize,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_params(self, request_set, target_set=None, variable=None, context=None):
         """Validate that variable had two items of equal length

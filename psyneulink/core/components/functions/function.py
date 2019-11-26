@@ -501,16 +501,18 @@ class Function_Base(Function):
     # Note: the following enforce encoding as 1D np.ndarrays (one array per variable)
     variableEncodingDim = 1
 
-
     @abc.abstractmethod
-    def __init__(self,
-                 default_variable,
-                 params,
-                 function=None,
-                 owner=None,
-                 name=None,
-                 prefs=None,
-                 context=None):
+    def __init__(
+        self,
+        default_variable,
+        params,
+        function=None,
+        owner=None,
+        name=None,
+        prefs=None,
+        context=None,
+        **kwargs
+    ):
         """Assign category-level preferences, register category, and call super.__init__
 
         Initialization arguments:
@@ -536,11 +538,14 @@ class Function_Base(Function):
                           context=context)
         self.owner = owner
 
-        super().__init__(default_variable=default_variable,
-                         function=function,
-                         param_defaults=params,
-                         name=name,
-                            prefs=prefs)
+        super().__init__(
+            default_variable=default_variable,
+            function=function,
+            param_defaults=params,
+            name=name,
+            prefs=prefs,
+            **kwargs
+        )
 
     def __call__(self, *args, **kwargs):
         return self.function(*args, **kwargs)
@@ -821,11 +826,14 @@ class ArgumentTherapy(Function_Base):
                                                   pertinacity=pertincacity,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            propensity=propensity,
+            pertinacity=pertincacity,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_variable(self, variable, context=None):
         """Validates variable and returns validated value

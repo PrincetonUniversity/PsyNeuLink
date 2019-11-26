@@ -201,13 +201,15 @@ class StatefulFunction(Function_Base): #  --------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate: parameter_spec = 1.0,
-                 noise: parameter_spec = 0.0,
+                 rate=1.0,
+                 noise=0.0,
                  initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
-                 context=None):
+                 context=None,
+                 **kwargs
+                 ):
 
         if not hasattr(self, "initializers"):
             self.initializers = ["initializer"]
@@ -237,11 +239,18 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         # does not actually get set in _assign_args_to_param_dicts but we need it as an instance_default
         params[INITIALIZER] = initializer
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
+        super().__init__(
+            default_variable=default_variable,
+            rate=rate,
+            initializer=initializer,
+            previous_value=previous_value,
+            noise=noise,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=context,
+            **kwargs
+        )
 
         self.has_initializers = True
 

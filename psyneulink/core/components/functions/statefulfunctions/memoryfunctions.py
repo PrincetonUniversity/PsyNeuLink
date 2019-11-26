@@ -227,11 +227,14 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         super().__init__(
             default_variable=default_variable,
+            rate=rate,
             initializer=initializer,
+            noise=noise,
+            history=history,
             params=params,
             owner=owner,
             prefs=prefs,
-            )
+        )
 
         self.has_initializers = True
 
@@ -721,11 +724,19 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
         super().__init__(
             default_variable=default_variable,
+            retrieval_prob=retrieval_prob,
+            storage_prob=storage_prob,
             initializer=initializer,
+            duplicate_keys=duplicate_keys,
+            equidistant_keys_select=equidistant_keys_select,
+            rate=rate,
+            noise=noise,
+            max_entries=max_entries,
+            random_state=random_state,
             params=params,
             owner=owner,
             prefs=prefs,
-            )
+        )
 
         if self.previous_value.size != 0:
             self.parameters.key_size._set(len(self.previous_value[KEYS][0]), Context())
