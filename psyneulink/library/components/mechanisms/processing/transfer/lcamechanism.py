@@ -448,24 +448,31 @@ class LCAMechanism(RecurrentTransferMechanism):
                                                   output_ports=output_ports,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         size=size,
-                         input_ports=input_ports,
-                         auto=self_excitation,
-                         hetero=hetero,
-                         function=function,
-                         integrator_function=LeakyCompetingIntegrator,
-                         initial_value=initial_value,
-                         noise=noise,
-                         clip=clip,
-                         termination_threshold=termination_threshold,
-                         termination_measure=termination_measure,
-                         termination_comparison_op=termination_comparison_op,
-                         output_ports=output_ports,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         **kwargs)
+        super().__init__(
+            default_variable=default_variable,
+            size=size,
+            input_ports=input_ports,
+            auto=self_excitation,
+            hetero=hetero,
+            function=function,
+            integrator_function=LeakyCompetingIntegrator,
+            initial_value=initial_value,
+            noise=noise,
+            clip=clip,
+            termination_threshold=termination_threshold,
+            termination_measure=termination_measure,
+            termination_comparison_op=termination_comparison_op,
+            leak=leak,
+            self_excitation=self_excitation,
+            competition=competition,
+            integrator_mode=integrator_mode,
+            time_step_size=time_step_size,
+            output_ports=output_ports,
+            params=params,
+            name=name,
+            prefs=prefs,
+            **kwargs
+        )
 
         # Do these here so that name of the object (assigned by super) can be used in the warning messages
         if matrix is not None:

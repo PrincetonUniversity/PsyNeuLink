@@ -446,11 +446,16 @@ class BayesGLM(LearningFunction):
                                                   gamma_size_0=gamma_size_0,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            mu_0=mu_0,
+            sigma_0=sigma_0,
+            gamma_shape_0=gamma_shape_0,
+            gamma_size_0=gamma_size_0,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _handle_default_variable(self, default_variable=None, size=None):
 
@@ -761,12 +766,14 @@ class Kohonen(LearningFunction):  # --------------------------------------------
                                                   learning_rate=learning_rate,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
-
+        super().__init__(
+            default_variable=default_variable,
+            distance_function=distance_function,
+            learning_rate=learning_rate,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_variable(self, variable, context=None):
         variable = super()._validate_variable(variable, context)
@@ -1028,12 +1035,13 @@ class Hebbian(LearningFunction):  # --------------------------------------------
             learning_rate=learning_rate,
             params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
-
+        super().__init__(
+            default_variable=default_variable,
+            learning_rate=learning_rate,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_variable(self, variable, context=None):
         variable = super()._validate_variable(variable, context)
@@ -1263,12 +1271,13 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
             learning_rate=learning_rate,
             params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
-
+        super().__init__(
+            default_variable=default_variable,
+            learning_rate=learning_rate,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_variable(self, variable, context=None):
         variable = super()._validate_variable(variable, context)
@@ -1556,11 +1565,13 @@ class Reinforcement(LearningFunction):  # --------------------------------------
             learning_rate=learning_rate,
             params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            learning_rate=learning_rate,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_variable(self, variable, context=None):
         variable = super()._validate_variable(variable, context)
@@ -1915,11 +1926,16 @@ class BackPropagation(LearningFunction):
 
         # self.return_val = ReturnVal(None, None)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            activation_derivative_fct=activation_derivative_fct,
+            error_matrix=error_matrix,
+            learning_rate=learning_rate,
+            loss_function=loss_function,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     @property
     def output_type(self):
@@ -2155,11 +2171,13 @@ class TDLearning(Reinforcement):
         """
         # params = self._assign_args_to_param_dicts(learning_rate=learning_rate,
         # params=params)
-        super().__init__(default_variable=default_variable,
-                         learning_rate=learning_rate,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs)
+        super().__init__(
+            default_variable=default_variable,
+            learning_rate=learning_rate,
+            params=params,
+            owner=owner,
+            prefs=prefs
+        )
 
     def _validate_variable(self, variable, context=None):
         variable = super(Reinforcement, self)._validate_variable(variable, context)

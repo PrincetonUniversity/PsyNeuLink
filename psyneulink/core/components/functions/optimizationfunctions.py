@@ -339,19 +339,22 @@ class OptimizationFunction(Function_Base):
         saved_values = Parameter([], read_only=True, pnl_internal=True)
 
     @tc.typecheck
-    def __init__(self,
-                 default_variable=None,
-                 objective_function:tc.optional(is_function_type)=None,
-                 search_function:tc.optional(is_function_type)=None,
-                 search_space=None,
-                 search_termination_function:tc.optional(is_function_type)=None,
-                 save_samples:tc.optional(bool)=False,
-                 save_values:tc.optional(bool)=False,
-                 max_iterations:tc.optional(int)=None,
-                 params=None,
-                 owner=None,
-                 prefs=None,
-                 context=None):
+    def __init__(
+        self,
+        default_variable=None,
+        objective_function:tc.optional(is_function_type)=None,
+        search_function:tc.optional(is_function_type)=None,
+        search_space=None,
+        search_termination_function:tc.optional(is_function_type)=None,
+        save_samples:tc.optional(bool)=False,
+        save_values:tc.optional(bool)=False,
+        max_iterations:tc.optional(int)=None,
+        params=None,
+        owner=None,
+        prefs=None,
+        context=None,
+        **kwargs
+    ):
 
         self._unspecified_args = []
 
@@ -380,11 +383,18 @@ class OptimizationFunction(Function_Base):
                                                   search_space=search_space,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
+        super().__init__(
+            default_variable=default_variable,
+            save_samples=save_samples,
+            save_values=save_values,
+            max_iterations=max_iterations,
+            search_space=search_space,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=context,
+            **kwargs
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -877,18 +887,22 @@ class GradientOptimization(OptimizationFunction):
                                                   convergence_threshold=convergence_threshold,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         objective_function=objective_function,
-                         search_function=search_function,
-                         search_space=search_space,
-                         search_termination_function=search_termination_function,
-                         max_iterations=max_iterations,
-                         save_samples=save_samples,
-                         save_values=save_values,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            objective_function=objective_function,
+            search_function=search_function,
+            search_space=search_space,
+            search_termination_function=search_termination_function,
+            max_iterations=max_iterations,
+            save_samples=save_samples,
+            save_values=save_values,
+            step_size=step_size,
+            convergence_criterion=convergence_criterion,
+            convergence_threshold=convergence_threshold,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -1284,17 +1298,19 @@ class GridSearch(OptimizationFunction):
         params = self._assign_args_to_param_dicts(params=params,
                                                   random_state=random_state)
 
-        super().__init__(default_variable=default_variable,
-                         objective_function=objective_function,
-                         search_function=search_function,
-                         search_termination_function=search_termination_function,
-                         search_space=search_space,
-                         save_samples=True,
-                         save_values=True,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            objective_function=objective_function,
+            search_function=search_function,
+            search_termination_function=search_termination_function,
+            search_space=search_space,
+            save_samples=True,
+            save_values=True,
+            random_state=random_state,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
         self.stateful_attributes = ["random_state"]
 
@@ -1934,17 +1950,18 @@ class GaussianProcess(OptimizationFunction):
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(params=params)
 
-        super().__init__(default_variable=default_variable,
-                         objective_function=objective_function,
-                         search_function=search_function,
-                         search_space=search_space,
-                         search_termination_function=search_termination_function,
-                         save_samples=True,
-                         save_values=True,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            objective_function=objective_function,
+            search_function=search_function,
+            search_space=search_space,
+            search_termination_function=search_termination_function,
+            save_samples=True,
+            save_values=True,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set=request_set, target_set=target_set,context=context)
@@ -2230,17 +2247,19 @@ class ParamEstimationFunction(OptimizationFunction):
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(params=params)
 
-        super().__init__(default_variable=default_variable,
-                         objective_function=objective_function,
-                         search_function=None,
-                         search_space=search_space,
-                         search_termination_function=None,
-                         save_samples=True,
-                         save_values=True,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+        super().__init__(
+            default_variable=default_variable,
+            objective_function=objective_function,
+            search_function=None,
+            search_space=search_space,
+            search_termination_function=None,
+            save_samples=True,
+            save_values=True,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=ContextFlags.CONSTRUCTOR
+        )
 
     @staticmethod
     def _import_elfi():

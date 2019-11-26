@@ -983,15 +983,26 @@ class TransferMechanism(ProcessingMechanism_Base):
         # to True after initialization
         self._needs_integrator_function_init = False
 
-        super(TransferMechanism, self).__init__(default_variable=default_variable,
-                                                size=size,
-                                                input_ports=input_ports,
-                                                output_ports=output_ports,
-                                                function=function,
-                                                params=params,
-                                                name=name,
-                                                prefs=prefs,
-                                                **kwargs)
+        super(TransferMechanism, self).__init__(
+            default_variable=default_variable,
+            size=size,
+            input_ports=input_ports,
+            output_ports=output_ports,
+            initial_value=initial_value,
+            noise=noise,
+            integration_rate=integration_rate,
+            integrator_mode=integrator_mode,
+            clip=clip,
+            termination_measure=termination_measure,
+            termination_threshold=termination_threshold,
+            termination_comparison_op=termination_comparison_op,
+            integrator_function=integrator_function,
+            function=function,
+            params=params,
+            name=name,
+            prefs=prefs,
+            **kwargs
+        )
 
     def _parse_arg_initial_value(self, initial_value):
         return self._parse_arg_variable(initial_value)

@@ -194,14 +194,18 @@ class MaskedMappingProjection(MappingProjection):
                                                   function_params={MATRIX: matrix},
                                                   params=params)
 
-        super().__init__(sender=sender,
-                         receiver=receiver,
-                         matrix=matrix,
-                         function=function,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         **kwargs)
+        super().__init__(
+            sender=sender,
+            receiver=receiver,
+            mask=mask,
+            mask_operation=mask_operation,
+            matrix=matrix,
+            function=function,
+            params=params,
+            name=name,
+            prefs=prefs,
+            **kwargs
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate **mask** argument"""

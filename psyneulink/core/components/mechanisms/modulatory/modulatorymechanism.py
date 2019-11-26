@@ -203,12 +203,14 @@ class ModulatoryMechanism_Base(Mechanism_Base):
         params = self._assign_args_to_param_dicts(params=params,
                                                   modulation=modulation)
 
-        super().__init__(default_variable=default_variable,
-                         size=size,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         context=context,
-                         function=function,
-                         **kwargs
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            size=size,
+            modulation=modulation,
+            params=params,
+            name=name,
+            prefs=prefs,
+            context=context,
+            function=function,
+            **kwargs
+        )

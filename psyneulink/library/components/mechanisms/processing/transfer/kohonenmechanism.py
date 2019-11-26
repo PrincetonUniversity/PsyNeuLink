@@ -311,20 +311,26 @@ class KohonenMechanism(TransferMechanism):
                 enable_learning=enable_learning,
         )
 
-        super().__init__(default_variable=default_variable,
-                         size=size,
-                         function=function,
-                         integrator_function=integrator_function,
-                         integrator_mode=integrator_mode,
-                         initial_value=initial_value,
-                         noise=noise,
-                         integration_rate=integration_rate,
-                         clip=clip,
-                         output_ports=output_ports,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         **kwargs)
+        super().__init__(
+            default_variable=default_variable,
+            size=size,
+            function=function,
+            integrator_function=integrator_function,
+            integrator_mode=integrator_mode,
+            learning_rate=learning_rate,
+            learning_function=learning_function,
+            learned_projection=learned_projection,
+            enable_learning=enable_learning,
+            initial_value=initial_value,
+            noise=noise,
+            integration_rate=integration_rate,
+            clip=clip,
+            output_ports=output_ports,
+            params=params,
+            name=name,
+            prefs=prefs,
+            **kwargs
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set, target_set, context)

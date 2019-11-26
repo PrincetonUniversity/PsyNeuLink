@@ -243,11 +243,13 @@ class LeabraFunction(Function_Base):
             output_size = len(self.network.layers[-1].units)
             default_variable = [np.zeros(input_size), np.zeros(output_size)]
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            network=network,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_variable(self, variable, context=None):
         if not isinstance(variable, (list, np.ndarray, numbers.Number)):
@@ -537,11 +539,20 @@ class LeabraMechanism(ProcessingMechanism_Base):
                                                   quarter_size=quarter_size,
                                                   params=params)
 
-        super().__init__(size=[input_size, output_size],
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            function=function,
+            size=[input_size, output_size],
+            network=network,
+            input_size=input_size,
+            output_size=output_size,
+            hidden_layers=hidden_layers,
+            hidden_sizes=hidden_sizes,
+            quarter_size=quarter_size,
+            training_flag=training_flag,
+            params=params,
+            name=name,
+            prefs=prefs,
+        )
 
     def _execute(
         self,

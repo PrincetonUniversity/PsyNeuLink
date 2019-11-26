@@ -62,32 +62,6 @@ class SelectionFunction(Function_Base):
     """
     componentType = SELECTION_FUNCTION_TYPE
 
-    # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
-    def __init__(self, default_variable,
-                 params=None,
-                 owner=None,
-                 prefs=None,
-                 context=None):
-
-        # # FIX: 9/3/19 - DON'T IMPLEMENT, SINCE OneHot DOESN"T IMPLEMENT MODULATORY PARAMS
-        # try:
-        #     self.parameters.multiplicative_param
-        # except:
-        #     raise FunctionError(f"PROGRAM ERROR: {self.__class__.__name__} must implement "
-        #                         f"a {repr(MULTIPLICATIVE_PARAM)} Parameter or alias to one.")
-        #
-        # try:
-        #     self.parameters.additive_param
-        # except:
-        #     raise FunctionError(f"PROGRAM ERROR: {self.__class__.__name__} must implement "
-        #                         f"a {repr(ADDITIVE_PARAM)} Parameter or alias to one.")
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
-
 
 class OneHot(SelectionFunction):
     """
@@ -252,12 +226,14 @@ class OneHot(SelectionFunction):
             default_variable = [[0], [0]]
             reset_default_variable_flexibility = True
 
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            mode=mode,
+            random_state=random_state,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
         if reset_default_variable_flexibility:
             self._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE

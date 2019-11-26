@@ -1245,17 +1245,23 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                                   params=params)
         self._sim_counts = {}
 
-        super(ControlMechanism, self).__init__(default_variable=default_variable,
-                                                  size=size,
-                                                  modulation=modulation,
-                                                  params=params,
-                                                  name=name,
-                                                  function=function,
-                                                  monitor_for_control=monitor_for_control,
-                                                  control=control,
-                                                  output_ports=control,
-                                                  prefs=prefs,
-                                                  **kwargs)
+        super(ControlMechanism, self).__init__(
+            default_variable=default_variable,
+            size=size,
+            modulation=modulation,
+            params=params,
+            name=name,
+            function=function,
+            monitor_for_control=monitor_for_control,
+            control=control,
+            output_ports=control,
+            system=system,
+            objective_mechanism=objective_mechanism,
+            default_allocation=default_allocation,
+            control_spec=control_spec,
+            prefs=prefs,
+            **kwargs
+        )
 
         if system is not None:
             self._activate_projections_for_compositions(system)

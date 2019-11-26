@@ -105,35 +105,6 @@ class TransferFunction(Function_Base):
         """
         bounds = None
 
-    # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
-    def __init__(self, default_variable,
-                 params=None,
-                 owner=None,
-                 prefs=None,
-                 context=None):
-
-        if not hasattr(self, BOUNDS):
-            raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
-                                format(self.__class__.__name__, BOUNDS))
-
-        # # FIX: 9/3/19 - DON'T IMPLEMENT, SINCE IdentityFunction DOESN"T IMPLEMENT MODULATORY PARAMS
-        # try:
-        #     self.parameters.multiplicative_param
-        # except:
-        #     raise FunctionError(f"PROGRAM ERROR: {self.__class__.__name__} must implement "
-        #                         f"a {repr(MULTIPLICATIVE_PARAM)} Parameter or alias to one.")
-        #
-        # try:
-        #     self.parameters.additive_param
-        # except:
-        #     raise FunctionError(f"PROGRAM ERROR: {self.__class__.__name__} must implement "
-        #                         f"a {repr(ADDITIVE_PARAM)} Parameter or alias to one.")
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         # Pretend we have one huge array to work on
@@ -434,11 +405,14 @@ class Linear(TransferFunction):  # ---------------------------------------------
                                                   intercept=intercept,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            slope=slope,
+            intercept=intercept,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -691,11 +665,16 @@ class Exponential(TransferFunction):  # ----------------------------------------
                                                   offset=offset,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            rate=rate,
+            bias=bias,
+            scale=scale,
+            offset=offset,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -964,11 +943,17 @@ class Logistic(TransferFunction):  # -------------------------------------------
                                                   scale=scale,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            gain=gain,
+            x_0=x_0,
+            bias=bias,
+            offset=offset,
+            scale=scale,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -1263,11 +1248,17 @@ class Tanh(TransferFunction):  # -----------------------------------------------
                                                   scale=scale,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            gain=gain,
+            x_0=x_0,
+            bias=bias,
+            offset=offset,
+            scale=scale,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -1490,11 +1481,15 @@ class ReLU(TransferFunction):  # -----------------------------------------------
                                                   leak=leak,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            gain=gain,
+            bias=bias,
+            leak=leak,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _function(self,
                  variable=None,
@@ -1733,11 +1728,16 @@ class Gaussian(TransferFunction):  # -------------------------------------------
                                                   offset=offset,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            standard_deviation=standard_deviation,
+            bias=bias,
+            scale=scale,
+            offset=offset,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -2019,11 +2019,17 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
                                                   random_state=random_state,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            variance=variance,
+            bias=bias,
+            scale=scale,
+            offset=offset,
+            random_state=random_state,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -2299,11 +2305,15 @@ class SoftMax(TransferFunction):
                                                   output=output,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            gain=gain,
+            per_item=per_item,
+            output=output,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_variable(self, variable, context=None):
         if variable is None:
@@ -2687,11 +2697,13 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         # Note: this calls _validate_variable and _validate_params which are overridden below;
         #       the latter implements the matrix if required
         # super(LinearMatrix, self).__init__(default_variable=default_variable,
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            matrix=matrix,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
         self.matrix = self.instantiate_matrix(self.matrix)
 
@@ -3860,11 +3872,19 @@ class TransferWithCosts(TransferFunction):
                                                   combine_costs_fct=combine_costs_fct,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+        super().__init__(
+            default_variable=default_variable,
+            transfer_fct=transfer_fct,
+            enabled_cost_functions=enabled_cost_functions,
+            intensity_cost_fct=intensity_cost_fct,
+            adjustment_cost_fct=adjustment_cost_fct,
+            duration_cost_fct=duration_cost_fct,
+            combine_costs_fct=combine_costs_fct,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=ContextFlags.CONSTRUCTOR
+        )
 
         # # MODIFIED 6/12/19 NEW: [JDC]
         # self._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE

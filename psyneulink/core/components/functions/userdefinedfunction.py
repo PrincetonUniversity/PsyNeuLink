@@ -11,6 +11,7 @@
 
 import typecheck as tc
 
+from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import FunctionError, Function_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
@@ -356,6 +357,13 @@ class UserDefinedFunction(Function_Base):
     componentName = USER_DEFINED_FUNCTION
     componentType = USER_DEFINED_FUNCTION_TYPE
 
+    class Parameters(Function_Base.Parameters):
+        custom_function = Parameter(
+            None,
+            stateful=False,
+            loggable=False,
+        )
+
     @tc.typecheck
     def __init__(self,
                  custom_function=None,
@@ -468,12 +476,20 @@ class UserDefinedFunction(Function_Base):
                                                   **self.cust_fct_params
                                                   )
 
-        super().__init__(default_variable=default_variable,
-                         function=custom_function,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            function=custom_function,
+            custom_function=custom_function,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            **self.cust_fct_params
+        )
+
+    def _handle_illegal_kwargs(self, **kwargs):
+        super()._handle_illegal_kwargs(
+            **{k: kwargs[k] for k in kwargs if k not in self.cust_fct_params}
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         pass

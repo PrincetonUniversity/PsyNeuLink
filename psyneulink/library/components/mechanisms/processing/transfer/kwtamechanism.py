@@ -383,24 +383,31 @@ class KWTAMechanism(RecurrentTransferMechanism):
             if hetero is None:
                 hetero = 0
 
-        super().__init__(default_variable=default_variable,
-                         size=size,
-                         input_ports=input_ports,
-                         function=function,
-                         matrix=matrix,
-                         auto=auto,
-                         hetero=hetero,
-                         integrator_function=integrator_function,
-                         integrator_mode=integrator_mode,
-                         initial_value=initial_value,
-                         noise=noise,
-                         integration_rate=integration_rate,
-                         clip=clip,
-                         output_ports=output_ports,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         **kwargs)
+        super().__init__(
+            default_variable=default_variable,
+            size=size,
+            input_ports=input_ports,
+            function=function,
+            matrix=matrix,
+            auto=auto,
+            hetero=hetero,
+            integrator_function=integrator_function,
+            integrator_mode=integrator_mode,
+            k_value=k_value,
+            threshold=threshold,
+            ratio=ratio,
+            inhibition_only=inhibition_only,
+            average_based=average_based,
+            initial_value=initial_value,
+            noise=noise,
+            integration_rate=integration_rate,
+            clip=clip,
+            output_ports=output_ports,
+            params=params,
+            name=name,
+            prefs=prefs,
+            **kwargs
+        )
 
     def _parse_function_variable(self, variable, context=None):
         if variable.dtype.char == "U":

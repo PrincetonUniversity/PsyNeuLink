@@ -999,6 +999,7 @@ class Port_Base(Port):
         """
         function = Parameter(Linear, stateful=False, loggable=False)
         require_projection_in_composition = Parameter(True, stateful=False, loggable=False, read_only=True, pnl_internal=True)
+        projections = None
 
     portAttributes = {FUNCTION, FUNCTION_PARAMS, PROJECTIONS}
 
@@ -1018,7 +1019,7 @@ class Port_Base(Port):
                  name=None,
                  prefs=None,
                  context=None,
-                 **kargs):
+                 **kwargs):
         """Initialize subclass that computes and represents the value of a particular Port of a Mechanism
 
         This is used by subclasses to implement the InputPort(s), OutputPort(s), and ParameterPort(s) of a Mechanism.
@@ -1044,7 +1045,7 @@ class Port_Base(Port):
             - name (str): string with name of Port (default: name of owner + suffix + instanceIndex)
             - prefs (dict): dictionary containing system preferences (default: Prefs.DEFAULTS)
             - context (str)
-            - **kargs (dict): dictionary of arguments using the following keywords for each of the above kargs:
+            - **kwargs (dict): dictionary of arguments using the following keywords for each of the above kwargs:
                 # port_params is not handled here like the others are
                 + port_params = params
                 + Port_Name = name
@@ -1054,17 +1055,17 @@ class Port_Base(Port):
                     * these are used for dictionary specification of a Port in param declarations
                     * they take precedence over arguments specified directly in the call to __init__()
         """
-        if kargs:
+        if kwargs:
             try:
-                name = kargs[Port_Name]
+                name = kwargs[Port_Name]
             except (KeyError, NameError):
                 pass
             try:
-                prefs = kargs[PORT_PREFS]
+                prefs = kwargs[PORT_PREFS]
             except (KeyError, NameError):
                 pass
             try:
-                context = kargs[PORT_CONTEXT]
+                context = kwargs[PORT_CONTEXT]
             except (KeyError, NameError):
                 pass
 
@@ -1093,12 +1094,15 @@ class Port_Base(Port):
                           context=context)
 
         # VALIDATE VARIABLE, PARAM_SPECS, AND INSTANTIATE self.function
-        super(Port_Base, self).__init__(default_variable=variable,
-                                         size=size,
-                                         function=function,
-                                         param_defaults=params,
-                                         name=name,
-                                         prefs=prefs
+        super(Port_Base, self).__init__(
+            default_variable=variable,
+            size=size,
+            function=function,
+            projections=projections,
+            param_defaults=params,
+            name=name,
+            prefs=prefs,
+            **kwargs
         )
 
         self.path_afferents = []
@@ -2157,14 +2161,6 @@ class Port_Base(Port):
     @owner.setter
     def owner(self, assignment):
         self._owner = assignment
-
-    @property
-    def projections(self):
-        return self._projections
-
-    @projections.setter
-    def projections(self, assignment):
-        self._projections = assignment
 
     @property
     def all_afferents(self):

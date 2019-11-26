@@ -154,11 +154,14 @@ class NormalDist(DistributionFunction):
                                                   standard_deviation=standard_deviation,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            mean=mean,
+            standard_deviation=standard_deviation,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
@@ -306,12 +309,14 @@ class UniformToNormalDist(DistributionFunction):
                                                   standard_deviation=standard_deviation,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
-
+        super().__init__(
+            default_variable=default_variable,
+            mean=mean,
+            standard_deviation=standard_deviation,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _function(self,
                  variable=None,
@@ -419,12 +424,13 @@ class ExponentialDist(DistributionFunction):
         params = self._assign_args_to_param_dicts(beta=beta,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
-
+        super().__init__(
+            default_variable=default_variable,
+            beta=beta,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _function(self,
                  variable=None,
@@ -535,12 +541,14 @@ class UniformDist(DistributionFunction):
                                                   high=high,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
-
+        super().__init__(
+            default_variable=default_variable,
+            low=low,
+            high=high,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _function(self,
                  variable=None,
@@ -659,12 +667,14 @@ class GammaDist(DistributionFunction):
                                                   dist_shape=dist_shape,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
-
+        super().__init__(
+            default_variable=default_variable,
+            scale=scale,
+            dist_shape=dist_shape,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _function(self,
                  variable=None,
@@ -782,12 +792,14 @@ class WaldDist(DistributionFunction):
                                                   mean=mean,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
-
+        super().__init__(
+            default_variable=default_variable,
+            scale=scale,
+            mean=mean,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _function(self,
                  variable=None,
@@ -1021,11 +1033,17 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                                                   t0=t0,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            drift_rate=drift_rate,
+            starting_point=starting_point,
+            threshold=threshold,
+            noise=noise,
+            t0=t0,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     @property
     def shenhav_et_al_compat_mode(self):

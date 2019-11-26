@@ -813,16 +813,21 @@ class InputPort(Port_Base):
 
         # Validate sender (as variable) and params, and assign to variable
         # Note: pass name of owner (to override assignment of componentName in super.__init__)
-        super(InputPort, self).__init__(owner,
-                                        variable=variable,
-                                        size=size,
-                                        projections=projections,
-                                        function=function,
-                                        params=params,
-                                        name=name,
-                                        prefs=prefs,
-                                        context=context,
-                                        )
+        super(InputPort, self).__init__(
+            owner,
+            variable=variable,
+            size=size,
+            projections=projections,
+            function=function,
+            weight=weight,
+            exponent=exponent,
+            internal_only=internal_only,
+            shadow_inputs=None,
+            params=params,
+            name=name,
+            prefs=prefs,
+            context=context,
+        )
 
         if self.name is self.componentName or self.componentName + '-' in self.name:
             self._assign_default_port_Name(context=context)

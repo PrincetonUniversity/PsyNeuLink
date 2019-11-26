@@ -1030,17 +1030,20 @@ class LearningMechanism(ModulatoryMechanism_Base):
         # self.initialization_status = ContextFlags.DEFERRED_INIT
         # self.initialization_status = ContextFlags.DEFERRED_INIT
 
-        super().__init__(default_variable=default_variable,
-                         size=size,
-                         modulation=modulation,
-                         function=function,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         learning_signals=learning_signals,
-                         learning_rate=learning_rate,
-                         output_ports=output_ports,
-                         **kwargs)
+        super().__init__(
+            default_variable=default_variable,
+            size=size,
+            modulation=modulation,
+            function=function,
+            params=params,
+            name=name,
+            prefs=prefs,
+            learning_enabled=learning_enabled,
+            learning_signals=learning_signals,
+            learning_rate=learning_rate,
+            output_ports=output_ports,
+            **kwargs
+        )
 
     def _check_type_and_timing(self):
         try:

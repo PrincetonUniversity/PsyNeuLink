@@ -731,11 +731,19 @@ class OptimizationControlMechanism(ControlMechanism):
                                                   agent_rep=agent_rep,
                                                   params=params)
 
-        super().__init__(system=None,
-                         input_ports=features,
-                         features=features,
-                         params=params,
-                         **kwargs)
+        super().__init__(
+            system=None,
+            input_ports=features,
+            features=features,
+            feature_function=feature_function,
+            num_estimates=num_estimates,
+            search_statefulness=search_statefulness,
+            search_function=search_function,
+            search_termination_function=search_termination_function,
+            agent_rep=agent_rep,
+            params=params,
+            **kwargs
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Insure that specification of ObjectiveMechanism has projections to it"""

@@ -1585,15 +1585,19 @@ class Mechanism_Base(Mechanism):
             output_ports_spec=output_ports_spec,
         )
 
-        super(Mechanism_Base, self).__init__(default_variable=default_variable,
-                                             size=size,
-                                             function=function,
-                                             param_defaults=params,
-                                             prefs=prefs,
-                                             name=name,
-                                             input_ports=input_ports,
-                                             output_ports=output_ports,
-                                             **kwargs)
+        super(Mechanism_Base, self).__init__(
+            default_variable=default_variable,
+            size=size,
+            function=function,
+            input_ports_spec=input_ports_spec,
+            output_ports_spec=output_ports_spec,
+            param_defaults=params,
+            prefs=prefs,
+            name=name,
+            input_ports=input_ports,
+            output_ports=output_ports,
+            **kwargs
+        )
 
         # FIX: 10/3/17 - IS THIS CORRECT?  SHOULD IT BE INITIALIZED??
         self._status = INITIALIZING

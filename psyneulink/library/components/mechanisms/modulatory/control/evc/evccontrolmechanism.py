@@ -891,15 +891,24 @@ class EVCControlMechanism(ControlMechanism):
                                                   save_all_values_and_policies=save_all_values_and_policies,
                                                   params=params)
 
-        super().__init__(system=system,
-                         objective_mechanism=objective_mechanism,
-                         monitor_for_control=monitor_for_control,
-                         function=function,
-                         control_signals=control_signals,
-                         modulation=modulation,
-                         params=params,
-                         name=name,
-                         prefs=prefs)
+        super().__init__(
+            system=system,
+            prediction_mechanisms=prediction_mechanisms,
+            origin_objective_mechanism=origin_objective_mechanism,
+            terminal_objective_mechanism=terminal_objective_mechanism,
+            value_function=value_function,
+            cost_function=cost_function,
+            combine_outcome_and_cost_function=combine_outcome_and_cost_function,
+            save_all_values_and_policies=save_all_values_and_policies,
+            objective_mechanism=objective_mechanism,
+            monitor_for_control=monitor_for_control,
+            function=function,
+            control_signals=control_signals,
+            modulation=modulation,
+            params=params,
+            name=name,
+            prefs=prefs
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate prediction_mechanisms"""

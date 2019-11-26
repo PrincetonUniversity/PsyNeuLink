@@ -959,12 +959,19 @@ class System(System_Base):
 
         self.default_execution_id = self.name
 
-        super().__init__(default_variable=default_variable,
-                         size=size,
-                         param_defaults=params,
-                         name=self.name,
-                         prefs=prefs,
-                         context=context)
+        super().__init__(
+            default_variable=default_variable,
+            size=size,
+            processes=processes,
+            initial_values=initial_values,
+            enable_controller=enable_controller,
+            monitor_for_control=monitor_for_control,
+            learning_rate=learning_rate,
+            targets=targets,
+            param_defaults=params,
+            name=self.name,
+            prefs=prefs,
+        )
 
         self.reinitialize_mechanisms_when = reinitialize_mechanisms_when
 
