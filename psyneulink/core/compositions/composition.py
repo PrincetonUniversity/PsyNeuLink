@@ -1114,6 +1114,8 @@ import numpy as np
 import typecheck as tc
 
 from PIL import Image
+from copy import deepcopy
+from inspect import isgeneratorfunction
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta
@@ -4581,7 +4583,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         total_cost = self._get_total_cost_of_control_allocation(control_allocation, context, runtime_params)
 
         # Build input dictionary for simulation
-        inputs = self._build_predicted_inputs_dict(predicted_input)
+        if hasattr(self, '_input_spec') and isgeneratorfunction(self._input_spec):
+            inputs = self._input_spec()
+        else:
+            inputs = self._build_predicted_inputs_dict(predicted_input)
 
         # Run Composition in "SIMULATION" context
         if self._animate is not False and self._animate_simulations is not False:
@@ -6325,6 +6330,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in reinitialize_values:
             node.reinitialize(*reinitialize_values[node], context=context)
 
+        if ContextFlags.SIMULATION not in context.execution_phase:
+            self._input_spec = inputs
+
         # MODIFIED 8/27/19 OLD:
         # try:
         #     if ContextFlags.SIMULATION not in context.execution_phase:
@@ -6373,6 +6381,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         scheduler._init_counts(execution_id=context.execution_id)
 
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
+
+        # if inputs is a generator function, we should instantiate it now so that it will be properly handled
+        # below
+        if isgeneratorfunction(inputs):
+            inputs = inputs()
 
         # if there is only one INPUT Node, allow inputs to be specified in a list
         # if there is only one INPUT Node, allow inputs to be specified in a list
