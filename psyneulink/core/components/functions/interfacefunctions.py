@@ -112,10 +112,6 @@ class InterfacePortMap(InterfaceFunction):
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(corresponding_input_port=corresponding_input_port,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             corresponding_input_port=corresponding_input_port,

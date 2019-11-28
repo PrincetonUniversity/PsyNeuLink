@@ -109,7 +109,7 @@ COMMENT:
                                NOTE: can no longer be specified as function for LearningProjection
                     names = [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL]
                         NOTE:  this needs to be implemented for LearningMechanism as it is for ObjectiveMechanism
-                Check that, if learning function expects a derivative (in user_params), that the one specified
+                Check that, if learning function expects a derivative, that the one specified
                     is compatible with the function of the activation_output_mech
                 Assign:
                     NOTE:  should do these in their own Learning module function, called by LearningMechanaism directly

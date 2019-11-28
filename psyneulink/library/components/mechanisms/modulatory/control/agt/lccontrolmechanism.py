@@ -689,14 +689,6 @@ class LCControlMechanism(ControlMechanism):
                  prefs:is_pref_set=None
                  ):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(system=system,
-                                                  modulated_mechanisms=modulated_mechanisms,
-                                                  modulation=modulation,
-                                                  base_level_gain=base_level_gain,
-                                                  scaling_factor_gain=scaling_factor_gain,
-                                                  params=params)
-
         super().__init__(
             system=system,
             default_variable=default_variable,

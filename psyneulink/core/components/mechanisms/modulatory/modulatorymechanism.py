@@ -196,10 +196,6 @@ class ModulatoryMechanism_Base(Mechanism_Base):
         """Abstract class for ModulatoryMechanism
         """
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(params=params,
-                                                  modulation=modulation)
-
         super().__init__(
             default_variable=default_variable,
             size=size,

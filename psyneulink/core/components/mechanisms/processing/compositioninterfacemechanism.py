@@ -123,10 +123,6 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         self.composition = composition
         self.connected_to_composition = False
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  params=params)
-
         super(CompositionInterfaceMechanism, self).__init__(default_variable=default_variable,
                                                             size=size,
                                                             input_ports=input_ports,

@@ -195,27 +195,18 @@ A Component defines its `parameters <Parameters>` in its *parameters* attribute,
 * `Parameters <Component.Parameters>` - a `Parameters class <Parameters>` defining parameters and their default values that
     are used for all Components, unless overridden.
 
-* `user_params <Component.user_params>` - a dictionary that provides reference to all of the user-modifiable parameters
-  of a Component. The dictionary is a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python class `UserDict
-  <https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict>`_). The
-  value of an entry can be accessed in the standard manner (e.g., ``my_component.user_params[`PARAMETER NAME`]``);
-  as can its full list of entries (e.g., ``my_component.user_params``).  However, because it is read-only,
-  it cannot be used to make assignments.  Rather, changes to the value of a parameter must be made by assigning a
-  value to the attribute for that parameter directly (e.g., ``my_component.my_parameter``), but using a dedicated
-  method if one exists (e.g., `Mechanism_Base.add_ports`), or by using the Component's `assign_params
-  <Component.assign_params>` method.
-
-  All of the parameters listed in the *user_params* dictionary can be modified by the user (as described above).  Some
+  All of the parameters listed in the *parameters* class can be modified by the user (as described above).  Some
   can also be modified by `ControlSignals <ControlSignal>` when a `System executes <System_Execution_Control>`. In
   general, only parameters that take numerical values and/or do not affect the structure, mode of operation,
   or format of the values associated with a Component can be subject to modulation.  For example, for a
   `TransferMechanism`, `clip <TransferMechanism.clip>`, `initial_value <TransferMechanism.initial_value>`,
   `integrator_mode <TransferMechanism.integrator_mode>`, `input_ports <Mechanism_Base.input_ports>`,
-  `output_ports`, and `function <Mechanism_Base.function>`, are all listed in user_params, and are user-modifiable,
+  `output_ports`, and `function <Mechanism_Base.function>`, are all listed in parameters, and are user-modifiable,
   but are not subject to modulation; whereas `noise <TransferMechanism.noise>` and `integration_rate
-  <TransferMechanism.integration_rate>`, as well as the parameters of the TransferMechanism's `function
-  <Mechanism_Base.function>` (listed in the *function_params* subdictionary) can all be subject to modulation.
-  Parameters that are subject to modulation are associated with a `ParameterPort` to which the ControlSignals
+  <TransferMechanism.integration_rate>` can all be subject to modulation.
+  Parameters that are subject to modulation have the
+  `modulable <Parameter.modulable>` attribute set to True and are
+  associated with a `ParameterPort` to which the ControlSignals
   can project (by way of a `ControlProjection`).
 
 .. _Component_Function_Params:
@@ -323,7 +314,7 @@ COMMENT
 
 .. _Component_Assign_Params:
 
-* **reset_params** - reset the value of all user_params to a set of default values as specified in its **mode**
+* **reset_params** - reset the value of all parameters to a set of default values as specified in its **mode**
   argument, using a value of `ResetMode <Component_ResetMode>`.
 
 .. _Component_Execution:
@@ -464,7 +455,7 @@ from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_PARAMETER_SOURCE, \
     MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
     MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, PARAMS, PREFS_ARG, \
-    REINITIALIZE_WHEN, SIZE, USER_PARAMS, VALUE, VARIABLE
+    REINITIALIZE_WHEN, SIZE, VALUE, VARIABLE
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
@@ -738,9 +729,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     function : Function, function or method
         see `function <Component_Function>`
 
-    user_params : Dict[param_name: param_value]
-        see `user_params <Component_User_Params>`
-
     value : 2d np.array
         see `value <Component_Value>`
 
@@ -907,7 +895,13 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         max_executions_before_finished = Parameter(1000, modulable=False)
 
         def _parse_variable(self, variable):
-            return variable
+            if variable is None:
+                return variable
+
+            try:
+                return np.asarray(variable)
+            except ValueError:
+                return convert_all_elements_to_np_array(variable)
 
         def _validate_variable(self, variable):
             return None
@@ -1004,22 +998,28 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         try:
             function_params = copy.copy(param_defaults[FUNCTION_PARAMS])
-        except KeyError:
+        except (KeyError, TypeError):
             function_params = {}
 
         # allow override of standard arguments with arguments specified in
         # params (here, param_defaults) argument
-        for p in param_defaults:
-            try:
-                del kwargs[p]
-            except KeyError:
-                pass
+        # (if there are duplicates, later lines override previous)
+        parameter_values = {
+            **{
+                'function': function,
+                'variable': default_variable
+            },
+            **kwargs,
+            **(param_defaults if param_defaults is not None else {}),
+        }
 
-        self._initialize_parameters(context=context, **param_defaults, **kwargs)
+        self._initialize_parameters(
+            context=context,
+            **parameter_values
+        )
 
-        combined_args = {**param_defaults, **kwargs}
         self.initial_function_parameters = {
-            k: v for k, v in combined_args.items() if k in self.parameters.names() and getattr(self.parameters, k).function_parameter
+            k: v for k, v in parameter_values.items() if k in self.parameters.names() and getattr(self.parameters, k).function_parameter
         }
 
         v = self._handle_default_variable(default_variable, size)
@@ -1062,7 +1062,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         self.results = []
 
         if function is None:
-            if FUNCTION in param_defaults and param_defaults[FUNCTION] is not None:
+            if (
+                param_defaults is not None
+                and FUNCTION in param_defaults
+                and param_defaults[FUNCTION] is not None
+            ):
                 function = param_defaults[FUNCTION]
             else:
                 try:
@@ -1079,7 +1083,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         # Validate the set passed in
         self._instantiate_defaults(variable=default_variable,
-               request_set=param_defaults,            # requested set
+               request_set=parameter_values,  # requested set
                assign_missing=True,                   # assign missing params from classPreferences to instanceDefaults
                target_set=self.defaults.values(), # destination set to which params are being assigned
                default_set=self.class_defaults.values(),   # source set from which missing params are assigned
@@ -1498,261 +1502,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     def _assign_default_name(self, **kwargs):
         return
-
-    def _assign_args_to_param_dicts(self, defaults=None, **kwargs):
-        """Assign args passed in __init__() to params
-
-        Get args and their corresponding values in call to constructor
-        - assign arg values to local copy of params dict
-        - override those with any values specified in params dict passed as "params" arg
-
-        Accepts defaults dict that, if provided, overrides any values assigned to arguments in self.__init__
-
-        """
-
-        # Get args in call to constructor and create dictionary of their default values (for use below)
-        # Create dictionary of default values for args
-        defaults_dict = {}
-        for arg_name, arg in inspect.signature(self.__init__).parameters.items():
-            defaults_dict[arg_name] = arg.default
-        if defaults:
-            defaults_dict.update(defaults)
-        def default(val):
-            try:
-                return defaults_dict[val]
-            except KeyError:
-                # FIX: IF CUSTOM_FUNCTION IS IN PARAMS, TRY GETTING ITS ARGS
-                # raise ComponentError("PROGRAM ERROR: \'{}\' not declared in {}.__init__() "
-                #                      "but expected by its parent class ({}).".
-                #                      format(val,
-                #                             self.__class__.__name__,
-                #                             self.__class__.__bases__[0].__name__))
-                pass
-
-        def parse_arg(arg):
-            # Resolve the string value of any args that use keywords as their name
-            try:
-                name = eval(arg)
-            except NameError:
-                name = arg
-            if inspect.isclass(name):
-                name = arg
-            return name
-
-        for arg in kwargs:
-
-            arg_name = parse_arg(arg)
-
-            # parse the argument either by specialized parser or generic
-            try:
-                kwargs[arg_name] = getattr(self, '_parse_arg_' + arg_name)(kwargs[arg_name])
-            except AttributeError:
-                kwargs[arg_name] = self._parse_arg_generic(kwargs[arg_name])
-
-            # The params arg is never a default (nor is anything in it)
-            if arg_name is PARAMS or arg_name is VARIABLE:
-                continue
-
-        # ASSIGN ARG VALUES TO params dicts
-
-        # IMPLEMENTATION NOTE:  Use OrderedDicts for params (as well as user_params and user_param_for_instantiation)
-        #                       to insure a consistent order of retrieval (e.g., EVC ControlSignalGridSearch);
-        params = OrderedDict() # this is for final params that will be returned;
-        params_arg = {}        # this captures values specified in a params arg, that are used to override arg values
-        ignore_FUNCTION_PARAMS = False
-
-        # Sort kwargs so that params are entered in params OrderedDict in a consistent (alphabetical) order
-        for arg in sorted(list(kwargs.keys())):
-
-            # Put any values (presumably in a dict) passed in the "params" arg in params_arg
-            if arg is PARAMS:
-                params_arg = kwargs[arg]
-                continue
-
-            arg_name = parse_arg(arg)
-
-            # For function:
-            if arg_name is FUNCTION:
-
-                function = kwargs[arg]
-
-                # function arg is a class
-                if inspect.isclass(function):
-                    params[FUNCTION] = function
-                    function_instance = function()
-                    # Get copy of default params
-                    # IMPLEMENTATION NOTE: this is needed so that function_params gets included in user_params and
-                    #                      thereby gets instantiated as a property in _create_attributes_for_params
-                    params[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
-                    for param_name in sorted(list(function_instance.user_params.keys())):
-                        params[FUNCTION_PARAMS].__additem__(param_name, function_instance.user_params[param_name])
-                    continue
-
-                # function arg is not a class (presumably an object)
-                # FIX: REFACTOR Function._instantiate_function TO USE INSTANTIATED function
-                else:
-                    # Get params from instantiated function
-                    # FIX: DOES THIS OVER-WRITE FUNCTION_PARAMS??
-                    #      SHOULD IF THEY WERE DERIVED FROM PARAM_CLASS_DEFAULTS;
-                    #      BUT SHOULDN'T IF THEY CAME FROM __init__ ARG (I.E., KWARGS)
-                    # FIX: GIVE PRECEDENCE TO FUNCTION PARAMS SPECIFIED IN FUNCTION_PARAMS
-                    # FIX:     OVER ONES AS ARGS FOR FUNCTION ITSELF
-                    # FIX: DOES THE FOLLOWING WORK IN ALL CASES
-                    # FIX:    OR DOES TO REINTRODUCE THE OVERWRITE PROBLEM WITH MULTIPLE CONTROL SIGNALS (IN EVC SCRIPT)
-                    # FIX: AND, EVEN IF IT DOES, WHAT ABOUT ORDER EFFECTS:
-                    # FIX:    CAN IT BE TRUSTED THAT function WILL BE PROCESSED BEFORE FUNCTION_PARAMS,
-                    # FIX:     SO THAT FUNCTION_PARAMS WILL ALWAYS COME AFTER AND OVER-RWITE FUNCTION.USER_PARAMS
-                    from psyneulink.core.components.functions.function import Function
-
-                    # It is a PsyNeuLink Function
-                    # IMPLEMENTATION NOTE:  REPLACE THIS WITH "CONTINUE" ONCE _instantiate_function IS REFACTORED TO
-                    #                       TO ALLOW Function SPECIFICATION (VS. ONLY CLASS)
-                    if isinstance(function, Function):
-                        # Set it to the class (for compatibility with current implementation of _instantiate_function()
-                        params[FUNCTION] = function
-                        # Create ReadOnlyDict for FUNCTION_PARAMS and copy function's params into it
-                        params[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
-                        for param_name in sorted(list(function.user_params_for_instantiation.keys())):
-                            params[FUNCTION_PARAMS].__additem__(param_name,
-                                                                function.user_params_for_instantiation[param_name])
-
-                    # It is a generic function
-                    # # MODIFIED 2/26/18 OLD:
-                    # elif inspect.isfunction(function):
-                    # MODIFIED 2/26/18 NEW:
-                    elif (inspect.isfunction(function) or inspect.ismethod(function)):
-                    # MODIFIED 2/26/18 END
-                        # Assign as is (i.e., don't convert to class), since class is generic
-                        # (_instantiate_function also tests for this and leaves it as is)
-                        params[FUNCTION] = function
-                        params[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
-                        if hasattr(self, '_prefs') and self.verbosePref:
-                            warnings.warn("{} is not a PsyNeuLink Function, "
-                                          "therefore runtime_params cannot be used".format(default(arg).__name__))
-                    else:
-                        try:
-                            params[FUNCTION] = self.class_defaults.function
-                        except AttributeError:
-                            raise ComponentError("Unrecognized object ({}) specified as function for {}".
-                                                 format(function, self.name))
-
-                    ignore_FUNCTION_PARAMS = True
-
-            elif arg_name is FUNCTION_PARAMS:
-
-                # If function was instantiated object, FUNCTION_PARAMS came from it, so ignore additional specification
-                if ignore_FUNCTION_PARAMS:
-                    continue
-                params[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
-                for param_name in sorted(list(kwargs[arg].keys())):
-                    params[FUNCTION_PARAMS].__additem__(param_name,kwargs[arg][param_name])
-
-            # If no input_ports or output_ports are specified, ignore
-            elif arg in {INPUT_PORTS, OUTPUT_PORTS} and kwargs[arg] is None:
-                continue
-
-            else:
-                params[arg] = kwargs[arg]
-
-        # Add or override arg values with any specified in params dict (including FUNCTION and FUNCTION_PARAMS)
-        if params_arg:
-
-            # If function was specified in the function arg of the constructor
-            #    and also in the FUNCTION entry of a params dict in params arg of constructor:
-            # if params and FUNCTION in params and FUNCTION in params_arg:
-            #     # Check if it is the same as the default or the one assigned in the function arg of the constructor
-            #     if not is_same_function_spec(params[FUNCTION], params_arg[FUNCTION]):
-            #         # If it is not the same, delete any function params that have already been assigned
-            #         #    in params[] for the function specified in the function arg of the constructor
-            #         if FUNCTION_PARAMS in params:
-            #             for param in list(params[FUNCTION_PARAMS].keys()):
-            #                 params[FUNCTION_PARAMS].__deleteitem__(param)
-            try:
-                # Replace any parameters for function specified in function arg of constructor
-                #    with those specified either in FUNCTION_PARAMS entry of params dict
-                #    or for an instantiated function specified in FUNCTION entry of params dict
-
-                # First, if the function is instantiated, get the parameters from its user_params dict
-                from psyneulink.core.components.functions.function import Function
-                if FUNCTION in params_arg and isinstance(params_arg[FUNCTION], Function):
-                    for param_name in params_arg[FUNCTION].user_params:
-                        params[FUNCTION_PARAMS].__additem__(param_name, params_arg[FUNCTION].user_params[param_name])
-                # Then get any specified in FUNCTION_PARAMS entry of the params dict
-                #    (these will override any specified in the constructor for the function)
-                for param_name in params_arg[FUNCTION_PARAMS].keys():
-                    params[FUNCTION_PARAMS].__additem__(param_name, params_arg[FUNCTION_PARAMS][param_name])
-                # Convert params_arg[FUNCTION_PARAMS] to ReadOnlyOrderedDict and update it with params[FUNCTION_PARAMS];
-                #    this is needed so that when params is updated below,
-                #    it updates with the full and updated params[FUNCTION_PARAMS] (i.e, a complete set, from above)
-                #    and not just whichever ones were in params_arg[FUNCTION_PARAMS]
-                #    (i.e., if the user just specified a subset)
-                if isinstance(params_arg[FUNCTION_PARAMS], dict):
-                    function_params = params_arg[FUNCTION_PARAMS]
-                    params_arg[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
-                    for param_name in sorted(list(function_params.keys())):
-                        params_arg[FUNCTION_PARAMS].__additem__(param_name, function_params[param_name])
-                for param_name in sorted(list(params[FUNCTION_PARAMS].keys())):
-                    params_arg[FUNCTION_PARAMS].__additem__(param_name, params[FUNCTION_PARAMS][param_name])
-            except KeyError:
-                pass
-
-            # MODIFIED 6/29/18 OLD:
-            params.update(params_arg)
-            # # MODIFIED 6/29/18 NEW JDC:
-            # for item in params_arg:
-            #     if params_arg[item] is not None:
-            #         params.update({item: params_arg[item]})
-            # MODIFIED 6/29/18 END
-
-        # Save user-accessible params
-        # self.user_params = params.copy()
-        self.user_params = ReadOnlyOrderedDict(name=USER_PARAMS)
-        for param_name in sorted(list(params.keys())):
-            # copy dicts because otherwise if you ever modify the dict specified
-            # as the params argument, you will change the user_params of this object
-            # and any other object instantiated with that dict
-            new_param_val = params[param_name]
-            if isinstance(new_param_val, dict):
-                new_param_val = new_param_val.copy()
-            elif isinstance(new_param_val, (dict, ReadOnlyOrderedDict)):
-                # construct the ROOD key by key because disallows standard creation
-                val_dict = new_param_val.copy()
-                new_param_val = ReadOnlyOrderedDict()
-                for k in val_dict:
-                    new_param_val.__additem__(k, val_dict[k])
-
-            self.user_params.__additem__(param_name, new_param_val)
-
-        # Cache a (deep) copy of the user-specified values and put it in user_params_for_instantiation;
-        #    this is to deal with the following:
-        #    • the setter for those properties (in make_property) also assigns its value to its entry user_params;
-        self.user_params_for_instantiation = OrderedDict()
-        for param_name in sorted(list(self.user_params.keys())):
-            param_value = self.user_params[param_name]
-            if isinstance(param_value, (str, np.ndarray, tuple)):
-                self.user_params_for_instantiation[param_name] = param_value
-            elif isinstance(param_value, Iterable):
-                self.user_params_for_instantiation[param_name] = type(self.user_params[param_name])()
-                # DICT
-                if isinstance(param_value, dict):
-                    for k, v in param_value.items():
-                        self.user_params_for_instantiation[param_name][k] = v
-                elif isinstance(param_value, (ReadOnlyOrderedDict, ContentAddressableList)):
-                    for k in sorted(list(param_value)):
-                        self.user_params_for_instantiation[param_name].__additem__(k,param_value[k])
-                # SET
-                elif isinstance(param_value, set):
-                    for i in param_value:
-                        self.user_params_for_instantiation[param_name].add(i)
-                # OTHER ITERABLE
-                else:
-                    for i in range(len(param_value)):
-                        self.user_params_for_instantiation[param_name].append(param_value[i])
-            else:
-                self.user_params_for_instantiation[param_name] = param_value
-
-        # Return params only for args:
-        return params
 
     def _set_parameter_value(self, param, val, context=None):
         getattr(self.parameters, param)._set(val, context)
@@ -2903,14 +2652,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                                 format(pref_set, self.name))
 
     @property
-    def user_params(self):
-        return self._user_params
-
-    @user_params.setter
-    def user_params(self, new_params):
-        self._user_params = new_params
-
-    @property
     def verbosePref(self):
         return self.prefs.verbosePref
 
@@ -3095,7 +2836,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             deferred_init_values = copy.copy(self._init_args)
             try:
                 deferred_init_values.update(deferred_init_values['params'])
-            except KeyError:
+            except (KeyError, TypeError):
                 pass
 
             # .parameters still refers to class parameters during deferred init

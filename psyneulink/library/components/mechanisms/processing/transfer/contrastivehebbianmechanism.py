@@ -1048,19 +1048,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             else:
                 output_ports.append(additional_output_ports)
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(mode=mode,
-                                                  minus_phase_termination_condition=minus_phase_termination_condition,
-                                                  minus_phase_termination_threshold=minus_phase_termination_threshold,
-                                                  plus_phase_termination_condition=plus_phase_termination_condition,
-                                                  plus_phase_termination_threshold=plus_phase_termination_threshold,
-                                                  phase_convergence_function=phase_convergence_function,
-                                                  phase_convergence_threshold=minus_phase_termination_threshold,
-                                                  max_passes=max_passes,
-                                                  continuous=continuous,
-                                                  clamp=clamp,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             size=size,

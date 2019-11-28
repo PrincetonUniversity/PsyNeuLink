@@ -224,12 +224,6 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                  context=None,
                  **kwargs):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(params=params)
-
-        # # does not actually get set in _assign_args_to_param_dicts but we need it as an instance_default
-        # params[INITIALIZER] = initializer
-
         super().__init__(
             default_variable=default_variable,
             initializer=initializer,
@@ -551,13 +545,6 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(rate=rate,
-                                                  increment=increment,
-                                                  noise=noise,
-                                                  initializer=initializer,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             rate=rate,
@@ -816,13 +803,6 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(rate=rate,
-                                                  noise=noise,
-                                                  offset=offset,
-                                                  initializer=initializer,
-                                                  params=params)
         super().__init__(
             default_variable=default_variable,
             rate=rate,
@@ -1058,13 +1038,6 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(rate=rate,
-                                                  noise=noise,
-                                                  offset=offset,
-                                                  initializer=initializer,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             rate=rate,
@@ -1114,10 +1087,12 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
 
 
         # FIX: 12/9/18 [JDC] REPLACE WITH USE OF all_within_range
-        if RATE in target_set:
+        if self.parameters.rate._user_specified:
             # cannot use _validate_rate here because it assumes it's being run after instantiation of the object
             rate_value_msg = "The rate parameter ({}) (or all of its elements) of {} " \
                              "must be between 0.0 and 1.0 because it is an AdaptiveIntegrator"
+
+            rate = self.defaults.rate
 
             if isinstance(rate, np.ndarray) and rate.ndim > 0:
                 for r in rate:
@@ -1583,22 +1558,6 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["previous_short_term_avg", "previous_long_term_avg"]
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(initializer=initializer,
-                                                  # rate=rate,
-                                                  # noise=noise,
-                                                  offset=offset,
-                                                  initial_short_term_avg=initial_short_term_avg,
-                                                  initial_long_term_avg=initial_long_term_avg,
-                                                  short_term_gain=short_term_gain,
-                                                  long_term_gain=long_term_gain,
-                                                  short_term_bias=short_term_bias,
-                                                  long_term_bias=long_term_bias,
-                                                  short_term_rate=short_term_rate,
-                                                  long_term_rate=long_term_rate,
-                                                  operation=operation,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             initializer=initializer,
@@ -2059,17 +2018,6 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         if default_variable is None:
             default_variable = initializer
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(rate=rate,
-                                                  decay=decay,
-                                                  rest=rest,
-                                                  max_val=max_val,
-                                                  min_val=min_val,
-                                                  initializer=initializer,
-                                                  noise=noise,
-                                                  # offset=offset,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             rate=rate,
@@ -2435,16 +2383,6 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["previous_value", "previous_time"]
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(rate=rate,
-                                                  time_step_size=time_step_size,
-                                                  starting_point=starting_point,
-                                                  initializer=initializer,
-                                                  threshold=threshold,
-                                                  noise=noise,
-                                                  offset=offset,
-                                                  params=params)
-
         # Assign here as default, for use in initialization of function
         super().__init__(
             default_variable=default_variable,
@@ -2779,16 +2717,6 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["previous_value", "previous_time"]
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(rate=rate,
-                                                  decay=decay,
-                                                  noise=noise,
-                                                  offset=offset,
-                                                  starting_point=starting_point,
-                                                  time_step_size=time_step_size,
-                                                  initializer=initializer,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             rate=rate,
@@ -3035,14 +2963,6 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(rate=rate,
-                                                  noise=noise,
-                                                  offset=offset,
-                                                  time_step_size=time_step_size,
-                                                  initializer=initializer,
-                                                  params=params)
 
         super().__init__(
             default_variable=default_variable,
@@ -3707,30 +3627,6 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["previous_v", "previous_w", "previous_time"]
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(default_variable=default_variable,
-                                                  initial_v=initial_v,
-                                                  initial_w=initial_w,
-                                                  time_step_size=time_step_size,
-                                                  t_0=t_0,
-                                                  a_v=a_v,
-                                                  b_v=b_v,
-                                                  c_v=c_v,
-                                                  d_v=d_v,
-                                                  e_v=e_v,
-                                                  f_v=f_v,
-                                                  time_constant_v=time_constant_v,
-                                                  a_w=a_w,
-                                                  b_w=b_w,
-                                                  c_w=c_w,
-                                                  threshold=threshold,
-                                                  mode=mode,
-                                                  uncorrelated_activity=uncorrelated_activity,
-                                                  integration_method=integration_method,
-                                                  time_constant_w=time_constant_w,
-                                                  params=params,
-                                                  )
 
         super().__init__(
             default_variable=default_variable,

@@ -458,17 +458,6 @@ class LearningProjection(ModulatoryProjection_Base):
         #     error function and learning function specifications from the specification of a LearningProjection (used
         #     to implement learning for a MappingProjection, e.g., in a tuple) to the LearningMechanism responsible
         #     for implementing the function; and for specifying the default LearningProjection for a Process.
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(error_function=error_function,
-                                                  learning_function=learning_function,
-                                                  learning_rate=learning_rate,
-                                                  # FIX: 10/3/17 - TEST IF THIS OK AND REINSTATE IF SO
-                                                  # learning_signal_params=learning_signal_params,
-                                                  learning_enabled=learning_enabled,
-                                                  weight=weight,
-                                                  exponent=exponent,
-                                                  params=params)
-
         # If receiver has not been assigned, defer init to Port.instantiate_projection_to_state()
         if sender is None or receiver is None:
             # Flag for deferred initialization

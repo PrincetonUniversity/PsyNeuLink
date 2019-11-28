@@ -665,10 +665,6 @@ class Projection_Base(Projection):
         from psyneulink.core.components.ports.parameterport import ParameterPort
         from psyneulink.core.components.ports.port import Port_Base
 
-        params = self._assign_args_to_param_dicts(weight=weight,
-                                                  exponent=exponent,
-                                                  params=params)
-
         if self.initialization_status == ContextFlags.DEFERRED_INIT:
             self._assign_deferred_init_name(name, context)
             self._store_deferred_init_args(**locals())

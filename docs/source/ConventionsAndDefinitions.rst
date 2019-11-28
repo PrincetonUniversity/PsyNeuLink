@@ -52,7 +52,7 @@ Components are objects that perform a specific function. Every Component has a:
 * `variable <Component.variable>` - the input to the Component's `function <Component.function>`;
 
 * *parameter(s)* - determine how a Component's `function <Component.function>` operates
-  (listed in its `user_params <Component.user_params>` dictionary);
+  (listed in its `Parameters <Component.Parameters>` class);
 
 * `value <Component.value>` - represents the result of the Component's `function <Component.function>`;
 

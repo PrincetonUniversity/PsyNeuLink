@@ -804,11 +804,6 @@ class DDM(ProcessingMechanism):
         if isinstance(output_ports, (str, tuple)):
             output_ports = list(output_ports)
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  # input_format=input_format,
-                                                  params=params)
-
         # IMPLEMENTATION NOTE: this manner of setting default_variable works but is idiosyncratic
         # compared to other mechanisms: see TransferMechanism.py __init__ function for a more normal example.
         if default_variable is None and size is None:
@@ -817,7 +812,7 @@ class DDM(ProcessingMechanism):
                 if not is_numeric(default_variable):
                     # set normally by default
                     default_variable = None
-            except KeyError:
+            except (KeyError, TypeError):
                 # set normally by default
                 pass
 

@@ -584,11 +584,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         if output_ports is None or output_ports is OUTCOME:
             output_ports = [OUTCOME]
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(
-                                                  function=function,
-                                                  params=params)
-
         self._learning_role = None
 
         super().__init__(

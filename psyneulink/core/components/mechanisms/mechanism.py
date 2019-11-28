@@ -1591,12 +1591,6 @@ class Mechanism_Base(Mechanism):
         except TypeError:
             output_ports_spec = output_ports
 
-        params = self._assign_args_to_param_dicts(
-            params=params,
-            input_ports_spec=input_ports_spec,
-            output_ports_spec=output_ports_spec,
-        )
-
         super(Mechanism_Base, self).__init__(
             default_variable=default_variable,
             size=size,
@@ -1837,8 +1831,11 @@ class Mechanism_Base(Mechanism):
         # INPUT_PORTS is specified, so validate:
         if INPUT_PORTS in params and params[INPUT_PORTS] is not None:
             try:
-                for port_spec in params[INPUT_PORTS]:
-                    _parse_port_spec(owner=self, port_type=InputPort, port_spec=port_spec)
+                try:
+                    for port_spec in params[INPUT_PORTS]:
+                        _parse_port_spec(owner=self, port_type=InputPort, port_spec=port_spec)
+                except TypeError:
+                    _parse_port_spec(owner=self, port_type=InputPort, port_spec=params[INPUT_PORTS])
             except AttributeError as e:
                 if DEFER_VARIABLE_SPEC_TO_MECH_MSG in e.args[0]:
                     pass
@@ -2049,7 +2046,8 @@ class Mechanism_Base(Mechanism):
                                          context=context)
 
     def _instantiate_parameter_ports(self, function=None, context=None):
-        """Call Port._instantiate_parameter_ports to instantiate a ParameterPort for each parameter in user_params
+        """Call Port._instantiate_parameter_ports to instantiate a ParameterPort
+        for each parameter with modulable=True
 
         This is a stub, implemented to allow Mechanism subclasses to override _instantiate_parameter_ports
             or process InputPorts before and/or after call to _instantiate_parameter_ports
@@ -2066,7 +2064,6 @@ class Mechanism_Base(Mechanism):
         """
         from psyneulink.core.components.ports.outputport import _instantiate_output_ports
         # self._update_parameter_ports(context=context)
-        self._update_attribs_dicts(context=context)
         _instantiate_output_ports(owner=self, output_ports=self.output_ports, context=context)
 
     def _add_projection_to_mechanism(self, port, projection, context=None):
@@ -2388,7 +2385,7 @@ class Mechanism_Base(Mechanism):
         if self.prefs.reportOutputPref and (context.execution_phase & ContextFlags.PROCESSING | ContextFlags.LEARNING):
             self._report_mechanism_execution(
                 self.get_input_values(context),
-                self.user_params,
+                self.parameters.values(),
                 self.output_port.parameters.value._get(context),
                 context=context
             )
@@ -2486,7 +2483,6 @@ class Mechanism_Base(Mechanism):
 
         for port in self._parameter_ports:
             port._update(context=context, params=runtime_params)
-        self._update_attribs_dicts(context=context)
 
     def _get_parameter_port_deferred_init_control_specs(self):
         # FIX: 9/14/19 - THIS ASSUMES THAT ONLY CONTROLPROJECTIONS RELEVANT TO COMPOSITION ARE in DEFERRED INIT;
@@ -2497,20 +2493,12 @@ class Mechanism_Base(Mechanism):
             for proj in parameter_port.mod_afferents:
                 if proj.initialization_status == ContextFlags.DEFERRED_INIT:
                     try:
-                        proj_control_signal_specs = proj._init_args['params']['control_signal_params'] or {}
-                    except KeyError:
+                        proj_control_signal_specs = proj._init_args['control_signal_params'] or {}
+                    except (KeyError, TypeError):
                         proj_control_signal_specs = {}
                     proj_control_signal_specs.update({PROJECTIONS: [proj]})
                     ctl_specs.append(proj_control_signal_specs)
         return ctl_specs
-
-    def _update_attribs_dicts(self, context):
-        from psyneulink.core.globals.keywords import NOISE
-        for port in self._parameter_ports:
-            if NOISE in port.name and self.initialization_status == ContextFlags.INITIALIZING:
-                continue
-            if port.name in self.user_params:
-                self.user_params.__additem__(port.name, port.value)
 
     def _update_output_ports(self, context=None, runtime_params=None):
         """Execute function for each OutputPort and assign result of each to corresponding item of self.output_values
@@ -2801,7 +2789,7 @@ class Mechanism_Base(Mechanism):
             input_val = self.get_input_values(context)
         if output is None:
             output = self.output_port.parameters.value._get(context)
-        params = params or self.user_params
+        params = params or self.parameters.values()
 
         import re
         if 'mechanism' in self.name or 'Mechanism' in self.name:
@@ -2847,11 +2835,11 @@ class Mechanism_Base(Mechanism):
                 print ("\t{}: {}".format(param_name, str(param).__str__().strip("[]")))
                 if param_is_function:
                     # Sort for consistency of output
-                    func_params_keys_sorted = sorted(self.function.user_params.keys())
+                    func_params_keys_sorted = sorted(self.function.parameters.names())
                     for fct_param_name in func_params_keys_sorted:
                         print ("\t\t{}: {}".
                                format(fct_param_name,
-                                      str(self.function.user_params[fct_param_name]).__str__().strip("[]")))
+                                      str(getattr(self.function.parameters, fct_param_name)).__str__().strip("[]")))
 
         # kmantel: previous version would fail on anything but iterables of things that can be cast to floats
         #   if you want more specific output, you can add conditional tests here

@@ -202,9 +202,6 @@ class Identity(TransferFunction):  # -------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(params=params)
-
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
@@ -399,11 +396,6 @@ class Linear(TransferFunction):  # ---------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(slope=slope,
-                                                  intercept=intercept,
-                                                  params=params)
 
         super().__init__(
             default_variable=default_variable,
@@ -658,13 +650,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(rate=rate,
-                                                  bias=bias,
-                                                  scale=scale,
-                                                  offset=offset,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             rate=rate,
@@ -935,14 +920,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(gain=gain,
-                                                  x_0=x_0,
-                                                  bias=bias,
-                                                  offset=offset,
-                                                  scale=scale,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             gain=gain,
@@ -1240,14 +1217,6 @@ class Tanh(TransferFunction):  # -----------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(gain=gain,
-                                                  x_0=x_0,
-                                                  bias=bias,
-                                                  offset=offset,
-                                                  scale=scale,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             gain=gain,
@@ -1475,12 +1444,6 @@ class ReLU(TransferFunction):  # -----------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(gain=gain,
-                                                  bias=bias,
-                                                  leak=leak,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             gain=gain,
@@ -1721,13 +1684,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(standard_deviation=standard_deviation,
-                                                  bias=bias,
-                                                  scale=scale,
-                                                  offset=offset,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             standard_deviation=standard_deviation,
@@ -2004,20 +1960,13 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+
         if seed is None:
             seed = get_global_seed()
 
         random_state = np.random.RandomState([seed])
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["random_state"]
-
-        params = self._assign_args_to_param_dicts(variance=variance,
-                                                  bias=bias,
-                                                  scale=scale,
-                                                  offset=offset,
-                                                  random_state=random_state,
-                                                  params=params)
 
         super().__init__(
             default_variable=default_variable,
@@ -2298,12 +2247,6 @@ class SoftMax(TransferFunction):
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(gain=gain,
-                                                  per_item=per_item,
-                                                  output=output,
-                                                  params=params)
 
         super().__init__(
             default_variable=default_variable,
@@ -2689,10 +2632,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(matrix=matrix,
-                                                  params=params)
 
         # Note: this calls _validate_variable and _validate_params which are overridden below;
         #       the latter implements the matrix if required
@@ -3862,15 +3801,6 @@ class TransferWithCosts(TransferFunction):
         #     elif size != len(default_variable):
         #         raise FunctionError(f"Both {repr(DEFAULT_VARIABLE)} ({default_variable}) and {repr(SIZE)} ({size}) "
         #                             f"are specified for {self.name} but are {SIZE}!=len({DEFAULT_VARIABLE}).")
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(transfer_fct=transfer_fct,
-                                                  enabled_cost_functions=enabled_cost_functions,
-                                                  intensity_cost_fct=intensity_cost_fct,
-                                                  adjustment_cost_fct=adjustment_cost_fct,
-                                                  duration_cost_fct=duration_cost_fct,
-                                                  combine_costs_fct=combine_costs_fct,
-                                                  params=params)
 
         super().__init__(
             default_variable=default_variable,

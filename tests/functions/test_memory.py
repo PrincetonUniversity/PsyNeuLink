@@ -136,7 +136,7 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_same_as_val_size
     retrieved_keys=[]
     for key in sorted(stimuli.keys()):
         retrieved = [i for i in em.execute(stimuli[key])]
-        retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+        retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
         retrieved_keys.append(retrieved_key)
     assert retrieved_keys == [['F'], ['A'], ['A'], ['C'], ['B'], ['F']]
 
@@ -145,19 +145,19 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_same_as_val_size
     retrieved_keys=[]
     for key in sorted(stimuli.keys()):
         retrieved = [i for i in em.execute(stimuli[key])]
-        retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+        retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
         retrieved_keys.append(retrieved_key)
     assert retrieved_keys == [['A'], ['A'], ['A'], ['A'], ['B'], ['F']]
 
     stim = 'C'
     em.function.equidistant_keys_select = OLDEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-    retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+    retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
     assert retrieved_key == ['A']
 
     em.function.equidistant_keys_select = NEWEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-    retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+    retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
     assert retrieved_key == ['D']
 
     # Test that after allowing dups, warning is issued and memory with zeros is returned
@@ -195,19 +195,19 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_diff_from_val_si
     retrieved_keys=[]
     for key in sorted(stimuli.keys()):
         retrieved = [i for i in em.execute(stimuli[key])]
-        retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+        retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
         retrieved_keys.append(retrieved_key)
     assert retrieved_keys == [['F'], ['A'], ['A'], ['C'], ['B'], ['F']]
 
     stim = 'C'
     em.function.equidistant_keys_select = OLDEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-    retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+    retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
     assert retrieved_key == ['A']
 
     em.function.equidistant_keys_select = NEWEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-    retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+    retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
     assert retrieved_key == ['D']
 
     # Test that after allowing dups, warning is issued and memory with zeros is returned
@@ -244,19 +244,19 @@ def test_ContentAddressableMemory_without_initializer_and_key_size_same_as_val_s
     retrieved_keys=[]
     for key in sorted(stimuli.keys()):
         retrieved = [i for i in em.execute(stimuli[key])]
-        retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+        retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
         retrieved_keys.append(retrieved_key)
     assert retrieved_keys == [[None], ['A'], ['A'], ['C'], ['B'], ['C']]
 
     stim = 'C'
     em.function.equidistant_keys_select = OLDEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-    retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+    retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
     assert retrieved_key == ['A']
 
     em.function.equidistant_keys_select = NEWEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-    retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+    retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
     assert retrieved_key == ['D']
 
     # Test that after allowing dups, warning is issued and memory with zeros is returned
@@ -293,19 +293,19 @@ def test_ContentAddressableMemory_without_initializer_and_key_size_diff_from_val
     retrieved_keys=[]
     for key in sorted(stimuli.keys()):
         retrieved = [i for i in em.execute(stimuli[key])]
-        retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+        retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
         retrieved_keys.append(retrieved_key)
     assert retrieved_keys == [[None], ['A'], ['A'], ['C'], ['B'], ['C']]
 
     stim = 'C'
     em.function.equidistant_keys_select = OLDEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-    retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+    retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
     assert retrieved_key == ['A']
 
     em.function.equidistant_keys_select = NEWEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-    retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+    retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
     assert retrieved_key == ['D']
 
     # Test that after allowing dups, warning is issued and memory with zeros is returned
@@ -347,14 +347,14 @@ def test_ContentAddressableMemory_without_assoc():
     for key in sorted(stimuli.keys()):
         print(f'\nCurrent memory: \n{em.memory}\n')
         retrieved = [i for i in em.execute(stimuli[key])]
-        retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+        retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
         print(f'\nExecuted with stimulus {key}: {stimuli[key]};'
               f'\nRetrieved memory {retrieved_key[0]}: \n\t{retrieved}')
 
     retrieved_keys=[]
     for key in sorted(stimuli.keys()):
         retrieved = [i for i in em.execute(stimuli[key])]
-        retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+        retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
         retrieved_keys.append(retrieved_key)
 
     assert retrieved_keys == [['A', 'C', 'D'], ['B'], ['A', 'C', 'D'], ['A', 'C', 'D'], ['E'], ['F']]

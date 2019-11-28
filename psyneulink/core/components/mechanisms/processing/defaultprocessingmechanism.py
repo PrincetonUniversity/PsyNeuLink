@@ -73,8 +73,6 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
         :param prefs: (PreferenceSet)
         """
 
-        params = self._assign_args_to_param_dicts(params=params)
-
         super(DefaultProcessingMechanism_Base, self).__init__(default_variable=default_variable,
                                                               size=size,
                                                               function=function,

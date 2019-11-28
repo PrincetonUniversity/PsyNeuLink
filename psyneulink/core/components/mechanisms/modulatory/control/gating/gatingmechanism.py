@@ -471,10 +471,6 @@ class GatingMechanism(ControlMechanism):
                 if args:
                     monitor_for_gating.extend(convert_to_list(args))
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  params=params)
-
         super().__init__(default_variable=default_gating_allocation,
                          size=size,
                          monitor_for_control=monitor_for_gating,

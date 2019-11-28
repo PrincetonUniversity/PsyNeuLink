@@ -322,10 +322,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                  **kwargs
                  ):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  params=params)
-
         # # USE FOR IMPLEMENTATION OF deferred_init()
         # # Store args for deferred initialization
         # self._init_args = locals().copy()

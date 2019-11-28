@@ -367,13 +367,6 @@ class OptimizationFunction(Function_Base):
         if search_termination_function is None:
             self._unspecified_args.append(SEARCH_TERMINATION_FUNCTION)
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(save_samples=save_samples,
-                                                  save_values=save_values,
-                                                  max_iterations=max_iterations,
-                                                  search_space=search_space,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             save_samples=save_samples,
@@ -419,12 +412,19 @@ class OptimizationFunction(Function_Base):
                 raise OptimizationFunctionError("Specification of {} arg for {} ({}) must be a function or method".
                                                 format(repr(SEARCH_TERMINATION_FUNCTION), self.__class__.__name__,
                                                        request_set[SEARCH_TERMINATION_FUNCTION].__name__))
-            b = request_set[SEARCH_TERMINATION_FUNCTION]()
-            if not isinstance(b, bool):
-                raise OptimizationFunctionError("Function ({}) specified for {} arg of {} must return a boolean value".
-                                                format(request_set[SEARCH_TERMINATION_FUNCTION].__name__,
-                                                       repr(SEARCH_TERMINATION_FUNCTION),
-                                                       self.__class__.__name__))
+
+            try:
+                b = request_set[SEARCH_TERMINATION_FUNCTION]()
+                if not isinstance(b, bool):
+                    raise OptimizationFunctionError("Function ({}) specified for {} arg of {} must return a boolean value".
+                                                    format(request_set[SEARCH_TERMINATION_FUNCTION].__name__,
+                                                           repr(SEARCH_TERMINATION_FUNCTION),
+                                                           self.__class__.__name__))
+            except TypeError as e:
+                # we cannot validate arbitrary functions here if they
+                # require arguments
+                if 'required positional arguments' not in str(e):
+                    raise
 
     @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, *args, context=None):
@@ -874,12 +874,6 @@ class GradientOptimization(OptimizationFunction):
         search_function = self._follow_gradient
         search_termination_function = self._convergence_condition
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(step_size=step_size,
-                                                  convergence_criterion=convergence_criterion,
-                                                  convergence_threshold=convergence_threshold,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             objective_function=objective_function,
@@ -1287,10 +1281,6 @@ class GridSearch(OptimizationFunction):
         if seed is None:
             seed = get_global_seed()
         random_state = np.random.RandomState([seed])
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(params=params,
-                                                  random_state=random_state)
 
         super().__init__(
             default_variable=default_variable,
@@ -1942,9 +1932,6 @@ class GaussianProcess(OptimizationFunction):
         self._return_samples = save_values
         self.direction = direction
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(params=params)
-
         super().__init__(
             default_variable=default_variable,
             objective_function=objective_function,
@@ -2238,9 +2225,6 @@ class ParamEstimationFunction(OptimizationFunction):
         # The simulator function we will pass to ELFI, this is really the objective_function
         # with some stuff wrapped around it to massage its return values and arguments.
         self._sim_func = None
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(params=params)
 
         super().__init__(
             default_variable=default_variable,

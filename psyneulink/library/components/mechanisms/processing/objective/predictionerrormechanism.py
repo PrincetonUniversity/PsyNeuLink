@@ -302,12 +302,6 @@ class PredictionErrorMechanism(ComparatorMechanism):
                  ):
 
         input_ports = [sample, target]
-        params = self._assign_args_to_param_dicts(sample=sample,
-                                                  target=target,
-                                                  function=function,
-                                                  learning_rate=learning_rate,
-                                                  params=params)
-
         super().__init__(
             sample=sample,
             target=target,

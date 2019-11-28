@@ -186,11 +186,6 @@ class Concatenate(CombinationFunction):  # -------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(scale=scale,
-                                                  offset=offset,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             scale=scale,
@@ -411,12 +406,6 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(arrangement=arrangement,
-                                                  scale=scale,
-                                                  offset=offset,
-                                                  params=params)
 
         super().__init__(
             default_variable=default_variable,
@@ -723,14 +712,6 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(weights=weights,
-                                                  exponents=exponents,
-                                                  operation=operation,
-                                                  scale=scale,
-                                                  offset=offset,
-                                                  params=params)
 
         super().__init__(
             default_variable=default_variable,
@@ -1108,14 +1089,6 @@ class LinearCombination(
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(weights=weights,
-                                                  exponents=exponents,
-                                                  operation=operation,
-                                                  scale=scale,
-                                                  offset=offset,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             weights=weights,
@@ -1196,9 +1169,6 @@ class LinearCombination(
                 pass
             elif isinstance(scale, np.ndarray):
                 target_set[SCALE] = np.array(scale)
-            else:
-                raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
-                                    format(SCALE, self.name, scale))
             scale_is_a_scalar = isinstance(scale, numbers.Number) or (len(scale) == 1) and isinstance(scale[0],
                                                                                                       numbers.Number)
             if context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
@@ -1219,9 +1189,7 @@ class LinearCombination(
                 pass
             elif isinstance(offset, np.ndarray):
                 target_set[OFFSET] = np.array(offset)
-            else:
-                raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
-                                    format(OFFSET, self.name, offset))
+
             offset_is_a_scalar = isinstance(offset, numbers.Number) or (len(offset) == 1) and isinstance(offset[0],
                                                                                                          numbers.Number)
             if context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
@@ -1689,14 +1657,6 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(weights=weights,
-                                                  exponents=exponents,
-                                                  operation=operation,
-                                                  scale=scale,
-                                                  offset=offset,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             weights=weights,
@@ -1950,10 +1910,6 @@ class PredictionErrorDeltaFunction(CombinationFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        #
-        params = self._assign_args_to_param_dicts(gamma=gamma,
-                                                  params=params)
 
         super().__init__(
             default_variable=default_variable,

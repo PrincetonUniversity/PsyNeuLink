@@ -722,8 +722,7 @@ class DefaultAllocationFunction(Function_Base):
                  params=None,
                  owner=None
                  ):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(params=params)
+
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
@@ -1229,15 +1228,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
             )
         except TypeError:
             control_spec = control
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(system=system,
-                                                  objective_mechanism=objective_mechanism,
-                                                  function=function,
-                                                  default_allocation=default_allocation,
-                                                  modulation=modulation,
-                                                  control_spec=control_spec,
-                                                  params=params)
         self._sim_counts = {}
 
         super(ControlMechanism, self).__init__(

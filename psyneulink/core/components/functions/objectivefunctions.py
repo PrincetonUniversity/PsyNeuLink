@@ -230,13 +230,6 @@ class Stability(ObjectiveFunction):
                 raise FunctionError(f"Both {repr(DEFAULT_VARIABLE)} ({default_variable}) and {repr(SIZE)} ({size}) "
                                     f"are specified for {self.name} but are {SIZE}!=len({DEFAULT_VARIABLE}).")
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(matrix=matrix,
-                                                  metric=metric,
-                                                  transfer_fct=transfer_fct,
-                                                  normalize=normalize,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             matrix=matrix,
@@ -796,11 +789,6 @@ class Distance(ObjectiveFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(metric=metric,
-                                                  normalize=normalize,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             metric=metric,

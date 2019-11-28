@@ -227,15 +227,6 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             else:
                 initializer = self.class_defaults.variable
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(rate=rate,
-                                                  initializer=initializer,
-                                                  noise=noise,
-                                                  params=params)
-
-        # does not actually get set in _assign_args_to_param_dicts but we need it as an instance_default
-        params[INITIALIZER] = initializer
-
         super().__init__(
             default_variable=default_variable,
             rate=rate,

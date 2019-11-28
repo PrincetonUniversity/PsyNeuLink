@@ -515,10 +515,6 @@ class ParameterPort(Port_Base):
         # if isinstance(owner, MappingProjection) and name is MATRIX:
         #     function = LinearCombination(operation=SUM)
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  params=params)
-
         self.reference_value = reference_value
 
         # Validate sender (as variable) and params
@@ -771,11 +767,11 @@ class ParameterPort(Port_Base):
                                   format(PATHWAY_PROJECTION, self.name, PARAMETER_PORT, PATHWAY_PROJECTION))
 
 def _instantiate_parameter_ports(owner, function=None, context=None):
-    """Call _instantiate_parameter_port for all params in user_params to instantiate ParameterPorts for them
+    """Call _instantiate_parameter_port for all modulable parameters to instantiate ParameterPorts for them
 
     If owner.parameter_port is None or False:
         - no ParameterPorts will be instantiated.
-    Otherwise, instantiate ParameterPort for each allowable param in owner.user_params
+    Otherwise, instantiate ParameterPort for each modulable parameter
     :param function:
 
     """

@@ -591,13 +591,7 @@ class ModulatorySignal(OutputPort):
             #   and so modulation hasn't had a chance to be assigned to the owner's value
             #   (i.e., if it was not specified in the constructor), so do it now;
             #   however modulation has already been assigned to params, so need to assign it there
-            params[MODULATION] = self.modulation or owner.modulation
-
-        # Standard initialization
-        else:
-            # Assign args to params and functionParams dicts
-            params = self._assign_args_to_param_dicts(params=params,
-                                                      modulation=modulation)
+            modulation = modulation or owner.modulation
 
         if modulates is not None and not isinstance(modulates, list):
             modulates = [modulates]

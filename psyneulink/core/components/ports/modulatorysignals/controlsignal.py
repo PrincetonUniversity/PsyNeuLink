@@ -782,16 +782,6 @@ class ControlSignal(ModulatorySignal):
         if params and ALLOCATION_SAMPLES in params and params[ALLOCATION_SAMPLES] is not None:
             allocation_samples = params[ALLOCATION_SAMPLES]
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(
-                                                  cost_options=cost_options,
-                                                  intensity_cost_function=intensity_cost_function,
-                                                  adjustment_cost_function=adjustment_cost_function,
-                                                  duration_cost_function=duration_cost_function,
-                                                  combine_costs_function=combine_costs_function,
-                                                  allocation_samples=allocation_samples,
-                                                  params=params)
-
         # FIX: ??MOVE THIS TO _validate_params OR ANOTHER _instantiate METHOD??
         # IMPLEMENTATION NOTE:
         # Consider adding self to owner.output_ports here (and removing from ControlProjection._instantiate_sender)
