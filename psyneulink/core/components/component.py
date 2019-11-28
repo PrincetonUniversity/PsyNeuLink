@@ -3476,7 +3476,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 new_item = []
                 for item in value:
                     new_item.append(parse_parameter_value(item))
-                value = type(value)(new_item)
+                try:
+                    value = type(value)(new_item)
+                except TypeError:
+                    value = type(value)(*new_item)
             elif isinstance(value, dict):
                 value = {
                     parse_parameter_value(k): parse_parameter_value(v)
