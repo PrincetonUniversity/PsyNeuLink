@@ -783,17 +783,8 @@ class InputPort(Port_Base):
             variable = self._assign_variable_from_projection(variable, size, projections)
 
         # If combine argument is specified, save it along with any user-specified function for _validate_params()
-        # (but don't pass to _assign_args_to_param_dicts, as it is an option not a legitimate InputPort parameter)
         if combine:
             self.combine_function_args = (combine, function)
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  weight=weight,
-                                                  exponent=exponent,
-                                                  internal_only=internal_only,
-                                                  shadow_inputs=None,
-                                                  params=params)
 
         # If owner or reference_value has not been assigned, defer init to Port._instantiate_projection()
         # if owner is None or (variable is None and reference_value is None and projections is None):

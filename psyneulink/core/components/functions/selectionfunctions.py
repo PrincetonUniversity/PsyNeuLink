@@ -216,11 +216,6 @@ class OneHot(SelectionFunction):
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["random_state"]
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(mode=mode,
-                                                  random_state=random_state,
-                                                  params=params)
-
         reset_default_variable_flexibility = False
         if mode in {PROB, PROB_INDICATOR} and default_variable is None:
             default_variable = [[0], [0]]

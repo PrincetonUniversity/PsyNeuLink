@@ -189,11 +189,6 @@ class MaskedMappingProjection(MappingProjection):
                  prefs: is_pref_set = None,
                  **kwargs):
 
-        params = self._assign_args_to_param_dicts(mask=mask,
-                                                  mask_operation=mask_operation,
-                                                  function_params={MATRIX: matrix},
-                                                  params=params)
-
         super().__init__(
             sender=sender,
             receiver=receiver,

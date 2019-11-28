@@ -879,16 +879,6 @@ class Process(Process_Base):
         pathway = pathway or []
         self.projections = []
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(pathway=pathway,
-                                                  initial_values=initial_values,
-                                                  clamp_input=clamp_input,
-                                                  default_projection_matrix=default_projection_matrix,
-                                                  learning=learning,
-                                                  learning_rate=learning_rate,
-                                                  target=target,
-                                                  params=params)
-
         register_category(entry=self,
                           base_class=Process,
                           name=name,

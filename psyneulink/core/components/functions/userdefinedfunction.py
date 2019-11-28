@@ -405,7 +405,7 @@ class UserDefinedFunction(Function_Base):
 
                 # Use definition from the function as default;
                 #    this allows UDF to assign a value for this instance (including a MODULATORY spec)
-                #    while assigning an actual value to current/defaults (in _assign_args_to_params_dicts);
+                #    while assigning an actual value to current/defaults
                 if arg.default is _empty:
                     defaults[arg_name] = None
 
@@ -468,13 +468,6 @@ class UserDefinedFunction(Function_Base):
                                 "the first argument of {} is at least a 2d array".
                                 format(self.__class__.__name__, cust_fct_name, default_variable,
                                        cust_fct_name, cust_fct_variable, cust_fct_name, owner_name, cust_fct_name))
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(custom_function=custom_function,
-                                                  params=params,
-                                                  defaults=defaults,
-                                                  **self.cust_fct_params
-                                                  )
 
         super().__init__(
             default_variable=default_variable,

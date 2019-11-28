@@ -923,6 +923,8 @@ class OutputPort(Port_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
+                 index=None,
+                 assign=None,
                  **kwargs):
 
         context = kwargs.pop(CONTEXT, None)
@@ -932,11 +934,6 @@ class OutputPort(Port_Base):
             assign = kwargs['calculate']
         if params:
             _maintain_backward_compatibility(params, name, owner)
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(
-                function=function,
-                params=params)
 
         # setting here to ensure even deferred init ports have this attribute
         self._variable_spec = variable
@@ -972,16 +969,20 @@ class OutputPort(Port_Base):
         #  (test for it, and create if necessary, as per OutputPorts in ControlProjection._instantiate_sender),
 
         # Validate sender (as variable) and params
-        super().__init__(owner,
-                         variable=variable,
-                         size=size,
-                         projections=projections,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         context=context,
-                         function=function,
-                         )
+        super().__init__(
+            owner,
+            variable=variable,
+            size=size,
+            projections=projections,
+            params=params,
+            name=name,
+            prefs=prefs,
+            context=context,
+            function=function,
+            index=index,
+            assign=assign,
+            **kwargs
+        )
 
     def _validate_against_reference_value(self, reference_value):
         """Validate that Port.variable is compatible with the reference_value

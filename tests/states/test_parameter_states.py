@@ -99,7 +99,6 @@ class TestConfigurableParameters:
 
         # SMOOTHING FACTOR - - - - - - - -
 
-        assert np.allclose(T.user_params["integration_rate"], old_value)
         assert np.allclose(T.integration_rate, old_value)
         assert np.allclose(T.mod_integration_rate, old_value)
 
@@ -107,13 +106,11 @@ class TestConfigurableParameters:
 
         # KAM changed 3/2/18 --
         # function_params looks at ParameterPort value, so this will not update until next execution
-        assert np.allclose(T.user_params["integration_rate"], old_value)
         assert np.allclose(T.integration_rate, new_value)
         assert np.allclose(T.mod_integration_rate, old_value)
 
         # NOISE - - - - - - - -
 
-        assert np.allclose(T.user_params["noise"], old_value)
         assert np.allclose(T.noise, old_value)
         assert np.allclose(T.mod_noise, old_value)
 
@@ -121,7 +118,6 @@ class TestConfigurableParameters:
 
         # KAM changed 3/2/18 --
         # function_params looks at ParameterPort value, so this will not update until next execution
-        assert np.allclose(T.user_params["noise"], old_value)
         assert np.allclose(T.noise, new_value)
         assert np.allclose(T.mod_noise, old_value)
 
@@ -133,11 +129,9 @@ class TestConfigurableParameters:
         assert np.allclose(T.function.intercept, new_value)
         assert np.allclose(T.mod_intercept, new_value)
 
-        assert np.allclose(T.user_params["integration_rate"], new_value)
         assert np.allclose(T.integration_rate, new_value)
         assert np.allclose(T.mod_integration_rate, new_value)
 
-        assert np.allclose(T.user_params["noise"], new_value)
         assert np.allclose(T.noise, new_value)
         assert np.allclose(T.mod_noise, new_value)
 

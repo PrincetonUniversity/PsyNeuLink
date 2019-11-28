@@ -309,10 +309,6 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  **kwargs):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  params=params)
-
         super(ProcessingMechanism, self).__init__(default_variable=default_variable,
                                                   size=size,
                                                   input_ports=input_ports,

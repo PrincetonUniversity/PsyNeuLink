@@ -343,12 +343,6 @@ class KohonenLearningMechanism(LearningMechanism):
                  name=None,
                  prefs:is_pref_set=None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(matrix=matrix,
-                                                  function=function,
-                                                  learning_signals=learning_signals,
-                                                  params=params)
-
         # # USE FOR IMPLEMENTATION OF deferred_init()
         # # Store args for deferred initialization
         # self._init_args = locals().copy()

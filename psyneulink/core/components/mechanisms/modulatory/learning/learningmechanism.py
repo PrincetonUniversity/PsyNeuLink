@@ -1014,11 +1014,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
         self.in_composition = in_composition
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  learning_enabled=learning_enabled,
-                                                  params=params)
-
         # # USE FOR IMPLEMENTATION OF deferred_init()
         # # Store args for deferred initialization
         # self._init_args = locals().copy()

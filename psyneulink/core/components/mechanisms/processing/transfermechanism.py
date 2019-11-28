@@ -961,18 +961,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         initial_value = self._parse_arg_initial_value(initial_value)
 
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  initial_value=initial_value,
-                                                  noise=noise,
-                                                  integration_rate=integration_rate,
-                                                  integrator_mode=integrator_mode,
-                                                  clip=clip,
-                                                  termination_measure=termination_measure,
-                                                  termination_threshold=termination_threshold,
-                                                  termination_comparison_op=termination_comparison_op,
-                                                  integrator_function=integrator_function,
-                                                  params=params)
-
         # self.integrator_function = None
         self._current_variable_index = 0
 
@@ -1013,8 +1001,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         # Validate FUNCTION
-        if FUNCTION in target_set:
-            transfer_function = target_set[FUNCTION]
+        if self.parameters.function._user_specified:
+            transfer_function = self.defaults.function
             transfer_function_class = None
 
             # FUNCTION is a Function

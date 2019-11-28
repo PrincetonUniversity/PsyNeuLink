@@ -445,15 +445,12 @@ class MappingProjection(PathwayProjection_Base):
                  prefs:is_pref_set=None,
                  context=None,
                  **kwargs):
-        # Assign args to params and functionParams dicts
+
         # Assign matrix to function_params for use as matrix param of MappingProjection.function
         # (7/12/17 CW) this is a PATCH to allow the user to set matrix as an np.matrix... I still don't know why
         # it wasn't working.
         if isinstance(matrix, (np.matrix, list)):
             matrix = np.array(matrix)
-
-        params = self._assign_args_to_param_dicts(function_params={MATRIX: matrix},
-                                                  params=params)
 
         self.learning_mechanism = None
         self.has_learning_projection = None

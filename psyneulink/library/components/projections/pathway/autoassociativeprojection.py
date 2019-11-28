@@ -285,8 +285,6 @@ class AutoAssociativeProjection(MappingProjection):
             if receiver is None:
                 receiver = owner
 
-        params = self._assign_args_to_param_dicts(function_params={MATRIX: matrix}, params=params)
-
         super().__init__(sender=sender,
                          receiver=receiver,
                          matrix=matrix,

@@ -1080,10 +1080,6 @@ class Port_Base(Port):
             raise PortError("{}, as a subclass of {}, must implement an _execute() method".
                              format(self.__class__.__name__, PORT))
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(projections=projections,
-                                                  params=params)
-
         self.owner = owner
 
         # If name is not specified, assign default name
@@ -2427,6 +2423,12 @@ def _instantiate_port_list(owner,
         for proj in port.path_afferents:
             owner.aux_components.append(proj)
 
+        # KDM 12/3/19: this depends on name setting for InputPorts that
+        # ensures there are no duplicates. If duplicates exist, ports
+        # will be overwritten
+        # be careful of:
+        #   test_rumelhart_semantic_network_sequential
+        #   test_mix_and_match_input_sources
         ports[port.name] = port
 
     return ports
@@ -2726,7 +2728,7 @@ def _parse_port_spec(port_type=None,
                 projection = port_spec[PORT_SPEC_ARG][PROJECTIONS][0]
                 port = projection.sender
                 if port.initialization_status == ContextFlags.DEFERRED_INIT:
-                    port._init_args[PARAMS][PROJECTIONS]=projection
+                    port._init_args[PROJECTIONS] = projection
                 else:
                     port._instantiate_projections_to_port(projections=projection, context=context)
                 return port
@@ -2900,8 +2902,8 @@ def _parse_port_spec(port_type=None,
             else:
                 try:
                     sender = projection_spec._init_args[SENDER]
-                    matrix = projection_spec._init_args[PARAMS][FUNCTION_PARAMS][MATRIX]
-                except KeyError:
+                    matrix = projection_spec._init_args[MATRIX]
+                except (KeyError, TypeError):
                     pass
         # Projection specification dict:
         else:

@@ -683,19 +683,6 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         self._learning_enabled = enable_learning
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(matrix=matrix,
-                                                  integrator_mode=integrator_mode,
-                                                  learning_rate=learning_rate,
-                                                  learning_function=learning_function,
-                                                  learning_condition=learning_condition,
-                                                  auto=auto,
-                                                  hetero=hetero,
-                                                  has_recurrent_input_port=has_recurrent_input_port,
-                                                  combination_function=combination_function,
-                                                  params=params,
-                                                  )
-
         super().__init__(
             default_variable=default_variable,
             size=size,

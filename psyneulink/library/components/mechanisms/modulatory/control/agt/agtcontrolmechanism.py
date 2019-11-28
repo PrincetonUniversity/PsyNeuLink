@@ -257,11 +257,6 @@ class AGTControlMechanism(ControlMechanism):
                  name=None,
                  prefs:is_pref_set=None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  control_signals=control_signals,
-                                                  params=params)
-
         super().__init__(
             system=system,
             objective_mechanism=ObjectiveMechanism(

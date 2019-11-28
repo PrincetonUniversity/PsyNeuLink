@@ -234,10 +234,6 @@ class LeabraFunction(Function_Base):
         if network is None:
             raise LeabraError('network was None. Cannot create function for Leabra Mechanism if network is not specified.')
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(network=network,
-                                                  params=params)
-
         if default_variable is None:
             input_size = len(network.layers[0].units)
             output_size = len(network.layers[-1].units)
@@ -528,19 +524,8 @@ class LeabraMechanism(ProcessingMechanism_Base):
             network = build_leabra_network(input_size, output_size, hidden_layers, hidden_sizes,
                                                   training_flag, quarter_size)
 
-        function = LeabraFunction(network=network)
-
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  input_size=input_size,
-                                                  output_size=output_size,
-                                                  hidden_layers=hidden_layers,
-                                                  hidden_sizes=hidden_sizes,
-                                                  training_flag=training_flag,
-                                                  quarter_size=quarter_size,
-                                                  params=params)
-
         super().__init__(
-            function=function,
+            function=LeabraFunction(network=network),
             size=[input_size, output_size],
             network=network,
             input_size=input_size,

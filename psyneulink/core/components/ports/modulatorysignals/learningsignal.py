@@ -355,11 +355,6 @@ class LearningSignal(ModulatorySignal):
                  prefs:is_pref_set=None,
                  **kwargs):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  learning_rate=learning_rate,
-                                                  params=params)
-
         # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
         # Consider adding self to owner.output_ports here (and removing from LearningProjection._instantiate_sender)

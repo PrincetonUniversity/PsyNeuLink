@@ -251,11 +251,6 @@ class GatingProjection(ModulatoryProjection_Base):
                  prefs:is_pref_set=None,
                  **kwargs
                  ):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  gating_signal_params=gating_signal_params,
-                                                  params=params)
-
         # If receiver has not been assigned, defer init to Port.instantiate_projection_to_state()
         if sender is None or receiver is None:
             # Flag for deferred initialization

@@ -166,11 +166,6 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         """Assign type-level preferences, default input value (SigmoidLayer_DEFAULT_BIAS) and call super.__init__
         """
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(
-                                                  function=function,
-                                                  params=params)
-
         super(IntegratorMechanism, self).__init__(default_variable=default_variable,
                                                   size=size,
                                                   function=function,

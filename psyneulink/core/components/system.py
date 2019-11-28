@@ -923,17 +923,6 @@ class System(System_Base):
 
         self.projections = []
 
-        # fAssign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(processes=processes,
-                                                  initial_values=initial_values,
-                                                  # controller=controller,
-                                                  enable_controller=enable_controller,
-                                                  monitor_for_control=monitor_for_control,
-                                                  # control_signals=control_signals,
-                                                  learning_rate=learning_rate,
-                                                  targets=targets,
-                                                  params=params)
-
         self.inputs = []
         self.stimulusInputPorts = []
         self.target_input_ports = []
@@ -1079,7 +1068,7 @@ class System(System_Base):
 # FIX: AUGMENT LinearMatrix TO USE FULL_CONNECTIVITY_MATRIX IF len(sender) != len(receiver)
         """Instantiate processes of System
 
-        Use self.processes (populated by self.processes in Function._assign_args_to_param_dicts
+        Use self.processes
         If self.processes is empty, instantiate default process by calling process()
         Iterate through self.processes, instantiating each (including the input to each input projection)
         If input is specified, check that it's length equals the number of processes
@@ -1643,13 +1632,13 @@ class System(System_Base):
         self.execution_list = self._toposort_with_ordered_mechs(self.execution_graph)
 
         # Construct self.defaults.variable from inputs to ORIGIN mechanisms
-        self.defaults.variable = []
+        new_variable = []
         for mech in self.origin_mechanisms:
             orig_mech_input = []
             for input_port in mech.input_ports:
                 orig_mech_input.append(input_port.value)
-            self.defaults.variable.append(orig_mech_input)
-        self.defaults.variable = convert_to_np_array(self.defaults.variable, 2)
+            new_variable.append(orig_mech_input)
+        self.defaults.variable = convert_to_np_array(new_variable, 2)
         # should add Utility to allow conversion to 3D array
         # An example: when InputPort values are vectors, then self.defaults.variable is a 3D array because
         # an origin mechanism could have multiple input ports if there is a recurrent InputPort. However,
@@ -2589,8 +2578,8 @@ class System(System_Base):
                     # If Projection was deferred for init, instantiate its ControlSignal and then initialize it
                     if projection.initialization_status == ContextFlags.DEFERRED_INIT:
                         try:
-                            proj_control_signal_specs = projection._init_args['params']['control_signal_params'] or {}
-                        except KeyError:
+                            proj_control_signal_specs = projection._init_args['control_signal_params'] or {}
+                        except (KeyError, TypeError):
                             proj_control_signal_specs = {}
                         proj_control_signal_specs.update({PROJECTIONS: [projection]})
                         control_signal_specs.append(proj_control_signal_specs)

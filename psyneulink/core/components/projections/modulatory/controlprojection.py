@@ -262,11 +262,6 @@ class ControlProjection(ModulatoryProjection_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  **kwargs):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  control_signal_params=control_signal_params,
-                                                  params=params)
-
         # If receiver has not been assigned, defer init to Port.instantiate_projection_to_state()
         if (sender is None or sender.initialization_status == ContextFlags.DEFERRED_INIT or
                 inspect.isclass(receiver) or receiver is None or

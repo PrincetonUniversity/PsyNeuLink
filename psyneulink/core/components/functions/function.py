@@ -694,12 +694,6 @@ class Function_Base(Function):
 
         return value
 
-    def show_params(self):
-        print("\nParams for {} ({}):".format(self.name, self.componentName))
-        for param_name, param_value in sorted(self.user_params.items()):
-            print("\t{}: {}".format(param_name, param_value))
-        print('')
-
     @property
     def owner_name(self):
         try:
@@ -820,11 +814,6 @@ class ArgumentTherapy(Function_Base):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(propensity=propensity,
-                                                  pertinacity=pertincacity,
-                                                  params=params)
 
         super().__init__(
             default_variable=default_variable,
@@ -976,9 +965,6 @@ class EVCAuxiliaryFunction(Function_Base):
                  owner=None,
                  prefs:is_pref_set=None,
                  context=None):
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(params=params)
         self.aux_function = function
 
         super().__init__(default_variable=variable,

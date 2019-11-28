@@ -219,13 +219,6 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         if default_variable is None:
             default_variable = []
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(rate=rate,
-                                                  initializer=initializer,
-                                                  noise=noise,
-                                                  history=history,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             rate=rate,
@@ -715,18 +708,6 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         random_state = np.random.RandomState([seed])
 
         self._memory = []
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(retrieval_prob=retrieval_prob,
-                                                  storage_prob=storage_prob,
-                                                  initializer=initializer,
-                                                  duplicate_keys=duplicate_keys,
-                                                  equidistant_keys_select=equidistant_keys_select,
-                                                  rate=rate,
-                                                  noise=noise,
-                                                  max_entries=max_entries,
-                                                  random_state=random_state,
-                                                  params=params)
 
         super().__init__(
             default_variable=default_variable,

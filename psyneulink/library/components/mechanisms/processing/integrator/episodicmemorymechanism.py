@@ -230,9 +230,6 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
             output_ports.append({NAME: ASSOC_OUTPUT, VARIABLE: (OWNER_VALUE, 1)})
             default_variable.append(np.zeros(assoc_size))
 
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             function=function,

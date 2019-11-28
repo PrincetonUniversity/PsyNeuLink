@@ -701,12 +701,13 @@ class OptimizationControlMechanism(ControlMechanism):
         num_estimates = None
         # search_space = None
         control_allocation_search_space = None
+
         saved_samples = None
         saved_values = None
-
     @tc.typecheck
     def __init__(self,
                  agent_rep=None,
+                 function=None,
                  features: tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort)) = None,
                  feature_function: tc.optional(tc.any(is_function_type)) = None,
                  num_estimates = None,
@@ -717,18 +718,9 @@ class OptimizationControlMechanism(ControlMechanism):
                  **kwargs):
         """Implement OptimizationControlMechanism"""
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(
-                                                  feature_function=feature_function,
-                                                  num_estimates=num_estimates,
-                                                  search_statefulness=search_statefulness,
-                                                  search_function=search_function,
-                                                  search_termination_function=search_termination_function,
-                                                  agent_rep=agent_rep,
-                                                  params=params)
-
         super().__init__(
             system=None,
+            function=function,
             input_ports=features,
             features=features,
             feature_function=feature_function,
@@ -746,17 +738,13 @@ class OptimizationControlMechanism(ControlMechanism):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        if self.function is None:
-            raise OptimizationControlMechanismError(f"The {repr(FUNCTION)} arg of an {self.__class__.__name__} must "
-                                                    f"be specified and be an {OptimizationFunction.__name__}")
-
         from psyneulink.core.compositions.composition import Composition
-        if self.agent_rep is None:
+        if request_set[AGENT_REP] is None:
             raise OptimizationControlMechanismError(f"The {repr(AGENT_REP)} arg of an {self.__class__.__name__} must "
                                                     f"be specified and be a {Composition.__name__}")
 
-        elif not (isinstance(self.agent_rep, Composition)
-                  or (isinstance(self.agent_rep, type) and issubclass(self.agent_rep, Composition))):
+        elif not (isinstance(request_set[AGENT_REP], Composition)
+                  or (isinstance(request_set[AGENT_REP], type) and issubclass(request_set[AGENT_REP], Composition))):
             raise OptimizationControlMechanismError(f"The {repr(AGENT_REP)} arg of an {self.__class__.__name__} "
                                                     f"must be either a {Composition.__name__} or a sublcass of one")
 

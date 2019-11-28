@@ -303,14 +303,6 @@ class KohonenMechanism(TransferMechanism):
         self._learning_enabled = enable_learning
         self._learning_enable_deferred = False
 
-        params = self._assign_args_to_param_dicts(
-                integrator_mode=integrator_mode,
-                learning_rate=learning_rate,
-                learning_function=learning_function,
-                learned_projection=learned_projection,
-                enable_learning=enable_learning,
-        )
-
         super().__init__(
             default_variable=default_variable,
             size=size,

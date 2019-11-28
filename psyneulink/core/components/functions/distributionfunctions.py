@@ -149,11 +149,6 @@ class NormalDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(mean=mean,
-                                                  standard_deviation=standard_deviation,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             mean=mean,
@@ -304,11 +299,6 @@ class UniformToNormalDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(mean=mean,
-                                                  standard_deviation=standard_deviation,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             mean=mean,
@@ -420,10 +410,6 @@ class ExponentialDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(beta=beta,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             beta=beta,
@@ -536,11 +522,6 @@ class UniformDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(low=low,
-                                                  high=high,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             low=low,
@@ -662,11 +643,6 @@ class GammaDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(scale=scale,
-                                                  dist_shape=dist_shape,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             scale=scale,
@@ -787,11 +763,6 @@ class WaldDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(scale=scale,
-                                                  mean=mean,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
             scale=scale,
@@ -1024,14 +995,6 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                  shenhav_et_al_compat_mode=False):
 
         self._shenhav_et_al_compat_mode = shenhav_et_al_compat_mode
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(drift_rate=drift_rate,
-                                                  starting_point=starting_point,
-                                                  threshold=threshold,
-                                                  noise=noise,
-                                                  t0=t0,
-                                                  params=params)
 
         super().__init__(
             default_variable=default_variable,
