@@ -6373,8 +6373,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._set_up_animation(context)
 
         # SET UP EXECUTION -----------------------------------------------
-
-        results = []
+        results = self.parameters.results._get(context)
+        if results is None:
+            results = []
 
         self._assign_execution_ids(context)
 
@@ -6458,13 +6459,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     EX = self._compilation_data.ptx_execution._get(context)
                     results += EX.cuda_run(inputs, num_trials, num_inputs_sets)
 
-                full_results = self.parameters.results._get(context)
-                if full_results is None:
-                    full_results = results
-                else:
-                    full_results.extend(results)
+                # Update the parameter for results
+                self.parameters.results._set(results, context)
 
-                self.parameters.results._set(full_results, context)
                 # KAM added the [-1] index after changing Composition run()
                 # behavior to return only last trial of run (11/7/18)
                 self.most_recent_context = context
@@ -6557,6 +6554,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             if ContextFlags.SIMULATION not in context.execution_phase:
                 results.append(result_copy)
+                self.parameters.results._set(results, context)
 
                 if not self.parameters.retain_old_simulation_data._get():
                     if self.controller is not None:
@@ -6573,14 +6571,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 call_with_pruned_args(call_after_trial, context=context)
 
         scheduler.get_clock(context)._increment_time(TimeScale.RUN)
-
-        full_results = self.parameters.results._get(context)
-        if full_results is None:
-            full_results = results
-        else:
-            full_results.extend(results)
-
-        self.parameters.results._set(full_results, context)
 
         self.most_recent_context = context
 
