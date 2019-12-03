@@ -803,7 +803,6 @@ class ControlSignal(ModulatorySignal):
             reference_value=reference_value,
             default_allocation=default_allocation,
             size=size,
-            assign=None,
             function=function,
             modulation=modulation,
             modulates=modulates,

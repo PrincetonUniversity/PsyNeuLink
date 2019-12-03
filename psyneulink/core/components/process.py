@@ -1561,7 +1561,7 @@ class Process(Process_Base):
                                 )
 
                         # Check if it is specified for learning
-                        matrix_spec = item._init_args['kwargs'][MATRIX]
+                        matrix_spec = item._init_args[MATRIX]
                         if (
                             isinstance(matrix_spec, tuple)
                             and (

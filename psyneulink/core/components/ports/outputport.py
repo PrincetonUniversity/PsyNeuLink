@@ -613,6 +613,7 @@ Class Reference
 
 """
 
+import inspect
 import numpy as np
 import typecheck as tc
 import warnings
@@ -946,12 +947,7 @@ class OutputPort(Port_Base):
             # Temporarily name OutputPort
             self._assign_deferred_init_name(name, context)
             # Store args for deferred initialization
-            self._init_args = locals().copy()
-            del self._init_args['kwargs']
-            self._init_args['variable'] = variable
-            self._init_args['context'] = context
-            self._init_args['name'] = name
-            self._init_args['projections'] = projections
+            self._store_deferred_init_args(**locals())
 
             # Flag for deferred initialization
             self.initialization_status = ContextFlags.DEFERRED_INIT

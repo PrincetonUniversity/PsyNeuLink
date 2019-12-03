@@ -494,6 +494,7 @@ Class Reference
 ---------------
 
 """
+import inspect
 import numbers
 import warnings
 
@@ -800,10 +801,7 @@ class InputPort(Port_Base):
             # Temporarily name InputPort
             self._assign_deferred_init_name(name, context)
             # Store args for deferred initialization
-            self._init_args = locals().copy()
-            self._init_args['context'] = context
-            self._init_args['name'] = name
-            self._init_args['projections'] = projections
+            self._store_deferred_init_args(**locals())
 
             # Flag for deferred initialization
             self.initialization_status = ContextFlags.DEFERRED_INIT
