@@ -6465,7 +6465,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # KAM added the [-1] index after changing Composition run()
                 # behavior to return only last trial of run (11/7/18)
                 self.most_recent_context = context
-                return full_results[-1]
+                return results[-1]
 
             except Exception as e:
                 if bin_execute is not True:
