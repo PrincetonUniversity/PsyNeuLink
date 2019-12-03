@@ -1440,6 +1440,38 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 f"(type: {self.__class__.__name__}): {repr(', '.join(illegal_args))}"
             )
 
+    # breaking self convention here because when storing the args,
+    # "self" is often among them. To avoid needing to preprocess to
+    # avoid argument duplication, use "self_" in this method signature
+    def _store_deferred_init_args(self_, **kwargs):
+        self = self_
+
+        try:
+            del kwargs['self']
+        except KeyError:
+            pass
+
+        # add unspecified kwargs
+        kwargs_names = [
+            k
+            for k, v in inspect.signature(self.__init__).parameters.items()
+            if v.kind is inspect.Parameter.VAR_KEYWORD
+        ]
+
+        self._init_args = {
+            k: v
+            for k, v in kwargs.items()
+            if (
+                k in get_all_explicit_arguments(self.__class__, '__init__')
+                or k in kwargs_names
+            )
+        }
+        try:
+            self._init_args.update(self._init_args['kwargs'])
+            del self._init_args['kwargs']
+        except KeyError:
+            pass
+
     @handle_external_context()
     def _deferred_init(self, context=None):
         """Use in subclasses that require deferred initialization
@@ -1450,20 +1482,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             #       (usually in _instantiate_function)
             self.initialization_status = ContextFlags.INITIALIZING
 
-            del self._init_args['self']
-
-            try:
-                del self._init_args['__class__']
-            except KeyError:
-                pass
-
             self._init_args['context'] = context
-
-            try:
-                self._init_args.update(self._init_args['kwargs'])
-                del self._init_args['kwargs']
-            except KeyError:
-                pass
 
             # Complete initialization
             # MODIFIED 10/27/18 OLD:

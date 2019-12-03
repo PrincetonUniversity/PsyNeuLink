@@ -671,12 +671,7 @@ class Projection_Base(Projection):
 
         if self.initialization_status == ContextFlags.DEFERRED_INIT:
             self._assign_deferred_init_name(name, context)
-            self._init_args = locals().copy()
-            self._init_args[NAME] = name
-
-            # remove local imports
-            del self._init_args['ParameterPort']
-            del self._init_args['Port_Base']
+            self._store_deferred_init_args(**locals())
             return
 
         self.receiver = receiver
