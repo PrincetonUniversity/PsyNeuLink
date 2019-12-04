@@ -1079,6 +1079,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                  size=NotImplemented,  # 7/5/17 CW: this is a hack to check whether the user has passed in a size arg
                  function=None,
                  name=None,
+                 reinitialize_when=None,
                  prefs=None,
                  **kwargs):
         """Assign default preferences; enforce required params; validate and instantiate params and execute method
@@ -1123,8 +1124,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         self.parameters.has_initializers._set(False, context)
 
-        if kwargs and REINITIALIZE_WHEN in kwargs:
-            self.reinitialize_when = kwargs[REINITIALIZE_WHEN]
+        if reinitialize_when is not None:
+            self.reinitialize_when = reinitialize_when
         else:
             self.reinitialize_when = Never()
 
