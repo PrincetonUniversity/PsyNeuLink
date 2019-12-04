@@ -453,6 +453,7 @@ Class Reference
 ---------------
 
 """
+import copy
 import inspect
 import numbers
 import warnings
@@ -1170,6 +1171,14 @@ class TransferMechanism(ProcessingMechanism_Base):
                                          context):
 
         if isinstance(self.integrator_function, type):
+            # KDM 12/4/19: must copy the parameters because they refer
+            # to the exact objects that are the owning mechanism's
+            # parameters, and they get modified during instantiation
+            if isinstance(noise, (np.ndarray, list)):
+                noise = copy.copy(noise)
+            if isinstance(rate, (np.ndarray, list)):
+                rate = copy.copy(rate)
+
             self.integrator_function = self.integrator_function(default_variable=variable,
                                                                 initializer=initializer,
                                                                 noise=noise,

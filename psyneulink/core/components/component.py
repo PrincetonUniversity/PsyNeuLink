@@ -1043,7 +1043,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     )
                 )
             ):
-                return param_value[0]
+                value = param_value[0]
             # assume a DistributionFunction is allowed to persist, for noise
             elif (
                 (
@@ -1058,9 +1058,14 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     and param_value in MODULATORY_SPEC_KEYWORDS
                 )
             ):
-                return getattr(self, param_name).default_value
+                value = getattr(self, param_name).default_value
             else:
-                return param_value
+                value = param_value
+
+            if isinstance(value, list):
+                value = np.asarray(value)
+
+            return value
 
     initMethod = INIT_FULL_EXECUTE_METHOD
 
