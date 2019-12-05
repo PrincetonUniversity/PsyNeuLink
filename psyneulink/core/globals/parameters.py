@@ -762,6 +762,9 @@ class Parameter(types.SimpleNamespace):
         except AttributeError:
             return super().__str__()
 
+    def __lt__(self, other):
+        return self.name < other.name
+
     def __deepcopy__(self, memo):
         result = Parameter(
             **{
@@ -1211,6 +1214,9 @@ class ParameterAlias(types.SimpleNamespace, metaclass=_ParameterAliasMeta):
             source._register_alias(name)
         except AttributeError:
             pass
+
+    def __lt__(self, other):
+        return self.name < other.name
 
     def __getattr__(self, attr):
         return getattr(self.source, attr)
