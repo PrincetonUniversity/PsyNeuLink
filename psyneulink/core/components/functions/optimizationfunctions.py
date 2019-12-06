@@ -1254,6 +1254,8 @@ class GridSearch(OptimizationFunction):
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
+    # TODO: should save_values be in the constructor if it's ignored?
+    # is False or True the correct value?
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -1920,6 +1922,8 @@ class GaussianProcess(OptimizationFunction):
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
+    # TODO: should save_values be in the constructor if it's ignored?
+    # is False or True the correct value?
     @tc.typecheck
     def __init__(self,
                  default_variable=None,

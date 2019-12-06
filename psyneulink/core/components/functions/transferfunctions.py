@@ -1728,7 +1728,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         """
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        scale = Parameter(0.0, modulable=True)
+        scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
 
     @tc.typecheck
@@ -2006,7 +2006,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         """
         variance = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        scale = Parameter(0.0, modulable=True)
+        scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
         random_state = Parameter(None, modulable=False, pnl_internal=True)
 

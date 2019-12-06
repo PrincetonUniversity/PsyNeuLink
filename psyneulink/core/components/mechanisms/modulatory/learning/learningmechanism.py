@@ -951,6 +951,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         error_signal = Parameter(None, read_only=True, getter=_error_signal_getter)
         learning_rate = Parameter(None, modulable=True, setter=_learning_mechanism_learning_rate_setter)
         learning_enabled = True
+        modulation = ADDITIVE
 
     paramClassDefaults = ModulatoryMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
