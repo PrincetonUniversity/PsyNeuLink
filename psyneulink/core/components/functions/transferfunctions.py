@@ -53,6 +53,7 @@ from psyneulink.core.components.component import parameter_keywords, method_type
 from psyneulink.core.components.functions.function import \
     Function, Function_Base, FunctionError, function_keywords, is_function_type
 from psyneulink.core.components.component import function_type
+from psyneulink.core.components.shellclasses import Projection
 from psyneulink.core.globals.keywords import \
     ADDITIVE, ADDITIVE_PARAM, ALL, AUTO_ASSIGN_MATRIX, BIAS, BOUNDS, EXPONENTIAL_FUNCTION, \
     FULL_CONNECTIVITY_MATRIX, GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
@@ -63,7 +64,7 @@ from psyneulink.core.globals.keywords import \
     RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM,\
     TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import \
-    Parameter, ParameterError, get_validator_by_type_only, get_validator_by_function
+    Parameter, ParameterError, get_validator_by_function
 from psyneulink.core.globals.utilities import parameter_spec, get_global_seed
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.preferences.basepreferenceset import \
@@ -1728,7 +1729,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         """
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        scale = Parameter(0.0, modulable=True)
+        scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
 
     @tc.typecheck
@@ -2006,7 +2007,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         """
         variance = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        scale = Parameter(0.0, modulable=True)
+        scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
         random_state = Parameter(None, modulable=False, pnl_internal=True)
 
@@ -2368,7 +2369,7 @@ class SoftMax(TransferFunction):
         builder.store(new_index, max_ind_ptr)
 
     def __gen_llvm_exp_div(self, builder, index, ctx, vi, vo, gain, exp_sum):
-        assert self.params[OUTPUT_TYPE] == ALL
+        assert self.output == ALL
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
@@ -2398,7 +2399,7 @@ class SoftMax(TransferFunction):
                                         max_ind_ptr=max_ind_ptr,
                                         exp_sum_ptr=exp_sum_ptr)
 
-        output_type = self.params[OUTPUT_TYPE]
+        output_type = self.output
         exp_sum = builder.load(exp_sum_ptr)
         index = builder.load(max_ind_ptr)
         ptro = builder.gep(arg_out, [ctx.int32_ty(0), index])
@@ -2507,7 +2508,7 @@ class SoftMax(TransferFunction):
         derivative of values returned by SoftMax :  1d or 2d array (depending on *OUTPUT_TYPE* of SoftMax)
         """
 
-        output_type = self.params[OUTPUT_TYPE]
+        output_type = self.output_type
         size = len(output)
         sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
 
@@ -2715,7 +2716,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                          prefs=prefs,
                          )
 
-        self.matrix = self.instantiate_matrix(self.paramsCurrent[MATRIX])
+        self.matrix = self.instantiate_matrix(self.matrix)
 
     # def _validate_variable(self, variable, context=None):
     #     """Insure that variable passed to LinearMatrix is a max 2D array
@@ -2952,6 +2953,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                                MATRIX_KEYWORD_NAMES))
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
+        # replicates setting of receiver in _validate_params
+        if isinstance(self.owner, Projection):
+            self.receiver = self.defaults.variable
+
         if self.matrix is None and not hasattr(self.owner, "receiver"):
             variable_length = np.size(np.atleast_2d(self.defaults.variable), 1)
             self.matrix = np.identity(variable_length)
@@ -3785,8 +3790,10 @@ class TransferWithCosts(TransferFunction):
                                            getter=_transfer_fct_add_param_getter,
                                            setter=_transfer_fct_add_param_setter)
 
-        enabled_cost_functions = CostFunctions.DEFAULTS
-        _validate_cost_functions = get_validator_by_type_only([CostFunctions, list])
+        enabled_cost_functions = Parameter(
+            CostFunctions.DEFAULTS,
+            valid_types=(CostFunctions, list)
+        )
 
         # Create versions of cost functions' modulation params for TransferWithCosts
 
@@ -4163,7 +4170,7 @@ class TransferWithCosts(TransferFunction):
 
         enabled_cost_functions = self.parameters.enabled_cost_functions.get(execution_context)
         if assignment:
-            if not self.paramsCurrent[cost_function_name]:
+            if not cost_function_name in self.parameters.names():
                 raise FunctionError("Unable to toggle {} ON as function assignment is \'None\'".
                                          format(cost_function_name))
             if not enabled_cost_functions:

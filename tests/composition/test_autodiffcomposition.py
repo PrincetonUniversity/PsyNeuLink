@@ -739,7 +739,7 @@ class TestTrainingCorrectness:
 
                 # compare model output for terminal node on current trial with target for terminal node on current trial
                 assert np.allclose(np.round(result[0][i][j]), correct_value)
-        
+
         benchmark(sem_net.run,inputs={'inputs': inputs_dict,
                                       'targets': targets_dict,
                                       'epochs': eps}, bin_execute=mode)
@@ -1791,12 +1791,6 @@ class TestTrainingIdenticalness():
         inputs_dict_sys = {}
         inputs_dict_sys[nouns_in_sys] = inputs_dict[nouns_in]
         inputs_dict_sys[rels_in_sys] = inputs_dict[rels_in]
-
-        targets_dict_sys = {}
-        targets_dict_sys[out_sig_I_sys] = targets_dict[out_sig_I]
-        targets_dict_sys[out_sig_is_sys] = targets_dict[out_sig_is]
-        targets_dict_sys[out_sig_has_sys] = targets_dict[out_sig_has]
-        targets_dict_sys[out_sig_can_sys] = targets_dict[out_sig_can]
 
         sem_net.learning_enabled=False
         result = sem_net.run(inputs=inputs_dict)

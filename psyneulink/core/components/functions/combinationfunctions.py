@@ -1468,28 +1468,6 @@ class LinearCombination(
             self.__gen_llvm_combine(ctx=ctx, vi=arg_in, vo=arg_out, params=params, *args)
         return builder
 
-    @property
-    def offset(self):
-        if not hasattr(self, '_offset'):
-            return None
-        else:
-            return self._offset
-
-    @offset.setter
-    def offset(self, val):
-        self._offset = val
-
-    @property
-    def scale(self):
-        if not hasattr(self, '_scale'):
-            return None
-        else:
-            return self._scale
-
-    @scale.setter
-    def scale(self, val):
-        self._scale = val
-
 
 class CombineMeans(CombinationFunction):  # ------------------------------------------------------------------------
     # FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE

@@ -844,7 +844,13 @@ class Process(Process_Base):
 
         """
         variable = None
-        input = None
+        input = []
+        pathway = None
+
+        process_input_ports = []
+        targets = None
+        target_input_ports = []
+        systems = []
 
     paramClassDefaults = Component.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -953,10 +959,10 @@ class Process(Process_Base):
             Note: this means learning is not validated either
         """
 
-        if self.paramsCurrent[FUNCTION] != self.execute:
+        if self.function != self.execute:
             print("Process object ({0}) should not have a specification ({1}) for a {2} param;  it will be ignored").\
-                format(self.name, self.paramsCurrent[FUNCTION], FUNCTION)
-            self.paramsCurrent[FUNCTION] = self.execute
+                format(self.name, self.function, FUNCTION)
+            self.function = self.execute
 
 # DOCUMENTATION:
 
@@ -1003,7 +1009,7 @@ class Process(Process_Base):
         :param context:
         :return:
         """
-        pathway = self.paramsCurrent[PATHWAY]
+        pathway = self.pathway
         self._mechs = []
         self._learning_mechs = []
         self._target_mechs = []
@@ -1936,8 +1942,10 @@ class Process(Process_Base):
                     # mech must be a LearningMechanism;
                     # If a learning_rate has been specified for the process, assign that to all LearningMechanism
                     #    for which a mechanism-specific learning_rate has NOT been assigned
-                    if (self.learning_rate is not None and
-                                mech.function.learning_rate is None):
+                    if (
+                        self.learning_rate is not None
+                        and not mech.function.parameters.learning_rate._user_specified
+                    ):
                         mech.function.learning_rate = self.learning_rate
 
                     # Assign its label
@@ -2011,7 +2019,7 @@ class Process(Process_Base):
                 else:
                     error_msg = 'Error in attempt to initialize LearningProjection ({}) for {}: \"{}\"'.\
                         format(param_projection.name, projection.name, e.args[0])
-                    raise ProcessError(error_msg)
+                    raise
 
     def _check_for_target_mechanisms(self):
         """Check for and assign TARGET ObjectiveMechanism to use for reporting error during learning.

@@ -108,12 +108,15 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     paramClassDefaults.update({})
     paramNames = paramClassDefaults.keys()
 
+    class Parameters(ProcessingMechanism_Base.Parameters):
+        function = Identity
+
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,
                  input_ports: tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort)) = None,
-                 function=Identity(),
+                 function=None,
                  composition=None,
                  params=None,
                  name=None,
@@ -126,7 +129,6 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
-                                                  input_ports=input_ports,
                                                   params=params)
 
         super(CompositionInterfaceMechanism, self).__init__(default_variable=default_variable,

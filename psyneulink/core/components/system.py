@@ -434,7 +434,7 @@ import warnings
 
 from PIL import Image
 from collections.abc import Iterable
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict
 from os import path, remove
 
 import numpy as np
@@ -443,7 +443,7 @@ import typecheck as tc
 from toposort import toposort, toposort_flatten
 
 from psyneulink.core.components.component import Component
-from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism, MonitoredOutputPortTuple
 from psyneulink.core.components.mechanisms.modulatory.learning.learningauxiliary import _assign_error_signal_projections, _get_learning_mechanisms
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism, LearningTiming
 from psyneulink.core.components.mechanisms.mechanism import MechanismList
@@ -528,7 +528,6 @@ OUTPUT_PORT_INDEX = 0
 WEIGHT_INDEX = 1
 EXPONENT_INDEX = 2
 MATRIX_INDEX = 3
-MonitoredOutputPortTuple = namedtuple("MonitoredOutputPortTuple", "output_port weight exponent matrix")
 
 # show_graph options
 SHOW_CONTROL = 'show_control'
@@ -874,12 +873,12 @@ class System(System_Base):
 
     paramClassDefaults = Component.paramClassDefaults.copy()
     paramClassDefaults.update({
-        'outputPorts': {},
+        'outputPorts': None,
         '_phaseSpecMax': 0,
-        'stimulusInputPorts': [],
-        'inputs': [],
+        'stimulusInputPorts': None,
+        'inputs': None,
         'current_input': None,
-        'target_input_ports': [],
+        'target_input_ports': None,
         'targets': None,
         'current_targets': None,
         'learning': False
@@ -940,6 +939,10 @@ class System(System_Base):
                                                   learning_rate=learning_rate,
                                                   targets=targets,
                                                   params=params)
+
+        self.inputs = []
+        self.stimulusInputPorts = []
+        self.target_input_ports = []
 
         self.scheduler = scheduler
         self.scheduler_learning = None
@@ -1048,10 +1051,10 @@ class System(System_Base):
             since generally there is no need, as all of the mechanisms in PROCESSES have already been validated
         """
 
-        if self.paramsCurrent[FUNCTION] != self.execute:
+        if self.function != self.execute:
             print("System object ({0}) should not have a specification ({1}) for a {2} param;  it will be ignored").\
-                format(self.name, self.paramsCurrent[FUNCTION], FUNCTION)
-            self.paramsCurrent[FUNCTION] = self.execute
+                format(self.name, self.function, FUNCTION)
+            self.function = self.execute
 
     def _instantiate_value(self, context=None):
         # If validation pref is set, execute the System
@@ -1072,7 +1075,7 @@ class System(System_Base):
 # FIX: AUGMENT LinearMatrix TO USE FULL_CONNECTIVITY_MATRIX IF len(sender) != len(receiver)
         """Instantiate processes of System
 
-        Use self.processes (populated by self.paramsCurrent[PROCESSES] in Function._assign_args_to_param_dicts
+        Use self.processes (populated by self.processes in Function._assign_args_to_param_dicts
         If self.processes is empty, instantiate default process by calling process()
         Iterate through self.processes, instantiating each (including the input to each input projection)
         If input is specified, check that it's length equals the number of processes
@@ -1224,7 +1227,7 @@ class System(System_Base):
             pass
 
         # # Instantiate processList using process_tuples, and point self.processes to it
-        # # Note: this also points self.params[PROCESSES] to self.processes
+        # # Note: this also points self.processes to self.processes
         self.process_tuples = processes_spec
         self._processList = ProcessList(self, self.process_tuples)
         self.processes = self._processList.processes
@@ -1533,9 +1536,11 @@ class System(System_Base):
                                 # or from mechanisms within its own process (e.g., [a, b, a])
                                 projection.sender.owner in list(process.mechanisms) or
                                 # or from Mechanisms in other processes for which it is also an ORIGIN ([a,b,a],[a,c,a])
-                                all(ORIGIN in first_mech.processes[proc]
+                                not isinstance(projection.sender.owner, Mechanism)
+                                or all(
+                                    ORIGIN in first_mech.processes[proc]
                                     for proc in projection.sender.owner.processes
-                                    if isinstance(projection.sender.owner,Mechanism))
+                                )
                             # For all the projections to each InputPort
                             for projection in input_port.path_afferents)
                         # For all input_ports for the first_mech
@@ -2313,8 +2318,10 @@ class System(System_Base):
                         output_ports = [spec]
                     # spec is Mechanism, so use the Port's owner, and get the relevant OutputPort(s)
                     elif isinstance(spec, Mechanism):
-                        if (MONITOR_FOR_CONTROL in spec.params
-                            and spec.params[MONITOR_FOR_CONTROL] is MonitoredOutputPortsOption.ALL_OUTPUT_PORTS):
+                        if (
+                            hasattr(spec, MONITOR_FOR_CONTROL)
+                            and spec.monitor_for_control is MonitoredOutputPortsOption.ALL_OUTPUT_PORTS
+                        ):
                             output_ports = spec.output_ports
                         else:
                             output_ports = [spec.output_port]
@@ -2392,7 +2399,7 @@ class System(System_Base):
 
             # Get MONITOR_FOR_CONTROL specification from Mechanism
             try:
-                mech_specs = mech.paramsCurrent[MONITOR_FOR_CONTROL]
+                mech_specs = mech.monitor_for_control
 
                 if mech_specs is NotImplemented:
                     raise AttributeError
@@ -2439,7 +2446,7 @@ class System(System_Base):
 
                 # Get MONITOR_FOR_CONTROL specification from OutputPort
                 try:
-                    output_port_specs = output_port.paramsCurrent[MONITOR_FOR_CONTROL]
+                    output_port_specs = output_port.monitor_for_control
                     if output_port_specs is NotImplemented:
                         raise AttributeError
 

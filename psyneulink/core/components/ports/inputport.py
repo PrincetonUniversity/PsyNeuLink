@@ -755,7 +755,7 @@ class InputPort(Port_Base):
         exponent = Parameter(None, modulable=True)
         combine = None
         internal_only = Parameter(False, stateful=False, loggable=False, pnl_internal=True)
-        shadow_inputs = Parameter(None, stateful=False, loggable=False, read_only=True, pnl_internal=True)
+        shadow_inputs = Parameter(None, stateful=False, loggable=False, read_only=True, pnl_internal=True, structural=True)
 
     paramClassDefaults = Port_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
@@ -1337,7 +1337,7 @@ class InputPort(Port_Base):
 def _instantiate_input_ports(owner, input_ports=None, reference_value=None, context=None):
     """Call Port._instantiate_port_list() to instantiate ContentAddressableList of InputPort(s)
 
-    Create ContentAddressableList of InputPort(s) specified in paramsCurrent[INPUT_PORTS]
+    Create ContentAddressableList of InputPort(s) specified in self.input_ports
 
     If input_ports is not specified:
         - use owner.input_ports as list of InputPort specifications
@@ -1346,7 +1346,7 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
     When completed:
         - self.input_ports contains a ContentAddressableList of one or more input_ports
         - self.input_port contains the `primary InputPort <InputPort_Primary>`:  first or only one in input_ports
-        - paramsCurrent[INPUT_PORTS] contains the same ContentAddressableList (of one or more input_ports)
+        - self.input_ports contains the same ContentAddressableList (of one or more input_ports)
         - each InputPort corresponds to an item in the variable of the owner's function
         - the value of all of the input_ports is stored in a list in input_value
         - if there is only one InputPort, it is assigned the full value
@@ -1382,10 +1382,10 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
     if context.source & (ContextFlags.METHOD | ContextFlags.COMMAND_LINE):
         owner.input_ports.extend(port_list)
     else:
-        owner._input_ports = port_list
+        owner.input_ports = port_list
 
     # Assign value of require_projection_in_composition
-    for port in owner._input_ports:
+    for port in owner.input_ports:
         # Assign True for owner's primary InputPort and the value has not already been set in InputPort constructor
         if port.require_projection_in_composition is None and owner.input_port == port:
             port.parameters.require_projection_in_composition._set(True, context)

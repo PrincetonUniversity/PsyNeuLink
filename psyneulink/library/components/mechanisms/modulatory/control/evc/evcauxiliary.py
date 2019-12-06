@@ -206,8 +206,8 @@ class ValueFunction(EVCAuxiliaryFunction):
             return (np.array([0]), np.array([0]), np.array([0]))
 
         # remove this in favor of attribute or parameter?
-        cost_function = controller.paramsCurrent[COST_FUNCTION]
-        combine_function = controller.paramsCurrent[COMBINE_OUTCOME_AND_COST_FUNCTION]
+        cost_function = controller.cost_function
+        combine_function = controller.combine_outcome_and_cost_function
 
         from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 

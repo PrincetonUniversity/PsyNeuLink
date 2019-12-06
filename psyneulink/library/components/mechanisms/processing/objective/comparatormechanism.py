@@ -298,6 +298,14 @@ class ComparatorMechanism(ObjectiveMechanism):
         sample = None
         target = None
 
+        output_ports = Parameter(
+            [OUTCOME],
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
+        )
+
     # ComparatorMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
 
@@ -315,7 +323,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                  sample: tc.optional(tc.any(OutputPort, Mechanism_Base, dict, is_numeric, str))=None,
                  target: tc.optional(tc.any(OutputPort, Mechanism_Base, dict, is_numeric, str))=None,
                  function=LinearCombination(weights=[[-1], [1]]),
-                 output_ports:tc.optional(tc.any(str, Iterable))=(OUTCOME,),
+                 output_ports:tc.optional(tc.any(str, Iterable)) = None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -340,7 +348,7 @@ class ComparatorMechanism(ObjectiveMechanism):
 
         super().__init__(monitor=input_ports,
                          function=function,
-                         output_ports=output_ports.copy(), # prevent default from getting overwritten by later assign
+                         output_ports=output_ports, # prevent default from getting overwritten by later assign
                          params=params,
                          name=name,
                          prefs=prefs,

@@ -219,7 +219,9 @@ class PNLJSONEncoder(json.JSONEncoder):
     def default(self, o):
         from psyneulink.core.components.component import Component, ComponentsMeta
 
-        if isinstance(o, (type, types.BuiltinFunctionType)):
+        if isinstance(o, ComponentsMeta):
+            return o.__name__
+        elif isinstance(o, (type, types.BuiltinFunctionType)):
             if o.__module__ == 'builtins':
                 # just give standard type, like float or int
                 return f'{o.__name__}'
@@ -235,8 +237,6 @@ class PNLJSONEncoder(json.JSONEncoder):
             return None
         elif isinstance(o, Component):
             return o.name
-        elif isinstance(o, ComponentsMeta):
-            return o.__name__
         elif isinstance(o, SampleIterator):
             return f'{o.__class__.__name__}({repr(o.specification)})'
         elif isinstance(o, numpy.ndarray):
@@ -460,17 +460,30 @@ def _generate_component_string(
             val = _parse_parameter_value(val, component_identifiers)
             default_val = getattr(component_type.defaults, arg)
 
-            # val may be a string that evaluates to the default value
-            # also skip listing in constructor in this case
+            evaled_val = NotImplemented
+
+            # see if val is a psyneulink class instantiation
+            # if so, do not instantiate it (avoid offsetting rng for
+            # testing - see if you can bypass another way?)
             try:
-                evaled_val = eval(val)
-            except (TypeError, NameError, ValueError):
-                evaled_val = NotImplemented
-            except Exception:
-                # Assume this occurred in creation of a Component
-                # that probably needs some hidden/automatic modification.
-                # Special handling here?
-                evaled_val = NotImplemented
+                eval(re.match(r'(psyneulink\.\w+)\(', val).group(1))
+                is_pnl_instance = True
+            except (AttributeError, TypeError, NameError, ValueError):
+                is_pnl_instance = False
+
+            if not is_pnl_instance:
+                # val may be a string that evaluates to the default value
+                # also skip listing in constructor in this case
+                try:
+                    evaled_val = eval(val)
+                except (TypeError, NameError, ValueError):
+                    pass
+                except Exception:
+                    # Assume this occurred in creation of a Component
+                    # that probably needs some hidden/automatic modification.
+                    # Special handling here?
+                    # still relevant after testing for instance above?
+                    pass
 
             # skip specifying parameters that match the class defaults
             if (
