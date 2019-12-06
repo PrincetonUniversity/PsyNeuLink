@@ -345,7 +345,7 @@ from psyneulink.core.globals.keywords import \
     OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, \
     PARAMETER_PORT, PARAMETER_PORTS, \
     PROJECTION_TYPE, RECEIVER, SUM
-from psyneulink.core.globals.parameters import Parameter, get_validator_by_function, get_validator_by_type_only
+from psyneulink.core.globals.parameters import Parameter, get_validator_by_function
 from psyneulink.core.globals.sampleiterator import is_sample_spec
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -690,7 +690,12 @@ class ControlSignal(ModulatorySignal):
         )
         allocation_samples = Parameter(None, modulable=True)
 
-        cost_options = Parameter(CostFunctions.DEFAULTS, getter=_cost_options_getter, setter=_cost_options_setter)
+        cost_options = Parameter(
+            CostFunctions.DEFAULTS,
+            getter=_cost_options_getter,
+            setter=_cost_options_setter,
+            valid_types=(CostFunctions, list)
+        )
         intensity_cost = Parameter(None, read_only=True, getter=_intensity_cost_getter)
         adjustment_cost = Parameter(0, read_only=True, getter=_adjustment_cost_getter)
         duration_cost = Parameter(0, read_only=True, getter=_duration_cost_getter)
@@ -721,7 +726,6 @@ class ControlSignal(ModulatorySignal):
             getter=_combine_costs_function_getter
         )
         modulation = None
-        _validate_cost_options = get_validator_by_type_only([CostFunctions, list])
         _validate_intensity_cost_function = get_validator_by_function(is_function_type)
         _validate_adjustment_cost_function = get_validator_by_function(is_function_type)
         _validate_duration_cost_function = get_validator_by_function(is_function_type)
@@ -807,6 +811,7 @@ class ControlSignal(ModulatorySignal):
                          function=function,
                          modulation=modulation,
                          modulates=modulates,
+                         allocation_samples=allocation_samples,
                          params=params,
                          name=name,
                          prefs=prefs,
@@ -943,7 +948,7 @@ class ControlSignal(ModulatorySignal):
     def _instantiate_allocation_samples(self, context=None):
         """Assign specified `allocation_samples <ControlSignal.allocation_samples>` to a `SampleIterator`."""
 
-        a = self.paramsCurrent[ALLOCATION_SAMPLES]
+        a = self.parameters.allocation_samples._get(context)
 
         if a is None:
             return

@@ -54,7 +54,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 __all__ = ['SimpleIntegrator', 'AdaptiveIntegrator', 'DriftDiffusionIntegrator',
            'OrnsteinUhlenbeckIntegrator', 'FitzHughNagumoIntegrator', 'AccumulatorIntegrator',
            'LeakyCompetingIntegrator', 'DualAdaptiveIntegrator', 'InteractiveActivationIntegrator',
-           'S_MINUS_L', 'L_MINUS_S'
+           'S_MINUS_L', 'L_MINUS_S', 'IntegratorFunction'
            ]
 
 
@@ -579,22 +579,17 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         Called by AccumulatorIntegrator to validate params
         Validation can be suppressed by turning parameter_validation attribute off
         target_set is a params dictionary to which params should be assigned;
-           otherwise, they are assigned to paramsCurrent;
 
         Does the following:
-        - assign runtime params to paramsCurrent
+        - assign runtime params to context
         - validate params if PARAM_VALIDATION is set
 
         :param params: (dict) - params to validate
-        :target_set: (dict) - set to which params should be assigned (default: self.paramsCurrent)
+        :target_set: (dict) - set to which params should be assigned
         :return:
         """
 
         # PARAMS ------------------------------------------------------------
-
-        # If target_set is not specified, use paramsCurrent
-        if target_set is None:
-            target_set = self.paramsCurrent
 
         # # MODIFIED 11/27/16 OLD:
         # # If parameter_validation is set, the function was called with params,
@@ -603,7 +598,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         #     # self._validate_params(params, target_set, context=FUNCTION_CHECK_ARGS)
         #     self._validate_params(request_set=params, target_set=target_set, context=context)
 
-        # If params have been passed, treat as runtime params and assign to paramsCurrent
+        # If params have been passed, treat as runtime params
         #   (relabel params as runtime_params for clarity)
         if context.execution_id in self._runtime_params_reset:
             for key in self._runtime_params_reset[context.execution_id]:
@@ -2049,10 +2044,10 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
 
         """
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM], function_arg=True)
-        decay = Parameter(1.0, modulable=True, function_arg=True)
+        decay = Parameter(0.0, modulable=True, function_arg=True)
         rest = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
         max_val = Parameter(1.0, function_arg=True)
-        min_val = Parameter(1.0, function_arg=True)
+        min_val = Parameter(-1.0, function_arg=True)
 
     @tc.typecheck
     def __init__(self,
@@ -3727,7 +3722,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         """
         variable = Parameter(np.array([1.0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         time_step_size = Parameter(0.05, modulable=True)
-        a_v = Parameter(1.0 / 3, modulable=True)
+        a_v = Parameter(-1.0 / 3, modulable=True)
         b_v = Parameter(0.0, modulable=True)
         c_v = Parameter(1.0, modulable=True)
         d_v = Parameter(0.0, modulable=True)
@@ -3745,8 +3740,8 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         # FIX: make an integration_method enum class for RK4/EULER
         integration_method = Parameter("RK4", stateful=False)
 
-        initial_w = np.array([1.0])
-        initial_v = np.array([1.0])
+        initial_w = 0.0
+        initial_v = 0.0
         t_0 = 0.0
         previous_w = Parameter(np.array([1.0]), pnl_internal=True)
         previous_v = Parameter(np.array([1.0]), pnl_internal=True)

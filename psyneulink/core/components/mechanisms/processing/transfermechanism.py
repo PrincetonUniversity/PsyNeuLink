@@ -453,6 +453,7 @@ Class Reference
 ---------------
 
 """
+import copy
 import inspect
 import numbers
 import warnings
@@ -889,7 +890,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         integrator_mode = Parameter(False, setter=_integrator_mode_setter)
         integration_rate = Parameter(0.5, modulable=True)
         initial_value = None
-        integrator_function = Parameter(None, stateful=False, loggable=False)
+        integrator_function = Parameter(AdaptiveIntegrator, stateful=False, loggable=False)
         integrator_function_value = Parameter([[0]], read_only=True)
         has_integrated = Parameter(False, user=False)
         on_resume_integrator_mode = Parameter(INSTANTANEOUS_MODE_VALUE, stateful=False, loggable=False)
@@ -899,6 +900,14 @@ class TransferMechanism(ProcessingMechanism_Base):
         termination_threshold = Parameter(None, modulable=True)
         termination_comparison_op = Parameter(operator.le, modulable=False, loggable=False)
         termination_measure_value = Parameter(0.0, modulable=False, read_only=True)
+
+        output_ports = Parameter(
+            [RESULTS],
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
+        )
 
         def _validate_integrator_mode(self, integrator_mode):
             if not isinstance(integrator_mode, bool):
@@ -939,7 +948,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                  termination_measure=Distance(metric=MAX_ABS_DIFF),
                  termination_threshold:tc.optional(float)=None,
                  termination_comparison_op:tc.any(str, is_comparison_operator)=LESS_THAN_OR_EQUAL,
-                 output_ports:tc.optional(tc.any(str, Iterable))=RESULTS,
+                 output_ports:tc.optional(tc.any(str, Iterable))=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -958,8 +967,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,
-                                                  input_ports=input_ports,
-                                                  output_ports=output_ports,
                                                   noise=noise,
                                                   integration_rate=integration_rate,
                                                   integrator_mode=integrator_mode,
@@ -967,6 +974,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   termination_measure=termination_measure,
                                                   termination_threshold=termination_threshold,
                                                   termination_comparison_op=termination_comparison_op,
+                                                  integrator_function=integrator_function,
                                                   params=params)
 
         self.on_resume_integrator_mode = on_resume_integrator_mode
@@ -1157,12 +1165,20 @@ class TransferMechanism(ProcessingMechanism_Base):
         super()._instantiate_attributes_before_function(function=function, context=context)
 
         if self.initial_value is None:
-            self.initial_value = self.defaults.variable
+            self.parameters.initial_value._set(self.defaults.variable, context)
 
     def _instantiate_integrator_function(self, variable, noise, initializer,  rate,
                                          context):
 
         if isinstance(self.integrator_function, type):
+            # KDM 12/4/19: must copy the parameters because they refer
+            # to the exact objects that are the owning mechanism's
+            # parameters, and they get modified during instantiation
+            if isinstance(noise, (np.ndarray, list)):
+                noise = copy.copy(noise)
+            if isinstance(rate, (np.ndarray, list)):
+                rate = copy.copy(rate)
+
             self.integrator_function = self.integrator_function(default_variable=variable,
                                                                 initializer=initializer,
                                                                 noise=noise,
@@ -1535,7 +1551,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _instantiate_attributes_after_function(self, context=None):
         """Determine numberr of items expected by termination_measure"""
         super()._instantiate_attributes_after_function(context)
-        
+
         measure = self.termination_measure
         try:
             # If measure is a Function, use its default_variable to determine expected number of items

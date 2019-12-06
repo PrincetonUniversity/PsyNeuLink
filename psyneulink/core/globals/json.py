@@ -219,7 +219,9 @@ class PNLJSONEncoder(json.JSONEncoder):
     def default(self, o):
         from psyneulink.core.components.component import Component, ComponentsMeta
 
-        if isinstance(o, (type, types.BuiltinFunctionType)):
+        if isinstance(o, ComponentsMeta):
+            return o.__name__
+        elif isinstance(o, (type, types.BuiltinFunctionType)):
             if o.__module__ == 'builtins':
                 # just give standard type, like float or int
                 return f'{o.__name__}'
@@ -235,8 +237,6 @@ class PNLJSONEncoder(json.JSONEncoder):
             return None
         elif isinstance(o, Component):
             return o.name
-        elif isinstance(o, ComponentsMeta):
-            return o.__name__
         elif isinstance(o, SampleIterator):
             return f'{o.__class__.__name__}({repr(o.specification)})'
         elif isinstance(o, numpy.ndarray):

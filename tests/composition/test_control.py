@@ -39,7 +39,7 @@ class TestControlSpecification:
         comp.add_controller(ctl_mech)
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
         assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
-        assert np.allclose(comp.controller.control_signals[0].allocation_samples(),
+        assert np.allclose(comp.controller.control[0].allocation_samples(),
                            [0.1, 0.4, 0.7000000000000001, 1.0000000000000002])
 
     def test_add_controller_in_comp_constructor_then_add_node_with_control_specified(self):
@@ -58,9 +58,9 @@ class TestControlSpecification:
         ctl_mech = pnl.ControlMechanism()
         comp = pnl.Composition(controller=ctl_mech)
         comp.add_node(ddm)
-        assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
+        assert comp.controller.control[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
-        assert np.allclose(comp.controller.control_signals[0].allocation_samples(),
+        assert np.allclose(comp.controller.control[0].allocation_samples(),
                            [0.1, 0.4, 0.7000000000000001, 1.0000000000000002])
 
     def test_redundant_control_spec_add_node_with_control_specified_then_controller_in_comp_constructor(self):
@@ -108,7 +108,7 @@ class TestControlSpecification:
         comp.add_node(ddm)
         assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
-        assert np.allclose(comp.controller.control_signals[0].allocation_samples(), [0.2, 0.5, 0.8])
+        assert np.allclose(comp.controller.control[0].allocation_samples(), [0.2, 0.5, 0.8])
 
 class TestControlMechanisms:
 

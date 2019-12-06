@@ -523,6 +523,16 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         """
         function = Parameter(LinearCombination, stateful=False, loggable=False)
 
+        input_ports = Parameter(
+            None,
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
+            parse_spec=True,
+            aliases='monitor',
+            constructor_argument='monitor'
+        )
         input_ports_spec = Parameter(
             None,
             stateful=False,
@@ -531,6 +541,13 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             user=False,
             pnl_internal=True,
             constructor_argument='monitor'
+        )
+        output_ports = Parameter(
+            [OUTCOME],
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
         )
 
     # ObjectiveMechanism parameter and control signal assignments):
@@ -551,7 +568,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  default_variable=None,
                  size=None,
                  function=LinearCombination,
-                 output_ports:tc.optional(tc.any(str, Iterable))=OUTCOME,
+                 output_ports:tc.optional(tc.any(str, Iterable))=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -572,8 +589,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             output_ports = [OUTCOME]
 
         # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(input_ports=input_ports,
-                                                  output_ports=output_ports,
+        params = self._assign_args_to_param_dicts(
                                                   function=function,
                                                   params=params)
 
@@ -684,7 +700,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # Get value of each OutputPort or, if a Projection from it is specified, then the Projection's value
         for i, spec in enumerate(monitor_specs):
             from psyneulink.core.components.ports.inputport import InputPort
-            from psyneulink.core.components.system import MonitoredOutputPortTuple
+            from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import MonitoredOutputPortTuple
             from psyneulink.core.components.projections.projection import _get_projection_value_shape
 
             # If it is a MonitoredOutputPortTuple, create InputPort specification dictionary

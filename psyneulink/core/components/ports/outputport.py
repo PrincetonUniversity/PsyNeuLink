@@ -1285,7 +1285,7 @@ class OutputPort(Port_Base):
 def _instantiate_output_ports(owner, output_ports=None, context=None):
     """Call Port._instantiate_port_list() to instantiate ContentAddressableList of OutputPort(s)
 
-    Create ContentAddressableList of OutputPort(s) specified in paramsCurrent[OUTPUT_PORTS]
+    Create ContentAddressableList of OutputPort(s) specified in self.output_ports
 
     If output_ports is not specified:
         - use owner.output_ports as list of OutputPort specifications
@@ -1302,14 +1302,14 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
     When completed:
         - self.output_ports contains a ContentAddressableList of one or more OutputPorts;
         - self.output_port contains first or only OutputPort in list;
-        - paramsCurrent[OUTPUT_PORTS] contains the same ContentAddressableList (of one or more OutputPorts)
+        - self.output_ports contains the same ContentAddressableList (of one or more OutputPorts)
         - each OutputPort properly references, for its variable, the specified attributes of its owner Mechanism
         - if there is only one OutputPort, it is assigned the full value of its owner.
 
     (See Port._instantiate_port_list() for additional details)
 
     IMPLEMENTATION NOTE:
-        default(s) for self.paramsCurrent[OUTPUT_PORTS] (self.defaults.value) are assigned here
+        default(s) for self.output_ports (self.defaults.value) are assigned here
         rather than in _validate_params, as it requires function to have been instantiated first
 
     Returns list of instantiated OutputPorts
@@ -1354,7 +1354,7 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
 
     # Get the value of each OutputPort
     # IMPLEMENTATION NOTE:
-    # Should change the default behavior such that, if len(owner_value) == len owner.paramsCurrent[OUTPUT_PORTS]
+    # Should change the default behavior such that, if len(owner_value) == len owner.output_ports
     #        (that is, there is the same number of items in owner_value as there are OutputPorts)
     #        then increment index so as to assign each item of owner_value to each OutputPort
     # IMPLEMENTATION NOTE:  SHOULD BE REFACTORED TO USE _parse_port_spec TO PARSE ouput_ports arg
@@ -1437,10 +1437,10 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
     if context.source & (ContextFlags.COMMAND_LINE | ContextFlags.METHOD):
         owner.output_ports.extend(port_list)
     else:
-        owner._output_ports = port_list
+        owner.output_ports = port_list
 
     # Assign value of require_projection_in_composition
-    for port in owner._output_ports:
+    for port in owner.output_ports:
         # Assign True for owner's primary OutputPort and the value has not already been set in OutputPort constructor
         if port.require_projection_in_composition is None and owner.output_port == port:
             port.parameters.require_projection_in_composition._set(True, context)

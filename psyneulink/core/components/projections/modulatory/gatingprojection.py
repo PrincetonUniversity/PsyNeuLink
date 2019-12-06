@@ -315,8 +315,8 @@ class GatingProjection(ModulatoryProjection_Base):
         # # Match type of GatingProjection.value to type to the parameter being modulated
         # modulated_param = self.sender.modulation
         # function = self.receiver.function
-        # function_param = function.params[modulated_param]
-        # function_param_value = function.params[function_param]
+        # function_param = function.modulated_param
+        # function_param_value = function.function_param
         # gating_projection_function = self.function
         # gating_projection_function.output_type = type(function_param_value)
         # # ASSIGN FUNCTION TYPE TO FUNCTION HERE

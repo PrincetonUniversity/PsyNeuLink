@@ -406,6 +406,8 @@ Class Reference
 ---------------
 """
 
+import itertools
+
 from psyneulink.core.components.component import component_keywords
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.port import Port_Base
@@ -580,6 +582,10 @@ class ModulatorySignal(OutputPort):
             if PROJECTIONS in kwargs:
                 modulates = kwargs.pop(PROJECTIONS, modulates)
 
+        if params is not None:
+            if PROJECTIONS in params:
+                modulates = params.pop(PROJECTIONS, modulates)
+
         # Deferred initialization
         # if self.initialization_status & (ContextFlags.DEFERRED_INIT | ContextFlags.INITIALIZING):
         if self.initialization_status & ContextFlags.DEFERRED_INIT:
@@ -594,6 +600,9 @@ class ModulatorySignal(OutputPort):
             # Assign args to params and functionParams dicts
             params = self._assign_args_to_param_dicts(params=params,
                                                       modulation=modulation)
+
+        if modulates is not None and not isinstance(modulates, list):
+            modulates = [modulates]
 
         super().__init__(owner=owner,
                          reference_value=reference_value,
@@ -645,9 +654,16 @@ class ModulatorySignal(OutputPort):
         # If the name is not a default name for the class,
         #    or the ModulatorySignal has no projections (which are used to name it)
         #    then return
-        if (not (self.name is self.__class__.__name__
-                 or self.__class__.__name__ + '-' in self.name) or
-                    len(self.efferents)==0):
+        if (
+            (
+                not (
+                    self.name is self.__class__.__name__
+                    or self.__class__.__name__ + '-' in self.name
+                )
+                or len(self.efferents) == 0
+            )
+            and self.name not in [p.receiver.name for p in self.efferents]
+        ):
             return self.name
 
         # Construct default name

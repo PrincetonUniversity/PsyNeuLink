@@ -1014,7 +1014,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
         """
         variable = Parameter(np.array([0, 0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
-        learning_rate = Parameter(0.05, modulable=True)
+        learning_rate = 0.05
     default_learning_rate = 0.05
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -1116,6 +1116,9 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         # MODIFIED 9/21/17 END
 
         # If learning_rate is a 1d array, multiply it by variable
+        # KDM 11/21/19: if learning_rate comes from a parameter_port, it will
+        # be 1 dimensional even if it "should" be a float. This causes test
+        # failures
         if learning_rate_dim == 1:
             variable = variable * learning_rate
 

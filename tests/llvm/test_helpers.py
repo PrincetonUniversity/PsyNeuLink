@@ -1,7 +1,9 @@
+from ctypes import util
 import ctypes
 import copy
 import numpy as np
 import pytest
+import sys
 
 from psyneulink.core import llvm as pnlvm
 from llvmlite import ir
@@ -188,3 +190,30 @@ def test_helper_all_close(mode):
         res = res[0]
 
     assert np.array_equal(res, ref)
+
+@pytest.mark.llvm
+@pytest.mark.skipif(sys.platform == 'win32', reason="Loading C library is complicated on windows")
+def test_helper_printf(capfd):
+
+    with pnlvm.LLVMBuilderContext() as ctx:
+        func_ty = ir.FunctionType(ir.VoidType(), [ctx.int32_ty])
+
+        custom_name = ctx.get_unique_name("hello")
+        function = ir.Function(ctx.module, func_ty, name=custom_name)
+        block = function.append_basic_block(name="entry")
+        builder = ir.IRBuilder(block)
+
+        ctx.inject_printf(builder, "Hello %u!\n", function.args[0], override_debug=True)
+        builder.ret_void()
+
+    bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
+
+
+    # Printf is buffered in libc.
+    res = ctypes.c_int32(4)
+    bin_f(res)
+    libc = ctypes.util.find_library("c")
+    libc = ctypes.CDLL(libc)
+    # fflush(NULL) flushes all open streams.
+    libc.fflush(0)
+    assert capfd.readouterr().out == "Hello 4!\n"

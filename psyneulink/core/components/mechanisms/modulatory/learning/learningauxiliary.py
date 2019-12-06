@@ -376,9 +376,9 @@ def _instantiate_learning_components(learning_projection, context=None):
     #      FOR PROCESS AND SYSTEM, RATHER THAN USING A LearningProjection
     # Get function used for learning and the learning_rate from their specification in the LearningProjection
     # FIXME: learning_function is deprecated
-    learning_function = learning_projection._learning_function
-    learning_rate = learning_projection._learning_rate
-    error_function = learning_projection._error_function
+    learning_function = learning_projection.learning_function
+    learning_rate = learning_projection.learning_rate
+    error_function = learning_projection.error_function
 
     # HEBBIAN LEARNING FUNCTION
     if learning_function.componentName is HEBBIAN_FUNCTION:
@@ -987,7 +987,7 @@ class LearningComponents(object):
                 return None
             # If MONITOR_FOR_LEARNING specifies an outputPort, use that
             try:
-                sample_port_Name = self.activation_output_mech.paramsCurrent[MONITOR_FOR_LEARNING]
+                sample_port_Name = self.activation_output_mech.monitor_for_learning
                 self.activation_mech_output = self.activation_output_mech.output_ports[sample_port_Name]
                 if not isinstance(self.activation_mech_output, OutputPort):
                     raise LearningAuxiliaryError("The specification of the MONITOR_FOR_LEARNING parameter ({}) "

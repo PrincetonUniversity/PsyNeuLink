@@ -1108,6 +1108,7 @@ import inspect
 import itertools
 import logging
 import warnings
+import sys
 
 import numpy as np
 import typecheck as tc
@@ -1764,9 +1765,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.initialization_status = ContextFlags.INITIALIZED
 
-    def __repr__(self):
-        return '({0} {1})'.format(type(self).__name__, self.name)
-
     @property
     def graph_processing(self):
         """
@@ -2046,8 +2044,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.controller._remove_default_control_signal(type=CONTROL_SIGNAL)
                 for ctl_sig_spec in deferred_init_control_specs:
                     # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
-                    self.controller._instantiate_control_signal(control_signal=ctl_sig_spec,
+                    control_signal = self.controller._instantiate_control_signal(control_signal=ctl_sig_spec,
                                                            context=Context(source=ContextFlags.COMPOSITION))
+                    self.controller.control.append(control_signal)
                     self.controller._activate_projections_for_compositions(self)
 
     def add_nodes(self, nodes, required_roles=None):
@@ -4466,8 +4465,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Don't add any that are already on the ControlMechanism
 
             # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
-            controller._instantiate_control_signal(control_signal=ctl_sig_spec,
+            new_signal = controller._instantiate_control_signal(control_signal=ctl_sig_spec,
                                                    context=Context(source=ContextFlags.COMPOSITION))
+            controller.control.append(new_signal)
             # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITON:
             #                ?DON'T ASSIGN ControlProjection?
             #                ?JUST DON'T ACTIVATE IT FOR COMPOSITON?
@@ -6385,6 +6385,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif callable(inputs):
             num_inputs_sets = 1
             autodiff_stimuli = {}
+        elif hasattr(inputs, '__next__'):
+            num_inputs_sets = sys.maxsize
+            autodiff_stimuli = {}
         elif not isinstance(inputs, dict):
             if len(input_nodes) == 1:
                 raise CompositionError(
@@ -6397,7 +6400,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     "Inputs to {} must be specified in a dictionary "
                     "with its {} INPUT nodes ({}) as the keys and their inputs as the values".
                     format(self.name, len(input_nodes), input_node_names))
-        if not callable(inputs):
+        if not callable(inputs) \
+                and not hasattr(inputs, '__next__'):
             # Currently, no validation if 'inputs' arg is a function
             ad_tmp = {}
             if hasattr(self,'learning_enabled') and self.learning_enabled is True:
@@ -6483,6 +6487,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 execution_stimuli = inputs(self.env, trial_output)
                 if not isinstance(execution_stimuli, dict):
                     return trial_output
+            elif hasattr(inputs, '__next__'):
+                try:
+                    execution_stimuli = inputs.__next__()
+                except StopIteration:
+                    break
             else:
                 execution_stimuli = {}
                 stimulus_index = trial_num % num_inputs_sets

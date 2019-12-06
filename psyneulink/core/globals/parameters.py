@@ -251,7 +251,7 @@ from psyneulink.core.globals.log import LogCondition, LogEntry, LogError
 from psyneulink.core.globals.utilities import call_with_pruned_args, copy_iterable_with_shared, get_alias_property_getter, get_alias_property_setter, get_deepcopy_with_shared, unproxy_weakproxy
 
 __all__ = [
-    'Defaults', 'get_validator_by_function', 'get_validator_by_type_only', 'Parameter', 'ParameterAlias', 'ParameterError',
+    'Defaults', 'get_validator_by_function', 'Parameter', 'ParameterAlias', 'ParameterError',
     'ParametersBase', 'parse_context',
 ]
 
@@ -260,24 +260,6 @@ logger = logging.getLogger(__name__)
 
 class ParameterError(Exception):
     pass
-
-
-def get_validator_by_type_only(valid_types):
-    """
-        :return: A validation method for use with Parameters classes that rejects any assignment that is not one of the **valid_types**
-        :rtype: types.FunctionType
-    """
-    if not isinstance(valid_types, collections.abc.Iterable):
-        valid_types = [valid_types]
-
-    def validator(self, value):
-        for t in valid_types:
-            if isinstance(value, t):
-                return None
-        else:
-            return 'valid types: {0}'.format(valid_types)
-
-    return validator
 
 
 def get_validator_by_function(function):
@@ -313,6 +295,41 @@ def parse_context(context):
         return context.default_execution_id
     except AttributeError:
         return context
+
+
+def copy_parameter_value(value, shared_types=None, memo=None):
+    """
+        Returns a copy of **value** used as the value or spec of a
+        Parameter, with exceptions.
+
+        For example, we assume that if we have a Component in an
+        iterable, it is meant to be a pointer rather than something
+        used in computation requiring it to be a "real" instance
+        (like `Component.function`)
+
+        e.g. in spec attribute or Parameter `Mechanism.input_ports_spec`
+    """
+    from psyneulink.core.components.component import Component, ComponentsMeta
+
+    if shared_types is None:
+        shared_types = (Component, ComponentsMeta, types.MethodType)
+    else:
+        shared_types = tuple(shared_types)
+
+    try:
+        return copy_iterable_with_shared(
+            value,
+            shared_types=shared_types,
+            memo=memo
+        )
+    except TypeError:
+        # this will attempt to copy the current object if it
+        # is referenced in a parameter, such as
+        # ComparatorMechanism, which does this for input_ports
+        if not isinstance(value, shared_types):
+            return copy.deepcopy(value, memo)
+        else:
+            return value
 
 
 class ParametersTemplate:
@@ -608,6 +625,12 @@ class Parameter(types.SimpleNamespace):
 
             :default: None
 
+        valid_types
+            if not None, this contains a tuple of `type`\\ s that are acceptable
+            for values of this Parameter
+
+            :default: None
+
     """
     # The values of these attributes will never be inherited from parent Parameters
     # KDM 7/12/18: consider inheriting ONLY default_value?
@@ -615,19 +638,28 @@ class Parameter(types.SimpleNamespace):
 
     # for user convenience - these attributes will be hidden from the repr
     # display if the function is True based on the value of the attribute
-    _hidden_if_unset_attrs = {'aliases', 'getter', 'setter', 'constructor_argument'}
+    _hidden_if_unset_attrs = {
+        'aliases', 'getter', 'setter', 'constructor_argument', 'spec',
+        'modulation_combination_function', 'valid_types'
+    }
     _hidden_if_false_attrs = {'read_only', 'modulable', 'fallback_default', 'retain_old_simulation_data'}
     _hidden_when = {
         **{k: lambda self, val: val is None for k in _hidden_if_unset_attrs},
         **{k: lambda self, val: val is False for k in _hidden_if_false_attrs},
-        **{k: lambda self, val: self.loggable is False or self.log_condition is LogCondition.OFF for k in ['log', 'log_condition']}
+        **{k: lambda self, val: self.loggable is False or self.log_condition is LogCondition.OFF for k in ['log', 'log_condition']},
+        **{k: lambda self, val: self.modulable is False for k in ['modulation_combination_function']},
     }
 
     # for user convenience - these "properties" (see note below in _set_history_max_length)
     # will be included as "param attrs" - the attributes of a Parameter that may be of interest to/settable by users
     # To add an additional property-like param attribute, add its name here, and a _set_<param_name> method
     # (see _set_history_max_length)
-    _additional_param_attr_properties = {'default_value', 'history_max_length', 'log_condition'}
+    _additional_param_attr_properties = {
+        'default_value',
+        'history_max_length',
+        'log_condition',
+        'spec',
+    }
 
     def __init__(
         self,
@@ -635,6 +667,7 @@ class Parameter(types.SimpleNamespace):
         name=None,
         stateful=True,
         modulable=False,
+        structural=False,
         modulation_combination_function=None,
         read_only=False,
         function_arg=True,
@@ -653,6 +686,9 @@ class Parameter(types.SimpleNamespace):
         fallback_default=False,
         retain_old_simulation_data=False,
         constructor_argument=None,
+        spec=None,
+        parse_spec=False,
+        valid_types=None,
         _owner=None,
         _inherited=False,
         _user_specified=False,
@@ -669,11 +705,18 @@ class Parameter(types.SimpleNamespace):
         if loggable and log is None:
             log = {}
 
+        if valid_types is not None:
+            if isinstance(valid_types, list):
+                valid_types = tuple(valid_types)
+            else:
+                valid_types = (valid_types, )
+
         super().__init__(
             default_value=default_value,
             name=name,
             stateful=stateful,
             modulable=modulable,
+            structural=structural,
             modulation_combination_function=modulation_combination_function,
             read_only=read_only,
             function_arg=function_arg,
@@ -692,6 +735,9 @@ class Parameter(types.SimpleNamespace):
             fallback_default=fallback_default,
             retain_old_simulation_data=retain_old_simulation_data,
             constructor_argument=constructor_argument,
+            spec=spec,
+            parse_spec=parse_spec,
+            valid_types=valid_types,
             _inherited=_inherited,
             _user_specified=_user_specified,
         )
@@ -725,8 +771,19 @@ class Parameter(types.SimpleNamespace):
         except AttributeError:
             return super().__str__()
 
+    def __lt__(self, other):
+        return self.name < other.name
+
     def __deepcopy__(self, memo):
-        result = Parameter(**{k: copy.deepcopy(getattr(self, k)) for k in self._param_attrs}, _owner=self._owner, _inherited=self._inherited)
+        result = Parameter(
+            **{
+                k: copy_parameter_value(getattr(self, k), memo=memo)
+                for k in self._param_attrs
+            },
+            _owner=self._owner,
+            _inherited=self._inherited,
+            _user_specified=self._user_specified,
+        )
         memo[id(self)] = result
 
         return result
@@ -788,8 +845,12 @@ class Parameter(types.SimpleNamespace):
                         delattr(self, attr)
             else:
                 for attr in self._param_attrs:
-                    if attr not in self._uninherited_attrs:
+                    if (
+                        attr not in self._uninherited_attrs
+                        and getattr(self, attr) is getattr(self._parent, attr)
+                    ):
                         setattr(self, attr, self._inherited_attrs_cache[attr])
+
             self.__inherited = value
 
     def _cache_inherited_attrs(self):
@@ -1130,6 +1191,11 @@ class Parameter(types.SimpleNamespace):
 
         super().__setattr__('log_condition', value)
 
+    def _set_spec(self, value):
+        if self.parse_spec:
+            value = self._parse(value)
+        super().__setattr__('spec', value)
+
 
 class _ParameterAliasMeta(type):
     # these will not be taken from the source
@@ -1167,6 +1233,9 @@ class ParameterAlias(types.SimpleNamespace, metaclass=_ParameterAliasMeta):
             source._register_alias(name)
         except AttributeError:
             pass
+
+    def __lt__(self, other):
+        return self.name < other.name
 
     def __getattr__(self, attr):
         return getattr(self.source, attr)
@@ -1230,7 +1299,10 @@ class ParametersBase(ParametersTemplate):
         except AttributeError:
             try:
                 param_owner = self._owner
-                owner_string = f' of {param_owner.name}'
+                if isinstance(param_owner, type):
+                    owner_string = f' of {param_owner}'
+                else:
+                    owner_string = f' of {param_owner.name}'
                 if hasattr(param_owner, 'owner') and param_owner.owner:
                     owner_string += f' for {param_owner.owner.name}'
                     if hasattr(param_owner.owner, 'owner') and param_owner.owner.owner:
@@ -1247,8 +1319,6 @@ class ParametersBase(ParametersTemplate):
             super().__setattr__(attr, value)
         else:
             if isinstance(value, Parameter):
-                self._validate(attr, value.default_value)
-
                 if value.name is None:
                     value.name = attr
 
@@ -1257,7 +1327,13 @@ class ParametersBase(ParametersTemplate):
 
                 if value.aliases is not None:
                     for alias in value.aliases:
-                        if not hasattr(self, alias) or unproxy_weakproxy(getattr(self, alias)._owner) is not self:
+                        # the alias doesn't exist, or it's an alias on the
+                        # parent
+                        if (
+                            not hasattr(self, alias)
+                            or not hasattr(getattr(self, alias), '_owner')
+                            or unproxy_weakproxy(getattr(self, alias)._owner) is not self
+                        ):
                             super().__setattr__(alias, ParameterAlias(source=getattr(self, attr), name=alias))
                             self._register_parameter(alias)
 
@@ -1277,7 +1353,6 @@ class ParametersBase(ParametersTemplate):
                         )
                 super().__setattr__(attr, value)
             else:
-                self._validate(attr, value)
                 # assign value to default_value
                 if hasattr(self, attr) and isinstance(getattr(self, attr), Parameter):
                     current_param = getattr(self, attr)
@@ -1292,43 +1367,75 @@ class ParametersBase(ParametersTemplate):
 
                 super().__setattr__(attr, new_param)
 
+            self._validate(attr, getattr(self, attr).default_value)
             self._register_parameter(attr)
 
-    def _get_prefixed_method(self, parse=False, validate=False, parameter_name=None):
+    def _get_prefixed_method(
+        self,
+        parse=False,
+        validate=False,
+        modulable=False,
+        parameter_name=None
+    ):
         """
-            Returns the method named **prefix**\\ **parameter_name**, used to simplify
-            pluggable methods for parsing and validation of `Parameter`\\ s
+            Returns the parsing or validation method for the Parameter named
+            **parameter_name** or for any modulable Parameter
         """
+
+        if (
+            parse and validate
+            or (not parse and not validate)
+        ):
+            raise ValueError('Exactly one of parse or validate must be True')
+
         if parse:
             prefix = self._parsing_method_prefix
         elif validate:
             prefix = self._validation_method_prefix
-        else:
-            return None
 
-        return getattr(self, '{0}{1}'.format(prefix, parameter_name))
+        if (
+            modulable and parameter_name is not None
+            or not modulable and parameter_name is None
+        ):
+            raise ValueError('modulable must be True or parameter_name must be specified, but not both.')
+
+        if modulable:
+            suffix = 'modulable'
+        elif parameter_name is not None:
+            suffix = parameter_name
+
+        return getattr(self, '{0}{1}'.format(prefix, suffix))
 
     def _validate(self, attr, value):
+        err_msg = None
+
+        valid_types = getattr(self, attr).valid_types
+        if valid_types is not None:
+            if not isinstance(value, valid_types):
+                err_msg = '{0} is an invalid type. Valid types are: {1}'.format(
+                    type(value),
+                    valid_types
+                )
+
         try:
             validation_method = self._get_prefixed_method(validate=True, parameter_name=attr)
             err_msg = validation_method(value)
             if err_msg is False:
                 err_msg = '{0} returned False'.format(validation_method)
-            elif err_msg is True:
-                err_msg = None
 
-            if err_msg is not None:
-                raise ParameterError(
-                    "Value ({0}) assigned to parameter '{1}' of {2}.parameters is not valid: {3}".format(
-                        value,
-                        attr,
-                        self._owner,
-                        err_msg
-                    )
-                )
         except AttributeError:
             # parameter does not have a validation method
             pass
+
+        if err_msg is not None:
+            raise ParameterError(
+                "Value ({0}) assigned to parameter '{1}' of {2}.parameters is not valid: {3}".format(
+                    value,
+                    attr,
+                    self._owner,
+                    err_msg
+                )
+            )
 
     def _parse(self, attr, value):
         try:

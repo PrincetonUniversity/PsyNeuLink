@@ -342,15 +342,12 @@ class ControlProjection(ModulatoryProjection_Base):
         if isinstance(self.receiver, Mechanism):
             # If there is just one param of ParameterPort type in the receiver Mechanism
             # then assign it as actual receiver (which must be a Port);  otherwise, raise exception
-            from psyneulink.core.components.ports.parameterport import ParameterPort
-            if len(dict((param_name, port) for param_name, port in self.receiver.paramsCurrent.items()
-                    if isinstance(port, ParameterPort))) == 1:
-                receiver_parameter_port = [port for port in dict.values()][0]
+            if len(self.receiver.parameter_ports) == 1:
                 # Reassign self.receiver to Mechanism's parameterPort
-                self.receiver = receiver_parameter_port
+                self.receiver = self.receiver.parameter_ports[0]
             else:
                 raise ControlProjectionError("Unable to assign ControlProjection ({0}) from {1} to {2}, "
-                                         "as it has several ParameterPorts;  must specify one (or each) of them"
+                                         "as it does not have exactly one ParameterPort;  must specify one (or each) of them"
                                          " as receiver(s)".
                                          format(self.name, self.sender.owner, self.receiver.name))
         # else:

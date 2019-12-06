@@ -407,8 +407,9 @@ from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, NAME, \
-    OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMETER_PORTS, PARAMS
-from psyneulink.core.globals.parameters import Parameter
+    OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMETER_PORTS, PARAMS, \
+    CONTROL, AUTO_ASSIGN_MATRIX
+from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 from psyneulink.core import llvm as pnlvm
@@ -674,12 +675,30 @@ class OptimizationControlMechanism(ControlMechanism):
         comp_execution_mode = Parameter('Python', stateful=False, loggable=False, pnl_internal=True)
         search_statefulness = Parameter(True, stateful=False, loggable=False)
 
-        agent_rep = Parameter(None, stateful=False, loggable=False, pnl_internal=True)
+        agent_rep = Parameter(None, stateful=False, loggable=False, pnl_internal=True, structural=True)
 
         feature_values = Parameter(_parse_feature_values_from_variable([defaultControlAllocation]), user=False, pnl_internal=True)
 
-        features = Parameter(None, pnl_internal=True)
-        num_estimates = 1
+        input_ports_spec = Parameter(
+            None,
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            user=False,
+            pnl_internal=True,
+            constructor_argument='features'
+        )
+        input_ports = Parameter(
+            [{NAME: OUTCOME, PARAMS: {INTERNAL_ONLY: True}}],
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
+            parse_spec=True,
+            aliases='features',
+            constructor_argument='features'
+        )
+        num_estimates = None
         # search_space = None
         control_allocation_search_space = None
 
@@ -707,17 +726,18 @@ class OptimizationControlMechanism(ControlMechanism):
         self.saved_values = None
 
         # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(input_ports=features,
+        params = self._assign_args_to_param_dicts(
                                                   feature_function=feature_function,
                                                   num_estimates=num_estimates,
                                                   search_statefulness=search_statefulness,
                                                   search_function=search_function,
                                                   search_termination_function=search_termination_function,
                                                   agent_rep=agent_rep,
-                                                  features=features,
                                                   params=params)
 
         super().__init__(system=None,
+                         input_ports=features,
+                         features=features,
                          params=params,
                          **kwargs)
 
@@ -790,10 +810,11 @@ class OptimizationControlMechanism(ControlMechanism):
         Assign each modulatory_signal sequentially to corresponding item of control_allocation.
         """
         from psyneulink.core.globals.keywords import OWNER_VALUE
-        for i, spec in enumerate(self.control):
+        output_port_specs = list(enumerate(self.output_ports))
+        for i, spec in output_port_specs:
             control_signal = self._instantiate_control_signal(spec, context=context)
             control_signal._variable_spec = (OWNER_VALUE, i)
-            self.control_signals[i] = control_signal
+            self.output_ports[i] = control_signal
         self.defaults.value = np.tile(control_signal.parameters.variable.default_value, (i + 1, 1))
         self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
 
@@ -827,6 +848,33 @@ class OptimizationControlMechanism(ControlMechanism):
         from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
         if (isinstance(self.agent_rep, CompositionFunctionApproximator)):
             self._initialize_composition_function_approximator(context)
+
+    def _instantiate_objective_mechanism(self, context=None):
+        from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+        # differs from parent because it should not use add_to_monitor on its
+        # input_states (formerly monitor_for_control)
+
+        # Assign ObjectiveMechanism's role as CONTROL
+        self.objective_mechanism._role = CONTROL
+
+        # Instantiate MappingProjection from ObjectiveMechanism to ControlMechanism
+        projection_from_objective = MappingProjection(sender=self.objective_mechanism,
+                                                      receiver=self,
+                                                      matrix=AUTO_ASSIGN_MATRIX,
+                                                      context=context)
+
+        # CONFIGURE FOR ASSIGNMENT TO COMPOSITION
+
+        # Insure that ObjectiveMechanism's input_ports are not assigned projections from a Composition's input_CIM
+        for input_port in self.objective_mechanism.input_ports:
+            input_port.internal_only = True
+        # Flag ObjectiveMechanism and its Projection to ControlMechanism for inclusion in Composition
+        self.aux_components.append(self.objective_mechanism)
+        self.aux_components.append(projection_from_objective)
+
+        # ASSIGN ATTRIBUTES
+
+        self._objective_projection = projection_from_objective
 
     def _update_input_ports(self, context=None, runtime_params=None):
         """Update value for each InputPort in self.input_ports:
