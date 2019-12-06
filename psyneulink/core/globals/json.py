@@ -233,6 +233,8 @@ class PNLJSONEncoder(json.JSONEncoder):
                 return f"{o.__module__.lstrip('_')}.{o.__name__}"
         elif isinstance(o, (enum.Enum, types.FunctionType)):
             return str(o)
+        elif isinstance(o, types.MethodType):
+            return o.__qualname__
         elif o is NotImplemented:
             return None
         elif isinstance(o, Component):
