@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LeabraMechanism &mdash; PsyNeuLink 0.7.1.1+27.g1b9e0d1 documentation</title>
+  <title>LeabraMechanism &mdash; PsyNeuLink 0.7.1.1+47.g0cc41c4 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.1.1+27
+                  0.7.1.1+47
                 </div>
               
             
@@ -236,7 +236,7 @@ the leabra package, the leabra package itself is still in development, so it is 
 of the output layer (<strong>output_size</strong>), number of hidden layers (<strong>hidden_layers</strong>), and sizes of the hidden layers
 (<strong>hidden_sizes</strong>). In this case, the LeabraMechanism will initialize the connections as uniform random values between
 0.55 and 0.95. Alternatively, users can provide a leabra Network object from the leabra package as an argument
-(<strong>leabra_net</strong>), in which case the <strong>leabra_net</strong> will be used as the network wrapped by the LeabraMechanism.
+(<strong>network</strong>), in which case the <strong>network</strong> will be used as the network wrapped by the LeabraMechanism.
 This option requires users to be familiar with the leabra package, but allows more flexibility in specifying parameters.
 In the former method of creating a LeabraMechanism, the <strong>training_flag</strong> argument specifies whether the network should
 be learning (updating its weights) or not.</p>
@@ -335,7 +335,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 
 <dl class="class">
 <dt id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism">
-<em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.leabramechanism.</code><code class="descname">LeabraMechanism</code><span class="sig-paren">(</span><em>leabra_net=None</em>, <em>input_size=1</em>, <em>output_size=1</em>, <em>hidden_layers=0</em>, <em>hidden_sizes=None</em>, <em>training_flag=False</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.leabramechanism.</code><code class="descname">LeabraMechanism</code><span class="sig-paren">(</span><em>network=None</em>, <em>input_size=1</em>, <em>output_size=1</em>, <em>hidden_layers=0</em>, <em>hidden_sizes=None</em>, <em>training_flag=False</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a> that is a wrapper for a Leabra network in PsyNeuLink.
 See <a class="reference internal" href="Mechanism.html#mechanism-class-reference"><span class="std std-ref">Mechanism</span></a> for additional arguments and attributes.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -343,7 +343,7 @@ See <a class="reference internal" href="Mechanism.html#mechanism-class-reference
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>leabra_net</strong> (<em>Optional</em><em>[</em><em>leabra.Network</em><em>]</em>) – a network object from the leabra package. If specified, the LeabraMechanism’s network becomes <strong>leabra_net</strong>,
+<li><strong>network</strong> (<em>Optional</em><em>[</em><em>leabra.Network</em><em>]</em>) – a network object from the leabra package. If specified, the LeabraMechanism’s network becomes <strong>network</strong>,
 and the other arguments that specify the network are ignored (<strong>input_size</strong>, <strong>output_size</strong>,
 <strong>hidden_layers</strong>, <strong>hidden_sizes</strong>).</li>
 <li><strong>input_size</strong> (<em>int : default 1</em>) – an integer specifying how many units are in (the size of) the first layer (input) of the leabra network.</li>
@@ -356,9 +356,9 @@ then all hidden layers are of that size.</li>
 <li><strong>training_flag</strong> (<em>boolean : default None</em>) – a boolean specifying whether the leabra network should be learning. If True, the leabra network will adjust
 its weights using the “leabra” algorithm, based on the training pattern (which is read from its second output
 state). The <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag"><code class="xref any py py-attr docutils literal"><span class="pre">training_flag</span></code></a> attribute can be changed after initialization, causing the leabra network to
-start/stop learning. If None, <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag"><code class="xref any py py-attr docutils literal"><span class="pre">training_flag</span></code></a> will default to False if <strong>leabra_net</strong> argument is not provided.
-If <strong>leabra_net</strong> argument is provided and <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag"><code class="xref any py py-attr docutils literal"><span class="pre">training_flag</span></code></a> is None, then the existing learning rules of the
-<strong>leabra_net</strong> will be preserved.</li>
+start/stop learning. If None, <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag"><code class="xref any py py-attr docutils literal"><span class="pre">training_flag</span></code></a> will default to False if <strong>network</strong> argument is not provided.
+If <strong>network</strong> argument is provided and <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag"><code class="xref any py py-attr docutils literal"><span class="pre">training_flag</span></code></a> is None, then the existing learning rules of the
+<strong>network</strong> will be preserved.</li>
 <li><strong>quarter_size</strong> (<em>int : default 50</em>) – an integer specifying how many times the Leabra network cycles each time it is run. Lower values of
 quarter_size result in shorter execution times, though very low values may cause slight fluctuations in output.
 Lower values of quarter_size also effectively reduce the magnitude of learning weight changes during
@@ -507,7 +507,7 @@ please see the <code class="xref any docutils literal"><span class="pre">leabra<
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.1.1+27.g1b9e0d1',
+               VERSION:'0.7.1.1+47.g0cc41c4',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

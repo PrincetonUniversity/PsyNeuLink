@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.7.1.1+27.g1b9e0d1 documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.7.1.1+47.g0cc41c4 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.1.1+27
+                  0.7.1.1+47
                 </div>
               
             
@@ -477,7 +477,7 @@ The following attributes control and provide information about the execution of 
 <ul id="component-reinitialize-when">
 <li><p class="first"><strong>reinitialize_when</strong> - contains a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>; when this condition is satisfied, the Component calls its
 <a class="reference internal" href="#psyneulink.core.components.component.Component.reinitialize" title="psyneulink.core.components.component.Component.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method. The <a class="reference internal" href="#psyneulink.core.components.component.Component.reinitialize" title="psyneulink.core.components.component.Component.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method is executed
-without arguments, meaning that the relevant function’s <code class="xref any docutils literal"><span class="pre">initializer</span></code> attribute
+without arguments, meaning that the relevant function’s <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.initializer" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> attribute
 (or equivalent – initialization attributes vary among functions) is used for reinitialization. Keep in mind that
 the <a class="reference internal" href="#psyneulink.core.components.component.Component.reinitialize" title="psyneulink.core.components.component.Component.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method and <a class="reference internal" href="#psyneulink.core.components.component.Component.reinitialize_when" title="psyneulink.core.components.component.Component.reinitialize_when"><code class="xref any py py-attr docutils literal"><span class="pre">reinitialize_when</span></code></a> attribute
 only exist for Mechanisms that have <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.stateful" title="psyneulink.core.globals.parameters.Parameter.stateful"><code class="xref any py py-attr docutils literal"><span class="pre">stateful</span></code></a> Parameters, or that have a <code class="xref any docutils literal"><span class="pre">function</span></code> with <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.stateful" title="psyneulink.core.globals.parameters.Parameter.stateful"><code class="xref any py py-attr docutils literal"><span class="pre">stateful</span></code></a> Parameters.</p>
@@ -535,7 +535,7 @@ last execution.</li>
 <span id="component-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.components.component.Component">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.component.</code><code class="descname">Component</code><span class="sig-paren">(</span><em>default_variable</em>, <em>param_defaults</em>, <em>size=NotImplemented</em>, <em>function=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.component.</code><code class="descname">Component</code><span class="sig-paren">(</span><em>default_variable</em>, <em>param_defaults</em>, <em>size=NotImplemented</em>, <em>function=None</em>, <em>name=None</em>, <em>reinitialize_when=None</em>, <em>prefs=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for Component.
 The arguments below are ones that can be used in the constructor for any Component subclass.</p>
 <div class="admonition note">
@@ -739,7 +739,7 @@ This is a convenience method that calls the <a class="reference internal" href="
 <dl class="method">
 <dt id="psyneulink.core.components.component.Component.reinitialize">
 <code class="descname">reinitialize</code><span class="sig-paren">(</span><em>*args</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.reinitialize" title="Permalink to this definition">¶</a></dt>
-<dd><p>If the component’s execute method involves execution of an <code class="xref any docutils literal"><span class="pre">IntegratorFunction</span></code> Function, this method
+<dd><p>If the component’s execute method involves execution of an <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal"><span class="pre">IntegratorFunction</span></code></a> Function, this method
 effectively begins the function’s accumulation over again at the specified value, and may update related
 values on the component, depending on the component type.  Otherwise, it simply reassigns the Component’s
 value based on its default_variable.</p>
@@ -747,7 +747,7 @@ value based on its default_variable.</p>
 
 <dl class="method">
 <dt id="psyneulink.core.components.component.Component.reset_params">
-<code class="descname">reset_params</code><span class="sig-paren">(</span><em>mode=&lt;ResetMode.INSTANCE_TO_CLASS: 1&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.reset_params" title="Permalink to this definition">¶</a></dt>
+<code class="descname">reset_params</code><span class="sig-paren">(</span><em>mode=&lt;ResetMode.INSTANCE_TO_CLASS: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.reset_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reset current and/or instance defaults</p>
 <dl class="docutils">
 <dt>If called with:</dt>
@@ -829,21 +829,21 @@ reassign the Linear’s default variable as needed (<a class="reference internal
 <dl class="docutils" id="current-to-instance-defaults">
 <dt><em>CURRENT_TO_INSTANCE_DEFAULTS</em></dt>
 <dd><ul class="first last simple">
-<li>resets all paramsCurrent values to paramInstanceDefaults values.</li>
+<li>resets all current values to instance default values.</li>
 </ul>
 </dd>
 </dl>
 <dl class="docutils" id="instance-to-class">
 <dt><em>INSTANCE_TO_CLASS</em></dt>
 <dd><ul class="first last simple">
-<li>resets all paramInstanceDefaults values to paramClassDefaults values.</li>
+<li>resets all instance default values to class default values.</li>
 </ul>
 </dd>
 </dl>
 <dl class="docutils" id="all-to-class-defaults">
 <dt><em>ALL_TO_CLASS_DEFAULTS</em></dt>
 <dd><ul class="first last simple">
-<li>resets all paramsCurrent and paramInstanceDefaults values to paramClassDefafults values</li>
+<li>resets all current values and instance default values to       class default values</li>
 </ul>
 </dd>
 </dl>
@@ -933,7 +933,7 @@ reassign the Linear’s default variable as needed (<a class="reference internal
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.1.1+27.g1b9e0d1',
+               VERSION:'0.7.1.1+47.g0cc41c4',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

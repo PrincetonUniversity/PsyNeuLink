@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanisms &mdash; PsyNeuLink 0.7.1.1+27.g1b9e0d1 documentation</title>
+  <title>Mechanisms &mdash; PsyNeuLink 0.7.1.1+47.g0cc41c4 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.1.1+27
+                  0.7.1.1+47
                 </div>
               
             
@@ -1445,11 +1445,11 @@ over the specified x_range</td>
 <dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize">
 <code class="descname">reinitialize</code><span class="sig-paren">(</span><em>*args</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reinitialize <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.previous_value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> if Mechanisms is stateful.</p>
-<p>If the mechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code> is an <code class="xref any docutils literal"><span class="pre">IntegratorFunction</span></code>, or if the mechanism has and
+<p>If the mechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code> is an <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal"><span class="pre">IntegratorFunction</span></code></a>, or if the mechanism has and
 <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> (see <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>), this method
 effectively begins the function’s accumulation over again at the specified value, and updates related
 attributes on the mechanism.  It also reassigns <code class="xref any docutils literal"><span class="pre">previous_value</span></code> to None.</p>
-<p>If the mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is an <code class="xref any docutils literal"><span class="pre">IntegratorFunction</span></code>, its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method:</p>
+<p>If the mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is an <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal"><span class="pre">IntegratorFunction</span></code></a>, its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method:</p>
 <blockquote>
 <div><ol class="arabic simple">
 <li>Calls the function’s own <code class="xref any docutils literal"><span class="pre">reinitialize</span></code> method (see Note below for
@@ -1476,9 +1476,9 @@ reinitialize method</li>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The reinitialize method of an IntegratorFunction Function typically resets the function’s
-<code class="xref any docutils literal"><span class="pre">previous_value</span></code> (and any other <code class="xref any docutils literal"><span class="pre">portful_attributes</span></code>) and <code class="xref any docutils literal"><span class="pre">value</span></code> to the quantity (or
+<a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> (and any other <code class="xref any docutils literal"><span class="pre">portful_attributes</span></code>) and <code class="xref any docutils literal"><span class="pre">value</span></code> to the quantity (or
 quantities) specified. If <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> is called without arguments,
-the <code class="xref any docutils literal"><span class="pre">initializer</span></code> value (or the values of each of the attributes in
+the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.initializer" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> value (or the values of each of the attributes in
 <code class="xref any docutils literal"><span class="pre">initializers</span></code>) is used instead. The <code class="xref any docutils literal"><span class="pre">reinitialize</span></code> method may vary across different Integrators. See individual
 functions for details on their <code class="xref any docutils literal"><span class="pre">stateful_attributes</span></code>,
 as well as other reinitialization steps that the reinitialize method may carry out.</p>
@@ -1642,7 +1642,7 @@ description of formatting requirements and options).</li>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.1.1+27.g1b9e0d1',
+               VERSION:'0.7.1.1+47.g0cc41c4',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
