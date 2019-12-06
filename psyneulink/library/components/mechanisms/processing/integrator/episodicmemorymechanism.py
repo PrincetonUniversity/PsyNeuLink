@@ -179,6 +179,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
 
         """
         variable = Parameter([[0]], pnl_internal=True, constructor_argument='default_variable')
+        function = Parameter(ContentAddressableMemory, stateful=False, loggable=False)
 
     def __init__(self,
                  content_size:int=1,
