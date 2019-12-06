@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DDM &mdash; PsyNeuLink 0.7.1.1 documentation</title>
+  <title>DDM &mdash; PsyNeuLink 0.7.2.0 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.1.1
+                  0.7.2.0
                 </div>
               
             
@@ -336,7 +336,7 @@ correct responses  (<a class="reference internal" href="#ddm-rt-correct-mean"><s
 <p>The Drift Diffusion Model <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> that calculates a path integration is <a class="reference internal" href="IntegratorFunctions.html#driftdiffusionintegrator"><span class="std std-ref">DriftDiffusionIntegrator</span></a>. The DDM Mechanism uses the <a class="reference external" href="https://en.wikipedia.org/wiki/Euler_method">Euler method</a> to
 carry out numerical step-wise integration of the decision process (see <a class="reference internal" href="#ddm-execution"><span class="std std-ref">Execution</span></a> below).  In this
 mode, only the <a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a> and <a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a> are available.</p>
-<p><code class="xref any docutils literal"><span class="pre">IntegratorFunction</span></code> Function:</p>
+<p><a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal"><span class="pre">IntegratorFunction</span></code></a> Function:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_DDM_path_integrator</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">DriftDiffusionIntegrator</span><span class="p">(</span>
 <span class="gp">... </span>        <span class="n">noise</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
@@ -409,7 +409,7 @@ execution (see <a class="reference internal" href="#psyneulink.library.component
 <code class="descname">function</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>IntegratorFunction : default DriftDiffusionAnalytical</em> – the function used to <a class="reference internal" href="#ddm-execution"><span class="std std-ref">execute</span></a> the decision process; determines the mode of execution.
 If it is <a class="reference internal" href="DistributionFunctions.html#driftdiffusionanalytical"><span class="std std-ref">DriftDiffusionAnalytical</span></a>, an <a class="reference internal" href="#ddm-analytic-mode"><span class="std std-ref">analytic solution</span></a> is calculated (note:  the latter requires that the MatLab engine is installed); if it is
-an <code class="xref any docutils literal"><span class="pre">IntegratorFunction</span></code> Function with an <code class="xref any docutils literal"><span class="pre">integration_type</span></code> of
+an <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal"><span class="pre">IntegratorFunction</span></code></a> Function with an <code class="xref any docutils literal"><span class="pre">integration_type</span></code> of
 <em>DIFFUSION</em>, then <a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">numerical step-wise integration</span></a> is carried out.  See <a class="reference internal" href="#ddm-modes"><span class="std std-ref">DDM Function Types</span></a> and
 <a class="reference internal" href="#ddm-execution"><span class="std std-ref">Execution</span></a> for additional information.</p>
 </dd></dl>
@@ -722,7 +722,7 @@ towards a specified threshold</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.1.1',
+               VERSION:'0.7.2.0',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
