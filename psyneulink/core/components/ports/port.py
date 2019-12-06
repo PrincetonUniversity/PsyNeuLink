@@ -1111,8 +1111,8 @@ class Port_Base(Port):
 
         # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
         # INSTANTIATE PROJECTIONS SPECIFIED IN projections ARG OR params[PROJECTIONS:<>]
-        if PROJECTIONS in self.paramsCurrent and self.paramsCurrent[PROJECTIONS]:
-            self._instantiate_projections(self.paramsCurrent[PROJECTIONS], context=context)
+        if self.projections is not None:
+            self._instantiate_projections(self.projections, context=context)
         else:
             # No projections specified, so none will be created here
             # IMPLEMENTATION NOTE:  This is where a default projection would be implemented
@@ -1123,6 +1123,11 @@ class Port_Base(Port):
 
         if context.source == ContextFlags.COMMAND_LINE:
             owner.add_ports([self])
+
+    def _initialize_parameters(self, context=None, **param_defaults):
+        super()._initialize_parameters(context=context, **param_defaults)
+        # instantiate auxiliary Functions
+        self._instantiate_parameter_classes(context)
 
     def _handle_size(self, size, variable):
         """Overwrites the parent method in Component.py, because the variable of a Port
@@ -1309,7 +1314,7 @@ class Port_Base(Port):
             - assign sender
             - if deferred_init and sender is instantiated, complete initialization
             - assign to path_afferents or mod_afferents
-            - if specs fail, instantiates a default Projection of type specified by self.params[PROJECTION_TYPE]
+            - if specs fail, instantiates a default Projection of type specified by self.projection_type
 
         Notes:
             Calls _parse_connection_specs() to parse projection_list into a list of ProjectionTuples;
@@ -2314,7 +2319,7 @@ def _instantiate_port_list(owner,
 
     Arguments:
     - port_type (class): Port class to be instantiated
-    - port_list (list): List of Port specifications (generally from owner.paramsCurrent[kw<Port>]),
+    - port_list (list): List of Port specifications (generally from owner.kw<port>),
                              each item of which must be a:
                                  string (used as name)
                                  number (used as constraint value)
@@ -2346,7 +2351,7 @@ def _instantiate_port_list(owner,
         # the key for each entry the name of the Port if provided,
         #     otherwise, use MECHANISM<port_type>Ports-n (incrementing n for each additional entry)
         # the Port value for each entry to the corresponding item of the Mechanism's port_type Port's value
-        # the dict to both self.<port_type>Ports and paramsCurrent[MECHANISM<port_type>Ports]
+        # the dict to self.<port_type>Ports
         # self.<port_type>Port to self.<port_type>Ports[0] (the first entry of the dict)
     Notes:
         * if there is only one Port, but the value of the Mechanism's port_type has more than one item:

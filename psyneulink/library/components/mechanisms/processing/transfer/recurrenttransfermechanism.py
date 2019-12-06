@@ -656,7 +656,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  learning_function: tc.any(is_function_type) = Hebbian,
                  learning_condition:tc.optional(tc.any(Condition, TimeScale,
                                                        tc.enum(UPDATE, CONVERGENCE)))=None,
-                 output_ports:tc.optional(tc.any(str, Iterable))=RESULT,
+                 output_ports:tc.optional(tc.any(str, Iterable))=None,
                  params=None,
                  name=None,
                  prefs: is_pref_set=None,
@@ -694,7 +694,6 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                   hetero=hetero,
                                                   has_recurrent_input_port=has_recurrent_input_port,
                                                   combination_function=combination_function,
-                                                  output_ports=output_ports,
                                                   params=params,
                                                   )
 
@@ -873,7 +872,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             raise RecurrentTransferError("Matrix parameter ({}) for {} failed to produce a suitable matrix: "
                                          "if the matrix parameter does not produce a suitable matrix, the "
                                          "'auto' and 'hetero' parameters must be specified; currently, either"
-                                         "auto or hetero parameter is missing.".format(self.params[MATRIX], self))
+                                         "auto or hetero parameter is missing.".format(self.matrix, self))
 
         if AUTO not in param_keys and HETERO in param_keys:
             d = np.diagonal(matrix).copy()
@@ -884,7 +883,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                        reference_value_name=AUTO,
                                        params=None,
                                        context=context)
-            self._auto = d
+            self.auto = d
             if port is not None:
                 self._parameter_ports[AUTO] = port
                 port.source = self
@@ -895,7 +894,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
             m = matrix.copy()
             np.fill_diagonal(m, 0.0)
-            self._hetero = m
+            self.hetero = m
             port = _instantiate_port(owner=self,
                                        port_type=ParameterPort,
                                        name=HETERO,

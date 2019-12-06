@@ -579,22 +579,17 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         Called by AccumulatorIntegrator to validate params
         Validation can be suppressed by turning parameter_validation attribute off
         target_set is a params dictionary to which params should be assigned;
-           otherwise, they are assigned to paramsCurrent;
 
         Does the following:
-        - assign runtime params to paramsCurrent
+        - assign runtime params to context
         - validate params if PARAM_VALIDATION is set
 
         :param params: (dict) - params to validate
-        :target_set: (dict) - set to which params should be assigned (default: self.paramsCurrent)
+        :target_set: (dict) - set to which params should be assigned
         :return:
         """
 
         # PARAMS ------------------------------------------------------------
-
-        # If target_set is not specified, use paramsCurrent
-        if target_set is None:
-            target_set = self.paramsCurrent
 
         # # MODIFIED 11/27/16 OLD:
         # # If parameter_validation is set, the function was called with params,
@@ -603,7 +598,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         #     # self._validate_params(params, target_set, context=FUNCTION_CHECK_ARGS)
         #     self._validate_params(request_set=params, target_set=target_set, context=context)
 
-        # If params have been passed, treat as runtime params and assign to paramsCurrent
+        # If params have been passed, treat as runtime params
         #   (relabel params as runtime_params for clarity)
         if context.execution_id in self._runtime_params_reset:
             for key in self._runtime_params_reset[context.execution_id]:

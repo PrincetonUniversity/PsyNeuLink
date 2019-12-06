@@ -371,7 +371,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
         if output_ports is None:
             output_ports = [RESULT]
 
-        params = self._assign_args_to_param_dicts(input_ports=input_ports,
+        params = self._assign_args_to_param_dicts(
                                                   integrator_mode=integrator_mode,
                                                   k_value=k_value,
                                                   threshold=threshold,

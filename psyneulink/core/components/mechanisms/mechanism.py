@@ -1365,8 +1365,6 @@ class Mechanism_Base(Mechanism):
     # Category specific defaults:
     paramClassDefaults = Component.paramClassDefaults.copy()
     paramClassDefaults.update({
-        INPUT_PORTS:None,
-        OUTPUT_PORTS:None,
         MONITOR_FOR_CONTROL: NotImplemented,  # This has to be here to "register" it as a valid param for the class
                                               # but is set to NotImplemented so that it is ignored if it is not
                                               # assigned;  setting it to None actively disallows assignment
@@ -1428,6 +1426,7 @@ class Mechanism_Base(Mechanism):
                                          getter=_input_port_variables_getter,
                                          pnl_internal=True)
 
+        # fold these specs into the main
         input_ports_spec = Parameter(
             None,
             stateful=False,
@@ -1436,6 +1435,13 @@ class Mechanism_Base(Mechanism):
             user=False,
             pnl_internal=True,
             constructor_argument='input_ports'
+        )
+        input_ports = Parameter(
+            None,
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
         )
 
         output_ports_spec = Parameter(
@@ -1446,6 +1452,13 @@ class Mechanism_Base(Mechanism):
             user=False,
             pnl_internal=True,
             constructor_argument='output_ports'
+        )
+        output_ports = Parameter(
+            None,
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
         )
 
         def _parse_input_ports_spec(self, input_ports_spec):
@@ -1491,6 +1504,20 @@ class Mechanism_Base(Mechanism):
                     spec_list.append(port)
 
             return spec_list
+
+        # _parse_input_ports = _parse_input_ports_spec
+
+        def _parse_input_ports(self, input_ports):
+            if input_ports is not None and not isinstance(input_ports, list):
+                return [input_ports]
+            else:
+                return input_ports
+
+        def _parse_output_ports(self, output_ports):
+            if output_ports is not None and not isinstance(output_ports, list):
+                return [output_ports]
+            else:
+                return output_ports
 
     # def __new__(cls, *args, **kwargs):
     # def __new__(cls, name=NotImplemented, params=NotImplemented, context=None):
@@ -1591,6 +1618,8 @@ class Mechanism_Base(Mechanism):
                                              param_defaults=params,
                                              prefs=prefs,
                                              name=name,
+                                             input_ports=input_ports,
+                                             output_ports=output_ports,
                                              **kwargs)
 
         # FIX: 10/3/17 - IS THIS CORRECT?  SHOULD IT BE INITIALIZED??
@@ -1703,9 +1732,6 @@ class Mechanism_Base(Mechanism):
 
         if not isinstance(input_ports, list):
             input_ports = [input_ports]
-            # KDM 6/28/18: you can't set to self.input_ports because this triggers
-            # a check for validation pref, but self.prefs does not exist yet so this fails
-            self._input_ports = input_ports
 
         for i, s in enumerate(input_ports):
 
@@ -1790,33 +1816,6 @@ class Mechanism_Base(Mechanism):
         """
 
         import copy
-
-        # INPUT_PORTS:
-
-        # Check if input_ports is in params (i.e., was specified in arg of constructor)
-        if not INPUT_PORTS in params or params[INPUT_PORTS] is None:
-            # If it wasn't, assign from paramClassDefaults (even if it is None) to force creation of input_ports attrib
-            if self.paramClassDefaults[INPUT_PORTS] is not None:
-                params[INPUT_PORTS] = copy.deepcopy(self.paramClassDefaults[INPUT_PORTS])
-            else:
-                params[INPUT_PORTS] = None
-        # Convert input_ports_spec to list if it is not one
-        if params[INPUT_PORTS] is not None and not isinstance(params[INPUT_PORTS], (list, dict)):
-            params[INPUT_PORTS] = [params[INPUT_PORTS]]
-        self.user_params.__additem__(INPUT_PORTS, params[INPUT_PORTS])
-
-        # OUTPUT_PORTS:
-
-        # Check if OUTPUT_PORTS is in params (i.e., was specified in arg of contructor)
-        if not OUTPUT_PORTS in params or params[OUTPUT_PORTS] is None:
-            if self.paramClassDefaults[OUTPUT_PORTS] is not None:
-                params[OUTPUT_PORTS] = copy.deepcopy(self.paramClassDefaults[OUTPUT_PORTS])
-            else:
-                params[OUTPUT_PORTS] = None
-        # Convert OUTPUT_PORTS_spec to list if it is not one
-        if params[OUTPUT_PORTS] is not None and not isinstance(params[OUTPUT_PORTS], (list, dict)):
-            params[OUTPUT_PORTS] = [params[OUTPUT_PORTS]]
-        self.user_params.__additem__(OUTPUT_PORTS, params[OUTPUT_PORTS])
 
         # try:
         #     input_ports_spec = params[INPUT_PORTS]
@@ -2293,14 +2292,14 @@ class Mechanism_Base(Mechanism):
                 + execute every self.input_port.path_afferents.[<Projection>.execute()...]
                 + combine results and/or gate portusing self.input_port.function()
                 + assign the result in self.input_port.value
-            - Call every self.params[<ParameterPort>].execute(); for each:
-                + execute self.params[<ParameterPort>].mod_afferents.[<Projection>.execute()...]
+            - Call every self.<parameterport>.execute(); for each:
+                + execute self.<parameterport>].mod_afferents.[<projection>.execute()...
                     (usually this is just a single ControlProjection)
                 + combine results for each ModulationParam or assign value from an OVERRIDE specification
-                + assign the result to self.params[<ParameterPort>].value
+                + assign the result to self.<parameterport>.value
             - Call subclass' self.execute(params):
                 - use self.input_port.value as its variable,
-                - use self.params[<ParameterPort>].value for each param of subclass' self.function
+                - use self.<parameterport>.value for each param of subclass' self.function
                 - call self._update_output_ports() to assign the output to each self.output_ports[<OutputPort>].value
                 Note:
                 * if execution is occurring as part of initialization, each output_port is reset to 0
@@ -3507,15 +3506,6 @@ class Mechanism_Base(Mechanism):
                                       component=mechanism)
         del mechanism
 
-
-    def _get_mechanism_param_values(self):
-        """Return dict with current value of each ParameterPort in paramsCurrent
-        :return: (dict)
-        """
-        from psyneulink.core.components.ports.parameterport import ParameterPort
-        return dict((param, value.value) for param, value in self.paramsCurrent.items()
-                    if isinstance(value, ParameterPort))
-
     def get_input_port_position(self, port):
         if port in self.input_ports:
             return self.input_ports.index(port)
@@ -3615,12 +3605,6 @@ class Mechanism_Base(Mechanism):
     @property
     def parameter_ports(self):
         return self._parameter_ports
-
-    @parameter_ports.setter
-    def parameter_ports(self, value):
-        # This keeps parameter_ports property readonly,
-        #    but averts exception when setting paramsCurrent in Component (around line 850)
-        pass
 
     @property
     def output_port(self):

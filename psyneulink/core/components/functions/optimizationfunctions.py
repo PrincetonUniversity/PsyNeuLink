@@ -373,16 +373,11 @@ class OptimizationFunction(Function_Base):
         else:
             self.search_termination_function = search_termination_function
 
-        if search_space is None:
-            self.search_space = [SampleIterator([0.])]
-            self._unspecified_args.append(SEARCH_SPACE)
-        else:
-            self.search_space = search_space
-
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(save_samples=save_samples,
                                                   save_values=save_values,
                                                   max_iterations=max_iterations,
+                                                  search_space=search_space,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,

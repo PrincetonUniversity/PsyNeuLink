@@ -793,7 +793,7 @@ class ParameterPort(Port_Base):
 def _instantiate_parameter_ports(owner, function=None, context=None):
     """Call _instantiate_parameter_port for all params in user_params to instantiate ParameterPorts for them
 
-    If owner.params[PARAMETER_PORT] is None or False:
+    If owner.parameter_port is None or False:
         - no ParameterPorts will be instantiated.
     Otherwise, instantiate ParameterPort for each allowable param in owner.user_params
     :param function:
@@ -808,7 +808,7 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
     # Check that all ParameterPorts for owner have not been explicitly suppressed
     #    (by assigning `NotImplemented` to PARAMETER_PORTS entry of paramClassDefaults)
     try:
-        if owner.params[PARAMETER_PORTS] is NotImplemented:
+        if owner.parameter_ports is NotImplemented:
             return
     except KeyError:
         # PARAMETER_PORTS not specified at all, so OK to continue and construct them
@@ -822,9 +822,9 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
     #     using its value as the port_spec
     # Exclude input_ports and output_ports which are also in user_params
     # IMPLEMENTATION NOTE:  Use user_params_for_instantiation since user_params may have been overwritten
-    #                       when defaults were assigned to paramsCurrent in Component.__init__,
+    #                       when defaults were assigned in Component.__init__,
     #                       (since that will assign values to the properties of each param;
-    #                       and that, in turn, will overwrite their current values with the defaults from paramsCurrent)
+    #                       and that, in turn, will overwrite their current values with the defaults)
     for param_name, param_value in owner.user_params_for_instantiation.items():
         # Skip any parameter that has been specifically excluded
         if param_name in owner.exclude_from_parameter_ports:

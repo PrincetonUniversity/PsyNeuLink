@@ -936,10 +936,10 @@ class EVCControlMechanism(ControlMechanism):
         Assign each modulatory_signal sequentially to corresponding item of control_allocation.
         """
         from psyneulink.core.globals.keywords import OWNER_VALUE
-        for i, spec in enumerate(self.control):
+        for i, spec in list(enumerate(self.control)):
             control_signal = self._instantiate_control_signal(spec, context=context)
             control_signal._variable_spec = (OWNER_VALUE, i)
-            self.control_signals[i] = control_signal
+            self.control[i] = control_signal
         self.defaults.value = np.tile(control_signal.parameters.variable.default_value, (i + 1, 1))
         self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
 
@@ -1292,55 +1292,3 @@ class EVCControlMechanism(ControlMechanism):
         # MODIFIED 9/18/18 END
 
         return monitored_ports
-
-    # The following implementation of function attributes as properties insures that even if user sets the value of a
-    #    function directly (i.e., without using assign_params), it will still be wrapped as a UserDefinedFunction.
-    # This is done to insure they can be called by value_function in the same way as the defaults
-    #    (which are all Functions), and so that they can be passed a params dict.
-
-    # def wrap_function(self, function):
-    #     if isinstance(function, function_type):
-    #         return ValueFunction(function)
-    #     elif inspect.isclass(assignment) and issubclass(assignment, Function):
-    #         self._value_function = ValueFunction()
-    #     else:
-    #         self._value_function = assignment
-
-    @property
-    def value_function(self):
-        return self._value_function
-
-    @value_function.setter
-    def value_function(self, assignment):
-        if isinstance(assignment, function_type):
-            self._value_function = ValueFunction(assignment)
-        elif assignment is ValueFunction:
-            self._value_function = ValueFunction()
-        else:
-            self._value_function = assignment
-
-    @property
-    def cost_function(self):
-        return self._cost_function
-
-    @cost_function.setter
-    def cost_function(self, value):
-        from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
-        if isinstance(value, function_type):
-            udf = UserDefinedFunction(function=value)
-            self._cost_function = udf
-        else:
-            self._cost_function = value
-
-    @property
-    def combine_outcome_and_cost_function(self):
-        return self._combine_outcome_and_cost_function
-
-    @combine_outcome_and_cost_function.setter
-    def combine_outcome_and_cost_function(self, value):
-        from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
-        if isinstance(value, function_type):
-            udf = UserDefinedFunction(function=value)
-            self._combine_outcome_and_cost_function = udf
-        else:
-            self._combine_outcome_and_cost_function = value

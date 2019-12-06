@@ -252,6 +252,13 @@ class KohonenMechanism(TransferMechanism):
         enable_learning = True
         matrix = DEFAULT_MATRIX
 
+        output_ports = Parameter(
+            [RESULT, {NAME: INPUT_PATTERN, VARIABLE: OWNER_VARIABLE}],
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
+        )
 
     paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({'function': Linear})  # perhaps hacky? not sure (7/10/17 CW)
@@ -305,7 +312,7 @@ class KohonenMechanism(TransferMechanism):
                 learning_function=learning_function,
                 learned_projection=learned_projection,
                 enable_learning=enable_learning,
-                output_ports=output_ports)
+        )
 
         super().__init__(default_variable=default_variable,
                          size=size,

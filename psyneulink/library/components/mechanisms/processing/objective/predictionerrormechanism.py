@@ -293,7 +293,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
                                             is_numeric,
                                             str)) = None,
                  function=PredictionErrorDeltaFunction(),
-                 output_ports: tc.optional(tc.any(str, Iterable)) = OUTCOME,
+                 output_ports: tc.optional(tc.any(str, Iterable)) = None,
                  learning_rate: is_numeric = 0.3,
                  params=None,
                  name=None,
@@ -305,8 +305,6 @@ class PredictionErrorMechanism(ComparatorMechanism):
         params = self._assign_args_to_param_dicts(sample=sample,
                                                   target=target,
                                                   function=function,
-                                                  input_ports=input_ports,
-                                                  output_ports=output_ports,
                                                   learning_rate=learning_rate,
                                                   params=params)
 

@@ -1113,7 +1113,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         attentional_drift_rate = float(self.get_current_function_param(DRIFT_RATE, context))
         stimulus_drift_rate = float(variable)
         drift_rate = attentional_drift_rate * stimulus_drift_rate
-        threshold = float(self.get_current_function_param(THRESHOLD, context))
+        threshold = self.get_current_function_param(THRESHOLD, context)
         starting_point = float(self.get_current_function_param(STARTING_POINT, context))
         noise = float(self.get_current_function_param(NOISE, context))
         t0 = float(self.get_current_function_param(NON_DECISION_TIME, context))

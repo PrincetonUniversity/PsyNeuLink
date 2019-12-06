@@ -384,6 +384,7 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         initial_value = None
         integrator_mode = Parameter(True, setter=_integrator_mode_setter)
+        integrator_function = Parameter(LeakyCompetingIntegrator, stateful=False, loggable=False)
         termination_measure = Parameter(max, stateful=False, loggable=False)
 
     standard_output_ports = RecurrentTransferMechanism.standard_output_ports.copy()
@@ -445,7 +446,7 @@ class LCAMechanism(RecurrentTransferMechanism):
         integrator_function = LeakyCompetingIntegrator
 
         # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(input_ports=input_ports,
+        params = self._assign_args_to_param_dicts(
                                                   leak=leak,
                                                   self_excitation=self_excitation,
                                                   hetero=hetero,

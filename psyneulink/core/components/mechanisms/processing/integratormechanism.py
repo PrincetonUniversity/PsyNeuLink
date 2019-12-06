@@ -162,7 +162,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                  size=None,
                  input_ports:tc.optional(tc.any(list, dict))=None,
                  function=None,
-                 output_ports:tc.optional(tc.any(str, Iterable))=RESULTS,
+                 output_ports:tc.optional(tc.any(str, Iterable))=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -171,8 +171,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         """
 
         # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(input_ports=input_ports,
-                                                  output_ports=output_ports,
+        params = self._assign_args_to_param_dicts(
                                                   function=function,
                                                   params=params)
 
@@ -182,7 +181,8 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                                                   params=params,
                                                   name=name,
                                                   prefs=prefs,
-
+                                                  input_ports=input_ports,
+                                                  output_ports=output_ports,
                                                   **kwargs)
 
         # IMPLEMENT: INITIALIZE LOG ENTRIES, NOW THAT ALL PARTS OF THE MECHANISM HAVE BEEN INSTANTIATED

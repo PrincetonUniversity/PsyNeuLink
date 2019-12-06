@@ -810,8 +810,6 @@ class DDM(ProcessingMechanism):
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
                                                   # input_format=input_format,
-                                                  input_ports=input_ports,
-                                                  output_ports=output_ports,
                                                   params=params)
 
         # IMPLEMENTATION NOTE: this manner of setting default_variable works but is idiosyncratic
