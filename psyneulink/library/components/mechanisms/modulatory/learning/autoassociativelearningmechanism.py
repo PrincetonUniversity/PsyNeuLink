@@ -105,6 +105,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     ADDITIVE, AUTOASSOCIATIVE_LEARNING_MECHANISM, CONTROL_PROJECTIONS, INPUT_PORTS, \
     LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_PORTS, OWNER_VALUE, VARIABLE
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, parameter_spec
@@ -287,6 +288,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                     :type: `ModulationParam`
 
         """
+        function = Parameter(Hebbian, stateful=False, loggable=False)
         learning_signals = None
         modulation = ADDITIVE
 
