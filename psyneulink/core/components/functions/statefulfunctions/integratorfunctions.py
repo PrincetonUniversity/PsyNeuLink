@@ -2049,10 +2049,10 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
 
         """
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM], function_arg=True)
-        decay = Parameter(1.0, modulable=True, function_arg=True)
+        decay = Parameter(0.0, modulable=True, function_arg=True)
         rest = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
         max_val = Parameter(1.0, function_arg=True)
-        min_val = Parameter(1.0, function_arg=True)
+        min_val = Parameter(-1.0, function_arg=True)
 
     @tc.typecheck
     def __init__(self,
