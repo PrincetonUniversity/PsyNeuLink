@@ -1194,7 +1194,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                  modulation:tc.optional(str)=MULTIPLICATIVE,
                  combine_costs:is_function_type=np.sum,
                  compute_reconfiguration_cost:tc.optional(is_function_type)=None,
-                 compute_net_outcome:is_function_type=lambda outcome, cost : outcome - cost,
+                 compute_net_outcome=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -1220,9 +1220,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     control.extend(convert_to_list(args))
 
         function = function or DefaultAllocationFunction
-        self.combine_costs = combine_costs
-        self.compute_net_outcome = compute_net_outcome
-        self.compute_reconfiguration_cost = compute_reconfiguration_cost
 
         try:
             control_spec = (
@@ -1256,6 +1253,9 @@ class ControlMechanism(ModulatoryMechanism_Base):
             system=system,
             objective_mechanism=objective_mechanism,
             default_allocation=default_allocation,
+            combine_costs=combine_costs,
+            compute_net_outcome=compute_net_outcome,
+            compute_reconfiguration_cost=compute_reconfiguration_cost,
             control_spec=control_spec,
             prefs=prefs,
             **kwargs

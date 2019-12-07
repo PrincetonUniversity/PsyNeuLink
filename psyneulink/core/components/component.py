@@ -592,26 +592,12 @@ def _parameters_belongs_to_obj(obj):
         return False
 
 
-def _get_backing_field(attr_name):
-    return '_{0}'.format(attr_name)
-
-
 def make_parameter_property(name):
-    backing_field = _get_backing_field(name)
-
     def getter(self):
-        if not _parameters_belongs_to_obj(self):
-            # would refer to class parameters before an instance of Parameters is created for self
-            return getattr(self, backing_field)
-        else:
-            return getattr(self.parameters, name)._get(self.most_recent_context)
+        return getattr(self.parameters, name)._get(self.most_recent_context)
 
     def setter(self, value):
-        if not _parameters_belongs_to_obj(self):
-            # set to backing field, which is what gets looked for and discarded when creating an object's parameters
-            setattr(self, backing_field, value)
-        else:
-            getattr(self.parameters, name)._set(value, self.most_recent_context)
+        getattr(self.parameters, name)._set(value, self.most_recent_context)
 
     return property(getter).setter(setter)
 
@@ -2020,30 +2006,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
             # set default to None context to ensure it exists
             if p.getter is None and p._get(context) is None:
-                try:
-                    # remember, this portion with attrs is a temporary hack
-                    # to be used only until AATPD is fully removed
-                    attr_name = '_{0}'.format(p.name)
-                    val = getattr(self, attr_name)
-
-                    if (
-                        (val is None or p.name in param_defaults)
-                    ):
-                        try:
-                            val = param_defaults[p.name]
-                        except KeyError:
-                            val = None
-                        if val is None:
-                            val = copy_parameter_value(p.default_value)
-
-                    # remove this when AATPD fully removed..
-                    if not p.structural:
-                        delattr(self, attr_name)
-                except AttributeError:
-                    if p.name in param_defaults and param_defaults[p.name] is not None:
-                        val = param_defaults[p.name]
-                    else:
-                        val = copy_parameter_value(p.default_value)
+                if p.name in param_defaults and param_defaults[p.name] is not None:
+                    val = param_defaults[p.name]
+                else:
+                    val = copy_parameter_value(p.default_value)
 
                 p.set(val, context=context, skip_history=True, override=True)
 
