@@ -1649,9 +1649,6 @@ class Mechanism_Base(Mechanism):
         try:
             default_variable_from_input_ports, input_ports_variable_was_specified = \
                 self._handle_arg_input_ports(params[INPUT_PORTS])
-
-            # updated here in case it was parsed in _handle_arg_input_ports
-            params[INPUT_PORTS] = self.input_ports
         except (TypeError, KeyError):
             pass
         except AttributeError as e:
