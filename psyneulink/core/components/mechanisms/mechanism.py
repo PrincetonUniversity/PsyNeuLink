@@ -309,8 +309,8 @@ Custom Functions
 A Mechanism's `function <Mechanism_Base.function>` can be customized by assigning a user-defined function (e.g.,
 a lambda function), so long as it takes arguments and returns values that are compatible with those of the
 Mechanism's defaults for that function.  This is also true for auxiliary functions that appear as arguments in a
-Mechanism's constructor (e.g., the `EVCControlMechanism`).  A user-defined function can be assigned using the Mechanism's
-`assign_params` method (the safest means) or by assigning it directly to the corresponding attribute of the Mechanism
+Mechanism's constructor (e.g., the `EVCControlMechanism`).  A user-defined function can be assigned
+directly to the corresponding attribute of the Mechanism
 (for its primary function, its `function <Mechanism_Base.function>` attribute). When a user-defined function is
 specified, it is automatically converted to a `UserDefinedFunction`.
 
@@ -629,7 +629,7 @@ In addition to the `standard attributes <Component_Structure>` of any `Component
 Mechanism-specific attributes (listed below). These can be specified in arguments of the Mechanism's constructor,
 in a `parameter specification dictionary <ParameterPort_Specification>` assigned to the **params** argument of the
 Mechanism's constructor, by direct reference to the corresponding attribute of the Mechanisms after it has been
-constructed (e.g., ``my_mechanism.param``), or using the Mechanism's `assign_params` method. The Mechanism-specific
+constructed (e.g., ``my_mechanism.param``). The Mechanism-specific
 attributes are listed below by their argument names / keywords, along with a description of how they are specified:
 
     * **input_ports** / *INPUT_PORTS* - a list specifying the Mechanism's input_ports
@@ -1397,6 +1397,18 @@ class Mechanism_Base(Mechanism):
         input_port_variables = Parameter(None, read_only=True, user=False,
                                          getter=_input_port_variables_getter,
                                          pnl_internal=True)
+        input_labels_dict = Parameter(
+            {},
+            stateful=False,
+            loggable=False,
+            pnl_internal=True
+        )
+        output_labels_dict = Parameter(
+            {},
+            stateful=False,
+            loggable=False,
+            pnl_internal=True
+        )
 
         # fold these specs into the main
         input_ports_spec = Parameter(
@@ -1816,6 +1828,7 @@ class Mechanism_Base(Mechanism):
 
         from psyneulink.core.components.ports.port import _parse_port_spec
         from psyneulink.core.components.ports.inputport import InputPort
+        from psyneulink.core.components.ports.outputport import OutputPort
 
         # Perform first-pass validation in Function.__init__():
         super(Mechanism, self)._validate_params(request_set,target_set,context)
@@ -1879,7 +1892,6 @@ class Mechanism_Base(Mechanism):
             # Validate each item in the list or OrderedDict
             i = 0
             for key, item in param_value if isinstance(param_value, dict) else enumerate(param_value):
-                from psyneulink.core.components.ports.outputport import OutputPort
                 # If not valid...
                 if not ((isclass(item) and issubclass(item, OutputPort)) or  # OutputPort class ref
                         isinstance(item, OutputPort) or  # OutputPort object
@@ -1906,11 +1918,13 @@ class Mechanism_Base(Mechanism):
 
         def validate_labels_dict(lablel_dict, type):
             for label, value in labels_dict.items():
-                if not isinstance(label,str):
-                    raise MechanismError("Key ({}) in the {} for {} must be a string".
+                # KDM 11/26/19: allowed ints and dicts because they are
+                # expected in test_3_input_ports_2_label_dicts
+                if not isinstance(label, (str, int)):
+                    raise MechanismError("Key ({}) in the {} for {} must be a string or int ".
                                          format(label, type, self.name))
-                if not isinstance(value,(list, np.ndarray)):
-                    raise MechanismError("The value of {} ({}) in the {} for {} must be a list or array".
+                if not isinstance(value, (list, np.ndarray, dict, int)):
+                    raise MechanismError("The value of {} ({}) in the {} for {} must be a list, dict, or array".
                                          format(label, value, type, self.name))
         def validate_subdict_key(port_type, key, dict_type):
             # IMPLEMENTATION NOTE:
@@ -2485,7 +2499,10 @@ class Mechanism_Base(Mechanism):
         for parameter_port in self._parameter_ports:
             for proj in parameter_port.mod_afferents:
                 if proj.initialization_status == ContextFlags.DEFERRED_INIT:
-                    proj_control_signal_specs = proj.control_signal_params or {}
+                    try:
+                        proj_control_signal_specs = proj._init_args['params']['control_signal_params'] or {}
+                    except KeyError:
+                        proj_control_signal_specs = {}
                     proj_control_signal_specs.update({PROJECTIONS: [proj]})
                     ctl_specs.append(proj_control_signal_specs)
         return ctl_specs

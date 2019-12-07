@@ -323,11 +323,6 @@ COMMENT
 
 .. _Component_Assign_Params:
 
-* **assign_params** - assign the value of one or more parameters of a Component.  Each parameter is specified
-  as an entry in a `parameter specification dictionary <ParameterPort_Specification>` in the **request_set**
-  argument;  parameters for the Component's `function <Component.function>` are specified as entries in a
-  *FUNCTION_PARAMS* dict within **request_set** dict.
-..
 * **reset_params** - reset the value of all user_params to a set of default values as specified in its **mode**
   argument, using a value of `ResetMode <Component_ResetMode>`.
 
@@ -481,7 +476,7 @@ from psyneulink.core.scheduling.condition import Never
 
 __all__ = [
     'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog',
-    'DefaultsFlexibility', 'DeferredInitRegistry', 'make_property', 'parameter_keywords', 'ResetMode',
+    'DefaultsFlexibility', 'DeferredInitRegistry', 'parameter_keywords', 'ResetMode',
 ]
 
 logger = logging.getLogger(__name__)
@@ -1744,7 +1739,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         # Cache a (deep) copy of the user-specified values and put it in user_params_for_instantiation;
         #    this is to deal with the following:
-        #    • _create_attributes_for_params assigns properties to each param in user_params;
         #    • the setter for those properties (in make_property) also assigns its value to its entry user_params;
         self.user_params_for_instantiation = OrderedDict()
         for param_name in sorted(list(self.user_params.keys())):
@@ -1771,45 +1765,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             else:
                 self.user_params_for_instantiation[param_name] = param_value
 
-        # FIX: 6/1/17 - MAKE SURE FUNCTIONS DON'T GET ASSIGNED AS PROPERTIES, SINCE THEY DON'T HAVE ParameterPorts
-        #                AND SO CAN'T RETURN A ParameterPort.value AS THEIR VALUE
-
-        # Provide opportunity for subclasses to filter final set of params in class-specific way
-        # Note:  this is done here to preserve identity of user-specified params assigned to user_params above
-        self._filter_params(params)
-        # Create property on self for each parameter in user_params:
-        #    these WILL be validated whenever they are assigned a new value
-
-        self._create_attributes_for_params(make_as_properties=True, **self.user_params)
-
         # Return params only for args:
         return params
-
-    def _filter_params(self, params):
-        """This provides an opportunity for subclasses to modify the final set of params in a class-specific way.
-        """
-        pass
-
-    def _create_attributes_for_params(self, make_as_properties=False, **kwargs):
-        """Create property on parent class of object for all attributes passed in kwargs dict.
-
-        If attribute or property already exists, do nothing.
-        Create backing field for attribute with "_" prefixed to attribute name,
-            and assign value provided in kwargs as its default value.
-        """
-        if make_as_properties:
-            # getter returns backing field value
-            # setter runs validation [_assign_params()], updates user_params
-
-            for arg_name, arg_value in kwargs.items():
-                if not any(hasattr(parent_class, arg_name) for parent_class in self.__class__.mro()):
-                    # create property
-                    setattr(self.__class__, arg_name, make_property(arg_name))
-                # assign default value
-                setattr(self, "_" + arg_name, arg_value)
-        else:
-            for arg_name, arg_value in kwargs.items():
-                setattr(self, arg_name, arg_value)
 
     def _set_parameter_value(self, param, val, context=None):
         getattr(self.parameters, param)._set(val, context)
@@ -1969,7 +1926,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             else:
                 variable = np.zeros(self.shape)
 
-        # VALIDATE VARIABLE (if not called from assign_params)
+        # VALIDATE VARIABLE
 
         if not (context.source & (ContextFlags.COMMAND_LINE | ContextFlags.PROPERTY)):
             # if variable has been passed then validate and, if OK, assign as self.defaults.variable
@@ -2107,75 +2064,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     and issubclass(val, Function)
                 ):
                     p._set(val(), context)
-
-    @handle_external_context()
-    def assign_params(self, request_set=None, context=None):
-        """Validates specified params, and instantiates any if necessary
-
-        Call _instantiate_defaults with context = COMMAND_LINE, and "validated_set" as target_set.
-        Instantiate any items in request set that require it (i.e., function or ports).
-
-        """
-        self._assign_params(request_set=request_set, context=context)
-
-    @tc.typecheck
-    @handle_external_context()
-    def _assign_params(self, request_set:tc.optional(dict)=None, context=None):
-        from psyneulink.core.components.functions.function import Function
-
-        if not request_set:
-            if self.verbosePref:
-                warnings.warn("No params specified")
-            return
-
-        validated_set = {}
-
-        self._instantiate_defaults(request_set=request_set,
-                                   target_set=validated_set,
-                                    assign_missing=False,
-                                   context=context)
-
-        # Turn off paramValidationPref to prevent recursive loop
-        #     (since setter for attrib of param calls assign_params if validationPref is True)
-        #     and no need to validate, since that has already been done above (in _instantiate_defaults)
-
-        pref_buffer = self.prefs._param_validation_pref
-        self.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
-        # The following is so that:
-        #    if the Component is a function and it is passed as an argument to a Component,
-        #    then the parameters are available in self.user_params_for_instantiation
-        #    (which is needed when the function is recreated from its class in _assign_args_to_params_dicts)
-        self.user_params_for_instantiation.update(self.user_params)
-        self.paramValidationPref = pref_buffer
-
-        # FIX: THIS NEEDS TO BE HANDLED BETTER:
-        # FIX: DEAL WITH INPUT_PORTS AND PARAMETER_PORTS DIRECTLY (RATHER THAN VIA instantiate_attributes_before...)
-        # FIX: SAME FOR FUNCTIONS THAT NEED TO BE "WRAPPED"
-        # FIX: FIGURE OUT HOW TO DEAL WITH INPUT_PORTS
-        # FIX: FOR PARAMETER_PORTS:
-        #        CALL THE FOLLOWING FOR EACH PARAM:
-        # FIX: NEED TO CALL
-
-        validated_set_param_names = list(validated_set.keys())
-
-        # If an input_port is being added from the command line,
-        #    must _instantiate_attributes_before_function to parse input_ports specification
-        # Otherwise, should not be run,
-        #    as it induces an unecessary call to _instantatiate_parameter_ports (during instantiate_input_ports),
-        #    that causes name-repetition problems when it is called as part of the standard init procedure
-        if INPUT_PORTS in validated_set_param_names and context.source & ContextFlags.COMMAND_LINE:
-            self._instantiate_attributes_before_function(context=context)
-
-        # If the object's function is being assigned, and it is a class, instantiate it as a Function object
-        if FUNCTION in validated_set and inspect.isclass(self.function):
-            self._instantiate_function(context=context)
-        # FIX: WHY SHOULD IT BE CALLED DURING STANDRD INIT PROCEDURE?
-        # # MODIFIED 5/5/17 OLD:
-        # if OUTPUT_PORTS in validated_set:
-        # MODIFIED 5/5/17 NEW:  [THIS FAILS WITH A SPECIFICATION IN output_ports ARG OF CONSTRUCTOR]
-        if OUTPUT_PORTS in validated_set and context.source & ContextFlags.COMMAND_LINE:
-        # MODIFIED 5/5/17 END
-            self._instantiate_attributes_after_function(context=context)
 
     @handle_external_context()
     def reset_params(self, mode=ResetMode.INSTANCE_TO_CLASS, context=None):
@@ -3481,59 +3369,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
 
 COMPONENT_BASE_CLASS = Component
-
-
-def make_property(name):
-    backing_field = '_' + name
-
-    def getter(self):
-        return getattr(self, backing_field)
-
-    def setter(self, val):
-        if (
-            hasattr(self, '_prefs')
-            and self.paramValidationPref
-            and hasattr(self, 'user_params_for_instantiation')
-            and hasattr(self, 'user_params')
-        ):
-            self._assign_params(request_set={name:val}, context=Context(source=ContextFlags.PROPERTY))
-
-        setattr(self, backing_field, val)
-
-        # Update user_params dict with new value
-        # KAM COMMENTED OUT 3/2/18 -- we do not want to update user_params with the base value, only param port value
-        # self.user_params.__additem__(name, val)
-
-        # If Component is a Function and has an owner, update function_params dict for owner
-        #    also, get parameter_port_owner if one exists
-        from psyneulink.core.components.functions.function import Function_Base
-        if isinstance(self, Function_Base) and hasattr(self, 'owner') and self.owner is not None:
-            param_port_owner = self.owner
-            # NOTE CW 1/26/18: if you're getting an error (such as "self.owner has no attribute function_params", or
-            # "function_params" has no attribute __additem__ (this happens when it's a dict rather than a
-            # ReadOnlyOrderedDict)) it may be caused by function_params not being included in paramInstanceDefaults,
-            # which may be caused by _assign_args_to_param_dicts() bugs. LMK, if you're getting bugs here like that.
-            # KAM COMMENTED OUT 3/2/18 --
-            # we do not want to update function_params with the base value, only param state value
-            # self.owner.function_params.__additem__(name, val)
-        else:
-            param_port_owner = self
-
-        # If the parameter is associated with a ParameterPort, assign the value to the ParameterPort's variable
-        # if hasattr(param_port_owner, '_parameter_ports') and name in param_port_owner._parameter_ports:
-        #     param_port = param_port_owner._parameter_ports[name]
-        #
-        #     # MODIFIED 7/24/17 CW: If the ParameterPort's function has an initializer attribute (i.e. it's an
-        #     # integrator function), then also reset the 'previous_value' and 'initializer' attributes by setting
-        #     # 'reinitialize'
-        #     if hasattr(param_port.function, 'initializer'):
-        #         param_port.function.reinitialize = val
-
-    # Create the property
-    prop = property(getter).setter(setter)
-    # # Install some documentation
-    # prop.__doc__ = docs[name]
-    return prop
 
 
 def make_property_mod(param_name):

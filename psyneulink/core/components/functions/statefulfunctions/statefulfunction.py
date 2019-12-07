@@ -227,12 +227,9 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             else:
                 initializer = self.class_defaults.variable
 
-        previous_value = self._initialize_previous_value(initializer, context)
-
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   initializer=initializer,
-                                                  previous_value=previous_value,
                                                   noise=noise,
                                                   params=params)
 
@@ -243,7 +240,6 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             default_variable=default_variable,
             rate=rate,
             initializer=initializer,
-            previous_value=previous_value,
             noise=noise,
             params=params,
             owner=owner,
@@ -446,6 +442,13 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         return param
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
+        self.parameters.previous_value._set(
+            self._initialize_previous_value(
+                self.parameters.initializer._get(context),
+                context
+            ),
+            context
+        )
 
         # use np.broadcast_to to guarantee that all initializer type attributes take on the same shape as variable
         if not np.isscalar(self.defaults.variable):

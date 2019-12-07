@@ -474,6 +474,12 @@ class LearningProjection(ModulatoryProjection_Base):
             # Flag for deferred initialization
             self.initialization_status = ContextFlags.DEFERRED_INIT
 
+            # parameters should be passed through methods like
+            # instantiate_sender instead of grabbed from attributes like this
+            self._learning_function = learning_function
+            self._learning_rate = learning_rate
+            self._error_function = error_function
+
         super().__init__(sender=sender,
                          receiver=receiver,
                          weight=weight,
@@ -481,6 +487,10 @@ class LearningProjection(ModulatoryProjection_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
+                         error_function=error_function,
+                         learning_function=learning_function,
+                         learning_rate=learning_rate,
+                         learning_enabled=learning_enabled,
                          **kwargs)
 
     def _validate_params(self, request_set, target_set=None, context=None):

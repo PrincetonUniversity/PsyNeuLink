@@ -998,6 +998,12 @@ class Port_Base(Port):
                     :read only: True
         """
         function = Parameter(Linear, stateful=False, loggable=False)
+        projections = Parameter(
+            None,
+            structural=True,
+            stateful=False,
+            loggable=False
+        )
         require_projection_in_composition = Parameter(True, stateful=False, loggable=False, read_only=True, pnl_internal=True)
         projections = None
 

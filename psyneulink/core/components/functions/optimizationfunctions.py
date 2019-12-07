@@ -389,6 +389,9 @@ class OptimizationFunction(Function_Base):
             save_values=save_values,
             max_iterations=max_iterations,
             search_space=search_space,
+            objective_function=objective_function,
+            search_function=search_function,
+            search_termination_function=search_termination_function,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -853,6 +856,12 @@ class GradientOptimization(OptimizationFunction):
         direction = ASCENT
         convergence_criterion = Parameter(VALUE, pnl_internal=True)
 
+        def _parse_direction(self, direction):
+            if direction is ASCENT:
+                return 1
+            else:
+                return -1
+
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -871,15 +880,8 @@ class GradientOptimization(OptimizationFunction):
                  owner=None,
                  prefs=None):
 
-        self.gradient_function = gradient_function
         search_function = self._follow_gradient
         search_termination_function = self._convergence_condition
-
-        if direction is ASCENT:
-            self.direction = 1
-        else:
-            self.direction = -1
-        self.annealing_function = annealing_function
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(step_size=step_size,
@@ -899,6 +901,8 @@ class GradientOptimization(OptimizationFunction):
             step_size=step_size,
             convergence_criterion=convergence_criterion,
             convergence_threshold=convergence_threshold,
+            gradient_function=gradient_function,
+            annealing_function=annealing_function,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -1286,7 +1290,6 @@ class GridSearch(OptimizationFunction):
             pass
 
         self.num_iterations = 1 if search_space is None else np.product([i.num for i in search_space])
-        self.direction = direction
         # self.tolerance = tolerance
         self.select_randomly_from_optimal_values = select_randomly_from_optimal_values
 
@@ -1307,6 +1310,7 @@ class GridSearch(OptimizationFunction):
             save_samples=True,
             save_values=True,
             random_state=random_state,
+            direction=direction,
             params=params,
             owner=owner,
             prefs=prefs,

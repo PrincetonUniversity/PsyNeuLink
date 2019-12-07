@@ -112,7 +112,6 @@ Parameters can be specified in one of several places:
     * By direct assignment to the Component's attribute for the parameter
       (see `below <ParameterPort_Modulable_Parameters>`).
     ..
-    * In the `assign_params <Component.assign_params>` method for the Component.
     ..
     * In the **runtime_params** argument of a call to a Composition's `Run` method
 
@@ -328,10 +327,9 @@ read-only.
 
 An initial value can be assigned to a parameter in the corresponding argument of the constructor for the Component
 (see `above <ParameterPort_Value_Specification>`.  Parameter values can also be modified by a assigning a value to
-the corresponding attribute, or in groups using the Component's `assign_params <Component.assign_params>` method.
+the corresponding attribute.
 The parameters of a Component's function can be modified by assigning a value to the corresponding attribute of the
-Component's `function <Component.function>` attribute (e.g., ``myMechanism.function.my_parameter``)
-or in *FUNCTION_PARAMS* dict in a call to the Component's `assign_params <Component.assign_params>` method.
+Component's `function <Component.function>` attribute (e.g., ``myMechanism.function.my_parameter``).
 See `Mechanism_ParameterPorts` for additional information.
 
 
@@ -534,23 +532,6 @@ class ParameterPort(Port_Base):
                                             name=name,
                                             prefs=prefs,
                                             context=context)
-
-    def _validate_params(self, request_set, target_set=None, context=None):
-        """Insure that ParameterPort (as identified by its name) is for a valid parameter of the owner
-
-        Parameter can be either owner's, or owner's function
-        """
-
-        # If the parameter is not in either the owner's user_params dict or its function_params dict, throw exception
-        if not self.name in self.owner.parameters.names() and not self.name in self.owner.function.parameters.names():
-            raise ParameterPortError("Name of requested ParameterPort ({}) does not refer to a valid parameter "
-                                      "of the component ({}) or its function ({})".
-                                      format(self.name,
-                                             # self.owner.function.__class__.__name__,
-                                             self.owner.name,
-                                             self.owner.function.componentName))
-
-        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
     def _validate_against_reference_value(self, reference_value):
         """Validate that value of the Port is compatible with the reference_value
@@ -813,7 +794,7 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
         pass
 
     # Instantiate ParameterPort for each modulable Parameter on
-    # owner.function and owner. owner.function is first because in some
+    # function and owner. function is first because in some
     # cases a Parameter will be specified on both, and the function's
     # values/defaults should take precedence
     def skip_parameter_port(parameter):
@@ -827,13 +808,8 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
     # function may also be a Function class, in which case parameter
     # ports are still created for the modulable Parameters
 
-    # NOTE: using owner.function is a direct translation from previous
-    # version, but this is not the function passed in as an argument. It
-    # is instead the default, and though this is strange, it appears to
-    # be required to match old behavior. It should be the function
-    # argument passed in.
-    if is_instance_or_subclass(owner.function, Function):
-        for p in owner.function.parameters:
+    if is_instance_or_subclass(function, Function):
+        for p in function.parameters:
             if not skip_parameter_port(p):
                 try:
                     value = owner.initial_function_parameters[p.name]
@@ -875,7 +851,7 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
 
     Include ones in function.parameters
     Exclude if it is a:
-        ParameterPort that already exists (e.g., in case of a call from Component.assign_params)
+        ParameterPort that already exists
         non-numeric value (including NotImplemented, False or True)
             unless it is:
                 a tuple (could be one specifying Modulatory Component)
@@ -908,7 +884,7 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
 
     # EXCLUSIONS:
 
-    # # Skip if ParameterPort already exists (e.g., in case of call from Component.assign_params)
+    # # Skip if ParameterPort already exists
     # if param_name in owner.ParameterPorts:
     #     return
 
@@ -1056,8 +1032,8 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
                                    params=None,
                                    context=context)
         if port:
-            if param_name in owner.function.parameters.names():
-                port.source = owner.function
+            if param_name in function.parameters.names():
+                port.source = function
             else:
                 port.source = owner
 

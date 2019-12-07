@@ -925,8 +925,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         phase_terminated = False
 
         input_size = Parameter(None, stateful=False, loggable=False)
-        hidden_size = Parameter(None, stateful=False, loggable=False)
-        target_size = Parameter(None, stateful=False, loggable=False)
+        hidden_size = Parameter(0, stateful=False, loggable=False)
+        target_size = Parameter(0, stateful=False, loggable=False)
         separated = Parameter(True, stateful=False, loggable=False)
         mode = Parameter(None, stateful=False, loggable=False)
         continuous = Parameter(True, stateful=False, loggable=False)
@@ -1014,19 +1014,16 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             continuous = False
             learning_function = Hebbian
 
-        self.input_size = input_size
-        self.hidden_size = hidden_size or 0
-        self.target_size = target_size or 0
         self.separated = separated
-        self.recurrent_size = input_size + hidden_size
+        self.recurrent_size = input_size + (hidden_size or 0)
         if separated and target_size:
             self.recurrent_size += target_size
-            self.target_start = input_size + hidden_size
+            self.target_start = input_size + (hidden_size or 0)
             self._target_included = True
         else:
             self.target_start = 0
             self._target_included = False
-        self.target_end = self.target_start + self.target_size
+        self.target_end = self.target_start + target_size
         size = self.recurrent_size
 
         default_variable = [np.zeros(input_size), np.zeros(self.recurrent_size)]
@@ -1095,6 +1092,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             phase_convergence_threshold=minus_phase_termination_threshold,
             max_passes=max_passes,
             continuous=continuous,
+            input_size=input_size,
+            hidden_size=hidden_size,
+            target_size=target_size,
+            separated=separated,
             clamp=clamp,
             params=params,
             name=name,

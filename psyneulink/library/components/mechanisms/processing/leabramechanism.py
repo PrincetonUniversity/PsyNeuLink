@@ -239,8 +239,8 @@ class LeabraFunction(Function_Base):
                                                   params=params)
 
         if default_variable is None:
-            input_size = len(self.network.layers[0].units)
-            output_size = len(self.network.layers[-1].units)
+            input_size = len(network.layers[0].units)
+            output_size = len(network.layers[-1].units)
             default_variable = [np.zeros(input_size), np.zeros(output_size)]
 
         super().__init__(

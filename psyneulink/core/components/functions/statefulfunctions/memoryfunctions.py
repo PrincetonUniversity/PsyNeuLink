@@ -191,6 +191,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         history = None
+        initializer = Parameter(np.array([]), pnl_internal=True)
 
 
     @tc.typecheck
@@ -210,7 +211,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                  # rate: tc.optional(tc.any(int, float, list, np.ndarray)) = 1.0,
                  # noise: tc.optional(tc.any(int, float, list, np.ndarray, callable)) = 0.0,
                  history: tc.optional(int) = None,
-                 initializer=[],
+                 initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
@@ -247,8 +248,13 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         return previous_value
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
-
-        self.has_initializers = True
+        self.parameters.previous_value._set(
+            self._initialize_previous_value(
+                self.parameters.initializer._get(context),
+                context
+            ),
+            context
+        )
 
     @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, *args, context=None):
@@ -1018,9 +1024,16 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                     warnings.warn(f"Attempt to initialize memory of {self.__class__.__name__} with an entry ({entry}) "
                                   f"that has the same key as a previous one, while 'duplicate_keys'==False; "
                                   f"that entry has been skipped")
-            return self._memory
+            return np.asarray(self._memory)
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
+        self.parameters.previous_value._set(
+            self._initialize_previous_value(
+                self.parameters.initializer._get(context),
+                context
+            ),
+            context
+        )
 
         self.has_initializers = True
 

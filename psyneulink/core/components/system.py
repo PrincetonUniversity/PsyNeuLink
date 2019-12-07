@@ -2588,7 +2588,10 @@ class System(System_Base):
                 for projection in parameter_port.mod_afferents:
                     # If Projection was deferred for init, instantiate its ControlSignal and then initialize it
                     if projection.initialization_status == ContextFlags.DEFERRED_INIT:
-                        proj_control_signal_specs = projection.control_signal_params or {}
+                        try:
+                            proj_control_signal_specs = projection._init_args['params']['control_signal_params'] or {}
+                        except KeyError:
+                            proj_control_signal_specs = {}
                         proj_control_signal_specs.update({PROJECTIONS: [projection]})
                         control_signal_specs.append(proj_control_signal_specs)
         return control_signal_specs
