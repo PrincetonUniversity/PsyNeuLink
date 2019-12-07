@@ -1014,7 +1014,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             continuous = False
             learning_function = Hebbian
 
-        self.separated = separated
         self.recurrent_size = input_size + (hidden_size or 0)
         if separated and target_size:
             self.recurrent_size += target_size

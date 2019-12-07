@@ -2789,10 +2789,6 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
                                                   initializer=initializer,
                                                   params=params)
 
-        # Assign here as default, for use in initialization of function
-        self.parameters.previous_value._set(initializer, Context())
-        self.previous_time = starting_point
-
         super().__init__(
             default_variable=default_variable,
             rate=rate,
@@ -2802,12 +2798,13 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
             starting_point=starting_point,
             time_step_size=time_step_size,
             initializer=initializer,
+            previous_value=initializer,
+            previous_time=starting_point,
             params=params,
             owner=owner,
             prefs=prefs,
         )
 
-        self.previous_time = self.starting_point
         self.has_initializers = True
 
     def _validate_noise(self, noise):

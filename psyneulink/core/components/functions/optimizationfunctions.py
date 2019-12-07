@@ -359,22 +359,13 @@ class OptimizationFunction(Function_Base):
         self._unspecified_args = []
 
         if objective_function is None:
-            self.objective_function = lambda x:0
             self._unspecified_args.append(OBJECTIVE_FUNCTION)
-        else:
-            self.objective_function = objective_function
 
         if search_function is None:
-            self.search_function = lambda x:x
             self._unspecified_args.append(SEARCH_FUNCTION)
-        else:
-            self.search_function = search_function
 
         if search_termination_function is None:
-            self.search_termination_function = lambda x,y,z:True
             self._unspecified_args.append(SEARCH_TERMINATION_FUNCTION)
-        else:
-            self.search_termination_function = search_termination_function
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(save_samples=save_samples,

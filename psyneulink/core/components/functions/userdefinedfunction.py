@@ -502,16 +502,7 @@ class UserDefinedFunction(Function_Base):
             p = Parameter(self.cust_fct_params[param_name], modulable=True)
             setattr(self.parameters, param_name, p)
 
-            try:
-                attr_name = '_{0}'.format(p.name)
-                attr_value = getattr(self, attr_name)
-                if attr_value is None:
-                    attr_value = p.default_value
-
-                p._set(attr_value, context, skip_history=True)
-                delattr(self, attr_name)
-            except AttributeError:
-                p._set(p.default_value, context, skip_history=True)
+            p._set(p.default_value, context, skip_history=True)
 
     def _function(self, variable, context=None, **kwargs):
 

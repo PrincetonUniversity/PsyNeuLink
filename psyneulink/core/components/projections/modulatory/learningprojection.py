@@ -480,6 +480,13 @@ class LearningProjection(ModulatoryProjection_Base):
             self._learning_rate = learning_rate
             self._error_function = error_function
 
+        # replaces similar code in _instantiate_sender
+        try:
+            if sender.owner.learning_rate is not None:
+                learning_rate = sender.owner.learning_rate
+        except AttributeError:
+            pass
+
         super().__init__(sender=sender,
                          receiver=receiver,
                          weight=weight,
@@ -572,9 +579,6 @@ class LearningProjection(ModulatoryProjection_Base):
         #    OutputPort and formats the LearningProjection's defaults.variable to be compatible with
         #    the LearningSignal's value
         super()._instantiate_sender(self.sender, context=context)
-
-        if self.sender.owner.learning_rate is not None:
-            self.learning_rate = self.sender.owner.learning_rate
 
     def _instantiate_receiver(self, context=None):
         """Validate that receiver has been assigned and is compatible with the output of function

@@ -701,6 +701,8 @@ class OptimizationControlMechanism(ControlMechanism):
         num_estimates = None
         # search_space = None
         control_allocation_search_space = None
+        saved_samples = None
+        saved_values = None
 
     @tc.typecheck
     def __init__(self,
@@ -714,12 +716,6 @@ class OptimizationControlMechanism(ControlMechanism):
                  params=None,
                  **kwargs):
         """Implement OptimizationControlMechanism"""
-
-        self.agent_rep = agent_rep
-        self.search_function = search_function
-        self.search_termination_function = search_termination_function
-        self.saved_samples = None
-        self.saved_values = None
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(

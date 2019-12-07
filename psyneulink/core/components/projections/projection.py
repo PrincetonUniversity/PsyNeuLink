@@ -672,12 +672,6 @@ class Projection_Base(Projection):
         if self.initialization_status == ContextFlags.DEFERRED_INIT:
             self._assign_deferred_init_name(name, context)
             self._store_deferred_init_args(**locals())
-
-            # parameters should be passed through methods like
-            # instantiate_sender instead of grabbed from attributes like this
-            self._weight = weight
-            self._exponent = exponent
-
             return
 
         self.receiver = receiver
@@ -1187,8 +1181,6 @@ def _parse_projection_spec(projection_spec,
             (proj_spec_dict[EXPONENT] is not None and projection.exponent is not None)):
             raise ProjectionError("PROGRAM ERROR: Conflict in weight and/or exponent specs "
                                   "between Projection and ProjectionTuple")
-        projection._weight = proj_spec_dict[WEIGHT] or projection.weight
-        projection._exponent = proj_spec_dict[EXPONENT] or projection.exponent
         if projection.initialization_status == ContextFlags.DEFERRED_INIT:
             projection._init_args[NAME] = proj_spec_dict[NAME] or projection._init_args[NAME]
         else:
