@@ -832,7 +832,6 @@ class ControlSignal(ModulatorySignal):
         # # MODIFIED 8/30/19 OLD:
         # # Validate cost functions in request_set
         # #   This should be all of them if this is an initialization call;
-        # #   Otherwise, just those specified in assign_params
         # for cost_function_name in [item for item in request_set if item in costFunctionNames]:
         #     cost_function = request_set[cost_function_name]
         #
@@ -952,12 +951,6 @@ class ControlSignal(ModulatorySignal):
         a = self.parameters.allocation_samples._get(context)
 
         if a is None:
-            return
-
-        # KDM 12/14/18: below is a temporary fix that exists to bypass a validation loop
-        # resulting from the function_object->function refactor. When this validation/assign_params/etc.
-        # is taken care of, this check can be removed
-        if isinstance(a, SampleIterator):
             return
 
         if isinstance(a, (range, np.ndarray)):

@@ -672,6 +672,12 @@ class Projection_Base(Projection):
         if self.initialization_status == ContextFlags.DEFERRED_INIT:
             self._assign_deferred_init_name(name, context)
             self._store_deferred_init_args(**locals())
+
+            # parameters should be passed through methods like
+            # instantiate_sender instead of grabbed from attributes like this
+            self._weight = weight
+            self._exponent = exponent
+
             return
 
         self.receiver = receiver

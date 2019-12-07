@@ -331,9 +331,7 @@ In general, a `ControlSignal` is created for each parameter specified to be cont
 are a type of `OutputPort` that send a `ControlProjection` to the `ParameterPort` of the parameter to be
 controlled. All of the ControlSignals for a ControlMechanism are listed in its `control_signals
 <ControlMechanism.control_signals>` attribute, and all of its ControlProjections are listed in
-its`control_projections <ControlMechanism.control_projections>` attribute. Additional parameters to be controlled can
-be added to a ControlMechanism by using its `assign_params` method to add a `ControlSignal` for each additional
-parameter.  See `ControlMechanism_Examples`.
+its`control_projections <ControlMechanism.control_projections>` attribute. See `ControlMechanism_Examples`.
 
 .. _ControlMechanism_Structure:
 

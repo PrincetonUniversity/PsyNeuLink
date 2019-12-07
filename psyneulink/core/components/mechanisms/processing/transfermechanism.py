@@ -960,7 +960,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             output_ports = [RESULTS]
 
         initial_value = self._parse_arg_initial_value(initial_value)
-        self.integrator_function = integrator_function or AdaptiveIntegrator # In case any subclass set it to None
 
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,
@@ -974,9 +973,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   integrator_function=integrator_function,
                                                   params=params)
 
-        self.on_resume_integrator_mode = on_resume_integrator_mode
         # self.integrator_function = None
-        self.has_integrated = False
         self._current_variable_index = 0
 
         # this is checked during execution to see if integrator_mode was set
@@ -997,6 +994,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             termination_threshold=termination_threshold,
             termination_comparison_op=termination_comparison_op,
             integrator_function=integrator_function,
+            on_resume_integrator_mode=on_resume_integrator_mode,
             function=function,
             params=params,
             name=name,
@@ -1162,9 +1160,16 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _instantiate_parameter_ports(self, function=None, context=None):
 
         # If function is a logistic, and clip has not been specified, bound it between 0 and 1
-        if ((isinstance(self.function, Logistic) or
-                 (inspect.isclass(self.function) and issubclass(self.function,Logistic))) and
-                self.clip is None):
+        if (
+            (
+                isinstance(function, Logistic)
+                or (
+                    inspect.isclass(function)
+                    and issubclass(function, Logistic)
+                )
+            )
+            and self.clip is None
+        ):
             self.clip = (0,1)
 
         super()._instantiate_parameter_ports(function=function, context=context)
