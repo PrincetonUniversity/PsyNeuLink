@@ -840,7 +840,7 @@ class LCControlMechanism(ControlMechanism):
     def _get_mech_params_type(self, ctx):
         return ctx.convert_python_struct_to_llvm_ir((self.scaling_factor_gain, self.base_level_gain))
 
-    def _get_mech_params_init(self):
+    def _get_mech_params_init(self, context):
         return (self.scaling_factor_gain, self.base_level_gain)
 
     def _gen_llvm_function_postprocess(self, builder, ctx, mf_out):

@@ -2699,13 +2699,13 @@ class Mechanism_Base(Mechanism):
         function_param_init = self._get_function_param_initializer(context)
         param_init_list = [port_param_init, function_param_init]
 
-        mech_params_init = self._get_mech_params_init()
+        mech_params_init = self._get_mech_params_init(context)
         if mech_params_init is not None:
             param_init_list.append(mech_params_init)
 
         return tuple(param_init_list)
 
-    def _get_mech_params_init(self):
+    def _get_mech_params_init(self, context):
         pass
 
     def _get_ports_state_initializer(self, context):
