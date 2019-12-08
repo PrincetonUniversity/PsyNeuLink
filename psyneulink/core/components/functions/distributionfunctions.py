@@ -1301,6 +1301,9 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
 
         noise_sqr = builder.fmul(noise, noise)
 
+        # Arguments used in mechanisms are 2D
+        arg_in = ctx.unwrap_2d_array(builder, arg_in)
+
         stimulus_drift_rate = pnlvm.helpers.load_extract_scalar_array_one(builder, arg_in)
         drift_rate = builder.fmul(attentional_drift_rate, stimulus_drift_rate)
 
@@ -1310,8 +1313,15 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
 
         bias = pnlvm.helpers.fclamp(builder, bias, 1e-8, 1 - 1e-8)
 
-        rt_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        er_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        def _get_arg_out_ptr(idx):
+            ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+            if isinstance(ptr.type.pointee, pnlvm.ir.ArrayType):
+                assert len(ptr.type.pointee) == 1
+                ptr = builder.gep(ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            return ptr
+
+        rt_ptr = _get_arg_out_ptr(0)
+        er_ptr = _get_arg_out_ptr(1)
 
         abs_f = ctx.get_builtin("fabs", [bias.type])
         abs_drift_rate = builder.call(abs_f, [drift_rate])
@@ -1412,12 +1422,13 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                 builder.store(rt, rt_ptr)
 
         # Calculate moments
-        mean_rt_plus_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(2)])
-        var_rt_plus_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(3)])
-        skew_rt_plus_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(4)])
-        mean_rt_minus_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(5)])
-        var_rt_minus_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(6)])
-        skew_rt_minus_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(7)])
+        mean_rt_plus_ptr = _get_arg_out_ptr(2)
+        var_rt_plus_ptr = _get_arg_out_ptr(3)
+        skew_rt_plus_ptr = _get_arg_out_ptr(4)
+        mean_rt_minus_ptr = _get_arg_out_ptr(5)
+        var_rt_minus_ptr = _get_arg_out_ptr(6)
+        skew_rt_minus_ptr = _get_arg_out_ptr(7)
+
         # Transform starting point to be centered at 0
         starting_point = bias
         starting_point = builder.fsub(starting_point, starting_point.type(0.5))
