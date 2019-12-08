@@ -2657,19 +2657,17 @@ class Mechanism_Base(Mechanism):
     def _get_function_state_struct_type(self, ctx):
         return ctx.get_state_struct_type(self.function)
 
-    def _get_state_struct_type(self, ctx):
-        states_state_struct = self._get_ports_state_struct_type(ctx)
-        function_state_struct = self._get_function_state_struct_type(ctx)
-        context_list = [states_state_struct, function_state_struct]
-
-        mech_context = self._get_mech_state_struct_type(ctx)
-        if mech_context is not None:
-            context_list.append(mech_context)
-
-        return pnlvm.ir.LiteralStructType(context_list)
-
     def _get_mech_state_struct_type(self, ctx):
-        pass
+        return pnlvm.ir.LiteralStructType(())
+
+    def _get_state_struct_type(self, ctx):
+        ports_state_struct = self._get_ports_state_struct_type(ctx)
+        function_state_struct = self._get_function_state_struct_type(ctx)
+        mech_state_struct = self._get_mech_state_struct_type(ctx)
+
+        return pnlvm.ir.LiteralStructType((ports_state_struct,
+                                           function_state_struct,
+                                           mech_state_struct))
 
     def _get_output_struct_type(self, ctx):
         output_type_list = (ctx.get_output_struct_type(port) for port in self.output_ports)
@@ -2709,18 +2707,14 @@ class Mechanism_Base(Mechanism):
         return self.function._get_state_initializer(context)
 
     def _get_mech_state_init(self, context):
-        pass
+        return ()
 
     def _get_state_initializer(self, context):
-        ports_state_init = self._get_ports_state_initializer(context)
+        port_state_init = self._get_ports_state_initializer(context)
         function_state_init = self._get_function_state_initializer(context)
-        state_init_list = [ports_state_init, function_state_init]
-
         mech_state_init = self._get_mech_state_init(context)
-        if mech_state_init is not None:
-            state_init_list.append(mech_state_init)
 
-        return tuple(state_init_list)
+        return (port_state_init, function_state_init, mech_state_init)
 
     def _gen_llvm_ports(self, ctx, builder, ports,
                         get_output_ptr, fill_input_data,
