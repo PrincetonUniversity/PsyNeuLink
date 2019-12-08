@@ -2638,20 +2638,17 @@ class Mechanism_Base(Mechanism):
     def _get_function_param_struct_type(self, ctx):
         return ctx.get_param_struct_type(self.function)
 
+    def _get_mech_param_struct_type(self, ctx):
+        return pnlvm.ir.LiteralStructType(())
+
     def _get_param_struct_type(self, ctx):
         states_param_struct = self._get_states_param_struct_type(ctx)
         function_param_struct = self._get_function_param_struct_type(ctx)
-        param_list = [states_param_struct, function_param_struct]
+        mech_param_struct = self._get_mech_param_struct_type(ctx)
 
-        mech_params = self._get_mech_params_type(ctx)
-        if mech_params is not None:
-            param_list.append(mech_params)
-
-        return pnlvm.ir.LiteralStructType(param_list)
-
-    def _get_mech_params_type(self, ctx):
-        pass
-
+        return pnlvm.ir.LiteralStructType((states_param_struct,
+                                           function_param_struct,
+                                           mech_param_struct))
 
     def _get_ports_state_struct_type(self, ctx):
         gen = (ctx.get_state_struct_type(s) for s in self.ports)
@@ -2697,16 +2694,12 @@ class Mechanism_Base(Mechanism):
     def _get_param_initializer(self, context):
         port_param_init = self._get_port_param_initializer(context)
         function_param_init = self._get_function_param_initializer(context)
-        param_init_list = [port_param_init, function_param_init]
+        mech_param_init = self._get_mech_params_init(context)
 
-        mech_params_init = self._get_mech_params_init(context)
-        if mech_params_init is not None:
-            param_init_list.append(mech_params_init)
-
-        return tuple(param_init_list)
+        return (port_param_init, function_param_init, mech_param_init)
 
     def _get_mech_params_init(self, context):
-        pass
+        return ()
 
     def _get_ports_state_initializer(self, context):
         gen = (s._get_state_initializer(context) for s in self.ports)
