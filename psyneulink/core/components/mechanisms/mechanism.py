@@ -2715,10 +2715,19 @@ class Mechanism_Base(Mechanism):
     def _get_function_state_initializer(self, context):
         return self.function._get_state_initializer(context)
 
+    def _get_mech_state_init(self, context):
+        pass
+
     def _get_state_initializer(self, context):
         ports_state_init = self._get_ports_state_initializer(context)
         function_state_init = self._get_function_state_initializer(context)
-        return (ports_state_init, function_state_init)
+        state_init_list = [ports_state_init, function_state_init]
+
+        mech_state_init = self._get_mech_state_init(context)
+        if mech_state_init is not None:
+            state_init_list.append(mech_state_init)
+
+        return tuple(state_init_list)
 
     def _gen_llvm_ports(self, ctx, builder, ports,
                         get_output_ptr, fill_input_data,
