@@ -2331,6 +2331,9 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         determines the boundaries of the drift diffusion process:  the integration process can be scheduled to
         terminate when the result of `function <DriftDiffusionIntegrator.function>` equals or exceeds either the
         positive or negative value of threshold (see hint).
+        NOTE: Vector version of this parameter acts as a saturation barrier.
+        While it is possible to subtract from value == threshold, any movement
+        in the threshold direction will be capped at the threshold value.
 
         .. hint::
            To terminate execution of the `Mechanism <Mechanism>` to which the `function
