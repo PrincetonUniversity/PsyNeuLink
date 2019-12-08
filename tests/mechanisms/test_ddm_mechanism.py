@@ -200,14 +200,29 @@ class TestOutputPorts:
 # function = Bogacz
 
 
-def test_DDM_Integrator_Bogacz():
+@pytest.mark.ddm_mechanism
+@pytest.mark.mechanism
+@pytest.mark.benchmark
+@pytest.mark.parametrize("mode", [
+    "Python",
+    pytest.param("LLVM", marks=pytest.mark.llvm),
+    pytest.param("PTX", marks=[pytest.mark.llvm, pytest.mark.cuda]),
+])
+def test_DDM_Integrator_Bogacz(benchmark, mode):
     stim = 10
     T = DDM(
         name='DDM',
         function=DriftDiffusionAnalytical()
     )
-    val = float(T.execute(stim)[0])
-    assert val == 1.0
+    if mode == "Python":
+        ex = T.execute
+    elif mode == "LLVM":
+        ex = pnlvm.execution.MechExecution(T).execute
+    elif mode == "PTX":
+        ex = pnlvm.execution.MechExecution(T).cuda_execute
+    val = ex(stim)[0]
+    assert np.allclose(val, [1.0])
+    benchmark(ex, stim)
 
 # ------------------------------------------------------------------------------------------------
 # # TEST 3

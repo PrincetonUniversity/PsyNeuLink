@@ -386,6 +386,8 @@ from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, R
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, is_same_function_spec, object_has_single_value, get_global_seed
 
+from psyneulink.core import llvm as pnlvm
+
 __all__ = [
     'ARRAY', 'DDM', 'DDMError', 'DECISION_VARIABLE', 'DECISION_VARIABLE_ARRAY',
     'PROBABILITY_LOWER_THRESHOLD', 'PROBABILITY_UPPER_THRESHOLD', 'RESPONSE_TIME',
@@ -1081,9 +1083,12 @@ class DDM(ProcessingMechanism):
                 return_value[self.DECISION_VARIABLE_INDEX] = threshold
             return return_value
 
-    def _gen_llvm_function_body(self, *args, **kwargs):
-        assert isinstance(self.function, IntegratorFunction)
-        return super()._gen_llvm_function_body(*args, **kwargs)
+    def _get_mech_state_struct_type(self, ctx):
+        return ctx.convert_python_struct_to_llvm_ir(self.random_state)
+
+    def _get_mech_state_init(self, context):
+        random_state = self.get_current_mechanism_param("random_state", context)
+        return pnlvm._tupleize(random_state.get_state()[1:])
 
     def _gen_llvm_function_postprocess(self, builder, ctx, mf_out):
         mech_out_ty = ctx.convert_python_struct_to_llvm_ir(self.defaults.value)
@@ -1101,8 +1106,55 @@ class DDM(ProcessingMechanism):
                           builder.gep(mech_out, [ctx.int32_ty(0),
                                                  ctx.int32_ty(1),
                                                  ctx.int32_ty(0)]))
-            return mech_out, builder
-        return mf_out, builder
+        elif isinstance(self.function, DriftDiffusionAnalytical):
+            for res_idx, idx in enumerate((self.RESPONSE_TIME_INDEX,
+                                           self.PROBABILITY_LOWER_THRESHOLD_INDEX,
+                                           self.RT_CORRECT_MEAN_INDEX,
+                                           self.RT_CORRECT_VARIANCE_INDEX,
+                                           self.RT_CORRECT_SKEW_INDEX,
+                                           self.RT_INCORRECT_MEAN_INDEX,
+                                           self.RT_INCORRECT_VARIANCE_INDEX,
+                                           self.RT_INCORRECT_SKEW_INDEX)):
+                src = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(res_idx)])
+                dst = builder.gep(mech_out, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+                builder.store(builder.load(src), dst)
+
+            # Handle upper threshold probability
+            src = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(1),
+                                       ctx.int32_ty(0)])
+            dst = builder.gep(mech_out, [ctx.int32_ty(0),
+                ctx.int32_ty(self.PROBABILITY_UPPER_THRESHOLD_INDEX),
+                ctx.int32_ty(0)])
+            prob_lower_thr = builder.load(src)
+            prob_upper_thr = builder.fsub(prob_lower_thr.type(1),
+                                          prob_lower_thr)
+            builder.store(prob_upper_thr, dst)
+            
+            # Load mechanism state and function threshold parameter
+            params, state, _, _ = builder.function.args
+            func_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            threshold_ptr = ctx.get_param_ptr(self.function, builder,
+                                              func_params, THRESHOLD)
+            threshold = pnlvm.helpers.load_extract_scalar_array_one(builder,
+                                                                    threshold_ptr)
+            random_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+            random_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
+            random_val_ptr = builder.alloca(random_f.args[1].type.pointee)
+            builder.call(random_f, [random_state, random_val_ptr])
+            random_val = builder.load(random_val_ptr)
+
+            # Convert ER to decision variable:
+            dst = builder.gep(mech_out, [ctx.int32_ty(0),
+                ctx.int32_ty(self.DECISION_VARIABLE_INDEX),
+                ctx.int32_ty(0)])
+            thr_cmp = builder.fcmp_ordered("<", random_val, prob_lower_thr)
+            neg_threshold = builder.fsub(threshold.type(-0.0), threshold)
+            res = builder.select(thr_cmp, neg_threshold, threshold)
+
+            builder.store(res, dst)
+        else:
+            assert False, "Only Integrator mode is supported for compiled DDM!"
+        return mech_out, builder
 
     @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, *args, context=None):
