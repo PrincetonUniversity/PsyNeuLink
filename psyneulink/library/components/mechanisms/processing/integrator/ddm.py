@@ -359,7 +359,6 @@ Class Reference
 ---------------
 """
 import logging
-import random
 
 from collections.abc import Iterable
 
