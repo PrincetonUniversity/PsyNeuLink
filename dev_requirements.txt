@@ -1,8 +1,8 @@
 pytest
 pytest-benchmark
-pytest-codestyle
 pytest-cov
 pytest-profiling
+pytest-pycodestyle
 pytest-pydocstyle
 pytest-helpers-namespace
 pytest-xdist
