@@ -1,13 +1,13 @@
 pytest
 pytest-benchmark
 pytest-cov
+pytest-helpers-namespace
 pytest-profiling
 pytest-pycodestyle
 pytest-pydocstyle
-pytest-helpers-namespace
 pytest-xdist
 jupyter
-sphinx
 psyneulink-sphinx-theme
+sphinx
 ipykernel
 ipython
