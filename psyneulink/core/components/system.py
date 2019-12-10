@@ -3435,7 +3435,7 @@ class System(System_Base):
 
 
         # Sort by phaseSpec and, within each phase, by mechanism name
-#        sorted_execution_list.sort(key=lambda object_item: object_item.phase)
+        # sorted_execution_list.sort(key=lambda object_item: object_item.phase)
 
 
         # Add controller to execution list for printing if enabled
