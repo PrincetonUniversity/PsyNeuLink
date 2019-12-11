@@ -229,7 +229,7 @@ modulates the `value <Port_Base.value>` of a `Port`, by specifying which paramte
 <Port_Base.function>`that it modifies (see `figure <ModulatorySignal_Detail_Figure>` below).  This is specified
 in a tuple containing the Port and the name of the parameter to be modified (see `example <EXAMPLE XXX>`).
 Alternatively, a keyword can be used in place of the parameter's name.  For some `Functions <Function>`,
-such keywords can be used to specify function-specific forms of modulation (e.g., see
+keywords can be used to specify function-specific forms of modulation (e.g., see
 `TransferWithCosts_Modulation_of_Cost_Params`).  In addition, there are four keywords that can be used to specify
 generic forms of modulation supported by most `Functions <Function>`:
 
