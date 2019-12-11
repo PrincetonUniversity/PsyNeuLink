@@ -140,7 +140,7 @@ ControlMechanism to which the ControlSignal belongs (which is the same for all o
 ControlMechanism).  The value of the `modulation <ModulatorySignal.modulation>` attribute of a ControlSignal is used by
 all of the `ControlProjections <ControlProjection>` that project from that ControlSignal.
 
-.. _ControlSignal_Allocation_and_Intensity
+.. _ControlSignal_Allocation_and_Intensity:
 
 *Allocation, Function and Intensity*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
