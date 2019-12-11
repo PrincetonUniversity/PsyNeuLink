@@ -134,11 +134,11 @@ A ControlSignal has a `modulation <ModulatorySignal.modulation>` attribute that 
 (see `ModulatorySignal_Modulation` for an explanation of how the `modulation <ModulatorySignal.modulation>` attribute is
 specified and used to modulate the `value <Port_Base.value>` of a Port). The `modulation <ModulatorySignal.modulation>`
 attribute can be specified in the **modulation** argument of the constructor for a ControlSignal, or in a specification
-dictionary as described `above <ControlSignal_Specification>`. The value must be a value of `ModulationParam`;  if it
-is not specified, its default is the value of the `modulation <ControlMechanism.modulation>` attribute of the
-ControlMechanism to which the ControlSignal belongs (which is the same for all of the ControlSignals belonging to that
-ControlMechanism).  The value of the `modulation <ModulatorySignal.modulation>` attribute of a ControlSignal is used by
-all of the `ControlProjections <ControlProjection>` that project from that ControlSignal.
+dictionary as described `above <ControlSignal_Specification>` (see `ModulatorySignal_Types` for forms of specification).
+If it is not specified, its default is the value of the `modulation <ControlMechanism.modulation>` attribute of the
+ControlMechanism to which the ControlSignal belongs (which is the same for all of the ControlSignals belonging to
+that ControlMechanism).  The value of the `modulation <ModulatorySignal.modulation>` attribute of a ControlSignal is
+used by all of the `ControlProjections <ControlProjection>` that project from that ControlSignal.
 
 .. _ControlSignal_Allocation_and_Intensity:
 
