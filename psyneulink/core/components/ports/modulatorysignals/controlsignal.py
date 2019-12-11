@@ -160,13 +160,21 @@ FIX: 8/30/19 -- ADD DESCRIPTION OF function AS ACTUALLY IMPLEMENTED AS TransferW
                 - cost functions can be specified, but attributes are pointers to function's cost functions
                 - cost attributes get value of corresponding attributes of cost function
                 - ?handling of cost_options
-*Function*. A ControlSignal's `allocation <ControlSignal.allocation>` serves as its`variable
+
+*Function*. A ControlSignal's `allocation <ControlSignal.allocation>` serves as its `variable
 <ModulatorySignal.variable>`, and is used by its `function <ControlSignal.function>` to generate an `intensity`.
-The default `function <ControlSignal.function>` for a ControlSignal is an identity function (`Linear` with `slope
-<Linear.slope>` \\=1 and `intercept <Linear.intercept>`\\=0), that simply assigns the `allocation
-<ControlSignal.allocation>` as the ControlSignal's `intensity <ControlSignal.intensity>`. However,
-another `TransferFunction` can be assigned (e.g., `Exponential`), or any other function that takes and returns a
+The default `function <ControlSignal.function>` for a ControlSignal is `TransferWithCosts`.  This is a
+`Function` that supplements its core `TransferFunction` (specified by its `transfer_fct
+<TransferWithCosts.transfer_fct>` with a set of cost functions that can be used to compute the ControlSignal's `cost
+attributes <ControlSignal_Costs>`.  The default `transfer_fct <TransferWithCosts.transfer_fct>`> for
+TransferWithCosts is an identity function (`Linear` with `slope <Linear.slope>` \\=1 and `intercept
+<Linear.intercept>`\\=0), that simply assigns the ControlSignal's `allocation <ControlSignal.allocation>` as its
+`intensity <ControlSignal.intensity>`. However, another `TransferFunction` can be assigned to the TransferWithCost's
+
+(e.g., `Exponential`),
+or any other function that takes and returns a
 scalar value or 1d array.
+
 
 *Intensity (value)*. The result of the function is assigned as the value of the ControlSignal's `intensity`
 attribute, which serves as the ControlSignal's `value <ControlSignal.value>` (also referred to as `control_signal`).
