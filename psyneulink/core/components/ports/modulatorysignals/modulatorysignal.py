@@ -143,7 +143,8 @@ ModulatorySignal's constructor, or in a *MODULATION* entry of a `Port specificat
 <Port_Specification>` used to create the ModulatorySignal (see `Type of Modualtion <ModulatorySignal_Types>` and
 `figure <ModulatorySignal_Detail_Figure>` below for details). If the type of `modulation <ModulatorySignal.modulation>`
 is not specified when a ModulatorySignal is created, it is assigned the value of the `modulation
-<ModulatoryMechanism_Base.modulation>` attribute for the `ModulatoryMechanism <ModulatoryMechanism>` to which it belongs.
+<ModulatoryMechanism_Base.modulation>` attribute for the `ModulatoryMechanism <ModulatoryMechanism>` to which it
+belongs.
 
 .. _ModulatorySignal_Uses:
 
@@ -176,22 +177,22 @@ and shown in the `figure below <ModulatorySignal_Anatomy_Figure>`.
 .. table:: **ModulatorySignals and Ports they Modulate**
   :align: left
 
-  +------------------------------------+------------------------+------------------------------+----------------------------------------+----------------------------+
-  |                                    |                        |Default type of `modulation   |                                        |Default Function (mod param)|
-  |             Purpose                |  ModulatorySignal      |<ModulatorySignal.modulation>`|           Recipient Port              |for Recipient Port         |
-  +====================================+========================+==============================+========================================+============================+
+  +------------------------------------+------------------------+------------------------------+---------------------------------------+----------------------------+
+  |                                    |                        |Default type of `modulation   |                                       |Default Function (mod param)|
+  |             Purpose                |  ModulatorySignal      |<ModulatorySignal.modulation>`|           Recipient Port              |for Recipient Port          |
+  +====================================+========================+==============================+=======================================+============================+
   | Modulate the parameter of a        |                        |                              | Mechanism `ParameterPort` (by default)|                            |
-  | Mechanism's `function              | `ControlSignal` (blue) |     *MULTIPLICATIVE*         | but can also be an                     |     `Linear` (`slope`)     |
-  | <Mechanism_Base.function>`         |                        |                              | `InputPort` or `OutputPort`          |                            |
-  +------------------------------------+------------------------+------------------------------+----------------------------------------+----------------------------+
-  | Modulate the input or output of    |                        |                              |                                        |                            |
-  | a Mechanism's `function            | `GatingSignal` (brown) |     *MULTIPLICATIVE*         |  Mechanism `InputPort`/`OutputPort`  |     `Linear` (`slope`)     |
-  | <Mechanism_Base.function>`         |                        |                              |                                        |                            |
-  +------------------------------------+------------------------+------------------------------+----------------------------------------+----------------------------+
-  | Modulate a MappingProjection's     |                        |                              |                                        |   `AccumulatorIntegrator`  |
+  | Mechanism's `function              | `ControlSignal` (blue) |     *MULTIPLICATIVE*         | but can also be an                    |     `Linear` (`slope`)     |
+  | <Mechanism_Base.function>`         |                        |                              | `InputPort` or `OutputPort`           |                            |
+  +------------------------------------+------------------------+------------------------------+---------------------------------------+----------------------------+
+  | Modulate the input or output of    |                        |                              |                                       |                            |
+  | a Mechanism's `function            | `GatingSignal` (brown) |     *MULTIPLICATIVE*         |  Mechanism `InputPort`/`OutputPort`   |    `Linear` (`slope`)      |
+  | <Mechanism_Base.function>`         |                        |                              |                                       |                            |
+  +------------------------------------+------------------------+------------------------------+---------------------------------------+----------------------------+
+  | Modulate a MappingProjection's     |                        |                              |                                       |   `AccumulatorIntegrator`  |
   | `matrix <MappingProjection.matrix>`|`LearningSignal` (green)|        *ADDITIVE*            |  MappingProjection `ParameterPort`    |   (`increment`)            |
-  | parameter                          |                        |                              |                                        |                            |
-  +------------------------------------+------------------------+------------------------------+----------------------------------------+----------------------------+
+  | parameter                          |                        |                              |                                       |                            |
+  +------------------------------------+------------------------+------------------------------+---------------------------------------+----------------------------+
 
 Colors listed are those used in the `figure <ModulatorySignal_Anatomy_Figure>` below.
 
@@ -226,9 +227,11 @@ Types of Modulation
 The `modulation <ModulatorySignal.modulation>` attribute of a ModulatorySignal determines the way in which it
 modulates the `value <Port_Base.value>` of a `Port`, by specifying which paramter of the Port's `function
 <Port_Base.function>`that it modifies (see `figure <ModulatorySignal_Detail_Figure>` below).  This is specified
-in a tuple containing the Port and the name of the parameter to be modified (see `example <EXAMPLE??> below).
-Alternatively, there are four keywords that can be used in place of the parameter's name, that specify the two most
-commonly used types of modulation, and allow two other types:
+in a tuple containing the Port and the name of the parameter to be modified (see `example <EXAMPLE XXX>`).
+Alternatively, a keyword can be used in place of the parameter's name.  For some `Functions <Function>`,
+such keywords can be used to specify function-specific forms of modulation (e.g., see
+`TransferWithCosts_Modulation_of_Cost_Params`).  In addition, there are four keywords that can be used to specify
+generic forms of modulation supported by most `Functions <Function>`:
 
   * *MULTPLICATIVE_PARAM* - assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the parameter of
     the Port's `function <Port_Base.function>` specified as its `multiplicative_param <Function_Modulatory_Params>`.

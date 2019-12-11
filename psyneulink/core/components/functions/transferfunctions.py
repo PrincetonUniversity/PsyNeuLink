@@ -3443,19 +3443,62 @@ class TransferWithCosts(TransferFunction):
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     The `multiplicative_param <Function_Modulatory_Params>` and `additive_param <Function_Modulatory_Params>` of each
-    cost function is assigned as a parameter of the TransferWIthCost `Function`.  This makes them accessible for
-    `modulation <ModulatorySignal_Modulation>` when the Function is assigned to a `Port` (e.g., as the default
-    `function <ControlSignal.function>` of a `ControlSignal`), or a `Mechanism <Mechanism>`.
+    `cost function <TransferWithCosts_Cost_Functions>` is assigned as a parameter of the TransferWithCost `Function`.
+    This makes them accessible for `modulation <ModulatorySignal_Modulation>` when the Function is assigned to a
+    `Port` (e.g., as the default `function <ControlSignal.function>` of a `ControlSignal`), or a `Mechanism
+    <Mechanism>`.  They can be referred to in the **modulation** argument of a `ModulatorySignal`\\'s constructor
+    (see `ModulatorySignal_Types`) using the following keywords:
 
-    For example, the following scripts shows how modulate the `intensity_cost_function
-    <ControlSignal.intensity_cost_function>` of a `ControlSignal`::
+        *INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM*
+        *INTENSITY_COST_FCT_ADDITIVE_PARAM*
+        *ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM*
+        *ADJUSTMENT_COST_FCT_ADDITIVE_PARAM*
+        *DURATION_COST_FCT_MULTIPLICATIVE_PARAM*
+        *DURATION_COST_FCT_ADDITIVE_PARAM*
+        *COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM*
+        *COMBINE_COSTS_FCT_ADDITIVE_PARAM*
 
-   FIX: 9/3/19 FINISH EXAMPLE
-        >>> mech_1 = ProcessingMechanism()
-        >>> mech_2 = ProcessingMechanism()
-        >>> ctrl_mech_A = ControlMechanism(monitor_for_control=mech_1,
-              contol_signals)
+    See `XXX` for an example of how this can be used to modulate the parameters of the cost functions.
 
+    >>> from psyneulink import *
+    >>> mech = ProcessingMechanism()
+    >>> ctl_mech_A = ControlMechanism(monitor_for_control=mech,
+    >>>                               control_signals=ControlSignal(modulates=(INTERCEPT,mech),
+    ...                                                             cost_options=CostFunctions.INTENSITY))
+    >>> ctl_mech_B = ControlMechanism(monitor_for_control=mech,
+    ...                               control_signals=ControlSignal(modulates=ctl_mech_A.control_signals[0],
+    ...                                                             modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM))
+    >>> comp = Composition()
+    >>> comp.add_linear_processing_pathway(pathway=[mech,
+    ...                                             ctl_mech_A,
+    ...                                             ctl_mech_B
+    ...                                             ])
+
+    configures the `ControlSignal` of``ctl_mech_A`` to implement its `intensity_cost_fct
+    <TransferWithCosts.intensity_cost_fct>`, and the ControlSignal of ``ctl_mech_B`` to modulate the
+    the `multiplicative_param <Function_Modulatory_Params>` of ``ctl_mech_A``\\'s  `intensity_cost_fct
+    <TransferWithCosts.intensity_cost_fct>` (see `XXX` for a more detailed description of how this impacts the
+    cost parameter and
+
+    COMMENT:
+    Executing the script and examining the `intensity_cost <TransferWithCosts.intensity_cost>` of ``clt_mech_A``
+    generates the following::
+
+    >>> comp.run(inputs={mech:[3]}, num_trials=2)
+    3
+    >>> ctl_mech_A.control_signals[0].intensity_cost
+    8103.083927575384008
+
+    MOVE THIS TO EXAMPLE TO ControlSignal AND/OR ControlMechanism AND POINT TO THAT FROM HERE
+    This is because ...
+    The default for an `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>` is the `Exponential` `Function`,
+    and its multiplicative_parm is its `rate <Exponential.rate>` parameter.  Since ``ctl_mech_A`` is configured to
+    monitor the output of ``mech``, the `intensity <TransferWithCosts.intensity>` of ``ctl_mech_A`` is ``3``.  That is,
+    used by its ``intensity_cost_function <TransferMechanismWithCosts.intensity_cost_fct>`` to calculate its
+    `intensity_cost <TransferWithCosts.intensity_cost>`.  The
+    executing the script with ``3`` as the input to ``mech`` intensity_cost should = e ^ (allocation (3) * value of ctl_mech_B (also 3)) = e^9
+
+    COMMENT
 
 
     COMMENT:
