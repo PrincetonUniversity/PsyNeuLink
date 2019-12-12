@@ -155,26 +155,20 @@ at the end of the previous `TRIAL` (i.e., when the ControlMechanism last execute
 `ControlMechanism Execution <ControlMechanism_Execution>`); its value from the previous `TRIAL` is assigned to the
 `last_intensity` attribute.
 
-FIX: 8/30/19 -- ADD DESCRIPTION OF function AS ACTUALLY IMPLEMENTED AS TransferWithCosts
-                AND MODIFY DOCUMENTATION OF COSTS AND COST FUNCTIONS BELOW, AND THEIR Attributes ENTRIES ACCORDINGLY:
-                - cost functions can be specified, but attributes are pointers to function's cost functions
-                - cost attributes get value of corresponding attributes of cost function
-                - ?handling of cost_options
-
 *Function*. A ControlSignal's `allocation <ControlSignal.allocation>` serves as its `variable
 <ModulatorySignal.variable>`, and is used by its `function <ControlSignal.function>` to generate an `intensity`.
 The default `function <ControlSignal.function>` for a ControlSignal is `TransferWithCosts`.  This is a
 `Function` that supplements its core `TransferFunction` (specified by its `transfer_fct
 <TransferWithCosts.transfer_fct>` with a set of cost functions that can be used to compute the ControlSignal's `cost
-attributes <ControlSignal_Costs>`.  The default `transfer_fct <TransferWithCosts.transfer_fct>`> for
-TransferWithCosts is an identity function (`Linear` with `slope <Linear.slope>` \\=1 and `intercept
-<Linear.intercept>`\\=0), that simply assigns the ControlSignal's `allocation <ControlSignal.allocation>` as its
-`intensity <ControlSignal.intensity>`. However, another `TransferFunction` can be assigned to the TransferWithCost's
-
-(e.g., `Exponential`),
-or any other function that takes and returns a
-scalar value or 1d array.
-
+attributes <ControlSignal_Costs>`.  The default `transfer_fct <TransferWithCosts.transfer_fct>`> for TransferWithCosts
+is an identity function (`Linear` with `slope <Linear.slope>` \\=1 and `intercept <Linear.intercept>`\\=0), that simply
+assigns the ControlSignal's `allocation <ControlSignal.allocation>` as its `intensity <ControlSignal.intensity>`.
+However, the TransferWithCosts function can be specified as **function** argument in the ControlSignal's constructor,
+with a different function specified for the **transfer_fct** argument of the TransferWithCosts's constructor (e.g.,
+`Exponential`, or any other function that takes and returns a scalar value or 1d array).  The TransferWithCosts' `cost
+functions <TransferWithCosts_Cost_Functions>` can also be assigned using its own constructor.  A function other than
+TransferWithCosts can also be assigned as the ControlSignal's `function <ControlSignal.function>`, however in that
+case, the ControlSignal's costs can't be computed and will all be assigned None.
 
 *Intensity (value)*. The result of the function is assigned as the value of the ControlSignal's `intensity`
 attribute, which serves as the ControlSignal's `value <ControlSignal.value>` (also referred to as `control_signal`).
@@ -189,35 +183,50 @@ its value from the previous `TRIAL` is assigned to the `last_intensity` attribut
 
 A ControlSignal has a `cost <ControlSignal.cost>` attribute that may be used by the ControlMechanism to which it
 belongs to determine its `allocation <ControlSignal.allocation>`.  The value of the `cost <ControlSignal.cost>`
-is computed from the ControlSignal's `intensity` using one or more of three cost functions, each of which
-computes a different component of the cost, and a function that combines them, as listed below:
+is computed from the ControlSignal's `intensity` using one or more of four cost functions.  These are only
+available if the ControlSignal's `function <ControlSignal.function>` is `TransferWithCosts` (which it is by default),
+and are actually functions that belong to the `TransferWithCosts` `Function` (see `TransferWithCosts_Cost_Functions`).
+Three of these compute different types of cost, and a fourth combines them, the result of which is assigned as the
+ControlSignal's `cost <ControlSignal.cost>` attribute.  The ControlSignal has attributes that reference each of the
+TransferWithCosts' cost functions and their attributesas listed below:
 
-    * `intensity_cost` - calculated by the `intensity_cost_function` based on the current `intensity` of the
-      ControlSignal;
+    * `intensity_cost` - calculated by the `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>` based on the
+      current `intensity` of the ControlSignal, and can be referenced by the ControlSignal's `intensity_cost_function
+      <ControlSignal.intensity_cost_function>` attribute.
     ..
-    * `adjustment_cost` - calculated by the `adjustment_cost_function` based on a change in the ControlSignal's
-      `intensity` from its last value;
+    * `adjustment_cost` - calculated by the `adjustment_cost_fct <TransferWithCosts.adjustment_cost_fct>` based on
+      a change in the ControlSignal's `intensity` from its last value, and can be referenced by the ControlSignal's
+      `adjustment_cost_function <ControlSignal.adjustment_cost_function>` attribute.
     ..
-    * `duration_cost` - calculated by the `duration_cost_function` based on an integral of the ControlSignal's
-      `cost <ControlSignal.cost>`;
+    * `duration_cost` - calculated by the `duration_cost_fct <TransferWithCosts.duration_cost_fct>` based on an
+      integral of the ControlSignal's `cost <ControlSignal.cost>`, and can be referenced by the ControlSignal's
+      `duration_cost_function <ControlSignal.duration_cost_function>` attribute.
     ..
-    * `cost` - calculated by the `combine_costs_function` that combines the results of any cost functions that are
-      enabled.
+    * `cost` - calculated by the `combine_costs_fct <TransferWithCosts.combine_costs_fct>` that combines the results
+      of any cost functions that are enabled, and can be referenced by the ControlSignal's `duration_cost_function
+      <ControlSignal.combine_costs_function>` attribute.
 
-The components used to determine the ControlSignal's `cost <ControlSignal.cost>` can be specified in the
-**costs_options** argument of its constructor, or using its `enable_costs`, `disable_costs` and `assign_costs`
-methods.  All of these take one or more values of `CostFunctions`, each of which specifies a cost component.
-How the enabled components are combined is determined by the `combine_costs_function`.  By default, the values of
-the enabled cost components are summed, however this can be modified by specifying the `combine_costs_function`.
+Which of the cost functions are used can be specified in the **costs_options** argument ControlSignal's constructor,
+which is passed to the corresponding argument of the TransferWithCosts constructor (where it can also be specified).
+The costs functions can also be enabled and disabled using the TransferWithCosts function's `enable_costs
+<TransferWithCosts.enable_costs>`,  `disable_costs <TransferWithCosts.disable_costs>`, `toggle_cost
+<TransferWithCosts.toggle_cost>` and `assign_costs <TransferWithCosts.assign_costs>` methods.  All of these
+take one or more values of `CostFunctions`.  The `combine_costs_function <ControlSignal.combine_costs_function>` is used
+to combine the values generated by the enabled cost functions, and the result is assigned as the ControlSignal's `cost
+<ControlSignal.cost>` attribute.  By default, the `combine_costs_function <ControlSignal.combine_costs_function>` sums
+the results of the enabled cost functions. However, this can be modified by specifying the `combine_costs_function
+<ControlSignal.combine_costs_function>` by specifying the ControlSignal's  `function <ControlSignal.function>` using
+the constructor for the TransferWithCosts function. The parameters of the ControlSignal's cost functions can also be
+modulated by another `ControlMechanism` (see `example <ControlSignal_Example_Modulate_Costs>` below).
 
     COMMENT:
     .. _ControlSignal_Toggle_Costs:
 
     *Enabling and Disabling Cost Functions*.  Any of the cost functions (except the `combine_costs_function`) can
-    be enabled or disabled using the `toggle_cost_function` method to turn it `ON` or `OFF`. If it is disabled, that
+    be enabled or disabled using the `toggle_cost` method to turn it `ON` or `OFF`. If it is disabled, that
     component of the cost is not included in the ControlSignal's `cost` attribute.  A cost function  can  also be
     permanently disabled for the ControlSignal by assigning it's attribute `None`.  If a cost function is permanently
-    disabled for a ControlSignal, it cannot be re-enabled using `toggle_cost_function`.
+    disabled for a ControlSignal, it cannot be re-enabled using `toggle_cost`.
     COMMENT
 
 .. _ControlSignal_Execution:
@@ -252,6 +261,8 @@ evaluate a `control_allocation <ControlMechanism.control_allocation>`, and adjus
 Examples
 --------
 
+.. _ControlSignal_Example_Modulate_Mechanism_Parameter:
+
 *Modulate the parameter of a Mechanism's function*.  The following example assigns a
 ControlSignal to the `bias <Logistic.gain>` parameter of the `Logistic` Function used by a `TransferMechanism`::
 
@@ -265,6 +276,8 @@ attribute is *MULTIPLICATIVE*, so that it will multiply the value of the `bias <
 When the TransferMechanism executes, the Logistic Function will use the value of the ControlSignal as its
 bias parameter.
 
+.. _ControlSignal_Example_Specify_Attributes:
+
 *Specify attributes of a ControlSignal*.  Ordinarily, ControlSignals modify the *MULTIPLICATIVE_PARAM* of a
 ParameterPort's `function <ParameterPort.function>` to modulate the parameter's value.
 In the example below, this is changed by specifying the `modulation <ModulatorySignal.modulation>` attribute of a
@@ -274,30 +287,81 @@ function::
 
     >>> my_mech = TransferMechanism(function=Logistic(gain=(1.0, ControlSignal(modulation=ADDITIVE))))
 
-Note that the `ModulationParam` specified for the `ControlSignal` refers to how the parameter of the *Logistic*
-Function (in this case, its `gain <Logistic.gain>` parameter) is modified, and not directly to input Logistic function;
-that is, in this example, the value of the ControlSignal is added to the *gain parameter* of the Logistic
-function, *not* its `variable <Logistic.variable>`.  If the value of the ControlSignal's **modulation** argument
-had been ``ModulationParam.OVERRIDE``, then the ControlSignal's value would have been used as (i.e., it would have
-replaced) the value of the *Logistic* Function's `gain <Logistic.gain>` parameter, rather than added to it.
+Note that the value specified for the **modulation** argument of `ControlSignal` refers to how the parameter of the
+*Logistic* Function is modified (in this case, its `gain <Logistic.gain>` parameter), and not to the input of the
+Logistic function; that is, in this example, the value of the ControlSignal is added to the *gain parameter* of the
+Logistic function, *not* its `variable <Logistic.variable>`.  If the value of the ControlSignal's **modulation**
+argument had been *OVERRIDE*, then the ControlSignal's value would have been used as (i.e., it would have replaced)
+the value of the *Logistic* Function's `gain <Logistic.gain>` parameter, rather than being added to it.
+
+.. _ControlSignal_Example_Modulate_Costs:
+
+The following example shows how the parameters of a `cost function <ControlSignal_Costs>` can be modulated by another
+`ControlSignal`::
+
+  >>> from psyneulink import *
+  >>> mech = ProcessingMechanism()
+  >>> ctl_mech_A = ControlMechanism(monitor_for_control=mech,
+  ...                               control_signals=ControlSignal(modulates=(INTERCEPT,mech),
+  ...                                                             cost_options=CostFunctions.INTENSITY))
+  >>> ctl_mech_B = ControlMechanism(monitor_for_control=mech,
+  ...                               control_signals=ControlSignal(modulates=ctl_mech_A.control_signals[0],
+  ...                                                             modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM))
+  >>> comp = Composition()
+  >>> comp.add_linear_processing_pathway(pathway=[mech,
+  ...                                             ctl_mech_A,
+  ...                                             ctl_mech_B
+  ...                                             ])
+
+Here, the `ControlSignal` of ``ctl_mech_A`` is configured to monitor the output of ``mech``, modulate the
+the `intercept <Linear.intercept>` parameter of its `function <Mechanism_Base.function>` (which is a `Linear` by
+default), and to implement its `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>` (using the
+**cost_options** argument of the ControlSignal's constructor).  ``ctl_mech_B`` is configured to also monitor
+``mech``, but to modulate the `multiplicative_param <Function_Modulatory_Params>` of the `intensity_cost_fct
+<TransferWithCosts.intensity_cost_fct>` of ``ctl_mech_A``\\s ControlSignal.  The default for the `intensity_cost_fct
+<TransferWithCosts.intensity_cost_fct>` is `Exponential`, the `multiplicative_param <Function_Modulatory_Params>`
+of which is `rate <Exponential>`.  When the ``comp`` is run with an input of ``3``, since the default `function
+<Mechanism_Base.function>` for ``mech`` is `Linear` with a `slope <Linear.slope>` of 1 and an `intercept <Linear>`
+of 0, its output is also ``3``, which is used by both ``ctl_mech_A`` and ``ctl_mech_B`` as their `allocation
+<ControlSignal.allocation>`.  Since the ControlSignals of both use their default `function <ControlSignal>` ——
+TransferWithCosts with an identity function as its `transfer_fct <TransferWithCosts.transfer_fct>` -- the
+`intensity <ControlMechanism.intensity>` of both is the same as their ``allocation`` (i.e., ``3``).  This is used
+as the input to the `Exponential` function used as `intensity_cost_function <ControlSignal.intensity_cost_function>`
+of ``ctl_mech_A``.  However, since the `rate <Exponential.rate>` of that function is modulated by ``ctl_mech_B``,
+the `intensity <ControlSignal.intensity>` of which is also ``3``, the value of the `intensity_cost
+<ControlSignal.intensity_cost>` for ``ctl_mech_A`` is e ^ (allocation (3) * value of ctl_mech_B (also 3)) = e^9,
+as shown below::
+
+    >>> comp.run(inputs={mech:[3]}, num_trials=2)
+    3
+    >>> ctl_mech_A.control_signals[0].intensity_cost
+    8103.083927575384008
+
+The Composition must be executed for 2 trials to see this, since the `value <ControlProjection.value>` computed
+by ``ctl_mech_B`` must be computed on the first trial before it can have its effect on ``ctl_mech_A`` on the next
+(i.e., second) trial (see noted under `ControlSignal_Execution`).
 
 COMMENT:
-    MOVE THIS EXAMPLE TO EVCControlMechanism
 
+.. _ControlSignal_Example_OCM:
+??MOVE TO OCM?
 *Modulate the parameters of several Mechanisms by an OptimizationControlMechanism*.  This shows::
 
-    my_mech_A = TransferMechanism(function=Logistic)
-    my_mech_B = TransferMechanism(function=Linear,
-                                 output_ports=[RESULT, MEAN])
+    >>> my_mech_A = TransferMechanism(function=Logistic)
+    >>> my_mech_B = TransferMechanism(function=Linear,
+    ...                              output_ports=[RESULT, MEAN])
 
-    my_ocm = OptimizationControlMechanism(monitor_for_control=[my_mech_A.output_ports[RESULT],
-                                                               my_mech_B.output_ports[MEAN]],
-                                          control_signals=[(GAIN, my_mech_A),
-                                                           {NAME: INTERCEPT,
-                                                            MECHANISM: my_mech_B,
-                                                            MODULATION:ADDITIVE}],
-                                          name='my_ocm')
+    >>> my_ocm = OptimizationControlMechanism(monitor_for_control=[my_mech_A.output_ports[RESULT],
+    ...                                                            my_mech_B.output_ports[MEAN]],
+    ...                                       control_signals=[(GAIN, my_mech_A),
+    ...                                                        {NAME: INTERCEPT,
+    ...                                                         MECHANISM: my_mech_B,
+    ...                                                         MODULATION:ADDITIVE}],
+    ...                                       name='my_ocm')
 
+.. _ControlSignal_Example_Modulate_Several_Mechanisms:
+
+DEPRECATED
 *Modulate the parameters of several Mechanisms in a System*.  The following example assigns ControlSignals to modulate
 the `gain <Logistic.gain>` parameter of the `Logistic` function for ``my_mech_A`` and the `intercept
 <Logistic.intercept>` parameter of the `Linear` function for ``my_mech_B``::
@@ -317,7 +381,6 @@ the `gain <Logistic.gain>` parameter of the `Logistic` function for ``my_mech_A`
     ...                                          MECHANISM: my_mech_B,
     ...                                          MODULATION: ADDITIVE}],
     ...                        name='My Test System')
-
 COMMENT
 
 .. _ControlSignal_Class_Reference:

@@ -84,7 +84,7 @@ class UserDefinedFunction(Function_Base):
       OutputPort that receives one more more `GatingProjections <GatingProjection>`.
 
       COMMENT:
-      # IMPLEMENT INTERFACE FOR OTHER ModulationParam TYPES (i.e., for ability to add new custom ones)
+      # IMPLEMENT INTERFACE FOR OTHER MODULATION TYPES (i.e., for ability to add new custom ones)
       COMMENT
 
     .. tip::

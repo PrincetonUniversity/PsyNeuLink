@@ -127,11 +127,10 @@ projects to modify their `value <Port_Base.value>` \\s (see `ModulatorySignal_Mo
 `modulation <GatingSignal.modulation>` attribute is specified and used to modulate the `value <Port_Base.value>` of a
 Port). The `modulation <GatingSignal.modulation>` attribute can be specified in the **modulation** argument of the
 constructor for a GatingSignal, or in a specification dictionary as described `above <GatingSignal_Specification>`.
-The value must be a value of `ModulationParam`;  if it is not specified, its default is the value of the `modulation
-<GatingMechanism.modulation>` attribute of the GatingMechanism to which the GatingSignal belongs (which is the same
-for all of the GatingSignals belonging to that GatingMechanism).  The value of the
-`modulation <GatingSignal.modulation>` attribute of a GatingSignal is used by all of the
-`GatingProjections <GatingProjection>` that project from that GatingSignal.
+If it is not specified, its default is the value of the `modulation <GatingMechanism.modulation>` attribute of the
+GatingMechanism to which the GatingSignal belongs (which is the same for all of the GatingSignals belonging to that
+GatingMechanism).  The value of the `modulation <GatingSignal.modulation>` attribute of a GatingSignal is used by all
+of the `GatingProjections <GatingProjection>` that project from that GatingSignal.
 
 
 .. _GatingSignal_Execution:
@@ -196,12 +195,12 @@ Note that, again, the **gate** are listed as Mechanisms, since in this case it i
 to be gated. Since they are all listed in a single entry of a `specification dictionary <GatingSignal_Specification>`,
 they will all be gated by a single GatingSignal named ``GATE_ALL``, that will send a `GatingProjection` to the
 InputPort of each of the Mechanisms listed (the next example shows how different InputPorts can be differentially
-gated by a `GatingMechanism`). Finally, note that the `ModulationParam` specified for the `GatingMechanism` (and
-therefore the default for its GatingSignals) pertains to the `function <InputPort.function>` of each `InputPort`.
-By default that is a `Linear` function, the *ADDITIVE_PARAM* of which is its `intercept <Linear.intercept>`
-parameter. Therefore, in the example above, each time the InputPorts are updated, the value of the GatingSignal will
-be assigned as the `intercept` of each InputPort's `function <InputPort.function>`, thus adding that amount to the
-input to the Port before determining its `value <InputPort.value>`.
+gated by a `GatingMechanism`). Finally, note that the value of the **modulation** arguent specified for the
+`GatingMechanism` (and therefore the default for its GatingSignals) pertains to the `function <InputPort.function>`
+of each `InputPort`. By default that is a `Linear` function, the *ADDITIVE_PARAM* of which is its `intercept
+<Linear.intercept>` parameter. Therefore, in the example above, each time the InputPorts are updated, the value of
+the GatingSignal will be assigned as the `intercept` of each InputPort's `function <InputPort.function>`, thus adding
+that amount to the input to the Port before determining its `value <InputPort.value>`.
 
 **Gate InputPorts differentially**.  In the example above, the InputPorts for all of the Mechanisms were gated
 using a single GatingSignal.  In the example below, a different GatingSignal is assigned to the InputPort of each
@@ -220,9 +219,8 @@ GatingSignal should project (i.e., the ones to be gated).  Once again, the speci
 default is to gate the `primary InputPort <InputPort_Primary>` of a Mechanism, so those are what are referenced. The
 first dict also contains a  *MODULATION* entry that specifies the value of the `modulation <GatingSignal.modulation>`
 attribute for the GatingSignal.  The second one does not, so the default will be used (which, for a GatingSignal, is
-`ModulationParam.MULTIPLICATIVE`).  Thus, the InputPort of ``my_input_layer`` will be additively modulated by
-``GATING_SIGNAL_A``, while the InputPorts of ``my_hidden_layer`` and ``my_output_layer`` will be multiplicatively
-modulated by ``GATING_SIGNAL_B``.
+*MULTIPLICATIVE*).  Thus, the InputPort of ``my_input_layer`` will be additively modulated by ``GATING_SIGNAL_A``, while
+the InputPorts of ``my_hidden_layer`` and ``my_output_layer`` will be multiplicativelymodulated by ``GATING_SIGNAL_B``.
 
 **Creating and assigning stand-alone GatingSignals**.  GatingSignals can also be created on their own, and then later
 assigned to a GatingMechanism.  In the example below, the same GatingSignals specified in the previous example are

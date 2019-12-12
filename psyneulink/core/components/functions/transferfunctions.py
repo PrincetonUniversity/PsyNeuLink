@@ -3253,7 +3253,9 @@ class CostFunctions(IntEnum):
     """Options for selecting constituent cost functions to be used by a `TransferWithCosts` Function.
 
     These can be used alone or in combination with one another, by enabling or disabling each using the
-    `TransferWithCosts` Function's `toggle_cost_function <TransferWithCosts.toggle_cost_function>` method.
+    `TransferWithCosts` Function's `enable_costs <TransferWithCosts.enable_costs>`,
+    `disable_costs <TransferWithCosts.disable_costs>`, `toggle_cost <TransferWithCosts.toggle_cost>` and
+    `assign_costs <TransferWithCosts.assign_costs>` methods.
 
     Attributes
     ----------
@@ -3425,9 +3427,10 @@ class TransferWithCosts(TransferFunction):
     * `duration_cost_fct <TransferWithCosts.duration_cost_fct>` -> `duration_cost <TransferWithCosts.duration_cost>`;
 
     Which functions are called is determined by the settings in `enabled_cost_functions
-    <TransferWithCosts.enabled_cost_functions>`, which can be initialized in the constructor using the
-    **enabled_cost_functions** argument, and modified using the `toggle_cost_function
-    <TransferWithCosts.toggle_cost_function>` method.  The value of any cost for which its function has
+    <TransferWithCosts.enabled_cost_functions>`, that can be initialized in the constructor using the
+    **enabled_cost_functions** argument, and later modified using the `enable_costs <TransferWithCosts.enable_costs>`,
+    `disable_costs <TransferWithCosts.disable_costs>`, `toggle_cost <TransferWithCosts.toggle_cost>` and
+    `assign_costs <TransferWithCosts.assign_costs>` methods.  The value of any cost for which its function has
     *never* been enabled is None;  otherwise, it is the value assigned when it was last enabled and executed
     (see `duration_cost_fct <TransferWithCosts.duration_cost_fct> for additional details concerning that function).
 
@@ -3458,52 +3461,8 @@ class TransferWithCosts(TransferFunction):
         *COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM*
         *COMBINE_COSTS_FCT_ADDITIVE_PARAM*
 
-    See `XXX` for an example of how this can be used to modulate the parameters of the cost functions.
-
-    >>> from psyneulink import *
-    >>> mech = ProcessingMechanism()
-    >>> ctl_mech_A = ControlMechanism(monitor_for_control=mech,
-    >>>                               control_signals=ControlSignal(modulates=(INTERCEPT,mech),
-    ...                                                             cost_options=CostFunctions.INTENSITY))
-    >>> ctl_mech_B = ControlMechanism(monitor_for_control=mech,
-    ...                               control_signals=ControlSignal(modulates=ctl_mech_A.control_signals[0],
-    ...                                                             modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM))
-    >>> comp = Composition()
-    >>> comp.add_linear_processing_pathway(pathway=[mech,
-    ...                                             ctl_mech_A,
-    ...                                             ctl_mech_B
-    ...                                             ])
-
-    configures the `ControlSignal` of``ctl_mech_A`` to implement its `intensity_cost_fct
-    <TransferWithCosts.intensity_cost_fct>`, and the ControlSignal of ``ctl_mech_B`` to modulate the
-    the `multiplicative_param <Function_Modulatory_Params>` of ``ctl_mech_A``\\'s  `intensity_cost_fct
-    <TransferWithCosts.intensity_cost_fct>` (see `XXX` for a more detailed description of how this impacts the
-    cost parameter and
-
-    COMMENT:
-    Executing the script and examining the `intensity_cost <TransferWithCosts.intensity_cost>` of ``clt_mech_A``
-    generates the following::
-
-    >>> comp.run(inputs={mech:[3]}, num_trials=2)
-    3
-    >>> ctl_mech_A.control_signals[0].intensity_cost
-    8103.083927575384008
-
-    MOVE THIS TO EXAMPLE TO ControlSignal AND/OR ControlMechanism AND POINT TO THAT FROM HERE
-    This is because ...
-    The default for an `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>` is the `Exponential` `Function`,
-    and its multiplicative_parm is its `rate <Exponential.rate>` parameter.  Since ``ctl_mech_A`` is configured to
-    monitor the output of ``mech``, the `intensity <TransferWithCosts.intensity>` of ``ctl_mech_A`` is ``3``.  That is,
-    used by its ``intensity_cost_function <TransferMechanismWithCosts.intensity_cost_fct>`` to calculate its
-    `intensity_cost <TransferWithCosts.intensity_cost>`.  The
-    executing the script with ``3`` as the input to ``mech`` intensity_cost should = e ^ (allocation (3) * value of ctl_mech_B (also 3)) = e^9
-
-    COMMENT
-
-
-    COMMENT:
-    FIX 8/30/19: ADD EXAMPLES HERE FOR ASSIGNMENT TO ControlSignal AND DIRECTLY TO A MECHANISM
-    COMMENT
+    See `example <ControlSignal_Example_Modulate_Costs>` of how these keywords can be used to
+    modulate the parameters of the cost functions of a TransferMechanism assigned to a ControlSignal.
 
     Arguments
     ---------
@@ -3960,7 +3919,7 @@ class TransferWithCosts(TransferFunction):
 
         def instantiate_fct(fct_name, fct):
             if not fct:
-                self.toggle_cost_function(fct_name, OFF)
+                self.toggle_cost(fct_name, OFF)
                 return None
             if isinstance(fct, (Function, function_type, method_type)):
                 return fct
@@ -4051,7 +4010,7 @@ class TransferWithCosts(TransferFunction):
             # For each cost function that is enabled:
             # - get params for the cost functon using get_current_function_param:
             #   - if TransferWithControl is owned by a Mechanism, get value from ParameterPort for param
-            #   - otherwise, get from TransferWithControl parameter ModulationParam (which is also subject to modulation)
+            #   - otherwise, get from TransferWithControl modulation parameter (which is also subject to modulation)
 
             # Compute intensity_cost
             if enabled_cost_functions & CostFunctions.INTENSITY:
@@ -4181,7 +4140,7 @@ class TransferWithCosts(TransferFunction):
         self.parameters.enabled_cost_functions.set(enabled_cost_functions, execution_context)
         return enabled_cost_functions
 
-    def toggle_cost_function(self, cost_function_name:tc.any(str, CostFunctions),
+    def toggle_cost(self, cost_function_name:tc.any(str, CostFunctions),
                              assignment:bool=ON,
                              execution_context=None):
         """Enable/disable a `cost functions <TransferWithCosts_Cost_Functions>`.
@@ -4209,7 +4168,7 @@ class TransferWithCosts(TransferFunction):
         elif cost_function_name == COMBINE_COSTS_FUNCTION:
             raise FunctionError("{} cannot be disabled".format(COMBINE_COSTS_FUNCTION))
         else:
-            raise FunctionError("toggle_cost_function: unrecognized cost function: {}".format(cost_function_name))
+            raise FunctionError("toggle_cost: unrecognized cost function: {}".format(cost_function_name))
 
         enabled_cost_functions = self.parameters.enabled_cost_functions.get(execution_context)
         if assignment:

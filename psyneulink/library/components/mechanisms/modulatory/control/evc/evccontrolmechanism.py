@@ -820,7 +820,7 @@ class EVCControlMechanism(ControlMechanism):
                 modulation
                     see `modulation <EVCControlMechanism.modulation>`
 
-                    :default value: ModulationParam.MULTIPLICATIVE
+                    :default value: MULTIPLICATIVE
                     :type: `ModulationParam`
 
                 predicted_input
