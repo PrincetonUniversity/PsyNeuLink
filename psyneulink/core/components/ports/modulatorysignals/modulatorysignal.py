@@ -413,9 +413,11 @@ import itertools
 
 from psyneulink.core.components.component import component_keywords
 from psyneulink.core.components.ports.outputport import OutputPort
-from psyneulink.core.components.ports.port import Port_Base
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import MAYBE, MECHANISM, MODULATION, MODULATORY_SIGNAL, VARIABLE, PROJECTIONS
+from psyneulink.core.globals.keywords import \
+    ADDITIVE_PARAM, DISABLE, MAYBE, MECHANISM, MODULATION, MODULATORY_SIGNAL, MULTIPLICATIVE_PARAM, \
+    OVERRIDE, PROJECTIONS, VARIABLE
+
 from psyneulink.core.globals.defaults import defaultModulatoryAllocation
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -447,7 +449,7 @@ class ModulatorySignalError(Exception):
 
 modulatory_signal_keywords = {MECHANISM, MODULATION}
 modulatory_signal_keywords.update(component_keywords)
-
+modulation_type_keywords = [MULTIPLICATIVE_PARAM, ADDITIVE_PARAM, OVERRIDE, OVERRIDE, DISABLE]
 
 class ModulatorySignal(OutputPort):
     """Subclass of `OutputPort` used by a `ModulatoryMechanism <ModulatoryMechanism>` to modulate the value
@@ -627,8 +629,7 @@ class ModulatorySignal(OutputPort):
         if self.owner and self.modulation is None:
             self.modulation = self.owner.modulation
         if self.modulation is not None:
-            from psyneulink.core.globals.keywords import MULTIPLICATIVE_PARAM, ADDITIVE_PARAM, OVERRIDE, DISABLE
-            if not self.modulation in [MULTIPLICATIVE_PARAM, ADDITIVE_PARAM, OVERRIDE, OVERRIDE, DISABLE]:
+            if not self.modulation in modulation_type_keywords:
                 try:
                     getattr(self.function.parameters, self.modulation)
                 except:
