@@ -182,6 +182,7 @@ class FunctionOutputType(IntEnum):
     RAW_NUMBER = 0
     NP_1D_ARRAY = 1
     NP_2D_ARRAY = 2
+    DEFAULT = 3
 
 
 # Typechecking *********************************************************************************************************
@@ -286,6 +287,46 @@ def get_param_value_for_function(owner, function):
 #         return convert_output_type(result)
 #     return wrapper
 
+# this should eventually be moved to a unified validation method
+def _output_type_setter(value, owning_component):
+    # Can't convert from arrays of length > 1 to number
+    if (
+        owning_component.defaults.variable is not None
+        and safe_len(owning_component.defaults.variable) > 1
+        and owning_component.output_type is FunctionOutputType.RAW_NUMBER
+    ):
+        raise FunctionError(
+            f"{owning_component.__class__.__name__} can't be set to return a "
+            "single number since its variable has more than one number."
+        )
+
+    # warn if user overrides the 2D setting for mechanism functions
+    # may be removed when
+    # https://github.com/PrincetonUniversity/PsyNeuLink/issues/895 is solved
+    # properly(meaning Mechanism values may be something other than 2D np array)
+    try:
+        # import here because if this package is not installed, we can assume
+        # the user is probably not dealing with compilation so no need to warn
+        # unecessarily
+        import llvmlite
+        if (
+            isinstance(owning_component.owner, Mechanism)
+            and (
+                value == FunctionOutputType.RAW_NUMBER
+                or value == FunctionOutputType.NP_1D_ARRAY
+            )
+        ):
+            warnings.warn(
+                f'Functions that are owned by a Mechanism but do not return a '
+                '2D numpy array may cause unexpected behavior if llvm '
+                'compilation is enabled.'
+            )
+    except (AttributeError, ImportError):
+        pass
+
+    return value
+
+
 class Function_Base(Function):
     """
     Function_Base(           \
@@ -348,7 +389,6 @@ class Function_Base(Function):
             + registry (dict): FunctionRegistry
             + classPreference (PreferenceSet): BasePreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-            + paramClassDefaults (dict): {FUNCTION_OUTPUT_TYPE_CONVERSION: :keyword:`False`}
 
         Class methods:
             none
@@ -357,7 +397,6 @@ class Function_Base(Function):
             + componentType (str):  assigned by subclasses
             + componentName (str):   assigned by subclasses
             + variable (value) - used as input to function's execute method
-            + paramInstanceDefaults (dict) - defaults for instance (created and validated in Components init)
             + value (value) - output of execute method
             + name (str) - if not specified as an arg, a default based on the class is assigned in register_category
             + prefs (PreferenceSet) - if not specified as an arg, default is created by copying BasePreferenceSet
@@ -450,33 +489,38 @@ class Function_Base(Function):
         """
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
+        output_type = Parameter(
+            FunctionOutputType.DEFAULT,
+            stateful=False,
+            loggable=False,
+            pnl_internal=True,
+            valid_types=FunctionOutputType
+        )
+        enable_output_type_conversion = Parameter(False, stateful=False, loggable=False, pnl_internal=True)
+
     # Note: the following enforce encoding as 1D np.ndarrays (one array per variable)
     variableEncodingDim = 1
 
-    paramClassDefaults = Function.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        FUNCTION_OUTPUT_TYPE_CONVERSION: False,  # Enable/disable output type conversion
-        FUNCTION_OUTPUT_TYPE: None  # Default is to not convert
-    })
-
     @abc.abstractmethod
-    def __init__(self,
-                 default_variable,
-                 params,
-                 function=None,
-                 owner=None,
-                 name=None,
-                 prefs=None,
-                 context=None):
+    def __init__(
+        self,
+        default_variable,
+        params,
+        function=None,
+        owner=None,
+        name=None,
+        prefs=None,
+        context=None,
+        **kwargs
+    ):
         """Assign category-level preferences, register category, and call super.__init__
 
         Initialization arguments:
         - default_variable (anything): establishes type for the variable, used for validation
-        - params_default (dict): assigned as paramInstanceDefaults
         Note: if parameter_validation is off, validation is suppressed (for efficiency) (Function class default = on)
 
         :param default_variable: (anything but a dict) - value to assign as self.defaults.variable
-        :param params: (dict) - params to be assigned to paramInstanceDefaults
+        :param params: (dict) - params to be assigned as instance defaults
         :param log: (ComponentLog enum) - log entry types set in self.componentLog
         :param name: (string) - optional, overrides assignment of default (componentName of subclass)
         :return:
@@ -487,10 +531,6 @@ class Function_Base(Function):
             self._init_args[NAME] = name
             return
 
-
-        self._output_type = None
-        self.enable_output_type_conversion = False
-
         register_category(entry=self,
                           base_class=Function_Base,
                           registry=FunctionRegistry,
@@ -498,11 +538,14 @@ class Function_Base(Function):
                           context=context)
         self.owner = owner
 
-        super().__init__(default_variable=default_variable,
-                         function=function,
-                         param_defaults=params,
-                         name=name,
-                            prefs=prefs)
+        super().__init__(
+            default_variable=default_variable,
+            function=function,
+            param_defaults=params,
+            name=name,
+            prefs=prefs,
+            **kwargs
+        )
 
     def __call__(self, *args, **kwargs):
         return self.function(*args, **kwargs)
@@ -652,47 +695,6 @@ class Function_Base(Function):
         return value
 
     @property
-    def output_type(self):
-        return self._output_type
-
-    @output_type.setter
-    def output_type(self, value):
-        # Bad outputType specification
-        if value is not None and not isinstance(value, FunctionOutputType):
-            raise FunctionError(f"value ({self.output_type}) of output_type attribute "
-                                f"must be FunctionOutputType for {self.__class__.__name__}.")
-
-        # Can't convert from arrays of length > 1 to number
-        if (
-            self.defaults.variable is not None
-            and safe_len(self.defaults.variable) > 1
-            and self.output_type is FunctionOutputType.RAW_NUMBER
-        ):
-            raise FunctionError(f"{self.__class__.__name__} can't be set to return a single number "
-                                f"since its variable has more than one number.")
-
-        # warn if user overrides the 2D setting for mechanism functions
-        # may be removed when https://github.com/PrincetonUniversity/PsyNeuLink/issues/895 is solved properly
-        # (meaning Mechanism values may be something other than 2D np array)
-        try:
-            # import here because if this package is not installed, we can assume the user is probably not dealing with compilation
-            # so no need to warn unecessarily
-            import llvmlite
-            if (isinstance(self.owner, Mechanism) and (value == FunctionOutputType.RAW_NUMBER or value == FunctionOutputType.NP_1D_ARRAY)):
-                warnings.warn(f'Functions that are owned by a Mechanism but do not return a 2D numpy array '
-                              f'may cause unexpected behavior if llvm compilation is enabled.')
-        except (AttributeError, ImportError):
-            pass
-
-        self._output_type = value
-
-    def show_params(self):
-        print("\nParams for {} ({}):".format(self.name, self.componentName))
-        for param_name, param_value in sorted(self.user_params.items()):
-            print("\t{}: {}".format(param_name, param_value))
-        print('')
-
-    @property
     def owner_name(self):
         try:
             return self.owner.name
@@ -805,13 +807,6 @@ class ArgumentTherapy(Function_Base):
     # These are used both to type-cast the params, and as defaults if none are assigned
     #  in the initialization call or later (using either _instantiate_defaults or during a function call)
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-                               PARAMETER_PORT_PARAMS: None
-                               # PROPENSITY: Manner.CONTRARIAN,
-                               # PERTINACITY:  10
-                               })
-
     def __init__(self,
                  default_variable=None,
                  propensity=10.0,
@@ -820,16 +815,14 @@ class ArgumentTherapy(Function_Base):
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(propensity=propensity,
-                                                  pertinacity=pertincacity,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            propensity=propensity,
+            pertinacity=pertincacity,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_variable(self, variable, context=None):
         """Validates variable and returns validated value
@@ -972,9 +965,6 @@ class EVCAuxiliaryFunction(Function_Base):
                  owner=None,
                  prefs:is_pref_set=None,
                  context=None):
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(params=params)
         self.aux_function = function
 
         super().__init__(default_variable=variable,

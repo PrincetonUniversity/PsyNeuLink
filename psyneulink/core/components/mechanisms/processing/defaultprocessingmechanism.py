@@ -38,11 +38,6 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
 
     Class attributes:
         + componentType (str): System Default Mechanism
-        + paramClassDefaults (dict):
-            # + kwInputPortValue: [0]
-            # + kwOutputPortValue: [1]
-            + FUNCTION: Linear
-            + FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0}
     """
 
     componentName = DEFAULT_PROCESSING_MECHANISM
@@ -58,12 +53,6 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
 
     class Parameters(Mechanism_Base.Parameters):
         variable = np.array([SystemDefaultInputValue])
-
-    paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        FUNCTION: Linear,
-        FUNCTION_PARAMS: {SLOPE: 1, INTERCEPT: 0}
-    })
 
     @tc.typecheck
     def __init__(self,
@@ -83,8 +72,6 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
         :param name: (str)
         :param prefs: (PreferenceSet)
         """
-
-        params = self._assign_args_to_param_dicts(params=params)
 
         super(DefaultProcessingMechanism_Base, self).__init__(default_variable=default_variable,
                                                               size=size,

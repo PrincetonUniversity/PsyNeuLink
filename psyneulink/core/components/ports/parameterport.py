@@ -26,7 +26,7 @@ Overview
 --------
 
 ParameterPorts belong to either a `Mechanism <Mechanism>` or a `Projection <Projection>`. A ParameterPort is created
-to represent each `modulatable parameter <ParameterPort_Configurable_Parameters>` of the `Mechanism
+to represent each `modulatable parameter <ParameterPort_Modulable_Parameters>` of the `Mechanism
 <Mechanism>` or a `Projection <Projection>`, as well as those of the component's `function <Component_Function>`. A
 ParameterPort provides the current value of the parameter it represents during any relevant computations, and serves as
 an interface for parameter modulation.
@@ -63,16 +63,17 @@ Creating a ParameterPort
 ParameterPorts are created automatically when the `Mechanism <Mechanism>` or `Projection <Projection>` to which they
 belong is created.  The `owner <Port.owner>` of a ParameterPort must be a `Mechanism <Mechanism>` or `MappingProjection`
 (the initialization of a ParameterPort cannot be `deferred <Port_Deferred_Initialization>`). One ParameterPort is
-created for each configurable parameter of its owner, as well as for each configurable parameter of the owner's
-`function <Component.function>` (the `configurable parameters <ParameterPort_Configurable_Parameters>` of a Component
-are listed in its `user_params <Component.user_params>` and function_params <Component.function_params>` dictionaries.
+created for each modulable Parameter of its owner, as well as for each modulable Parameter of the owner's
+`function <Component.function>` (modulable Parameters of a Component
+are listed in its `Parameters` class, and have the attribute
+`modulable <Parameter.modulable>` set to True.)
 Each ParameterPort is created using the value specified for the corresponding parameter, as described below.  The
 ParameterPorts for the parameters of a Mechanism or Projection are listed in its `parameter_ports` attribute.
 
 COMMENT:
     FOR DEVELOPERS: The instantiation of ParameterPorts for all of the `user_params` of a Component can be
                     suppressed if a *PARAMETER_PORTS* entry is included and set to `NotImplemented` in the
-                    paramClassDefaults dictionary of its class definition;  the instantiation of a ParameterPort
+                    default of its class Parameters;  the instantiation of a ParameterPort
                     for an individual parameter in user_params can be suppressed by including it in
                     exclude_from_parameter_ports for the class (or one of its parent classes)
                     (see LearningProjection and EVCControlMechanism for examples, and `note
@@ -109,9 +110,8 @@ Parameters can be specified in one of several places:
       assigned to the argument for the parameter in the Component's constructor.
     ..
     * By direct assignment to the Component's attribute for the parameter
-      (see `below <ParameterPort_Configurable_Parameters>`).
+      (see `below <ParameterPort_Modulable_Parameters>`).
     ..
-    * In the `assign_params <Component.assign_params>` method for the Component.
     ..
     * In the **runtime_params** argument of a call to a Composition's `Run` method
 
@@ -317,22 +317,19 @@ following core attributes:
 * `value <ParameterPort.value>` - the result of `function <ParameterPort.function>`; used by the ParameterPort's
   owner as the value of the parameter for which the ParameterPort is responsible.
 
-.. _ParameterPort_Configurable_Parameters:
+.. _ParameterPort_Modulable_Parameters:
 
-All of the configurable parameters of a Component -- that is, for which it has ParameterPorts -- are listed in its
-`user_params <Component.user_params>` attribute, which is a read-only dictionary with an entry for each parameter.
-The parameters for a Component's `function <Component.function>` are listed both in a *FUNCTION_PARAMS* entry of the
-`user_params <Component.user_params>` dictionary, and in their own `function_params <Component.function_params>`
-attribute, which is also a read-only dictionary (with an entry for each of its function's parameters).  The
+All of the modulable parameters of a Component -- that is, for which it has ParameterPorts --
+are listed in its `Parameters` class, and have the attribute
+`modulable <Parameter.modulable>` set to True.  The
 ParameterPorts for a Mechanism or Projection are listed in its :keyword:`parameter_ports` attribute, which is also
 read-only.
 
 An initial value can be assigned to a parameter in the corresponding argument of the constructor for the Component
 (see `above <ParameterPort_Value_Specification>`.  Parameter values can also be modified by a assigning a value to
-the corresponding attribute, or in groups using the Component's `assign_params <Component.assign_params>` method.
+the corresponding attribute.
 The parameters of a Component's function can be modified by assigning a value to the corresponding attribute of the
-Component's `function <Component.function>` attribute (e.g., ``myMechanism.function.my_parameter``)
-or in *FUNCTION_PARAMS* dict in a call to the Component's `assign_params <Component.assign_params>` method.
+Component's `function <Component.function>` attribute (e.g., ``myMechanism.function.my_parameter``).
 See `Mechanism_ParameterPorts` for additional information.
 
 
@@ -362,6 +359,7 @@ Class Reference
 """
 
 import inspect
+import itertools
 import warnings
 
 import numpy as np
@@ -369,7 +367,7 @@ import typecheck as tc
 
 from psyneulink.core.components.component import Component, function_type, method_type, parameter_keywords
 from psyneulink.core.components.functions.function import get_param_value_for_keyword
-from psyneulink.core.components.shellclasses import Mechanism, Projection
+from psyneulink.core.components.shellclasses import Mechanism, Projection, Function
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.ports.port import PortError, Port_Base, _instantiate_port, port_type_keywords
 from psyneulink.core.globals.context import ContextFlags
@@ -377,10 +375,11 @@ from psyneulink.core.globals.keywords import \
     CONTEXT, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, FUNCTION, FUNCTION_PARAMS, \
     LEARNING_SIGNAL, LEARNING_SIGNALS, MECHANISM, NAME, PARAMETER_PORT, PARAMETER_PORTS, \
     PARAMETER_PORT_PARAMS, PATHWAY_PROJECTION, PROJECTION, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, VALUE
+from psyneulink.core.globals.parameters import ParameterAlias
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities \
-    import ContentAddressableList, ReadOnlyOrderedDict, is_iterable, is_numeric, is_value_spec, iscompatible
+    import ContentAddressableList, ReadOnlyOrderedDict, is_iterable, is_numeric, is_value_spec, iscompatible, is_instance_or_subclass
 
 __all__ = [
     'ParameterPort', 'ParameterPortError', 'port_type_keywords',
@@ -481,6 +480,7 @@ class ParameterPort(Port_Base):
     projectionSocket = SENDER
     modulators = [CONTROL_SIGNAL, LEARNING_SIGNAL]
     canReceive = modulators
+    projection_type = CONTROL_PROJECTION
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
@@ -489,8 +489,6 @@ class ParameterPort(Port_Base):
     #     PREFERENCE_SET_NAME: 'ParameterPortCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
-    paramClassDefaults = Port_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_TYPE: CONTROL_PROJECTION})
     #endregion
 
     tc.typecheck
@@ -517,13 +515,9 @@ class ParameterPort(Port_Base):
         # if isinstance(owner, MappingProjection) and name is MATRIX:
         #     function = LinearCombination(operation=SUM)
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  params=params)
-
         self.reference_value = reference_value
 
-        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
+        # Validate sender (as variable) and params
         # Note: pass name of Mechanism (to override assignment of componentName in super.__init__)
         super(ParameterPort, self).__init__(owner,
                                             variable=variable,
@@ -534,23 +528,6 @@ class ParameterPort(Port_Base):
                                             name=name,
                                             prefs=prefs,
                                             context=context)
-
-    def _validate_params(self, request_set, target_set=None, context=None):
-        """Insure that ParameterPort (as identified by its name) is for a valid parameter of the owner
-
-        Parameter can be either owner's, or owner's function
-        """
-
-        # If the parameter is not in either the owner's user_params dict or its function_params dict, throw exception
-        if not self.name in self.owner.user_params.keys() and not self.name in self.owner.function_params.keys():
-            raise ParameterPortError("Name of requested ParameterPort ({}) does not refer to a valid parameter "
-                                      "of the component ({}) or its function ({})".
-                                      format(self.name,
-                                             # self.owner.function.__class__.__name__,
-                                             self.owner.name,
-                                             self.owner.function.componentName))
-
-        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
     def _validate_against_reference_value(self, reference_value):
         """Validate that value of the Port is compatible with the reference_value
@@ -608,7 +585,6 @@ class ParameterPort(Port_Base):
                           f' of {projection.sender.owner.name} to {self.name} {self.__class__.__name__} of '
                           f'{self.owner.name} already exists; will ignore additional one specified ({projection.name}).')
         return duplicate
-
 
     @tc.typecheck
     def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
@@ -791,11 +767,11 @@ class ParameterPort(Port_Base):
                                   format(PATHWAY_PROJECTION, self.name, PARAMETER_PORT, PATHWAY_PROJECTION))
 
 def _instantiate_parameter_ports(owner, function=None, context=None):
-    """Call _instantiate_parameter_port for all params in user_params to instantiate ParameterPorts for them
+    """Call _instantiate_parameter_port for all modulable parameters to instantiate ParameterPorts for them
 
     If owner.parameter_port is None or False:
         - no ParameterPorts will be instantiated.
-    Otherwise, instantiate ParameterPort for each allowable param in owner.user_params
+    Otherwise, instantiate ParameterPort for each modulable parameter
     :param function:
 
     """
@@ -806,7 +782,6 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
                                                      name=owner.name + '.parameter_ports')
 
     # Check that all ParameterPorts for owner have not been explicitly suppressed
-    #    (by assigning `NotImplemented` to PARAMETER_PORTS entry of paramClassDefaults)
     try:
         if owner.parameter_ports is NotImplemented:
             return
@@ -814,41 +789,72 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
         # PARAMETER_PORTS not specified at all, so OK to continue and construct them
         pass
 
-    try:
-        owner.user_params
-    except AttributeError:
-        return
-    # Instantiate ParameterPort for each param in user_params (including all params in function_params dict),
-    #     using its value as the port_spec
-    # Exclude input_ports and output_ports which are also in user_params
-    # IMPLEMENTATION NOTE:  Use user_params_for_instantiation since user_params may have been overwritten
-    #                       when defaults were assigned in Component.__init__,
-    #                       (since that will assign values to the properties of each param;
-    #                       and that, in turn, will overwrite their current values with the defaults)
-    for param_name, param_value in owner.user_params_for_instantiation.items():
-        # Skip any parameter that has been specifically excluded
-        if param_name in owner.exclude_from_parameter_ports:
-            continue
-        if hasattr(owner.parameters, param_name) and not getattr(owner.parameters, param_name).modulable:
-            # skip non modulable parameters
-            continue
+    # Instantiate ParameterPort for each modulable Parameter on
+    # function and owner. function is first because in some
+    # cases a Parameter will be specified on both, and the function's
+    # values/defaults should take precedence
+    def skip_parameter_port(parameter):
+        return (
+            isinstance(parameter, ParameterAlias)
+            or parameter.name in owner.exclude_from_parameter_ports
+            or not parameter.modulable
+        )
 
-        _instantiate_parameter_port(owner, param_name, param_value, context=context, function=function)
+    # function may be a custom function not yet parsed to a UDF
+    # function may also be a Function class, in which case parameter
+    # ports are still created for the modulable Parameters
+
+    if is_instance_or_subclass(function, Function):
+        for p in function.parameters:
+            if not skip_parameter_port(p):
+                try:
+                    value = owner.initial_function_parameters[p.name]
+                except (KeyError, TypeError):
+                    if p.spec is not None:
+                        value = p.spec
+                    else:
+                        value = p.default_value
+
+                _instantiate_parameter_port(
+                    owner,
+                    p.name,
+                    value,
+                    context=context,
+                    function=function
+                )
+
+    for p in owner.parameters:
+        if (
+            not skip_parameter_port(p)
+            and p.name not in owner.parameter_ports.names
+        ):
+            if p.spec is not None:
+                value = p.spec
+            else:
+                value = p.default_value
+
+            _instantiate_parameter_port(
+                owner,
+                p.name,
+                value,
+                context=context,
+                function=function
+            )
 
 
 def _instantiate_parameter_port(owner, param_name, param_value, context, function=None):
     """Call _instantiate_port for allowable params, to instantiate a ParameterPort for it
 
-    Include ones in owner.user_params[FUNCTION_PARAMS] (nested iteration through that dict)
+    Include ones in function.parameters
     Exclude if it is a:
-        ParameterPort that already exists (e.g., in case of a call from Component.assign_params)
+        ParameterPort that already exists
         non-numeric value (including NotImplemented, False or True)
             unless it is:
                 a tuple (could be one specifying Modulatory Component)
                 a dict with the name FUNCTION_PARAMS (otherwise exclude)
         function or method
             IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
-            (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
+            (this is because self.defaults.function could be a class rather than an bound method;
             i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
     # FIX: UPDATE WITH MODULATION_MODS
     # FIX:    CHANGE TO IntegratorFunction FUnction ONCE LearningProjection MODULATES ParameterPort Function:
@@ -874,7 +880,7 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
 
     # EXCLUSIONS:
 
-    # # Skip if ParameterPort already exists (e.g., in case of call from Component.assign_params)
+    # # Skip if ParameterPort already exists
     # if param_name in owner.ParameterPorts:
     #     return
 
@@ -923,6 +929,9 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
     # allows `hetero` to be specified as a matrix, while still generating a ParameterPort
     elif isinstance(param_value, np.ndarray) or isinstance(param_value, np.matrix):
         pass
+    # allow function parameters
+    elif param_name in function.parameters.names():
+        pass
     # Exclude all others
     else:
         return
@@ -932,90 +941,82 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
     #    - a function or method
     #    - have a value of None (see IMPLEMENTATION_NOTE below)
     #    - they have the same name as another parameter of the component (raise exception for this)
-    if param_name is FUNCTION_PARAMS:
-        for function_param_name in param_value.keys():
-            if (hasattr(function.parameters, function_param_name) and
-                    not getattr(function.parameters, function_param_name).modulable):
-                # skip non modulable function parameters
-                continue
+    if param_name in function.parameters.names():
+        function_param_name = param_name
+        if (
+            hasattr(function.parameters, function_param_name)
+            and not getattr(function.parameters, function_param_name).modulable
+        ):
+            # skip non modulable function parameters
+            return
 
-            function_param_value = param_value[function_param_name]
+        function_param_value = param_value
 
-            # IMPLEMENTATION NOTE:
-            # The following is necessary since, if ANY parameters of a function are specified, entries are made
-            #    in the FUNCTION_PARAMS dict of its owner for ALL of the function's params;  however, their values
-            #    will be set to None (and there may not be any relevant paramClassDefaults or a way to determine a
-            #    default; e.g., the length of the array for the weights or exponents params for LinearCombination).
-            #    Therefore, None will be passed as the reference_value, which will cause validation of the
-            #    ParameterPort's function (in _instantiate_function()) to fail.
-            #  Current solution is to simply not instantiate a ParameterPort for any function_param that has
-            #    not been explicitly specified
-            if function_param_value is None:
-                continue
+        # IMPLEMENTATION NOTE:
+        # The following is necessary since, if ANY parameters of a function are specified, entries are made
+        #    in the FUNCTION_PARAMS dict of its owner for ALL of the function's params;  however, their values
+        #    will be set to None (and there may not be a way to determine a
+        #    default; e.g., the length of the array for the weights or exponents params for LinearCombination).
+        #    Therefore, None will be passed as the reference_value, which will cause validation of the
+        #    ParameterPort's function (in _instantiate_function()) to fail.
+        #  Current solution is to simply not instantiate a ParameterPort for any function_param that has
+        #    not been explicitly specified
+        if function_param_value is None:
+            return
 
-            if not _is_legal_param_value(owner, function_param_value):
-                continue
+        if not _is_legal_param_value(owner, function_param_value):
+            return
 
-            # Raise exception if the function parameter's name is the same as one that already exists for its owner
-            if function_param_name in owner.user_params:
-                if inspect.isclass(function):
-                    function_name = function.__name__
-                else:
-                    function_name= function.name
-                raise ParameterPortError("PROGRAM ERROR: the function ({}) of a component ({}) has a parameter ({}) "
-                                          "with the same name as a parameter of the component itself".
-                                          format(function_name, owner.name, function_param_name))
-
-            elif (_is_modulatory_spec(function_param_value, include_matrix_spec=False)
-                  and not isinstance(function_param_value, tuple)):
-                # If parameter is a single Modulatory specification (e.g., ControlSignal, or CONTROL, etc.)
-                # try to place it in a tuple (for interpretation by _parse_port_spec) using default value as 1st item
-                #   (note: exclude matrix since it is allowed as a value specification vs. a projection reference)
-                try:
-                    function_param_value = _get_tuple_for_single_item_modulatory_spec(
-                        function,
-                        function_param_name,
-                        function_param_value
-                    )
-                except ParameterPortError:
-                    function_param_value = _get_tuple_for_single_item_modulatory_spec(
-                        owner,
-                        function_param_name,
-                        function_param_value
-                    )
+        elif (_is_modulatory_spec(function_param_value, include_matrix_spec=False)
+              and not isinstance(function_param_value, tuple)):
+            # If parameter is a single Modulatory specification (e.g., ControlSignal, or CONTROL, etc.)
+            # try to place it in a tuple (for interpretation by _parse_port_spec) using default value as 1st item
+            #   (note: exclude matrix since it is allowed as a value specification vs. a projection reference)
+            try:
+                function_param_value = _get_tuple_for_single_item_modulatory_spec(
+                    function,
+                    function_param_name,
+                    function_param_value
+                )
+            except ParameterPortError:
+                function_param_value = _get_tuple_for_single_item_modulatory_spec(
+                    owner,
+                    function_param_name,
+                    function_param_value
+                )
 
 
-            # # FIX: 10/3/17 - ??MOVE THIS TO _parse_port_specific_specs ----------------
-            # # Use function_param_value as constraint
-            # # IMPLEMENTATION NOTE:  need to copy, since _instantiate_port() calls _parse_port_value()
-            # #                       for constraints before port_spec, which moves items to subdictionaries,
-            # #                       which would make them inaccessible to the subsequent parse of port_spec
-            from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
-            from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
-            if (
-                is_iterable(function_param_value)
-                and any(isinstance(item, (ModulatorySignal, ModulatoryProjection_Base, ModulatoryMechanism_Base)) for item in function_param_value)
-            ):
-                reference_value = function_param_value
-            else:
-                from copy import deepcopy
-                reference_value = deepcopy(function_param_value)
+        # # FIX: 10/3/17 - ??MOVE THIS TO _parse_port_specific_specs ----------------
+        # # Use function_param_value as constraint
+        # # IMPLEMENTATION NOTE:  need to copy, since _instantiate_port() calls _parse_port_value()
+        # #                       for constraints before port_spec, which moves items to subdictionaries,
+        # #                       which would make them inaccessible to the subsequent parse of port_spec
+        from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
+        from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
+        if (
+            is_iterable(function_param_value)
+            and any(isinstance(item, (ModulatorySignal, ModulatoryProjection_Base, ModulatoryMechanism_Base)) for item in function_param_value)
+        ):
+            reference_value = function_param_value
+        else:
+            from copy import deepcopy
+            reference_value = deepcopy(function_param_value)
 
-            # Assign parameterPort for function_param to the component
-            port = _instantiate_port(owner=owner,
-                                       port_type=ParameterPort,
-                                       name=function_param_name,
-                                       port_spec=function_param_value,
-                                       reference_value=reference_value,
-                                       reference_value_name=function_param_name,
-                                       params=None,
-                                       context=context)
-            if port:
-                owner._parameter_ports[function_param_name] = port
-                # will be parsed on assignment of function
-                # FIX: if the function is manually changed after assignment,
-                # FIX: the source will remain pointing to the original Function
-                port.source = FUNCTION
+        # Assign parameterPort for function_param to the component
+        port = _instantiate_port(owner=owner,
+                                   port_type=ParameterPort,
+                                   name=function_param_name,
+                                   port_spec=function_param_value,
+                                   reference_value=reference_value,
+                                   reference_value_name=function_param_name,
+                                   params=None,
+                                   context=context)
+        if port:
+            owner._parameter_ports[function_param_name] = port
+            # will be parsed on assignment of function
+            # FIX: if the function is manually changed after assignment,
+            # FIX: the source will remain pointing to the original Function
+            port.source = FUNCTION
 
     elif _is_legal_param_value(owner, param_value):
         port = _instantiate_port(owner=owner,
@@ -1027,8 +1028,12 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
                                    params=None,
                                    context=context)
         if port:
+            if param_name in function.parameters.names():
+                port.source = function
+            else:
+                port.source = owner
+
             owner._parameter_ports[param_name] = port
-            port.source = owner
 
 
 def _is_legal_param_value(owner, value):

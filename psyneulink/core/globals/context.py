@@ -489,7 +489,6 @@ class Context():
 
         self._change_flags(old, new, operation=replace)
 
-
 @tc.typecheck
 def _get_context(context:tc.any(ContextFlags, Context, str)):
     """Set flags based on a string of ContextFlags keywords

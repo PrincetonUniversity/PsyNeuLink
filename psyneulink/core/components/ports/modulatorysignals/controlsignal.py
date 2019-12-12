@@ -746,6 +746,7 @@ class ControlSignal(ModulatorySignal):
     connectsWithAttribute = [PARAMETER_PORTS, INPUT_PORTS, OUTPUT_PORTS]
     projectionSocket = RECEIVER
     modulators = []
+    projection_type = CONTROL_PROJECTION
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
@@ -754,12 +755,6 @@ class ControlSignal(ModulatorySignal):
     #     PREFERENCE_SET_NAME: 'OutputPortCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
-    paramClassDefaults = Port_Base.paramClassDefaults.copy()
-    # paramClassDefaults = OutputPort.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        PROJECTION_TYPE: CONTROL_PROJECTION,
-        CONTROLLED_PARAMS:None
-    })
     #endregion
 
     @tc.typecheck
@@ -787,35 +782,31 @@ class ControlSignal(ModulatorySignal):
         if params and ALLOCATION_SAMPLES in params and params[ALLOCATION_SAMPLES] is not None:
             allocation_samples = params[ALLOCATION_SAMPLES]
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(
-                                                  cost_options=cost_options,
-                                                  intensity_cost_function=intensity_cost_function,
-                                                  adjustment_cost_function=adjustment_cost_function,
-                                                  duration_cost_function=duration_cost_function,
-                                                  combine_costs_function=combine_costs_function,
-                                                  allocation_samples=allocation_samples,
-                                                  params=params)
-
         # FIX: ??MOVE THIS TO _validate_params OR ANOTHER _instantiate METHOD??
         # IMPLEMENTATION NOTE:
         # Consider adding self to owner.output_ports here (and removing from ControlProjection._instantiate_sender)
         #  (test for it, and create if necessary, as per OutputPorts in ControlProjection._instantiate_sender),
 
-        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
-        super().__init__(owner=owner,
-                         reference_value=reference_value,
-                         default_allocation=default_allocation,
-                         size=size,
-                         assign=None,
-                         function=function,
-                         modulation=modulation,
-                         modulates=modulates,
-                         allocation_samples=allocation_samples,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         **kwargs)
+        # Validate sender (as variable) and params
+        super().__init__(
+            owner=owner,
+            reference_value=reference_value,
+            default_allocation=default_allocation,
+            size=size,
+            function=function,
+            modulation=modulation,
+            modulates=modulates,
+            cost_options=cost_options,
+            intensity_cost_function=intensity_cost_function,
+            adjustment_cost_function=adjustment_cost_function,
+            duration_cost_function=duration_cost_function,
+            combine_costs_function=combine_costs_function,
+            allocation_samples=allocation_samples,
+            params=params,
+            name=name,
+            prefs=prefs,
+            **kwargs
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate cost functions and allocation_samples
@@ -831,7 +822,6 @@ class ControlSignal(ModulatorySignal):
         # # MODIFIED 8/30/19 OLD:
         # # Validate cost functions in request_set
         # #   This should be all of them if this is an initialization call;
-        # #   Otherwise, just those specified in assign_params
         # for cost_function_name in [item for item in request_set if item in costFunctionNames]:
         #     cost_function = request_set[cost_function_name]
         #
@@ -951,12 +941,6 @@ class ControlSignal(ModulatorySignal):
         a = self.parameters.allocation_samples._get(context)
 
         if a is None:
-            return
-
-        # KDM 12/14/18: below is a temporary fix that exists to bypass a validation loop
-        # resulting from the function_object->function refactor. When this validation/assign_params/etc.
-        # is taken care of, this check can be removed
-        if isinstance(a, SampleIterator):
             return
 
         if isinstance(a, (range, np.ndarray)):

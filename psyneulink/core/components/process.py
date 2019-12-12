@@ -448,6 +448,7 @@ Class Reference
 
 """
 
+import copy
 import inspect
 import itertools
 import numbers
@@ -563,7 +564,6 @@ class Process(Process_Base):
         classPreference : PreferenceSet : default ProcessPreferenceSet instantiated in __init__()
         classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + class_defaults.variable = inputValueSystemDefault                     # Used as default input value to Process)
-        + paramClassDefaults = {PATHWAY: []}
 
         Class methods
         -------------
@@ -852,18 +852,13 @@ class Process(Process_Base):
         target_input_ports = []
         systems = []
 
-    paramClassDefaults = Component.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        '_context': None,
-        PATHWAY: None,
-        'input':[],
-        'process_input_ports': [],
-        'targets': None,
-        'target_input_ports': [],
-        'systems': [],
-        '_phaseSpecMax': 0,
-        '_isControllerProcess': False
-    })
+        initial_values = None
+        clamp_input = None
+        default_projection_matrix = DEFAULT_PROJECTION_MATRIX
+        learning = None
+
+        learning_rate = None
+        target = None
 
     @tc.typecheck
     def __init__(self,
@@ -884,16 +879,6 @@ class Process(Process_Base):
         pathway = pathway or []
         self.projections = []
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(pathway=pathway,
-                                                  initial_values=initial_values,
-                                                  clamp_input=clamp_input,
-                                                  default_projection_matrix=default_projection_matrix,
-                                                  learning=learning,
-                                                  learning_rate=learning_rate,
-                                                  target=target,
-                                                  params=params)
-
         register_category(entry=self,
                           base_class=Process,
                           name=name,
@@ -907,12 +892,23 @@ class Process(Process_Base):
             default_variable = pathway[0].defaults.variable
 
         self.default_execution_id = self.name
+        self._phaseSpecMax = 0
+        self._isControllerProcess = False
 
-        super(Process, self).__init__(default_variable=default_variable,
-                                      size=size,
-                                      param_defaults=params,
-                                      name=self.name,
-                                      prefs=prefs)
+        super(Process, self).__init__(
+            default_variable=default_variable,
+            size=size,
+            param_defaults=params,
+            name=self.name,
+            pathway=pathway,
+            initial_values=initial_values,
+            clamp_input=clamp_input,
+            default_projection_matrix=default_projection_matrix,
+            learning=learning,
+            learning_rate=learning_rate,
+            target=target,
+            prefs=prefs
+        )
 
     def _parse_arg_variable(self, variable):
         if variable is None:
@@ -1205,7 +1201,7 @@ class Process(Process_Base):
         else:
             matrix_spec = self.default_projection_matrix
 
-        projection_params = {FUNCTION_PARAMS: {MATRIX: matrix_spec}}
+        projection_params = {FUNCTION_PARAMS: {MATRIX: matrix_spec}, MATRIX: matrix_spec}
 
         for i in range(len(pathway)):
             item = pathway[i]
@@ -1424,7 +1420,7 @@ class Process(Process_Base):
                     projection = MappingProjection(
                         sender=preceding_item,
                         receiver=receiver,
-                        params=projection_params,
+                        params=copy.copy(projection_params),
                         name='{} from {} to {}'.format(MAPPING_PROJECTION, preceding_item.name, item.name)
                     )
 
@@ -1555,7 +1551,7 @@ class Process(Process_Base):
                                 )
 
                         # Check if it is specified for learning
-                        matrix_spec = item.function_params[MATRIX]
+                        matrix_spec = item._init_args[MATRIX]
                         if (
                             isinstance(matrix_spec, tuple)
                             and (

@@ -354,6 +354,7 @@ class GatingSignal(ControlSignal):
     connectsWithAttribute = [INPUT_PORTS, OUTPUT_PORTS]
     projectionSocket = RECEIVER
     modulators = []
+    projection_type = GATING_PROJECTION
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
@@ -407,11 +408,6 @@ class GatingSignal(ControlSignal):
         # duration_cost_function = None
         # combine_costs_function = None
 
-    paramClassDefaults = Port_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        PROJECTION_TYPE: GATING_PROJECTION,
-        GATE:None,
-    })
     #endregion
 
     @tc.typecheck
@@ -428,16 +424,12 @@ class GatingSignal(ControlSignal):
                  prefs:is_pref_set=None,
                  **kwargs):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  params=params)
-
         # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
         # Consider adding self to owner.output_ports here (and removing from GatingProjection._instantiate_sender)
         #  (test for it, and create if necessary, as per OutputPorts in GatingProjection._instantiate_sender),
 
-        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
+        # Validate sender (as variable) and params
         super().__init__(owner=owner,
                          reference_value=reference_value,
                          default_allocation=default_allocation,

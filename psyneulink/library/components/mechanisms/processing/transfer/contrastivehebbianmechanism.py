@@ -925,8 +925,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         phase_terminated = False
 
         input_size = Parameter(None, stateful=False, loggable=False)
-        hidden_size = Parameter(None, stateful=False, loggable=False)
-        target_size = Parameter(None, stateful=False, loggable=False)
+        hidden_size = Parameter(0, stateful=False, loggable=False)
+        target_size = Parameter(0, stateful=False, loggable=False)
         separated = Parameter(True, stateful=False, loggable=False)
         mode = Parameter(None, stateful=False, loggable=False)
         continuous = Parameter(True, stateful=False, loggable=False)
@@ -951,7 +951,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         minus_phase_termination_threshold = Parameter(0.01, modulable=True)
         plus_phase_termination_threshold = Parameter(0.01, modulable=True)
 
-    paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
 
     standard_output_ports = RecurrentTransferMechanism.standard_output_ports.copy()
     standard_output_ports.extend([{NAME:OUTPUT_ACTIVITY,
@@ -1015,19 +1014,15 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             continuous = False
             learning_function = Hebbian
 
-        self.input_size = input_size
-        self.hidden_size = hidden_size or 0
-        self.target_size = target_size or 0
-        self.separated = separated
-        self.recurrent_size = input_size + hidden_size
+        self.recurrent_size = input_size + (hidden_size or 0)
         if separated and target_size:
             self.recurrent_size += target_size
-            self.target_start = input_size + hidden_size
+            self.target_start = input_size + (hidden_size or 0)
             self._target_included = True
         else:
             self.target_start = 0
             self._target_included = False
-        self.target_end = self.target_start + self.target_size
+        self.target_end = self.target_start + target_size
         size = self.recurrent_size
 
         default_variable = [np.zeros(input_size), np.zeros(self.recurrent_size)]
@@ -1053,43 +1048,46 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             else:
                 output_ports.append(additional_output_ports)
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(mode=mode,
-                                                  minus_phase_termination_condition=minus_phase_termination_condition,
-                                                  minus_phase_termination_threshold=minus_phase_termination_threshold,
-                                                  plus_phase_termination_condition=plus_phase_termination_condition,
-                                                  plus_phase_termination_threshold=plus_phase_termination_threshold,
-                                                  phase_convergence_function=phase_convergence_function,
-                                                  phase_convergence_threshold=minus_phase_termination_threshold,
-                                                  max_passes=max_passes,
-                                                  continuous=continuous,
-                                                  clamp=clamp,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         size=size,
-                         input_ports=input_ports,
-                         combination_function=combination_function,
-                         function=function,
-                         matrix=matrix,
-                         auto=auto,
-                         hetero=hetero,
-                         has_recurrent_input_port=True,
-                         integrator_function=integrator_function,
-                         initial_value=initial_value,
-                         noise=noise,
-                         integrator_mode=integrator_mode,
-                         integration_rate=integration_rate,
-                         clip=clip,
-                         enable_learning=enable_learning,
-                         learning_rate=learning_rate,
-                         learning_function=learning_function,
-                         learning_condition=CONVERGENCE,
-                         output_ports=output_ports,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         **kwargs)
+        super().__init__(
+            default_variable=default_variable,
+            size=size,
+            input_ports=input_ports,
+            combination_function=combination_function,
+            function=function,
+            matrix=matrix,
+            auto=auto,
+            hetero=hetero,
+            has_recurrent_input_port=True,
+            integrator_function=integrator_function,
+            initial_value=initial_value,
+            noise=noise,
+            integrator_mode=integrator_mode,
+            integration_rate=integration_rate,
+            clip=clip,
+            enable_learning=enable_learning,
+            learning_rate=learning_rate,
+            learning_function=learning_function,
+            learning_condition=CONVERGENCE,
+            output_ports=output_ports,
+            mode=mode,
+            minus_phase_termination_condition=minus_phase_termination_condition,
+            minus_phase_termination_threshold=minus_phase_termination_threshold,
+            plus_phase_termination_condition=plus_phase_termination_condition,
+            plus_phase_termination_threshold=plus_phase_termination_threshold,
+            phase_convergence_function=phase_convergence_function,
+            phase_convergence_threshold=minus_phase_termination_threshold,
+            max_passes=max_passes,
+            continuous=continuous,
+            input_size=input_size,
+            hidden_size=hidden_size,
+            target_size=target_size,
+            separated=separated,
+            clamp=clamp,
+            params=params,
+            name=name,
+            prefs=prefs,
+            **kwargs
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -1133,15 +1131,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                          receiver=self.input_ports[RECURRENT],
                                          matrix=matrix,
                                          name=mech.name + ' recurrent projection')
-
-    def _instantiate_attributes_after_function(self, context=None):
-
-        # Assign these after instantiation of function, since they are initialized in _execute (see below)
-        self.attributes_dict_entries.update({OUTPUT_ACTIVITY_ATTR:OUTPUT_ACTIVITY_ATTR,
-                                             CURRENT_ACTIVITY_ATTR:CURRENT_ACTIVITY_ATTR,
-                                             MINUS_PHASE_ACTIVITY_ATTR:MINUS_PHASE_ACTIVITY_ATTR,
-                                             PLUS_PHASE_ACTIVITY_ATTR:PLUS_PHASE_ACTIVITY_ATTR})
-        super()._instantiate_attributes_after_function(context=context)
 
     def _execute(self,
                  variable=None,

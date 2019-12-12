@@ -207,7 +207,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  content_size:int=1,
                  assoc_size:int=0,
-                 function:Function=ContentAddressableMemory,
+                 function:Function=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -230,17 +230,16 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
             output_ports.append({NAME: ASSOC_OUTPUT, VARIABLE: (OWNER_VALUE, 1)})
             default_variable.append(np.zeros(assoc_size))
 
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         input_ports=input_ports,
-                         output_ports=output_ports,
-                         **kwargs
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            function=function,
+            params=params,
+            name=name,
+            prefs=prefs,
+            input_ports=input_ports,
+            output_ports=output_ports,
+            **kwargs
+        )
 
     def _execute(self, variable=None, context=None, runtime_params=None):
 
