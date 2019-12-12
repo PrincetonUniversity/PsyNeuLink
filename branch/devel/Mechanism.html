@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanisms &mdash; PsyNeuLink 0.7.2.0+6.ge1b7d16 documentation</title>
+  <title>Mechanisms &mdash; PsyNeuLink 0.7.2.0+21.g484928b documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.2.0+6
+                  0.7.2.0+21
                 </div>
               
             
@@ -447,8 +447,8 @@ the constructor for a <a class="reference internal" href="TransferMechanism.html
 <p>A Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> can be customized by assigning a user-defined function (e.g.,
 a lambda function), so long as it takes arguments and returns values that are compatible with those of the
 Mechanism’s defaults for that function.  This is also true for auxiliary functions that appear as arguments in a
-Mechanism’s constructor (e.g., the <a class="reference internal" href="EVCControlMechanism.html"><span class="doc">EVCControlMechanism</span></a>).  A user-defined function can be assigned using the Mechanism’s
-<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.assign_params" title="psyneulink.core.components.component.Component.assign_params"><code class="xref any py py-meth docutils literal"><span class="pre">assign_params</span></code></a> method (the safest means) or by assigning it directly to the corresponding attribute of the Mechanism
+Mechanism’s constructor (e.g., the <a class="reference internal" href="EVCControlMechanism.html"><span class="doc">EVCControlMechanism</span></a>).  A user-defined function can be assigned
+directly to the corresponding attribute of the Mechanism
 (for its primary function, its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute). When a user-defined function is
 specified, it is automatically converted to a <a class="reference internal" href="UserDefinedFunction.html"><span class="doc">UserDefinedFunction</span></a>.</p>
 <div class="admonition note">
@@ -647,9 +647,6 @@ constructors (see <a class="reference internal" href="#mechanism-function"><span
 value to the attribute for the parameter, or by using the Mechanism’s <code class="xref any docutils literal"><span class="pre">assign_param</span></code> method (the recommended means;
 see <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">Specifying Parameters</span></a>).  Note that the attributes for the parameters of a Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> usually belong to the <a class="reference internal" href="Functions.html#function-overview"><span class="std std-ref">Function</span></a> referenced in its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute, not the Mechanism itself, and therefore must be assigned to the Function
 Component (see <a class="reference internal" href="#mechanism-function"><span class="std std-ref">Function</span></a> above).</p>
-<p>All of the Mechanism’s parameters are listed in a dictionary in its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.user_params" title="psyneulink.core.components.component.Component.user_params"><code class="xref any py py-attr docutils literal"><span class="pre">user_params</span></code></a> attribute; that dictionary contains
-a <em>FUNCTION_PARAMS</em> entry that contains a sub-dictionary with the parameters of the Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  The <em>FUNCTION_PARAMS</em> sub-dictionary is also accessible directly from the Mechanism’s
-<a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function_params" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function_params"><code class="xref any py py-attr docutils literal"><span class="pre">function_params</span></code></a> attribute.</p>
 </div>
 <div class="section" id="outputports">
 <span id="mechanism-outputports"></span><h4>OutputPorts<a class="headerlink" href="#outputports" title="Permalink to this headline">¶</a></h4>
@@ -686,7 +683,7 @@ the Mechanism`s <a class="reference internal" href="#psyneulink.core.components.
 Mechanism-specific attributes (listed below). These can be specified in arguments of the Mechanism’s constructor,
 in a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter specification dictionary</span></a> assigned to the <strong>params</strong> argument of the
 Mechanism’s constructor, by direct reference to the corresponding attribute of the Mechanisms after it has been
-constructed (e.g., <code class="docutils literal"><span class="pre">my_mechanism.param</span></code>), or using the Mechanism’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.assign_params" title="psyneulink.core.components.component.Component.assign_params"><code class="xref any py py-meth docutils literal"><span class="pre">assign_params</span></code></a> method. The Mechanism-specific
+constructed (e.g., <code class="docutils literal"><span class="pre">my_mechanism.param</span></code>). The Mechanism-specific
 attributes are listed below by their argument names / keywords, along with a description of how they are specified:</p>
 <blockquote>
 <div><ul class="simple">
@@ -875,11 +872,6 @@ corresponding InputPort. For example, the label ‘red’, may translate to diff
 of the same Mechanism, and on different Mechanisms of a System.</p>
 </div>
 </div>
-<div class="section" id="attribute-dictionary">
-<h4>Attribute Dictionary<a class="headerlink" href="#attribute-dictionary" title="Permalink to this headline">¶</a></h4>
-<p>A Mechanism has an <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.attributes_dict" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.attributes_dict"><code class="xref any py py-attr docutils literal"><span class="pre">attributes_dict</span></code></a> attribute containing a dictionary of its attributes that can be used to
-specify the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.variable" title="psyneulink.core.components.ports.outputport.OutputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of its OutputPorts (see <a class="reference internal" href="OutputPort.html#outputport-customization"><span class="std std-ref">Custom OutputPorts</span></a>).</p>
-</div>
 </div>
 <div class="section" id="role-in-processes-and-systems">
 <span id="mechanism-role-in-processes-and-systems"></span><h3><em>Role in Processes and Systems</em><a class="headerlink" href="#role-in-processes-and-systems" title="Permalink to this headline">¶</a></h3>
@@ -1037,7 +1029,7 @@ receive external inputs).</p>
 <dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.parameter_ports">
 <code class="descname">parameter_ports</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.parameter_ports" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>ContentAddressableList[str, ParameterPort]</em> – a read-only list of the Mechanism’s <a class="reference internal" href="#mechanism-parameterports"><span class="std std-ref">ParameterPorts</span></a>, one for each of its
-<a class="reference internal" href="ParameterPort.html#parameterport-configurable-parameters"><span class="std std-ref">configurable parameters</span></a>, including those of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  The value of the parameters of the Mechanism and its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> are also accessible as (and can be modified using) attributes of the Mechanism
+<a class="reference internal" href="ParameterPort.html#parameterport-modulable-parameters"><span class="std std-ref">modulable parameters</span></a>, including those of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  The value of the parameters of the Mechanism and its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> are also accessible as (and can be modified using) attributes of the Mechanism
 (see <a class="reference internal" href="#mechanism-parameterports"><span class="std std-ref">ParameterPorts and Parameters</span></a>).</p>
 </dd></dl>
 
@@ -1228,13 +1220,6 @@ belongs, and its value is the Mechanism’s <a class="reference internal" href="
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.attributes_dict">
-<code class="descname">attributes_dict</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.attributes_dict" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Dict[keyword, value]</em> – a dictionary containing the attributes (and their current values) that can be used to specify the
-<a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.variable" title="psyneulink.core.components.ports.outputport.OutputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of the Mechanism’s <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> (see <a class="reference internal" href="OutputPort.html#outputport-customization"><span class="std std-ref">Custom OutputPorts</span></a>).</p>
-</dd></dl>
-
-<dl class="attribute">
 <dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.condition">
 <code class="descname">condition</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.condition" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Condition : None</em> – condition to be associated with the Mechanism in the <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> responsible for executing it in each
@@ -1296,12 +1281,6 @@ specifying the class or keyword for InputPort or OutputPort).</li>
 <dt>
 <code class="descname">afferents</code></dt>
 <dd><p>Return list of all of the Mechanism’s afferent Projections</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="descname">attributes_dict</code></dt>
-<dd><p><em>Note</em> – this needs to be updated each time it is called, as it must be able to report current values</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1612,7 +1591,6 @@ description of formatting requirements and options).</li>
 <li><a class="reference internal" href="#additional-constructor-arguments">Additional Constructor Arguments</a></li>
 <li><a class="reference internal" href="#projection-convenience-properties">Projection Convenience Properties</a></li>
 <li><a class="reference internal" href="#value-label-dictionaries">Value Label Dictionaries</a></li>
-<li><a class="reference internal" href="#attribute-dictionary">Attribute Dictionary</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#role-in-processes-and-systems"><em>Role in Processes and Systems</em></a></li>
@@ -1642,7 +1620,7 @@ description of formatting requirements and options).</li>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.2.0+6.ge1b7d16',
+               VERSION:'0.7.2.0+21.g484928b',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

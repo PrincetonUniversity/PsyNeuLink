@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.7.2.0+6.ge1b7d16 documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.7.2.0+21.g484928b documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.2.0+6
+                  0.7.2.0+21
                 </div>
               
             
@@ -392,46 +392,27 @@ preference (see <code class="xref any docutils literal"><span class="pre">Prefer
 <dd><p class="first last">are used for all Components, unless overridden.</p>
 </dd>
 </dl>
-</li>
-<li><p class="first"><a class="reference internal" href="#psyneulink.core.components.component.Component.user_params" title="psyneulink.core.components.component.Component.user_params"><code class="xref any py py-attr docutils literal"><span class="pre">user_params</span></code></a> - a dictionary that provides reference to all of the user-modifiable parameters
-of a Component. The dictionary is a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python class <a class="reference external" href="https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict">UserDict</a>). The
-value of an entry can be accessed in the standard manner (e.g., <code class="docutils literal"><span class="pre">my_component.user_params[`PARAMETER</span> <span class="pre">NAME`]</span></code>);
-as can its full list of entries (e.g., <code class="docutils literal"><span class="pre">my_component.user_params</span></code>).  However, because it is read-only,
-it cannot be used to make assignments.  Rather, changes to the value of a parameter must be made by assigning a
-value to the attribute for that parameter directly (e.g., <code class="docutils literal"><span class="pre">my_component.my_parameter</span></code>), but using a dedicated
-method if one exists (e.g., <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_ports"><code class="xref any py py-meth docutils literal"><span class="pre">Mechanism_Base.add_ports</span></code></a>), or by using the Component’s <a class="reference internal" href="#psyneulink.core.components.component.Component.assign_params" title="psyneulink.core.components.component.Component.assign_params"><code class="xref any py py-meth docutils literal"><span class="pre">assign_params</span></code></a> method.</p>
-<p>All of the parameters listed in the <em>user_params</em> dictionary can be modified by the user (as described above).  Some
+<p>All of the parameters listed in the <em>parameters</em> class can be modified by the user (as described above).  Some
 can also be modified by <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a> when a <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">System executes</span></a>. In
 general, only parameters that take numerical values and/or do not affect the structure, mode of operation,
 or format of the values associated with a Component can be subject to modulation.  For example, for a
 <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>, <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip"><code class="xref any py py-attr docutils literal"><span class="pre">clip</span></code></a>, <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value"><code class="xref any py py-attr docutils literal"><span class="pre">initial_value</span></code></a>,
 <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a>, <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal"><span class="pre">input_ports</span></code></a>,
-<a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_ports" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a>, and <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, are all listed in user_params, and are user-modifiable,
-but are not subject to modulation; whereas <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> and <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate"><code class="xref any py py-attr docutils literal"><span class="pre">integration_rate</span></code></a>, as well as the parameters of the TransferMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (listed in the <em>function_params</em> subdictionary) can all be subject to modulation.
-Parameters that are subject to modulation are associated with a <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> to which the ControlSignals
+<a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_ports" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a>, and <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, are all listed in parameters, and are user-modifiable,
+but are not subject to modulation; whereas <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> and <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate"><code class="xref any py py-attr docutils literal"><span class="pre">integration_rate</span></code></a> can all be subject to modulation.
+Parameters that are subject to modulation have the
+<a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.modulable" title="psyneulink.core.globals.parameters.Parameter.modulable"><code class="xref any py py-attr docutils literal"><span class="pre">modulable</span></code></a> attribute set to True and are
+associated with a <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> to which the ControlSignals
 can project (by way of a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>).</p>
 </li>
 </ul>
 <ul id="component-function-params">
-<li><p class="first"><strong>function_params</strong> - the <a class="reference internal" href="#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function_params</span></code></a> attribute contains a dictionary of the parameters
-for the Component’s <a class="reference internal" href="#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and their values.  Each entry is the name of a parameter, and its
-value is the value of that parameter.  The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python
-class <a class="reference external" href="https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict">UserList</a>). The
-value of an entry can be accessed in the standard manner (e.g., <code class="docutils literal"><span class="pre">my_component.function_params[`PARAMETER</span> <span class="pre">NAME`]</span></code>);
-as can its  full list of its entries (e.g., <code class="docutils literal"><span class="pre">my_component.function_params</span></code>).  However, because it is read-only,
-it cannot be used to make assignments. Rather, changes to the value of a function’s parameters must be made by
-assigning a value to the corresponding attribute of the Component’s <a class="reference internal" href="#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
-attribute (e.g., <code class="docutils literal"><span class="pre">my_component.function.my_parameter</span></code>), or in a FUNCTION_PARAMS dict using its
-<a class="reference internal" href="#psyneulink.core.components.component.Component.assign_params" title="psyneulink.core.components.component.Component.assign_params"><code class="xref any py py-meth docutils literal"><span class="pre">assign_params</span></code></a> method.  The parameters for a function can be specified when the Component is created in one of
+<li><p class="first"><strong>initial_function_parameters</strong> - the <a class="reference internal" href="#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">initial_function_parameters</span></code></a> attribute contains a dictionary of the parameters
+for the Component’s <a class="reference internal" href="#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and their values, to be used to instantiate the function.  Each entry is the name of a parameter, and its
+value is the value of that parameter. The parameters for a function can be specified when the Component is created in one of
 the following ways:</p>
 <blockquote>
 <div><ul>
-<li><p class="first">in the <strong>constructor</strong> for a Function – if that is used to specify the <a class="reference internal" href="#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
-argument, as in the following example:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_component</span> <span class="o">=</span> <span class="n">SomeComponent</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">SomeFunction</span><span class="p">(</span><span class="n">some_param</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">some_param</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-</pre></div>
-</div>
-</li>
 <li><p class="first">in an argument of the <strong>Component’s constructor</strong> – if all of the allowable functions for a Component’s
 <a class="reference internal" href="#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> share some or all of their parameters in common, the shared paramters may appear
 as arguments in the constructor of the Component itself, which can be used to set their values.</p>
@@ -457,13 +438,7 @@ parameter can be specified).</p>
 <div class="section" id="component-methods">
 <span id="id2"></span><h3><em>Component Methods</em><a class="headerlink" href="#component-methods" title="Permalink to this headline">¶</a></h3>
 <ul class="simple" id="component-assign-params">
-<li><strong>assign_params</strong> - assign the value of one or more parameters of a Component.  Each parameter is specified
-as an entry in a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter specification dictionary</span></a> in the <strong>request_set</strong>
-argument;  parameters for the Component’s <a class="reference internal" href="#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> are specified as entries in a
-<em>FUNCTION_PARAMS</em> dict within <strong>request_set</strong> dict.</li>
-</ul>
-<ul class="simple">
-<li><strong>reset_params</strong> - reset the value of all user_params to a set of default values as specified in its <strong>mode</strong>
+<li><strong>reset_params</strong> - reset the value of all parameters to a set of default values as specified in its <strong>mode</strong>
 argument, using a value of <a class="reference internal" href="#component-resetmode"><span class="std std-ref">ResetMode</span></a>.</li>
 </ul>
 </div>
@@ -583,18 +558,6 @@ override any assigned to those parameters in arguments of the constructor.</li>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.core.components.component.Component.function_params">
-<code class="descname">function_params</code><a class="headerlink" href="#psyneulink.core.components.component.Component.function_params" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Dict[param_name: param_value]</em> – see <a class="reference internal" href="#component-function-params"><span class="std std-ref">function_params</span></a></p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.components.component.Component.user_params">
-<code class="descname">user_params</code><a class="headerlink" href="#psyneulink.core.components.component.Component.user_params" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Dict[param_name: param_value]</em> – see <code class="xref any docutils literal"><span class="pre">user_params</span></code></p>
-</dd></dl>
-
-<dl class="attribute">
 <dt id="psyneulink.core.components.component.Component.value">
 <code class="descname">value</code><a class="headerlink" href="#psyneulink.core.components.component.Component.value" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>2d np.array</em> – see <a class="reference internal" href="#component-value"><span class="std std-ref">value</span></a></p>
@@ -681,15 +644,6 @@ one and only one of the following flags is always set:</p>
 <li><code class="xref any docutils literal"><span class="pre">UNINITIALIZED</span></code></li>
 </ul>
 </div></blockquote>
-</dd></dl>
-
-<dl class="method">
-<dt id="psyneulink.core.components.component.Component.assign_params">
-<code class="descname">assign_params</code><span class="sig-paren">(</span><em>request_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.assign_params" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validates specified params, adds them TO paramInstanceDefaults, and instantiates any if necessary</p>
-<p>Call _instantiate_defaults with context = COMMAND_LINE, and “validated_set” as target_set.
-Update paramInstanceDefaults with validated_set so that any instantiations (below) are done in proper context.
-Instantiate any items in request set that require it (i.e., function or ports).</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -933,7 +887,7 @@ reassign the Linear’s default variable as needed (<a class="reference internal
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.2.0+6.ge1b7d16',
+               VERSION:'0.7.2.0+21.g484928b',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
