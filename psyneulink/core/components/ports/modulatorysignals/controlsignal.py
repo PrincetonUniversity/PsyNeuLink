@@ -796,7 +796,6 @@ class ControlSignal(ModulatorySignal):
             loggable=False,
             getter=_combine_costs_function_getter
         )
-        modulation = None
         _validate_intensity_cost_function = get_validator_by_function(is_function_type)
         _validate_adjustment_cost_function = get_validator_by_function(is_function_type)
         _validate_duration_cost_function = get_validator_by_function(is_function_type)

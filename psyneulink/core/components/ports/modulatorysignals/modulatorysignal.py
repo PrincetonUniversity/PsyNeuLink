@@ -473,7 +473,10 @@ class ModulatorySignal(OutputPort):
         specifies the default template and value used for `variable <ModulatorySignal.variable>`.
 
     modulation : str : default MULTIPLICATIVE
-        specifies the type of modulation the ModulatorySignal uses to determine the value of the Port(s) it modulates.
+        specifies the type of modulation the ModulatorySignal uses to determine the value of the Port(s) it modulates;
+        must be either a keyword defined by the `Function` of the parameter to be modulated, or one of the following
+        generic keywods -- *MULTIPLICATIVE*, *ADDITIVE*, *OVERRIDE* or *DISABLE* (see `ModulatorySignal_Types` for
+        additional details).
 
     Attributes
     ----------
@@ -499,7 +502,8 @@ class ModulatorySignal(OutputPort):
         being modulated.
 
     modulation : str
-        determines how the output of the ModulatorySignal is used to modulate the value of the port(s) being modulated.
+        determines how the `value <ModulatorySignal.value>` of the ModulatorySignal is used to modulate the value of
+        the port(s) being modulated (see `ModulatorySignal_Types` for additional details).
 
     efferents : [List[GatingProjection]]
         a list of the `ModulatoryProjections <ModulatoryProjection>` assigned to the ModulatorySignal.
@@ -622,7 +626,16 @@ class ModulatorySignal(OutputPort):
         super()._instantiate_attributes_after_function(context=context)
         if self.owner and self.modulation is None:
             self.modulation = self.owner.modulation
-
+        if self.modulation is not None:
+            from psyneulink.core.globals.keywords import MULTIPLICATIVE_PARAM, ADDITIVE_PARAM, OVERRIDE, DISABLE
+            if not self.modulation in [MULTIPLICATIVE_PARAM, ADDITIVE_PARAM, OVERRIDE, OVERRIDE, DISABLE]:
+                try:
+                    getattr(self.function.parameters, self.modulation)
+                except:
+                    raise ModulatorySignalError(f"The {MODULATION} arg for {self.name} of {self.owner.name} must be "
+                                                f"the name of a modulable parameter of its function "
+                                                f"({self.function.__class__.__name__}) or a {MODULATION} keyword " 
+                                                f"(MULTIPLICATIVE, ADDITIVE, OVERRIDE, DISABLE).")
 
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of Port's constructor
