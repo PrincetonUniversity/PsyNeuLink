@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>GatingSignal &mdash; PsyNeuLink 0.7.2.0+21.g484928b documentation</title>
+  <title>GatingSignal &mdash; PsyNeuLink 0.7.2.0+22.gf16bacb documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.2.0+21
+                  0.7.2.0+22
                 </div>
               
             
@@ -335,10 +335,10 @@ projects to modify their <a class="reference internal" href="Port.html#psyneulin
 <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.modulation" title="psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute is specified and used to modulate the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a
 Port). The <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.modulation" title="psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute can be specified in the <strong>modulation</strong> argument of the
 constructor for a GatingSignal, or in a specification dictionary as described <a class="reference internal" href="#gatingsignal-specification"><span class="std std-ref">above</span></a>.
-The value must be a value of <code class="xref any docutils literal"><span class="pre">ModulationParam</span></code>;  if it is not specified, its default is the value of the <code class="xref any docutils literal"><span class="pre">modulation</span></code> attribute of the GatingMechanism to which the GatingSignal belongs (which is the same
-for all of the GatingSignals belonging to that GatingMechanism).  The value of the
-<a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.modulation" title="psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute of a GatingSignal is used by all of the
-<a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> that project from that GatingSignal.</p>
+If it is not specified, its default is the value of the <code class="xref any docutils literal"><span class="pre">modulation</span></code> attribute of the
+GatingMechanism to which the GatingSignal belongs (which is the same for all of the GatingSignals belonging to that
+GatingMechanism).  The value of the <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.modulation" title="psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute of a GatingSignal is used by all
+of the <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> that project from that GatingSignal.</p>
 </div>
 </div>
 <div class="section" id="execution">
@@ -394,12 +394,11 @@ it <em>adds</em> the <a class="reference internal" href="#psyneulink.core.compon
 to be gated. Since they are all listed in a single entry of a <a class="reference internal" href="#gatingsignal-specification"><span class="std std-ref">specification dictionary</span></a>,
 they will all be gated by a single GatingSignal named <code class="docutils literal"><span class="pre">GATE_ALL</span></code>, that will send a <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a> to the
 InputPort of each of the Mechanisms listed (the next example shows how different InputPorts can be differentially
-gated by a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a>). Finally, note that the <code class="xref any docutils literal"><span class="pre">ModulationParam</span></code> specified for the <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> (and
-therefore the default for its GatingSignals) pertains to the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.function" title="psyneulink.core.components.ports.inputport.InputPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of each <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>.
-By default that is a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function, the <em>ADDITIVE_PARAM</em> of which is its <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear.intercept" title="psyneulink.core.components.functions.transferfunctions.Linear.intercept"><code class="xref any py py-attr docutils literal"><span class="pre">intercept</span></code></a>
-parameter. Therefore, in the example above, each time the InputPorts are updated, the value of the GatingSignal will
-be assigned as the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear.intercept" title="psyneulink.core.components.functions.transferfunctions.Linear.intercept"><code class="xref any py py-attr docutils literal"><span class="pre">intercept</span></code></a> of each InputPort’s <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.function" title="psyneulink.core.components.ports.inputport.InputPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, thus adding that amount to the
-input to the Port before determining its <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</p>
+gated by a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a>). Finally, note that the value of the <strong>modulation</strong> arguent specified for the
+<a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> (and therefore the default for its GatingSignals) pertains to the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.function" title="psyneulink.core.components.ports.inputport.InputPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
+of each <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>. By default that is a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function, the <em>ADDITIVE_PARAM</em> of which is its <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear.intercept" title="psyneulink.core.components.functions.transferfunctions.Linear.intercept"><code class="xref any py py-attr docutils literal"><span class="pre">intercept</span></code></a> parameter. Therefore, in the example above, each time the InputPorts are updated, the value of
+the GatingSignal will be assigned as the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear.intercept" title="psyneulink.core.components.functions.transferfunctions.Linear.intercept"><code class="xref any py py-attr docutils literal"><span class="pre">intercept</span></code></a> of each InputPort’s <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.function" title="psyneulink.core.components.ports.inputport.InputPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, thus adding
+that amount to the input to the Port before determining its <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</p>
 <p><strong>Gate InputPorts differentially</strong>.  In the example above, the InputPorts for all of the Mechanisms were gated
 using a single GatingSignal.  In the example below, a different GatingSignal is assigned to the InputPort of each
 Mechanism:</p>
@@ -417,9 +416,8 @@ GatingSignal should project (i.e., the ones to be gated).  Once again, the speci
 default is to gate the <a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary InputPort</span></a> of a Mechanism, so those are what are referenced. The
 first dict also contains a  <em>MODULATION</em> entry that specifies the value of the <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.modulation" title="psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a>
 attribute for the GatingSignal.  The second one does not, so the default will be used (which, for a GatingSignal, is
-<code class="xref any docutils literal"><span class="pre">ModulationParam.MULTIPLICATIVE</span></code>).  Thus, the InputPort of <code class="docutils literal"><span class="pre">my_input_layer</span></code> will be additively modulated by
-<code class="docutils literal"><span class="pre">GATING_SIGNAL_A</span></code>, while the InputPorts of <code class="docutils literal"><span class="pre">my_hidden_layer</span></code> and <code class="docutils literal"><span class="pre">my_output_layer</span></code> will be multiplicatively
-modulated by <code class="docutils literal"><span class="pre">GATING_SIGNAL_B</span></code>.</p>
+<em>MULTIPLICATIVE</em>).  Thus, the InputPort of <code class="docutils literal"><span class="pre">my_input_layer</span></code> will be additively modulated by <code class="docutils literal"><span class="pre">GATING_SIGNAL_A</span></code>, while
+the InputPorts of <code class="docutils literal"><span class="pre">my_hidden_layer</span></code> and <code class="docutils literal"><span class="pre">my_output_layer</span></code> will be multiplicativelymodulated by <code class="docutils literal"><span class="pre">GATING_SIGNAL_B</span></code>.</p>
 <p><strong>Creating and assigning stand-alone GatingSignals</strong>.  GatingSignals can also be created on their own, and then later
 assigned to a GatingMechanism.  In the example below, the same GatingSignals specified in the previous example are
 created directly and then assigned to <code class="docutils literal"><span class="pre">my_gating_mechanism</span></code>:</p>
@@ -493,7 +491,7 @@ of the Port(s) to which the GatingSignal’s <a class="reference internal" href=
 <dl class="attribute">
 <dt id="psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.modulation">
 <code class="descname">modulation</code><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.modulation" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ModulationParam</em> – determines the way in the which <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.value" title="psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the GatingSignal is used to modify the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the InputPort(s) and/or OutputPort(s) to which the GatingSignal’s <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection(s)</span></a> project.</p>
+<dd><p><em>str</em> – determines the way in the which <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.value" title="psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the GatingSignal is used to modify the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the InputPort(s) and/or OutputPort(s) to which the GatingSignal’s <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection(s)</span></a> project.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -589,7 +587,7 @@ of the Port(s) to which the GatingSignal’s <a class="reference internal" href=
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.2.0+21.g484928b',
+               VERSION:'0.7.2.0+22.gf16bacb',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

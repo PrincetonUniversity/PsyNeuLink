@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Control Mechanisms &mdash; PsyNeuLink 0.7.2.0+21.g484928b documentation</title>
+  <title>Control Mechanisms &mdash; PsyNeuLink 0.7.2.0+22.gf16bacb documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.2.0+21
+                  0.7.2.0+22
                 </div>
               
             
@@ -608,7 +608,7 @@ which the <strong>default_allocation</strong> was not specified in its construct
 &lt;ControlMechanism.default_allocation&gt;` for additional details).</li>
 <li><strong>control</strong> (<em>ControlSignal specification</em><em> or </em><em>list</em><em>[</em><em>ControlSignal specification</em><em>, </em><em>..</em><em>]</em>) – specifies the parameters to be controlled by the ControlMechanism; a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> is created for each
 (see <a class="reference internal" href="ControlSignal.html#controlsignal-specification"><span class="std std-ref">Specifying ControlSignals</span></a> for details of specification).</li>
-<li><strong>modulation</strong> (<em>ModulationParam : MULTIPLICATIVE</em>) – specifies the default form of modulation used by the ControlMechanism’s <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>,
+<li><strong>modulation</strong> (<em>str : MULTIPLICATIVE</em>) – specifies the default form of modulation used by the ControlMechanism’s <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>,
 unless they are <a class="reference internal" href="ControlSignal.html#controlsignal-specification"><span class="std std-ref">individually specified</span></a>.</li>
 <li><strong>combine_costs</strong> (<em>Function</em><em>, </em><a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function"><em>function</em></a><em> or </em><em>method : default np.sum</em>) – specifies function used to combine the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.cost" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a> of the ControlMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>;  must take a list or 1d array of scalar values as its argument and
 return a list or array with a single scalar value.</li>
@@ -770,7 +770,7 @@ by the the <a class="reference internal" href="#psyneulink.core.components.mecha
 <dl class="attribute">
 <dt id="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.modulation">
 <code class="descname">modulation</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.modulation" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ModulationParam</em> – the default form of modulation used by the ControlMechanism’s <a class="reference internal" href="GatingSignal.html"><span class="doc">ControlSignals</span></a>,
+<dd><p><em>str</em> – the default form of modulation used by the ControlMechanism’s <a class="reference internal" href="GatingSignal.html"><span class="doc">ControlSignals</span></a>,
 unless they are <a class="reference internal" href="ControlSignal.html#controlsignal-specification"><span class="std std-ref">individually specified</span></a>.</p>
 </dd></dl>
 
@@ -921,7 +921,7 @@ and returns the same allocation for each of its <a class="reference internal" hr
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.2.0+21.g484928b',
+               VERSION:'0.7.2.0+22.gf16bacb',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
