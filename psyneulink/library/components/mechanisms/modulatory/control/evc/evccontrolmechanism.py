@@ -818,7 +818,7 @@ class EVCControlMechanism(ControlMechanism):
                     see `modulation <EVCControlMechanism.modulation>`
 
                     :default value: MULTIPLICATIVE
-                    :type: `ModulationParam`
+                    :type: str
 
                 predicted_input
                     see `predicted_input <EVCControlMechanism.predicted_input>`

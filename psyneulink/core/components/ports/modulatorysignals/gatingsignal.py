@@ -330,7 +330,7 @@ class GatingSignal(ControlSignal):
     gating_signal : number, list or np.ndarray
         result of the GatingSignal's `function <GatingSignal.function>` (same as its `value <GatingSignal.value>`).
 
-    modulation : ModulationParam
+    modulation : str
         determines the way in the which `value <GatingSignal.value>` of the GatingSignal is used to modify the `value
         <Port_Base.value>` of the InputPort(s) and/or OutputPort(s) to which the GatingSignal's `GatingProjection(s)
         <GatingProjection>` project.

@@ -472,7 +472,7 @@ class ModulatorySignal(OutputPort):
     default_allocation : scalar : defaultModulatoryAllocation
         specifies the default template and value used for `variable <ModulatorySignal.variable>`.
 
-    modulation : ModulationParam : default MULTIPLICATIVE
+    modulation : str : default MULTIPLICATIVE
         specifies the type of modulation the ModulatorySignal uses to determine the value of the Port(s) it modulates.
 
     Attributes
@@ -498,7 +498,7 @@ class ModulatorySignal(OutputPort):
         result of `function <ModulatorySignal.function>`, used to determine the `value <Port_Base.value>` of the Port(s)
         being modulated.
 
-    modulation : ModulationParam
+    modulation : str
         determines how the output of the ModulatorySignal is used to modulate the value of the port(s) being modulated.
 
     efferents : [List[GatingProjection]]

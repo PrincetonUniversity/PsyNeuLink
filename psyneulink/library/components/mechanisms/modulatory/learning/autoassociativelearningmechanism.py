@@ -279,7 +279,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                     see `modulation <AutoAssociativeLearningMechanism.modulation>`
 
                     :default value: ADDITIVE
-                    :type: `ModulationParam`
+                    :type: str
 
         """
         function = Parameter(Hebbian, stateful=False, loggable=False)
