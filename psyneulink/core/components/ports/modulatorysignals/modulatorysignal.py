@@ -636,7 +636,7 @@ class ModulatorySignal(OutputPort):
                 except:
                     raise ModulatorySignalError(f"The {MODULATION} arg for {self.name} of {self.owner.name} must be "
                                                 f"the name of a modulable parameter of its function "
-                                                f"({self.function.__class__.__name__}) or a {MODULATION} keyword " 
+                                                f"({self.function.__class__.__name__}) or a {MODULATION} keyword "
                                                 f"(MULTIPLICATIVE, ADDITIVE, OVERRIDE, DISABLE).")
 
     def _instantiate_projections(self, projections, context=None):
