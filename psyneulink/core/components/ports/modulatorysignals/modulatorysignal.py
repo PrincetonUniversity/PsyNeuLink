@@ -439,6 +439,10 @@ def _is_modulatory_spec(spec, include_matrix_spec=True):
     else:
         return False
 
+modulatory_signal_keywords = {MECHANISM, MODULATION}
+modulatory_signal_keywords.update(component_keywords)
+modulation_type_keywords = [MULTIPLICATIVE_PARAM, ADDITIVE_PARAM, OVERRIDE, DISABLE]
+
 
 class ModulatorySignalError(Exception):
     def __init__(self, error_value):
@@ -447,9 +451,6 @@ class ModulatorySignalError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-modulatory_signal_keywords = {MECHANISM, MODULATION}
-modulatory_signal_keywords.update(component_keywords)
-modulation_type_keywords = [MULTIPLICATIVE_PARAM, ADDITIVE_PARAM, OVERRIDE, OVERRIDE, DISABLE]
 
 class ModulatorySignal(OutputPort):
     """Subclass of `OutputPort` used by a `ModulatoryMechanism <ModulatoryMechanism>` to modulate the value
