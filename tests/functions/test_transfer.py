@@ -119,7 +119,7 @@ def test_transfer_with_costs_function():
     f = TransferWithCosts()
     result = f(1)
     assert np.allclose(result, 1)
-    f.toggle_cost_function(CostFunctions.INTENSITY)
+    f.toggle_cost(CostFunctions.INTENSITY)
     f = TransferWithCosts(enabled_cost_functions=CostFunctions.INTENSITY)
     result = f(2)
     assert np.allclose(result, 2)
@@ -127,14 +127,14 @@ def test_transfer_with_costs_function():
     assert f.adjustment_cost == None
     assert f.duration_cost == None
     assert np.allclose(np.float(f.combined_costs), 7.38905609893065)
-    f.toggle_cost_function(CostFunctions.ADJUSTMENT)
+    f.toggle_cost(CostFunctions.ADJUSTMENT)
     result = f(3)
     assert np.allclose(result, 3)
     assert np.allclose(f.intensity_cost, 20.085536923187668)
     assert np.allclose(f.adjustment_cost, 1)
     assert f.duration_cost == None
     assert np.allclose(np.float(f.combined_costs), 21.085536923187668)
-    f.toggle_cost_function(CostFunctions.DURATION)
+    f.toggle_cost(CostFunctions.DURATION)
     result = f(5)
     assert np.allclose(result, 5)
     assert np.allclose(f.intensity_cost, 148.413159102576603)

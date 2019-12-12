@@ -193,11 +193,8 @@ import typecheck as tc
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.ports.outputport import PRIMARY
-from psyneulink.core.components.ports.port import Port_Base
-from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    CONTEXT, LEARNED_PARAM, LEARNING_PROJECTION, LEARNING_SIGNAL, OUTPUT_PORT_PARAMS, \
-    PARAMETER_PORT, PARAMETER_PORTS, PROJECTION_TYPE, RECEIVER
+    LEARNING_PROJECTION, LEARNING_SIGNAL, OUTPUT_PORT_PARAMS, PARAMETER_PORT, PARAMETER_PORTS, RECEIVER
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel

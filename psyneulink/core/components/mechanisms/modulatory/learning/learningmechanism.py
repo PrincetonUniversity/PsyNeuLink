@@ -884,7 +884,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         `LearningSignal(s) <LearningMechanism_LearningSignal>`, and then those of any additional (user-specified)
         `OutputPorts <OutputPort>`.
 
-    modulation : ModulationParam
+    modulation : str
         the default form of modulation used by the LearningMechanism's `LearningSignal(s)
         <LearningMechanism_LearningSignal>`, unless they are `individually specified <LearningSignal_Specification>`.
 

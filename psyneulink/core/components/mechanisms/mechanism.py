@@ -2201,7 +2201,7 @@ class Mechanism_Base(Mechanism):
             - Call every self.<parameterport>.execute(); for each:
                 + execute self.<parameterport>].mod_afferents.[<projection>.execute()...
                     (usually this is just a single ControlProjection)
-                + combine results for each ModulationParam or assign value from an OVERRIDE specification
+                + combine results for each modulable param or assign value from an OVERRIDE specification
                 + assign the result to self.<parameterport>.value
             - Call subclass' self.execute(params):
                 - use self.input_port.value as its variable,

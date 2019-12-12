@@ -382,8 +382,8 @@ assigns one of its parameters as its *ADDITIVE_PARAM* and another as its *MULTIP
 `modulation <ModulatorySignal.modulation>` attribute of a ModulatorySignal determines which of these to modify when the
 Port uses it `function <Port_Base.function>` to calculate its `value  <Port_Base.value>`.  However, the
 ModulatorySignal can also be configured to override the Port's `value <Port_Base.value>` (i.e., assign it directly),
-or to disable modulation, using one of the values of `ModulationParam` for its `modulation
-<ModulatorySignal.modulation>` attribute (see `ModulatorySignal_Modulation` for a more detailed discussion).
+or to disable modulation, using either the keyword *OVERRIDE* or *DSIABLE*, respectively, to specify the value for its
+`modulation <ModulatorySignal.modulation>` attribute (see `ModulatorySignal_Modulation` for a more detailed discussion).
 
 .. _Port_Execution:
 

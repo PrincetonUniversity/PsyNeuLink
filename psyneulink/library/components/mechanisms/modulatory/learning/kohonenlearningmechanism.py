@@ -169,7 +169,7 @@ class KohonenLearningMechanism(LearningMechanism):
         specifies the `matrix <AutoAssociativeProjection.matrix>` to be learned (see `learning_signals
         <LearningMechanism.learning_signals>` for details of specification).
 
-    modulation : ModulationParam : default ADDITIVE
+    modulation : str : default ADDITIVE
         specifies the default form of modulation used by the KohonenLearningMechanism's LearningSignals,
         unless they are `individually specified <LearningSignal_Specification>`.
 
@@ -264,7 +264,7 @@ class KohonenLearningMechanism(LearningMechanism):
         the first item is the `value <OutputPort.value>` of the LearningMechanism's `learning_signal
         <KohonenLearningMechanism.learning_signal>`.
 
-    modulation : ModulationParam
+    modulation : str
         the default form of modulation used by the KohonenLearningMechanism's `LearningSignal(s)
         <LearningMechanism_LearningSignal>`, unless they are `individually specified <LearningSignal_Specification>`.
 
@@ -318,7 +318,7 @@ class KohonenLearningMechanism(LearningMechanism):
                     see `modulation <KohonenLearningMechanism.modulation>`
 
                     :default value: ADDITIVE
-                    :type: `ModulationParam`
+                    :type: str
 
         """
         function = Parameter(Hebbian, stateful=False, loggable=False)

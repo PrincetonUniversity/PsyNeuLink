@@ -828,7 +828,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         specifies the parameters to be controlled by the ControlMechanism; a `ControlSignal` is created for each
         (see `ControlSignal_Specification` for details of specification).
 
-    modulation : ModulationParam : MULTIPLICATIVE
+    modulation : str : MULTIPLICATIVE
         specifies the default form of modulation used by the ControlMechanism's `ControlSignals <ControlSignal>`,
         unless they are `individually specified <ControlSignal_Specification>`.
 
@@ -955,7 +955,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         list of `ControlProjections <ControlProjection>` that project from the ControlMechanism's `control_signals
         <ControlMechanism.control_signals>`.
 
-    modulation : ModulationParam
+    modulation : str
         the default form of modulation used by the ControlMechanism's `ControlSignals <GatingSignal>`,
         unless they are `individually specified <ControlSignal_Specification>`.
 
@@ -1049,7 +1049,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     see `modulation <ControlMechanism.modulation>`
 
                     :default value: MULTIPLICATIVE
-                    :type: `ModulationParam`
+                    :type: str
 
                 net_outcome
                     see `net_outcome <ControlMechanism.net_outcome>`
