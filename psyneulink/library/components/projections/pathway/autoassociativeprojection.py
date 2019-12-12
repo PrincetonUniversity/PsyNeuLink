@@ -260,12 +260,9 @@ class AutoAssociativeProjection(MappingProjection):
 
         auto = Parameter(1, getter=_auto_getter, setter=_auto_setter, modulable=True)
         hetero = Parameter(0, getter=_hetero_getter, setter=_hetero_setter, modulable=True)
-        matrix = Parameter(DEFAULT_MATRIX, getter=_matrix_getter, setter=_matrix_setter, modulable=True)
+        matrix = Parameter(DEFAULT_MATRIX, function_parameter=True, getter=_matrix_getter, setter=_matrix_setter, modulable=True)
 
     classPreferenceLevel = PreferenceLevel.TYPE
-
-    # necessary?
-    paramClassDefaults = MappingProjection.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
@@ -287,8 +284,6 @@ class AutoAssociativeProjection(MappingProjection):
                 sender = owner
             if receiver is None:
                 receiver = owner
-
-        params = self._assign_args_to_param_dicts(function_params={MATRIX: matrix}, params=params)
 
         super().__init__(sender=sender,
                          receiver=receiver,

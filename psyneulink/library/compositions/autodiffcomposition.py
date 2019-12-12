@@ -495,9 +495,6 @@ class AutodiffComposition(Composition):
             raise AutodiffCompositionError('Pytorch python module (torch) is not installed. Please install it with '
                                            '`pip install torch` or `pip3 install torch`')
 
-        # params = self._assign_args_to_param_dicts(learning_rate=learning_rate)
-        #
-        # super(AutodiffComposition, self).__init__(params=params, name=name)
         super(AutodiffComposition, self).__init__(name = name,
                                                   patience = patience,
                                                   min_delta = min_delta,

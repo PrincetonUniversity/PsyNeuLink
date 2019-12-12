@@ -174,8 +174,6 @@ class Stability(ObjectiveFunction):
 
     componentName = STABILITY_FUNCTION
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     class Parameters(ObjectiveFunction.Parameters):
         """
             Attributes
@@ -232,18 +230,16 @@ class Stability(ObjectiveFunction):
                 raise FunctionError(f"Both {repr(DEFAULT_VARIABLE)} ({default_variable}) and {repr(SIZE)} ({size}) "
                                     f"are specified for {self.name} but are {SIZE}!=len({DEFAULT_VARIABLE}).")
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(matrix=matrix,
-                                                  metric=metric,
-                                                  transfer_fct=transfer_fct,
-                                                  normalize=normalize,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            matrix=matrix,
+            metric=metric,
+            transfer_fct=transfer_fct,
+            normalize=normalize,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
         # MODIFIED 6/12/19 NEW: [JDC]
         self._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
@@ -270,15 +266,13 @@ class Stability(ObjectiveFunction):
         """
 
         # Validate matrix specification
-        if MATRIX in target_set:
+        # (str can be automatically transformed to variable shape)
+        if MATRIX in target_set and not isinstance(target_set[MATRIX], str):
 
             from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
             from psyneulink.core.components.ports.parameterport import ParameterPort
 
             matrix = target_set[MATRIX]
-
-            if isinstance(matrix, str):
-                matrix = get_matrix(matrix)
 
             if isinstance(matrix, MappingProjection):
                 try:
@@ -308,7 +302,14 @@ class Stability(ObjectiveFunction):
                                     format(param_type_string, MATRIX, self.name, matrix))
             rows = matrix.shape[0]
             cols = matrix.shape[1]
-            size = len(self.defaults.variable)
+
+            # this mirrors the transformation in _function
+            # it is a hack, and a general solution should be found
+            squeezed = np.array(self.defaults.variable)
+            if squeezed.ndim > 1:
+                squeezed = np.squeeze(squeezed)
+
+            size = safe_len(squeezed)
 
             if rows != size:
                 raise FunctionError("The value of the {} specified for the {} arg of {} is the wrong size;"
@@ -568,8 +569,9 @@ class Energy(Stability):
                  owner=None,
                  prefs=None):
 
-        super().__init__(default_variable=default_variable,
-                         size=size,
+        super().__init__(
+            default_variable=default_variable,
+            size=size,
                          metric=ENERGY,
                          matrix=matrix,
                          # transfer_fct=transfer_fct,
@@ -674,8 +676,9 @@ class Entropy(Stability):
                  owner=None,
                  prefs=None):
 
-        super().__init__(default_variable=default_variable,
-                         # matrix=matrix,
+        super().__init__(
+            default_variable=default_variable,
+            # matrix=matrix,
                          metric=ENTROPY,
                          transfer_fct=transfer_fct,
                          normalize=normalize,
@@ -778,8 +781,6 @@ class Distance(ObjectiveFunction):
         variable = Parameter(np.array([[0], [0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         metric = Parameter(DIFFERENCE, stateful=False)
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -788,16 +789,14 @@ class Distance(ObjectiveFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(metric=metric,
-                                                  normalize=normalize,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            metric=metric,
+            normalize=normalize,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_params(self, request_set, target_set=None, variable=None, context=None):
         """Validate that variable had two items of equal length

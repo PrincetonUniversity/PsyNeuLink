@@ -539,7 +539,7 @@ class Projection_Base(Projection):
 
     parameter_ports : ContentAddressableList[str, ParameterPort]
         a read-only list of the Projection's `ParameterPorts <Mechanism_ParameterPorts>`, one for each of its
-        `configurable parameters <ParameterPort_Configurable_Parameters>`, including those of its `function
+        `modulable parameters <ParameterPort_Modulable_Parameters>`, including those of its `function
         <Projection_Base.function>`.  The value of the parameters of the Projection and its `function
         <Projection_Base.function>` are also accessible as (and can be modified using) attributes of the Projection,
         in the same manner as they can for a `Mechanism <Mechanism_ParameterPorts>`).
@@ -602,9 +602,6 @@ class Projection_Base(Projection):
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
 
-    requiredParamClassDefaultTypes = Component.requiredParamClassDefaultTypes.copy()
-    requiredParamClassDefaultTypes.update({PROJECTION_SENDER: [str, Mechanism, Port]}) # Default sender type
-
     @abc.abstractmethod
     def __init__(self,
                  receiver,
@@ -616,6 +613,7 @@ class Projection_Base(Projection):
                  name=None,
                  prefs=None,
                  context=None,
+                 **kwargs
                  ):
         """Assign sender, receiver, and execute method and register Mechanism with ProjectionRegistry
 
@@ -667,18 +665,9 @@ class Projection_Base(Projection):
         from psyneulink.core.components.ports.parameterport import ParameterPort
         from psyneulink.core.components.ports.port import Port_Base
 
-        params = self._assign_args_to_param_dicts(weight=weight,
-                                                  exponent=exponent,
-                                                  params=params)
-
         if self.initialization_status == ContextFlags.DEFERRED_INIT:
             self._assign_deferred_init_name(name, context)
-            self._init_args = locals().copy()
-            self._init_args[NAME] = name
-
-            # remove local imports
-            del self._init_args['ParameterPort']
-            del self._init_args['Port_Base']
+            self._store_deferred_init_args(**locals())
             return
 
         self.receiver = receiver
@@ -726,13 +715,18 @@ class Projection_Base(Projection):
             if self not in self.receiver.afferents_info:
                 self.receiver.afferents_info[self] = ConnectionInfo()
 
-       # Validate variable, function and params, and assign params to paramInstanceDefaults
+       # Validate variable, function and params
         # Note: pass name of Projection (to override assignment of componentName in super.__init__)
-        super(Projection_Base, self).__init__(default_variable=variable,
-                                              function=function,
-                                              param_defaults=params,
-                                              name=self.name,
-                                              prefs=prefs)
+        super(Projection_Base, self).__init__(
+            default_variable=variable,
+            function=function,
+            param_defaults=params,
+            weight=weight,
+            exponent=exponent,
+            name=self.name,
+            prefs=prefs,
+            **kwargs
+        )
 
         self._assign_default_projection_name()
 
@@ -741,10 +735,10 @@ class Projection_Base(Projection):
 
         Check:
         - that PROJECTION_SENDER is a Mechanism or Port
-        - if it is different from paramClassDefaults[PROJECTION_SENDER], use it
+        - if it is different from .projection_sender, use it
         - if it is the same or is invalid, check if sender arg was provided to __init__ and is valid
         - if sender arg is valid use it (if PROJECTION_SENDER can't be used);
-        - if both were not provided, use paramClassDefaults[PROJECTION_SENDER]
+        - if both were not provided, use .projection_sender
         - otherwise, if one was not provided and the other is invalid, generate error
         - when done, sender is assigned to self.sender
 
@@ -762,7 +756,7 @@ class Projection_Base(Projection):
         # FIX:         PROJECTION_TYPE SPECIFIED BY THE CORRESPONDING PORT TYPES
 
         if (PROJECTION_SENDER in target_set and
-                not (target_set[PROJECTION_SENDER] in {None, self.paramClassDefaults[PROJECTION_SENDER]})):
+                not (target_set[PROJECTION_SENDER] in {None, self.projection_sender})):
             # If PROJECTION_SENDER is specified it will be the sender
             sender = target_set[PROJECTION_SENDER]
             sender_string = PROJECTION_SENDER
@@ -804,7 +798,7 @@ class Projection_Base(Projection):
         ):
             assert False, \
                 f"PROGRAM ERROR: Invalid specification for {SENDER} ({sender}) of {self.name} " \
-                f"(including paramClassDefaults: {self.paramClassDefaults[PROJECTION_SENDER]})."
+                f"(including class default: {self.projection_sender})."
 
         # If self.sender is specified as a Mechanism (rather than a Port),
         #     get relevant OutputPort and assign it to self.sender
@@ -1005,6 +999,16 @@ class Projection_Base(Projection):
         raise ProjectionError(f"{Projection.__name__} class {type(projection)} does not implement _delete method.")
 
     @property
+    def _model_spec_parameter_blacklist(self):
+        """
+            A set of Parameter names that should not be added to the generated
+            constructor string
+        """
+        return super()._model_spec_parameter_blacklist.union(
+            {'variable'}
+        )
+
+    @property
     def _dict_summary(self):
         # these may occur during deferred init
         if not isinstance(self.sender, type):
@@ -1032,7 +1036,6 @@ class Projection_Base(Projection):
             **super()._dict_summary,
             **socket_dict
         }
-
 
 @tc.typecheck
 def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_spec=True):
@@ -1174,8 +1177,6 @@ def _parse_projection_spec(projection_spec,
             (proj_spec_dict[EXPONENT] is not None and projection.exponent is not None)):
             raise ProjectionError("PROGRAM ERROR: Conflict in weight and/or exponent specs "
                                   "between Projection and ProjectionTuple")
-        projection._weight = proj_spec_dict[WEIGHT] or projection.weight
-        projection._exponent = proj_spec_dict[EXPONENT] or projection.exponent
         if projection.initialization_status == ContextFlags.DEFERRED_INIT:
             projection._init_args[NAME] = proj_spec_dict[NAME] or projection._init_args[NAME]
         else:
@@ -1199,13 +1200,13 @@ def _parse_projection_spec(projection_spec,
     # Port object or class
     elif (isinstance(projection_spec, Port)
           or (isinstance(projection_spec, type) and issubclass(projection_spec, Port))):
-        proj_spec_dict[PROJECTION_TYPE] = projection_spec.paramClassDefaults[PROJECTION_TYPE]
+        proj_spec_dict[PROJECTION_TYPE] = projection_spec.projection_type
         port_type = projection_spec.__class__
 
     # Mechanism object or class
     elif (isinstance(projection_spec, Mechanism)
           or (isinstance(projection_spec, type) and issubclass(projection_spec, Mechanism))):
-        proj_spec_dict[PROJECTION_TYPE] = projection_spec.outputPortTypes.paramClassDefaults[PROJECTION_TYPE]
+        proj_spec_dict[PROJECTION_TYPE] = projection_spec.outputPortTypes.projection_type
 
     # Dict
     elif isinstance(projection_spec, dict):
@@ -1222,7 +1223,7 @@ def _parse_projection_spec(projection_spec,
     # None
     if not proj_spec_dict[PROJECTION_TYPE]:
         # Assign default type
-        proj_spec_dict[PROJECTION_TYPE] = port_type.paramClassDefaults[PROJECTION_TYPE]
+        proj_spec_dict[PROJECTION_TYPE] = port_type.projection_type
 
         # prefs is not always created when this is called, so check
         try:

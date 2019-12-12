@@ -426,14 +426,17 @@ using the following:
     <Mechanism_Base.value>` indexed by the int;  indexing begins with 0 (e.g.; 1 references the 2nd item).
 
     *<attribute name>* -- the name of an attribute of the OutputPort's `owner <Port.owner>` (must be one
-    in the `owner <Port.owner>`\\'s `params_dict <Mechanism.attributes_dict>` dictionary); returns the value
+    in the `owner <Port.owner>`\\'s `Parameters <Mechanism.Parameters>` class); returns the value
     of the named attribute for use in the OutputPort's `variable <OutputPort.variable>`.
 
-    *PARAMS_DICT* -- keyword specifying the `owner <Port.owner>` Mechanism's entire `params_dict
-    <Mechanism.attributes_dict>` dictionary, that contains entries for all of it accessible attributes.  The
+    *PARAMS_DICT* -- keyword specifying the `owner <Port.owner>` Mechanism's
+    entire dictionary of Parameters, that contains its own Parameters, its
+    `function <Mechanism.function`\\'s Parameters, and the current `variable`
+    for the Mechanism's `input_ports <Mechanism.input_ports>`. The
     OutputPort's `function <OutputPort.function>` must be able to parse the dictionary.
     COMMENT
     ??WHERE CAN THE USER GET THE LIST OF ALLOWABLE ATTRIBUTES?  USER_PARAMS?? aTTRIBUTES_DICT?? USER ACCESSIBLE PARAMS??
+    <obj>.parameters
     COMMENT
 
     *List[<any of the above items>]* -- this assigns the value of each item in the list to the corresponding item of
@@ -610,6 +613,7 @@ Class Reference
 
 """
 
+import inspect
 import numpy as np
 import typecheck as tc
 import warnings
@@ -626,7 +630,7 @@ from psyneulink.core.globals.keywords import \
     NAME, OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, \
     OWNER_VALUE, PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, PROJECTION_TYPE, \
     RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_PORTS, PORT, VALUE, VARIABLE, VARIANCE, \
-    output_port_spec_to_parameter_name
+    output_port_spec_to_parameter_name, INPUT_PORT_VARIABLES
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -698,7 +702,17 @@ def _parse_output_port_variable(variable, owner, context=None, output_port_name=
 
         elif isinstance(spec, str) and spec == PARAMS_DICT:
             # Specifies passing owner's params_dict as variable
-            return owner.attributes_dict
+            return {
+                **{p.name: p._get(context) for p in owner.parameters},
+                **{p.name: p._get(context) for p in owner.function.parameters},
+                **{
+                    INPUT_PORT_VARIABLES:
+                    [
+                        input_port.parameters.variable._get(context)
+                        for input_port in owner.input_ports
+                    ]
+                }
+            }
         elif isinstance(spec, str):
             # Owner's full value or attribute other than its value
             try:
@@ -871,7 +885,7 @@ class OutputPort(Port_Base):
     projectionSocket = RECEIVER
     modulators = [GATING_SIGNAL, CONTROL_SIGNAL]
     canReceive = modulators
-
+    projection_type = MAPPING_PROJECTION
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
@@ -895,10 +909,6 @@ class OutputPort(Port_Base):
         """
         variable = Parameter(np.array([0]), read_only=True, getter=_output_port_variable_getter, pnl_internal=True, constructor_argument='default_variable')
 
-    paramClassDefaults = Port_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
-                               # DEFAULT_VARIABLE_SPEC: [(OWNER_VALUE, 0)]
-                               })
     #endregion
 
     @tc.typecheck
@@ -913,6 +923,8 @@ class OutputPort(Port_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
+                 index=None,
+                 assign=None,
                  **kwargs):
 
         context = kwargs.pop(CONTEXT, None)
@@ -923,11 +935,6 @@ class OutputPort(Port_Base):
         if params:
             _maintain_backward_compatibility(params, name, owner)
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(
-                function=function,
-                params=params)
-
         # setting here to ensure even deferred init ports have this attribute
         self._variable_spec = variable
 
@@ -937,12 +944,7 @@ class OutputPort(Port_Base):
             # Temporarily name OutputPort
             self._assign_deferred_init_name(name, context)
             # Store args for deferred initialization
-            self._init_args = locals().copy()
-            del self._init_args['kwargs']
-            self._init_args['variable'] = variable
-            self._init_args['context'] = context
-            self._init_args['name'] = name
-            self._init_args['projections'] = projections
+            self._store_deferred_init_args(**locals())
 
             # Flag for deferred initialization
             self.initialization_status = ContextFlags.DEFERRED_INIT
@@ -966,17 +968,21 @@ class OutputPort(Port_Base):
         # Consider adding self to owner.output_ports here (and removing from ControlProjection._instantiate_sender)
         #  (test for it, and create if necessary, as per OutputPorts in ControlProjection._instantiate_sender),
 
-        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
-        super().__init__(owner,
-                         variable=variable,
-                         size=size,
-                         projections=projections,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         context=context,
-                         function=function,
-                         )
+        # Validate sender (as variable) and params
+        super().__init__(
+            owner,
+            variable=variable,
+            size=size,
+            projections=projections,
+            params=params,
+            name=name,
+            prefs=prefs,
+            context=context,
+            function=function,
+            index=index,
+            assign=assign,
+            **kwargs
+        )
 
     def _validate_against_reference_value(self, reference_value):
         """Validate that Port.variable is compatible with the reference_value
@@ -1660,7 +1666,6 @@ def _parse_output_port_function(owner, output_port_name, function, params_dict_a
                                      OutputPort.name, owner.name, owner.name, VALUE))
             return lambda x: function(x[OWNER_VALUE][0])
     return function
-
 
 @tc.typecheck
 def _maintain_backward_compatibility(d:dict, name, owner):

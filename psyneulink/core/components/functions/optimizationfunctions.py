@@ -339,52 +339,49 @@ class OptimizationFunction(Function_Base):
         saved_values = Parameter([], read_only=True, pnl_internal=True)
 
     @tc.typecheck
-    def __init__(self,
-                 default_variable=None,
-                 objective_function:tc.optional(is_function_type)=None,
-                 search_function:tc.optional(is_function_type)=None,
-                 search_space=None,
-                 search_termination_function:tc.optional(is_function_type)=None,
-                 save_samples:tc.optional(bool)=False,
-                 save_values:tc.optional(bool)=False,
-                 max_iterations:tc.optional(int)=None,
-                 params=None,
-                 owner=None,
-                 prefs=None,
-                 context=None):
+    def __init__(
+        self,
+        default_variable=None,
+        objective_function:tc.optional(is_function_type)=None,
+        search_function:tc.optional(is_function_type)=None,
+        search_space=None,
+        search_termination_function:tc.optional(is_function_type)=None,
+        save_samples:tc.optional(bool)=False,
+        save_values:tc.optional(bool)=False,
+        max_iterations:tc.optional(int)=None,
+        params=None,
+        owner=None,
+        prefs=None,
+        context=None,
+        **kwargs
+    ):
 
         self._unspecified_args = []
 
         if objective_function is None:
-            self.objective_function = lambda x:0
             self._unspecified_args.append(OBJECTIVE_FUNCTION)
-        else:
-            self.objective_function = objective_function
 
         if search_function is None:
-            self.search_function = lambda x:x
             self._unspecified_args.append(SEARCH_FUNCTION)
-        else:
-            self.search_function = search_function
 
         if search_termination_function is None:
-            self.search_termination_function = lambda x,y,z:True
             self._unspecified_args.append(SEARCH_TERMINATION_FUNCTION)
-        else:
-            self.search_termination_function = search_termination_function
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(save_samples=save_samples,
-                                                  save_values=save_values,
-                                                  max_iterations=max_iterations,
-                                                  search_space=search_space,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
+        super().__init__(
+            default_variable=default_variable,
+            save_samples=save_samples,
+            save_values=save_values,
+            max_iterations=max_iterations,
+            search_space=search_space,
+            objective_function=objective_function,
+            search_function=search_function,
+            search_termination_function=search_termination_function,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=context,
+            **kwargs
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -415,12 +412,19 @@ class OptimizationFunction(Function_Base):
                 raise OptimizationFunctionError("Specification of {} arg for {} ({}) must be a function or method".
                                                 format(repr(SEARCH_TERMINATION_FUNCTION), self.__class__.__name__,
                                                        request_set[SEARCH_TERMINATION_FUNCTION].__name__))
-            b = request_set[SEARCH_TERMINATION_FUNCTION]()
-            if not isinstance(b, bool):
-                raise OptimizationFunctionError("Function ({}) specified for {} arg of {} must return a boolean value".
-                                                format(request_set[SEARCH_TERMINATION_FUNCTION].__name__,
-                                                       repr(SEARCH_TERMINATION_FUNCTION),
-                                                       self.__class__.__name__))
+
+            try:
+                b = request_set[SEARCH_TERMINATION_FUNCTION]()
+                if not isinstance(b, bool):
+                    raise OptimizationFunctionError("Function ({}) specified for {} arg of {} must return a boolean value".
+                                                    format(request_set[SEARCH_TERMINATION_FUNCTION].__name__,
+                                                           repr(SEARCH_TERMINATION_FUNCTION),
+                                                           self.__class__.__name__))
+            except TypeError as e:
+                # we cannot validate arbitrary functions here if they
+                # require arguments
+                if 'required positional arguments' not in str(e):
+                    raise
 
     @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, *args, context=None):
@@ -843,7 +847,11 @@ class GradientOptimization(OptimizationFunction):
         direction = ASCENT
         convergence_criterion = Parameter(VALUE, pnl_internal=True)
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+        def _parse_direction(self, direction):
+            if direction is ASCENT:
+                return 1
+            else:
+                return -1
 
     @tc.typecheck
     def __init__(self,
@@ -863,34 +871,27 @@ class GradientOptimization(OptimizationFunction):
                  owner=None,
                  prefs=None):
 
-        self.gradient_function = gradient_function
         search_function = self._follow_gradient
         search_termination_function = self._convergence_condition
 
-        if direction is ASCENT:
-            self.direction = 1
-        else:
-            self.direction = -1
-        self.annealing_function = annealing_function
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(step_size=step_size,
-                                                  convergence_criterion=convergence_criterion,
-                                                  convergence_threshold=convergence_threshold,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         objective_function=objective_function,
-                         search_function=search_function,
-                         search_space=search_space,
-                         search_termination_function=search_termination_function,
-                         max_iterations=max_iterations,
-                         save_samples=save_samples,
-                         save_values=save_values,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            objective_function=objective_function,
+            search_function=search_function,
+            search_space=search_space,
+            search_termination_function=search_termination_function,
+            max_iterations=max_iterations,
+            save_samples=save_samples,
+            save_values=save_values,
+            step_size=step_size,
+            convergence_criterion=convergence_criterion,
+            convergence_threshold=convergence_threshold,
+            gradient_function=gradient_function,
+            annealing_function=annealing_function,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -1247,8 +1248,6 @@ class GridSearch(OptimizationFunction):
 
         direction = MAXIMIZE
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     # TODO: should save_values be in the constructor if it's ignored?
     # is False or True the correct value?
     @tc.typecheck
@@ -1276,7 +1275,6 @@ class GridSearch(OptimizationFunction):
             pass
 
         self.num_iterations = 1 if search_space is None else np.product([i.num for i in search_space])
-        self.direction = direction
         # self.tolerance = tolerance
         self.select_randomly_from_optimal_values = select_randomly_from_optimal_values
 
@@ -1284,21 +1282,20 @@ class GridSearch(OptimizationFunction):
             seed = get_global_seed()
         random_state = np.random.RandomState([seed])
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(params=params,
-                                                  random_state=random_state)
-
-        super().__init__(default_variable=default_variable,
-                         objective_function=objective_function,
-                         search_function=search_function,
-                         search_termination_function=search_termination_function,
-                         search_space=search_space,
-                         save_samples=True,
-                         save_values=True,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            objective_function=objective_function,
+            search_function=search_function,
+            search_termination_function=search_termination_function,
+            search_space=search_space,
+            save_samples=True,
+            save_values=True,
+            random_state=random_state,
+            direction=direction,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
         self.stateful_attributes = ["random_state"]
 
@@ -1915,8 +1912,6 @@ class GaussianProcess(OptimizationFunction):
 
         direction = MAXIMIZE
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     # TODO: should save_values be in the constructor if it's ignored?
     # is False or True the correct value?
     @tc.typecheck
@@ -1937,20 +1932,18 @@ class GaussianProcess(OptimizationFunction):
         self._return_samples = save_values
         self.direction = direction
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(params=params)
-
-        super().__init__(default_variable=default_variable,
-                         objective_function=objective_function,
-                         search_function=search_function,
-                         search_space=search_space,
-                         search_termination_function=search_termination_function,
-                         save_samples=True,
-                         save_values=True,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            objective_function=objective_function,
+            search_function=search_function,
+            search_space=search_space,
+            search_termination_function=search_termination_function,
+            save_samples=True,
+            save_values=True,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set=request_set, target_set=target_set,context=context)
@@ -2180,8 +2173,6 @@ class ParamEstimationFunction(OptimizationFunction):
         save_samples = True
         save_values = True
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     @tc.typecheck
     def __init__(self,
                  priors,
@@ -2235,20 +2226,19 @@ class ParamEstimationFunction(OptimizationFunction):
         # with some stuff wrapped around it to massage its return values and arguments.
         self._sim_func = None
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(params=params)
-
-        super().__init__(default_variable=default_variable,
-                         objective_function=objective_function,
-                         search_function=None,
-                         search_space=search_space,
-                         search_termination_function=None,
-                         save_samples=True,
-                         save_values=True,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+        super().__init__(
+            default_variable=default_variable,
+            objective_function=objective_function,
+            search_function=None,
+            search_space=search_space,
+            search_termination_function=None,
+            save_samples=True,
+            save_values=True,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=ContextFlags.CONSTRUCTOR
+        )
 
     @staticmethod
     def _import_elfi():

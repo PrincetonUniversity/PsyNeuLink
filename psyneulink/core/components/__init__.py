@@ -231,37 +231,28 @@ register_category(entry=GatingProjection,
 
 # Assign default Projection type for Port subclasses
 for port_type in PortRegistry:
-    port_Params =PortRegistry[port_type].subclass.paramClassDefaults
+    projection_type = PortRegistry[port_type].subclass.projection_type
     try:
         # Use string specified in Port's PROJECTION_TYPE param to get
         # class reference for projection type from ProjectionRegistry
-        port_Params[PROJECTION_TYPE] = ProjectionRegistry[port_Params[PROJECTION_TYPE]].subclass
+        PortRegistry[port_type].subclass.projection_type = ProjectionRegistry[projection_type].subclass
+        projection_type = ProjectionRegistry[projection_type].subclass
     except AttributeError:
-        raise InitError("paramClassDefaults[PROJECTION_TYPE] not defined for {0}".format(port_type))
+        raise InitError("projection_type not defined for {0}".format(port_type))
     except (KeyError, NameError):
         # Check if port_Params[PROJECTION_TYPE] has already been assigned to a class and, if so, use it
-        if inspect.isclass(port_Params[PROJECTION_TYPE]):
-            port_Params[PROJECTION_TYPE] = port_Params[PROJECTION_TYPE]
-        else:
-            raise InitError("{0} not found in ProjectionRegistry".format(port_Params[PROJECTION_TYPE]))
+        if not inspect.isclass(projection_type):
+            raise InitError("{0} not found in ProjectionRegistry".format(projection_type))
     else:
-        if not (inspect.isclass(port_Params[PROJECTION_TYPE]) and
-                     issubclass(port_Params[PROJECTION_TYPE], Projection_Base)):
-            raise InitError("paramClassDefaults[PROJECTION_TYPE] ({0}) for {1} must be a type of Projection".
-                            format(port_Params[PROJECTION_TYPE].__name__, port_type))
+        if not (inspect.isclass(projection_type) and
+                     issubclass(projection_type, Projection_Base)):
+            raise InitError("projection_type ({0}) for {1} must be a type of Projection".
+                            format(projection_type.__name__, port_type))
 
 
 # Validate / assign default sender for each Projection subclass (must be a Mechanism, Port or instance of one)
 for projection_type in ProjectionRegistry:
-    # Get paramClassDefaults for projection_type subclass
-    projection_params = ProjectionRegistry[projection_type].subclass.paramClassDefaults
-
-    # Find PROJECTION_SENDER, and raise exception if absent
-    try:
-        projection_sender = projection_params[PROJECTION_SENDER]
-    except KeyError:
-        # raise InitError("{0} must define paramClassDefaults[PROJECTION_SENDER]".format(projection_type.__name__))
-        raise InitError("{0} must define paramClassDefaults[PROJECTION_SENDER]".format(projection_type))
+    projection_sender = ProjectionRegistry[projection_type].subclass.projection_sender
 
     # If it is a subclass of Mechanism or Port, leave it alone
     if (inspect.isclass(projection_sender) and
@@ -277,7 +268,7 @@ for projection_type in ProjectionRegistry:
             # Look it up in Mechanism Registry;
             # FIX 5/24/16
             # projection_sender = MechanismRegistry[projection_sender].subclass
-            projection_params[PROJECTION_SENDER] = MechanismRegistry[projection_sender].subclass
+            ProjectionRegistry[projection_type].subclass.projection_sender = MechanismRegistry[projection_sender].subclass
             # print("Looking for default sender ({0}) for {1} in MechanismRegistry...".
             #       format(projection_sender,projection_type.__name__))
         except KeyError:
@@ -286,7 +277,7 @@ for projection_type in ProjectionRegistry:
             # Look it up in Port Registry;  if that fails, raise an exception
             # FIX 5/24/16
             # projection_sender = PortRegistry[projection_sender].subclass
-            projection_params[PROJECTION_SENDER] = PortRegistry[projection_sender].subclass
+            ProjectionRegistry[projection_type].subclass.projection_sender = PortRegistry[projection_sender].subclass
 
         except KeyError:
             raise InitError("{0} param ({1}) for {2} not found in Mechanism or Port registries".
@@ -371,32 +362,4 @@ Function.classPreferences = BasePreferenceSet(owner=Function,
 #                                              level=PreferenceLevel.TYPE,
 #                                              context=".__init__.py")
 
-#endregion
-
-#
-#     try:
-#         # First try to get spec from PortRegistry
-#         projection_params[PROJECTION_SENDER] = PortRegistry[projection_params[PROJECTION_SENDER]].subclass
-#     except AttributeError:
-#         # No PROJECTION_SENDER spec found for for projection class
-#         raise InitError("paramClassDefaults[PROJECTION_SENDER] not defined for".format(projection))
-#     except (KeyError, NameError):
-#         # PROJECTION_SENDER spec not found in PortRegistry;  try next
-#         pass
-#
-#     try:
-#         # First try to get spec from PortRegistry
-#         projection_params[PROJECTION_SENDER] = MechanismRegistry[projection_params[PROJECTION_SENDER]].subclass
-#     except (KeyError, NameError):
-#         # PROJECTION_SENDER spec not found in PortRegistry;  try next
-# xxx
-#         # raise InitError("{0} not found in PortRegistry".format(projection_params[PROJECTION_SENDER]))
-#     else:
-#         if not ((inspect.isclass(projection_params[PROJECTION_SENDER]) and
-#                      issubclass(projection_params[PROJECTION_SENDER], Port_Base)) or
-#                     (isinstance(projection_params[PROJECTION_SENDER], Port_Base))):
-#             raise InitError("paramClassDefaults[PROJECTION_SENDER] for {0} ({1}) must be a type of Port".
-#                             format(projection, projection_params[PROJECTION_SENDER]))
-
-# Initialize ShellClass registries with subclasses listed above, and set their default values
 #endregion

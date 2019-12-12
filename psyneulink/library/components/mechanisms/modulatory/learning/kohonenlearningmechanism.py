@@ -330,14 +330,6 @@ class KohonenLearningMechanism(LearningMechanism):
         learning_timing = LearningTiming.EXECUTION_PHASE
         modulation = ADDITIVE
 
-    paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        CONTROL_PROJECTIONS: None,
-        INPUT_PORTS:input_port_names,
-        OUTPUT_PORTS:[{NAME:LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
-                        VARIABLE: (OWNER_VALUE,0)}
-                       ]})
-
     @tc.typecheck
     def __init__(self,
                  default_variable:tc.any(list, np.ndarray),
@@ -351,12 +343,6 @@ class KohonenLearningMechanism(LearningMechanism):
                  name=None,
                  prefs:is_pref_set=None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(matrix=matrix,
-                                                  function=function,
-                                                  learning_signals=learning_signals,
-                                                  params=params)
-
         # # USE FOR IMPLEMENTATION OF deferred_init()
         # # Store args for deferred initialization
         # self._init_args = locals().copy()
@@ -369,15 +355,18 @@ class KohonenLearningMechanism(LearningMechanism):
 
         # self._learning_rate = learning_rate
 
-        super().__init__(default_variable=default_variable,
-                         size=size,
-                         function=function,
-                         modulation=modulation,
-                         learning_rate=learning_rate,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            size=size,
+            function=function,
+            modulation=modulation,
+            learning_rate=learning_rate,
+            matrix=matrix,
+            learning_signals=learning_signals,
+            params=params,
+            name=name,
+            prefs=prefs,
+        )
 
     def _validate_variable(self, variable, context=None):
         """Validate that variable has only one item: activation_input.

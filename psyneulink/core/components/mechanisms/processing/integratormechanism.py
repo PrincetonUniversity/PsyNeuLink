@@ -151,11 +151,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         """
         function = Parameter(AdaptiveIntegrator(rate=0.5), stateful=False, loggable=False)
 
-    paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({
-    #     OUTPUT_PORTS:[PREDICTION_MECHANISM_OUTPUT]
-    # })
-
+        #
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -169,11 +165,6 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                  **kwargs):
         """Assign type-level preferences, default input value (SigmoidLayer_DEFAULT_BIAS) and call super.__init__
         """
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(
-                                                  function=function,
-                                                  params=params)
 
         super(IntegratorMechanism, self).__init__(default_variable=default_variable,
                                                   size=size,

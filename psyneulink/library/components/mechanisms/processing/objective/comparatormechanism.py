@@ -307,7 +307,6 @@ class ComparatorMechanism(ObjectiveMechanism):
         )
 
     # ComparatorMechanism parameter and control signal assignments):
-    paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
 
     standard_output_ports = ObjectiveMechanism.standard_output_ports.copy()
     standard_output_ports.extend([{NAME: SSE,

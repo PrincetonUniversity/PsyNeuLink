@@ -331,9 +331,7 @@ In general, a `ControlSignal` is created for each parameter specified to be cont
 are a type of `OutputPort` that send a `ControlProjection` to the `ParameterPort` of the parameter to be
 controlled. All of the ControlSignals for a ControlMechanism are listed in its `control_signals
 <ControlMechanism.control_signals>` attribute, and all of its ControlProjections are listed in
-its`control_projections <ControlMechanism.control_projections>` attribute. Additional parameters to be controlled can
-be added to a ControlMechanism by using its `assign_params` method to add a `ControlSignal` for each additional
-parameter.  See `ControlMechanism_Examples`.
+its`control_projections <ControlMechanism.control_projections>` attribute. See `ControlMechanism_Examples`.
 
 .. _ControlMechanism_Structure:
 
@@ -724,8 +722,7 @@ class DefaultAllocationFunction(Function_Base):
                  params=None,
                  owner=None
                  ):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(params=params)
+
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
@@ -1097,6 +1094,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         modulation = Parameter(MULTIPLICATIVE, pnl_internal=True)
 
         objective_mechanism = Parameter(None, stateful=False, loggable=False, structural=True)
+        system = None
 
         input_ports = Parameter(
             [OUTCOME],
@@ -1177,10 +1175,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 return
             validate_monitored_port_spec(self._owner._owner, input_ports)
 
-    paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        CONTROL_PROJECTIONS: None})
-
 
     @tc.typecheck
     def __init__(self,
@@ -1199,7 +1193,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                  modulation:tc.optional(str)=MULTIPLICATIVE,
                  combine_costs:is_function_type=np.sum,
                  compute_reconfiguration_cost:tc.optional(is_function_type)=None,
-                 compute_net_outcome:is_function_type=lambda outcome, cost : outcome - cost,
+                 compute_net_outcome=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -1225,9 +1219,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     control.extend(convert_to_list(args))
 
         function = function or DefaultAllocationFunction
-        self.combine_costs = combine_costs
-        self.compute_net_outcome = compute_net_outcome
-        self.compute_reconfiguration_cost = compute_reconfiguration_cost
 
         try:
             control_spec = (
@@ -1237,28 +1228,28 @@ class ControlMechanism(ModulatoryMechanism_Base):
             )
         except TypeError:
             control_spec = control
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(system=system,
-                                                  objective_mechanism=objective_mechanism,
-                                                  function=function,
-                                                  default_allocation=default_allocation,
-                                                  modulation=modulation,
-                                                  control_spec=control_spec,
-                                                  params=params)
         self._sim_counts = {}
 
-        super(ControlMechanism, self).__init__(default_variable=default_variable,
-                                                  size=size,
-                                                  modulation=modulation,
-                                                  params=params,
-                                                  name=name,
-                                                  function=function,
-                                                  monitor_for_control=monitor_for_control,
-                                                  control=control,
-                                                  output_ports=control,
-                                                  prefs=prefs,
-                                                  **kwargs)
+        super(ControlMechanism, self).__init__(
+            default_variable=default_variable,
+            size=size,
+            modulation=modulation,
+            params=params,
+            name=name,
+            function=function,
+            monitor_for_control=monitor_for_control,
+            control=control,
+            output_ports=control,
+            system=system,
+            objective_mechanism=objective_mechanism,
+            default_allocation=default_allocation,
+            combine_costs=combine_costs,
+            compute_net_outcome=compute_net_outcome,
+            compute_reconfiguration_cost=compute_reconfiguration_cost,
+            control_spec=control_spec,
+            prefs=prefs,
+            **kwargs
+        )
 
         if system is not None:
             self._activate_projections_for_compositions(system)
@@ -1280,8 +1271,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
         if SYSTEM in target_set:
             if not isinstance(target_set[SYSTEM], System_Base):
                 raise KeyError
-            else:
-                self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
 
         if OBJECTIVE_MECHANISM in target_set and \
                 target_set[OBJECTIVE_MECHANISM] is not None and\
@@ -1593,7 +1582,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 return
 
             # Warn if *any* projections from control_signal are identical to ones in an existing control_signal
-            projection_type = existing_ctl_sig.paramClassDefaults[PROJECTION_TYPE]
+            projection_type = existing_ctl_sig.projection_type
             if any(
                     any(new_p.receiver == existing_p.receiver
                         for existing_p in existing_ctl_sig.efferents) for new_p in control_signal.efferents):

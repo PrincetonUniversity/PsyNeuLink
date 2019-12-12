@@ -6,7 +6,6 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 # NOTES:
-#  * COULD NOT IMPLEMENT integrator_function in paramClassDefaults (see notes below)
 #  * NOW THAT NOISE AND INTEGRATION_RATE ARE PROPRETIES THAT DIRECTLY REFERERNCE integrator_function,
 #      SHOULD THEY NOW BE VALIDATED ONLY THERE (AND NOT IN TransferMechanism)??
 #  * ARE THOSE THE ONLY TWO integrator PARAMS THAT SHOULD BE PROPERTIES??
@@ -797,8 +796,6 @@ class TransferMechanism(ProcessingMechanism_Base):
     #     }
 
     # TransferMechanism parameter and control signal assignments):
-    paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({NOISE: None})
 
     standard_output_ports = ProcessingMechanism_Base.standard_output_ports.copy()
     standard_output_ports.extend([{NAME: COMBINE,
@@ -963,38 +960,35 @@ class TransferMechanism(ProcessingMechanism_Base):
             output_ports = [RESULTS]
 
         initial_value = self._parse_arg_initial_value(initial_value)
-        self.integrator_function = integrator_function or AdaptiveIntegrator # In case any subclass set it to None
 
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  initial_value=initial_value,
-                                                  noise=noise,
-                                                  integration_rate=integration_rate,
-                                                  integrator_mode=integrator_mode,
-                                                  clip=clip,
-                                                  termination_measure=termination_measure,
-                                                  termination_threshold=termination_threshold,
-                                                  termination_comparison_op=termination_comparison_op,
-                                                  integrator_function=integrator_function,
-                                                  params=params)
-
-        self.on_resume_integrator_mode = on_resume_integrator_mode
         # self.integrator_function = None
-        self.has_integrated = False
         self._current_variable_index = 0
 
         # this is checked during execution to see if integrator_mode was set
         # to True after initialization
         self._needs_integrator_function_init = False
 
-        super(TransferMechanism, self).__init__(default_variable=default_variable,
-                                                size=size,
-                                                input_ports=input_ports,
-                                                output_ports=output_ports,
-                                                function=function,
-                                                params=params,
-                                                name=name,
-                                                prefs=prefs,
-                                                **kwargs)
+        super(TransferMechanism, self).__init__(
+            default_variable=default_variable,
+            size=size,
+            input_ports=input_ports,
+            output_ports=output_ports,
+            initial_value=initial_value,
+            noise=noise,
+            integration_rate=integration_rate,
+            integrator_mode=integrator_mode,
+            clip=clip,
+            termination_measure=termination_measure,
+            termination_threshold=termination_threshold,
+            termination_comparison_op=termination_comparison_op,
+            integrator_function=integrator_function,
+            on_resume_integrator_mode=on_resume_integrator_mode,
+            function=function,
+            params=params,
+            name=name,
+            prefs=prefs,
+            **kwargs
+        )
 
     def _parse_arg_initial_value(self, initial_value):
         return self._parse_arg_variable(initial_value)
@@ -1007,8 +1001,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         # Validate FUNCTION
-        if FUNCTION in target_set:
-            transfer_function = target_set[FUNCTION]
+        if self.parameters.function._user_specified:
+            transfer_function = self.defaults.function
             transfer_function_class = None
 
             # FUNCTION is a Function
@@ -1154,9 +1148,16 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _instantiate_parameter_ports(self, function=None, context=None):
 
         # If function is a logistic, and clip has not been specified, bound it between 0 and 1
-        if ((isinstance(self.function, Logistic) or
-                 (inspect.isclass(self.function) and issubclass(self.function,Logistic))) and
-                self.clip is None):
+        if (
+            (
+                isinstance(function, Logistic)
+                or (
+                    inspect.isclass(function)
+                    and issubclass(function, Logistic)
+                )
+            )
+            and self.clip is None
+        ):
             self.clip = (0,1)
 
         super()._instantiate_parameter_ports(function=function, context=context)

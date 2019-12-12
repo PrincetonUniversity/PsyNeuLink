@@ -711,9 +711,6 @@ class DDM(ProcessingMechanism):
 
         initializer = np.array([[0]])
 
-    paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        OUTPUT_PORTS: None})
 
     standard_output_ports =[{NAME: DECISION_VARIABLE,},           # Upper or lower threshold for Analtyic function
                             {NAME: RESPONSE_TIME},                # TIME_STEP within TRIAL for Integrator function
@@ -807,11 +804,6 @@ class DDM(ProcessingMechanism):
         if isinstance(output_ports, (str, tuple)):
             output_ports = list(output_ports)
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  # input_format=input_format,
-                                                  params=params)
-
         # IMPLEMENTATION NOTE: this manner of setting default_variable works but is idiosyncratic
         # compared to other mechanisms: see TransferMechanism.py __init__ function for a more normal example.
         if default_variable is None and size is None:
@@ -820,7 +812,7 @@ class DDM(ProcessingMechanism):
                 if not is_numeric(default_variable):
                     # set normally by default
                     default_variable = None
-            except KeyError:
+            except (KeyError, TypeError):
                 # set normally by default
                 pass
 
@@ -972,10 +964,14 @@ class DDM(ProcessingMechanism):
 
     def _instantiate_plotting_functions(self, context=None):
         if "DriftDiffusionIntegrator" in str(self.function):
-            self.get_axes_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
-                                                              noise=self.function_params['noise']).function
-            self.plot_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
-                                                          noise=self.function_params['noise']).function
+            self.get_axes_function = DriftDiffusionIntegrator(
+                rate=self.function.defaults.rate,
+                noise=self.function.defaults.noise
+            ).function
+            self.plot_function = DriftDiffusionIntegrator(
+                rate=self.function.defaults.rate,
+                noise=self.function.defaults.noise
+            ).function
 
     def _execute(
         self,

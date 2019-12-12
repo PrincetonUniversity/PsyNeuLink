@@ -23,6 +23,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     FUNCTION_OUTPUT_TYPE_CONVERSION, PARAMETER_PORT_PARAMS, PORT_MAP_FUNCTION, TRANSFER_FUNCTION_TYPE, \
     PREFERENCE_SET_NAME
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import \
     PreferenceEntry, PreferenceLevel, is_pref_set, REPORT_OUTPUT_PREF
 
@@ -95,11 +96,13 @@ class InterfacePortMap(InterfaceFunction):
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        FUNCTION_OUTPUT_TYPE_CONVERSION: True,
-        PARAMETER_PORT_PARAMS: None
-    })
+    class Parameters(InterfaceFunction.Parameters):
+        corresponding_input_port = Parameter(
+            None,
+            structural=True,
+            stateful=False,
+            loggable=False
+        )
 
     @tc.typecheck
     def __init__(self,
@@ -109,15 +112,13 @@ class InterfacePortMap(InterfaceFunction):
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(corresponding_input_port=corresponding_input_port,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            corresponding_input_port=corresponding_input_port,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
         # self.functionOutputType = None
 

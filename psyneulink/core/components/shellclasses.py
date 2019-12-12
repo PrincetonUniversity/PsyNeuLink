@@ -59,38 +59,14 @@ class Composition_Base(ShellClass):
 # ******************************************* SYSTEM *******************************************************************
 
 class System_Base(ShellClass):
-
-    def __init__(self,
-                 default_variable=None,
-                 size=None,
-                 param_defaults=None,
-                 name=None,
-                 prefs=None,
-                 context=None):
-
-        super().__init__(default_variable=default_variable,
-                         size=size,
-                         param_defaults=param_defaults,
-                         name=name,
-                         prefs=prefs)
+    pass
 
 
 # ****************************************** PROCESS *******************************************************************
 
 
 class Process_Base(ShellClass):
-    def __init__(self,
-                 default_variable=None,
-                 size=None,
-                 param_defaults=None,
-                 name=None,
-                 prefs=None):
-
-        super().__init__(default_variable=default_variable,
-                         size=size,
-                         param_defaults=param_defaults,
-                         name=name,
-                         prefs=prefs)
+    pass
 
 # ******************************************* MECHANISM ****************************************************************
 
@@ -132,14 +108,6 @@ class Port(ShellClass):
     @owner.setter
     def owner(self, assignment):
         raise ShellClassError("Must implement @owner.setter method in {0}".format(self.__class__.__name__))
-
-    @property
-    def projections(self):
-        raise ShellClassError("Must implement @property projections method in {0}".format(self.__class__.__name__))
-
-    @projections.setter
-    def projections(self, assignment):
-        raise ShellClassError("Must implement @projections.setter method in {0}".format(self.__class__.__name__))
 
     def _validate_variable(self, variable, context=None):
         raise ShellClassError("Must implement _validate_variable in {0}".format(self))

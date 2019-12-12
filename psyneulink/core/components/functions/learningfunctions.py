@@ -75,8 +75,6 @@ class LearningFunction(Function_Base):
        The function method of a LearningFunction *must* include a **kwargs argument, which accomodates
        Function-specific parameters;  this is to accommodate the ability of LearningMechanisms to call
        the function of a LearningFunction with arguments that may not be implemented for all LearningFunctions
-       (e.g., error_matrix for BackPropagation) -- these can't be included in the params argument, as those
-       are validated against paramClassDefaults which will not recognize params specific to another Function.
     COMMENT
 
     Attributes
@@ -439,18 +437,16 @@ class BayesGLM(LearningFunction):
 
         self.user_specified_default_variable = default_variable
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(mu_0=mu_0,
-                                                  sigma_0=sigma_0,
-                                                  gamma_shape_0=gamma_shape_0,
-                                                  gamma_size_0=gamma_size_0,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            mu_0=mu_0,
+            sigma_0=sigma_0,
+            gamma_shape_0=gamma_shape_0,
+            gamma_size_0=gamma_size_0,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _handle_default_variable(self, default_variable=None, size=None):
 
@@ -747,8 +743,6 @@ class Kohonen(LearningFunction):  # --------------------------------------------
 
     default_learning_rate = 0.05
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     def __init__(self,
                  default_variable=None,
                  # learning_rate: tc.optional(parameter_spec) = None,
@@ -758,17 +752,14 @@ class Kohonen(LearningFunction):  # --------------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(distance_function=distance_function,
-                                                  learning_rate=learning_rate,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
-
+        super().__init__(
+            default_variable=default_variable,
+            distance_function=distance_function,
+            learning_rate=learning_rate,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_variable(self, variable, context=None):
         variable = super()._validate_variable(variable, context)
@@ -1016,7 +1007,6 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         variable = Parameter(np.array([0, 0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         learning_rate = 0.05
     default_learning_rate = 0.05
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     def __init__(self,
                  default_variable=None,
@@ -1025,18 +1015,13 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(
-            # activation_function=activation_function,
+        super().__init__(
+            default_variable=default_variable,
             learning_rate=learning_rate,
-            params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
-
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_variable(self, variable, context=None):
         variable = super()._validate_variable(variable, context)
@@ -1252,8 +1237,6 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
     default_learning_rate = 0.05
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     def __init__(self,
                  default_variable=None,
                  # learning_rate: tc.optional(parameter_spec) = None,
@@ -1262,18 +1245,13 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(
-            # activation_function=activation_function,
+        super().__init__(
+            default_variable=default_variable,
             learning_rate=learning_rate,
-            params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
-
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_variable(self, variable, context=None):
         variable = super()._validate_variable(variable, context)
@@ -1540,8 +1518,13 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         activation_input = Parameter([0], read_only=True, getter=_activation_input_getter)
         activation_output = Parameter([0], read_only=True, getter=_activation_output_getter)
         error_signal = Parameter([0], read_only=True, getter=_error_signal_getter)
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+        enable_output_type_conversion = Parameter(
+            False,
+            stateful=False,
+            loggable=False,
+            pnl_internal=True,
+            read_only=True
+        )
 
     def __init__(self,
                  default_variable=None,
@@ -1551,26 +1534,13 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(  # activation_function=activation_function,
+        super().__init__(
+            default_variable=default_variable,
             learning_rate=learning_rate,
-            params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
-
-    @property
-    def output_type(self):
-        return self._output_type
-
-    @output_type.setter
-    def output_type(self, value):
-        # disabled because it happens during normal execution, may be confusing
-        # warnings.warn('output_type conversion disabled for {0}'.format(self.__class__.__name__))
-        self._output_type = None
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_variable(self, variable, context=None):
         variable = super()._validate_variable(variable, context)
@@ -1898,9 +1868,9 @@ class BackPropagation(LearningFunction):
 
         error_matrix = Parameter(None, read_only=True)
 
-    default_learning_rate = 1.0
+        activation_derivative_fct = Parameter(Logistic().derivative, stateful=False, loggable=False)
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    default_learning_rate = 1.0
 
     @tc.typecheck
     def __init__(self,
@@ -1916,20 +1886,18 @@ class BackPropagation(LearningFunction):
         error_matrix = np.zeros((len(default_variable[LEARNING_ACTIVATION_OUTPUT]),
                                  len(default_variable[LEARNING_ERROR_OUTPUT])))
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(activation_derivative_fct=activation_derivative_fct,
-                                                  error_matrix=error_matrix,
-                                                  learning_rate=learning_rate,
-                                                  loss_function=loss_function,
-                                                  params=params)
-
         # self.return_val = ReturnVal(None, None)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            activation_derivative_fct=activation_derivative_fct,
+            error_matrix=error_matrix,
+            learning_rate=learning_rate,
+            loss_function=loss_function,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     @property
     def output_type(self):
@@ -2163,13 +2131,14 @@ class TDLearning(Reinforcement):
         prefs
         context
         """
-        # params = self._assign_args_to_param_dicts(learning_rate=learning_rate,
-        # params=params)
-        super().__init__(default_variable=default_variable,
-                         learning_rate=learning_rate,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs)
+
+        super().__init__(
+            default_variable=default_variable,
+            learning_rate=learning_rate,
+            params=params,
+            owner=owner,
+            prefs=prefs
+        )
 
     def _validate_variable(self, variable, context=None):
         variable = super(Reinforcement, self)._validate_variable(variable, context)
