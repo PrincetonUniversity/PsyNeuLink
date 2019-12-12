@@ -256,7 +256,7 @@ class AutoAssociativeProjection(MappingProjection):
         """
         variable = Parameter(np.array([[0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         # function is always LinearMatrix that requires 1D input
-        function = LinearMatrix
+        function = Parameter(LinearMatrix, stateful=False, loggable=False)
 
         auto = Parameter(1, getter=_auto_getter, setter=_auto_setter, modulable=True)
         hetero = Parameter(0, getter=_hetero_getter, setter=_hetero_setter, modulable=True)

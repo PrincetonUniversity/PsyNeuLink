@@ -1392,7 +1392,7 @@ class Mechanism_Base(Mechanism):
                              constructor_argument='default_variable')
         value = Parameter(np.array([[0]]), read_only=True, pnl_internal=True)
         previous_value = Parameter(None, read_only=True, pnl_internal=True)
-        function = Linear
+        function = Parameter(Linear, stateful=False, loggable=False)
 
         input_port_variables = Parameter(None, read_only=True, user=False,
                                          getter=_input_port_variables_getter,

@@ -2969,17 +2969,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         return {arg_name: arg.default for (arg_name, arg) in inspect.signature(cls.__init__).parameters.items()}
 
     @property
-    def function(self):
-        # TODO: make sure all functions are stateless
-        return self.parameters.function._get(Context())
-
-    @function.setter
-    def function(self, value):
-        # TODO: currently no validation, should replicate from _instantiate_function
-        self.parameters.function._set(value, Context())
-        self._parse_param_port_sources()
-
-    @property
     def class_parameters(self):
         return self.__class__.parameters
 
