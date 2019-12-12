@@ -312,6 +312,7 @@ The following example shows how the parameters of a `cost function <ControlSigna
   ...                                             ctl_mech_A,
   ...                                             ctl_mech_B
   ...                                             ])
+  [(ProcessingMechanism ProcessingMechanism-0)]
 
 Here, the `ControlSignal` of ``ctl_mech_A`` is configured to monitor the output of ``mech``, modulate the
 the `intercept <Linear.intercept>` parameter of its `function <Mechanism_Base.function>` (which is a `Linear` by
@@ -333,31 +334,29 @@ the `intensity <ControlSignal.intensity>` of which is also ``3``, the value of t
 as shown below::
 
     >>> comp.run(inputs={mech:[3]}, num_trials=2)
-    3
+    [array([3.])]
     >>> ctl_mech_A.control_signals[0].intensity_cost
-    8103.083927575384008
+    array([8103.08392758])
 
 The Composition must be executed for 2 trials to see this, since the `value <ControlProjection.value>` computed
 by ``ctl_mech_B`` must be computed on the first trial before it can have its effect on ``ctl_mech_A`` on the next
 (i.e., second) trial (see noted under `ControlSignal_Execution`).
 
 COMMENT:
-
 .. _ControlSignal_Example_OCM:
 ??MOVE TO OCM?
 *Modulate the parameters of several Mechanisms by an OptimizationControlMechanism*.  This shows::
 
-    >>> my_mech_A = TransferMechanism(function=Logistic)
-    >>> my_mech_B = TransferMechanism(function=Linear,
-    ...                              output_ports=[RESULT, MEAN])
-
-    >>> my_ocm = OptimizationControlMechanism(monitor_for_control=[my_mech_A.output_ports[RESULT],
-    ...                                                            my_mech_B.output_ports[MEAN]],
-    ...                                       control_signals=[(GAIN, my_mech_A),
-    ...                                                        {NAME: INTERCEPT,
-    ...                                                         MECHANISM: my_mech_B,
-    ...                                                         MODULATION:ADDITIVE}],
-    ...                                       name='my_ocm')
+    # >>> my_mech_A = TransferMechanism(function=Logistic)
+    # >>> my_mech_B = TransferMechanism(function=Linear,
+    # ...                              output_ports=[RESULT, MEAN])
+    # >>> my_ocm = OptimizationControlMechanism(monitor_for_control=[my_mech_A.output_ports[RESULT],
+    # ...                                                            my_mech_B.output_ports[MEAN]],
+    # ...                                       control_signals=[(GAIN, my_mech_A),
+    # ...                                                        {NAME: INTERCEPT,
+    # ...                                                         MECHANISM: my_mech_B,
+    # ...                                                         MODULATION: ADDITIVE}],
+    # ...                                       name='my_ocm')
 
 .. _ControlSignal_Example_Modulate_Several_Mechanisms:
 
@@ -366,21 +365,19 @@ DEPRECATED
 the `gain <Logistic.gain>` parameter of the `Logistic` function for ``my_mech_A`` and the `intercept
 <Logistic.intercept>` parameter of the `Linear` function for ``my_mech_B``::
 
-    >>> my_mech_A = TransferMechanism(function=Logistic)
-    >>> my_mech_B = TransferMechanism(function=Linear,
-    ...                                   output_ports=[RESULT, MEAN])
-
-    >>> process_a = Process(pathway=[my_mech_A])
-    >>> process_b = Process(pathway=[my_mech_B])
-
-    >>> my_system = System(processes=[process_a, process_b],
-    ...                        monitor_for_control=[my_mech_A.output_ports[RESULT],
-    ...                                             my_mech_B.output_ports[MEAN]],
-    ...                        control_signals=[(GAIN, my_mech_A),
-    ...                                         {NAME: INTERCEPT,
-    ...                                          MECHANISM: my_mech_B,
-    ...                                          MODULATION: ADDITIVE}],
-    ...                        name='My Test System')
+    # >>> my_mech_A = TransferMechanism(function=Logistic)
+    # >>> my_mech_B = TransferMechanism(function=Linear,
+    # ...                                   output_ports=[RESULT, MEAN])
+    # >>> process_a = Process(pathway=[my_mech_A])
+    # >>> process_b = Process(pathway=[my_mech_B])
+    # >>> my_system = System(processes=[process_a, process_b],
+    # ...                        monitor_for_control=[my_mech_A.output_ports[RESULT],
+    # ...                                             my_mech_B.output_ports[MEAN]],
+    # ...                        control_signals=[(GAIN, my_mech_A),
+    # ...                                         {NAME: INTERCEPT,
+    # ...                                          MECHANISM: my_mech_B,
+    # ...                                          MODULATION: ADDITIVE}],
+    # ...                        name='My Test System')
 COMMENT
 
 .. _ControlSignal_Class_Reference:
