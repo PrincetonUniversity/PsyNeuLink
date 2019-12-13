@@ -9459,11 +9459,11 @@ article.psyneulink-article ul li,
 article.psyneulink-article ol li {
   margin: 0;
   margin-bottom: 12px;
-  line-height: 1.75rem;
+  line-height: 1.5rem;
 }
 article.psyneulink-article ul p,
 article.psyneulink-article ol p {
-  line-height: 1.75rem;
+  line-height: 1.5rem;
   margin-bottom: 0;
 }
 article.psyneulink-article ul ul,
@@ -10050,7 +10050,7 @@ article.psyneulink-article .wy-table-responsive table thead tr {
   border-bottom: 2px solid #6c6c6d;
 }
 article.psyneulink-article .wy-table-responsive table thead th {
-  line-height: 1.75rem;
+  line-height: 1.5rem;
   padding-left: 0.9375rem;
   padding-right: 0.9375rem;
 }
