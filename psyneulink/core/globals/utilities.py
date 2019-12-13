@@ -1301,6 +1301,17 @@ class ContentAddressableList(UserList):
         """
         return [getattr(item, self.key) for item in self.data]
 
+    def get_key_values(self, context=None):
+        """Return list of `values <Component.value>` of the keyed
+        parameter of components in the list.
+        Returns
+        -------
+        key_values :  list
+            list of the values of the `keyed <Component.name>`
+            parameter of components in the list  for **context**
+        """
+        return [getattr(item.parameters, self.key).get(context) for item in self.data]
+
     @property
     def values(self):
         """Return list of values of components in the list.
@@ -1310,6 +1321,16 @@ class ContentAddressableList(UserList):
             list of the values of the `value <Component.value>` attributes of components in the list.
         """
         return [getattr(item, VALUE) for item in self.data]
+
+    def get_values(self, context=None):
+        """Return list of values of components in the list.
+        Returns
+        -------
+        values :  list
+            list of the values of the `value <Component.value>`
+            parameter of components in the list  for **context**
+        """
+        return [item.parameters.value.get(context) for item in self.data]
 
     @property
     def values_as_lists(self):
