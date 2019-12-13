@@ -8235,6 +8235,20 @@ h3 {
   }
 }
 /*Github syntax highlighting theme via Rouge*/
+.highlight {
+  width: max-content;
+  min-width: 100%;
+}
+
+.highlight-default {
+  overflow-x: auto;
+  margin-bottom: 1.125rem;
+}
+
+.highlight pre {
+  margin-bottom: 0px!important
+}
+
 .highlight table td {
   padding: 5px;
 }
@@ -9199,7 +9213,7 @@ article.psyneulink-article dl dt,
 article.psyneulink-article dl dd,
 article.psyneulink-article blockquote {
   font-size: 1rem;
-  line-height: 1.375rem;
+  line-height: 1.5rem;
   color: #262626;
   letter-spacing: 0.01px;
   font-weight: 500;
@@ -9263,10 +9277,11 @@ article.psyneulink-article hr {
 article.psyneulink-article blockquote {
   margin: 0 auto;
   /*margin-bottom: 2.5rem;*/
-  width: 65%;
+  width: 85%;
 }
 article.psyneulink-article img {
   /*width: 100%;*/
+  max-width: 100%;
 }
 
 html {
@@ -9717,7 +9732,7 @@ article.psyneulink-article .class .attribute dt em.property {
   left: 0;
 }
 article.psyneulink-article table {
-  table-layout: fixed;
+  table-layout: auto;
 }
 
 article.psyneulink-article .note,
@@ -10023,10 +10038,13 @@ article.psyneulink-article .admonition > p:last-of-type {
   margin-top: unset;
 }
 
+article.psyneulink-article .wy-table-responsive {
+  overflow-x: auto;
+}
+
 article.psyneulink-article .wy-table-responsive table {
   border: none;
   border-color: #ffffff !important;
-  table-layout: fixed;
 }
 article.psyneulink-article .wy-table-responsive table thead tr {
   border-bottom: 2px solid #6c6c6d;
@@ -10044,7 +10062,7 @@ article.psyneulink-article .wy-table-responsive table tbody td {
   white-space: normal;
   padding: 0.9375rem;
   font-size: 1rem;
-  line-height: 1.375rem;
+  line-height: 1.5rem;
 }
 article.psyneulink-article .wy-table-responsive table tbody td .pre {
   background: #ffffff;
@@ -10089,7 +10107,6 @@ article.psyneulink-article blockquote {
 article.psyneulink-article .caption {
   color: #6c6c6d;
   letter-spacing: 0.25px;
-  line-height: 2.125rem;
 }
 
 article.psyneulink-article .math {
@@ -10433,7 +10450,7 @@ a:hover {
   display: block;
   display: inline-block;
   font-size: 1rem;
-  line-height: 1.375rem;
+  line-height: 1.5rem;
   margin-bottom: 1rem;
   padding: 0;
   text-transform: none;
