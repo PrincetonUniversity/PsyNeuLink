@@ -24,9 +24,10 @@ import itertools
 
 import numpy as np
 import typecheck as tc
+import types
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import function_type, method_type, DefaultsFlexibility
+from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import EPSILON, FunctionError, Function_Base
 from psyneulink.core.components.functions.transferfunctions import get_matrix
 from psyneulink.core.globals.context import ContextFlags
@@ -217,7 +218,7 @@ class Stability(ObjectiveFunction):
                  matrix=HOLLOW_MATRIX,
                  # metric:is_distance_metric=ENERGY,
                  metric: tc.any(tc.enum(ENERGY, ENTROPY), is_distance_metric) = ENERGY,
-                 transfer_fct: tc.optional(tc.any(function_type, method_type)) = None,
+                 transfer_fct: tc.optional(tc.any(types.FunctionType, types.MethodType)) = None,
                  normalize: bool = False,
                  params=None,
                  owner=None,

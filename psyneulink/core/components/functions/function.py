@@ -144,13 +144,13 @@ import inspect
 import numbers
 import numpy as np
 import typecheck as tc
+import types
 import warnings
 
 from enum import Enum, IntEnum
 from random import randint
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.shellclasses import Function, Mechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
@@ -207,7 +207,7 @@ def is_Function(x):
 def is_function_type(x):
     if not x:
         return False
-    elif isinstance(x, (Function, function_type, method_type)):
+    elif isinstance(x, (Function, types.FunctionType, types.MethodType)):
         return True
     elif issubclass(x, Function):
         return True

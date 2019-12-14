@@ -550,15 +550,6 @@ parameter_keywords = set()
 #     REPORT_OUTPUT_PREF: PreferenceEntry(True,PreferenceLevel.INSTANCE)})
 
 
-class dummy_class:
-    def dummy_method(self):
-        pass
-def dummy_function():
-    pass
-method_type = type(dummy_class().dummy_method)
-function_type = type(dummy_function)
-
-
 class ComponentLog(IntEnum):
     NONE            = 0
     ALL = 0

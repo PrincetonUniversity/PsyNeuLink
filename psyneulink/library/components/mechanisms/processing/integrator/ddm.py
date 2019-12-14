@@ -360,13 +360,13 @@ Class Reference
 """
 import logging
 import random
+import types
 
 from collections.abc import Iterable
 
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import method_type
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import \
     DriftDiffusionIntegrator, IntegratorFunction
 from psyneulink.core.components.functions.distributionfunctions import STARTING_POINT, \
@@ -928,7 +928,7 @@ class DDM(ProcessingMechanism):
             # If target_set[FUNCTION] is a method of a Function (e.g., being assigned in _instantiate_function),
             #   get the Function to which it belongs
             fun = target_set[FUNCTION]
-            if isinstance(fun, method_type):
+            if isinstance(fun, types.MethodType):
                 fun = fun.__self__.__class__
 
             for function_type in functions:

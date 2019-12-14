@@ -944,7 +944,7 @@ class ControlSignal(ModulatorySignal):
         #     #     DURATION_COST_FUNCTION and COMBINE_COSTS_FUNCTION must accept an array
         #     #     others must accept a scalar
         #     #     all must return a scalar
-        #     elif isinstance(cost_function, (function_type, method_type)):
+        #     elif isinstance(cost_function, (types.FunctionType, types.MethodType)):
         #         if cost_function_name in COMBINE_COSTS_FUNCTION:
         #             test_value = [1, 1]
         #         else:
@@ -997,7 +997,7 @@ class ControlSignal(ModulatorySignal):
         #     cost_function = target_set[cost_function_name]
         #     if not cost_function:
         #         continue
-        #     if ((not isinstance(cost_function, (Function, function_type, method_type)) and
+        #     if ((not isinstance(cost_function, (Function, types.FunctionType, types.MethodType)) and
         #              not issubclass(cost_function, Function))):
         #         raise ControlSignalError("{0} not a valid Function".format(cost_function))
         # MODIFIED 8/30/19 END

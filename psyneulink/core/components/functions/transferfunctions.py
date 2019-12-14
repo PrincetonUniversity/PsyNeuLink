@@ -46,13 +46,13 @@ from enum import Enum, IntEnum
 
 import numpy as np
 import typecheck as tc
+import types
 import warnings
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import parameter_keywords, method_type
+from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.function import \
     Function, Function_Base, FunctionError, function_keywords, is_function_type
-from psyneulink.core.components.component import function_type
 from psyneulink.core.components.shellclasses import Projection
 from psyneulink.core.globals.keywords import \
     ADDITIVE, ADDITIVE_PARAM, ALL, AUTO_ASSIGN_MATRIX, BIAS, BOUNDS, EXPONENTIAL_FUNCTION, \
@@ -2621,7 +2621,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     #         return True
     #     if m in MATRIX_KEYWORD_VALUES:
     #         return True
-    #     if isinstance(m, (list, np.ndarray, np.matrix, function_type)):
+    #     if isinstance(m, (list, np.ndarray, np.matrix, types.FunctionType)):
     #         return True
     #     return False
 
@@ -2818,7 +2818,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     # - assume it uses random.rand()
                     # - call with two args as place markers for cols and rows
                     # -  validate that it returns an array or np.matrix
-                    elif isinstance(param_value, function_type):
+                    elif isinstance(param_value, types.FunctionType):
                         test = param_value(1, 1)
                         if not isinstance(test, (np.ndarray, np.matrix)):
                             raise FunctionError("A function is specified for the matrix of the {} function of {}: {}) "
@@ -3032,7 +3032,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 # def is_matrix_spec(m):
 #     if m is None:
 #         return True
-#     if isinstance(m, (list, np.ndarray, np.matrix, function_type)):
+#     if isinstance(m, (list, np.ndarray, np.matrix, types.FunctionType)):
 #         return True
 #     if m in MATRIX_KEYWORD_VALUES:
 #         return True
@@ -3103,7 +3103,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
         return np.random.rand(rows, cols)
 
     # Function is specified, so assume it uses random.rand() and call with sender_len and receiver_len
-    if isinstance(specification, function_type):
+    if isinstance(specification, types.FunctionType):
         return specification(rows, cols)
 
     # (7/12/17 CW) this is a PATCH (like the one in MappingProjection) to allow users to
@@ -3844,7 +3844,7 @@ class TransferWithCosts(TransferFunction):
             if not fct:
                 self.toggle_cost(fct_name, OFF)
                 return None
-            if isinstance(fct, (Function, function_type, method_type)):
+            if isinstance(fct, (Function, types.FunctionType, types.MethodType)):
                 return fct
             elif issubclass(fct, Function):
                 return fct()

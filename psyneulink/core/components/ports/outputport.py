@@ -616,11 +616,12 @@ Class Reference
 import inspect
 import numpy as np
 import typecheck as tc
+import types
 import warnings
 from collections import OrderedDict
 
 from psyneulink.core.components.component import Component, ComponentError
-from psyneulink.core.components.functions.function import Function, function_type, method_type
+from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.ports.port import Port_Base, _instantiate_port_list, port_type_keywords
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
@@ -1634,7 +1635,7 @@ class StandardOutputPorts():
     #     return [item[INDEX] for item in self.data]
 
 def _parse_output_port_function(owner, output_port_name, function, params_dict_as_variable=False):
-    """Parse specification of function as Function, Function class, Function.function, function_type or method_type.
+    """Parse specification of function as Function, Function class, Function.function, types.FunctionType or types.MethodType.
 
     If params_dict_as_variable is True, and function is a Function, check whether it allows params_dict as variable;
     if it is and does, leave as is,
@@ -1643,7 +1644,7 @@ def _parse_output_port_function(owner, output_port_name, function, params_dict_a
     if function is None:
         function = OutputPort.defaults.function
 
-    if isinstance(function, (function_type, method_type)):
+    if isinstance(function, (types.FunctionType, types.MethodType)):
         return function
 
     if isinstance(function, type) and issubclass(function, Function):

@@ -925,6 +925,7 @@ import abc
 import inspect
 import itertools
 import logging
+import types
 import warnings
 
 from collections import OrderedDict
@@ -934,7 +935,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import Component, function_type, method_type
+from psyneulink.core.components.component import Component
 from psyneulink.core.components.functions.function import FunctionOutputType
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Function, Mechanism, Projection, Port
@@ -2827,7 +2828,7 @@ class Mechanism_Base(Mechanism):
                 elif isinstance(param_value, type(Function)):
                     param = param_value.__name__
                     param_is_function = True
-                elif isinstance(param_value, (function_type, method_type)):
+                elif isinstance(param_value, (types.FunctionType, types.MethodType)):
                     param = param_value.__self__.__class__.__name__
                     param_is_function = True
                 else:

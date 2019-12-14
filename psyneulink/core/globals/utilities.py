@@ -101,6 +101,7 @@ import re
 import time
 import warnings
 import weakref
+import types
 
 from enum import Enum, EnumMeta, IntEnum
 
@@ -236,7 +237,6 @@ def parameter_spec(param, numeric_only=None):
     # if isinstance(param, property):
     #     param = ??
     # if is_numeric(param):
-    from psyneulink.core.components.functions.function import function_type
     from psyneulink.core.components.shellclasses import Projection
     from psyneulink.core.components.component import parameter_keywords
     from psyneulink.core.globals.keywords import MODULATORY_SPEC_KEYWORDS
@@ -251,7 +251,7 @@ def parameter_spec(param, numeric_only=None):
                            list,
                            tuple,
                            dict,
-                           function_type,
+                           types.FunctionType,
                            Projection))
         or param in MODULATORY_SPEC_KEYWORDS
         or param in parameter_keywords):

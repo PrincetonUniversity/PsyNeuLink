@@ -360,12 +360,13 @@ Class Reference
 
 import inspect
 import itertools
+import types
 import warnings
 
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import Component, function_type, method_type, parameter_keywords
+from psyneulink.core.components.component import Component, parameter_keywords
 from psyneulink.core.components.functions.function import get_param_value_for_keyword
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Function
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
@@ -1065,7 +1066,7 @@ def _is_legal_param_value(owner, value):
         return True
 
     # Assignment of ParameterPort for Component objects, function or method are not currently supported
-    if isinstance(value, (function_type, method_type, Component)):
+    if isinstance(value, (types.FunctionType, types.MethodType, Component)):
         return False
 
 

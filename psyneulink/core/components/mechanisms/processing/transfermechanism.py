@@ -458,13 +458,13 @@ import numbers
 import warnings
 import logging
 import operator
+import types
 from collections.abc import Iterable
 
 import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
@@ -1017,12 +1017,12 @@ class TransferMechanism(ProcessingMechanism_Base):
                     raise TransferError("Function specified as {} param of {} ({}) must be a {}".
                                         format(repr(FUNCTION), self.name, transfer_function_class.__name__,
                                                " or ".join([TRANSFER_FUNCTION_TYPE, SELECTION_FUNCTION_TYPE])))
-            elif not isinstance(transfer_function, (function_type, method_type)):
+            elif not isinstance(transfer_function, (types.FunctionType, types.MethodType)):
                 raise TransferError("Unrecognized specification for {} param of {} ({})".
                                     format(repr(FUNCTION), self.name, transfer_function))
 
             # FUNCTION is a function or method, so test that shape of output = shape of input
-            if isinstance(transfer_function, (function_type, method_type, UserDefinedFunction)):
+            if isinstance(transfer_function, (types.FunctionType, types.MethodType, UserDefinedFunction)):
                 var_shape = self.defaults.variable.shape
                 if isinstance(transfer_function, UserDefinedFunction):
                     val_shape = transfer_function._execute(self.defaults.variable, context=context).shape

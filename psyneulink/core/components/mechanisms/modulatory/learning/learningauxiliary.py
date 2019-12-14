@@ -129,12 +129,12 @@ Class Reference
 
 """
 
+import types
 import warnings
 
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.functions.combinationfunctions import PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.learningfunctions import BackPropagation, Hebbian, Reinforcement, TDLearning
 from psyneulink.core.components.functions.transferfunctions import Linear
@@ -970,7 +970,7 @@ class LearningComponents(object):
 
     @activation_derivative.setter
     def activation_derivative(self, assignment):
-        if isinstance(assignment, (function_type, method_type)):
+        if isinstance(assignment, (types.FunctionType, types.MethodType)):
             self._activation_derivative = assignment
         else:
             raise LearningAuxiliaryError("PROGRAM ERROR: illegal assignment to activation_derivative; "
@@ -1126,7 +1126,7 @@ class LearningComponents(object):
 
     @error_derivative.setter
     def error_derivative(self, assignment):
-        if isinstance(assignment, (function_type, method_type)):
+        if isinstance(assignment, (types.FunctionType, types.MethodType)):
             self._error_derivative = assignment
         else:
             raise LearningAuxiliaryError("PROGRAM ERROR: illegal assignment to error_derivative; "

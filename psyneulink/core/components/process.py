@@ -453,6 +453,7 @@ import inspect
 import itertools
 import numbers
 import re
+import types
 import warnings
 
 from collections import UserList, namedtuple
@@ -460,7 +461,7 @@ from collections import UserList, namedtuple
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import Component, function_type
+from psyneulink.core.components.component import Component
 from psyneulink.core.components.mechanisms.mechanism import MechanismList, Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
@@ -2313,7 +2314,7 @@ class Process(Process_Base):
         #  and assign value to self.target (that will be used below to assign values to target_input_ports)
         # Note:  this accommodates functions that predicate the target on the outcome of processing
         #        (e.g., for rewards in reinforcement learning)
-        if isinstance(target, function_type):
+        if isinstance(target, types.FunctionType):
             target = target()
 
         # If target itself is callable, call that now

@@ -184,13 +184,12 @@ import itertools
 import numbers
 import numpy as np
 import typecheck as tc
+import types
 import warnings
 
 from collections.abc import Iterable
-from types import MethodType
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.functions.function import Function, is_function_type
 from psyneulink.core.components.functions.learningfunctions import Hebbian
 from psyneulink.core.components.functions.objectivefunctions import Stability
@@ -896,12 +895,12 @@ class RecurrentTransferMechanism(TransferMechanism):
                 not (
                     isinstance(comb_fct, LinearCombination)
                     or (isinstance(comb_fct, type) and issubclass(comb_fct, LinearCombination))
-                    or (isinstance(comb_fct, MethodType) and comb_fct.__self__ == self)
+                    or (isinstance(comb_fct, types.MethodType) and comb_fct.__self__ == self)
                 )
             ):
                 if isinstance(comb_fct, type):
                     comb_fct = comb_fct()
-                elif isinstance(comb_fct, (function_type, method_type)):
+                elif isinstance(comb_fct, (types.FunctionType, types.MethodType)):
                     comb_fct = UserDefinedFunction(comb_fct, self.defaults.variable)
                 try:
                     cust_fct_result = comb_fct.execute(self.defaults.variable)
@@ -932,7 +931,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             if not isinstance(comb_fct, Function):
                 if isinstance(comb_fct, type):
                     self.combination_function = comb_fct(default_variable=self.defaults.variable)
-                elif isinstance(comb_fct, MethodType) and comb_fct.__self__ == self:
+                elif isinstance(comb_fct, types.MethodType) and comb_fct.__self__ == self:
                     pass
                 else:
                     self.combination_function = UserDefinedFunction(custom_function=comb_fct,

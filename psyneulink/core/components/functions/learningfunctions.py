@@ -26,11 +26,11 @@ from collections import namedtuple
 
 import numpy as np
 import typecheck as tc
-
+import types
 
 from psyneulink.core.components.functions.function import Function_Base, FunctionError, is_function_type
 from psyneulink.core.components.functions.transferfunctions import Logistic
-from psyneulink.core.components.component import ComponentError, function_type, method_type
+from psyneulink.core.components.component import ComponentError
 from psyneulink.core.globals.keywords import \
     CONTRASTIVE_HEBBIAN_FUNCTION, DEFAULT_VARIABLE, TDLEARNING_FUNCTION, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
     KOHONEN_FUNCTION, GAUSSIAN, LINEAR, EXPONENTIAL, HEBBIAN_FUNCTION, RL_FUNCTION, BACKPROPAGATION_FUNCTION, MATRIX, \
@@ -1875,7 +1875,7 @@ class BackPropagation(LearningFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 activation_derivative_fct: tc.optional(tc.any(function_type, method_type)) = Logistic().derivative,
+                 activation_derivative_fct: tc.optional(tc.any(types.FunctionType, types.MethodType)) = Logistic().derivative,
                  # learning_rate: tc.optional(parameter_spec) = None,
                  learning_rate=None,
                  loss_function=None,

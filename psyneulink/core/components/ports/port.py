@@ -767,6 +767,7 @@ import abc
 import inspect
 import itertools
 import numbers
+import types
 import warnings
 
 from collections.abc import Iterable
@@ -776,7 +777,7 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import \
-    Component, ComponentError, DefaultsFlexibility, component_keywords, function_type, method_type
+    Component, ComponentError, DefaultsFlexibility, component_keywords
 from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, LinearCombination
 from psyneulink.core.components.functions.function import Function, get_param_value_for_keyword, is_function_type
 from psyneulink.core.components.functions.transferfunctions import Linear
@@ -2799,7 +2800,7 @@ def _parse_port_spec(port_type=None,
     #    and validate that it is consistent with any standard_args specified in call to _instantiate_port
 
     # function; try to resolve to a value
-    if isinstance(port_specification, function_type):
+    if isinstance(port_specification, types.FunctionType):
         port_specification = port_specification()
 
     # ModulatorySpecification of some kind
@@ -2953,7 +2954,7 @@ def _parse_port_spec(port_type=None,
             port_dict[NAME] = port_specification
 
     # # function; try to resolve to a value
-    # elif isinstance(Port_Specification, function_type):
+    # elif isinstance(Port_Specification, types.FunctionType):
     #     port_dict[REFERENCE_VALUE] = get_param_value_for_function(owner, Port_Specification)
     #     if port_dict[REFERENCE_VALUE] is None:
     #         raise PortError("PROGRAM ERROR: port_spec for {} of {} is a function ({}), but failed to return a value".
@@ -3135,7 +3136,7 @@ def _parse_port_spec(port_type=None,
     try:
         spec_function = port_dict[PARAMS][FUNCTION]
         # if isinstance(spec_function, Function):
-        if isinstance(spec_function, (Function, function_type, method_type)):
+        if isinstance(spec_function, (Function, types.FunctionType, types.MethodType)):
             spec_function_value = port_type._get_port_function_value(owner, spec_function, port_dict[VARIABLE])
         elif inspect.isclass(spec_function) and issubclass(spec_function, Function):
             try:
