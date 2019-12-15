@@ -93,7 +93,7 @@ A ModulatoryMechanism can be created by using the standard Python method of call
 ModulatoryMechanisms of the appropriate subtype are also created automatically when other Components are created that
 require them, or a form of modulation is specified for them. For example, a `ControlMechanism <ControlMechanism>` is
 automatically created as part of a `System <System_Creation>` (for use as its `controller
-<System.controller>`), or when `control is specified <ControlMechanism_Control_Signals>` for the parameter of a
+<System.controller>`), or when `control is specified <ControlMechanism_ControlSignals>` for the parameter of a
 `Mechanism <Mechanism>`; and one or more `LearningMechanism <LearningMechanism>` are created when learning is
 specified for a `Process <Process_Learning_Sequence>` or a `System <System_Learning>` (see the documentation for
 `subtypes <ModulatoryMechanism_Subtypes>` of ModulatoryMechanisms for more specific information about how to create them).

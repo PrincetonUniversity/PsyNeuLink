@@ -126,7 +126,7 @@ Projection in context:
         ControlProjection's `sender <ControlProjection.sender>`;  otherwise, the ControlProjection's `initialization
         is deferred <ControlProjection_Deferred_Initialization>` until the Mechanism is assigned to a System,
         at which time the ControlSignal is added to the System's `controller <System.controller>` and assigned
-        as its the ControlProjection's `sender <ControlProjection.sender>`.  See `ControlMechanism_Control_Signals` for
+        as its the ControlProjection's `sender <ControlProjection.sender>`.  See `ControlMechanism_ControlSignals` for
         additional details.
 
       * *GATING_PROJECTION* (or *GATING*) -- this can be used when specifying an `InputPort

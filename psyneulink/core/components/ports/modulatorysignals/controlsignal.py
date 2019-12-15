@@ -47,9 +47,9 @@ Creating a ControlSignal
 ------------------------
 
 A ControlSignal is created automatically whenever the parameter of a Mechanism or of its function is `specified for
-control <ControlMechanism_Control_Signals>`.  ControlSignals can also be specified in the **control_signals** argument
+control <ControlMechanism_ControlSignals>`.  ControlSignals can also be specified in the **control_signals** argument
 of the constructor for a `ControlMechanism <ControlMechanism>`, as well as in the `specification of the parameter
-<ParameterPort_Specification>` that the ControlSignal is intended to modulate (also see `Modualory Specificadtion
+<ParameterPort_Specification>` that the ControlSignal is intended to modulate (also see `Modualory Specification
 <ParameterPort_Modulatory_Specification>`.  Although a ControlSignal can also be  created on its own using its
 constructor (or any of the other ways for `creating an OutputPort <OutputPorts_Creation>`), this is usually not
 necessary nor is it advisable, as a ControlSignal has dedicated components and requirements for configuration that
@@ -70,11 +70,13 @@ ControlMechanism's constructor, in which case a default ControlSignal will be cr
 of the following can be use to specify the parameter(s) to be controlled:
 
   * **ParameterPort** (or list of them) -- for the Mechanism(s) to which the parameter(s) belong;
-  ..
+
   * **2-item tuple:** *(parameter name or list of them>, <Mechanism>)* -- the 1st item must be the name of the
     parameter (or list of parameter names), and the 2nd item the Mechanism to which it (they) belong(s); this is a
     convenience format, that is simpler to use than a specification dictionary (see above), but precludes
     specification of any `parameters <ControlSignal_Structure>` for the ControlSignal.
+
+  .. _ControlSignal_Specification_Dictionary:
 
   * **specification dictionary** -- this is an abbreviated form of `port specification dictionary
     <Port_Specification>`, in which the parameter(s) to be controlled can be specified in either of the two
@@ -261,43 +263,86 @@ evaluate a `control_allocation <ControlMechanism.control_allocation>`, and adjus
 Examples
 --------
 
-.. _ControlSignal_Example_Modulate_Mechanism_Parameter:
+As explained `above <ControlSignal_Creation>` (and in `ControlMechanism_ControlSignals`), a ControlSignal can be
+specified either where the parameter it controls is specified, or in the constructor of the ControlMechanism to
+which the ControlSignal belongs (i.e., that is responsible for the control).  Which of these to use is largely an
+aesthetic matter -- that is, where you wish the specification of control to appear. Examples of each are provided below.
 
-*Modulate the parameter of a Mechanism's function*.  The following example assigns a
-ControlSignal to the `bias <Logistic.gain>` parameter of the `Logistic` Function used by a `TransferMechanism`::
+.. note::
+  If a ControlSignal is specified where the parameter it controls is specified, the ControlSignal is
+  not implemented until the `Component` to which the parameter belongs is assigned to a `Composition`
+  (see `ControlMechanism_ControlSignals`).
+
+.. _ControlSignal_Example_Specify_with_Parameter:
+
+*Specify a ControlSignal where a parameter is specified*
+
+The simplest way to do this is to specify the ControlSignal by class, or using the keyword *CONTROL*, in a
+`tuple specification <ParameterPort_Tuple_Specification>` for the parameter, as in the following examples:
 
     >>> from psyneulink import *
-    >>> my_mech = TransferMechanism(function=Logistic(bias=(1.0, ControlSignal)))
+    >>> my_mech = ProcessingMechanism(function=Logistic(bias=(1.0, ControlMechanism)))
+    or
+    >>> my_mech = ProcessingMechanism(function=Logistic(bias=(1.0, CONTROL)))
 
-Note that the ControlSignal is specified by it class.  This will create a default ControlSignal,
-with a ControlProjection that projects to the TransferMechanism's `ParameterPort` for the `bias <Logistic.bias>`
-parameter of its `Logistic` Function.  The default value of a ControlSignal's `modulation <ModulatorySignal.modulation>`
-attribute is *MULTIPLICATIVE*, so that it will multiply the value of the `bias <Logistic.bias>` parameter.
-When the TransferMechanism executes, the Logistic Function will use the value of the ControlSignal as its
-bias parameter.
+Both of these assign a ControlSignal to the `bias <Logistic.gain>` parameter of the `Logistic` Function used by a
+`ProcessingMechanism`. This creates a default ControlSignal, with a `ControlProjection` that projects to the
+ProcessingMechanism's `ParameterPort` for the `bias <Logistic.bias>` parameter of its `Logistic` Function.  The
+default value of a ControlSignal's `modulation <ModulatorySignal.modulation>` attribute is *MULTIPLICATIVE*,
+so that it will multiply the value of the `bias <Logistic.bias>` parameter. When the ProcessingMechanism executes,
+the Logistic Function will use the value of the ControlSignal as its bias parameter.
 
-.. _ControlSignal_Example_Specify_Attributes:
+.. _ControlSignal_Example_Modulation:
 
-*Specify attributes of a ControlSignal*.  Ordinarily, ControlSignals modify the *MULTIPLICATIVE_PARAM* of a
-ParameterPort's `function <ParameterPort.function>` to modulate the parameter's value.
-In the example below, this is changed by specifying the `modulation <ModulatorySignal.modulation>` attribute of a
-`ControlSignal` for the `Logistic` Function of the `TransferMechanism`.  It is changed so that the value of the
-ControlSignal adds to, rather than multiplies, the value of the `gain <Logistic.gain>` parameter of the Logistic
-function::
+If attributes of the ControlSignal must be specified, then its constructor can be used.  For example, ordinarily a
+ControlSignal modulates the `MULTIPLICATIVE_PARAM <ModulatorySignal_Types>` of a `Port's <Port>` `function
+<Port_Base.function>`.  However, this can be changed by using the ControlSignal's constructor to specify its
+**modulation** argument, as follows::
 
-    >>> my_mech = TransferMechanism(function=Logistic(gain=(1.0, ControlSignal(modulation=ADDITIVE))))
+    >>> my_mech = ProcessingMechanism(function=Logistic(gain=(1.0, ControlSignal(modulation=ADDITIVE))))
 
-Note that the value specified for the **modulation** argument of `ControlSignal` refers to how the parameter of the
-*Logistic* Function is modified (in this case, its `gain <Logistic.gain>` parameter), and not to the input of the
-Logistic function; that is, in this example, the value of the ControlSignal is added to the *gain parameter* of the
-Logistic function, *not* its `variable <Logistic.variable>`.  If the value of the ControlSignal's **modulation**
-argument had been *OVERRIDE*, then the ControlSignal's value would have been used as (i.e., it would have replaced)
-the value of the *Logistic* Function's `gain <Logistic.gain>` parameter, rather than being added to it.
+This specifies that the value of the ControlSignal should be added to, rather than multiply the value of the `gain
+<Logistic.gain>` parameter of the Logistic function.  Note that the **modulation** argument determines how to modify a
+*parameter* of the *Logistic* Function (in this case, its `gain <Logistic.gain>` parameter), and its input directly;
+that is, in this example, the value of the ControlSignal is added to the *gain parameter* of the Logistic function,
+*not* to its `variable <Logistic.variable>`.  If the value of the ControlSignal's **modulation** argument had been
+*OVERRIDE*, then the ControlSignal's value would have been used as (i.e., it would have replaced) the value of the
+*Logistic* Function's `gain <Logistic.gain>` parameter, rather than being added to it.
+
+*Specify ControlSignals in a ControlMechanism's constructor*
+
+Parameters can also be specified for control in constructor of the `ControlMechanism <ControlMechanism>` that controls
+them.  This is done in the **control_signals** argument of the ControlMechanism's constructor, by specifying a
+ControlSignal for each parameter to be controlled.  The following example shows several ways in which the ControlSignal
+can be specified (see `ControlSignal_Specification` for additional details)::
+
+    >>> mech_A = ProcessingMechanism()
+    >>> mech_B = ProcessingMechanism(function=Logistic)
+    >>> ctl_mech = ControlMechanism(control_signals=[(INTERCEPT, mech_A),
+    ...                                              ControlSignal(modulates=(GAIN, mech_B),
+    ...                                                            cost_options=CostFunctions.INTENSITY)
+    ...                                              {
+    ...                                                  NAME: BIAS,
+    ...                                                  MECHANISM: mech_B,
+    ...                                                  MODULATION: ADDITIVE
+    ...                                              }])
+
+Here, ``ctl_mech`` modulates the `intercept <Linear.intercept>` parameter of ``mech_A``'s `Linear` `Function`
+(the default `function <Mechanism_Base.function>` for a `ProcessingMechanism`), and the `bias <Logistic.bias>`
+and `gain <Logistic.gain>` parameters of ``mech_B``'s `Logistic` `Function`.  The first ControlSignal is specified
+using a 2-item tuple (the simplest way to do so); the second uses the ControlSignal's constructor (allowing another
+parameter to be specified -- here, its `cost_options <ControlSignal_Costs>`); and the third uses a specification
+dictionary (which supports additional options; see `above <ControlSignal_Specification_Dictionary>`).
 
 .. _ControlSignal_Example_Modulate_Costs:
 
-The following example shows how the parameters of a `cost function <ControlSignal_Costs>` can be modulated by another
-`ControlSignal`::
+*Modulate the parameters of a ControlSignal's cost function*.
+
+ControlSignals can be used to modulate the parameters of other ControlSignals.  This is done using the **modulation**
+argument, but instead of using the keyword for a `generic form of modulation <ModulatorySignal_Types>` (as in the
+example `above <ControlSignal_Example_Modulation>`), a parameter of the ControlSignal's `function
+<ControlSignal.function>` is used.  For example, the following shows how the parameters of a ControlSignal's `cost
+function <ControlSignal_Costs>` can be modulated by another ControlSignal::
 
   >>> from psyneulink import *
   >>> mech = ProcessingMechanism()
@@ -341,44 +386,6 @@ as shown below::
 The Composition must be executed for 2 trials to see this, since the `value <ControlProjection.value>` computed
 by ``ctl_mech_B`` must be computed on the first trial before it can have its effect on ``ctl_mech_A`` on the next
 (i.e., second) trial (see noted under `ControlSignal_Execution`).
-
-COMMENT:
-.. _ControlSignal_Example_OCM:
-??MOVE TO OCM?
-*Modulate the parameters of several Mechanisms by an OptimizationControlMechanism*.  This shows::
-
-    # >>> my_mech_A = TransferMechanism(function=Logistic)
-    # >>> my_mech_B = TransferMechanism(function=Linear,
-    # ...                              output_ports=[RESULT, MEAN])
-    # >>> my_ocm = OptimizationControlMechanism(monitor_for_control=[my_mech_A.output_ports[RESULT],
-    # ...                                                            my_mech_B.output_ports[MEAN]],
-    # ...                                       control_signals=[(GAIN, my_mech_A),
-    # ...                                                        {NAME: INTERCEPT,
-    # ...                                                         MECHANISM: my_mech_B,
-    # ...                                                         MODULATION: ADDITIVE}],
-    # ...                                       name='my_ocm')
-
-.. _ControlSignal_Example_Modulate_Several_Mechanisms:
-
-DEPRECATED
-*Modulate the parameters of several Mechanisms in a System*.  The following example assigns ControlSignals to modulate
-the `gain <Logistic.gain>` parameter of the `Logistic` function for ``my_mech_A`` and the `intercept
-<Logistic.intercept>` parameter of the `Linear` function for ``my_mech_B``::
-
-    # >>> my_mech_A = TransferMechanism(function=Logistic)
-    # >>> my_mech_B = TransferMechanism(function=Linear,
-    # ...                                   output_ports=[RESULT, MEAN])
-    # >>> process_a = Process(pathway=[my_mech_A])
-    # >>> process_b = Process(pathway=[my_mech_B])
-    # >>> my_system = System(processes=[process_a, process_b],
-    # ...                        monitor_for_control=[my_mech_A.output_ports[RESULT],
-    # ...                                             my_mech_B.output_ports[MEAN]],
-    # ...                        control_signals=[(GAIN, my_mech_A),
-    # ...                                         {NAME: INTERCEPT,
-    # ...                                          MECHANISM: my_mech_B,
-    # ...                                          MODULATION: ADDITIVE}],
-    # ...                        name='My Test System')
-COMMENT
 
 .. _ControlSignal_Class_Reference:
 
@@ -520,7 +527,7 @@ class ControlSignal(ModulatorySignal):
         duration_cost_function=IntegratorFunction,                 \
         combine_costs_function=Reduce(operation=SUM),              \
         allocation_samples=self.class_defaults.allocation_samples, \
-        modulation=MULTIPLICATIVE                                  \
+        modulates=None,                                            \
         projections=None)
 
     A subclass of `ModulatorySignal <ModulatorySignal>` used by a `ControlMechanism <ControlMechanism>` to

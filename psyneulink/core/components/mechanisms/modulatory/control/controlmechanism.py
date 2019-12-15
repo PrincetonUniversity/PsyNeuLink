@@ -17,7 +17,7 @@ Contents
   * `ControlMechanism_Creation`
       - `ControlMechanism_Monitor_for_Control`
       - `ControlMechanism_ObjectiveMechanism`
-      - `ControlMechanism_Control_Signals`
+      - `ControlMechanism_ControlSignals`
   * `ControlMechanism_Structure`
       - `ControlMechanism_Input`
       - `ControlMechanism_Function`
@@ -61,12 +61,12 @@ can be listed using its `show <ControlMechanism.show>` method.
 A ControlMechanism can be assigned to a `Composition` and executed just like any other Mechanism. It can also be
 assigned as the `controller <Composition.controller>` of a `Composition`, that has a special relation
 to the Composition: it is used to control all of the parameters that have been `specified for control
-<ControlMechanism_Control_Signals>` in that Composition.  A ControlMechanism can be the `controller
+<ControlMechanism_ControlSignals>` in that Composition.  A ControlMechanism can be the `controller
 <Composition.controller>` for only one Composition, and a Composition can have only one `controller
 <Composition.controller>`.  When a ControlMechanism is assigned as the `controller <Composition.controller>` of a
 Composition (either in the Composition's constructor, or using its `add_controller <Composition.add_controller>`
 method, the ControlMechanism assumes control over all of the parameters that have been `specified for control
-<ControlMechanism_Control_Signals>` for Components in the Composition.  The Composition's `controller
+<ControlMechanism_ControlSignals>` for Components in the Composition.  The Composition's `controller
 <Composition.controller>` is executed either before or after all of the other Components in the Composition are
 executed, including any other ControlMechanisms that belong to it (see `Composition_Controller_Execution`).  A
 ControlMechanism can be assigned as the `controller <Composition.controller>` for a Composition by specifying it in
@@ -301,31 +301,30 @@ FOR DEVELOPERS:
     ObjectiveMechanism.add_to_monitor method.
 COMMENT
 
-.. _ControlMechanism_Control_Signals:
+.. _ControlMechanism_ControlSignals:
 
 *Specifying Parameters to Control*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This can be specified in either of two ways:
 
-*On a ControlMechanism itself*
+*With a ControlMechanism itself*
 
 The parameters controlled by a ControlMechanism can be specified in the **control** argument of its constructor;
 the argument must be a `specification for one more ControlSignals <ControlSignal_Specification>`.  The parameter to
 be controlled must belong to a Component in the same `Composition` as the ControlMechanism when it is added to the
 Composition, or an error will occur.
 
-*On a Parameter to be controlled by the `controller <Composition.controller>` of a `Composition`*
+*With a Parameter to be controlled by the `controller <Composition.controller>` of a `Composition`*
 
 Control can also be specified for a parameter where the `parameter itself is specified <ParameterPort_Specification>`,
-in the constructor for the Component to which it belongs, by including a `ControlProjection`, `ControlSignal` or
-the keyword `CONTROL` in a `tuple specification <ParameterPort_Tuple_Specification>` for the parameter.  In this
-case, the specified parameter will be assigned for control by the `controller <controller.Composition>` of any
-`Composition` to which its Component belongs, when the Component is executed in that Composition (see
-`ControlMechanism_Composition_Controller`).  Conversely, when a ControlMechanism is assigned as the `controller
-<Composition.controller>` of a Composition, a `ControlSignal` is created and assigned to the ControlMechanism
-for every parameter of any `Component <Component>` in the Composition that has been `specified for control
-<ParameterPort_Modulatory_Specification>`.
+by including the specification of a `ControlSignal`, `ControlProjection`, or the keyword `CONTROL` in a `tuple
+specification <ParameterPort_Tuple_Specification>` for the parameter.  In this case, the specified parameter will be
+assigned for control by the `controller <controller.Composition>` of any `Composition` to which its Component belongs,
+when the Component is added to the Composition (see `ControlMechanism_Composition_Controller`).  Conversely, when
+a ControlMechanism is assigned as the `controller <Composition.controller>` of a Composition, a `ControlSignal` is
+created and assigned to the ControlMechanism for every parameter of any `Component <Component>` in the Composition
+that has been `specified for control <ParameterPort_Modulatory_Specification>`.
 
 In general, a `ControlSignal` is created for each parameter specified to be controlled by a ControlMechanism.  These
 are a type of `OutputPort` that send a `ControlProjection` to the `ParameterPort` of the parameter to be
@@ -491,6 +490,10 @@ for the next `TRIAL` of execution.
 Examples
 --------
 
+The examples below focus on the specificaiton of the `objective_mechanism <ControlMechanism.objective_mechanims>`
+for a ControlMechanism.  See `Control Signal Examples <ControlSignal_Examples>` for examples of how to specify the
+ControlSignals for a ControlMechanism.
+
 The following example creates a ControlMechanism by specifying its **objective_mechanism** using a constructor
 that specifies the OutputPorts to be monitored by its `objective_mechanism <ControlMechanism.objective_mechanism>`
 and the function used to evaluate these::
@@ -498,12 +501,12 @@ and the function used to evaluate these::
     >>> my_mech_A = ProcessingMechanism(name="Mech A")
     >>> my_DDM = DDM(name="My DDM")
     >>> my_mech_B = ProcessingMechanism(function=Logistic,
-    ...                                            name="Mech B")
+    ...                                 name="Mech B")
 
     >>> my_control_mech = ControlMechanism(
     ...                          objective_mechanism=ObjectiveMechanism(monitor=[(my_mech_A, 2, 1),
     ...                                                                           my_DDM.output_ports[RESPONSE_TIME]],
-    ...                                                                     name="Objective Mechanism"),
+    ...                                                                 name="Objective Mechanism"),
     ...                          function=LinearCombination(operation=PRODUCT),
     ...                          control_signals=[(THRESHOLD, my_DDM),
     ...                                           (GAIN, my_mech_B)],
