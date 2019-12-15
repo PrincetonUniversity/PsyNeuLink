@@ -32,10 +32,10 @@ Overview
 --------
 
 A ModulatorySignal is a subclas of `OutputPort` that belongs to a `ModulatoryMechanism <ModulatoryMechanism>`, and is
-used to `modulate <ModulatorySignal_Modulation>` the `value <Port_Base.value>` of one or more `Ports <Port>` by way
-of one or more `ModulatoryProjctions <ModulatoryProjection>`. A ModulatorySignal modulates the value of a Port by
-modifying a  parameter of thatState's `function <Port_Base.function>`.  There are three types of ModulatorySignals,
-each of which is  associated wth a particular type of `ModulatoryMechanism <ModulatoryMechanism>` and `ModulatoryProjection
+used to `modulate <ModulatorySignal_Modulation>` the `value <Port_Base.value>` of one or more `Ports <Port>` by way of
+one or more `ModulatoryProjctions <ModulatoryProjection>`. A ModulatorySignal modulates the value of a Port by modifying
+a  parameter of that Port's `function <Port_Base.function>`.  There are three types of ModulatorySignals, each of which
+is  associated wth a particular type of `ModulatoryMechanism <ModulatoryMechanism>` and `ModulatoryProjection
 <ModulatoryProjection>`, and modifies the value of different types of Ports, as summarized `below:
 
 * `ControlSignal`
@@ -63,15 +63,20 @@ in the sections under `ModulatorySignal_Structure`.
 .. _ModulatorySignal_Naming:
 
 *Naming Conventions for ModulatorySignals*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Modulatory Components and their attributes are named according to the category of modulation:
+Modulatory Components and their attributes are named according to the type of modulation:
 
-    - ModulatoryMechanism name: <*Category*>Mechanism (e.g., ControlMechanism)
-    - ModulatorySignal name: <*Category*>Signal (e.g., ControlSignal)
-    - ModulatoryProjection name: <*Category*>Projection (e.g., ControlProjection)
-    - List of a ModulatoryMechanism's ModulatorySignals: <*CategoryMechanism*>.<category>_signals
-      (e.g., ControlMechanism.control_signals)
-    - Value of a ModulatorySignal: <*CategorySignal*>.<category>_signal (e.g., ControlSignal.control_signal)
+  * ModulatoryMechanism name
+      <*Type*>Mechanism (e.g., ControlMechanism)
+  * ModulatorySignal name
+      <*Type*>Signal (e.g., ControlSignal)
+  * ModulatoryProjection name
+      <*Type*>Projection (e.g., ControlProjection)
+  * List of a ModulatoryMechanism's ModulatorySignals
+      <*Type*>Mechanism.<type>_signals (e.g., ControlMechanism.control_signals)
+  * Value of a ModulatorySignal
+      <*Type*>Signal.<type>_signal (e.g., ControlSignal.control_signal)
 
 .. _ModulatorySignal_Creation:
 
@@ -95,15 +100,16 @@ Structure
 
 A ModulatorySignal is always assigned to a `ModulatoryMechanism <ModulatoryMechanism>`, and must be assigned to an
 ModulatoryMechanism of the appropriate type (`see types of ModulatoryMechanism <ModulatoryMechanism_Types>`).  The
-ModulatorySignal receives a `modulatory_allocation` from the ModulatoryMechanism to which it is assigned, that it uses
-as the `variable <Function_Base.variable>` for its `function <ModulatoryMechanism.function>`, the result of which is the
-modulatory `value <ModulatorySignal.value>` of the ModulatorySignal.  A ModulatorySignal is associated with one or more
-`ModulatoryProjections <ModulatoryProjection>` of the corresponding type, that that receive the ModulatorySignal's
-`value <ModulatorySignal.value>`, and use this to modulate the Port(s) to which they project.  All of the
-ModulatoryProjections from a given ModulatorySignal are assigned the same modulatory `value <ModulatorySignal.value>`
-(see `ModulatorySignal_Projections` below) and use the same `type of modulation <ModulatorySignal_Types>` specified
-by the the ModulatorySignal's `modulation <ModulatorySignal.modulation>` attribute.  The ModulatoryProjections
-received by a `Port <Port>` are listed in the Port's `mod_afferents <Port_Base.mod_afferents>` attribute.
+ModulatorySignal receives an `allocation <ModulatorySignal.allocation>` from the ModulatoryMechanism to which it is
+assigned, that it uses as the `variable <Function_Base.variable>` for its `function <Mechanism_Base.function>`, the
+result of which is the modulatory `value <ModulatorySignal.value>` of the ModulatorySignal.  A ModulatorySignal is
+associated with one or more `ModulatoryProjections <ModulatoryProjection>` of the corresponding type, that receive
+the ModulatorySignal's `value <ModulatorySignal.value>`, and use this to modulate the Port(s) to which they project.
+All of the ModulatoryProjections from a given ModulatorySignal are assigned the same modulatory `value
+<ModulatorySignal.value>` (see `ModulatorySignal_Projections` below) and use the same `type of modulation
+<ModulatorySignal_Types>` specified by the the ModulatorySignal's `modulation <ModulatorySignal.modulation>` attribute.
+The ModulatoryProjections received by a `Port <Port>` are listed in the Port's `mod_afferents <Port_Base.mod_afferents>`
+attribute.
 
 The section on `Modulation` below provides a comparison of ModulatorySignal `subclasses and their uses
 <ModulatorySignal_Uses>` (summarized in an accompanying `table <ModulatorySignal_Table>` and `figure
@@ -151,22 +157,25 @@ belongs.
 Uses of Modulation
 ^^^^^^^^^^^^^^^^^^
 
-There are three broad categories of modulation that serve different purposes, and differ according to the
-ModulatorySignals used and the type of Port modulated:
+There are three broad types of modulation that serve different purposes, and differ according to the
+ModulatorySignals used and the type of Port modulated;  these are modulation of a:
 
-  * **modulation of a** `Mechanism  <Mechanism>`\\s <function <Mechanism_Base.function> -- a `ControlSignal` must be
-    used; this modulates the `ParameterPort` for a parameter of the Mechanism's `function <Mechanism_Base.function>`
-    which, in turn, determines how it computes the Mechanism's `value <Mechanism_Base.value>`;
+  * `Mechanism's  <Mechanism>` `function <Mechanism_Base.function>`
+        a `ControlSignal` must be
+        used; this modulates the `ParameterPort` for a parameter of the Mechanism's `function <Mechanism_Base.function>`
+        which, in turn, determines how it computes the Mechanism's `value <Mechanism_Base.value>`;
 
-  * **modulation of a** `Mechanism <Mechanism>`\\s input or output -- a `GatingSignal` is specialized for this purpose,
-    though a `ControlSignal` can also be used;  these modulate an `InputPort` of the Mechanism, that determines the
-    Mechanism's `variable <Mechanism_Base.variable>` used as the input to its `function <Mechanism_Base.function>`,
-    or an `OutputPort` of the Mechanism, that determines how the `value <Mechanism_Base.value>` of the Mechanism
-    (i.e., the result of its `function <Mechanism_Base.function>`) is used to generate the output of the Mechanism.
+  * `Mechanism's <Mechanism>` input or output
+        a `GatingSignal` is specialized for this purpose,
+        though a `ControlSignal` can also be used.  These modulate an `InputPort` of the Mechanism, that determines the
+        Mechanism's `variable <Mechanism_Base.variable>` used as the input to its `function <Mechanism_Base.function>`;
+        or an `OutputPort` of the Mechanism, that determines how the `value <Mechanism_Base.value>` of the Mechanism
+        (i.e., the result of its `function <Mechanism_Base.function>`) is used to generate the output of that Mechanism.
 
-  * **modulation of a** `MappingProjection` -- a `LearningSignal` must be used; this modulates the `ParameterPort`
-    for the `matrix <MappingProjection.matrix>` parameter of a MappingProjection's `function  <MProjection.function>`
-    which, in turn, determines how it computes the MappingProjection's `value <Projection_Base.value>`.
+  * `MappingProjection`
+        a `LearningSignal` must be used; this modulates the `ParameterPort` for
+        the `matrix <MappingProjection.matrix>` parameter of a MappingProjection's `function <Projection_Base.function>`
+        which, in turn, determines how it computes the MappingProjection's `value <Projection_Base.value>`.
 
 The following table summarizes the three uses of modulation, the ModulatorySignals for each, and the Ports they
 modulate. The mechanics of modulation are described in greater detail in `ModulatorySignal_Implementation`,
@@ -225,13 +234,13 @@ Types of Modulation
 ^^^^^^^^^^^^^^^^^^^
 
 The `modulation <ModulatorySignal.modulation>` attribute of a ModulatorySignal determines the way in which it
-modulates the `value <Port_Base.value>` of a `Port`, by specifying which paramter of the Port's `function
-<Port_Base.function>`that it modifies (see `figure <ModulatorySignal_Detail_Figure>` below).  This is specified
-in a tuple containing the Port and the name of the parameter to be modified (see `example <EXAMPLE XXX>`).
-Alternatively, a keyword can be used in place of the parameter's name.  For some `Functions <Function>`,
-keywords can be used to specify function-specific forms of modulation (e.g., see
-`TransferWithCosts_Modulation_of_Cost_Params`).  In addition, there are four keywords that can be used to specify
-generic forms of modulation supported by most `Functions <Function>`:
+modulates the `value <Port_Base.value>` of a `Port <Port>`, by specifying which paramter of the Port's `function
+<Port_Base.function>` that it modifies (see `figure <ModulatorySignal_Detail_Figure>` below).  This is specified
+in a tuple containing the Port and the name of the parameter to be modified (see `example
+<ControlSignal_Example_Modulate_Costs>`). Alternatively, a keyword can be used in place of the parameter's name.
+For some `Functions <Function>`, keywords can be used to specify function-specific forms of modulation (e.g., see
+`TransferWithCosts Function <TransferWithCosts_Modulation_of_Cost_Params>` for an example).  In addition, there are
+four keywords that can be used to specify generic forms of modulation supported by most `Functions <Function>`:
 
   * *MULTPLICATIVE_PARAM* - assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the parameter of
     the Port's `function <Port_Base.function>` specified as its `multiplicative_param <Function_Modulatory_Params>`.
@@ -330,12 +339,12 @@ Execution
 
 ModulatorySignals cannot be executed directly.  This done when the `ModulatoryMechanism <ModulatoryMechanism>` to
 which they belong is executed. When a ModulatorySignal is executed, it calculates its `value <ModulatorySignal.value>`,
-which is then assigned as the `variable <ModulatoryProjection_Base.variable>` of the `ModulatoryProjections
+which is then assigned as the `variable <Projection_Base.variable>` of the `ModulatoryProjections
 <ModulatoryProjection>` listed in its `efferents <ModulatorySignal.efferents>` attribute.
 When those Projections execute, they convey the ModulatorySignal's `value <ModulatorySignal.value>` to the `function
 <Port_Base.function>` of the `Port <Port>` to which they project.  The Port's `function <Port_Base.function>`
 then uses that value in determining value of the parameter designated by the `modulation <ModulatorySignal.modulation>`
-attribute of the ModulatorySignal when the Port's `value <Port_Baselvalue>` is updated.
+attribute of the ModulatorySignal when the Port's `value <Port_Base.value>` is updated.
 
 COMMENT:
 
@@ -478,7 +487,7 @@ class ModulatorySignal(OutputPort):
     modulation : str : default MULTIPLICATIVE
         specifies the type of modulation the ModulatorySignal uses to determine the value of the Port(s) it modulates;
         must be either a keyword defined by the `Function` of the parameter to be modulated, or one of the following
-        generic keywods -- *MULTIPLICATIVE*, *ADDITIVE*, *OVERRIDE* or *DISABLE* (see `ModulatorySignal_Types` for
+        generic keywords -- *MULTIPLICATIVE*, *ADDITIVE*, *OVERRIDE* or *DISABLE* (see `ModulatorySignal_Types` for
         additional details).
 
     Attributes

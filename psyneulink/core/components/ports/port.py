@@ -246,25 +246,25 @@ The following types of Projections can be specified for each type of Port:
         | *Port Type*      | *PROJECTIONS* specification   | *Assigned to Attribute*             |
         +==================+===============================+=====================================+
         |`InputPort`       | `PathwayProjection(s)         | `path_afferents                     |
-        |                  | <PathwayProjection>`          | <tPort.path_afferents>`             |
+        |                  | <PathwayProjection>`          | <Port_Base.path_afferents>`         |
         |                  |                               |                                     |
         |                  | `ControlProjection(s)         | `mod_afferents                      |
-        |                  | <ControlProjection>`          | <Port.mod_afferents>`               |
+        |                  | <ControlProjection>`          | <Port_Base.mod_afferents>`          |
         |                  |                               |                                     |
         |                  | `GatingProjection(s)          | `mod_afferents                      |
-        |                  | <GatingProjection>`           | <Port.mod_afferents>`               |
+        |                  | <GatingProjection>`           | <Port_Base.mod_afferents>`          |
         +------------------+-------------------------------+-------------------------------------+
         |`ParameterPort`   | `ControlProjection(s)         | `mod_afferents                      |
         |                  | <ControlProjection>`          | <ParameterPort.mod_afferents>`      |
         +------------------+-------------------------------+-------------------------------------+
         |`OutputPort`      | `PathwayProjection(s)         | `efferents                          |
-        |                  | <PathwayProjection>`          | <Port.efferents>`                   |
+        |                  | <PathwayProjection>`          | <Port_Base.efferents>`              |
         |                  |                               |                                     |
         |                  | `ControlProjection(s)         | `mod_afferents                      |
-        |                  | <ControlProjection>`          | <OutputPort.mod_afferents>`         |
+        |                  | <ControlProjection>`          | <Port_Base.mod_afferents>`          |
         |                  |                               |                                     |
         |                  | `GatingProjection(s)          | `mod_afferents                      |
-        |                  | <GatingProjection>`           | <OutputPort.mod_afferents>`         |
+        |                  | <GatingProjection>`           | <Port_Base.mod_afferents>`          |
         +------------------+-------------------------------+-------------------------------------+
         |`ModulatorySignal`|  `ModulatoryProjection(s)     | `efferents                          |
         |                  |  <ModulatoryProjection>`      | <ModulatorySignal.efferents>`       |
