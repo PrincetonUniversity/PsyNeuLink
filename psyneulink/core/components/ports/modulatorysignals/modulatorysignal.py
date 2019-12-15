@@ -13,16 +13,17 @@
 Contents
 --------
   * `ModulatorySignal_Overview`
-    - `Naming Conventions for ModulatorySignals <ModulatorySignal_Naming>`
   * `ModulatorySignal_Creation`
   * `ModulatorySignal_Structure`
-    - `ModulatorySignal_Projections`
-    - `ModulatorySignal_Modulation`
-      • `ModulatorySignal_Uses`
-      • `ModulatorySignal_Types`
-      • `ModulatorySignal_Implementation`
+      - `ModulatorySignal_Projections`
+      - `ModulatorySignal_Modulation`
+          • `ModulatorySignal_Uses`
+          • `ModulatorySignal_Types`
+          • `ModulatorySignal_Implementation`
   * `ModulatorySignal_Execution`
+  COMMENT:
   * `ModulatorySignal_Examples`
+  COMMENT
   * `ModulatorySignal_Class_Reference`
 
 
@@ -83,7 +84,7 @@ Structure
 ---------
 
 A ModulatorySignal is always assigned to a `ModulatoryMechanism <ModulatoryMechanism>`, and must be assigned to an
-ModulatoryMechanism of the appropriate type (`see types of ModulatoryMechanism <ModulatoryMechanism_Types>`).  The
+ModulatoryMechanism of the appropriate type (see `Types of ModulatoryMechanism <ModulatoryMechanism_Types>`).  The
 ModulatorySignal receives an `allocation <ModulatorySignal.allocation>` from the ModulatoryMechanism to which it is
 assigned, that it uses as the `variable <Function_Base.variable>` for its `function <Mechanism_Base.function>`, the
 result of which is the modulatory `value <ModulatorySignal.value>` of the ModulatorySignal.  A ModulatorySignal is
@@ -145,21 +146,22 @@ There are three broad types of modulation that serve different purposes, and dif
 ModulatorySignals used and the type of Port modulated;  these are modulation of a:
 
   * `Mechanism's  <Mechanism>` `function <Mechanism_Base.function>`
-        a `ControlSignal` must be
-        used; this modulates the `ParameterPort` for a parameter of the Mechanism's `function <Mechanism_Base.function>`
-        which, in turn, determines how it computes the Mechanism's `value <Mechanism_Base.value>`;
+        a `ControlSignal` must be used; this modulates the `value <ParameterPort.value>` of `ParameterPort` for a
+        parameter of the Mechanism's `function <Mechanism_Base.function>` which, in turn, determines how it computes
+        the Mechanism's `value <Mechanism_Base.value>`;
 
   * `Mechanism's <Mechanism>` input or output
-        a `GatingSignal` is specialized for this purpose,
-        though a `ControlSignal` can also be used.  These modulate an `InputPort` of the Mechanism, that determines the
-        Mechanism's `variable <Mechanism_Base.variable>` used as the input to its `function <Mechanism_Base.function>`;
-        or an `OutputPort` of the Mechanism, that determines how the `value <Mechanism_Base.value>` of the Mechanism
-        (i.e., the result of its `function <Mechanism_Base.function>`) is used to generate the output of that Mechanism.
+        a `GatingSignal` is specialized for this purpose, though a `ControlSignal` can also be used.  These modulate
+        either the value <InputPort.value>` an `InputPort` of the Mechanism, that determines the Mechanism's `variable
+        <Mechanism_Base.variable>` used as the input to its `function <Mechanism_Base.function>`; or the `value
+        <OutputPort.value>` of an `OutputPort` of the Mechanism, that determines how the `value <Mechanism_Base.value>`
+        of the Mechanism (i.e., the result of its `function <Mechanism_Base.function>`) is used to generate the output
+        from that Mechanism.
 
   * `MappingProjection`
-        a `LearningSignal` must be used; this modulates the `ParameterPort` for
-        the `matrix <MappingProjection.matrix>` parameter of a MappingProjection's `function <Projection_Base.function>`
-        which, in turn, determines how it computes the MappingProjection's `value <Projection_Base.value>`.
+        a `LearningSignal` must be used; this modulates the `ParameterPort` for the `matrix <MappingProjection.matrix>`
+        parameter of a MappingProjection's `function <Projection_Base.function>` which, in turn, determines how it
+        computes the MappingProjection's `value <Projection_Base.value>`.
 
 The following table summarizes the three uses of modulation, the ModulatorySignals for each, and the Ports they
 modulate. The mechanics of modulation are described in greater detail in `ModulatorySignal_Implementation`,
