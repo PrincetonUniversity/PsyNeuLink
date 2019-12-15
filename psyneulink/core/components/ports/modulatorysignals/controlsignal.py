@@ -412,7 +412,7 @@ from psyneulink.core.globals.keywords import \
     INPUT_PORT, INPUT_PORTS, \
     OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, \
     PARAMETER_PORT, PARAMETER_PORTS, \
-    PROJECTION_TYPE, RECEIVER, SUM
+    PROJECTION_TYPE, RECEIVER, SUM, FUNCTION
 from psyneulink.core.globals.parameters import Parameter, get_validator_by_function
 from psyneulink.core.globals.sampleiterator import is_sample_spec
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -748,6 +748,11 @@ class ControlSignal(ModulatorySignal):
         )
 
         function = Parameter(TransferWithCosts, stateful=False, loggable=False)
+        transfer_function = Parameter(
+            Linear,
+            stateful=False,
+            loggable=False,
+        )
 
         value = Parameter(
             np.array([defaultControlAllocation]),
@@ -830,7 +835,7 @@ class ControlSignal(ModulatorySignal):
                  reference_value=None,
                  default_allocation=None,
                  size=None,
-                 function=Linear,
+                 transfer_function=None,
                  cost_options:tc.optional(tc.any(CostFunctions, list))=None,
                  intensity_cost_function:(is_function_type)=Exponential,
                  adjustment_cost_function:tc.optional(is_function_type)=Linear,
@@ -843,6 +848,16 @@ class ControlSignal(ModulatorySignal):
                  name=None,
                  prefs:is_pref_set=None,
                  **kwargs):
+
+        try:
+            if kwargs[FUNCTION] is not None:
+                raise TypeError(
+                    f'{self.__class__.__name__} automatically creates a '
+                    'TransferWithCosts function, and does not accept override. '
+                    'TransferWithCosts uses the transfer_function parameter.'
+                )
+        except KeyError:
+            pass
 
         # This is included in case ControlSignal was created by another Component (such as ControlProjection)
         #    that specified ALLOCATION_SAMPLES in params
@@ -860,7 +875,7 @@ class ControlSignal(ModulatorySignal):
             reference_value=reference_value,
             default_allocation=default_allocation,
             size=size,
-            function=function,
+            transfer_function=transfer_function,
             modulation=modulation,
             modulates=modulates,
             cost_options=cost_options,
@@ -992,7 +1007,7 @@ class ControlSignal(ModulatorySignal):
         # constructor here
         function = TransferWithCosts(
             default_variable=self.defaults.variable,
-            transfer_fct=function,
+            transfer_fct=self.defaults.transfer_function,
             enabled_cost_functions=self.defaults.cost_options,
             intensity_cost_fct=self.defaults.intensity_cost_function,
             adjustment_cost_fct=self.defaults.adjustment_cost_function,

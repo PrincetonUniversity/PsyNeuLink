@@ -398,7 +398,6 @@ class TestControlMechanisms:
                 ),
                 function=pnl.GridSearch(direction=pnl.MINIMIZE),
                 control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
-                                                   function=pnl.Linear,
                                                    variable=1.0,
                                                    intensity_cost_function=pnl.Linear(slope=0.0),
                                                    allocation_samples=pnl.SampleSpec(start=1.0, stop=5.0, num=5))])
@@ -416,7 +415,6 @@ class TestControlMechanisms:
                 ),
                 function=pnl.GridSearch(direction=pnl.MAXIMIZE),
                 control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
-                                                   function=pnl.Linear,
                                                    variable=1.0,
                                                    intensity_cost_function=pnl.Linear(slope=0.0),
                                                    allocation_samples=pnl.SampleSpec(start=1.0, stop=5.0, num=5))])
@@ -461,7 +459,6 @@ class TestControlMechanisms:
                 ),
                 function=pnl.GridSearch(direction=pnl.MAXIMIZE),
                 control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
-                                                   function=pnl.Linear,
                                                    variable=1.0,
                                                    intensity_cost_function=pnl.Linear(slope=0.0),
                                                    allocation_samples=pnl.SampleSpec(start=1.0,
@@ -481,7 +478,6 @@ class TestControlMechanisms:
                 ),
                 function=pnl.GridSearch(direction=pnl.MAXIMIZE),
                 control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
-                                                   function=pnl.Linear,
                                                    variable=1.0,
                                                    intensity_cost_function=pnl.Linear(slope=0.0),
                                                    allocation_samples=pnl.SampleSpec(start=1.0,
@@ -528,7 +524,6 @@ class TestControlMechanisms:
                 ),
                 function=pnl.GridSearch(direction=pnl.MINIMIZE),
                 control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
-                                                   function=pnl.Linear,
                                                    variable=1.0,
                                                    intensity_cost_function=pnl.Linear(slope=0.0),
                                                    allocation_samples=pnl.SampleSpec(start=1.0,
@@ -548,7 +543,6 @@ class TestControlMechanisms:
                 ),
                 function=pnl.GridSearch(direction=pnl.MINIMIZE),
                 control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
-                                                   function=pnl.Linear,
                                                    variable=1.0,
                                                    intensity_cost_function=pnl.Linear(slope=0.0),
                                                    allocation_samples=pnl.SampleSpec(start=1.0,
@@ -687,7 +681,6 @@ class TestControlMechanisms:
                                              function=pnl.GridSearch(),
                                              control_signals=[pnl.ControlSignal(
                                                  projections=[(pnl.GAIN, activation)],
-                                                 function=pnl.Linear,
                                                  variable=1.0,
                                                  intensity_cost_function=pnl.Linear(
                                                      slope=0.0),
@@ -714,7 +707,6 @@ class TestControlMechanisms:
                                              control_signals=[
                                                  pnl.ControlSignal(
                                                      projections=[(pnl.THRESHOLD, decisionMaker)],
-                                                     function=pnl.Linear,
                                                      variable=1.0,
                                                      intensity_cost_function=pnl.Linear(
                                                          slope=0.0),
@@ -769,7 +761,7 @@ class TestControlMechanisms:
             control_signals=[
                 pnl.ControlSignal(
                     name='ControllerTransfer',
-                    function=pnl.Linear(slope=2),
+                    transfer_function=pnl.Linear(slope=2),
                     modulates=(pnl.SLOPE, iA),
                 )
             ],
@@ -781,7 +773,7 @@ class TestControlMechanisms:
             control_signals=[
                 pnl.ControlSignal(
                     name='ControllerTransfer',
-                    function=pnl.Linear(slope=4),
+                    transfer_function=pnl.Linear(slope=4),
                     modulates=(pnl.SLOPE, iB)
                 )
             ],
@@ -944,13 +936,11 @@ class TestModelBasedOptimizationControlMechanisms:
         signalSearchRange = pnl.SampleSpec(start=1.0, stop=1.8, step=0.2)
 
         target_rep_control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, Target_Rep)],
-                                                      function=pnl.Linear,
                                                       variable=1.0,
                                                       intensity_cost_function=pnl.Exponential(rate=0.8046),
                                                       allocation_samples=signalSearchRange)
 
         flanker_rep_control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, Flanker_Rep)],
-                                                       function=pnl.Linear,
                                                        variable=1.0,
                                                        intensity_cost_function=pnl.Exponential(rate=0.8046),
                                                        allocation_samples=signalSearchRange)
@@ -1353,7 +1343,6 @@ class TestModelBasedOptimizationControlMechanisms:
 
         search_range = pnl.SampleSpec(start=0.25, stop=0.75, step=0.25)
         control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, A)],
-                                           function=pnl.Linear,
                                            variable=1.0,
                                            allocation_samples=search_range,
                                            intensity_cost_function=pnl.Linear(slope=0.))
@@ -1394,7 +1383,6 @@ class TestModelBasedOptimizationControlMechanisms:
 
         search_range = pnl.SampleSpec(start=0.25, stop=0.75, step=0.25)
         control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, A)],
-                                           function=pnl.Linear,
                                            variable=1.0,
                                            allocation_samples=search_range,
                                            intensity_cost_function=pnl.Linear(slope=0.))
@@ -1430,7 +1418,6 @@ class TestModelBasedOptimizationControlMechanisms:
 
         search_range = pnl.SampleSpec(start=0.25, stop=0.75, step=0.25)
         control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, A)],
-                                           function=pnl.Linear,
                                            variable=1.0,
                                            allocation_samples=search_range,
                                            intensity_cost_function=pnl.Linear(slope=0.))
@@ -1623,7 +1610,6 @@ class TestModelBasedOptimizationControlMechanisms:
         # Modulate the GAIN parameter from activation layer
         # Initalize cost function as 0
         signal = pnl.ControlSignal(projections=[(pnl.GAIN, activation)],
-                                   function=pnl.Linear,
                                    variable=1.0,
                                    intensity_cost_function=pnl.Linear(slope=0.0),
                                    allocation_samples=searchRange)
@@ -1669,7 +1655,6 @@ class TestModelBasedOptimizationControlMechanisms:
 
         search_range = pnl.SampleSpec(start=0.25, stop=0.75, step=0.25)
         control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, A)],
-                                           function=pnl.Linear,
                                            variable=1.0,
                                            allocation_samples=search_range,
                                            intensity_cost_function=pnl.Linear(slope=0.))
@@ -1703,7 +1688,6 @@ class TestModelBasedOptimizationControlMechanisms:
 
         control_signal = pnl.ControlSignal(
             projections=[(pnl.SLOPE, A)],
-            function=pnl.Linear,
             variable=1.0,
             allocation_samples=[1, 2, 3],
             intensity_cost_function=pnl.Linear(slope=0.)
@@ -1741,7 +1725,6 @@ class TestModelBasedOptimizationControlMechanisms:
 
         search_range = pnl.SampleSpec(start=15., stop=35., step=5)
         control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, A)],
-                                           function=pnl.Linear,
                                            variable=1.0,
                                            allocation_samples=search_range,
                                            intensity_cost_function=pnl.Linear(slope=0.))

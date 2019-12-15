@@ -414,7 +414,7 @@ class GatingSignal(ControlSignal):
                  reference_value=None,
                  default_allocation=defaultGatingAllocation,
                  size=None,
-                 function=Linear,
+                 transfer_function=None,
                  modulation:tc.optional(str)=None,
                  modulates=None,
                  params=None,
@@ -437,7 +437,7 @@ class GatingSignal(ControlSignal):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         function=function,
+                         transfer_function=transfer_function,
                          **kwargs)
 
     def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):

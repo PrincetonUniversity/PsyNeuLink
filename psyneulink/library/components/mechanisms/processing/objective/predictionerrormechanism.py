@@ -280,7 +280,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
 
         variable = Parameter(None, read_only=True, pnl_internal=True, constructor_argument='default_variable')
         learning_rate = Parameter(0.3, modulable=True)
-        function = PredictionErrorDeltaFunction
+        function = Parameter(PredictionErrorDeltaFunction, stateful=False, loggable=False)
         sample = None
         target = None
 

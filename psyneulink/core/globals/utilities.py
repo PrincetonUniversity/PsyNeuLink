@@ -1717,7 +1717,11 @@ def unproxy_weakproxy(proxy):
             >>> a() is b
             True
     """
-    return proxy.__repr__.__self__
+    try:
+        return proxy.__repr__.__self__
+    except AttributeError:
+        # handles the case where proxy references a class
+        return proxy.__mro__[0]
 
 
 def parse_valid_identifier(orig_identifier):

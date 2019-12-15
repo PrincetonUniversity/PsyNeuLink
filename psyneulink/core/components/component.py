@@ -573,16 +573,6 @@ class ComponentError(Exception):
         return repr(self.error_value)
 
 
-def _parameters_belongs_to_obj(obj):
-    if obj is obj.parameters._owner:
-        return True
-
-    try:
-        return obj is unproxy_weakproxy(obj.parameters._owner)
-    except AttributeError:
-        return False
-
-
 def make_parameter_property(name):
     def getter(self):
         return getattr(self.parameters, name)._get(self.most_recent_context)
@@ -1137,11 +1127,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         if newone.parameters is not newone.class_parameters:
             # may be in DEFERRED INIT, so parameters/defaults belongs to class
-            # TODO: consider setting _owner as a property to deal with weakref
-            # proxying so it's sensible (so self.parameters._owner is self)
-            newone.parameters._owner = weakref.proxy(newone)
-            newone.defaults._owner = weakref.proxy(newone)
-            newone._compilation_data._owner = weakref.proxy(newone)
+            newone.parameters._owner = newone
+            newone.defaults._owner = newone
+            newone._compilation_data._owner = newone
 
         return newone
 
@@ -2840,7 +2828,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 pass
 
             # .parameters still refers to class parameters during deferred init
-            assert not _parameters_belongs_to_obj(self)
+            assert self.parameters._owner is not self
 
         for p in self.parameters:
             if (
@@ -2967,17 +2955,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     @classmethod
     def get_constructor_defaults(cls):
         return {arg_name: arg.default for (arg_name, arg) in inspect.signature(cls.__init__).parameters.items()}
-
-    @property
-    def function(self):
-        # TODO: make sure all functions are stateless
-        return self.parameters.function._get(Context())
-
-    @function.setter
-    def function(self, value):
-        # TODO: currently no validation, should replicate from _instantiate_function
-        self.parameters.function._set(value, Context())
-        self._parse_param_port_sources()
 
     @property
     def class_parameters(self):

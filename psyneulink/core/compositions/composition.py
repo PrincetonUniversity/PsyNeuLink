@@ -2556,7 +2556,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 owner = pcim,
                                 modulation = modulation,
                                 variable = OWNER_VALUE,
-                                function = InterfacePortMap(
+                                transfer_function=InterfacePortMap(
                                     corresponding_input_port = input_port
                                 ),
                                 modulates = receiver,
