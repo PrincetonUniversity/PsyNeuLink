@@ -60,23 +60,7 @@ is  associated wth a particular type of `ModulatoryMechanism <ModulatoryMechanis
 These are shown in a `figure <ModulatorySignal_Anatomy_Figure>` below, and are descdribed in greater detail in
 in the sections under `ModulatorySignal_Structure`.
 
-.. _ModulatorySignal_Naming:
-
-*Naming Conventions for ModulatorySignals*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Modulatory Components and their attributes are named according to the type of modulation:
-
-  * ModulatoryMechanism name
-      <*Type*>Mechanism (e.g., ControlMechanism)
-  * ModulatorySignal name
-      <*Type*>Signal (e.g., ControlSignal)
-  * ModulatoryProjection name
-      <*Type*>Projection (e.g., ControlProjection)
-  * List of a ModulatoryMechanism's ModulatorySignals
-      <*Type*>Mechanism.<type>_signals (e.g., ControlMechanism.control_signals)
-  * Value of a ModulatorySignal
-      <*Type*>Signal.<type>_signal (e.g., ControlSignal.control_signal)
+See `ModulatoryMechanism <ModulatoryMechanism_Naming>` for conventions used for the names of Modulatory components.
 
 .. _ModulatorySignal_Creation:
 

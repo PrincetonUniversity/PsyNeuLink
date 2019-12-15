@@ -46,19 +46,10 @@ There are two primary types of ModulatoryMechanism:
     `OutputPorts <OutputPort>` that appear after its ControlSignals in its `output_ports
     <ControlMechanism.output_ports>` attribute.
 
-COMMENT:
-..
-* `GatingMechanism`
-    a subclsass of `ModulatoryMechanism` that is specialized for modulating the input to or output from a `Mechanism
-    <Mechanism>`; it takes an evaluative signal (generally received from an `ObjectiveMechanism`) and generates a
-    `gating_allocation <GatingMechanism.gating_allocation>`, each item of which is assigned to one of its
-    `GatingSignals <ControlSignal>`;  each of those generates a `gating_signal <ControlSignal.control_signal>`
-    that is used by its `GatingProjection(s) <ControlProjection>` to modulate the parameter of a `function
-    <Port_Base.function>` (and thereby the `value <Port_Base.value>`) of an `InputPort` or `OutputPort`.
-    A GatingMechanism can be assigned only the `GatingSignal` class of `ModulatorySignal`, but can be also be assigned
-    other generic `OutputPorts <OutputPort>`.
-COMMENT.
-..
+    `GatingMechanism` is a specialized subclass of ControlMechanism,
+    that is used to modulate the `value <Port_Base.value>` of an `InputPort` or `OutputPort`, and that uses
+    `GatingSignals <GatingSignal>` which do not have any cost attributes.
+
 * `LearningMechanism`
     modulates the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`.  Takes an error signal
     (received from an `ObjectiveMechanism` or another `LearningMechanism`) and generates a `learning_signal
@@ -68,20 +59,30 @@ COMMENT.
     as its `OuputStates <OutputPort>`, but can be also be assigned other generic `OutputPorts <OutputPort>`,
     that appear after its LearningSignals in its `output_ports <LearningMechanism.output_ports>` attribute.
 
-See `ModulatorySignal <ModulatorySignal_Naming>` for conventions used for the names of Modulatory components.
-
 A single `ModulatoryMechanism` can be assigned more than one ModulatorySignal of the appropriate type, each of which
 can be assigned different `control_allocations <ControlSignal.control_allocation>` (for ControlSignals) or
 `learning_signals <LearningMechanism.learning_signal>` (for LearningSignals).  A single ModulatorySignal can also be
 assigned multiple ModulatoryProjections; however, as described  in `ModulatorySignal_Projections`, they will all
 be assigned the same `variable <ModulatoryProjection_Base.variable>`.
 
-COMMENT:
-ModulatoryMechanisms are always executed after all `ProcessingMechanisms <ProcessingMechanism>` in the `Process` or
-`System` to which they belong have been executed, with all LearningMechanism executed first, then GatingMechanism,
-ControlMechanism. All three types of ModulatoryMechanisms are executed before the next `TRIAL`, so that the
-modifications they make are available during the next `TRIAL` run for the Process or System.
-COMMENT
+.. _ModulatoryMechanism_Naming:
+
+*Naming Conventions for Modulatory Components*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Modulatory Components and their attributes are named according to the type of modulation using the following templates:
+
+  * ModulatoryMechanism name
+      <*Type*>Mechanism (e.g., ControlMechanism)
+  * ModulatorySignal name
+      <*Type*>Signal (e.g., ControlSignal)
+  * ModulatoryProjection name
+      <*Type*>Projection (e.g., ControlProjection)
+  * List of a ModulatoryMechanism's ModulatorySignals
+      <*Type*>Mechanism.<type>_signals (e.g., ControlMechanism.control_signals)
+  * Value of a ModulatorySignal
+      <*Type*>Signal.<type>_signal (e.g., ControlSignal.control_signal)
+
 
 .. _ModulatoryMechanism_Creation:
 
