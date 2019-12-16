@@ -306,7 +306,7 @@ COMMENT
 *Specifying Parameters to Control*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This can be specified in either of two ways:
+This can be specified in either of two ways (see `ControlSignal_Examples` in `ControlSignal`):
 
 *With a ControlMechanism itself*
 
@@ -315,12 +315,12 @@ the argument must be a `specification for one more ControlSignals <ControlSignal
 be controlled must belong to a Component in the same `Composition` as the ControlMechanism when it is added to the
 Composition, or an error will occur.
 
-*With a Parameter to be controlled by the `controller <Composition.controller>` of a `Composition`*
+*With a Parameter to be controlled by the* `controller <Composition.controller>` *of a* `Composition`
 
 Control can also be specified for a parameter where the `parameter itself is specified <ParameterPort_Specification>`,
 by including the specification of a `ControlSignal`, `ControlProjection`, or the keyword `CONTROL` in a `tuple
 specification <ParameterPort_Tuple_Specification>` for the parameter.  In this case, the specified parameter will be
-assigned for control by the `controller <controller.Composition>` of any `Composition` to which its Component belongs,
+assigned for control by the `controller <Composition.controller>` of any `Composition` to which its Component belongs,
 when the Component is added to the Composition (see `ControlMechanism_Composition_Controller`).  Conversely, when
 a ControlMechanism is assigned as the `controller <Composition.controller>` of a Composition, a `ControlSignal` is
 created and assigned to the ControlMechanism for every parameter of any `Component <Component>` in the Composition
@@ -330,7 +330,7 @@ In general, a `ControlSignal` is created for each parameter specified to be cont
 are a type of `OutputPort` that send a `ControlProjection` to the `ParameterPort` of the parameter to be
 controlled. All of the ControlSignals for a ControlMechanism are listed in its `control_signals
 <ControlMechanism.control_signals>` attribute, and all of its ControlProjections are listed in
-its`control_projections <ControlMechanism.control_projections>` attribute. See `ControlMechanism_Examples`.
+its `control_projections <ControlMechanism.control_projections>` attribute (see `ControlMechanism_Examples`).
 
 .. _ControlMechanism_Structure:
 
@@ -476,7 +476,7 @@ Once the ControlMechanism's `function <ControlMechanism.function>` has executed,
 `reconfiguration_cost <ControlMechanism.reconfiguration_cost>` for its `control_allocation
 <ControlMechanism.control_allocation>` (see `above <ControlMechanism_Reconfiguration_Cost>`. After that, each
 of the ControlMechanism's `control_signals <ControlMechanism.control_signals>` calculates its `cost
-<ControlSignal.cost>`, based on its `intensity  <ControlSignal/intensity>`.  The ControlMechanism then combines these
+<ControlSignal.cost>`, based on its `intensity  <ControlSignal.intensity>`.  The ControlMechanism then combines these
 with the `reconfiguration_cost <ControlMechanism.reconfiguration_cost>` using its `combine_costs
 <ControlMechanism.combine_costs>` function, and the result is assigned to the `costs <ControlMechanism.costs>`
 attribute.  Finally, the ControlMechanism uses this, together with its `outcome <ControlMechanism.outcome>` attribute,
@@ -490,7 +490,7 @@ for the next `TRIAL` of execution.
 Examples
 --------
 
-The examples below focus on the specificaiton of the `objective_mechanism <ControlMechanism.objective_mechanims>`
+The examples below focus on the specificaiton of the `objective_mechanism <ControlMechanism.objective_mechanism>`
 for a ControlMechanism.  See `Control Signal Examples <ControlSignal_Examples>` for examples of how to specify the
 ControlSignals for a ControlMechanism.
 
@@ -512,12 +512,12 @@ and the function used to evaluate these::
     ...                                           (GAIN, my_mech_B)],
     ...                          name="My Control Mech")
 
-This creates an ObjectiveMechanism for the ControlMechanism that monitors the `primary OutputPort
-<OutputPort_Primary>` of ``my_mech_A`` and the *RESPONSE_TIME* OutputPort of ``my_DDM``;  its function
-first multiplies the former by 2 before, then takes product of their values and passes the result as the input to the
-ControlMechanism.  The ControlMechanism's `function <ControlMechanism.function>` uses this value to determine
-the allocation for its ControlSignals, that control the value of the `threshold <DDM.threshold>` parameter of
-``my_DDM`` and the  `gain <Logistic.gain>` parameter of the `Logistic` Function for ``my_transfer_mech_B``.
+This creates an ObjectiveMechanism for the ControlMechanism that monitors the `primary OutputPort <OutputPort_Primary>`
+of ``my_mech_A`` and the *RESPONSE_TIME* OutputPort of ``my_DDM``;  its function first multiplies the former by ``2``,
+then takes product of their values and passes the result as the input to the ControlMechanism.  The ControlMechanism's
+`function <ControlMechanism.function>` uses this value to determine the allocation for its ControlSignals, that control
+the value of the `threshold <DriftDiffusionAnalytical.threshold>` parameter of the `DriftDiffusionAnalytical` Function
+for ``my_DDM`` and the  `gain <Logistic.gain>` parameter of the `Logistic` Function for ``my_transfer_mech_B``.
 
 The following example specifies the same set of OutputPorts for the ObjectiveMechanism, by assigning them directly
 to the **objective_mechanism** argument::
@@ -823,8 +823,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
         specifies function used to combine values of monitored OutputPorts.
 
     default_allocation : number, list or 1d array : None
-        specifies the default_allocation of any `control_signals <ControlMechanism.control.signals>` for
-        which the **default_allocation** was not specified in its constructor (see default_allocation
+        specifies the default_allocation of any `control_signals <ControlMechanism.control_signals>` for
+        which the **default_allocation** was not specified in its constructor (see `default_allocation
         <ControlMechanism.default_allocation>` for additional details).
 
     control : ControlSignal specification or list[ControlSignal specification, ...]
@@ -873,28 +873,28 @@ class ControlMechanism(ModulatoryMechanism_Base):
         each tuple in the list contains the weight and exponent associated with a corresponding OutputPort specified
         in `monitor_for_control <ControlMechanism.monitor_for_control>`; if `objective_mechanism
         <ControlMechanism.objective_mechanism>` is specified, these are the same as those in the ObjectiveMechanism's
-        `monitored_output_ports_weights_and_exponents
-        <ObjectiveMechanism.monitored_output_ports_weights_and_exponents>` attribute, and are used by the
-        ObjectiveMechanism's `function <ObjectiveMechanism.function>` to parametrize the contribution made to its
-        output by each of the values that it monitors (see `ObjectiveMechanism Function <ObjectiveMechanism_Function>`).
+        `monitor_weights_and_exponents <ObjectiveMechanism.monitor_weights_and_exponents>` attribute,
+        and are used by the ObjectiveMechanism's `function <ObjectiveMechanism.function>` to parametrize the
+        contribution made to its output by each of the values that it monitors (see `ObjectiveMechanism Function
+        <ObjectiveMechanism_Function>`).
 
     input_port : InputPort
         the ControlMechanism's `primary InputPort <InputPort_Primary>`, named *OUTCOME*;  this receives a
         `MappingProjection` from the *OUTCOME* `OutputPort <ObjectiveMechanism_Output>` of `objective_mechanism
         <ControlMechanism.objective_mechanism>` if that is specified; otherwise, it receives MappingProjections
         from each of the OutputPorts specifed in `monitor_for_control <ControlMechanism.monitor_for_control>`
-        (see `_ControlMechanism_Input` for additional details).
+        (see `ControlMechanism_Input` for additional details).
 
     outcome : 1d array
         the `value <InputPort.value>` of the ControlMechanism's *OUTCOME* `input_port <ControlMechanism.input_port>`.
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
-        determines how the `value <OuputState.value>` \\s of the `OutputPorts <OutputPort>` specified in the
+        determines how the `value <OuputPort.value>`\\s of the `OutputPorts <OutputPort>` specified in the
         **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>` of the ControlMechanism's
         constructor are used to generate its `control_allocation <ControlMechanism.control_allocation>`.
 
     default_allocation : number, list or 1d array
-        determines the default_allocation of any `control_signals <ControlMechanism.control.signals>` for
+        determines the default_allocation of any `control_signals <ControlMechanism.control_signals>` for
         which the **default_allocation** was not specified in its constructor;  if it is None (not specified)
         then the ControlSignal's parameters.allocation.default_value is used. See documentation for
         **default_allocation** argument of ControlSignal constructor for additional details.
@@ -905,7 +905,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         ControlMechanism's `value <Mechanism_Base.value>` attribute).
 
     control_signals : ContentAddressableList[ControlSignal]
-        list of the `ControlSignals <ControlSignals>` for the ControlMechanism, including any inherited from a
+        list of the `ControlSignals <ControlSignal>` for the ControlMechanism, including any inherited from a
         `Composition` for which it is a `controller <Composition.controller>` (same as ControlMechanism's
         `output_ports <Mechanism_Base.output_ports>` attribute); each sends a `ControlProjection`
         to the `ParameterPort` for the parameter it controls
@@ -929,7 +929,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
     costs : list
         current costs for the ControlMechanism's `control_signals <ControlMechanism.control_signals>`, computed
-        for each using its `compute_costs <ControlSignals.compute_costs>` method.
+        for each using its `compute_costs <ControlSignal.compute_costs>` method.
 
     combine_costs : Function, function or method
         function used to combine the `cost <ControlSignal.cost>` of its `control_signals

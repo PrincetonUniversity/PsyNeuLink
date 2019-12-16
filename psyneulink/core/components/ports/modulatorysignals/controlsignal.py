@@ -187,7 +187,7 @@ A ControlSignal has a `cost <ControlSignal.cost>` attribute that may be used by 
 belongs to determine its `allocation <ControlSignal.allocation>`.  The value of the `cost <ControlSignal.cost>`
 is computed from the ControlSignal's `intensity` using one or more of four cost functions.  These are only
 available if the ControlSignal's `function <ControlSignal.function>` is `TransferWithCosts` (which it is by default),
-and are actually functions that belong to the `TransferWithCosts` `Function` (see `TransferWithCosts_Cost_Functions`).
+and are actually functions that belong to the `TransferWithCosts` Function (see `TransferWithCosts_Cost_Functions`).
 Three of these compute different types of cost, and a fourth combines them, the result of which is assigned as the
 ControlSignal's `cost <ControlSignal.cost>` attribute.  The ControlSignal has attributes that reference each of the
 TransferWithCosts' cost functions and their attributesas listed below:
@@ -327,9 +327,9 @@ can be specified (see `ControlSignal_Specification` for additional details)::
     ...                                                  MODULATION: ADDITIVE
     ...                                              }])
 
-Here, ``ctl_mech`` modulates the `intercept <Linear.intercept>` parameter of ``mech_A``'s `Linear` `Function`
+Here, ``ctl_mech`` modulates the `intercept <Linear.intercept>` parameter of ``mech_A``'s `Linear` Function
 (the default `function <Mechanism_Base.function>` for a `ProcessingMechanism`), and the `bias <Logistic.bias>`
-and `gain <Logistic.gain>` parameters of ``mech_B``'s `Logistic` `Function`.  The first ControlSignal is specified
+and `gain <Logistic.gain>` parameters of ``mech_B``'s `Logistic` Function.  The first ControlSignal is specified
 using a 2-item tuple (the simplest way to do so); the second uses the ControlSignal's constructor (allowing another
 parameter to be specified -- here, its `cost_options <ControlSignal_Costs>`); and the third uses a specification
 dictionary (which supports additional options; see `above <ControlSignal_Specification_Dictionary>`).

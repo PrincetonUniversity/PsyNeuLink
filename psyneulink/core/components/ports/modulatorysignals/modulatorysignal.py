@@ -380,7 +380,7 @@ FIX: EXAMPLE OF CONTROL SIGNAL MODULATION OF INPUTPORT
 
 
 .  For
-example, the `TransferWithCosts` `Function` defines keywords for `modulating the parameters of its cost functions
+example, the `TransferWithCosts` Function defines keywords for `modulating the parameters of its cost functions
 <TransferWithCosts_Modulation_of_Cost_Params>`.
 A ControlMechanism can even modulate the parameters of another
 ControlMechanism, or its ControlSignals.  For example, in the following, ``ctl_mech_A`` modulates the `intensity_cost
