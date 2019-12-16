@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferFunctions &mdash; PsyNeuLink 0.7.2.0+28.ga24b106 documentation</title>
+  <title>TransferFunctions &mdash; PsyNeuLink 0.7.2.0+29.gaf69e7a documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.2.0+28
+                  0.7.2.0+29
                 </div>
               
             
@@ -233,6 +233,19 @@ each of these is assigned the name of one of the function’s
 parameters and used by <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> to modulate the output of the
 TransferFunction’s function (see <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">Modulatory Parameters</span></a>).</li>
 </ul>
+<dl class="class">
+<dt id="psyneulink.core.components.functions.transferfunctions.TransferFunction">
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.transferfunctions.</code><code class="descname">TransferFunction</code><span class="sig-paren">(</span><em>default_variable</em>, <em>params</em>, <em>function=None</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that transforms variable but maintains its shape.</p>
+<p>All TransferFunctions MUST have the following attributes:</p>
+<p><a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.bounds" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.bounds"><code class="xref any py py-attr docutils literal"><span class="pre">bounds</span></code></a> – specifies the lower and upper limits of the result;  if there are none, the attribute is set to
+<code class="xref any docutils literal"><span class="pre">None</span></code>;  if it has at least one bound, the attribute is set to a tuple specifying the lower and upper bounds,
+respectively, with <code class="xref any docutils literal"><span class="pre">None</span></code> as the entry for no bound.</p>
+<p><a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> and <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">additive_param</span></a> – each
+of these is assigned the name of one of the function’s parameters and used by <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> to modulate the output of the TransferFunction’s <code class="xref any docutils literal"><span class="pre">function</span></code>
+(see  <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">Modulatory Parameters</span></a>).</p>
+</dd></dl>
+
 <dl class="class">
 <dt id="psyneulink.core.components.functions.transferfunctions.Identity">
 <em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.transferfunctions.</code><code class="descname">Identity</code><span class="sig-paren">(</span><em>default_variable</em>, <em>params=None</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Identity" title="Permalink to this definition">¶</a></dt>
@@ -1296,9 +1309,9 @@ for details).</p>
 <dl class="class">
 <dt id="psyneulink.core.components.functions.transferfunctions.TransferWithCosts">
 <em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.transferfunctions.</code><code class="descname">TransferWithCosts</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>transfer_fct=Line                           enabled_cost_functions=None</em>, <em>intensity_fct=Exponential                   adjustment_fct=Linear                       duration_fct=SimpleIntegrator               combine_costs_fct=LinearCombination         params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts" title="Permalink to this definition">¶</a></dt>
-<dd><p id="transferwithcosts"><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.function" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> returns value of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Exponential.variable" title="psyneulink.core.components.functions.transferfunctions.Exponential.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> transformed by
-<a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.transfer_fct" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.transfer_fct"><code class="xref any py py-attr docutils literal"><span class="pre">transfer_fct</span></code></a>, after calling any cost functions that are enable and assigning
-the result(s) to the corresponding parameter(s), as described below</p>
+<dd><p id="transferwithcosts">returns value of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.variable" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> transformed by <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.transfer_fct" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.transfer_fct"><code class="xref any py py-attr docutils literal"><span class="pre">transfer_fct</span></code></a>, after calling any cost functions that are enabled and assigning
+the result(s) to the corresponding parameter(s), as described below.</p>
+<p id="transferwithcosts-cost-functions"><strong>Cost Functions</strong></p>
 <p>The TransferWithCosts function has three individual cost functions that it can execute when its <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.function" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is executed, which assign their results to the attributes indicated below:</p>
 <ul class="simple">
 <li><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity_cost_fct" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity_cost_fct"><code class="xref any py py-attr docutils literal"><span class="pre">intensity_cost_fct</span></code></a> -&gt; <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity_cost" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity_cost"><code class="xref any py py-attr docutils literal"><span class="pre">intensity_cost</span></code></a>;</li>
@@ -1310,12 +1323,13 @@ the result(s) to the corresponding parameter(s), as described below</p>
 <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.disable_costs" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.disable_costs"><code class="xref any py py-meth docutils literal"><span class="pre">disable_costs</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.toggle_cost" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.toggle_cost"><code class="xref any py py-meth docutils literal"><span class="pre">toggle_cost</span></code></a> and
 <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.assign_costs" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.assign_costs"><code class="xref any py py-meth docutils literal"><span class="pre">assign_costs</span></code></a> methods.  The value of any cost for which its function has
 <em>never</em> been enabled is None;  otherwise, it is the value assigned when it was last enabled and executed
-(see <a href="#id2"><span class="problematic" id="id3">`</span></a>duration_cost_fct &lt;TransferWithCosts.duration_cost_fct&gt; for additional details concerning that function).</p>
+(see <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.duration_cost_fct" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.duration_cost_fct"><code class="xref any py py-attr docutils literal"><span class="pre">duration_cost_fct</span></code></a> for additional details concerning that function).</p>
 <p>If any cost functions are enabled, then the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.combine_costs_fct" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.combine_costs_fct"><code class="xref any py py-attr docutils literal"><span class="pre">combine_costs_fct</span></code></a> function
 is executed, which sums the results of those that are enabled (Hadamard style, if the costs are arrays), and
 stores the result in the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.combined_costs" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.combined_costs"><code class="xref any py py-attr docutils literal"><span class="pre">combined_costs</span></code></a> attribute.  Its value is None if no
 cost functions have ever been enabled;  otherwise it is the value assigned the last time one or more cost functions
 were enabled.</p>
+<p id="transferwithcosts-modulation-of-cost-params"><strong>Modulation of Cost Function Parameters</strong></p>
 <p>The <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> and <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">additive_param</span></a> of each
 <a class="reference internal" href="#transferwithcosts-cost-functions"><span class="std std-ref">cost function</span></a> is assigned as a parameter of the TransferWithCost <a class="reference internal" href="Function.html"><span class="doc">Function</span></a>.
 This makes them accessible for <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">modulation</span></a> when the Function is assigned to a
@@ -1330,6 +1344,9 @@ This makes them accessible for <a class="reference internal" href="ModulatorySig
 <em>DURATION_COST_FCT_ADDITIVE_PARAM</em>
 <em>COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM</em>
 <em>COMBINE_COSTS_FCT_ADDITIVE_PARAM</em></div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
 <p>See <a class="reference internal" href="ControlSignal.html#controlsignal-example-modulate-costs"><span class="std std-ref">example</span></a> of how these keywords can be used to
 modulate the parameters of the cost functions of a TransferMechanism assigned to a ControlSignal.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -1344,11 +1361,11 @@ default_value, in which case zeros are assigned as the value(s). An error is gen
 specified but size != len(default_value).</li>
 <li><strong>transfer_fct</strong> (<em>TransferFunction : Linear</em>) – specifies the primary function, used to generate the value it returns.</li>
 <li><strong>enabled_cost_functions</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.CostFunctions" title="psyneulink.core.components.functions.transferfunctions.CostFunctions"><em>CostFunctions</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.CostFunctions" title="psyneulink.core.components.functions.transferfunctions.CostFunctions"><em>CostFunctions</em></a><em>] </em><em>: None</em>) – specifies the costs to execute when <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.function" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is called, and
-include in the computation of <code class="xref any docutils literal"><span class="pre">combined_cost</span></code>.</li>
-<li><strong>intensity_cost_fct</strong> (Optional[<code class="xref any docutils literal"><span class="pre">TransferFunction</span></code>] : default <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Exponential" title="psyneulink.core.components.functions.transferfunctions.Exponential"><code class="xref any py py-class docutils literal"><span class="pre">Exponential</span></code></a>) – specifies the function used to compute the <a href="#id4"><span class="problematic" id="id5">`</span></a>intensity_cost &lt;TransferWithCosts.intensity_cost&gt;.</li>
-<li><strong>adjustment_cost_fct</strong> (Optional[<code class="xref any docutils literal"><span class="pre">TransferFunction</span></code>] : default <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a>) – specifies the function used to compute the <a href="#id6"><span class="problematic" id="id7">`</span></a>adjustment_cost &lt;TransferWithCosts.adjustment_cost&gt;.</li>
-<li><strong>duration_cost_fct</strong> (<a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal"><span class="pre">IntegratorFunction</span></code></a> : default <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal"><span class="pre">IntegratorFunction</span></code></a>) – specifies the function used to compute the <a href="#id8"><span class="problematic" id="id9">`</span></a>duration_cost &lt;TransferWithCosts.duration_cost&gt;.</li>
-<li><strong>combine_costs_fct</strong> (function : default <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.LinearCombination" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>) – specifies the function used to compute <a href="#id10"><span class="problematic" id="id11">`</span></a>combined_cost &lt;TransferWithCosts.combined_cost&gt;.</li>
+include in the computation of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.combined_costs" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.combined_costs"><code class="xref any py py-attr docutils literal"><span class="pre">combined_costs</span></code></a>.</li>
+<li><strong>intensity_cost_fct</strong> (Optional[<a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferFunction" title="psyneulink.core.components.functions.transferfunctions.TransferFunction"><code class="xref any py py-class docutils literal"><span class="pre">TransferFunction</span></code></a>] : default <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Exponential" title="psyneulink.core.components.functions.transferfunctions.Exponential"><code class="xref any py py-class docutils literal"><span class="pre">Exponential</span></code></a>) – specifies the function used to compute the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity_cost" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity_cost"><code class="xref any py py-attr docutils literal"><span class="pre">intensity_cost</span></code></a>.</li>
+<li><strong>adjustment_cost_fct</strong> (Optional[<a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferFunction" title="psyneulink.core.components.functions.transferfunctions.TransferFunction"><code class="xref any py py-class docutils literal"><span class="pre">TransferFunction</span></code></a>] : default <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a>) – specifies the function used to compute the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.adjustment_cost" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.adjustment_cost"><code class="xref any py py-attr docutils literal"><span class="pre">adjustment_cost</span></code></a>.</li>
+<li><strong>duration_cost_fct</strong> (<a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal"><span class="pre">IntegratorFunction</span></code></a> : default <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal"><span class="pre">IntegratorFunction</span></code></a>) – specifies the function used to compute the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.duration_cost" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.duration_cost"><code class="xref any py py-attr docutils literal"><span class="pre">duration_cost</span></code></a>.</li>
+<li><strong>combine_costs_fct</strong> (function : default <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.LinearCombination" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>) – specifies the function used to compute <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.combined_costs" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.combined_costs"><code class="xref any py py-attr docutils literal"><span class="pre">combined_costs</span></code></a>.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -1398,22 +1415,22 @@ same as <a class="reference internal" href="#psyneulink.core.components.function
 <dt id="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.enabled_cost_functions">
 <code class="descname">enabled_cost_functions</code><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.enabled_cost_functions" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>CostFunctions or None</em> – boolean combination of currently enabled CostFunctions;  determines which <a class="reference internal" href="#transferwithcosts-cost-functions"><span class="std std-ref">cost functions</span></a> are calculated when <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.function" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is called, and
-are included in the computation of <code class="xref any docutils literal"><span class="pre">combined_cost</span></code> (see
-<code class="xref any docutils literal"><span class="pre">TransferWithCosts_Cost_Functions</span></code> for additional details).</p>
+are included in the computation of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.combined_costs" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.combined_costs"><code class="xref any py py-attr docutils literal"><span class="pre">combined_costs</span></code></a> (see
+<a class="reference internal" href="#transferwithcosts-cost-functions"><span class="std std-ref">Cost Functions</span></a> for additional details).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity_cost">
 <code class="descname">intensity_cost</code><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity_cost" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>float or None</em> – cost computed by <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity_cost_fct" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity_cost_fct"><code class="xref any py py-attr docutils literal"><span class="pre">intensity_cost_fct</span></code></a> for current <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>.  Value is None if <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity_cost_fct" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity_cost_fct"><code class="xref any py py-attr docutils literal"><span class="pre">intensity_cost_fct</span></code></a>
-has not been enabled (see <code class="xref any docutils literal"><span class="pre">TransferWithCosts_Cost_Functions</span></code> for additional details).</p>
+has not been enabled (see <a class="reference internal" href="#transferwithcosts-cost-functions"><span class="std std-ref">Cost Functions</span></a> for additional details).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity_cost_fct">
 <code class="descname">intensity_cost_fct</code><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity_cost_fct" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>TransferFunction</em> – calculates <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity_cost" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity_cost"><code class="xref any py py-attr docutils literal"><span class="pre">intensity_cost</span></code></a> from the current value of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>.
-It can be any <code class="xref any docutils literal"><span class="pre">TransferFunction</span></code>, or any other function that takes and returns a scalar value.
+It can be any <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferFunction" title="psyneulink.core.components.functions.transferfunctions.TransferFunction"><code class="xref any py py-class docutils literal"><span class="pre">TransferFunction</span></code></a>, or any other function that takes and returns a scalar value.
 The default is <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Exponential" title="psyneulink.core.components.functions.transferfunctions.Exponential"><code class="xref any py py-class docutils literal"><span class="pre">Exponential</span></code></a>.</p>
 </dd></dl>
 
@@ -1432,15 +1449,14 @@ The default is <a class="reference internal" href="#psyneulink.core.components.f
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.adjustment_cost">
 <code class="descname">adjustment_cost</code><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.adjustment_cost" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or None</em> – cost of change in <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> from the last time <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.function" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> was executed.  Value is None if <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.adjustment_cost_fct" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.adjustment_cost_fct"><code class="xref any py py-attr docutils literal"><span class="pre">adjustment_cost_fct</span></code></a> has not been enabled (see <code class="xref any docutils literal"><span class="pre">TransferWithCosts_Cost_Functions</span></code> for
-additional details).</p>
+<dd><p><em>float or None</em> – cost of change in <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> from the last time <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.function" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> was executed.  Value is None if <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.adjustment_cost_fct" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.adjustment_cost_fct"><code class="xref any py py-attr docutils literal"><span class="pre">adjustment_cost_fct</span></code></a> has not been enabled (see <a class="reference internal" href="#transferwithcosts-cost-functions"><span class="std std-ref">Cost Functions</span></a> for additional details).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.adjustment_cost_fct">
 <code class="descname">adjustment_cost_fct</code><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.adjustment_cost_fct" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>TransferFunction</em> – calculates <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.adjustment_cost" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.adjustment_cost"><code class="xref any py py-attr docutils literal"><span class="pre">adjustment_cost</span></code></a> based on the change in <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> from its value the last time <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.function" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> was
-executed. It can be any <code class="xref any docutils literal"><span class="pre">TransferFunction</span></code>, or any other function that takes and returns a scalar value.</p>
+executed. It can be any <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferFunction" title="psyneulink.core.components.functions.transferfunctions.TransferFunction"><code class="xref any py py-class docutils literal"><span class="pre">TransferFunction</span></code></a>, or any other function that takes and returns a scalar value.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1486,7 +1502,7 @@ or any other function that takes a list or array of two values and returns a sca
 <code class="descname">combined_costs</code><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.combined_costs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>float or None</em> – combined result of all <code class="xref any docutils literal"><span class="pre">cost</span> <span class="pre">functions</span></code> that are enabled;
 computed by <code class="xref any docutils literal"><span class="pre">combined_costs_fct</span></code> for current <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>.  Value is None if no costs have been enabled (see
-<code class="xref any docutils literal"><span class="pre">TransferWithCosts_Cost_Functions</span></code> for additional details).</p>
+<a class="reference internal" href="#transferwithcosts-cost-functions"><span class="std std-ref">Cost Functions</span></a> for additional details).</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1753,7 +1769,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 
 <dl class="method">
 <dt id="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.assign_costs">
-<code class="descname">assign_costs</code><span class="sig-paren">(</span><em>cost_functions: &lt;typecheck.tc_predicates.any object at 0x118b9f630&gt;</em>, <em>execution_context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.assign_costs" title="Permalink to this definition">¶</a></dt>
+<code class="descname">assign_costs</code><span class="sig-paren">(</span><em>cost_functions: &lt;typecheck.tc_predicates.any object at 0x11ae81630&gt;</em>, <em>execution_context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.assign_costs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assigns specified functions; all others are disabled.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1771,7 +1787,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 
 <dl class="method">
 <dt id="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.disable_costs">
-<code class="descname">disable_costs</code><span class="sig-paren">(</span><em>cost_functions: &lt;typecheck.tc_predicates.any object at 0x118b9f780&gt;</em>, <em>execution_context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.disable_costs" title="Permalink to this definition">¶</a></dt>
+<code class="descname">disable_costs</code><span class="sig-paren">(</span><em>cost_functions: &lt;typecheck.tc_predicates.any object at 0x11ae81780&gt;</em>, <em>execution_context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.disable_costs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Disable specified <a class="reference internal" href="#transferwithcosts-cost-functions"><span class="std std-ref">cost functions</span></a>;
 settings for all other cost functions are left intact.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -1790,7 +1806,7 @@ settings for all other cost functions are left intact.</p>
 
 <dl class="method">
 <dt id="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.enable_costs">
-<code class="descname">enable_costs</code><span class="sig-paren">(</span><em>cost_functions: &lt;typecheck.tc_predicates.any object at 0x118b9f748&gt;</em>, <em>execution_context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.enable_costs" title="Permalink to this definition">¶</a></dt>
+<code class="descname">enable_costs</code><span class="sig-paren">(</span><em>cost_functions: &lt;typecheck.tc_predicates.any object at 0x11ae81748&gt;</em>, <em>execution_context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.enable_costs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Enable specified <a class="reference internal" href="#transferwithcosts-cost-functions"><span class="std std-ref">cost functions</span></a>;
 settings for all other cost functions are left intact.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -1810,7 +1826,7 @@ in addition to any that are already enabled.</td>
 
 <dl class="method">
 <dt id="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.toggle_cost">
-<code class="descname">toggle_cost</code><span class="sig-paren">(</span><em>cost_function_name: &lt;typecheck.tc_predicates.any object at 0x118b9f828&gt;</em>, <em>assignment: bool = True</em>, <em>execution_context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.toggle_cost" title="Permalink to this definition">¶</a></dt>
+<code class="descname">toggle_cost</code><span class="sig-paren">(</span><em>cost_function_name: &lt;typecheck.tc_predicates.any object at 0x11ae81828&gt;</em>, <em>assignment: bool = True</em>, <em>execution_context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.toggle_cost" title="Permalink to this definition">¶</a></dt>
 <dd><p>Enable/disable a <a class="reference internal" href="#transferwithcosts-cost-functions"><span class="std std-ref">cost functions</span></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1944,7 +1960,7 @@ based on its integral (i.e., it accumulated value over multiple executions).</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.2.0+28.ga24b106',
+               VERSION:'0.7.2.0+29.gaf69e7a',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

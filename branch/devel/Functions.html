@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Functions &mdash; PsyNeuLink 0.7.2.0+28.ga24b106 documentation</title>
+  <title>Functions &mdash; PsyNeuLink 0.7.2.0+29.gaf69e7a documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.2.0+28
+                  0.7.2.0+29
                 </div>
               
             
@@ -286,11 +286,10 @@ used by <a class="reference internal" href="ControlProjection.html"><span class=
 <div class="section" id="modulatory-parameters">
 <span id="function-modulatory-params"></span><h3><em>Modulatory Parameters</em><a class="headerlink" href="#modulatory-parameters" title="Permalink to this headline">¶</a></h3>
 <p>Some classes of Functions also implement a pair of modulatory parameters: <code class="xref any docutils literal"><span class="pre">multiplicative_param</span></code> and <code class="xref any docutils literal"><span class="pre">additive_param</span></code>.
-Each of these is assigned the name of one of the function’s parameters. These are used by <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignals</span></a> to modulate the output of the function (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-detail-figure"><span class="std std-ref">figure</span></a>).  For
-example, they are used by <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignals</span></a> to modulate the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of an
-<a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> or <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>, and thereby its <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>; and by the <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal(s)</span></a>
-of an <a class="reference internal" href="LCControlMechanism.html"><span class="doc">LCControlMechanism</span></a> to modulate the <code class="xref any docutils literal"><span class="pre">multiplicative_param</span></code> of the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a
-<a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>.</p>
+Each of these is assigned the name of one of the function’s parameters. These are used by <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignals</span></a> to modulate the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> and thereby its <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a> and <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-detail-figure"><span class="std std-ref">figure</span></a> for additional
+details). For example, a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> typically uses the <code class="xref any docutils literal"><span class="pre">multiplicative_param</span></code> to modulate the value of a parameter
+of a Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, whereas a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> uses the <code class="xref any docutils literal"><span class="pre">additive_param</span></code> to increment
+the <code class="xref any docutils literal"><span class="pre">value</span></code> of the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.</p>
 </div>
 </div>
 <div class="section" id="execution">
@@ -506,7 +505,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.2.0+28.ga24b106',
+               VERSION:'0.7.2.0+29.gaf69e7a',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

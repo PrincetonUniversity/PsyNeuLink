@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>System &mdash; PsyNeuLink 0.7.2.0+28.ga24b106 documentation</title>
+  <title>System &mdash; PsyNeuLink 0.7.2.0+29.gaf69e7a documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.2.0+28
+                  0.7.2.0+29
                 </div>
               
             
@@ -222,7 +222,7 @@ must be included in the <strong>processes</strong> argument of the <a class="ref
 <p>A controller can also be specified for the System, in the <strong>controller</strong> argument of the <a class="reference internal" href="#"><span class="doc">System</span></a>.  This can be an
 existing <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a>, a constructor for one, or a class of ControlMechanism in which case a default
 instance of that class will be created.  If an existing ControlMechanism or the constructor for one is used, then
-the <a class="reference internal" href="ControlMechanism.html#controlmechanism-objectivemechanism"><span class="std std-ref">OutputPorts it monitors</span></a> and the <a class="reference internal" href="ControlMechanism.html#controlmechanism-control-signals"><span class="std std-ref">parameters it controls</span></a> can be specified using its <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> and <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>
+the <a class="reference internal" href="ControlMechanism.html#controlmechanism-objectivemechanism"><span class="std std-ref">OutputPorts it monitors</span></a> and the <a class="reference internal" href="ControlMechanism.html#controlmechanism-controlsignals"><span class="std std-ref">parameters it controls</span></a> can be specified using its <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> and <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>
 attributes, respectively.  In addition, these can be specified in the <strong>monitor_for_control</strong> and <strong>control_signal</strong>
 arguments of the <a class="reference internal" href="#"><span class="doc">System</span></a>, as described below.</p>
 <ul>
@@ -256,7 +256,7 @@ ObjectiveMechanism’s <code class="xref any docutils literal"><span class="pre"
 </ul>
 <ul class="simple">
 <li><strong>control_signals</strong> argument – used to specify the parameters of Components in the System to be controlled. These
-can be specified in any of the ways used to <a class="reference internal" href="ControlMechanism.html#controlmechanism-control-signals"><span class="std std-ref">specify ControlSignals</span></a> in the
+can be specified in any of the ways used to <a class="reference internal" href="ControlMechanism.html#controlmechanism-controlsignals"><span class="std std-ref">specify ControlSignals</span></a> in the
 <em>control_signals</em> argument of a ControlMechanism. These are added to any <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a> that have
 already been specified for the <a class="reference internal" href="#psyneulink.core.components.system.System.controller" title="psyneulink.core.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> (listed in its <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a> attribute), and any parameters that have directly been <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">specified for
 control</span></a> within the System (see <a class="reference internal" href="#system-control"><span class="std std-ref">Control</span></a> below for additional details).</li>
@@ -424,7 +424,7 @@ other Mechanisms in the System have executed.  Although a System may have more t
 can be assigned as its <a class="reference internal" href="#psyneulink.core.components.system.System.controller" title="psyneulink.core.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>;  all other ControlMechanisms are executed during the
 <code class="xref any docutils literal"><span class="pre">processing</span> <span class="pre">`System_Execution_Processing</span></code> phase of the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> like any other Mechanism.  The <a class="reference internal" href="#psyneulink.core.components.system.System.controller" title="psyneulink.core.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> uses its <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> to monitor and evaluate
 the <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort(s)</span></a> of Mechanisms in the System; based on the information it receives from that
-<a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>, it modulates the value of the parameters of Components in the System that have been <a class="reference internal" href="ControlMechanism.html#controlmechanism-control-signals"><span class="std std-ref">specified
+<a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>, it modulates the value of the parameters of Components in the System that have been <a class="reference internal" href="ControlMechanism.html#controlmechanism-controlsignals"><span class="std std-ref">specified
 for control</span></a>, which then take effect in the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> (see <a class="reference internal" href="#system-control"><span class="std std-ref">Control</span></a> for
 additional information about control). The control Components of a System can be displayed using the System’s
 <code class="xref any docutils literal"><span class="pre">show_graph`method</span> <span class="pre">with</span> <span class="pre">its</span> <span class="pre">**show_control**</span> <span class="pre">argument</span> <span class="pre">assigned</span> <span class="pre">`True</span></code>.</p>
@@ -1165,7 +1165,7 @@ corresponding InputPort of the <a class="reference internal" href="#psyneulink.c
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.2.0+28.ga24b106',
+               VERSION:'0.7.2.0+29.gaf69e7a',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
