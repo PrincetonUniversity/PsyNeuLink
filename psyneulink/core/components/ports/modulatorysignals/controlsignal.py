@@ -281,7 +281,7 @@ The simplest way to do this is to specify the ControlSignal by class, or using t
 `tuple specification <ParameterPort_Tuple_Specification>` for the parameter, as in the following examples:
 
     >>> from psyneulink import *
-    >>> my_mech = ProcessingMechanism(function=Logistic(bias=(1.0, ControlMechanism)))
+    >>> my_mech = ProcessingMechanism(function=Logistic(bias=(1.0, ControlMechanism))) #doctest: +SKIP
     or
     >>> my_mech = ProcessingMechanism(function=Logistic(bias=(1.0, CONTROL)))
 
@@ -320,7 +320,7 @@ can be specified (see `ControlSignal_Specification` for additional details)::
     >>> mech_B = ProcessingMechanism(function=Logistic)
     >>> ctl_mech = ControlMechanism(control_signals=[(INTERCEPT, mech_A),
     ...                                              ControlSignal(modulates=(GAIN, mech_B),
-    ...                                                            cost_options=CostFunctions.INTENSITY)
+    ...                                                            cost_options=CostFunctions.INTENSITY),
     ...                                              {
     ...                                                  NAME: BIAS,
     ...                                                  MECHANISM: mech_B,
@@ -345,7 +345,7 @@ example `above <ControlSignal_Example_Modulation>`), a parameter of the ControlS
 function <ControlSignal_Costs>` can be modulated by another ControlSignal::
 
   >>> from psyneulink import *
-  >>> mech = ProcessingMechanism()
+  >>> mech = ProcessingMechanism(name='my_mech')
   >>> ctl_mech_A = ControlMechanism(monitor_for_control=mech,
   ...                               control_signals=ControlSignal(modulates=(INTERCEPT,mech),
   ...                                                             cost_options=CostFunctions.INTENSITY))
@@ -357,7 +357,7 @@ function <ControlSignal_Costs>` can be modulated by another ControlSignal::
   ...                                             ctl_mech_A,
   ...                                             ctl_mech_B
   ...                                             ])
-  [(ProcessingMechanism ProcessingMechanism-0)]
+  [(ProcessingMechanism my_mech)]
 
 Here, the `ControlSignal` of ``ctl_mech_A`` is configured to monitor the output of ``mech``, modulate the
 the `intercept <Linear.intercept>` parameter of its `function <Mechanism_Base.function>` (which is a `Linear` by
