@@ -53,7 +53,7 @@ monitored OutputPorts are listed in the LCControlMechanism's `monitored_output_p
 attribute,  as well as that of its `objective_mechanism <AGTControlMechanism.objective_mechanism>`.
 
 The parameter(s) controlled by an AGTControlMechanism are specified in the **control_signals** argument of its constructor,
-in the `standard way for a ControlMechanism <ControlMechanism_Control_Signals>`.
+in the `standard way for a ControlMechanism <ControlMechanism_ControlSignals>`.
 
 .. _AGTControlMechanism_Structure:
 

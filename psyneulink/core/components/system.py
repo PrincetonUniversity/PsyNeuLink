@@ -63,7 +63,7 @@ A controller can also be specified for the System, in the **controller** argumen
 existing `ControlMechanism`, a constructor for one, or a class of ControlMechanism in which case a default
 instance of that class will be created.  If an existing ControlMechanism or the constructor for one is used, then
 the `OutputPorts it monitors <ControlMechanism_ObjectiveMechanism>` and the `parameters it controls
-<ControlMechanism_Control_Signals>` can be specified using its `objective_mechanism
+<ControlMechanism_ControlSignals>` can be specified using its `objective_mechanism
 <ControlMechanism.objective_mechanism>` and `control_signals <ControlMechanism.control_signals>`
 attributes, respectively.  In addition, these can be specified in the **monitor_for_control** and **control_signal**
 arguments of the `System`, as described below.
@@ -98,7 +98,7 @@ arguments of the `System`, as described below.
   ObjectiveMechanism's `monitored_output_ports <ObjectiveMechanism.monitored_output_ports>` attribute).
 ..
 * **control_signals** argument -- used to specify the parameters of Components in the System to be controlled. These
-  can be specified in any of the ways used to `specify ControlSignals <ControlMechanism_Control_Signals>` in the
+  can be specified in any of the ways used to `specify ControlSignals <ControlMechanism_ControlSignals>` in the
   *control_signals* argument of a ControlMechanism. These are added to any `ControlSignals <ControlSignal>` that have
   already been specified for the `controller <System.controller>` (listed in its `control_signals
   <ControlMechanism.control_signals>` attribute), and any parameters that have directly been `specified for
@@ -338,7 +338,7 @@ can be assigned as its `controller <System.controller>`;  all other ControlMecha
 <System.controller>` uses its `objective_mechanism <ControlMechanism.objective_mechanism>` to monitor and evaluate
 the `OutputPort(s) <OutputPort>` of Mechanisms in the System; based on the information it receives from that
 `ObjectiveMechanism`, it modulates the value of the parameters of Components in the System that have been `specified
-for control <ControlMechanism_Control_Signals>`, which then take effect in the next `TRIAL` (see `System_Control` for
+for control <ControlMechanism_ControlSignals>`, which then take effect in the next `TRIAL` (see `System_Control` for
 additional information about control). The control Components of a System can be displayed using the System's
 `show_graph`method with its **show_control** argument assigned `True`.
 

@@ -108,11 +108,16 @@ COMMENT
 
 Some classes of Functions also implement a pair of modulatory parameters: `multiplicative_param` and `additive_param`.
 Each of these is assigned the name of one of the function's parameters. These are used by `ModulatorySignals
-<ModulatorySignal>` to modulate the output of the function (see `figure <ModulatorySignal_Detail_Figure>`).  For
-example, they are used by `GatingSignals <GatingSignal>` to modulate the `function <Port_Base.function>` of an
-`InputPort` or `OutputPort`, and thereby its `value <Port_Base.value>`; and by the `ControlSignal(s) <ControlSignal>`
-of an `LCControlMechanism` to modulate the `multiplicative_param` of the `function <Mechanism_Base.function>` of a
-`TransferMechanism`.
+<ModulatorySignal>` to modulate the `function <Port_Base.function>` of a `Port <Port>` and thereby its `value
+<Port_Base.value>` (see `ModulatorySignal_Modulation` and `figure <ModulatorySignal_Detail_Figure>` for additional
+details). For example, a `ControlSignal` typically uses the `multiplicative_param` to modulate the value of a parameter
+of a Mechanism's `function <Mechanism_Base.function>`, whereas a `LearningSignal` uses the `additive_param` to increment
+the `value <ParamterPort.value>` of the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`.
+
+COMMENT:
+FOR DEVELOPERS:  'multiplicative_param` and `additive_param` are implemented as aliases to the relevant
+parameters of a given Function, declared in its Parameters subclass declaration of the Function's declaration.
+COMMENT
 
 
 .. _Function_Execution:

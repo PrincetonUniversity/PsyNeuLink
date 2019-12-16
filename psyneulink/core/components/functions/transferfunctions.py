@@ -3336,14 +3336,13 @@ class TransferWithCosts(TransferFunction):
 
     .. _TransferWithCosts:
 
-    `function <TransferWithCosts.function>` returns value of `variable <Exponential.variable>` transformed by
-    `transfer_fct <TransferWithCosts.transfer_fct>`, after calling any cost functions that are enable and assigning
-    the result(s) to the corresponding parameter(s), as described below
+    returns value of `variable <TransferWithCosts.variable>` transformed by `transfer_fct
+    <TransferWithCosts.transfer_fct>`, after calling any cost functions that are enabled and assigning
+    the result(s) to the corresponding parameter(s), as described below.
 
     .. _TransferWithCosts_Cost_Functions:
 
-    Cost Functions
-    ~~~~~~~~~~~~~~
+    **Cost Functions**
 
     The TransferWithCosts function has three individual cost functions that it can execute when its `function
     <TransferWithCosts.function>` is executed, which assign their results to the attributes indicated below:
@@ -3358,7 +3357,7 @@ class TransferWithCosts(TransferFunction):
     `disable_costs <TransferWithCosts.disable_costs>`, `toggle_cost <TransferWithCosts.toggle_cost>` and
     `assign_costs <TransferWithCosts.assign_costs>` methods.  The value of any cost for which its function has
     *never* been enabled is None;  otherwise, it is the value assigned when it was last enabled and executed
-    (see `duration_cost_fct <TransferWithCosts.duration_cost_fct> for additional details concerning that function).
+    (see `duration_cost_fct <TransferWithCosts.duration_cost_fct>` for additional details concerning that function).
 
     If any cost functions are enabled, then the `combine_costs_fct <TransferWithCosts.combine_costs_fct>` function
     is executed, which sums the results of those that are enabled (Hadamard style, if the costs are arrays), and
@@ -3368,8 +3367,7 @@ class TransferWithCosts(TransferFunction):
 
     .. _TransferWithCosts_Modulation_of_Cost_Params:
 
-    Modulation of Cost Function Parameters
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    **Modulation of Cost Function Parameters**
 
     The `multiplicative_param <Function_Modulatory_Params>` and `additive_param <Function_Modulatory_Params>` of each
     `cost function <TransferWithCosts_Cost_Functions>` is assigned as a parameter of the TransferWithCost `Function`.
@@ -3386,7 +3384,7 @@ class TransferWithCosts(TransferFunction):
         *DURATION_COST_FCT_ADDITIVE_PARAM*
         *COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM*
         *COMBINE_COSTS_FCT_ADDITIVE_PARAM*
-
+    |
     See `example <ControlSignal_Example_Modulate_Costs>` of how these keywords can be used to
     modulate the parameters of the cost functions of a TransferMechanism assigned to a ControlSignal.
 
@@ -3409,19 +3407,19 @@ class TransferWithCosts(TransferFunction):
 
     enabled_cost_functions : CostFunctions or List[CostFunctions] : None
         specifies the costs to execute when `function <TransferWithCosts.function>` is called, and
-        include in the computation of `combined_cost <TransferWithCosts.combined_cost>`.
+        include in the computation of `combined_costs <TransferWithCosts.combined_costs>`.
 
     intensity_cost_fct : Optional[`TransferFunction`] : default `Exponential`
-        specifies the function used to compute the `intensity_cost <TransferWithCosts.intensity_cost>.
+        specifies the function used to compute the `intensity_cost <TransferWithCosts.intensity_cost>`.
 
     adjustment_cost_fct : Optional[`TransferFunction`] : default `Linear`
-        specifies the function used to compute the `adjustment_cost <TransferWithCosts.adjustment_cost>.
+        specifies the function used to compute the `adjustment_cost <TransferWithCosts.adjustment_cost>`.
 
     duration_cost_fct : `IntegratorFunction` : default `IntegratorFunction`
-        specifies the function used to compute the `duration_cost <TransferWithCosts.duration_cost>.
+        specifies the function used to compute the `duration_cost <TransferWithCosts.duration_cost>`.
 
     combine_costs_fct : function : default `LinearCombination`
-        specifies the function used to compute `combined_cost <TransferWithCosts.combined_cost>.
+        specifies the function used to compute `combined_costs <TransferWithCosts.combined_costs>`.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -3463,13 +3461,13 @@ class TransferWithCosts(TransferFunction):
     enabled_cost_functions : CostFunctions or None
         boolean combination of currently enabled CostFunctions;  determines which `cost functions
         <TransferWithCosts_Cost_Functions>` are calculated when `function <TransferWithCosts.function>` is called, and
-        are included in the computation of `combined_cost <TransferWithCosts.combined_cost>` (see
-        `TransferWithCosts_Cost_Functions` for additional details).
+        are included in the computation of `combined_costs <TransferWithCosts.combined_costs>` (see
+        `Cost Functions <TransferWithCosts_Cost_Functions>` for additional details).
 
     intensity_cost : float or None
         cost computed by `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>` for current `intensity
         <TransferWithCosts.intensity>`.  Value is None if `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>`
-        has not been enabled (see `TransferWithCosts_Cost_Functions` for additional details).
+        has not been enabled (see `Cost Functions <TransferWithCosts_Cost_Functions>` for additional details).
 
     intensity_cost_fct : TransferFunction
         calculates `intensity_cost` from the current value of `intensity <TransferWithCosts.intensity>`.
@@ -3487,8 +3485,8 @@ class TransferWithCosts(TransferFunction):
     adjustment_cost : float or None
         cost of change in `intensity <TransferWithCosts.intensity>` from the last time `function
         <TransferWithCosts.function>` was executed.  Value is None if `adjustment_cost_fct
-        <TransferWithCosts.adjustment_cost_fct>` has not been enabled (see `TransferWithCosts_Cost_Functions` for
-        additional details).
+        <TransferWithCosts.adjustment_cost_fct>` has not been enabled (see `Cost Functions
+        <TransferWithCosts_Cost_Functions>` for additional details).
 
     adjustment_cost_fct : TransferFunction
         calculates `adjustment_cost <TransferWithCosts.adjustment_cost>` based on the change in `intensity
@@ -3526,7 +3524,7 @@ class TransferWithCosts(TransferFunction):
         combined result of all `cost functions <TransferWithCostss_Cost_Functions>` that are enabled;
         computed by `combined_costs_fct <TransferWithCosts.combined_costs_fct>` for current `intensity
         <TransferWithCosts.intensity>`.  Value is None if no costs have been enabled (see
-        `TransferWithCosts_Cost_Functions` for additional details).
+        `Cost Functions <TransferWithCosts_Cost_Functions>` for additional details).
 
     combine_costs_fct : function
         combines the results of all `cost functions <TransferWithCostss_Cost_Functions>` that are enabled, and assigns

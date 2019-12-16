@@ -113,7 +113,7 @@ class OptimizationFunction(Function_Base):
     - the last sample evaluated (which may or may not be the optimal value, depending on the `objective_function
       <OptimizationFunction.objective_function>`);
 
-    - the value of `objective_function <OptimzationFunction.objective_function>` associated with the last sample;
+    - the value of `objective_function <OptimizationFunction.objective_function>` associated with the last sample;
 
     - two lists, that may contain all of the samples evaluated and their values, depending on whether `save_samples
       <OptimizationFunction.save_samples>` and/or `save_vales <OptimizationFunction.save_values>` are `True`,
@@ -130,14 +130,14 @@ class OptimizationFunction(Function_Base):
         example, an OptimizationFunction may use for its `objective_function <OptimizationFunction.objective_function>`
         or `search_function <OptimizationFunction.search_function>` a method of the Component to which it is being
         assigned;  however, those methods will not yet be available, as the Component itself has not yet been
-        constructed. This can be handled by calling the OptimizationFunction's `reinitialization
-        <OptimizationFunction.reinitialization>` method after the Component has been instantiated, with a parameter
+        constructed. This can be handled by calling the OptimizationFunction's `reinitialize
+        <OptimizationFunction.reinitialize>` method after the Component has been instantiated, with a parameter
         specification dictionary with a key for each entry that is the name of a parameter and its value the value to
         be assigned to the parameter.  This is done automatically for Mechanisms that take an ObjectiveFunction as
-        their `function <Mechanism.function>` (such as the `EVCControlMechanism`, `LVOCControlMechanism` and
-        `ParamterEstimationControlMechanism`), but will require it be done explicitly for Components for which that
-        is not the case. A warning is issued if defaults are used for the arguments of an OptimizationFunction or
-        its subclasses;  this can be suppressed by specifying the relevant argument(s) as `NotImplemnted`.
+        their `function <Mechanism_Base.function>` (such as the `OptimizationControlMechanism`), but will require it be
+        done explicitly for Components for which that is not the case. A warning is issued if defaults are used for
+        the arguments of an OptimizationFunction or its subclasses;  this can be suppressed by specifying the
+        relevant argument(s) as `NotImplemnted`.
 
     COMMENT:
     NOTES TO DEVELOPERS:

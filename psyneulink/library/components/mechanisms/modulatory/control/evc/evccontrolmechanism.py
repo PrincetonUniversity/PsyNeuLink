@@ -61,7 +61,7 @@ An EVCControlMechanism can be created in any of the ways used to `create a Contr
 class is specified in the **controller** argument of the System's constructor (see `System_Creation`).  The
 ObjectiveMechanism, the OutputPorts it monitors and evaluates, and the parameters controlled by an
 EVCControlMechanism can be specified in the standard way for a ControlMechanism (see
-`ControlMechanism_ObjectiveMechanism` and `ControlMechanism_Control_Signals`, respectively).
+`ControlMechanism_ObjectiveMechanism` and `ControlMechanism_ControlSignals`, respectively).
 
 .. note::
    Although an EVCControlMechanism can be created on its own, it can only be assigned to, and executed within a `System`
