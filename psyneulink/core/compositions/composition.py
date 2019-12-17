@@ -6349,11 +6349,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # set auto logging if it's not already set, and if log argument is True
         if log:
-            for item in self.nodes + self.projections:
-                if not isinstance(item, CompositionInterfaceMechanism):
-                    for param in item.parameters:
-                        if param.loggable and param.log_condition is LogCondition.OFF:
-                            param.log_condition = LogCondition.EXECUTION
+            self.enable_logging()
 
         # Set animation attributes
         if animate is True:
@@ -7702,6 +7698,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             builder.ret_void()
 
         return llvm_func
+
+    def enable_logging(self):
+        for item in self.nodes + self.projections:
+            if isinstance(item, Composition):
+                item.enable_logging()
+            elif not isinstance(item, CompositionInterfaceMechanism):
+                for param in item.parameters:
+                    if param.loggable and param.log_condition is LogCondition.OFF:
+                        param.log_condition = LogCondition.EXECUTION
 
     @property
     def _dict_summary(self):
