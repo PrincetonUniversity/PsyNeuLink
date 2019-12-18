@@ -6493,19 +6493,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # PROCESSING ------------------------------------------------------------------------
             # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
-            elif hasattr(inputs, '__next__'):
-                try:
-                    inputs = inputs.__next__()
-                    inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(inputs,
-                                                                                           bin_execute=bin_execute)
-                except StopIteration:
-                    break
-
             if callable(inputs):
                 # If 'inputs' argument is a function, call the function here with results from last trial
                 execution_stimuli = inputs(self.env, trial_output)
                 if not isinstance(execution_stimuli, dict):
                     return trial_output
+            elif hasattr(inputs, '__next__'):
+                try:
+                    next_inputs = inputs.__next__()
+                    next_inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(next_inputs,
+                                                                                                bin_execute=bin_execute)
+                    execution_stimuli = {}
+                    for node in next_inputs:
+                        if len(next_inputs[node]) == 1:
+                            execution_stimuli[node] = next_inputs[node][0]
+                            continue
+                        execution_stimuli[node] = next_inputs[node][stimulus_index]
+                except StopIteration:
+                    break
             else:
                 execution_stimuli = {}
                 stimulus_index = trial_num % num_inputs_sets
