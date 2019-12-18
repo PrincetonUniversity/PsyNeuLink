@@ -154,6 +154,14 @@ the second item of the tuple must be a learning specification, which can be any 
   * a reference to the LearningProjection or LearningSignal class, or the keyword *LEARNING* or *LEARNING_PROJECTION* --
     a default set of `learning Components <LearningMechanism_Learning_Configurations>` is automatically created.
 
+Specifying Learning for AutodiffCompositions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, all MappingProjections in an `AutodiffComposition` are treated as trainable PyTorch Parameters whose
+matrices are updated during backwards passes through the network. Optionally, users can specify during
+instantiation that a projection should not be updated. To do so, set the `learnable` argument to False in the
+constructor of the projection.
+
 .. _MappingProjection_Deferred_Initialization:
 
 *Deferred Initialization*
@@ -444,6 +452,7 @@ class MappingProjection(PathwayProjection_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  context=None,
+                 learnable=True,
                  **kwargs):
 
         # Assign matrix to function_params for use as matrix param of MappingProjection.function
@@ -454,7 +463,9 @@ class MappingProjection(PathwayProjection_Base):
 
         self.learning_mechanism = None
         self.has_learning_projection = None
-
+        self.learnable = bool(learnable)
+        if not self.learnable:
+            assert True
         # If sender or receiver has not been assigned, defer init to Port.instantiate_projection_to_state()
         if sender is None or receiver is None:
             self.initialization_status = ContextFlags.DEFERRED_INIT
