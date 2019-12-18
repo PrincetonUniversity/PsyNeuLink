@@ -6757,6 +6757,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             inputs = self._adjust_execution_stimuli(inputs)
             self._assign_values_to_input_CIM(inputs, context=context)
+            for comp in [node for node in self.get_nodes_by_role(NodeRole.INPUT) if isinstance(node, Composition)]:
+                for port in comp.input_ports:
+                    port._update(context)
 
         # FIX: 6/12/19 Deprecate?
         # Manage input clamping
