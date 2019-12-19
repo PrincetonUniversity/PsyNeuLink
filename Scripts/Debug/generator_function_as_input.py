@@ -91,4 +91,4 @@ inputs_dict = {
 results_generator_function = ocomp.run(inputs=inputs_generator_function)
 results_generator_instance = ocomp.run(inputs=inputs_generator_instance)
 results_dict = ocomp.run(inputs=inputs_dict)
-assert results_generator_function == results_generator_instance == results_dict
+assert results_generator_function == results_generator_instance == results_dict == [[130]]
