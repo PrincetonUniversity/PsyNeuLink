@@ -59,10 +59,6 @@ ocomp.add_controller(
                                                                                      num=5))])
 )
 
-# HACK: extra control signal is instantiated for some reason. Remove it from the controller's output ports
-if len(ocomp.controller.output_ports) > 1:
-    del ocomp.controller.output_ports[1]
-
 # set up input using three different formats:
 #  1) generator function
 #  2) instance of generator function
