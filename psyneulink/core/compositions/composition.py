@@ -4499,7 +4499,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if isinstance(node, Composition):
                 # Get control signal specifications for nested composition if it does not have its own controller
                 if node.controller:
-                    control_signal_specs.append(node._get_control_signals_for_composition())
+                    node_control_signals = node._get_control_signals_for_composition()
+                    if node_control_signals:
+                        control_signal_specs.append(node._get_control_signals_for_composition())
             elif isinstance(node, Mechanism):
                 control_signal_specs.extend(node._get_parameter_port_deferred_init_control_specs())
         return control_signal_specs
@@ -6500,7 +6502,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     return trial_output
             elif hasattr(inputs, '__next__'):
                 try:
-                    execution_stimuli = inputs.__next__()
+                    next_inputs = inputs.__next__()
+                    next_inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(next_inputs,
+                                                                                                bin_execute=bin_execute)
+                    execution_stimuli = {}
+                    for node in next_inputs:
+                        if len(next_inputs[node]) == 1:
+                            execution_stimuli[node] = next_inputs[node][0]
+                            continue
+                        execution_stimuli[node] = next_inputs[node][stimulus_index]
                 except StopIteration:
                     break
             else:
@@ -6754,6 +6764,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             inputs = self._adjust_execution_stimuli(inputs)
             self._assign_values_to_input_CIM(inputs, context=context)
+            for comp in [node for node in self.get_nodes_by_role(NodeRole.INPUT) if isinstance(node, Composition)]:
+                for port in comp.input_ports:
+                    port._update(context)
 
         # FIX: 6/12/19 Deprecate?
         # Manage input clamping
