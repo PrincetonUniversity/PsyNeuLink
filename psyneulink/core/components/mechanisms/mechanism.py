@@ -2537,20 +2537,17 @@ class Mechanism_Base(Mechanism):
     def _get_function_param_struct_type(self, ctx):
         return ctx.get_param_struct_type(self.function)
 
+    def _get_mech_param_struct_type(self, ctx):
+        return pnlvm.ir.LiteralStructType(())
+
     def _get_param_struct_type(self, ctx):
         states_param_struct = self._get_states_param_struct_type(ctx)
         function_param_struct = self._get_function_param_struct_type(ctx)
-        param_list = [states_param_struct, function_param_struct]
+        mech_param_struct = self._get_mech_param_struct_type(ctx)
 
-        mech_params = self._get_mech_params_type(ctx)
-        if mech_params is not None:
-            param_list.append(mech_params)
-
-        return pnlvm.ir.LiteralStructType(param_list)
-
-    def _get_mech_params_type(self, ctx):
-        pass
-
+        return pnlvm.ir.LiteralStructType((states_param_struct,
+                                           function_param_struct,
+                                           mech_param_struct))
 
     def _get_ports_state_struct_type(self, ctx):
         gen = (ctx.get_state_struct_type(s) for s in self.ports)
@@ -2559,19 +2556,17 @@ class Mechanism_Base(Mechanism):
     def _get_function_state_struct_type(self, ctx):
         return ctx.get_state_struct_type(self.function)
 
-    def _get_state_struct_type(self, ctx):
-        states_state_struct = self._get_ports_state_struct_type(ctx)
-        function_state_struct = self._get_function_state_struct_type(ctx)
-        context_list = [states_state_struct, function_state_struct]
-
-        mech_context = self._get_mech_state_struct_type(ctx)
-        if mech_context is not None:
-            context_list.append(mech_context)
-
-        return pnlvm.ir.LiteralStructType(context_list)
-
     def _get_mech_state_struct_type(self, ctx):
-        pass
+        return pnlvm.ir.LiteralStructType(())
+
+    def _get_state_struct_type(self, ctx):
+        ports_state_struct = self._get_ports_state_struct_type(ctx)
+        function_state_struct = self._get_function_state_struct_type(ctx)
+        mech_state_struct = self._get_mech_state_struct_type(ctx)
+
+        return pnlvm.ir.LiteralStructType((ports_state_struct,
+                                           function_state_struct,
+                                           mech_state_struct))
 
     def _get_output_struct_type(self, ctx):
         output_type_list = (ctx.get_output_struct_type(port) for port in self.output_ports)
@@ -2596,16 +2591,12 @@ class Mechanism_Base(Mechanism):
     def _get_param_initializer(self, context):
         port_param_init = self._get_port_param_initializer(context)
         function_param_init = self._get_function_param_initializer(context)
-        param_init_list = [port_param_init, function_param_init]
+        mech_param_init = self._get_mech_params_init(context)
 
-        mech_params_init = self._get_mech_params_init()
-        if mech_params_init is not None:
-            param_init_list.append(mech_params_init)
+        return (port_param_init, function_param_init, mech_param_init)
 
-        return tuple(param_init_list)
-
-    def _get_mech_params_init(self):
-        pass
+    def _get_mech_params_init(self, context):
+        return ()
 
     def _get_ports_state_initializer(self, context):
         gen = (s._get_state_initializer(context) for s in self.ports)
@@ -2614,10 +2605,15 @@ class Mechanism_Base(Mechanism):
     def _get_function_state_initializer(self, context):
         return self.function._get_state_initializer(context)
 
+    def _get_mech_state_init(self, context):
+        return ()
+
     def _get_state_initializer(self, context):
-        ports_state_init = self._get_ports_state_initializer(context)
+        port_state_init = self._get_ports_state_initializer(context)
         function_state_init = self._get_function_state_initializer(context)
-        return (ports_state_init, function_state_init)
+        mech_state_init = self._get_mech_state_init(context)
+
+        return (port_state_init, function_state_init, mech_state_init)
 
     def _gen_llvm_ports(self, ctx, builder, ports,
                         get_output_ptr, fill_input_data,
@@ -2627,13 +2623,13 @@ class Mechanism_Base(Mechanism):
         all_ports = self.ports
         mod_afferents = self.mod_afferents
         for i, port in enumerate(ports):
-            s_function = ctx.import_llvm_function(port)
+            p_function = ctx.import_llvm_function(port)
 
             # Find output location
             builder, p_output = get_output_ptr(builder, i)
 
             # Allocate the input structure (data + modulation)
-            p_input = builder.alloca(s_function.args[2].type.pointee)
+            p_input = builder.alloca(p_function.args[2].type.pointee)
 
             # Copy input data to input structure
             builder = fill_input_data(builder, p_input, i)
@@ -2656,7 +2652,7 @@ class Mechanism_Base(Mechanism):
                                                ctx.int32_ty(0),
                                                ctx.int32_ty(port_idx)])
 
-            builder.call(s_function, [p_params, p_state, p_input, p_output])
+            builder.call(p_function, [p_params, p_state, p_input, p_output])
 
         return builder
 
@@ -2664,33 +2660,34 @@ class Mechanism_Base(Mechanism):
                                mech_params, mech_state, mech_input):
         # Allocate temporary storage. We rely on the fact that series
         # of InputPort results should match the main function input.
-        is_output_list = []
+        ip_output_list = []
         for port in self.input_ports:
-            is_function = ctx.import_llvm_function(port)
-            is_output_list.append(is_function.args[3].type.pointee)
+            ip_function = ctx.import_llvm_function(port)
+            ip_output_list.append(ip_function.args[3].type.pointee)
 
         # Check if all elements are the same. Function input will be array type if yes.
-        if len(set(is_output_list)) == 1:
-            is_output_type = pnlvm.ir.ArrayType(is_output_list[0], len(is_output_list))
+        if len(set(ip_output_list)) == 1:
+            ip_output_type = pnlvm.ir.ArrayType(ip_output_list[0], len(ip_output_list))
         else:
-            is_output_type = pnlvm.ir.LiteralStructType(is_output_list)
+            ip_output_type = pnlvm.ir.LiteralStructType(ip_output_list)
 
-        is_output = builder.alloca(is_output_type)
+        ip_output = builder.alloca(ip_output_type)
+
         def _get_output_ptr(b, i):
-            ptr = b.gep(is_output, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            ptr = b.gep(ip_output, [ctx.int32_ty(0), ctx.int32_ty(i)])
             return b, ptr
 
-        def _fill_input(b, s_input, i):
-            is_in = builder.gep(mech_input, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            data_ptr = builder.gep(s_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            b.store(b.load(is_in), data_ptr)
+        def _fill_input(b, p_input, i):
+            ip_in = builder.gep(mech_input, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            data_ptr = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            b.store(b.load(ip_in), data_ptr)
             return b
 
         builder = self._gen_llvm_ports(ctx, builder, self.input_ports,
                                        _get_output_ptr, _fill_input,
                                        mech_params, mech_state, mech_input)
 
-        return is_output, builder
+        return ip_output, builder
 
     def _gen_llvm_param_ports(self, func, f_params_in, ctx, builder,
                                mech_params, mech_state, mech_input):
@@ -2720,17 +2717,15 @@ class Mechanism_Base(Mechanism):
 
     def _gen_llvm_output_port_parse_variable(self, ctx, builder,
                                              mech_params, mech_state, value, port):
-            os_in_spec = port._variable_spec
-            if os_in_spec == OWNER_VALUE:
+            port_spec = port._variable_spec
+            if port_spec == OWNER_VALUE:
                 return value
-            elif isinstance(os_in_spec, tuple) and os_in_spec[0] == OWNER_VALUE:
-                return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(os_in_spec[1])])
-            #FIXME: For some reason this can be wrapped in a list
-            elif isinstance(os_in_spec, list) and len(os_in_spec) == 1 and isinstance(os_in_spec[0], tuple) and os_in_spec[0][0] == OWNER_VALUE:
-                return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(os_in_spec[0][1])])
+            elif isinstance(port_spec, tuple) and port_spec[0] == OWNER_VALUE:
+                assert port_spec[1] < len(value.type.pointee)
+                return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(port_spec[1])])
             else:
                 #TODO: support more spec options
-                assert False, "Unsupported OutputPort spec: {} ({})".format(os_in_spec, value.type)
+                assert False, "Unsupported OutputPort spec: {} ({})".format(port_spec, value.type)
 
     def _gen_llvm_output_ports(self, ctx, builder, value,
                                mech_params, mech_state, mech_in, mech_out):
