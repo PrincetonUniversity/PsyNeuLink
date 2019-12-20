@@ -227,10 +227,16 @@ class GatingProjection(ModulatoryProjection_Base):
         function = Parameter(Linear(params={FUNCTION_OUTPUT_TYPE: FunctionOutputType.RAW_NUMBER}), stateful=False, loggable=False)
         gating_signal = Parameter(None, read_only=True, getter=_gating_signal_getter, setter=_gating_signal_setter, pnl_internal=True)
 
-    paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        PROJECTION_SENDER: GatingMechanism,
-    })
+        gating_signal_params = Parameter(
+            None,
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            user=False,
+            pnl_internal=True
+        )
+
+    projection_sender = GatingMechanism
 
     @tc.typecheck
     def __init__(self,
@@ -245,27 +251,25 @@ class GatingProjection(ModulatoryProjection_Base):
                  prefs:is_pref_set=None,
                  **kwargs
                  ):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  gating_signal_params=gating_signal_params,
-                                                  params=params)
-
         # If receiver has not been assigned, defer init to Port.instantiate_projection_to_state()
         if sender is None or receiver is None:
             # Flag for deferred initialization
             self.initialization_status = ContextFlags.DEFERRED_INIT
 
-        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
+        # Validate sender (as variable) and params, and assign to variable
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
-        super().__init__(sender=sender,
-                         receiver=receiver,
-                         weight=weight,
-                         exponent=exponent,
-                         function=function,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         **kwargs)
+        super().__init__(
+            sender=sender,
+            receiver=receiver,
+            weight=weight,
+            exponent=exponent,
+            function=function,
+            gating_signal_params=gating_signal_params,
+            params=params,
+            name=name,
+            prefs=prefs,
+            **kwargs
+        )
 
     def _instantiate_sender(self, sender, params=None, context=None):
         """Check that sender is not a process and that, if specified as a Mechanism, it is a GatingMechanism

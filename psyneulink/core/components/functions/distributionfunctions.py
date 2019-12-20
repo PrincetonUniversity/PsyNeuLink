@@ -121,8 +121,6 @@ class NormalDist(DistributionFunction):
 
     componentName = NORMAL_DIST_FUNCTION
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     class Parameters(DistributionFunction.Parameters):
         """
             Attributes
@@ -152,16 +150,14 @@ class NormalDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(mean=mean,
-                                                  standard_deviation=standard_deviation,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            mean=mean,
+            standard_deviation=standard_deviation,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
@@ -296,8 +292,6 @@ class UniformToNormalDist(DistributionFunction):
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -306,17 +300,14 @@ class UniformToNormalDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(mean=mean,
-                                                  standard_deviation=standard_deviation,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
-
+        super().__init__(
+            default_variable=default_variable,
+            mean=mean,
+            standard_deviation=standard_deviation,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _function(self,
                  variable=None,
@@ -399,8 +390,6 @@ class ExponentialDist(DistributionFunction):
     """
     componentName = EXPONENTIAL_DIST_FUNCTION
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     class Parameters(DistributionFunction.Parameters):
         """
             Attributes
@@ -422,16 +411,13 @@ class ExponentialDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(beta=beta,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
-
+        super().__init__(
+            default_variable=default_variable,
+            beta=beta,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _function(self,
                  variable=None,
@@ -508,8 +494,6 @@ class UniformDist(DistributionFunction):
     """
     componentName = UNIFORM_DIST_FUNCTION
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     class Parameters(DistributionFunction.Parameters):
         """
             Attributes
@@ -539,17 +523,14 @@ class UniformDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(low=low,
-                                                  high=high,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
-
+        super().__init__(
+            default_variable=default_variable,
+            low=low,
+            high=high,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _function(self,
                  variable=None,
@@ -634,8 +615,6 @@ class GammaDist(DistributionFunction):
 
     componentName = GAMMA_DIST_FUNCTION
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     class Parameters(DistributionFunction.Parameters):
         """
             Attributes
@@ -665,17 +644,14 @@ class GammaDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(scale=scale,
-                                                  dist_shape=dist_shape,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
-
+        super().__init__(
+            default_variable=default_variable,
+            scale=scale,
+            dist_shape=dist_shape,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _function(self,
                  variable=None,
@@ -759,8 +735,6 @@ class WaldDist(DistributionFunction):
 
     componentName = WALD_DIST_FUNCTION
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     class Parameters(DistributionFunction.Parameters):
         """
             Attributes
@@ -790,17 +764,14 @@ class WaldDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(scale=scale,
-                                                  mean=mean,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
-
+        super().__init__(
+            default_variable=default_variable,
+            scale=scale,
+            mean=mean,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _function(self,
                  variable=None,
@@ -952,8 +923,6 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
 
     componentName = DRIFT_DIFFUSION_ANALYTICAL_FUNCTION
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     class Parameters(DistributionFunction.Parameters):
         """
             Attributes
@@ -1003,6 +972,15 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         noise = Parameter(0.5, modulable=True)
         t0 = .200
         bias = Parameter(0.5, read_only=True, getter=_DriftDiffusionAnalytical_bias_getter)
+        # this is read only because conversion is disabled for this function
+        # this occurs in other places as well
+        enable_output_type_conversion = Parameter(
+            False,
+            stateful=False,
+            loggable=False,
+            pnl_internal=True,
+            read_only=True
+        )
 
     @tc.typecheck
     def __init__(self,
@@ -1019,29 +997,17 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
 
         self._shenhav_et_al_compat_mode = shenhav_et_al_compat_mode
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(drift_rate=drift_rate,
-                                                  starting_point=starting_point,
-                                                  threshold=threshold,
-                                                  noise=noise,
-                                                  t0=t0,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
-
-    @property
-    def output_type(self):
-        return self._output_type
-
-    @output_type.setter
-    def output_type(self, value):
-        # disabled because it happens during normal execution, may be confusing
-        # warnings.warn('output_type conversion disabled for {0}'.format(self.__class__.__name__))
-        self._output_type = None
+        super().__init__(
+            default_variable=default_variable,
+            drift_rate=drift_rate,
+            starting_point=starting_point,
+            threshold=threshold,
+            noise=noise,
+            t0=t0,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     @property
     def shenhav_et_al_compat_mode(self):

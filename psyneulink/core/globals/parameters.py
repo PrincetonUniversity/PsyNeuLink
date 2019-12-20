@@ -13,9 +13,9 @@ and `logged values <Log>`.
 Defaults
 ========
 
-Parameters have two types of defaults: *instance* defaults and *class* defaults. Class defaults belong to a PNL class, and suggest
-valid types and shapes of Parameter values. Instance defaults belong to an instance of a PNL class, and are used to validate
-compatibility between this instance and other PNL objects. Given a `TransferMechanism` *t*:
+Parameters have two types of defaults: *instance* defaults and *class* defaults. Class defaults belong to a PNL class,
+and suggest valid types and shapes of Parameter values. Instance defaults belong to an instance of a PNL class,
+and are used to validate compatibility between this instance and other PNL objects. Given a `TransferMechanism` *t*:
 
     - instance defaults are accessible by ``t.defaults``
     - class defaults are accessible by ``t.class_defaults`` or ``TransferMechanism.defaults``
@@ -338,7 +338,7 @@ class ParametersTemplate:
 
     def __init__(self, owner, parent=None):
         # using weakref to allow garbage collection of unused objects of this type
-        self._owner = weakref.proxy(owner)
+        self._owner = owner
         self._parent = parent
         if isinstance(self._parent, ParametersTemplate):
             # using weakref to allow garbage collection of unused children
@@ -424,6 +424,17 @@ class ParametersTemplate:
 
     def names(self, show_all=False):
         return sorted([p for p in self.values(show_all)])
+
+    @property
+    def _owner(self):
+        return unproxy_weakproxy(self.__owner)
+
+    @_owner.setter
+    def _owner(self, value):
+        try:
+            self.__owner = weakref.proxy(value)
+        except TypeError:
+            self.__owner = value
 
 
 class Defaults(ParametersTemplate):
@@ -671,6 +682,7 @@ class Parameter(types.SimpleNamespace):
         modulation_combination_function=None,
         read_only=False,
         function_arg=True,
+        function_parameter=False,
         pnl_internal=False,
         aliases=None,
         user=True,
@@ -720,6 +732,7 @@ class Parameter(types.SimpleNamespace):
             modulation_combination_function=modulation_combination_function,
             read_only=read_only,
             function_arg=function_arg,
+            function_parameter=function_parameter,
             pnl_internal=pnl_internal,
             aliases=aliases,
             user=user,
@@ -742,14 +755,7 @@ class Parameter(types.SimpleNamespace):
             _user_specified=_user_specified,
         )
 
-        if _owner is None:
-            self._owner = None
-        else:
-            try:
-                self._owner = weakref.proxy(_owner)
-            except TypeError:
-                self._owner = _owner
-
+        self._owner = _owner
         self._param_attrs = [k for k in self.__dict__ if k[0] != '_'] \
             + [k for k in self.__class__.__dict__ if k in self._additional_param_attr_properties]
         self._inherited_attrs_cache = {}
@@ -1223,11 +1229,8 @@ class ParameterAlias(types.SimpleNamespace, metaclass=_ParameterAliasMeta):
     """
     def __init__(self, source=None, name=None):
         super().__init__(name=name)
-        try:
-            self.source = weakref.proxy(source)
-        except TypeError:
-            # source is already a weakref proxy, coming from another ParameterAlias
-            self.source = source
+
+        self.source = source
 
         try:
             source._register_alias(name)
@@ -1239,6 +1242,17 @@ class ParameterAlias(types.SimpleNamespace, metaclass=_ParameterAliasMeta):
 
     def __getattr__(self, attr):
         return getattr(self.source, attr)
+
+    @property
+    def source(self):
+        return unproxy_weakproxy(self._source)
+
+    @source.setter
+    def source(self, value):
+        try:
+            self._source = weakref.proxy(value)
+        except TypeError:
+            self._source = value
 
 
 # KDM 6/29/18: consider assuming that ALL parameters are stateful

@@ -169,7 +169,7 @@ class KohonenLearningMechanism(LearningMechanism):
         specifies the `matrix <AutoAssociativeProjection.matrix>` to be learned (see `learning_signals
         <LearningMechanism.learning_signals>` for details of specification).
 
-    modulation : ModulationParam : default ADDITIVE
+    modulation : str : default ADDITIVE
         specifies the default form of modulation used by the KohonenLearningMechanism's LearningSignals,
         unless they are `individually specified <LearningSignal_Specification>`.
 
@@ -264,7 +264,7 @@ class KohonenLearningMechanism(LearningMechanism):
         the first item is the `value <OutputPort.value>` of the LearningMechanism's `learning_signal
         <KohonenLearningMechanism.learning_signal>`.
 
-    modulation : ModulationParam
+    modulation : str
         the default form of modulation used by the KohonenLearningMechanism's `LearningSignal(s)
         <LearningMechanism_LearningSignal>`, unless they are `individually specified <LearningSignal_Specification>`.
 
@@ -318,7 +318,7 @@ class KohonenLearningMechanism(LearningMechanism):
                     see `modulation <KohonenLearningMechanism.modulation>`
 
                     :default value: ADDITIVE
-                    :type: `ModulationParam`
+                    :type: str
 
         """
         function = Parameter(Hebbian, stateful=False, loggable=False)
@@ -329,14 +329,6 @@ class KohonenLearningMechanism(LearningMechanism):
         learning_type = LearningType.UNSUPERVISED
         learning_timing = LearningTiming.EXECUTION_PHASE
         modulation = ADDITIVE
-
-    paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        CONTROL_PROJECTIONS: None,
-        INPUT_PORTS:input_port_names,
-        OUTPUT_PORTS:[{NAME:LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
-                        VARIABLE: (OWNER_VALUE,0)}
-                       ]})
 
     @tc.typecheck
     def __init__(self,
@@ -351,12 +343,6 @@ class KohonenLearningMechanism(LearningMechanism):
                  name=None,
                  prefs:is_pref_set=None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(matrix=matrix,
-                                                  function=function,
-                                                  learning_signals=learning_signals,
-                                                  params=params)
-
         # # USE FOR IMPLEMENTATION OF deferred_init()
         # # Store args for deferred initialization
         # self._init_args = locals().copy()
@@ -369,15 +355,18 @@ class KohonenLearningMechanism(LearningMechanism):
 
         # self._learning_rate = learning_rate
 
-        super().__init__(default_variable=default_variable,
-                         size=size,
-                         function=function,
-                         modulation=modulation,
-                         learning_rate=learning_rate,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            size=size,
+            function=function,
+            modulation=modulation,
+            learning_rate=learning_rate,
+            matrix=matrix,
+            learning_signals=learning_signals,
+            params=params,
+            name=name,
+            prefs=prefs,
+        )
 
     def _validate_variable(self, variable, context=None):
         """Validate that variable has only one item: activation_input.

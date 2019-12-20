@@ -6,7 +6,6 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 # NOTES:
-#  * COULD NOT IMPLEMENT integrator_function in paramClassDefaults (see notes below)
 #  * NOW THAT NOISE AND INTEGRATION_RATE ARE PROPRETIES THAT DIRECTLY REFERERNCE integrator_function,
 #      SHOULD THEY NOW BE VALIDATED ONLY THERE (AND NOT IN TransferMechanism)??
 #  * ARE THOSE THE ONLY TWO integrator PARAMS THAT SHOULD BE PROPERTIES??
@@ -185,13 +184,12 @@ import itertools
 import numbers
 import numpy as np
 import typecheck as tc
+import types
 import warnings
 
 from collections.abc import Iterable
-from types import MethodType
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.functions.function import Function, is_function_type
 from psyneulink.core.components.functions.learningfunctions import Hebbian
 from psyneulink.core.components.functions.objectivefunctions import Stability
@@ -626,8 +624,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         learning_function = Parameter(Hebbian, stateful=False, loggable=False)
         learning_rate = Parameter(None, setter=_recurrent_transfer_mechanism_learning_rate_setter)
         learning_condition = Parameter(None, stateful=False, loggable=False)
+        has_recurrent_input_port = Parameter(None, stateful=False, loggable=False)
 
-    paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
 
     standard_output_ports = TransferMechanism.standard_output_ports.copy()
     standard_output_ports.extend([{NAME:ENERGY_OUTPUT_PORT_NAME}, {NAME:ENTROPY_OUTPUT_PORT_NAME}])
@@ -684,49 +682,31 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         self._learning_enabled = enable_learning
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(matrix=matrix,
-                                                  integrator_mode=integrator_mode,
-                                                  learning_rate=learning_rate,
-                                                  learning_function=learning_function,
-                                                  learning_condition=learning_condition,
-                                                  auto=auto,
-                                                  hetero=hetero,
-                                                  has_recurrent_input_port=has_recurrent_input_port,
-                                                  combination_function=combination_function,
-                                                  params=params,
-                                                  )
-
-        super().__init__(default_variable=default_variable,
-                         size=size,
-                         input_ports=input_ports,
-                         function=function,
-                         integrator_function=integrator_function,
-                         initial_value=initial_value,
-                         noise=noise,
-                         integrator_mode=integrator_mode,
-                         integration_rate=integration_rate,
-                         clip=clip,
-                         output_ports=output_ports,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         **kwargs)
-
-    # def _handle_default_variable(self, default_variable=None, size=None, input_ports=None, params=None):
-    #     """Set self.recurrent_size if it was not set by subclass;  assumes it is size of first item"""
-    #     default_variable = super()._handle_default_variable(default_variable, size, input_ports, params)
-    #     self.recurrent_size = self.recurrent_size or len(default_variable[0])
-    #     return default_variable
-
-    def _instantiate_defaults(
-            self,variable=None,request_set=None,assign_missing=True,target_set=None,default_set=None,context=None):
-        """Set self.recurrent_size if it was not set by subclass;  assumes it is size of first item of variable"""
-        try:
-            self.recurrent_size
-        except AttributeError:
-            self.recurrent_size = len(variable[0])
-        super()._instantiate_defaults(variable,request_set,assign_missing,target_set,default_set, context=context)
+        super().__init__(
+            default_variable=default_variable,
+            size=size,
+            input_ports=input_ports,
+            function=function,
+            integrator_function=integrator_function,
+            initial_value=initial_value,
+            noise=noise,
+            matrix=matrix,
+            integrator_mode=integrator_mode,
+            integration_rate=integration_rate,
+            learning_rate=learning_rate,
+            learning_function=learning_function,
+            learning_condition=learning_condition,
+            auto=auto,
+            hetero=hetero,
+            has_recurrent_input_port=has_recurrent_input_port,
+            combination_function=combination_function,
+            clip=clip,
+            output_ports=output_ports,
+            params=params,
+            name=name,
+            prefs=prefs,
+            **kwargs
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate shape and size of auto, hetero, matrix.
@@ -915,12 +895,12 @@ class RecurrentTransferMechanism(TransferMechanism):
                 not (
                     isinstance(comb_fct, LinearCombination)
                     or (isinstance(comb_fct, type) and issubclass(comb_fct, LinearCombination))
-                    or (isinstance(comb_fct, MethodType) and comb_fct.__self__ == self)
+                    or (isinstance(comb_fct, types.MethodType) and comb_fct.__self__ == self)
                 )
             ):
                 if isinstance(comb_fct, type):
                     comb_fct = comb_fct()
-                elif isinstance(comb_fct, (function_type, method_type)):
+                elif isinstance(comb_fct, (types.FunctionType, types.MethodType)):
                     comb_fct = UserDefinedFunction(comb_fct, self.defaults.variable)
                 try:
                     cust_fct_result = comb_fct.execute(self.defaults.variable)
@@ -951,7 +931,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             if not isinstance(comb_fct, Function):
                 if isinstance(comb_fct, type):
                     self.combination_function = comb_fct(default_variable=self.defaults.variable)
-                elif isinstance(comb_fct, MethodType) and comb_fct.__self__ == self:
+                elif isinstance(comb_fct, types.MethodType) and comb_fct.__self__ == self:
                     pass
                 else:
                     self.combination_function = UserDefinedFunction(custom_function=comb_fct,

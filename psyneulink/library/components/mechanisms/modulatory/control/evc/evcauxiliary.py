@@ -107,9 +107,6 @@ class EVCAuxiliaryFunction(Function_Base):
                  owner=None,
                  prefs:is_pref_set=None,
                  context=None):
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(params=params)
         self.aux_function = function
 
         super().__init__(default_variable=variable,
@@ -859,6 +856,7 @@ class PredictionMechanism(IntegratorMechanism):
         """
         window_size = Parameter(1, stateful=False, loggable=False)
         filter_function = Parameter(None, stateful=False, loggable=False)
+        input_type = None
 
         rate = Parameter(1.0, modulable=True)
 
@@ -887,17 +885,15 @@ class PredictionMechanism(IntegratorMechanism):
                           "set context=Context(source=ContextFlags.COMMAND_LINE), but proceed at your peril!")
             return
 
+        if params is None:
+            params = {}
+
         if params and FUNCTION in params:
             function = params[FUNCTION]
 
         input_type = None
         if function in input_types:
             input_type = function
-
-        params = self._assign_args_to_param_dicts(window_size=window_size,
-                                                  input_type=input_type,
-                                                  filter_function=filter_function,
-                                                  params=params)
 
         if function in input_types:
 

@@ -884,7 +884,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         `LearningSignal(s) <LearningMechanism_LearningSignal>`, and then those of any additional (user-specified)
         `OutputPorts <OutputPort>`.
 
-    modulation : ModulationParam
+    modulation : str
         the default form of modulation used by the LearningMechanism's `LearningSignal(s)
         <LearningMechanism_LearningSignal>`, unless they are `individually specified <LearningSignal_Specification>`.
 
@@ -986,17 +986,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
             structural=True,
         )
 
-    paramClassDefaults = ModulatoryMechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        CONTROL_PROJECTIONS: None,
-        INPUT_PORTS:input_port_names,
-        OUTPUT_PORTS:[{NAME:ERROR_SIGNAL,
-                        PORT_TYPE:OUTPUT_PORT,
-                        VARIABLE: (OWNER_VALUE, 1)},
-                       {NAME:LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
-                        VARIABLE: (OWNER_VALUE, 0)}
-                       ]})
-
     @tc.typecheck
     def __init__(self,
                  # default_variable:tc.any(list, np.ndarray),
@@ -1025,11 +1014,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
         self.in_composition = in_composition
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  learning_enabled=learning_enabled,
-                                                  params=params)
-
         # # USE FOR IMPLEMENTATION OF deferred_init()
         # # Store args for deferred initialization
         # self._init_args = locals().copy()
@@ -1041,17 +1025,20 @@ class LearningMechanism(ModulatoryMechanism_Base):
         # self.initialization_status = ContextFlags.DEFERRED_INIT
         # self.initialization_status = ContextFlags.DEFERRED_INIT
 
-        super().__init__(default_variable=default_variable,
-                         size=size,
-                         modulation=modulation,
-                         function=function,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         learning_signals=learning_signals,
-                         learning_rate=learning_rate,
-                         output_ports=output_ports,
-                         **kwargs)
+        super().__init__(
+            default_variable=default_variable,
+            size=size,
+            modulation=modulation,
+            function=function,
+            params=params,
+            name=name,
+            prefs=prefs,
+            learning_enabled=learning_enabled,
+            learning_signals=learning_signals,
+            learning_rate=learning_rate,
+            output_ports=output_ports,
+            **kwargs
+        )
 
     def _check_type_and_timing(self):
         try:
@@ -1222,7 +1209,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
         # Instantiate LearningSignals if they are specified, and assign to self.output_ports
         # Notes:
         #    - if any LearningSignals are specified they will replace the default LEARNING_SIGNAL OutputPort
-        #        in the OUTPUT_PORTS entry of paramClassDefaults;
         #    - the LearningSignals are appended to _output_ports, leaving ERROR_SIGNAL as the first entry.
 
         # Instantiate LearningSignals and assign to self.output_ports

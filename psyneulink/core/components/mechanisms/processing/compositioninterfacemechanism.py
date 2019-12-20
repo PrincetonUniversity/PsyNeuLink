@@ -71,6 +71,7 @@ from psyneulink.core.components.ports.modulatorysignals.controlsignal import Con
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, PREFERENCE_SET_NAME
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
@@ -104,12 +105,8 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         PREFERENCE_SET_NAME: 'CompositionInterfaceMechanismCustomClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({})
-    paramNames = paramClassDefaults.keys()
-
     class Parameters(ProcessingMechanism_Base.Parameters):
-        function = Identity
+        function = Parameter(Identity, stateful=False, loggable=False)
 
     @tc.typecheck
     def __init__(self,
@@ -126,10 +123,6 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
             default_variable = self.class_defaults.variable
         self.composition = composition
         self.connected_to_composition = False
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  params=params)
 
         super(CompositionInterfaceMechanism, self).__init__(default_variable=default_variable,
                                                             size=size,

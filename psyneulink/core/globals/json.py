@@ -256,15 +256,13 @@ class PNLJSONEncoder(json.JSONEncoder):
 
 
 def _parse_component_type(component_dict):
+    type_dict = component_dict[MODEL_SPEC_ID_TYPE]
+
     try:
-        type_str = component_dict[MODEL_SPEC_ID_TYPE][MODEL_SPEC_ID_PSYNEULINK]
-    except (TypeError, KeyError):
-        try:
-            type_str = component_dict[MODEL_SPEC_ID_TYPE][MODEL_SPEC_ID_GENERIC]
-        except (TypeError, KeyError) as e:
-            raise PNLJSONError(
-                f'{component_dict} not a Component type'
-            ) from e
+        type_str = type_dict[MODEL_SPEC_ID_PSYNEULINK]
+    except KeyError:
+        # catch error outside of this function if necessary
+        type_str = type_dict[MODEL_SPEC_ID_GENERIC]
 
     try:
         # gets the actual psyneulink type (Component, etc..) from the module
@@ -402,8 +400,19 @@ def _generate_component_string(
     component_dict,
     component_identifiers,
     assignment=False,
+    default_type=None   # used if no PNL or generic types are specified
 ):
-    component_type = _parse_component_type(component_dict)
+    try:
+        component_type = _parse_component_type(component_dict)
+    except KeyError as e:
+        # acceptable to exclude type currently
+        if default_type is not None:
+            component_type = default_type
+        else:
+            raise type(e)(
+                f'{component_dict} has no PNL or generic type and no '
+                'default_type is specified'
+            ) from e
 
     name = component_dict['name']
     parameters = dict(component_dict[component_type._model_spec_id_parameters])
@@ -608,6 +617,11 @@ def _generate_condition_string(condition_dict, component_identifiers):
 
 
 def _generate_composition_string(composition_list, component_identifiers):
+    # used if no generic types are specified
+    default_composition_type = psyneulink.Composition
+    default_node_type = psyneulink.ProcessingMechanism
+    default_edge_type = psyneulink.MappingProjection
+
     control_mechanism_types = (psyneulink.ControlMechanism, )
     # these are not actively added to a Composition
     implicit_types = (
@@ -619,7 +633,11 @@ def _generate_composition_string(composition_list, component_identifiers):
 
     # may be given multiple compositions
     for composition_dict in composition_list:
-        comp_type = _parse_component_type(composition_dict)
+        try:
+            comp_type = _parse_component_type(composition_dict)
+        except KeyError:
+            comp_type = default_composition_type
+
         comp_name = composition_dict['name']
         comp_identifer = parse_valid_identifier(comp_name)
 
@@ -654,6 +672,9 @@ def _generate_composition_string(composition_list, component_identifiers):
         for name, node in composition_dict[MODEL_SPEC_ID_NODES].items():
             try:
                 _parse_component_type(node)
+            except KeyError:
+                # will use a default type
+                pass
             except PNLJSONError:
                 # node isn't a node dictionary, but a dict of dicts,
                 # indicating a software-specific set of nodes or
@@ -676,6 +697,9 @@ def _generate_composition_string(composition_list, component_identifiers):
         for name, edge in composition_dict[MODEL_SPEC_ID_PROJECTIONS].items():
             try:
                 _parse_component_type(edge)
+            except KeyError:
+                # will use a default type
+                pass
             except PNLJSONError:
                 if name == MODEL_SPEC_ID_PSYNEULINK:
                     pnl_specific_items = edge
@@ -700,7 +724,8 @@ def _generate_composition_string(composition_list, component_identifiers):
                 comp_identifer,
                 _generate_component_string(
                     composition_dict,
-                    component_identifiers
+                    component_identifiers,
+                    default_type=default_composition_type
                 )
             )
         )
@@ -720,7 +745,10 @@ def _generate_composition_string(composition_list, component_identifiers):
             if MODEL_SPEC_ID_COMPOSITION in node:
                 compositions.append(node[MODEL_SPEC_ID_COMPOSITION])
             else:
-                component_type = _parse_component_type(node)
+                try:
+                    component_type = _parse_component_type(node)
+                except KeyError:
+                    component_type = default_node_type
                 identifier = parse_valid_identifier(name)
                 if issubclass(component_type, control_mechanism_types):
                     control_mechanisms.append(node)
@@ -742,6 +770,7 @@ def _generate_composition_string(composition_list, component_identifiers):
                     mech,
                     component_identifiers,
                     assignment=True,
+                    default_type=default_node_type
                 )
             )
         if len(mechanisms) > 0:
@@ -753,6 +782,7 @@ def _generate_composition_string(composition_list, component_identifiers):
                     mech,
                     component_identifiers,
                     assignment=True,
+                    default_type=default_node_type
                 )
             )
 
@@ -771,18 +801,20 @@ def _generate_composition_string(composition_list, component_identifiers):
             output.append('')
 
         # generate string to add the nodes to this Composition
-        node_roles = {
-            parse_valid_identifier(node): role for (node, role) in
-            composition_dict[comp_type._model_spec_id_parameters][MODEL_SPEC_ID_PSYNEULINK]['required_node_roles']
-        }
+        try:
+            node_roles = {
+                parse_valid_identifier(node): role for (node, role) in
+                composition_dict[comp_type._model_spec_id_parameters][MODEL_SPEC_ID_PSYNEULINK]['required_node_roles']
+            }
+        except KeyError:
+            node_roles = []
 
         # do not add the controller as a normal node
-        if composition_dict['controller'] is not None:
-            try:
-                controller_name = composition_dict['controller']['name']
-            except TypeError:
-                controller_name = composition_dict['controller']
-        else:
+        try:
+            controller_name = composition_dict['controller']['name']
+        except TypeError:
+            controller_name = composition_dict['controller']
+        except KeyError:
             controller_name = None
 
         for name in sorted(
@@ -812,7 +844,10 @@ def _generate_composition_string(composition_list, component_identifiers):
 
         # generate string to add the projections
         for name, projection_dict in composition_dict[MODEL_SPEC_ID_PROJECTIONS].items():
-            projection_type = _parse_component_type(projection_dict)
+            try:
+                projection_type = _parse_component_type(projection_dict)
+            except KeyError:
+                projection_type = default_edge_type
 
             if (
                 not issubclass(projection_type, implicit_types)
@@ -824,7 +859,8 @@ def _generate_composition_string(composition_list, component_identifiers):
                         comp_identifer,
                         _generate_component_string(
                             projection_dict,
-                            component_identifiers
+                            component_identifiers,
+                            default_type=default_edge_type
                         ),
                         parse_valid_identifier(
                             projection_dict[MODEL_SPEC_ID_SENDER_MECH]

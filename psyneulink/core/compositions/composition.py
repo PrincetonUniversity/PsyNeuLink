@@ -589,7 +589,7 @@ A controller can also be specified for the System, in the **controller** argumen
 existing `ControlMechanism`, a constructor for one, or a class of ControlMechanism in which case a default
 instance of that class will be created.  If an existing ControlMechanism or the constructor for one is used, then
 the `OutputPorts it monitors <ControlMechanism_ObjectiveMechanism>` and the `parameters it controls
-<ControlMechanism_Control_Signals>` can be specified using its `objective_mechanism
+<ControlMechanism_ControlSignals>` can be specified using its `objective_mechanism
 <ControlMechanism.objective_mechanism>` and `control_signals <ControlMechanism.control_signals>`
 attributes, respectively.  In addition, these can be specified in the **monitor_for_control** and **control_signal**
 arguments of the `System`, as described below.
@@ -624,7 +624,7 @@ arguments of the `System`, as described below.
   ObjectiveMechanism's `monitored_output_ports <ObjectiveMechanism.monitored_output_ports>` attribute).
 ..
 * **control_signals** argument -- used to specify the parameters of Components in the System to be controlled. These
-  can be specified in any of the ways used to `specify ControlSignals <ControlMechanism_Control_Signals>` in the
+  can be specified in any of the ways used to `specify ControlSignals <ControlMechanism_ControlSignals>` in the
   *control_signals* argument of a ControlMechanism. These are added to any `ControlSignals <ControlSignal>` that have
   already been specified for the `controller <System.controller>` (listed in its `control_signals
   <ControlMechanism.control_signals>` attribute), and any parameters that have directly been `specified for
@@ -2424,7 +2424,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     interface_output_port = OutputPort(owner=self.input_CIM,
                                                         variable=OWNER_VALUE,
-                                                        default_variable=self.input_CIM.defaults.variable,
                                                         function=InterfacePortMap(
                                                              corresponding_input_port=interface_input_port),
                                                         name="INPUT_CIM_" + node.name + "_" + input_port.name)
@@ -2557,7 +2556,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 owner = pcim,
                                 modulation = modulation,
                                 variable = OWNER_VALUE,
-                                function = InterfacePortMap(
+                                transfer_function=InterfacePortMap(
                                     corresponding_input_port = input_port
                                 ),
                                 modulates = receiver,
@@ -6350,11 +6349,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # set auto logging if it's not already set, and if log argument is True
         if log:
-            for item in self.nodes + self.projections:
-                if not isinstance(item, CompositionInterfaceMechanism):
-                    for param in item.parameters:
-                        if param.loggable and param.log_condition is LogCondition.OFF:
-                            param.log_condition = LogCondition.EXECUTION
+            self.enable_logging()
 
         # Set animation attributes
         if animate is True:
@@ -7703,6 +7698,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             builder.ret_void()
 
         return llvm_func
+
+    def enable_logging(self):
+        for item in self.nodes + self.projections:
+            if isinstance(item, Composition):
+                item.enable_logging()
+            elif not isinstance(item, CompositionInterfaceMechanism):
+                for param in item.parameters:
+                    if param.loggable and param.log_condition is LogCondition.OFF:
+                        param.log_condition = LogCondition.EXECUTION
 
     @property
     def _dict_summary(self):

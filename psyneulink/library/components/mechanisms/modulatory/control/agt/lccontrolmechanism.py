@@ -652,10 +652,7 @@ class LCControlMechanism(ControlMechanism):
         base_level_gain = Parameter(0.5, modulable=True)
         scaling_factor_gain = Parameter(3.0, modulable=True)
 
-    paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
-    paramClassDefaults.update({FUNCTION:FitzHughNagumoIntegrator,
-                               CONTROL_PROJECTIONS: None,
-                               })
+        modulated_mechanisms = None
 
     @tc.typecheck
     def __init__(self,
@@ -692,42 +689,40 @@ class LCControlMechanism(ControlMechanism):
                  prefs:is_pref_set=None
                  ):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(system=system,
-                                                  modulated_mechanisms=modulated_mechanisms,
-                                                  modulation=modulation,
-                                                  base_level_gain=base_level_gain,
-                                                  scaling_factor_gain=scaling_factor_gain,
-                                                  params=params)
-
-        super().__init__(system=system,
-                         default_variable=default_variable,
-                         objective_mechanism=objective_mechanism,
-                         monitor_for_control=monitor_for_control,
-                         function=FitzHughNagumoIntegrator(integration_method=integration_method,
-                                                initial_v=initial_v_FitzHughNagumo,
-                                                initial_w=initial_w_FitzHughNagumo,
-                                                time_step_size=time_step_size_FitzHughNagumo,
-                                                t_0=t_0_FitzHughNagumo,
-                                                a_v=a_v_FitzHughNagumo,
-                                                b_v=b_v_FitzHughNagumo,
-                                                c_v=c_v_FitzHughNagumo,
-                                                d_v=d_v_FitzHughNagumo,
-                                                e_v=e_v_FitzHughNagumo,
-                                                f_v=f_v_FitzHughNagumo,
-                                                time_constant_v=time_constant_v_FitzHughNagumo,
-                                                a_w=a_w_FitzHughNagumo,
-                                                b_w=b_w_FitzHughNagumo,
-                                                c_w=c_w_FitzHughNagumo,
-                                                threshold=threshold_FitzHughNagumo,
-                                                mode=mode_FitzHughNagumo,
-                                                uncorrelated_activity=uncorrelated_activity_FitzHughNagumo,
-                                                time_constant_w=time_constant_w_FitzHughNagumo,
-                                                ),
-                         modulation=modulation,
-                         params=params,
-                         name=name,
-                         prefs=prefs)
+        super().__init__(
+            system=system,
+            default_variable=default_variable,
+            objective_mechanism=objective_mechanism,
+            monitor_for_control=monitor_for_control,
+            function=FitzHughNagumoIntegrator(
+                integration_method=integration_method,
+                initial_v=initial_v_FitzHughNagumo,
+                initial_w=initial_w_FitzHughNagumo,
+                time_step_size=time_step_size_FitzHughNagumo,
+                t_0=t_0_FitzHughNagumo,
+                a_v=a_v_FitzHughNagumo,
+                b_v=b_v_FitzHughNagumo,
+                c_v=c_v_FitzHughNagumo,
+                d_v=d_v_FitzHughNagumo,
+                e_v=e_v_FitzHughNagumo,
+                f_v=f_v_FitzHughNagumo,
+                time_constant_v=time_constant_v_FitzHughNagumo,
+                a_w=a_w_FitzHughNagumo,
+                b_w=b_w_FitzHughNagumo,
+                c_w=c_w_FitzHughNagumo,
+                threshold=threshold_FitzHughNagumo,
+                mode=mode_FitzHughNagumo,
+                uncorrelated_activity=uncorrelated_activity_FitzHughNagumo,
+                time_constant_w=time_constant_w_FitzHughNagumo,
+            ),
+            modulated_mechanisms=modulated_mechanisms,
+            modulation=modulation,
+            base_level_gain=base_level_gain,
+            scaling_factor_gain=scaling_factor_gain,
+            params=params,
+            name=name,
+            prefs=prefs
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS

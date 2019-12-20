@@ -176,9 +176,6 @@ class MaskedMappingProjection(MappingProjection):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
-    # necessary?
-    paramClassDefaults = MappingProjection.paramClassDefaults.copy()
-
     @tc.typecheck
     def __init__(self,
                  sender=None,
@@ -192,19 +189,18 @@ class MaskedMappingProjection(MappingProjection):
                  prefs: is_pref_set = None,
                  **kwargs):
 
-        params = self._assign_args_to_param_dicts(mask=mask,
-                                                  mask_operation=mask_operation,
-                                                  function_params={MATRIX: matrix},
-                                                  params=params)
-
-        super().__init__(sender=sender,
-                         receiver=receiver,
-                         matrix=matrix,
-                         function=function,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         **kwargs)
+        super().__init__(
+            sender=sender,
+            receiver=receiver,
+            mask=mask,
+            mask_operation=mask_operation,
+            matrix=matrix,
+            function=function,
+            params=params,
+            name=name,
+            prefs=prefs,
+            **kwargs
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate **mask** argument"""
@@ -218,7 +214,7 @@ class MaskedMappingProjection(MappingProjection):
             if isinstance(mask, (int, float)):
                 return
             mask_shape = np.array(mask).shape
-            matrix = get_matrix(self.user_params[FUNCTION_PARAMS][MATRIX],
+            matrix = get_matrix(self.defaults.matrix,
                                 len(self.sender.defaults.value), len(self.receiver.defaults.value))
             matrix_shape = matrix.shape
             if mask_shape != matrix_shape:

@@ -11,6 +11,7 @@
 
 import typecheck as tc
 
+from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import FunctionError, Function_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
@@ -84,7 +85,7 @@ class UserDefinedFunction(Function_Base):
       OutputPort that receives one more more `GatingProjections <GatingProjection>`.
 
       COMMENT:
-      # IMPLEMENT INTERFACE FOR OTHER ModulationParam TYPES (i.e., for ability to add new custom ones)
+      # IMPLEMENT INTERFACE FOR OTHER MODULATION TYPES (i.e., for ability to add new custom ones)
       COMMENT
 
     .. tip::
@@ -356,13 +357,12 @@ class UserDefinedFunction(Function_Base):
     componentName = USER_DEFINED_FUNCTION
     componentType = USER_DEFINED_FUNCTION_TYPE
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        PARAMETER_PORT_PARAMS: None,
-        CUSTOM_FUNCTION: None,
-        MULTIPLICATIVE_PARAM: None,
-        ADDITIVE_PARAM: None
-    })
+    class Parameters(Function_Base.Parameters):
+        custom_function = Parameter(
+            None,
+            stateful=False,
+            loggable=False,
+        )
 
     @tc.typecheck
     def __init__(self,
@@ -405,7 +405,7 @@ class UserDefinedFunction(Function_Base):
 
                 # Use definition from the function as default;
                 #    this allows UDF to assign a value for this instance (including a MODULATORY spec)
-                #    while assigning an actual value to paramClassDefaults (in _assign_args_to_params_dicts);
+                #    while assigning an actual value to current/defaults
                 if arg.default is _empty:
                     defaults[arg_name] = None
 
@@ -469,19 +469,23 @@ class UserDefinedFunction(Function_Base):
                                 format(self.__class__.__name__, cust_fct_name, default_variable,
                                        cust_fct_name, cust_fct_variable, cust_fct_name, owner_name, cust_fct_name))
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(custom_function=custom_function,
-                                                  params=params,
-                                                  defaults=defaults,
-                                                  **self.cust_fct_params
-                                                  )
+        super().__init__(
+            default_variable=default_variable,
+            function=custom_function,
+            custom_function=custom_function,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            **self.cust_fct_params
+        )
 
-        super().__init__(default_variable=default_variable,
-                         function=custom_function,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+    def _handle_illegal_kwargs(self, **kwargs):
+        super()._handle_illegal_kwargs(
+            **{k: kwargs[k] for k in kwargs if k not in self.cust_fct_params}
+        )
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        pass
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         super()._instantiate_attributes_before_function(function=function, context=context)
@@ -491,16 +495,7 @@ class UserDefinedFunction(Function_Base):
             p = Parameter(self.cust_fct_params[param_name], modulable=True)
             setattr(self.parameters, param_name, p)
 
-            try:
-                attr_name = '_{0}'.format(p.name)
-                attr_value = getattr(self, attr_name)
-                if attr_value is None:
-                    attr_value = p.default_value
-
-                p._set(attr_value, context, skip_history=True)
-                delattr(self, attr_name)
-            except AttributeError:
-                p._set(p.default_value, context, skip_history=True)
+            p._set(p.default_value, context, skip_history=True)
 
     def _function(self, variable, context=None, **kwargs):
 

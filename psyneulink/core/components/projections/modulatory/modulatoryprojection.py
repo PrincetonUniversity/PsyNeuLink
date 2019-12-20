@@ -46,6 +46,8 @@ that modulate different types of Components and their Ports:
     to the `InputPort` or `OutputPort` of a `ProcessingMechanism <ProcessingMechanism>` for use by the Port's
     `function <Port_Base.function>` in modulating its `value <Port_Base.value>`.
 
+See `ModulatoryMechanism <ModulatoryMechanism_Naming>` for conventions used for the names of Modulatory components.
+
 .. _ModulatoryProjection_Creation:
 
 Creating a ModulatoryProjection
