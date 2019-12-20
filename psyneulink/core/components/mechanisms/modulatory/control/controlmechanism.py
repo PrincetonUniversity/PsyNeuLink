@@ -1125,53 +1125,41 @@ class ControlMechanism(ModulatoryMechanism_Base):
             aliases=['control', 'control_signals'],
             constructor_argument='control'
         )
-        control_spec = Parameter(
-            None,
-            stateful=False,
-            loggable=False,
-            read_only=True,
-            user=False,
-            pnl_internal=True,
-            constructor_argument='control',
-        )
-        output_ports_spec = ParameterAlias(source='control_spec')
 
-        def _parse_control_spec(self, control_spec):
+        def _parse_output_ports(self, output_ports):
             def is_2tuple(o):
                 return isinstance(o, tuple) and len(o) == 2
 
-            if not isinstance(control_spec, list):
-                control_spec = [control_spec]
+            if not isinstance(output_ports, list):
+                output_ports = [output_ports]
 
-            for i in range(len(control_spec)):
+            for i in range(len(output_ports)):
                 # handle 2-item tuple
-                if is_2tuple(control_spec[i]):
+                if is_2tuple(output_ports[i]):
 
                     # this is an odd case that uses two names in the name entry
                     # unsure what it means
-                    if isinstance(control_spec[i][0], list):
+                    if isinstance(output_ports[i][0], list):
                         continue
 
-                    control_spec[i] = {
-                        NAME: control_spec[i][0],
-                        MECHANISM: control_spec[i][1]
+                    output_ports[i] = {
+                        NAME: output_ports[i][0],
+                        MECHANISM: output_ports[i][1]
                     }
                 # handle dict of form {PROJECTIONS: <2 item tuple>, <param1>: <value1>, ...}
                 elif (
-                    isinstance(control_spec[i], dict)
-                    and PROJECTIONS in control_spec[i]
-                    and is_2tuple(control_spec[i][PROJECTIONS])
+                    isinstance(output_ports[i], dict)
+                    and PROJECTIONS in output_ports[i]
+                    and is_2tuple(output_ports[i][PROJECTIONS])
                 ):
                     full_spec_dict = {
-                        NAME: control_spec[i][PROJECTIONS][0],
-                        MECHANISM: control_spec[i][PROJECTIONS][1],
-                        **{k: v for k, v in control_spec[i].items() if k != PROJECTIONS}
+                        NAME: output_ports[i][PROJECTIONS][0],
+                        MECHANISM: output_ports[i][PROJECTIONS][1],
+                        **{k: v for k, v in output_ports[i].items() if k != PROJECTIONS}
                     }
-                    control_spec[i] = full_spec_dict
+                    output_ports[i] = full_spec_dict
 
-            return control_spec
-
-        _parse_output_ports = _parse_control_spec
+            return output_ports
 
         def _validate_input_ports(self, input_ports):
             if input_ports is None:
@@ -1223,14 +1211,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         function = function or DefaultAllocationFunction
 
-        try:
-            control_spec = (
-                copy_iterable_with_shared(control, shared_types=Component)
-                if control is not None
-                else None
-            )
-        except TypeError:
-            control_spec = control
         self._sim_counts = {}
 
         super(ControlMechanism, self).__init__(
@@ -1249,7 +1229,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
             combine_costs=combine_costs,
             compute_net_outcome=compute_net_outcome,
             compute_reconfiguration_cost=compute_reconfiguration_cost,
-            control_spec=control_spec,
             prefs=prefs,
             **kwargs
         )

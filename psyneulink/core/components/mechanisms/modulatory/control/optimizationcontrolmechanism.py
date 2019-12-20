@@ -679,15 +679,6 @@ class OptimizationControlMechanism(ControlMechanism):
 
         feature_values = Parameter(_parse_feature_values_from_variable([defaultControlAllocation]), user=False, pnl_internal=True)
 
-        input_ports_spec = Parameter(
-            None,
-            stateful=False,
-            loggable=False,
-            read_only=True,
-            user=False,
-            pnl_internal=True,
-            constructor_argument='features'
-        )
         input_ports = Parameter(
             [{NAME: OUTCOME, PARAMS: {INTERNAL_ONLY: True}}],
             stateful=False,
