@@ -2,7 +2,6 @@ import numpy as np
 import os
 import psyneulink as pnl
 import pytest
-import random
 
 # stroop stimuli
 red = [1, 0]
@@ -48,7 +47,6 @@ def test_json_results_equivalence(
 
     # reset random seed
     seed = 0
-    random.seed(seed)
     np.random.seed(seed)
     pnl.core.globals.utilities.set_global_seed(seed)
 
