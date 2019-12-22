@@ -15,8 +15,8 @@ dist: bionic
 
 env:
   jobs:
-    - PYTHON=3.8.0
-    - PYTHON=3.7.5
+    - PYTHON=3.8.1
+    - PYTHON=3.7.6
     - PYTHON=3.6.8
   global:
     - PYTHONWARNINGS="ignore::DeprecationWarning"
@@ -25,7 +25,7 @@ env:
 
 jobs:
   exclude:
-    - env: PYTHON=3.8.0
+    - env: PYTHON=3.8.1
       os: osx
 
 # Cache downloaded(built) python packages
