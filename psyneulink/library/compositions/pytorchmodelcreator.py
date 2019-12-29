@@ -655,11 +655,11 @@ class PytorchModelCreator(torch.nn.Module):
                             num_trials,
                             override_debug=True)
 
-        ctx.inject_printf(builder,"\tnum_target_structs: %d \n\ttarget_struct_addr: %Ld\n",
+        ctx.inject_printf(builder,"\tnum_target_structs: %d \n\ttarget_struct_addr: 0x%Lx\n",
                             num_target_structs,
                             target_struct_ptr,
                             override_debug=True)
-        ctx.inject_printf(builder,"\tnum_input_structs: %d \n\tinput_struct_addr: %Ld \n",
+        ctx.inject_printf(builder,"\tnum_input_structs: %d \n\tinput_struct_addr: 0x%Lx \n",
                             num_input_structs,
                             input_struct_ptr,
                             override_debug=True)
