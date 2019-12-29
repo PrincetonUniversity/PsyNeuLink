@@ -249,26 +249,24 @@ class LLVMBuilderContext:
     def inject_printf(self, builder, fmt, *args, override_debug=False):
         if "print_values" not in debug_env and not override_debug:
             return
+
+        ir_module = builder.function.module
         fmt += "\0"
 
         int8 = ir.IntType(8)
-        stack_save = self.get_builtin("stacksave", [],
-                                      ir.FunctionType(int8.as_pointer(), []))
-        stack_restore = self.get_builtin("stackrestore", [],
-                                         ir.FunctionType(ir.VoidType(), [int8.as_pointer()]))
-
-        old_stack = builder.call(stack_save, [])
         fmt_data = bytearray(fmt.encode("utf8"))
+        fmt_ty = ir.ArrayType(int8, len(fmt_data))
+        global_fmt = ir.GlobalVariable(ir_module, fmt_ty,
+                                       name="printf_fmt_" + str(len(ir_module.globals)))
+        global_fmt.linkage = "internal"
+        global_fmt.global_constant = True
+        global_fmt.initializer = fmt_ty(fmt_data)
 
-        # Allocate array to ease initialization
-        fmt = builder.alloca(ir.ArrayType(int8, len(fmt_data)))
-        builder.store(fmt.type.pointee(fmt_data), fmt)
-        fmt_ptr = builder.gep(fmt, [self.int32_ty(0), self.int32_ty(0)])
+        fmt_ptr = builder.gep(global_fmt, [self.int32_ty(0), self.int32_ty(0)])
 
         printf = self.get_builtin("printf")
         builder.call(printf, [fmt_ptr] + list(args))
 
-        builder.call(stack_restore, [old_stack])
 
     def inject_printf_float_array(self, builder, array, prefix="", suffix="\n", override_debug=False):
         self.inject_printf(builder, prefix, override_debug=override_debug)
