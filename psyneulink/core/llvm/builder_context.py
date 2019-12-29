@@ -90,7 +90,7 @@ class LLVMBuilderContext:
     @classmethod
     def get_unique_name(cls, name: str):
         cls.__uniq_counter += 1
-        name = re.sub(r"[- ()\[\]]", "_", name)
+        name = re.sub(r"[^a-zA-Z0-9_]", "_", name)
         return name + '_' + str(cls.__uniq_counter)
 
     def get_builtin(self, name: str, args=[], function_type=None):
