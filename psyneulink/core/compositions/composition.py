@@ -4419,7 +4419,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # INSTANTIATE SHADOW_INPUT PROJECTIONS
         # Skip controller's first (OUTCOME) input_port (that receives the Projection from its objective_mechanism
-        input_cims=[self.input_CIM] + [comp.input_CIM for comp in self._get_nested_compositions()]
+        nested_cims = [comp.input_CIM for comp in self._get_nested_compositions()]
+        input_cims= [self.input_CIM] + nested_cims
         # For the rest of the controller's input_ports if they are marked as receiving SHADOW_INPUTS,
         #    instantiate the shadowing Projection to them from the sender to the shadowed InputPort
         for input_port in controller.input_ports[1:]:
@@ -4432,13 +4433,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                             receiver=controller)
                         shadow_proj._activate_for_compositions(self)
                     else:
-                        try:
-                            shadow_proj = MappingProjection(sender=proj.sender, receiver=input_port)
-                            shadow_proj._activate_for_compositions(self)
-                        except DuplicateProjectionError:
-                            pass
+                        if not sender.owner.composition == self:
+                            sender_input_cim = sender.owner
+                            proj_index = sender_input_cim.output_ports.index(sender)
+                            sender_corresponding_input_projection = sender_input_cim.input_ports[
+                                proj_index].path_afferents[0]
+                            input_projection_sender = sender_corresponding_input_projection.sender
+                            if input_projection_sender.owner == self.input_CIM:
+                                shadow_proj = MappingProjection(sender = input_projection_sender,receiver = input_port)
+                                shadow_proj._activate_for_compositions(self)
+                        else:
+                            try:
+                                shadow_proj = MappingProjection(sender=proj.sender, receiver=input_port)
+                                shadow_proj._activate_for_compositions(self)
+                            except DuplicateProjectionError:
+                                pass
             for proj in input_port.path_afferents:
-                proj._activate_for_compositions(self)
+                if not proj.sender.owner in nested_cims:
+                    proj._activate_for_compositions(self)
 
         # Check whether controller has input, and if not then disable
         if not (isinstance(self.controller.input_ports, ContentAddressableList)
@@ -4495,7 +4507,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if isinstance(node, Composition):
                 # Get control signal specifications for nested composition if it does not have its own controller
                 if node.controller:
-                    control_signal_specs.append(node._get_control_signals_for_composition())
+                    node_control_signals = node._get_control_signals_for_composition()
+                    if node_control_signals:
+                        control_signal_specs.append(node._get_control_signals_for_composition())
             elif isinstance(node, Mechanism):
                 control_signal_specs.extend(node._get_parameter_port_deferred_init_control_specs())
         return control_signal_specs
