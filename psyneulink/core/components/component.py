@@ -462,7 +462,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import BasePreference
 from psyneulink.core.globals.preferences.preferenceset import \
     PreferenceEntry, PreferenceLevel, PreferenceSet, _assign_prefs
 from psyneulink.core.globals.registry import register_category
-from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, copy_iterable_with_shared, get_deepcopy_with_shared, is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, unproxy_weakproxy, get_all_explicit_arguments
+from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, copy_iterable_with_shared, get_deepcopy_with_shared, is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, unproxy_weakproxy, get_all_explicit_arguments, call_with_pruned_args
 from psyneulink.core.scheduling.condition import Never
 
 __all__ = [
@@ -1003,7 +1003,12 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             k: v for k, v in parameter_values.items() if k in self.parameters.names() and getattr(self.parameters, k).function_parameter
         }
 
-        v = self._handle_default_variable(default_variable, size)
+        v = call_with_pruned_args(
+            self._handle_default_variable,
+            default_variable=default_variable,
+            size=size,
+            **parameter_values
+        )
         if v is None:
             default_variable = self.defaults.variable
         else:
@@ -1240,23 +1245,17 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 a default variable if possible
                 None otherwise
         """
-        if self._default_variable_handled:
-            return default_variable
-
         default_variable = self._parse_arg_variable(default_variable)
 
         if default_variable is None:
             default_variable = self._handle_size(size, default_variable)
 
             if default_variable is None or default_variable is NotImplemented:
-                self._default_variable_handled = True
                 return None
             else:
                 self._default_variable_flexibility = DefaultsFlexibility.RIGID
         else:
             self._default_variable_flexibility = DefaultsFlexibility.RIGID
-
-        self._default_variable_handled = True
 
         return convert_to_np_array(default_variable, dimension=1)
 
@@ -2931,18 +2930,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     @_default_variable_flexibility.setter
     def _default_variable_flexibility(self, value):
         self.__default_variable_flexibility = value
-
-    @property
-    def _default_variable_handled(self):
-        try:
-            return self.__default_variable_handled
-        except AttributeError:
-            self.__default_variable_handled = False
-            return self.__default_variable_handled
-
-    @_default_variable_handled.setter
-    def _default_variable_handled(self, value):
-        self.__default_variable_handled = value
 
     @classmethod
     def get_constructor_defaults(cls):
