@@ -1009,6 +1009,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         else:
             default_variable = v
             self.defaults.variable = default_variable
+            self.parameters.variable._user_specified = True
 
         self.parameters.has_initializers._set(False, context)
 
