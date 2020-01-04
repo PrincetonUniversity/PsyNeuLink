@@ -417,11 +417,6 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
             prefs=prefs,
         )
 
-    def _handle_default_variable(self, default_variable=None, size=None, input_ports=None, function=None, params=None):
-        if default_variable is not None:
-            self.parameters.variable._user_specified = True
-        return default_variable
-
     def _validate_variable(self, variable, context=None):
         """Insure that all elements are numeric and that list or array is at least 2d
         """
