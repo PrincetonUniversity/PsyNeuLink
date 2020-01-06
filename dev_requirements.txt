@@ -1,3 +1,7 @@
+ipykernel
+ipython
+jupyter
+psyneulink-sphinx-theme
 pytest
 pytest-benchmark
 pytest-cov
@@ -6,8 +10,4 @@ pytest-profiling
 pytest-pycodestyle
 pytest-pydocstyle
 pytest-xdist
-jupyter
-psyneulink-sphinx-theme
 sphinx
-ipykernel
-ipython
