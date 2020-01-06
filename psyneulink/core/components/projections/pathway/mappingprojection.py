@@ -154,6 +154,14 @@ the second item of the tuple must be a learning specification, which can be any 
   * a reference to the LearningProjection or LearningSignal class, or the keyword *LEARNING* or *LEARNING_PROJECTION* --
     a default set of `learning Components <LearningMechanism_Learning_Configurations>` is automatically created.
 
+Specifying Learning for AutodiffCompositions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, all MappingProjections in an `AutodiffComposition` are treated as trainable PyTorch Parameters whose
+matrices are updated during backwards passes through the network. Optionally, users can specify during
+instantiation that a projection should not be updated. To do so, set the `learnable` argument to False in the
+constructor of the projection.
+
 .. _MappingProjection_Deferred_Initialization:
 
 *Deferred Initialization*
@@ -411,7 +419,7 @@ class MappingProjection(PathwayProjection_Base):
 
         """
         function = Parameter(LinearMatrix, stateful=False, loggable=False)
-        matrix = Parameter(DEFAULT_MATRIX, modulable=True, getter=_mapping_projection_matrix_getter, setter=_mapping_projection_matrix_setter)
+        matrix = Parameter(DEFAULT_MATRIX, modulable=True, function_parameter=True, getter=_mapping_projection_matrix_getter, setter=_mapping_projection_matrix_setter)
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
@@ -429,10 +437,8 @@ class MappingProjection(PathwayProjection_Base):
         sender=[OUTPUT_PORT, PROCESS_INPUT_PORT, SYSTEM_INPUT_PORT]
         receiver=[INPUT_PORT]
 
-    paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({FUNCTION: LinearMatrix,
-                               PROJECTION_SENDER: OutputPort,
-                               })
+
+    projection_sender = OutputPort
 
     @tc.typecheck
     def __init__(self,
@@ -446,29 +452,30 @@ class MappingProjection(PathwayProjection_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  context=None,
+                 learnable=True,
                  **kwargs):
-        # Assign args to params and functionParams dicts
+
         # Assign matrix to function_params for use as matrix param of MappingProjection.function
         # (7/12/17 CW) this is a PATCH to allow the user to set matrix as an np.matrix... I still don't know why
         # it wasn't working.
         if isinstance(matrix, (np.matrix, list)):
             matrix = np.array(matrix)
 
-        params = self._assign_args_to_param_dicts(function_params={MATRIX: matrix},
-                                                  params=params)
-
         self.learning_mechanism = None
         self.has_learning_projection = None
-
+        self.learnable = bool(learnable)
+        if not self.learnable:
+            assert True
         # If sender or receiver has not been assigned, defer init to Port.instantiate_projection_to_state()
         if sender is None or receiver is None:
             self.initialization_status = ContextFlags.DEFERRED_INIT
 
-        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
+        # Validate sender (as variable) and params
         super().__init__(sender=sender,
                          receiver=receiver,
                          weight=weight,
                          exponent=exponent,
+                         matrix=matrix,
                          function=function,
                          params=params,
                          name=name,
@@ -534,16 +541,13 @@ class MappingProjection(PathwayProjection_Base):
         except TypeError:
             mapping_output_len = 1
 
-        # FIX: CONVERT ALL REFS TO paramsCurrent[FUNCTION_PARAMS][MATRIX] TO self.matrix (CHECK THEY'RE THE SAME)
-        # FIX: CONVERT ALL REFS TO matrix_spec TO self._matrix_spec
-        # FIX: CREATE @PROPERTY FOR self._learning_spec AND ASSIGN IN INIT??
-        # FIX: HOW DOES mapping_output_len RELATE TO receiver_len?/
+        matrix_spec = self.defaults.matrix
 
-        if self._matrix_spec is AUTO_ASSIGN_MATRIX:
+        if matrix_spec is AUTO_ASSIGN_MATRIX:
             if mapping_input_len == receiver_len:
-                self._matrix_spec = IDENTITY_MATRIX
+                matrix_spec = IDENTITY_MATRIX
             else:
-                self._matrix_spec = FULL_CONNECTIVITY_MATRIX
+                matrix_spec = FULL_CONNECTIVITY_MATRIX
 
         # Length of the output of the Projection doesn't match the length of the receiving InputPort
         #    so consider reshaping the matrix
@@ -560,7 +564,7 @@ class MappingProjection(PathwayProjection_Base):
                 states_string = "from \'{}\' OuputState of \'{}\' to \'{}\'".format(self.sender.name,
                                                                                     self.sender.owner.name,
                                                                                     self.receiver.owner.name)
-            if not isinstance(self._matrix_spec, str):
+            if not isinstance(matrix_spec, str):
                 # if all(string in self.name for string in {'from', 'to'}):
 
                 raise ProjectionError("Width ({}) of the {} of \'{}{}\'{} "
@@ -573,7 +577,7 @@ class MappingProjection(PathwayProjection_Base):
                                              self.receiver.name,
                                              receiver_len))
 
-            elif self._matrix_spec == IDENTITY_MATRIX or self._matrix_spec == HOLLOW_MATRIX:
+            elif matrix_spec == IDENTITY_MATRIX or matrix_spec == HOLLOW_MATRIX:
                 # Identity matrix is not reshapable
                 raise ProjectionError("Output length ({}) of \'{}{}\' from {} to Mechanism \'{}\'"
                                       " must equal length of it InputPort ({}) to use {}".
@@ -583,7 +587,7 @@ class MappingProjection(PathwayProjection_Base):
                                              self.sender.name,
                                              self.receiver.owner.name,
                                              receiver_len,
-                                             self._matrix_spec))
+                                             matrix_spec))
             else:
                 # Flag that matrix is being reshaped
                 self.reshapedWeightMatrix = True
@@ -597,7 +601,7 @@ class MappingProjection(PathwayProjection_Base):
                                  receiver_len,
                                  self.receiver.owner.name))
 
-                self.matrix = get_matrix(self._matrix_spec, mapping_input_len, receiver_len, context=context)
+                self.matrix = get_matrix(matrix_spec, mapping_input_len, receiver_len, context=context)
 
                 # Since matrix shape has changed, output of self.function may have changed, so update value
                 self._instantiate_value(context=context)
@@ -615,38 +619,6 @@ class MappingProjection(PathwayProjection_Base):
                 )
 
         return value
-
-    @property
-    def _matrix_spec(self):
-        """Returns matrix specification in self.paramsCurrent[FUNCTION_PARAMS][MATRIX]
-
-        Returns matrix param for MappingProjection, getting second item if it is
-         an unnamed (matrix, projection) tuple
-        """
-        return self._get_param_value_from_tuple(self.paramsCurrent[FUNCTION_PARAMS][MATRIX])
-
-    @_matrix_spec.setter
-    def _matrix_spec(self, value):
-        """Assign matrix specification for self.paramsCurrent[FUNCTION_PARAMS][MATRIX]
-
-        Assigns matrix param for MappingProjection, assigning second item if it is
-         a 2-item tuple or unnamed (matrix, projection) tuple
-        """
-
-        # Specification is a two-item tuple, so validate that 2nd item is:
-        # *LEARNING* or *LEARNING_PROJECTION* keyword, LearningProjection subclass, or instance of a LearningPojection
-        from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
-        if (isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX], tuple) and
-                    len(self.paramsCurrent[FUNCTION_PARAMS][MATRIX]) == 2 and
-                (self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1] in {LEARNING, LEARNING_PROJECTION}
-                 or isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], LearningProjection) or
-                     (inspect.isclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]) and
-                          issubclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], LearningProjection)))):
-            self.paramsCurrent[FUNCTION_PARAMS].__additem__(MATRIX,
-                                                            (value, self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]))
-
-        else:
-            self.paramsCurrent[FUNCTION_PARAMS].__additem__(MATRIX, value)
 
     @property
     def logPref(self):

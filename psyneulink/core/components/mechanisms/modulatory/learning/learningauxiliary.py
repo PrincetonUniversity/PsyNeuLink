@@ -109,7 +109,7 @@ COMMENT:
                                NOTE: can no longer be specified as function for LearningProjection
                     names = [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL]
                         NOTE:  this needs to be implemented for LearningMechanism as it is for ObjectiveMechanism
-                Check that, if learning function expects a derivative (in user_params), that the one specified
+                Check that, if learning function expects a derivative, that the one specified
                     is compatible with the function of the activation_output_mech
                 Assign:
                     NOTE:  should do these in their own Learning module function, called by LearningMechanaism directly
@@ -129,12 +129,12 @@ Class Reference
 
 """
 
+import types
 import warnings
 
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.functions.combinationfunctions import PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.learningfunctions import BackPropagation, Hebbian, Reinforcement, TDLearning
 from psyneulink.core.components.functions.transferfunctions import Linear
@@ -376,9 +376,9 @@ def _instantiate_learning_components(learning_projection, context=None):
     #      FOR PROCESS AND SYSTEM, RATHER THAN USING A LearningProjection
     # Get function used for learning and the learning_rate from their specification in the LearningProjection
     # FIXME: learning_function is deprecated
-    learning_function = learning_projection._learning_function
-    learning_rate = learning_projection._learning_rate
-    error_function = learning_projection._error_function
+    learning_function = learning_projection._init_args['learning_function']
+    learning_rate = learning_projection._init_args['learning_rate']
+    error_function = learning_projection._init_args['error_function']
 
     # HEBBIAN LEARNING FUNCTION
     if learning_function.componentName is HEBBIAN_FUNCTION:
@@ -404,7 +404,7 @@ def _instantiate_learning_components(learning_projection, context=None):
         # Force output activity and error arrays to be scalars
         error_signal = np.array([0])
         error_output = np.array([0])
-        learning_rate = learning_projection.learning_function.learning_rate
+        learning_rate = learning_function.learning_rate
 
         # FIX: GET AND PASS ANY PARAMS ASSIGNED IN LearningProjection.learning_function ARG:
         # FIX:     ACTIVATION FUNCTION AND/OR LEARNING RATE
@@ -418,7 +418,7 @@ def _instantiate_learning_components(learning_projection, context=None):
 
         error_output = np.zeros_like(lc.activation_mech_output.value)
         error_signal = np.zeros_like(lc.activation_mech_output.value)
-        learning_rate = learning_projection.learning_function.learning_rate
+        learning_rate = learning_function.learning_rate
 
         learning_function = TDLearning(default_variable=[activation_input,
                                                          activation_output,
@@ -668,7 +668,6 @@ def _instantiate_error_signal_projection(sender, receiver):
                              receiver=receiver,
                              matrix=IDENTITY_MATRIX,
                              name=sender.owner.name + ' to ' + ERROR_SIGNAL)
-
 
 @tc.typecheck
 def _get_learning_mechanisms(mech:Mechanism, composition=None):
@@ -971,7 +970,7 @@ class LearningComponents(object):
 
     @activation_derivative.setter
     def activation_derivative(self, assignment):
-        if isinstance(assignment, (function_type, method_type)):
+        if isinstance(assignment, (types.FunctionType, types.MethodType)):
             self._activation_derivative = assignment
         else:
             raise LearningAuxiliaryError("PROGRAM ERROR: illegal assignment to activation_derivative; "
@@ -987,7 +986,7 @@ class LearningComponents(object):
                 return None
             # If MONITOR_FOR_LEARNING specifies an outputPort, use that
             try:
-                sample_port_Name = self.activation_output_mech.paramsCurrent[MONITOR_FOR_LEARNING]
+                sample_port_Name = self.activation_output_mech.monitor_for_learning
                 self.activation_mech_output = self.activation_output_mech.output_ports[sample_port_Name]
                 if not isinstance(self.activation_mech_output, OutputPort):
                     raise LearningAuxiliaryError("The specification of the MONITOR_FOR_LEARNING parameter ({}) "
@@ -1127,7 +1126,7 @@ class LearningComponents(object):
 
     @error_derivative.setter
     def error_derivative(self, assignment):
-        if isinstance(assignment, (function_type, method_type)):
+        if isinstance(assignment, (types.FunctionType, types.MethodType)):
             self._error_derivative = assignment
         else:
             raise LearningAuxiliaryError("PROGRAM ERROR: illegal assignment to error_derivative; "

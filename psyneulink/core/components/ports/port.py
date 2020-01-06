@@ -246,25 +246,25 @@ The following types of Projections can be specified for each type of Port:
         | *Port Type*      | *PROJECTIONS* specification   | *Assigned to Attribute*             |
         +==================+===============================+=====================================+
         |`InputPort`       | `PathwayProjection(s)         | `path_afferents                     |
-        |                  | <PathwayProjection>`          | <tPort.path_afferents>`             |
+        |                  | <PathwayProjection>`          | <Port_Base.path_afferents>`         |
         |                  |                               |                                     |
         |                  | `ControlProjection(s)         | `mod_afferents                      |
-        |                  | <ControlProjection>`          | <Port.mod_afferents>`               |
+        |                  | <ControlProjection>`          | <Port_Base.mod_afferents>`          |
         |                  |                               |                                     |
         |                  | `GatingProjection(s)          | `mod_afferents                      |
-        |                  | <GatingProjection>`           | <Port.mod_afferents>`               |
+        |                  | <GatingProjection>`           | <Port_Base.mod_afferents>`          |
         +------------------+-------------------------------+-------------------------------------+
         |`ParameterPort`   | `ControlProjection(s)         | `mod_afferents                      |
         |                  | <ControlProjection>`          | <ParameterPort.mod_afferents>`      |
         +------------------+-------------------------------+-------------------------------------+
         |`OutputPort`      | `PathwayProjection(s)         | `efferents                          |
-        |                  | <PathwayProjection>`          | <Port.efferents>`                   |
+        |                  | <PathwayProjection>`          | <Port_Base.efferents>`              |
         |                  |                               |                                     |
         |                  | `ControlProjection(s)         | `mod_afferents                      |
-        |                  | <ControlProjection>`          | <OutputPort.mod_afferents>`         |
+        |                  | <ControlProjection>`          | <Port_Base.mod_afferents>`          |
         |                  |                               |                                     |
         |                  | `GatingProjection(s)          | `mod_afferents                      |
-        |                  | <GatingProjection>`           | <OutputPort.mod_afferents>`         |
+        |                  | <GatingProjection>`           | <Port_Base.mod_afferents>`          |
         +------------------+-------------------------------+-------------------------------------+
         |`ModulatorySignal`|  `ModulatoryProjection(s)     | `efferents                          |
         |                  |  <ModulatoryProjection>`      | <ModulatorySignal.efferents>`       |
@@ -382,8 +382,8 @@ assigns one of its parameters as its *ADDITIVE_PARAM* and another as its *MULTIP
 `modulation <ModulatorySignal.modulation>` attribute of a ModulatorySignal determines which of these to modify when the
 Port uses it `function <Port_Base.function>` to calculate its `value  <Port_Base.value>`.  However, the
 ModulatorySignal can also be configured to override the Port's `value <Port_Base.value>` (i.e., assign it directly),
-or to disable modulation, using one of the values of `ModulationParam` for its `modulation
-<ModulatorySignal.modulation>` attribute (see `ModulatorySignal_Modulation` for a more detailed discussion).
+or to disable modulation, using either the keyword *OVERRIDE* or *DSIABLE*, respectively, to specify the value for its
+`modulation <ModulatorySignal.modulation>` attribute (see `ModulatorySignal_Modulation` for a more detailed discussion).
 
 .. _Port_Execution:
 
@@ -767,6 +767,7 @@ import abc
 import inspect
 import itertools
 import numbers
+import types
 import warnings
 
 from collections.abc import Iterable
@@ -776,7 +777,7 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import \
-    Component, ComponentError, DefaultsFlexibility, component_keywords, function_type, method_type
+    Component, ComponentError, DefaultsFlexibility, component_keywords
 from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, LinearCombination
 from psyneulink.core.components.functions.function import Function, get_param_value_for_keyword, is_function_type
 from psyneulink.core.components.functions.transferfunctions import Linear
@@ -998,18 +999,20 @@ class Port_Base(Port):
                     :read only: True
         """
         function = Parameter(Linear, stateful=False, loggable=False)
+        projections = Parameter(
+            None,
+            structural=True,
+            stateful=False,
+            loggable=False
+        )
         require_projection_in_composition = Parameter(True, stateful=False, loggable=False, read_only=True, pnl_internal=True)
+        projections = None
 
     portAttributes = {FUNCTION, FUNCTION_PARAMS, PROJECTIONS}
 
     registry = PortRegistry
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
-
-    requiredParamClassDefaultTypes = Component.requiredParamClassDefaultTypes.copy()
-    requiredParamClassDefaultTypes.update({PROJECTION_TYPE: [str, Projection]})   # Default projection type
-    paramClassDefaults = Component.paramClassDefaults.copy()
-    paramClassDefaults.update({PORT_TYPE: None})
 
     @tc.typecheck
     @abc.abstractmethod
@@ -1023,7 +1026,7 @@ class Port_Base(Port):
                  name=None,
                  prefs=None,
                  context=None,
-                 **kargs):
+                 **kwargs):
         """Initialize subclass that computes and represents the value of a particular Port of a Mechanism
 
         This is used by subclasses to implement the InputPort(s), OutputPort(s), and ParameterPort(s) of a Mechanism.
@@ -1049,7 +1052,7 @@ class Port_Base(Port):
             - name (str): string with name of Port (default: name of owner + suffix + instanceIndex)
             - prefs (dict): dictionary containing system preferences (default: Prefs.DEFAULTS)
             - context (str)
-            - **kargs (dict): dictionary of arguments using the following keywords for each of the above kargs:
+            - **kwargs (dict): dictionary of arguments using the following keywords for each of the above kwargs:
                 # port_params is not handled here like the others are
                 + port_params = params
                 + Port_Name = name
@@ -1059,17 +1062,17 @@ class Port_Base(Port):
                     * these are used for dictionary specification of a Port in param declarations
                     * they take precedence over arguments specified directly in the call to __init__()
         """
-        if kargs:
+        if kwargs:
             try:
-                name = kargs[Port_Name]
+                name = kwargs[Port_Name]
             except (KeyError, NameError):
                 pass
             try:
-                prefs = kargs[PORT_PREFS]
+                prefs = kwargs[PORT_PREFS]
             except (KeyError, NameError):
                 pass
             try:
-                context = kargs[PORT_CONTEXT]
+                context = kwargs[PORT_CONTEXT]
             except (KeyError, NameError):
                 pass
 
@@ -1077,10 +1080,6 @@ class Port_Base(Port):
         if not hasattr(self, '_execute'):
             raise PortError("{}, as a subclass of {}, must implement an _execute() method".
                              format(self.__class__.__name__, PORT))
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(projections=projections,
-                                                  params=params)
 
         self.owner = owner
 
@@ -1098,12 +1097,15 @@ class Port_Base(Port):
                           context=context)
 
         # VALIDATE VARIABLE, PARAM_SPECS, AND INSTANTIATE self.function
-        super(Port_Base, self).__init__(default_variable=variable,
-                                         size=size,
-                                         function=function,
-                                         param_defaults=params,
-                                         name=name,
-                                         prefs=prefs
+        super(Port_Base, self).__init__(
+            default_variable=variable,
+            size=size,
+            function=function,
+            projections=projections,
+            param_defaults=params,
+            name=name,
+            prefs=prefs,
+            **kwargs
         )
 
         self.path_afferents = []
@@ -1111,8 +1113,8 @@ class Port_Base(Port):
 
         # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
         # INSTANTIATE PROJECTIONS SPECIFIED IN projections ARG OR params[PROJECTIONS:<>]
-        if PROJECTIONS in self.paramsCurrent and self.paramsCurrent[PROJECTIONS]:
-            self._instantiate_projections(self.paramsCurrent[PROJECTIONS], context=context)
+        if self.projections is not None:
+            self._instantiate_projections(self.projections, context=context)
         else:
             # No projections specified, so none will be created here
             # IMPLEMENTATION NOTE:  This is where a default projection would be implemented
@@ -1123,6 +1125,11 @@ class Port_Base(Port):
 
         if context.source == ContextFlags.COMMAND_LINE:
             owner.add_ports([self])
+
+    def _initialize_parameters(self, context=None, **param_defaults):
+        super()._initialize_parameters(context=context, **param_defaults)
+        # instantiate auxiliary Functions
+        self._instantiate_parameter_classes(context)
 
     def _handle_size(self, size, variable):
         """Overwrites the parent method in Component.py, because the variable of a Port
@@ -1212,7 +1219,7 @@ class Port_Base(Port):
 
         if PROJECTIONS in request_set and request_set[PROJECTIONS] is not None:
             # if projection specification is an object or class reference, needs to be wrapped in a list
-            #    to be consistent with paramClassDefaults and for consistency of treatment below
+            #    to be consistent with defaults and for consistency of treatment below
             projections = request_set[PROJECTIONS]
             if not isinstance(projections, list):
                 projections = [projections]
@@ -1309,7 +1316,7 @@ class Port_Base(Port):
             - assign sender
             - if deferred_init and sender is instantiated, complete initialization
             - assign to path_afferents or mod_afferents
-            - if specs fail, instantiates a default Projection of type specified by self.params[PROJECTION_TYPE]
+            - if specs fail, instantiates a default Projection of type specified by self.projection_type
 
         Notes:
             Calls _parse_connection_specs() to parse projection_list into a list of ProjectionTuples;
@@ -1326,7 +1333,7 @@ class Port_Base(Port):
         from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.core.components.projections.projection import _parse_connection_specs
 
-        default_projection_type = self.paramClassDefaults[PROJECTION_TYPE]
+        default_projection_type = self.projection_type
 
         # If specification is not a list, wrap it in one for consistency of treatment below
         # (since specification can be a list, so easier to treat any as a list)
@@ -1568,8 +1575,8 @@ class Port_Base(Port):
         from psyneulink.core.components.projections.projection import ProjectionTuple, _parse_connection_specs
 
         # FIX: 10/3/17 THIS NEEDS TO BE MADE SPECIFIC TO EFFERENT PROJECTIONS (I.E., FOR WHICH IT CAN BE A SENDER)
-        # default_projection_type = ProjectionRegistry[self.paramClassDefaults[PROJECTION_TYPE]].subclass
-        default_projection_type = self.paramClassDefaults[PROJECTION_TYPE]
+        # default_projection_type = ProjectionRegistry[self.projection_type].subclass
+        default_projection_type = self.projection_type
 
         # projection_object = None # flags whether projection object has been instantiated; doesn't store object
         # projection_type = None   # stores type of projection to instantiate
@@ -2159,14 +2166,6 @@ class Port_Base(Port):
         self._owner = assignment
 
     @property
-    def projections(self):
-        return self._projections
-
-    @projections.setter
-    def projections(self, assignment):
-        self._projections = assignment
-
-    @property
     def all_afferents(self):
         return self.path_afferents + self.mod_afferents
 
@@ -2314,7 +2313,7 @@ def _instantiate_port_list(owner,
 
     Arguments:
     - port_type (class): Port class to be instantiated
-    - port_list (list): List of Port specifications (generally from owner.paramsCurrent[kw<Port>]),
+    - port_list (list): List of Port specifications (generally from owner.kw<port>),
                              each item of which must be a:
                                  string (used as name)
                                  number (used as constraint value)
@@ -2346,7 +2345,7 @@ def _instantiate_port_list(owner,
         # the key for each entry the name of the Port if provided,
         #     otherwise, use MECHANISM<port_type>Ports-n (incrementing n for each additional entry)
         # the Port value for each entry to the corresponding item of the Mechanism's port_type Port's value
-        # the dict to both self.<port_type>Ports and paramsCurrent[MECHANISM<port_type>Ports]
+        # the dict to self.<port_type>Ports
         # self.<port_type>Port to self.<port_type>Ports[0] (the first entry of the dict)
     Notes:
         * if there is only one Port, but the value of the Mechanism's port_type has more than one item:
@@ -2425,10 +2424,15 @@ def _instantiate_port_list(owner,
         for proj in port.path_afferents:
             owner.aux_components.append(proj)
 
+        # KDM 12/3/19: this depends on name setting for InputPorts that
+        # ensures there are no duplicates. If duplicates exist, ports
+        # will be overwritten
+        # be careful of:
+        #   test_rumelhart_semantic_network_sequential
+        #   test_mix_and_match_input_sources
         ports[port.name] = port
 
     return ports
-
 
 @tc.typecheck
 def _instantiate_port(port_type:_is_port_class,           # Port's type
@@ -2698,10 +2702,11 @@ def _parse_port_spec(port_type=None,
     Return either Port object or Port specification dictionary
     """
     from psyneulink.core.components.projections.projection \
-        import _is_projection_spec, _parse_projection_spec, _parse_connection_specs, ProjectionTuple
+        import _is_projection_spec, _parse_projection_spec, _parse_connection_specs, ProjectionTuple, ProjectionError
     from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
     from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
     from psyneulink.core.components.projections.projection import _get_projection_value_shape
+    from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 
 
     # Get all of the standard arguments passed from _instantiate_port (i.e., those other than port_spec) into a dict
@@ -2725,7 +2730,7 @@ def _parse_port_spec(port_type=None,
                 projection = port_spec[PORT_SPEC_ARG][PROJECTIONS][0]
                 port = projection.sender
                 if port.initialization_status == ContextFlags.DEFERRED_INIT:
-                    port._init_args[PARAMS][PROJECTIONS]=projection
+                    port._init_args[PROJECTIONS] = projection
                 else:
                     port._instantiate_projections_to_port(projections=projection, context=context)
                 return port
@@ -2747,7 +2752,7 @@ def _parse_port_spec(port_type=None,
                 spec = port_spec[PORT_SPEC_ARG]
                 port_tuple = [spec[PORT_SPEC_ARG], spec[WEIGHT], spec[EXPONENT]]
                 try:
-                    port_tuple.append(spec[PROJECTION])
+                    port_tuple.append(spec[PROJECTIONS])
                 except KeyError:
                     pass
                 port_specification = tuple(port_tuple)
@@ -2796,7 +2801,7 @@ def _parse_port_spec(port_type=None,
     #    and validate that it is consistent with any standard_args specified in call to _instantiate_port
 
     # function; try to resolve to a value
-    if isinstance(port_specification, function_type):
+    if isinstance(port_specification, types.FunctionType):
         port_specification = port_specification()
 
     # ModulatorySpecification of some kind
@@ -2899,8 +2904,8 @@ def _parse_port_spec(port_type=None,
             else:
                 try:
                     sender = projection_spec._init_args[SENDER]
-                    matrix = projection_spec._init_args[PARAMS][FUNCTION_PARAMS][MATRIX]
-                except KeyError:
+                    matrix = projection_spec._init_args[MATRIX]
+                except (KeyError, TypeError):
                     pass
         # Projection specification dict:
         else:
@@ -2950,7 +2955,7 @@ def _parse_port_spec(port_type=None,
             port_dict[NAME] = port_specification
 
     # # function; try to resolve to a value
-    # elif isinstance(Port_Specification, function_type):
+    # elif isinstance(Port_Specification, types.FunctionType):
     #     port_dict[REFERENCE_VALUE] = get_param_value_for_function(owner, Port_Specification)
     #     if port_dict[REFERENCE_VALUE] is None:
     #         raise PortError("PROGRAM ERROR: port_spec for {} of {} is a function ({}), but failed to return a value".
@@ -3077,8 +3082,19 @@ def _parse_port_spec(port_type=None,
                 if len(unrecognized_keys)==1:
                     key = unrecognized_keys[0]
                     port_dict[NAME] = key
-                    params[PROJECTIONS] = port_specific_args[key]
-                    del port_specific_args[key]
+                    # KDM 12/24/19: in some cases, params[PROJECTIONS] is
+                    # already parsed into a ProjectionTuple, and this assignment
+                    # will replace it with an unparsed ndarray which causes a
+                    # ProjectionError in _parse_connection_specs
+                    if (
+                        PROJECTIONS not in params
+                        or not any([
+                            isinstance(x, ProjectionTuple)
+                            for x in params[PROJECTIONS]
+                        ])
+                    ):
+                        params[PROJECTIONS] = port_specific_args[key]
+                        del port_specific_args[key]
                 else:
                     raise PortError("There is more than one entry of the {} "
                                      "specification dictionary for {} ({}) "
@@ -3090,8 +3106,26 @@ def _parse_port_spec(port_type=None,
                                             ", ".join([s for s in list(port_specific_args.keys())])))
 
             for param in port_type.portAttributes:
+                # KDM 12/24/19: below is meant to skip overwriting an already
+                # parsed ProjectionTuple just as in the section above
                 if param in port_specific_args:
-                    params[param] = port_specific_args[param]
+                    try:
+                        param_value_is_tuple = any([
+                            isinstance(x, ProjectionTuple)
+                            for x in params[param]
+                        ])
+                    except TypeError:
+                        param_value_is_tuple = isinstance(
+                            params[param],
+                            ProjectionTuple
+                        )
+                    except KeyError:
+                        # param may not be in port_specific_args, and in this
+                        # case use the default/previous behavior
+                        param_value_is_tuple = False
+
+                    if param not in params or not param_value_is_tuple:
+                        params[param] = port_specific_args[param]
 
             if PROJECTIONS in params and params[PROJECTIONS] is not None:
                 #       (E.G., WEIGHTS AND EXPONENTS FOR InputPort AND INDEX FOR OutputPort)
@@ -3132,7 +3166,7 @@ def _parse_port_spec(port_type=None,
     try:
         spec_function = port_dict[PARAMS][FUNCTION]
         # if isinstance(spec_function, Function):
-        if isinstance(spec_function, (Function, function_type, method_type)):
+        if isinstance(spec_function, (Function, types.FunctionType, types.MethodType)):
             spec_function_value = port_type._get_port_function_value(owner, spec_function, port_dict[VARIABLE])
         elif inspect.isclass(spec_function) and issubclass(spec_function, Function):
             try:

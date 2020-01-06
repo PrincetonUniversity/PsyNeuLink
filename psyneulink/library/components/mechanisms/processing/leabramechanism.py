@@ -42,7 +42,7 @@ A LeabraMechanism can be created in two ways. Users can specify the size of the 
 of the output layer (**output_size**), number of hidden layers (**hidden_layers**), and sizes of the hidden layers
 (**hidden_sizes**). In this case, the LeabraMechanism will initialize the connections as uniform random values between
 0.55 and 0.95. Alternatively, users can provide a leabra Network object from the leabra package as an argument
-(**leabra_net**), in which case the **leabra_net** will be used as the network wrapped by the LeabraMechanism.
+(**network**), in which case the **network** will be used as the network wrapped by the LeabraMechanism.
 This option requires users to be familiar with the leabra package, but allows more flexibility in specifying parameters.
 In the former method of creating a LeabraMechanism, the **training_flag** argument specifies whether the network should
 be learning (updating its weights) or not.
@@ -198,8 +198,6 @@ class LeabraFunction(Function_Base):
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     class Parameters(Function_Base.Parameters):
         """
             Attributes
@@ -236,20 +234,18 @@ class LeabraFunction(Function_Base):
         if network is None:
             raise LeabraError('network was None. Cannot create function for Leabra Mechanism if network is not specified.')
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(network=network,
-                                                  params=params)
-
         if default_variable is None:
-            input_size = len(self.network.layers[0].units)
-            output_size = len(self.network.layers[-1].units)
+            input_size = len(network.layers[0].units)
+            output_size = len(network.layers[-1].units)
             default_variable = [np.zeros(input_size), np.zeros(output_size)]
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            network=network,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_variable(self, variable, context=None):
         if not isinstance(variable, (list, np.ndarray, numbers.Number)):
@@ -329,7 +325,9 @@ def _training_flag_setter(value, self=None, owning_component=None, context=None)
         try:
             set_training(owning_component.parameters.network._get(context), value)
         except AttributeError:
-            return None
+            # do not return None here, or training_flag will always be
+            # set to None
+            pass
 
     return value
 
@@ -337,7 +335,7 @@ def _training_flag_setter(value, self=None, owning_component=None, context=None)
 class LeabraMechanism(ProcessingMechanism_Base):
     """
     LeabraMechanism(                \
-    leabra_net=None,                \
+    network=None,                   \
     input_size=1,                   \
     output_size=1,                  \
     hidden_layers=0,                \
@@ -353,8 +351,8 @@ class LeabraMechanism(ProcessingMechanism_Base):
     Arguments
     ---------
 
-    leabra_net : Optional[leabra.Network]
-        a network object from the leabra package. If specified, the LeabraMechanism's network becomes **leabra_net**,
+    network : Optional[leabra.Network]
+        a network object from the leabra package. If specified, the LeabraMechanism's network becomes **network**,
         and the other arguments that specify the network are ignored (**input_size**, **output_size**,
         **hidden_layers**, **hidden_sizes**).
 
@@ -377,9 +375,9 @@ class LeabraMechanism(ProcessingMechanism_Base):
         a boolean specifying whether the leabra network should be learning. If True, the leabra network will adjust
         its weights using the "leabra" algorithm, based on the training pattern (which is read from its second output
         state). The `training_flag` attribute can be changed after initialization, causing the leabra network to
-        start/stop learning. If None, `training_flag` will default to False if **leabra_net** argument is not provided.
-        If **leabra_net** argument is provided and `training_flag` is None, then the existing learning rules of the
-        **leabra_net** will be preserved.
+        start/stop learning. If None, `training_flag` will default to False if **network** argument is not provided.
+        If **network** argument is provided and `training_flag` is None, then the existing learning rules of the
+        **network** will be preserved.
 
     quarter_size : int : default 50
         an integer specifying how many times the Leabra network cycles each time it is run. Lower values of
@@ -438,10 +436,6 @@ class LeabraMechanism(ProcessingMechanism_Base):
     }
 
     # LeabraMechanism parameter and control signal assignments):
-    paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({FUNCTION: LeabraFunction,
-                               INPUT_PORTS: input_port_names,
-                               OUTPUT_PORTS: output_port_name})
 
     class Parameters(ProcessingMechanism_Base.Parameters):
         """
@@ -501,7 +495,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
         training_flag = Parameter(None, setter=_training_flag_setter)
 
     def __init__(self,
-                 leabra_net=None,
+                 network=None,
                  input_size=1,
                  output_size=1,
                  hidden_layers=0,
@@ -515,38 +509,35 @@ class LeabraMechanism(ProcessingMechanism_Base):
             raise LeabraError('leabra python module is not installed. Please install it from '
                               'https://github.com/benureau/leabra')
 
-        if leabra_net is not None:
-            leabra_network = leabra_net
-            input_size = len(leabra_network.layers[0].units)
-            output_size = len(leabra_network.layers[-1].units)
-            hidden_layers = len(leabra_network.layers) - 2
-            hidden_sizes = list(map(lambda x: len(x.units), leabra_network.layers))[1:-2]
-            quarter_size = leabra_network.spec.quarter_size
-            training_flag = infer_training_flag_from_network(leabra_network)
+        if network is not None:
+            input_size = len(network.layers[0].units)
+            output_size = len(network.layers[-1].units)
+            hidden_layers = len(network.layers) - 2
+            hidden_sizes = list(map(lambda x: len(x.units), network.layers))[1:-2]
+            quarter_size = network.spec.quarter_size
+            training_flag = infer_training_flag_from_network(network)
         else:
             if hidden_sizes is None:
                 hidden_sizes = input_size
             if training_flag is None:
                 training_flag = False
-            leabra_network = build_leabra_network(input_size, output_size, hidden_layers, hidden_sizes,
+            network = build_leabra_network(input_size, output_size, hidden_layers, hidden_sizes,
                                                   training_flag, quarter_size)
 
-        function = LeabraFunction(network=leabra_network)
-
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  input_size=input_size,
-                                                  output_size=output_size,
-                                                  hidden_layers=hidden_layers,
-                                                  hidden_sizes=hidden_sizes,
-                                                  training_flag=training_flag,
-                                                  quarter_size=quarter_size,
-                                                  params=params)
-
-        super().__init__(size=[input_size, output_size],
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            function=LeabraFunction(network=network),
+            size=[input_size, output_size],
+            network=network,
+            input_size=input_size,
+            output_size=output_size,
+            hidden_layers=hidden_layers,
+            hidden_sizes=hidden_sizes,
+            quarter_size=quarter_size,
+            training_flag=training_flag,
+            params=params,
+            name=name,
+            prefs=prefs,
+        )
 
     def _execute(
         self,

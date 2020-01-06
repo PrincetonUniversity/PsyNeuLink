@@ -207,11 +207,11 @@ class FuncExecution(CUDAExecution):
 class MechExecution(FuncExecution):
 
     def execute(self, variable):
-        # convert to 3d. we always assume that:
-        # a) the input is vector of input ports
-        # b) input ports take vector of projection outputs
-        # c) projection output is a vector (even 1 element vector)
-        new_var = np.asfarray([np.atleast_2d(x) for x in variable])
+        # Convert to 3d. We always assume that:
+        #   a) the input is vector of input ports
+        #   b) input ports take vector of projection outputs
+        #   c) projection output is a vector (even 1 element vector)
+        new_var = np.asfarray([np.atleast_2d(x) for x in np.atleast_1d(variable)])
         return super().execute(new_var)
 
 

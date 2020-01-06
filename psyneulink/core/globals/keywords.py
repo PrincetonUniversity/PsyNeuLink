@@ -66,7 +66,7 @@ __all__ = [
     'LEARNING_PROJECTION_PARAMS', 'LEARNING_RATE', 'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS', 'LEARNING_SIGNALS',
     'LESS_THAN', 'LESS_THAN_OR_EQUAL', 'LINEAR', 'LINEAR_COMBINATION_FUNCTION', 'LINEAR_FUNCTION',
     'LINEAR_MATRIX_FUNCTION', 'LOG_ENTRIES', 'LOGISTIC_FUNCTION', 'LOW', 'LVOC_CONTROL_MECHANISM', 'L0', 'L1',
-    'MAKE_DEFAULT_GATING_MECHANISM', 'MAPPING_PROJECTION', 'MAPPING_PROJECTION_PARAMS', 'MASKED_MAPPING_PROJECTION',
+    'MAPPING_PROJECTION', 'MAPPING_PROJECTION_PARAMS', 'MASKED_MAPPING_PROJECTION',
     'MATRIX', 'MATRIX_KEYWORD_NAMES', 'MATRIX_KEYWORD_SET', 'MATRIX_KEYWORD_VALUES', 'MATRIX_KEYWORDS','MatrixKeywords',
     'MAX_ABS_DIFF', 'MAX_ABS_INDICATOR', 'MAX_ONE_HOT', 'MAX_ABS_ONE_HOT', 'MAX_ABS_VAL',
     'MAX_EXECUTIONS_BEFORE_FINISHED', 'MAX_INDICATOR', 'MAX_VAL', 'MAYBE', 'MEAN',
@@ -87,8 +87,8 @@ __all__ = [
     'OUTPUT_PORT', 'OUTPUT_PORT_PARAMS', 'output_port_spec_to_parameter_name', 'OUTPUT_PORTS', 'OUTPUT_TYPE',
     'OVERRIDE', 'OVERRIDE_PARAM', 'OVERWRITE',
     'OWNER', 'OWNER_EXECUTION_COUNT', 'OWNER_EXECUTION_TIME', 'OWNER_VALUE', 'OWNER_VARIABLE',
-    'PARAM_CLASS_DEFAULTS', 'PARAM_INSTANCE_DEFAULTS', 'PARAMETER_PORT', 'PARAMETER_PORT_PARAMS',
-    'PARAMETER_PORTS', 'PARAMS', 'PARAMS_DICT', 'PARAMS_CURRENT', 'PATHWAY', 'PATHWAY_PROJECTION', 'PEARSON',
+    'PARAMETER_PORT', 'PARAMETER_PORT_PARAMS',
+    'PARAMETER_PORTS', 'PARAMS', 'PARAMS_DICT', 'PATHWAY', 'PATHWAY_PROJECTION', 'PEARSON',
     'PREDICTION_MECHANISM', 'PREDICTION_MECHANISMS', 'PREDICTION_MECHANISM_OUTPUT', 'PREDICTION_MECHANISM_PARAMS',
     'PREDICTION_MECHANISM_TYPE', 'PREFS_ARG', 'PREF_BASE_VALUE', 'PREF_CURRENT_VALUE', 'PREFERENCE_SET',
     'PREFERENCE_SET_NAME', 'PREF_LEVEL', 'PREFS', 'PREFS_OWNER', 'PREVIOUS_VALUE', 'PRIMARY', 'PROB', 'PROB_INDICATOR',
@@ -108,7 +108,7 @@ __all__ = [
     'TARGET', 'TARGET_MECHANISM', 'TARGET_LABELS_DICT', 'TERMINAL', 'TERMINATION_MEASURE', 'TERMINATION_THRESHOLD',
     'TERMINATION_COMPARISION_OP', 'THRESHOLD', 'TIME', 'TIME_STEP_SIZE', 'TIME_STEPS_DIM', 'TRAINING_SET',
     'TRANSFER_FUNCTION_TYPE', 'TRANSFER_MECHANISM', 'TRANSFER_WITH_COSTS_FUNCTION', 'TRIAL', 'TRIALS_DIM',
-    'UNCHANGED', 'UNIFORM_DIST_FUNCTION', 'USER_DEFINED_FUNCTION', 'USER_DEFINED_FUNCTION_TYPE', 'USER_PARAMS',
+    'UNCHANGED', 'UNIFORM_DIST_FUNCTION', 'USER_DEFINED_FUNCTION', 'USER_DEFINED_FUNCTION_TYPE',
     'VALUES', 'VALIDATE', 'VALIDATION', 'VALUE', 'VALUE_ASSIGNMENT', 'VALUE_FUNCTION', 'VARIABLE', 'VARIANCE',
     'VECTOR', 'WALD_DIST_FUNCTION', 'WEIGHT', 'WEIGHTS', 'X_0',
 ]
@@ -507,16 +507,9 @@ COMPONENT_INIT = 'Component.__init__'
 DEFERRED_INITIALIZATION = 'Deferred Init'
 DEFERRED_ASSIGNMENT = 'Deferred Assignment'
 DEFERRED_DEFAULT_NAME = 'DEFERRED_DEFAULT_NAME'
-USER_PARAMS = 'user_params' # Parameters available to user for inspection in user_params dict
 FUNCTION = "function" # Parameter name for function, method, or type to instantiate and assign to self.execute
 FUNCTION_PARAMS  = "function_params" # Parameters used to instantiate or assign to a FUNCTION
 
-PARAM_CLASS_DEFAULTS = "paramClassDefaults"        # "Factory" default params for a Function
-PARAM_INSTANCE_DEFAULTS = "paramInstanceDefaults" # Parameters used to instantiate a Function; supercede paramClassDefaults
-PARAMS_CURRENT = "paramsCurrent"                  # Parameters currently in effect for an instance of a Function
-                                                   #    in general, this includes params specifed as arg in a
-                                                   #    to Function.execute;  however, there are some exceptions
-                                                   #    in which those are kept separate from paramsCurrent (see DDM)
 FUNCTION_CHECK_ARGS = 'super._check_args' # Use for "context" arg
 FUNCTION_OUTPUT_TYPE_CONVERSION = "enable_output_type_conversion"  # Used in Function Components to set output type
 
@@ -631,6 +624,7 @@ LINEAR_FUNCTION = "Linear Function"
 LEABRA_FUNCTION = "Leabra Function"
 EXPONENTIAL_FUNCTION = "Exponential Function"
 LOGISTIC_FUNCTION = "Logistic Function"
+TANH_FUNCTION = "Tanh Function"
 RELU_FUNCTION = "ReLU Function"
 GAUSSIAN_FUNCTION = "Gaussian Function"
 GAUSSIAN_DISTORT_FUNCTION = "GaussianDistort Function"
@@ -842,7 +836,6 @@ ALLOCATION_SAMPLES = "allocation_samples"
 
 
 # GatingMechanism
-MAKE_DEFAULT_GATING_MECHANISM = "make_default_gating_mechanism"
 GATING_SIGNALS = 'gating_signals'
 GATING_SIGNAL_SPECS = 'GATING_SIGNAL_SPECS'
 GATE = 'GATE'

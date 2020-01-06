@@ -523,21 +523,25 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         """
         function = Parameter(LinearCombination, stateful=False, loggable=False)
 
-        input_ports_spec = Parameter(
+        input_ports = Parameter(
             None,
             stateful=False,
             loggable=False,
             read_only=True,
-            user=False,
-            pnl_internal=True,
+            structural=True,
+            parse_spec=True,
+            aliases='monitor',
             constructor_argument='monitor'
+        )
+        output_ports = Parameter(
+            [OUTCOME],
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
         )
 
     # ObjectiveMechanism parameter and control signal assignments):
-    paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        FUNCTION: LinearCombination,
-        })
 
     standard_output_ports = ProcessingMechanism_Base.standard_output_ports.copy()
     standard_output_ports.extend([{NAME:OUTCOME, VARIABLE:(OWNER_VALUE, 0)}])
@@ -551,7 +555,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  default_variable=None,
                  size=None,
                  function=LinearCombination,
-                 output_ports:tc.optional(tc.any(str, Iterable))=OUTCOME,
+                 output_ports:tc.optional(tc.any(str, Iterable))=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -571,16 +575,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         if output_ports is None or output_ports is OUTCOME:
             output_ports = [OUTCOME]
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(input_ports=input_ports,
-                                                  output_ports=output_ports,
-                                                  function=function,
-                                                  params=params)
-
         self._learning_role = None
 
-        super().__init__(default_variable=default_variable,
-                         size=size,
+        super().__init__(
+            default_variable=default_variable,
+            size=size,
                          input_ports=input_ports,
                          output_ports=output_ports,
                          function=function,
@@ -684,7 +683,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # Get value of each OutputPort or, if a Projection from it is specified, then the Projection's value
         for i, spec in enumerate(monitor_specs):
             from psyneulink.core.components.ports.inputport import InputPort
-            from psyneulink.core.components.system import MonitoredOutputPortTuple
+            from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import MonitoredOutputPortTuple
             from psyneulink.core.components.projections.projection import _get_projection_value_shape
 
             # If it is a MonitoredOutputPortTuple, create InputPort specification dictionary

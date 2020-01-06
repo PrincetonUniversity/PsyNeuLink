@@ -426,14 +426,17 @@ using the following:
     <Mechanism_Base.value>` indexed by the int;  indexing begins with 0 (e.g.; 1 references the 2nd item).
 
     *<attribute name>* -- the name of an attribute of the OutputPort's `owner <Port.owner>` (must be one
-    in the `owner <Port.owner>`\\'s `params_dict <Mechanism.attributes_dict>` dictionary); returns the value
+    in the `owner <Port.owner>`\\'s `Parameters <Mechanism.Parameters>` class); returns the value
     of the named attribute for use in the OutputPort's `variable <OutputPort.variable>`.
 
-    *PARAMS_DICT* -- keyword specifying the `owner <Port.owner>` Mechanism's entire `params_dict
-    <Mechanism.attributes_dict>` dictionary, that contains entries for all of it accessible attributes.  The
+    *PARAMS_DICT* -- keyword specifying the `owner <Port.owner>` Mechanism's
+    entire dictionary of Parameters, that contains its own Parameters, its
+    `function <Mechanism.function`\\'s Parameters, and the current `variable`
+    for the Mechanism's `input_ports <Mechanism.input_ports>`. The
     OutputPort's `function <OutputPort.function>` must be able to parse the dictionary.
     COMMENT
     ??WHERE CAN THE USER GET THE LIST OF ALLOWABLE ATTRIBUTES?  USER_PARAMS?? aTTRIBUTES_DICT?? USER ACCESSIBLE PARAMS??
+    <obj>.parameters
     COMMENT
 
     *List[<any of the above items>]* -- this assigns the value of each item in the list to the corresponding item of
@@ -610,13 +613,15 @@ Class Reference
 
 """
 
+import inspect
 import numpy as np
 import typecheck as tc
+import types
 import warnings
 from collections import OrderedDict
 
 from psyneulink.core.components.component import Component, ComponentError
-from psyneulink.core.components.functions.function import Function, function_type, method_type
+from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.ports.port import Port_Base, _instantiate_port_list, port_type_keywords
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
@@ -626,7 +631,7 @@ from psyneulink.core.globals.keywords import \
     NAME, OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, \
     OWNER_VALUE, PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, PROJECTION_TYPE, \
     RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_PORTS, PORT, VALUE, VARIABLE, VARIANCE, \
-    output_port_spec_to_parameter_name
+    output_port_spec_to_parameter_name, INPUT_PORT_VARIABLES
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -698,7 +703,17 @@ def _parse_output_port_variable(variable, owner, context=None, output_port_name=
 
         elif isinstance(spec, str) and spec == PARAMS_DICT:
             # Specifies passing owner's params_dict as variable
-            return owner.attributes_dict
+            return {
+                **{p.name: p._get(context) for p in owner.parameters},
+                **{p.name: p._get(context) for p in owner.function.parameters},
+                **{
+                    INPUT_PORT_VARIABLES:
+                    [
+                        input_port.parameters.variable._get(context)
+                        for input_port in owner.input_ports
+                    ]
+                }
+            }
         elif isinstance(spec, str):
             # Owner's full value or attribute other than its value
             try:
@@ -871,7 +886,7 @@ class OutputPort(Port_Base):
     projectionSocket = RECEIVER
     modulators = [GATING_SIGNAL, CONTROL_SIGNAL]
     canReceive = modulators
-
+    projection_type = MAPPING_PROJECTION
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
@@ -895,10 +910,6 @@ class OutputPort(Port_Base):
         """
         variable = Parameter(np.array([0]), read_only=True, getter=_output_port_variable_getter, pnl_internal=True, constructor_argument='default_variable')
 
-    paramClassDefaults = Port_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
-                               # DEFAULT_VARIABLE_SPEC: [(OWNER_VALUE, 0)]
-                               })
     #endregion
 
     @tc.typecheck
@@ -913,6 +924,8 @@ class OutputPort(Port_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
+                 index=None,
+                 assign=None,
                  **kwargs):
 
         context = kwargs.pop(CONTEXT, None)
@@ -923,11 +936,6 @@ class OutputPort(Port_Base):
         if params:
             _maintain_backward_compatibility(params, name, owner)
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(
-                function=function,
-                params=params)
-
         # setting here to ensure even deferred init ports have this attribute
         self._variable_spec = variable
 
@@ -937,12 +945,7 @@ class OutputPort(Port_Base):
             # Temporarily name OutputPort
             self._assign_deferred_init_name(name, context)
             # Store args for deferred initialization
-            self._init_args = locals().copy()
-            del self._init_args['kwargs']
-            self._init_args['variable'] = variable
-            self._init_args['context'] = context
-            self._init_args['name'] = name
-            self._init_args['projections'] = projections
+            self._store_deferred_init_args(**locals())
 
             # Flag for deferred initialization
             self.initialization_status = ContextFlags.DEFERRED_INIT
@@ -966,17 +969,21 @@ class OutputPort(Port_Base):
         # Consider adding self to owner.output_ports here (and removing from ControlProjection._instantiate_sender)
         #  (test for it, and create if necessary, as per OutputPorts in ControlProjection._instantiate_sender),
 
-        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
-        super().__init__(owner,
-                         variable=variable,
-                         size=size,
-                         projections=projections,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         context=context,
-                         function=function,
-                         )
+        # Validate sender (as variable) and params
+        super().__init__(
+            owner,
+            variable=variable,
+            size=size,
+            projections=projections,
+            params=params,
+            name=name,
+            prefs=prefs,
+            context=context,
+            function=function,
+            index=index,
+            assign=assign,
+            **kwargs
+        )
 
     def _validate_against_reference_value(self, reference_value):
         """Validate that Port.variable is compatible with the reference_value
@@ -1285,7 +1292,7 @@ class OutputPort(Port_Base):
 def _instantiate_output_ports(owner, output_ports=None, context=None):
     """Call Port._instantiate_port_list() to instantiate ContentAddressableList of OutputPort(s)
 
-    Create ContentAddressableList of OutputPort(s) specified in paramsCurrent[OUTPUT_PORTS]
+    Create ContentAddressableList of OutputPort(s) specified in self.output_ports
 
     If output_ports is not specified:
         - use owner.output_ports as list of OutputPort specifications
@@ -1302,14 +1309,14 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
     When completed:
         - self.output_ports contains a ContentAddressableList of one or more OutputPorts;
         - self.output_port contains first or only OutputPort in list;
-        - paramsCurrent[OUTPUT_PORTS] contains the same ContentAddressableList (of one or more OutputPorts)
+        - self.output_ports contains the same ContentAddressableList (of one or more OutputPorts)
         - each OutputPort properly references, for its variable, the specified attributes of its owner Mechanism
         - if there is only one OutputPort, it is assigned the full value of its owner.
 
     (See Port._instantiate_port_list() for additional details)
 
     IMPLEMENTATION NOTE:
-        default(s) for self.paramsCurrent[OUTPUT_PORTS] (self.defaults.value) are assigned here
+        default(s) for self.output_ports (self.defaults.value) are assigned here
         rather than in _validate_params, as it requires function to have been instantiated first
 
     Returns list of instantiated OutputPorts
@@ -1354,7 +1361,7 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
 
     # Get the value of each OutputPort
     # IMPLEMENTATION NOTE:
-    # Should change the default behavior such that, if len(owner_value) == len owner.paramsCurrent[OUTPUT_PORTS]
+    # Should change the default behavior such that, if len(owner_value) == len owner.output_ports
     #        (that is, there is the same number of items in owner_value as there are OutputPorts)
     #        then increment index so as to assign each item of owner_value to each OutputPort
     # IMPLEMENTATION NOTE:  SHOULD BE REFACTORED TO USE _parse_port_spec TO PARSE ouput_ports arg
@@ -1437,10 +1444,10 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
     if context.source & (ContextFlags.COMMAND_LINE | ContextFlags.METHOD):
         owner.output_ports.extend(port_list)
     else:
-        owner._output_ports = port_list
+        owner.output_ports = port_list
 
     # Assign value of require_projection_in_composition
-    for port in owner._output_ports:
+    for port in owner.output_ports:
         # Assign True for owner's primary OutputPort and the value has not already been set in OutputPort constructor
         if port.require_projection_in_composition is None and owner.output_port == port:
             port.parameters.require_projection_in_composition._set(True, context)
@@ -1628,7 +1635,7 @@ class StandardOutputPorts():
     #     return [item[INDEX] for item in self.data]
 
 def _parse_output_port_function(owner, output_port_name, function, params_dict_as_variable=False):
-    """Parse specification of function as Function, Function class, Function.function, function_type or method_type.
+    """Parse specification of function as Function, Function class, Function.function, types.FunctionType or types.MethodType.
 
     If params_dict_as_variable is True, and function is a Function, check whether it allows params_dict as variable;
     if it is and does, leave as is,
@@ -1637,7 +1644,7 @@ def _parse_output_port_function(owner, output_port_name, function, params_dict_a
     if function is None:
         function = OutputPort.defaults.function
 
-    if isinstance(function, (function_type, method_type)):
+    if isinstance(function, (types.FunctionType, types.MethodType)):
         return function
 
     if isinstance(function, type) and issubclass(function, Function):
@@ -1660,7 +1667,6 @@ def _parse_output_port_function(owner, output_port_name, function, params_dict_a
                                      OutputPort.name, owner.name, owner.name, VALUE))
             return lambda x: function(x[OWNER_VALUE][0])
     return function
-
 
 @tc.typecheck
 def _maintain_backward_compatibility(d:dict, name, owner):

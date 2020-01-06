@@ -659,9 +659,20 @@ def _error_signal_getter(owning_component=None, context=None):
         return None
 
 def _learning_mechanism_learning_rate_setter(value, owning_component=None, context=None):
-    if hasattr(owning_component, "function") and owning_component.function:
-        if hasattr(owning_component.function.parameters, "learning_rate"):
+    try:
+        # this prevents overridding a specified value on the function with
+        # this mechanism's default during initialization
+        # these checks could be done universally if we make a special handler
+        # for these parameters that serve only as mirrors into function
+        # parameters of the same name
+        if (
+            owning_component.initialization_status is not ContextFlags.INITIALIZING
+            or owning_component.parameters.learning_rate._user_specified
+            or not owning_component.function.parameters.learning_rate._user_specified
+        ):
             owning_component.function.parameters.learning_rate._set(value, context)
+    except AttributeError:
+        pass
     return value
 
 class LearningMechanism(ModulatoryMechanism_Base):
@@ -873,7 +884,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         `LearningSignal(s) <LearningMechanism_LearningSignal>`, and then those of any additional (user-specified)
         `OutputPorts <OutputPort>`.
 
-    modulation : ModulationParam
+    modulation : str
         the default form of modulation used by the LearningMechanism's `LearningSignal(s)
         <LearningMechanism_LearningSignal>`, unless they are `individually specified <LearningSignal_Specification>`.
 
@@ -940,17 +951,40 @@ class LearningMechanism(ModulatoryMechanism_Base):
         error_signal = Parameter(None, read_only=True, getter=_error_signal_getter)
         learning_rate = Parameter(None, modulable=True, setter=_learning_mechanism_learning_rate_setter)
         learning_enabled = True
-
-    paramClassDefaults = ModulatoryMechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        CONTROL_PROJECTIONS: None,
-        INPUT_PORTS:input_port_names,
-        OUTPUT_PORTS:[{NAME:ERROR_SIGNAL,
-                        PORT_TYPE:OUTPUT_PORT,
-                        VARIABLE: (OWNER_VALUE, 1)},
-                       {NAME:LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
-                        VARIABLE: (OWNER_VALUE, 0)}
-                       ]})
+        modulation = ADDITIVE
+        input_ports = Parameter(
+            [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL],
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
+            parse_spec=True,
+        )
+        output_ports = Parameter(
+            [
+                {
+                    NAME: ERROR_SIGNAL,
+                    PORT_TYPE: OUTPUT_PORT,
+                    VARIABLE: (OWNER_VALUE, 1)
+                },
+            ],
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
+        )
+        learning_signals = Parameter(
+            [
+                {
+                    NAME: LEARNING_SIGNAL,
+                    VARIABLE: (OWNER_VALUE, 0)
+                }
+            ],
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
+        )
 
     @tc.typecheck
     def __init__(self,
@@ -960,6 +994,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
                  error_sources:tc.optional(tc.any(Mechanism, list))=None,
                  function=None,
                  learning_signals:tc.optional(list) = None,
+                 output_ports=None,
                  modulation:tc.optional(str)=ADDITIVE,
                  learning_rate:tc.optional(parameter_spec)=None,
                  learning_enabled:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=True,
@@ -979,12 +1014,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
         self.in_composition = in_composition
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  learning_signals=learning_signals,
-                                                  learning_enabled=learning_enabled,
-                                                  params=params)
-
         # # USE FOR IMPLEMENTATION OF deferred_init()
         # # Store args for deferred initialization
         # self._init_args = locals().copy()
@@ -996,16 +1025,20 @@ class LearningMechanism(ModulatoryMechanism_Base):
         # self.initialization_status = ContextFlags.DEFERRED_INIT
         # self.initialization_status = ContextFlags.DEFERRED_INIT
 
-        self._learning_rate = learning_rate
-
-        super().__init__(default_variable=default_variable,
-                         size=size,
-                         modulation=modulation,
-                         function=function,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         **kwargs)
+        super().__init__(
+            default_variable=default_variable,
+            size=size,
+            modulation=modulation,
+            function=function,
+            params=params,
+            name=name,
+            prefs=prefs,
+            learning_enabled=learning_enabled,
+            learning_signals=learning_signals,
+            learning_rate=learning_rate,
+            output_ports=output_ports,
+            **kwargs
+        )
 
     def _check_type_and_timing(self):
         try:
@@ -1165,6 +1198,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         from psyneulink.core.globals.registry import register_category
         from psyneulink.core.components.ports.modulatorysignals.learningsignal import LearningSignal
         from psyneulink.core.components.ports.port import Port_Base, _instantiate_port
+        from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 
         # Create registry for LearningSignals (to manage names)
         register_category(entry=LearningSignal,
@@ -1172,27 +1206,12 @@ class LearningMechanism(ModulatoryMechanism_Base):
                           registry=self._portRegistry,
                           context=context)
 
-        # Instantiate LearningSignals if they are specified, and assign to self._output_ports
+        # Instantiate LearningSignals if they are specified, and assign to self.output_ports
         # Notes:
         #    - if any LearningSignals are specified they will replace the default LEARNING_SIGNAL OutputPort
-        #        in the OUTPUT_PORTS entry of paramClassDefaults;
         #    - the LearningSignals are appended to _output_ports, leaving ERROR_SIGNAL as the first entry.
 
-        # Get default LearningSignal
-        default_learning_signal = next((item for item in self._output_ports
-                                        if NAME in item and item[NAME] is LEARNING_SIGNAL),None)
-        if default_learning_signal is None:
-            raise LearningMechanismError("PROGRAM ERROR: Can't find default {} for {}".
-                                         format(LearningSignal.__name__, self.name))
-
-        # Assign default if user didn't specify any
-        if self.learning_signals is None:
-            self.learning_signals = [default_learning_signal]
-
-        # Either way, delete default LearningSignal
-        del self._output_ports[self._output_ports.index(default_learning_signal)]
-
-        # Instantiate LearningSignals and assign to self._output_ports
+        # Instantiate LearningSignals and assign to self.output_ports
         for learning_signal in self.learning_signals:
             # Instantiate LearningSignal
 
@@ -1210,7 +1229,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
                                                  port_spec=learning_signal,
                                                  context=context)
             # Add LearningSignal to output_ports list
-            self._output_ports.append(learning_signal)
+            self.output_ports.append(learning_signal)
 
         # Assign LEARNING_SIGNAL as the name of the 1st LearningSignal; the names of any others can be user-defined
         first_learning_signal = next(port for port in self.output_ports if isinstance(port, LearningSignal))
@@ -1220,7 +1239,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
         # Reassign learning_signals to capture any user_defined LearningSignals instantiated in call to super
         #   and assign them to a ContentAddressableList
-        self._learning_signals = ContentAddressableList(component_type=LearningSignal,
+        self.learning_signals = ContentAddressableList(component_type=LearningSignal,
                                                         list=[port for port in self.output_ports if
                                                                   isinstance(port, LearningSignal)])
 

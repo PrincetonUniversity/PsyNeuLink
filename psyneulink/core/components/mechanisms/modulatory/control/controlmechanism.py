@@ -17,7 +17,7 @@ Contents
   * `ControlMechanism_Creation`
       - `ControlMechanism_Monitor_for_Control`
       - `ControlMechanism_ObjectiveMechanism`
-      - `ControlMechanism_Control_Signals`
+      - `ControlMechanism_ControlSignals`
   * `ControlMechanism_Structure`
       - `ControlMechanism_Input`
       - `ControlMechanism_Function`
@@ -61,12 +61,12 @@ can be listed using its `show <ControlMechanism.show>` method.
 A ControlMechanism can be assigned to a `Composition` and executed just like any other Mechanism. It can also be
 assigned as the `controller <Composition.controller>` of a `Composition`, that has a special relation
 to the Composition: it is used to control all of the parameters that have been `specified for control
-<ControlMechanism_Control_Signals>` in that Composition.  A ControlMechanism can be the `controller
+<ControlMechanism_ControlSignals>` in that Composition.  A ControlMechanism can be the `controller
 <Composition.controller>` for only one Composition, and a Composition can have only one `controller
 <Composition.controller>`.  When a ControlMechanism is assigned as the `controller <Composition.controller>` of a
 Composition (either in the Composition's constructor, or using its `add_controller <Composition.add_controller>`
 method, the ControlMechanism assumes control over all of the parameters that have been `specified for control
-<ControlMechanism_Control_Signals>` for Components in the Composition.  The Composition's `controller
+<ControlMechanism_ControlSignals>` for Components in the Composition.  The Composition's `controller
 <Composition.controller>` is executed either before or after all of the other Components in the Composition are
 executed, including any other ControlMechanisms that belong to it (see `Composition_Controller_Execution`).  A
 ControlMechanism can be assigned as the `controller <Composition.controller>` for a Composition by specifying it in
@@ -301,39 +301,36 @@ FOR DEVELOPERS:
     ObjectiveMechanism.add_to_monitor method.
 COMMENT
 
-.. _ControlMechanism_Control_Signals:
+.. _ControlMechanism_ControlSignals:
 
 *Specifying Parameters to Control*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This can be specified in either of two ways:
+This can be specified in either of two ways (see `ControlSignal_Examples` in `ControlSignal`):
 
-*On a ControlMechanism itself*
+*With a ControlMechanism itself*
 
 The parameters controlled by a ControlMechanism can be specified in the **control** argument of its constructor;
 the argument must be a `specification for one more ControlSignals <ControlSignal_Specification>`.  The parameter to
 be controlled must belong to a Component in the same `Composition` as the ControlMechanism when it is added to the
 Composition, or an error will occur.
 
-*On a Parameter to be controlled by the `controller <Composition.controller>` of a `Composition`*
+*With a Parameter to be controlled by the* `controller <Composition.controller>` *of a* `Composition`
 
 Control can also be specified for a parameter where the `parameter itself is specified <ParameterPort_Specification>`,
-in the constructor for the Component to which it belongs, by including a `ControlProjection`, `ControlSignal` or
-the keyword `CONTROL` in a `tuple specification <ParameterPort_Tuple_Specification>` for the parameter.  In this
-case, the specified parameter will be assigned for control by the `controller <controller.Composition>` of any
-`Composition` to which its Component belongs, when the Component is executed in that Composition (see
-`ControlMechanism_Composition_Controller`).  Conversely, when a ControlMechanism is assigned as the `controller
-<Composition.controller>` of a Composition, a `ControlSignal` is created and assigned to the ControlMechanism
-for every parameter of any `Component <Component>` in the Composition that has been `specified for control
-<ParameterPort_Modulatory_Specification>`.
+by including the specification of a `ControlSignal`, `ControlProjection`, or the keyword `CONTROL` in a `tuple
+specification <ParameterPort_Tuple_Specification>` for the parameter.  In this case, the specified parameter will be
+assigned for control by the `controller <Composition.controller>` of any `Composition` to which its Component belongs,
+when the Component is added to the Composition (see `ControlMechanism_Composition_Controller`).  Conversely, when
+a ControlMechanism is assigned as the `controller <Composition.controller>` of a Composition, a `ControlSignal` is
+created and assigned to the ControlMechanism for every parameter of any `Component <Component>` in the Composition
+that has been `specified for control <ParameterPort_Modulatory_Specification>`.
 
 In general, a `ControlSignal` is created for each parameter specified to be controlled by a ControlMechanism.  These
 are a type of `OutputPort` that send a `ControlProjection` to the `ParameterPort` of the parameter to be
 controlled. All of the ControlSignals for a ControlMechanism are listed in its `control_signals
 <ControlMechanism.control_signals>` attribute, and all of its ControlProjections are listed in
-its`control_projections <ControlMechanism.control_projections>` attribute. Additional parameters to be controlled can
-be added to a ControlMechanism by using its `assign_params` method to add a `ControlSignal` for each additional
-parameter.  See `ControlMechanism_Examples`.
+its `control_projections <ControlMechanism.control_projections>` attribute (see `ControlMechanism_Examples`).
 
 .. _ControlMechanism_Structure:
 
@@ -479,7 +476,7 @@ Once the ControlMechanism's `function <ControlMechanism.function>` has executed,
 `reconfiguration_cost <ControlMechanism.reconfiguration_cost>` for its `control_allocation
 <ControlMechanism.control_allocation>` (see `above <ControlMechanism_Reconfiguration_Cost>`. After that, each
 of the ControlMechanism's `control_signals <ControlMechanism.control_signals>` calculates its `cost
-<ControlSignal.cost>`, based on its `intensity  <ControlSignal/intensity>`.  The ControlMechanism then combines these
+<ControlSignal.cost>`, based on its `intensity  <ControlSignal.intensity>`.  The ControlMechanism then combines these
 with the `reconfiguration_cost <ControlMechanism.reconfiguration_cost>` using its `combine_costs
 <ControlMechanism.combine_costs>` function, and the result is assigned to the `costs <ControlMechanism.costs>`
 attribute.  Finally, the ControlMechanism uses this, together with its `outcome <ControlMechanism.outcome>` attribute,
@@ -493,6 +490,10 @@ for the next `TRIAL` of execution.
 Examples
 --------
 
+The examples below focus on the specificaiton of the `objective_mechanism <ControlMechanism.objective_mechanism>`
+for a ControlMechanism.  See `Control Signal Examples <ControlSignal_Examples>` for examples of how to specify the
+ControlSignals for a ControlMechanism.
+
 The following example creates a ControlMechanism by specifying its **objective_mechanism** using a constructor
 that specifies the OutputPorts to be monitored by its `objective_mechanism <ControlMechanism.objective_mechanism>`
 and the function used to evaluate these::
@@ -500,23 +501,23 @@ and the function used to evaluate these::
     >>> my_mech_A = ProcessingMechanism(name="Mech A")
     >>> my_DDM = DDM(name="My DDM")
     >>> my_mech_B = ProcessingMechanism(function=Logistic,
-    ...                                            name="Mech B")
+    ...                                 name="Mech B")
 
     >>> my_control_mech = ControlMechanism(
     ...                          objective_mechanism=ObjectiveMechanism(monitor=[(my_mech_A, 2, 1),
     ...                                                                           my_DDM.output_ports[RESPONSE_TIME]],
-    ...                                                                     name="Objective Mechanism"),
+    ...                                                                 name="Objective Mechanism"),
     ...                          function=LinearCombination(operation=PRODUCT),
     ...                          control_signals=[(THRESHOLD, my_DDM),
     ...                                           (GAIN, my_mech_B)],
     ...                          name="My Control Mech")
 
-This creates an ObjectiveMechanism for the ControlMechanism that monitors the `primary OutputPort
-<OutputPort_Primary>` of ``my_mech_A`` and the *RESPONSE_TIME* OutputPort of ``my_DDM``;  its function
-first multiplies the former by 2 before, then takes product of their values and passes the result as the input to the
-ControlMechanism.  The ControlMechanism's `function <ControlMechanism.function>` uses this value to determine
-the allocation for its ControlSignals, that control the value of the `threshold <DDM.threshold>` parameter of
-``my_DDM`` and the  `gain <Logistic.gain>` parameter of the `Logistic` Function for ``my_transfer_mech_B``.
+This creates an ObjectiveMechanism for the ControlMechanism that monitors the `primary OutputPort <OutputPort_Primary>`
+of ``my_mech_A`` and the *RESPONSE_TIME* OutputPort of ``my_DDM``;  its function first multiplies the former by ``2``,
+then takes product of their values and passes the result as the input to the ControlMechanism.  The ControlMechanism's
+`function <ControlMechanism.function>` uses this value to determine the allocation for its ControlSignals, that control
+the value of the `threshold <DriftDiffusionAnalytical.threshold>` parameter of the `DriftDiffusionAnalytical` Function
+for ``my_DDM`` and the  `gain <Logistic.gain>` parameter of the `Logistic` Function for ``my_transfer_mech_B``.
 
 The following example specifies the same set of OutputPorts for the ObjectiveMechanism, by assigning them directly
 to the **objective_mechanism** argument::
@@ -559,6 +560,7 @@ Class Reference
 """
 
 import copy
+import collections
 import itertools
 import numpy as np
 import threading
@@ -585,7 +587,7 @@ from psyneulink.core.globals.keywords import \
     MODULATORY_SIGNALS, MONITOR_FOR_CONTROL, MONITOR_FOR_MODULATION, MULTIPLICATIVE, \
     OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, PORT_TYPE, SYSTEM, \
     MECHANISM, MULTIPLICATIVE, NAME
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_list, copy_iterable_with_shared, is_iterable
@@ -597,6 +599,8 @@ __all__ = [
 
 CONTROL_ALLOCATION = 'control_allocation'
 GATING_ALLOCATION = 'gating_allocation'
+
+MonitoredOutputPortTuple = collections.namedtuple("MonitoredOutputPortTuple", "output_port weight exponent matrix")
 
 ControlMechanismRegistry = {}
 
@@ -622,6 +626,52 @@ def _is_control_spec(spec):
 class ControlMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
+
+
+def validate_monitored_port_spec(owner, spec_list):
+    for spec in spec_list:
+        if isinstance(spec, MonitoredOutputPortTuple):
+            spec = spec.output_port
+        elif isinstance(spec, tuple):
+            spec = _parse_port_spec(
+                owner=owner,
+                port_type=InputPort,
+                port_spec=spec,
+            )
+            spec = spec['params'][PROJECTIONS][0][0]
+        elif isinstance(spec, dict):
+            # If it is a dict, parse to validate that it is an InputPort specification dict
+            #    (for InputPort of ObjectiveMechanism to be assigned to the monitored_output_port)
+            spec = _parse_port_spec(
+                owner=owner,
+                port_type=InputPort,
+                port_spec=spec,
+            )
+            # Get the OutputPort, to validate that it is in the ControlMechanism's Composition (below);
+            #    presumes that the monitored_output_port is the first in the list of projection_specs
+            #    in the InputPort port specification dictionary returned from the parse,
+            #    and that it is specified as a projection_spec (parsed into that in the call
+            #    to _parse_connection_specs by _parse_port_spec)
+            spec = spec[PROJECTIONS][0][0]
+
+        if not isinstance(spec, (OutputPort, Mechanism)):
+            if isinstance(spec, type) and issubclass(spec, Mechanism):
+                raise ControlMechanismError(
+                    f"Mechanism class ({spec.__name__}) specified in '{MONITOR_FOR_CONTROL}' arg "
+                    f"of {self.name}; it must be an instantiated {Mechanism.__name__} or "
+                    f"{OutputPort.__name__} of one."
+                )
+            elif isinstance(spec, Port):
+                raise ControlMechanismError(
+                    f"{spec.__class__.__name__} specified in '{MONITOR_FOR_CONTROL}' arg of {owner.name} "
+                    f"({spec.name} of {spec.owner.name}); "
+                    f"it must be an {OutputPort.__name__} or {Mechanism.__name__}."
+                )
+            else:
+                raise ControlMechanismError(
+                    f"Erroneous specification of '{MONITOR_FOR_CONTROL}' arg for {owner.name} ({spec}); "
+                    f"it must be an {OutputPort.__name__} or a {Mechanism.__name__}."
+                )
 
 
 def _control_mechanism_costs_getter(owning_component=None, context=None):
@@ -675,8 +725,7 @@ class DefaultAllocationFunction(Function_Base):
                  params=None,
                  owner=None
                  ):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(params=params)
+
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
@@ -739,7 +788,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
             OBJECTIVE_MECHANISM param determines which Ports will be monitored.
                 specifies the OutputPorts of the terminal Mechanisms in the System to be monitored by ControlMechanism
-                this specification overrides any in System.params[], but can be overridden by Mechanism.params[]
+                this specification overrides any in System.], but can be overridden by mechanism.params[
                 ?? if MonitoredOutputPorts appears alone, it will be used to determine how Ports are assigned from
                     System.execution_graph by default
                 if MonitoredOutputPortsOption is used, it applies to any Mechanisms specified in the list for which
@@ -774,15 +823,15 @@ class ControlMechanism(ModulatoryMechanism_Base):
         specifies function used to combine values of monitored OutputPorts.
 
     default_allocation : number, list or 1d array : None
-        specifies the default_allocation of any `control_signals <ControlMechanism.control.signals>` for
-        which the **default_allocation** was not specified in its constructor (see default_allocation
+        specifies the default_allocation of any `control_signals <ControlMechanism.control_signals>` for
+        which the **default_allocation** was not specified in its constructor (see `default_allocation
         <ControlMechanism.default_allocation>` for additional details).
 
     control : ControlSignal specification or list[ControlSignal specification, ...]
         specifies the parameters to be controlled by the ControlMechanism; a `ControlSignal` is created for each
         (see `ControlSignal_Specification` for details of specification).
 
-    modulation : ModulationParam : MULTIPLICATIVE
+    modulation : str : MULTIPLICATIVE
         specifies the default form of modulation used by the ControlMechanism's `ControlSignals <ControlSignal>`,
         unless they are `individually specified <ControlSignal_Specification>`.
 
@@ -824,28 +873,28 @@ class ControlMechanism(ModulatoryMechanism_Base):
         each tuple in the list contains the weight and exponent associated with a corresponding OutputPort specified
         in `monitor_for_control <ControlMechanism.monitor_for_control>`; if `objective_mechanism
         <ControlMechanism.objective_mechanism>` is specified, these are the same as those in the ObjectiveMechanism's
-        `monitored_output_ports_weights_and_exponents
-        <ObjectiveMechanism.monitored_output_ports_weights_and_exponents>` attribute, and are used by the
-        ObjectiveMechanism's `function <ObjectiveMechanism.function>` to parametrize the contribution made to its
-        output by each of the values that it monitors (see `ObjectiveMechanism Function <ObjectiveMechanism_Function>`).
+        `monitor_weights_and_exponents <ObjectiveMechanism.monitor_weights_and_exponents>` attribute,
+        and are used by the ObjectiveMechanism's `function <ObjectiveMechanism.function>` to parametrize the
+        contribution made to its output by each of the values that it monitors (see `ObjectiveMechanism Function
+        <ObjectiveMechanism_Function>`).
 
     input_port : InputPort
         the ControlMechanism's `primary InputPort <InputPort_Primary>`, named *OUTCOME*;  this receives a
         `MappingProjection` from the *OUTCOME* `OutputPort <ObjectiveMechanism_Output>` of `objective_mechanism
         <ControlMechanism.objective_mechanism>` if that is specified; otherwise, it receives MappingProjections
         from each of the OutputPorts specifed in `monitor_for_control <ControlMechanism.monitor_for_control>`
-        (see `_ControlMechanism_Input` for additional details).
+        (see `ControlMechanism_Input` for additional details).
 
     outcome : 1d array
         the `value <InputPort.value>` of the ControlMechanism's *OUTCOME* `input_port <ControlMechanism.input_port>`.
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
-        determines how the `value <OuputState.value>` \\s of the `OutputPorts <OutputPort>` specified in the
+        determines how the `value <OuputPort.value>`\\s of the `OutputPorts <OutputPort>` specified in the
         **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>` of the ControlMechanism's
         constructor are used to generate its `control_allocation <ControlMechanism.control_allocation>`.
 
     default_allocation : number, list or 1d array
-        determines the default_allocation of any `control_signals <ControlMechanism.control.signals>` for
+        determines the default_allocation of any `control_signals <ControlMechanism.control_signals>` for
         which the **default_allocation** was not specified in its constructor;  if it is None (not specified)
         then the ControlSignal's parameters.allocation.default_value is used. See documentation for
         **default_allocation** argument of ControlSignal constructor for additional details.
@@ -856,7 +905,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         ControlMechanism's `value <Mechanism_Base.value>` attribute).
 
     control_signals : ContentAddressableList[ControlSignal]
-        list of the `ControlSignals <ControlSignals>` for the ControlMechanism, including any inherited from a
+        list of the `ControlSignals <ControlSignal>` for the ControlMechanism, including any inherited from a
         `Composition` for which it is a `controller <Composition.controller>` (same as ControlMechanism's
         `output_ports <Mechanism_Base.output_ports>` attribute); each sends a `ControlProjection`
         to the `ParameterPort` for the parameter it controls
@@ -880,7 +929,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
     costs : list
         current costs for the ControlMechanism's `control_signals <ControlMechanism.control_signals>`, computed
-        for each using its `compute_costs <ControlSignals.compute_costs>` method.
+        for each using its `compute_costs <ControlSignal.compute_costs>` method.
 
     combine_costs : Function, function or method
         function used to combine the `cost <ControlSignal.cost>` of its `control_signals
@@ -909,7 +958,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         list of `ControlProjections <ControlProjection>` that project from the ControlMechanism's `control_signals
         <ControlMechanism.control_signals>`.
 
-    modulation : ModulationParam
+    modulation : str
         the default form of modulation used by the ControlMechanism's `ControlSignals <GatingSignal>`,
         unless they are `individually specified <ControlSignal_Specification>`.
 
@@ -1003,7 +1052,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     see `modulation <ControlMechanism.modulation>`
 
                     :default value: MULTIPLICATIVE
-                    :type: `ModulationParam`
+                    :type: str
 
                 net_outcome
                     see `net_outcome <ControlMechanism.net_outcome>`
@@ -1030,7 +1079,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         variable = Parameter(np.array([[defaultControlAllocation]]), pnl_internal=True, constructor_argument='default_variable')
         value = Parameter(np.array([defaultControlAllocation]), aliases='control_allocation', pnl_internal=True)
-        default_allocation = None,
+        default_allocation = None
         combine_costs = Parameter(np.sum, stateful=False, loggable=False)
         costs = Parameter(None, read_only=True, getter=_control_mechanism_costs_getter)
         control_signal_costs = Parameter(None, read_only=True, pnl_internal=True)
@@ -1047,51 +1096,75 @@ class ControlMechanism(ModulatoryMechanism_Base):
         simulation_ids = Parameter([], user=False, pnl_internal=True)
         modulation = Parameter(MULTIPLICATIVE, pnl_internal=True)
 
-        objective_mechanism = Parameter(None, stateful=False, loggable=False)
+        objective_mechanism = Parameter(None, stateful=False, loggable=False, structural=True)
+        system = None
 
-        control_spec = Parameter(
+        input_ports = Parameter(
+            [OUTCOME],
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
+            parse_spec=True,
+        )
+
+        monitor_for_control = Parameter(
+            [OUTCOME],
+            stateful=False,
+            loggable=False,
+            read_only=True,
+        )
+
+        output_ports = Parameter(
             None,
             stateful=False,
             loggable=False,
             read_only=True,
-            user=False,
-            pnl_internal=True,
+            structural=True,
+            parse_spec=True,
+            aliases=['control', 'control_signals'],
             constructor_argument='control'
         )
 
-        def _parse_control_spec(self, control_spec):
+        def _parse_output_ports(self, output_ports):
             def is_2tuple(o):
                 return isinstance(o, tuple) and len(o) == 2
 
-            if not isinstance(control_spec, list):
-                control_spec = [control_spec]
+            if not isinstance(output_ports, list):
+                output_ports = [output_ports]
 
-            for i in range(len(control_spec)):
+            for i in range(len(output_ports)):
                 # handle 2-item tuple
-                if is_2tuple(control_spec[i]):
-                    control_spec[i] = {
-                        NAME: control_spec[i][0],
-                        MECHANISM: control_spec[i][1]
+                if is_2tuple(output_ports[i]):
+
+                    # this is an odd case that uses two names in the name entry
+                    # unsure what it means
+                    if isinstance(output_ports[i][0], list):
+                        continue
+
+                    output_ports[i] = {
+                        NAME: output_ports[i][0],
+                        MECHANISM: output_ports[i][1]
                     }
                 # handle dict of form {PROJECTIONS: <2 item tuple>, <param1>: <value1>, ...}
                 elif (
-                    isinstance(control_spec[i], dict)
-                    and PROJECTIONS in control_spec[i]
-                    and is_2tuple(control_spec[i][PROJECTIONS])
+                    isinstance(output_ports[i], dict)
+                    and PROJECTIONS in output_ports[i]
+                    and is_2tuple(output_ports[i][PROJECTIONS])
                 ):
                     full_spec_dict = {
-                        NAME: control_spec[i][PROJECTIONS][0],
-                        MECHANISM: control_spec[i][PROJECTIONS][1],
-                        **{k: v for k, v in control_spec[i].items() if k != PROJECTIONS}
+                        NAME: output_ports[i][PROJECTIONS][0],
+                        MECHANISM: output_ports[i][PROJECTIONS][1],
+                        **{k: v for k, v in output_ports[i].items() if k != PROJECTIONS}
                     }
-                    control_spec[i] = full_spec_dict
+                    output_ports[i] = full_spec_dict
 
-            return control_spec
+            return output_ports
 
-    paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        OBJECTIVE_MECHANISM: None,
-        CONTROL_PROJECTIONS: None})
+        def _validate_input_ports(self, input_ports):
+            if input_ports is None:
+                return
+            validate_monitored_port_spec(self._owner._owner, input_ports)
 
 
     @tc.typecheck
@@ -1111,7 +1184,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                  modulation:tc.optional(str)=MULTIPLICATIVE,
                  combine_costs:is_function_type=np.sum,
                  compute_reconfiguration_cost:tc.optional(is_function_type)=None,
-                 compute_net_outcome:is_function_type=lambda outcome, cost : outcome - cost,
+                 compute_net_outcome=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -1137,39 +1210,28 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     control.extend(convert_to_list(args))
 
         function = function or DefaultAllocationFunction
-        self.combine_costs = combine_costs
-        self.compute_net_outcome = compute_net_outcome
-        self.compute_reconfiguration_cost = compute_reconfiguration_cost
 
-        try:
-            control_spec = (
-                copy_iterable_with_shared(control, shared_types=Component)
-                if control is not None
-                else None
-            )
-        except TypeError:
-            control_spec = control
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(system=system,
-                                                  monitor_for_control=monitor_for_control,
-                                                  objective_mechanism=objective_mechanism,
-                                                  function=function,
-                                                  default_allocation=default_allocation,
-                                                  control=control,
-                                                  modulation=modulation,
-                                                  control_spec=control_spec,
-                                                  params=params)
         self._sim_counts = {}
 
-        super(ControlMechanism, self).__init__(default_variable=default_variable,
-                                                  size=size,
-                                                  modulation=modulation,
-                                                  params=params,
-                                                  name=name,
-                                                  function=function,
-                                                  prefs=prefs,
-                                                  **kwargs)
+        super(ControlMechanism, self).__init__(
+            default_variable=default_variable,
+            size=size,
+            modulation=modulation,
+            params=params,
+            name=name,
+            function=function,
+            monitor_for_control=monitor_for_control,
+            control=control,
+            output_ports=control,
+            system=system,
+            objective_mechanism=objective_mechanism,
+            default_allocation=default_allocation,
+            combine_costs=combine_costs,
+            compute_net_outcome=compute_net_outcome,
+            compute_reconfiguration_cost=compute_reconfiguration_cost,
+            prefs=prefs,
+            **kwargs
+        )
 
         if system is not None:
             self._activate_projections_for_compositions(system)
@@ -1182,72 +1244,15 @@ class ControlMechanism(ModulatoryMechanism_Base):
         Check that all items in CONTROL_SIGNALS are parameters or ParameterPorts for Mechanisms in self.system
         Check that all items in GATING_SIGNALS are Ports for Mechanisms in self.system
         """
-        from psyneulink.core.components.system import MonitoredOutputPortTuple
         from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-        from psyneulink.core.components.ports.inputport import InputPort
 
         super(ControlMechanism, self)._validate_params(request_set=request_set,
                                                        target_set=target_set,
                                                        context=context)
 
-        def validate_monitored_port_spec(spec_list):
-            for spec in spec_list:
-                if isinstance(spec, MonitoredOutputPortTuple):
-                    spec = spec.output_port
-                elif isinstance(spec, tuple):
-                    spec = _parse_port_spec(owner=self,
-                                             port_type=InputPort,
-                                             port_spec=spec,
-                                             context=context)
-                    spec = spec['params'][PROJECTIONS][0][0]
-                elif isinstance(spec, dict):
-                    # If it is a dict, parse to validate that it is an InputPort specification dict
-                    #    (for InputPort of ObjectiveMechanism to be assigned to the monitored_output_port)
-                    spec = _parse_port_spec(owner=self,
-                                             port_type=InputPort,
-                                             port_spec=spec,
-                                             context=context)
-                    # Get the OutputPort, to validate that it is in the ControlMechanism's Composition (below);
-                    #    presumes that the monitored_output_port is the first in the list of projection_specs
-                    #    in the InputPort port specification dictionary returned from the parse,
-                    #    and that it is specified as a projection_spec (parsed into that in the call
-                    #    to _parse_connection_specs by _parse_port_spec)
-                    spec = spec[PROJECTIONS][0][0]
-
-                if not isinstance(spec, (OutputPort, Mechanism)):
-                    if isinstance(spec, type) and issubclass(spec, Mechanism):
-                        raise ControlMechanismError(
-                                f"Mechanism class ({spec.__name__}) specified in '{MONITOR_FOR_CONTROL}' arg "
-                                f"of {self.name}; it must be an instantiated {Mechanism.__name__} or "
-                                f"{OutputPort.__name__} of one.")
-                    elif isinstance(spec, Port):
-                        raise ControlMechanismError(
-                                f"{spec.__class__.__name__} specified in '{MONITOR_FOR_CONTROL}' arg of {self.name} "
-                                f"({spec.name} of {spec.owner.name}); "
-                                f"it must be an {OutputPort.__name__} or {Mechanism.__name__}.")
-                    else:
-                        raise ControlMechanismError(
-                                f"Erroneous specification of '{MONITOR_FOR_CONTROL}' arg for {self.name} ({spec}); "
-                                f"it must be an {OutputPort.__name__} or a {Mechanism.__name__}.")
-                # If ControlMechanism has been assigned to a System, check that
-                #    all the items in the list used to specify objective_mechanism are in the same System
-                # FIX: TBI FOR COMPOSITION
-                if self.system:
-                    if not isinstance(spec, (list, ContentAddressableList)):
-                        spec = [spec]
-                    self.system._validate_monitored_ports_in_system(spec, context=context)
-
         if SYSTEM in target_set:
             if not isinstance(target_set[SYSTEM], System_Base):
                 raise KeyError
-            else:
-                self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
-
-        if MONITOR_FOR_CONTROL in target_set and target_set[MONITOR_FOR_CONTROL] is not None:
-            spec = target_set[MONITOR_FOR_CONTROL]
-            if not isinstance(spec, (list, ContentAddressableList)):
-                spec = [spec]
-            validate_monitored_port_spec(spec)
 
         if OBJECTIVE_MECHANISM in target_set and \
                 target_set[OBJECTIVE_MECHANISM] is not None and\
@@ -1275,7 +1280,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                                     " it is in a list with other items ({})".
                                                     format(OBJECTIVE_MECHANISM, self.name, obj_mech_spec_list))
                 else:
-                    validate_monitored_port_spec(obj_mech_spec_list)
+                    validate_monitored_port_spec(self, obj_mech_spec_list)
 
             if not isinstance(target_set[OBJECTIVE_MECHANISM], (ObjectiveMechanism, list, bool)):
                 raise ControlMechanismError("Specification of {} arg for {} ({}) must be an {}"
@@ -1443,7 +1448,9 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
     def _instantiate_control_signals(self, context):
         """Subclassess can override for class-specific implementation (see OptimiziationControlMechanism for example)"""
-        for i, control_signal in enumerate(self.control):
+        output_port_specs = list(enumerate(self.output_ports))
+
+        for i, control_signal in output_port_specs:
             self.control[i] = self._instantiate_control_signal(control_signal, context=context)
         num_control_signals = i + 1
 
@@ -1487,8 +1494,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
            once value has been expanded
         """
 
-        if self._output_ports is None:
-            self._output_ports = []
+        if self.output_ports is None:
+            self.output_ports = []
 
         control_signal = self._instantiate_control_signal_type(control_signal, context)
         control_signal.owner = self
@@ -1510,11 +1517,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
         # so that modulation that occurs BEFORE the control mechanism executes is computed appropriately
         # if (isinstance(self.function, IntegratorFunction)):
         #     control_signal._intensity = function.initializer
-
-        # Add ControlSignal to end of list of ControlSignals at start of output_ports list
-        # FIX: 9/25/19 - PUT ALL ControlSignals AT THE BEGINNING OF THE LIST;
-        #                ALLOW OTHERS OutputPortS TO BE SPECIFIED
-        self._output_ports.append(control_signal)
 
         return control_signal
 
@@ -1562,7 +1564,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 return
 
             # Warn if *any* projections from control_signal are identical to ones in an existing control_signal
-            projection_type = existing_ctl_sig.paramClassDefaults[PROJECTION_TYPE]
+            projection_type = existing_ctl_sig.projection_type
             if any(
                     any(new_p.receiver == existing_p.receiver
                         for existing_p in existing_ctl_sig.efferents) for new_p in control_signal.efferents):
@@ -1727,7 +1729,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 and self.control_signals[0].name=='ControlSignal-0'
                 and not self.control_signals[0].efferents):
             # FIX: REPLACE WITH remove_ports
-            del self._output_ports[0]
+            del self.output_ports[0]
             # del self.control_signals[0]
 
         # Add any ControlSignals specified for System
@@ -1742,7 +1744,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                               "as one in controller ({}) being assigned to the {}."
                               "".format(ControlSignal.__name__, system.name,
                                         control_signal.name, self.name, system.__class__.__name__))
-            self.control_signals.append(control_signal)
+            self.control.append(control_signal)
 
         # If it HAS been assigned a System, make sure it is the current one
         if self.system and not self.system is system:

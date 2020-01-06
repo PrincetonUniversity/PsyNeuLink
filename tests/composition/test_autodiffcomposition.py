@@ -739,7 +739,7 @@ class TestTrainingCorrectness:
 
                 # compare model output for terminal node on current trial with target for terminal node on current trial
                 assert np.allclose(np.round(result[0][i][j]), correct_value)
-        
+
         benchmark(sem_net.run,inputs={'inputs': inputs_dict,
                                       'targets': targets_dict,
                                       'epochs': eps}, bin_execute=mode)
@@ -963,6 +963,229 @@ class TestTrainingCorrectness:
                              0.07103772, 0.03544133, 0.03019486, 0.12605846, 0.03976812])
 
         np.allclose(output,comparator)
+
+    def test_pytorch_equivalence_with_autodiff_training_disabled_on_proj(self):
+        iSs = np.array(
+                [np.array([0.47360805, 0.8009108, 0.5204775, 0.53737324, 0.7586156,
+                           0.1059076, 0.9025985, 0.44994998, 0.61306345, 0.75068617,
+                           0.60783064, 0.32504722, 0.58185035, 0.4143686, 0.4746975]),
+                 np.array([0.33739617, 0.6481719, 0.36824155, 0.53737324, 0.7586156,
+                           0.1059076, 0.21655035, 0.13521817, 0.324141, 0.65314,
+                           0.17090958, 0.35815218, 0.03842543, 0.63427407, 0.95894927]),
+                 np.array([0.33739617, 0.6481719, 0.36824155, 0.53737324, 0.7586156,
+                           0.1059076, 0.9025985, 0.44994998, 0.61306345, 0.65314,
+                           0.17090958, 0.35815218, 0.58185035, 0.4143686, 0.4746975]),
+                 np.array([0.95715517, 0.14035077, 0.87008727, 0.47360042, 0.18633235,
+                           0.73691815, 0.14967486, 0.22232139, 0.38648897, 0.75068617,
+                           0.60783064, 0.32504722, 0.6527903, 0.6350589, 0.9952996]),
+                 np.array([0.47360805, 0.8009108, 0.5204775, 0.47360042, 0.18633235,
+                           0.73691815, 0.9025985, 0.44994998, 0.61306345, 0.9023486,
+                           0.09928035, 0.96980906, 0.03842543, 0.63427407, 0.95894927]),
+                 np.array([0.33739617, 0.6481719, 0.36824155, 0.53737324, 0.7586156,
+                           0.1059076, 0.9025985, 0.44994998, 0.61306345, 0.9023486,
+                           0.09928035, 0.96980906, 0.03842543, 0.63427407, 0.95894927]),
+                 np.array([0.47360805, 0.8009108, 0.5204775, 0.47360042, 0.18633235,
+                           0.73691815, 0.14967486, 0.22232139, 0.38648897, 0.65314,
+                           0.17090958, 0.35815218, 0.58185035, 0.4143686, 0.4746975]),
+                 np.array([0.95715517, 0.14035077, 0.87008727, 0.47360042, 0.18633235,
+                           0.73691815, 0.9025985, 0.44994998, 0.61306345, 0.75068617,
+                           0.60783064, 0.32504722, 0.6527903, 0.6350589, 0.9952996]),
+                 np.array([0.47360805, 0.8009108, 0.5204775, 0.53737324, 0.7586156,
+                           0.1059076, 0.21655035, 0.13521817, 0.324141, 0.75068617,
+                           0.60783064, 0.32504722, 0.6527903, 0.6350589, 0.9952996]),
+                 np.array([0.33739617, 0.6481719, 0.36824155, 0.53737324, 0.7586156,
+                           0.1059076, 0.14967486, 0.22232139, 0.38648897, 0.9023486,
+                           0.09928035, 0.96980906, 0.03842543, 0.63427407, 0.95894927]),
+                 np.array([0.95715517, 0.14035077, 0.87008727, 0.47360042, 0.18633235,
+                           0.73691815, 0.9025985, 0.44994998, 0.61306345, 0.9023486,
+                           0.09928035, 0.96980906, 0.6527903, 0.6350589, 0.9952996]),
+                 np.array([0.33739617, 0.6481719, 0.36824155, 0.47360042, 0.18633235,
+                           0.73691815, 0.14967486, 0.22232139, 0.38648897, 0.75068617,
+                           0.60783064, 0.32504722, 0.03842543, 0.63427407, 0.95894927]),
+                 np.array([0.33739617, 0.6481719, 0.36824155, 0.53737324, 0.7586156,
+                           0.1059076, 0.14967486, 0.22232139, 0.38648897, 0.65314,
+                           0.17090958, 0.35815218, 0.03842543, 0.63427407, 0.95894927]),
+                 np.array([0.95715517, 0.14035077, 0.87008727, 0.47360042, 0.18633235,
+                           0.73691815, 0.21655035, 0.13521817, 0.324141, 0.75068617,
+                           0.60783064, 0.32504722, 0.6527903, 0.6350589, 0.9952996]),
+                 np.array([0.33739617, 0.6481719, 0.36824155, 0.47360042, 0.18633235,
+                           0.73691815, 0.9025985, 0.44994998, 0.61306345, 0.9023486,
+                           0.09928035, 0.96980906, 0.6527903, 0.6350589, 0.9952996])]
+        )
+
+        cSs = np.array(
+                [np.array([0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+                           0., 0., 0., 0., 0., 0., 0., 0.]),
+                 np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0.,
+                           0., 0., 0., 0., 0., 0., 0., 0.]),
+                 np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+                           0., 0., 0., 0., 0., 1., 0., 0.]),
+                 np.array([0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+                           0., 0., 0., 0., 0., 0., 0., 0.]),
+                 np.array([0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0.,
+                           0., 0., 0., 0., 0., 0., 0., 0.]),
+                 np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+                           0., 0., 0., 0., 0., 0., 0., 1.]),
+                 np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1.,
+                           0., 0., 0., 0., 0., 0., 0., 0.]),
+                 np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1.,
+                           0., 0., 0., 0., 0., 0., 0., 0.]),
+                 np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0.,
+                           0., 0., 0., 0., 0., 0., 0., 0.]),
+                 np.array([0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+                           0., 0., 0., 0., 0., 0., 0., 0.]),
+                 np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+                           0., 0., 0., 0., 0., 1., 0., 0.]),
+                 np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+                           0., 0., 0., 0., 0., 1., 0., 0.]),
+                 np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+                           0., 0., 0., 0., 0., 0., 0., 1.]),
+                 np.array([0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+                           0., 0., 0., 0., 0., 0., 0., 0.]),
+                 np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+                           0., 0., 0., 0., 0., 0., 0., 1.])]
+        )
+
+        oSs = np.array(
+                [np.array([0., 1., -0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]),
+                 np.array([1., 0., -0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]),
+                 np.array([0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0.]),
+                 np.array([0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]),
+                 np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., -0., 0., 1., 0., 0., 0.]),
+                 np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., -0., 0.]),
+                 np.array([0., 0., 0., 0., 1., -0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]),
+                 np.array([0., 0., 0., 0., -0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.]),
+                 np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., -0., 0., 0., 0.]),
+                 np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., -0., 0.]),
+                 np.array([0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0.]),
+                 np.array([0., 0., 0., 0., 0., 0., 1., -0., 0., 0., 0., 0., 0., 0., 0.]),
+                 np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., -0., 0.]),
+                 np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0.]),
+                 np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0.])]
+        )
+
+        nf = 3
+        nd = 5
+        nh = 200
+
+        D_i = nf * nd
+        D_c = nd ** 2
+        D_h = nh
+        D_o = nf * nd
+
+        np.random.seed(0)
+        import random
+
+        random.seed(0)
+
+        wih = np.random.rand(D_i, D_h) * 0.02 - 0.01
+        wch = np.random.rand(D_c, D_h) * 0.02 - 0.01
+        wco = np.random.rand(D_c, D_o) * 0.02 - 0.01
+        who = np.random.rand(D_h, D_o) * 0.02 - 0.01
+
+        patience = 10
+        min_delt = 0.00001
+        learning_rate = 100
+
+        il = TransferMechanism(size=D_i, name='input')
+        cl = TransferMechanism(size=D_c, name='control')
+        hl = TransferMechanism(size=D_h, name='hidden',
+                               function=Logistic(bias=-2))
+        ol = TransferMechanism(size=D_o, name='output',
+                               function=Logistic(bias=-2))
+
+        input_set = {
+            'inputs': {
+                il: iSs,
+                cl: cSs
+            },
+            'targets': {
+                ol: oSs
+            }
+        }
+
+        pih = MappingProjection(matrix=wih)
+        pch = MappingProjection(matrix=wch)
+        pco = MappingProjection(matrix=wco)
+        pho = MappingProjection(matrix=who, learnable=False)
+
+        mnet = AutodiffComposition(param_init_from_pnl=True,
+                                   patience=patience,
+                                   min_delta=min_delt,
+                                   learning_rate=learning_rate,
+                                   learning_enabled=True)
+
+        mnet.add_node(il)
+        mnet.add_node(cl)
+        mnet.add_node(hl)
+        mnet.add_node(ol)
+        mnet.add_projection(projection=pih, sender=il, receiver=hl)
+        mnet.add_projection(projection=pch, sender=cl, receiver=hl)
+        mnet.add_projection(projection=pco, sender=cl, receiver=ol)
+        mnet.add_projection(projection=pho, sender=hl, receiver=ol)
+
+        mnet.run(
+                inputs=input_set,
+                minibatch_size=1,
+        )
+        mnet.learning_enabled = False
+
+        print(mnet.parameters.results.get(mnet))
+
+        mnet.run(
+                inputs=input_set,
+        )
+
+        output = np.array(mnet.parameters.results.get(mnet)[-15:]).reshape(225)
+
+        comparator = np.array([0.10284232, 0.31514028, 0.10299414, 0.10164745, 0.10363132,
+                               0.10164711, 0.10305342, 0.10162935, 0.10363974, 0.10175142,
+                               0.10256631, 0.10194203, 0.10386363, 0.10445295, 0.10228054,
+                               0.31140432, 0.10257346, 0.10279541, 0.1015088, 0.10408029,
+                               0.10167408, 0.10260046, 0.10208146, 0.10258093, 0.10188455,
+                               0.10239721, 0.10162553, 0.10376681, 0.10523887, 0.10231788,
+                               0.08327345, 0.08337342, 0.0835557, 0.0828431, 0.08364569,
+                               0.08285296, 0.21721269, 0.15223454, 0.12355195, 0.08328209,
+                               0.08321026, 0.08318614, 0.08401372, 0.08443127, 0.08355132,
+                               0.10225081, 0.10250866, 0.1032809, 0.10216374, 0.3212671,
+                               0.10171002, 0.10223842, 0.10279202, 0.10348979, 0.102771,
+                               0.10200755, 0.10137874, 0.10408875, 0.10449553, 0.10241774,
+                               0.10293344, 0.10201894, 0.10300561, 0.10239243, 0.10291971,
+                               0.10242151, 0.10280451, 0.10199619, 0.10344362, 0.10265052,
+                               0.1030072, 0.31077573, 0.10299222, 0.10510338, 0.10226066,
+                               0.08338644, 0.08334018, 0.08376527, 0.08334996, 0.08397464,
+                               0.08293792, 0.08313457, 0.08310839, 0.08409815, 0.08289795,
+                               0.08348748, 0.08323742, 0.35242194, 0.22024544, 0.08337309,
+                               0.09164643, 0.09135997, 0.09195332, 0.09117354, 0.15678808,
+                               0.25366357, 0.09192788, 0.09090009, 0.09173747, 0.09161069,
+                               0.09198699, 0.09058125, 0.09191367, 0.09321109, 0.09121469,
+                               0.09163069, 0.09134816, 0.09194396, 0.09114014, 0.15678652,
+                               0.2536617, 0.09192093, 0.09089337, 0.09171399, 0.09160125,
+                               0.09198645, 0.09058312, 0.09191372, 0.09321296, 0.09118975,
+                               0.10222919, 0.1017347, 0.10354281, 0.10158797, 0.1038858,
+                               0.10181702, 0.10269418, 0.10235615, 0.10275149, 0.31305784,
+                               0.1030191, 0.10225646, 0.10283817, 0.10411466, 0.10244074,
+                               0.10203665, 0.10201294, 0.10314981, 0.10192659, 0.10328009,
+                               0.10265024, 0.1021864, 0.10181551, 0.1026119, 0.10268809,
+                               0.10219657, 0.10172481, 0.32032955, 0.104648, 0.10248389,
+                               0.08325538, 0.08334755, 0.08355319, 0.08281158, 0.08365688,
+                               0.08285309, 0.21719442, 0.15221967, 0.12351983, 0.08326486,
+                               0.08321615, 0.08318119, 0.08400558, 0.0844217, 0.08352901,
+                               0.08326998, 0.08336743, 0.08356269, 0.08283862, 0.08365061,
+                               0.08286179, 0.21723635, 0.15221801, 0.12355236, 0.08327687,
+                               0.08322325, 0.08318282, 0.08401041, 0.08442231, 0.0835505,
+                               0.0833958, 0.08335006, 0.08376891, 0.08336972, 0.08397432,
+                               0.08294199, 0.08314709, 0.08311359, 0.0841146, 0.08291036,
+                               0.08349533, 0.08323479, 0.35241473, 0.22023965, 0.08338647,
+                               0.10243648, 0.10270733, 0.10287204, 0.10181676, 0.10309494,
+                               0.10208003, 0.10258352, 0.10279328, 0.10355093, 0.10241994,
+                               0.31674582, 0.10140157, 0.10286999, 0.10426361, 0.1018871,
+                               0.08337424, 0.08333415, 0.08376191, 0.08333433, 0.08398008,
+                               0.08293781, 0.08313539, 0.08310112, 0.08409653, 0.08289441,
+                               0.08348761, 0.08323367, 0.35237628, 0.22024095, 0.08336799])
+
+        assert np.allclose(output, comparator)
+
 
 @pytest.mark.pytorch
 @pytest.mark.actime
@@ -1792,12 +2015,6 @@ class TestTrainingIdenticalness():
         inputs_dict_sys[nouns_in_sys] = inputs_dict[nouns_in]
         inputs_dict_sys[rels_in_sys] = inputs_dict[rels_in]
 
-        targets_dict_sys = {}
-        targets_dict_sys[out_sig_I_sys] = targets_dict[out_sig_I]
-        targets_dict_sys[out_sig_is_sys] = targets_dict[out_sig_is]
-        targets_dict_sys[out_sig_has_sys] = targets_dict[out_sig_has]
-        targets_dict_sys[out_sig_can_sys] = targets_dict[out_sig_can]
-
         sem_net.learning_enabled=False
         result = sem_net.run(inputs=inputs_dict)
 
@@ -1806,10 +2023,12 @@ class TestTrainingIdenticalness():
         # TRAIN COMPOSITION
         sem_net.learning_enabled=True
 
-        result = sem_net.run(inputs={"inputs": inputs_dict,
-                                     "targets": targets_dict,
-                                     "epochs": eps}
-                             )
+        def g_f():
+            yield {"inputs": inputs_dict,
+                   "targets": targets_dict,
+                   "epochs": eps}
+        g = g_f()
+        result = sem_net.run(inputs=g_f)
 
         comp_weights = sem_net.get_parameters()[0]
 
@@ -1875,6 +2094,258 @@ class TestTrainingIdenticalness():
         assert np.allclose(comp_weights[map_h2_is], map_h2_is_sys.get_mod_matrix(sem_net_sys))
         assert np.allclose(comp_weights[map_h2_has], map_h2_has_sys.get_mod_matrix(sem_net_sys))
         assert np.allclose(comp_weights[map_h2_can], map_h2_can_sys.get_mod_matrix(sem_net_sys))
+
+    def test_identicalness_of_input_types(self):
+        # SET UP MECHANISMS FOR COMPOSITION
+        from copy import copy
+        hid_map_mat = np.random.rand(2, 10)
+        out_map_mat = np.random.rand(10, 1)
+        xor_in_dict = TransferMechanism(name='xor_in',
+                                        default_variable=np.zeros(2))
+
+        xor_hid_dict = TransferMechanism(name='xor_hid',
+                                         default_variable=np.zeros(10),
+                                         function=Logistic())
+
+        xor_out_dict = TransferMechanism(name='xor_out',
+                                         default_variable=np.zeros(1),
+                                         function=Logistic())
+
+        # SET UP PROJECTIONS FOR COMPOSITION
+
+        hid_map_dict = MappingProjection(name='hid_map',
+                                         matrix=copy(hid_map_mat),
+                                         sender=xor_in_dict,
+                                         receiver=xor_hid_dict)
+
+        out_map_dict = MappingProjection(name='out_map',
+                                         matrix=copy(out_map_mat),
+                                         sender=xor_hid_dict,
+                                         receiver=xor_out_dict)
+
+        # SET UP COMPOSITION
+
+        xor_dict = AutodiffComposition(param_init_from_pnl=True)
+
+        xor_dict.add_node(xor_in_dict)
+        xor_dict.add_node(xor_hid_dict)
+        xor_dict.add_node(xor_out_dict)
+
+        xor_dict.add_projection(sender=xor_in_dict, projection=hid_map_dict, receiver=xor_hid_dict)
+        xor_dict.add_projection(sender=xor_hid_dict, projection=out_map_dict, receiver=xor_out_dict)
+
+        # SET UP INPUTS AND TARGETS
+
+        xor_inputs_dict = np.array(  # the inputs we will provide to the model
+                [[0, 0],
+                 [0, 1],
+                 [1, 0],
+                 [1, 1]])
+
+        xor_targets_dict = np.array(  # the outputs we wish to see from the model
+                [[0],
+                 [1],
+                 [1],
+                 [0]])
+
+        input_dict = {
+                "inputs": {
+                    xor_in_dict: xor_inputs_dict
+                },
+                "targets": {
+                    xor_out_dict: xor_targets_dict
+                }
+            }
+
+        result_dict = xor_dict.run(inputs=input_dict)
+
+        # SET UP MECHANISMS FOR COMPOSITION
+        xor_in_func = TransferMechanism(name='xor_in',
+                                        default_variable=np.zeros(2))
+
+        xor_hid_func = TransferMechanism(name='xor_hid',
+                                         default_variable=np.zeros(10),
+                                         function=Logistic())
+
+        xor_out_func = TransferMechanism(name='xor_out',
+                                         default_variable=np.zeros(1),
+                                         function=Logistic())
+
+        # SET UP PROJECTIONS FOR COMPOSITION
+
+        hid_map_func = MappingProjection(name='hid_map',
+                                         matrix=copy(hid_map_mat),
+                                         sender=xor_in_func,
+                                         receiver=xor_hid_func)
+
+        out_map_func = MappingProjection(name='out_map',
+                                         matrix=copy(out_map_mat),
+                                         sender=xor_hid_func,
+                                         receiver=xor_out_func)
+
+        # SET UP COMPOSITION
+
+        xor_func = AutodiffComposition(param_init_from_pnl=True)
+
+        xor_func.add_node(xor_in_func)
+        xor_func.add_node(xor_hid_func)
+        xor_func.add_node(xor_out_func)
+
+        xor_func.add_projection(sender=xor_in_func, projection=hid_map_func, receiver=xor_hid_func)
+        xor_func.add_projection(sender=xor_hid_func, projection=out_map_func, receiver=xor_out_func)
+
+        # SET UP INPUTS AND TARGETS
+
+        xor_inputs_func = np.array(  # the inputs we will provide to the model
+                [[0, 0],
+                 [0, 1],
+                 [1, 0],
+                 [1, 1]])
+
+        xor_targets_func = np.array(  # the outputs we wish to see from the model
+                [[0],
+                 [1],
+                 [1],
+                 [0]])
+
+        def get_inputs():
+            return {
+                "inputs": {
+                    xor_in_func: xor_inputs_func
+                },
+                "targets": {
+                    xor_out_func: xor_targets_func
+                }
+            }
+
+        result_func = xor_func.run(inputs=get_inputs)
+
+        # SET UP MECHANISMS FOR COMPOSITION
+        xor_in_gen = TransferMechanism(name='xor_in',
+                                       default_variable=np.zeros(2))
+
+        xor_hid_gen = TransferMechanism(name='xor_hid',
+                                        default_variable=np.zeros(10),
+                                        function=Logistic())
+
+        xor_out_gen = TransferMechanism(name='xor_out',
+                                        default_variable=np.zeros(1),
+                                        function=Logistic())
+
+        # SET UP PROJECTIONS FOR COMPOSITION
+
+        hid_map_gen = MappingProjection(name='hid_map',
+                                        matrix=copy(hid_map_mat),
+                                        sender=xor_in_gen,
+                                        receiver=xor_hid_gen)
+
+        out_map_gen = MappingProjection(name='out_map',
+                                        matrix=copy(out_map_mat),
+                                        sender=xor_hid_gen,
+                                        receiver=xor_out_gen)
+
+        # SET UP COMPOSITION
+
+        xor_gen = AutodiffComposition(param_init_from_pnl=True)
+
+        xor_gen.add_node(xor_in_gen)
+        xor_gen.add_node(xor_hid_gen)
+        xor_gen.add_node(xor_out_gen)
+
+        xor_gen.add_projection(sender=xor_in_gen, projection=hid_map_gen, receiver=xor_hid_gen)
+        xor_gen.add_projection(sender=xor_hid_gen, projection=out_map_gen, receiver=xor_out_gen)
+
+        # SET UP INPUTS AND TARGETS
+
+        xor_inputs_gen = np.array(  # the inputs we will provide to the model
+                [[0, 0],
+                 [0, 1],
+                 [1, 0],
+                 [1, 1]])
+
+        xor_targets_gen = np.array(  # the outputs we wish to see from the model
+                [[0],
+                 [1],
+                 [1],
+                 [0]])
+
+        def get_inputs_gen():
+            yield {
+                "inputs": {
+                    xor_in_gen: xor_inputs_gen
+                },
+                "targets": {
+                    xor_out_gen: xor_targets_gen
+                }
+            }
+
+        g = get_inputs_gen()
+
+        result_gen = xor_gen.run(inputs=g)
+
+        # SET UP MECHANISMS FOR COMPOSITION
+        xor_in_gen_func = TransferMechanism(name='xor_in',
+                                            default_variable=np.zeros(2))
+
+        xor_hid_gen_func = TransferMechanism(name='xor_hid',
+                                             default_variable=np.zeros(10),
+                                             function=Logistic())
+
+        xor_out_gen_func = TransferMechanism(name='xor_out',
+                                             default_variable=np.zeros(1),
+                                             function=Logistic())
+
+        # SET UP PROJECTIONS FOR COMPOSITION
+
+        hid_map_gen_func = MappingProjection(name='hid_map',
+                                             matrix=copy(hid_map_mat),
+                                             sender=xor_in_gen_func,
+                                             receiver=xor_hid_gen_func)
+
+        out_map_gen_func = MappingProjection(name='out_map',
+                                             matrix=copy(out_map_mat),
+                                             sender=xor_hid_gen_func,
+                                             receiver=xor_out_gen_func)
+
+        # SET UP COMPOSITION
+
+        xor_gen_func = AutodiffComposition(param_init_from_pnl=True)
+
+        xor_gen_func.add_node(xor_in_gen_func)
+        xor_gen_func.add_node(xor_hid_gen_func)
+        xor_gen_func.add_node(xor_out_gen_func)
+
+        xor_gen_func.add_projection(sender=xor_in_gen_func, projection=hid_map_gen_func, receiver=xor_hid_gen_func)
+        xor_gen_func.add_projection(sender=xor_hid_gen_func, projection=out_map_gen_func, receiver=xor_out_gen_func)
+
+        # SET UP INPUTS AND TARGETS
+
+        xor_inputs_gen_func = np.array(  # the inputs we will provide to the model
+                [[0, 0],
+                 [0, 1],
+                 [1, 0],
+                 [1, 1]])
+
+        xor_targets_gen_func = np.array(  # the outputs we wish to see from the model
+                [[0],
+                 [1],
+                 [1],
+                 [0]])
+
+        def get_inputs_gen_func():
+            yield {
+                "inputs": {
+                    xor_in_gen_func: xor_inputs_gen_func
+                },
+                "targets": {
+                    xor_out_gen_func: xor_targets_gen_func
+                }
+            }
+
+        result_gen_func = xor_gen_func.run(inputs=get_inputs_gen_func)
+
+        assert result_dict == result_func == result_gen == result_gen_func
+
 
 @pytest.mark.pytorch
 @pytest.mark.aclogging

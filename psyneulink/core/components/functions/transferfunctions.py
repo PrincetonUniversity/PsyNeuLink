@@ -46,19 +46,20 @@ from enum import Enum, IntEnum
 
 import numpy as np
 import typecheck as tc
+import types
 import warnings
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import parameter_keywords, method_type
+from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.function import \
     Function, Function_Base, FunctionError, function_keywords, is_function_type
-from psyneulink.core.components.component import function_type
+from psyneulink.core.components.shellclasses import Projection
 from psyneulink.core.globals.keywords import \
     ADDITIVE, ADDITIVE_PARAM, ALL, AUTO_ASSIGN_MATRIX, BIAS, BOUNDS, EXPONENTIAL_FUNCTION, \
     FULL_CONNECTIVITY_MATRIX, GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
     IDENTITY_FUNCTION, IDENTITY_MATRIX, INTERCEPT, INVERSE_HOLLOW_MATRIX,\
     LEAK, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, \
-    MATRIX_KEYWORD_NAMES, MATRIX, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE, MULTIPLICATIVE_PARAM, \
+    TANH_FUNCTION, MATRIX_KEYWORD_NAMES, MATRIX, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE, MULTIPLICATIVE_PARAM, \
     OFF, OFFSET, ON, PARAMETER_PORT_PARAMS, PER_ITEM, PROB, PRODUCT, OUTPUT_TYPE, PROB_INDICATOR, \
     RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM,\
     TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME
@@ -104,35 +105,6 @@ class TransferFunction(Function_Base):
         """
         bounds = None
 
-    # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
-    def __init__(self, default_variable,
-                 params=None,
-                 owner=None,
-                 prefs=None,
-                 context=None):
-
-        if not hasattr(self, BOUNDS):
-            raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
-                                format(self.__class__.__name__, BOUNDS))
-
-        # # FIX: 9/3/19 - DON'T IMPLEMENT, SINCE IdentityFunction DOESN"T IMPLEMENT MODULATORY PARAMS
-        # try:
-        #     self.parameters.multiplicative_param
-        # except:
-        #     raise FunctionError(f"PROGRAM ERROR: {self.__class__.__name__} must implement "
-        #                         f"a {repr(MULTIPLICATIVE_PARAM)} Parameter or alias to one.")
-        #
-        # try:
-        #     self.parameters.additive_param
-        # except:
-        #     raise FunctionError(f"PROGRAM ERROR: {self.__class__.__name__} must implement "
-        #                         f"a {repr(ADDITIVE_PARAM)} Parameter or alias to one.")
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         # Pretend we have one huge array to work on
@@ -224,17 +196,12 @@ class Identity(TransferFunction):  # -------------------------------------------
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(params=params)
-
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
@@ -421,11 +388,6 @@ class Linear(TransferFunction):  # ---------------------------------------------
         slope = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         intercept = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        PARAMETER_PORT_PARAMS: None
-    })
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -435,16 +397,14 @@ class Linear(TransferFunction):  # ---------------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(slope=slope,
-                                                  intercept=intercept,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            slope=slope,
+            intercept=intercept,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -645,8 +605,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
     bounds = (0, None)
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     class Parameters(TransferFunction.Parameters):
         """
             Attributes
@@ -692,18 +650,16 @@ class Exponential(TransferFunction):  # ----------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(rate=rate,
-                                                  bias=bias,
-                                                  scale=scale,
-                                                  offset=offset,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            rate=rate,
+            bias=bias,
+            scale=scale,
+            offset=offset,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -908,7 +864,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
     bounds = (0, 1)
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     _model_spec_class_name_is_generic = True
 
@@ -965,19 +920,17 @@ class Logistic(TransferFunction):  # -------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(gain=gain,
-                                                  x_0=x_0,
-                                                  bias=bias,
-                                                  offset=offset,
-                                                  scale=scale,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            gain=gain,
+            x_0=x_0,
+            bias=bias,
+            offset=offset,
+            scale=scale,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -1206,12 +1159,10 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         <LINK>` for details).
     """
 
-    componentName = LOGISTIC_FUNCTION
+    componentName = TANH_FUNCTION
     parameter_keywords.update({GAIN, BIAS, OFFSET})
 
     bounds = (0, 1)
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Parameters(TransferFunction.Parameters):
         """
@@ -1266,19 +1217,17 @@ class Tanh(TransferFunction):  # -----------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(gain=gain,
-                                                  x_0=x_0,
-                                                  bias=bias,
-                                                  offset=offset,
-                                                  scale=scale,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            gain=gain,
+            x_0=x_0,
+            bias=bias,
+            offset=offset,
+            scale=scale,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -1458,7 +1407,6 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
     bounds = (None,None)
 
-
     class Parameters(TransferFunction.Parameters):
         """
             Attributes
@@ -1486,7 +1434,6 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         leak = Parameter(0.0, modulable=True)
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
@@ -1497,17 +1444,15 @@ class ReLU(TransferFunction):  # -----------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(gain=gain,
-                                                  bias=bias,
-                                                  leak=leak,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            gain=gain,
+            bias=bias,
+            leak=leak,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _function(self,
                  variable=None,
@@ -1694,8 +1639,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
 
     bounds = (None,None)
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     class Parameters(TransferFunction.Parameters):
         """
             Attributes
@@ -1728,7 +1671,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         """
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        scale = Parameter(0.0, modulable=True)
+        scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
 
     @tc.typecheck
@@ -1741,18 +1684,16 @@ class Gaussian(TransferFunction):  # -------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(standard_deviation=standard_deviation,
-                                                  bias=bias,
-                                                  scale=scale,
-                                                  offset=offset,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            standard_deviation=standard_deviation,
+            bias=bias,
+            scale=scale,
+            offset=offset,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -1966,8 +1907,6 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
 
     bounds = (None,None)
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     class Parameters(TransferFunction.Parameters):
         """
             Attributes
@@ -2006,7 +1945,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         """
         variance = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        scale = Parameter(0.0, modulable=True)
+        scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
         random_state = Parameter(None, modulable=False, pnl_internal=True)
 
@@ -2021,7 +1960,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+
         if seed is None:
             seed = get_global_seed()
 
@@ -2029,18 +1968,17 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["random_state"]
 
-        params = self._assign_args_to_param_dicts(variance=variance,
-                                                  bias=bias,
-                                                  scale=scale,
-                                                  offset=offset,
-                                                  random_state=random_state,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            variance=variance,
+            bias=bias,
+            scale=scale,
+            offset=offset,
+            random_state=random_state,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -2250,7 +2188,6 @@ class SoftMax(TransferFunction):
 
     bounds = (0, 1)
 
-
     class Parameters(TransferFunction.Parameters):
         """
             Attributes
@@ -2301,8 +2238,6 @@ class SoftMax(TransferFunction):
             else:
                 return 'not one of {0}'.format(options)
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -2313,17 +2248,15 @@ class SoftMax(TransferFunction):
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(gain=gain,
-                                                  per_item=per_item,
-                                                  output=output,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            gain=gain,
+            per_item=per_item,
+            output=output,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_variable(self, variable, context=None):
         if variable is None:
@@ -2368,7 +2301,7 @@ class SoftMax(TransferFunction):
         builder.store(new_index, max_ind_ptr)
 
     def __gen_llvm_exp_div(self, builder, index, ctx, vi, vo, gain, exp_sum):
-        assert self.params[OUTPUT_TYPE] == ALL
+        assert self.output == ALL
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
@@ -2398,7 +2331,7 @@ class SoftMax(TransferFunction):
                                         max_ind_ptr=max_ind_ptr,
                                         exp_sum_ptr=exp_sum_ptr)
 
-        output_type = self.params[OUTPUT_TYPE]
+        output_type = self.output
         exp_sum = builder.load(exp_sum_ptr)
         index = builder.load(max_ind_ptr)
         ptro = builder.gep(arg_out, [ctx.int32_ty(0), index])
@@ -2507,7 +2440,7 @@ class SoftMax(TransferFunction):
         derivative of values returned by SoftMax :  1d or 2d array (depending on *OUTPUT_TYPE* of SoftMax)
         """
 
-        output_type = self.params[OUTPUT_TYPE]
+        output_type = self.output_type
         size = len(output)
         sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
 
@@ -2668,8 +2601,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     DEFAULT_FILLER_VALUE = 0
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     class Parameters(TransferFunction.Parameters):
         """
             Attributes
@@ -2690,7 +2621,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     #         return True
     #     if m in MATRIX_KEYWORD_VALUES:
     #         return True
-    #     if isinstance(m, (list, np.ndarray, np.matrix, function_type)):
+    #     if isinstance(m, (list, np.ndarray, np.matrix, types.FunctionType)):
     #         return True
     #     return False
 
@@ -2702,20 +2633,18 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(matrix=matrix,
-                                                  params=params)
-
         # Note: this calls _validate_variable and _validate_params which are overridden below;
         #       the latter implements the matrix if required
         # super(LinearMatrix, self).__init__(default_variable=default_variable,
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            matrix=matrix,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
-        self.matrix = self.instantiate_matrix(self.paramsCurrent[MATRIX])
+        self.matrix = self.instantiate_matrix(self.matrix)
 
     # def _validate_variable(self, variable, context=None):
     #     """Insure that variable passed to LinearMatrix is a max 2D array
@@ -2889,7 +2818,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     # - assume it uses random.rand()
                     # - call with two args as place markers for cols and rows
                     # -  validate that it returns an array or np.matrix
-                    elif isinstance(param_value, function_type):
+                    elif isinstance(param_value, types.FunctionType):
                         test = param_value(1, 1)
                         if not isinstance(test, (np.ndarray, np.matrix)):
                             raise FunctionError("A function is specified for the matrix of the {} function of {}: {}) "
@@ -2909,8 +2838,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                                    self.owner_name,
                                                    MATRIX_KEYWORD_NAMES))
                 else:
-                    message += "Unrecognized param ({}) specified for the {} function of {}\n". \
-                        format(param_name, self.componentName, self.owner_name)
                     continue
             if message:
                 raise FunctionError(message)
@@ -2952,6 +2879,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                                MATRIX_KEYWORD_NAMES))
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
+        # replicates setting of receiver in _validate_params
+        if isinstance(self.owner, Projection):
+            self.receiver = self.defaults.variable
+
         if self.matrix is None and not hasattr(self.owner, "receiver"):
             variable_length = np.size(np.atleast_2d(self.defaults.variable), 1)
             self.matrix = np.identity(variable_length)
@@ -3101,7 +3032,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 # def is_matrix_spec(m):
 #     if m is None:
 #         return True
-#     if isinstance(m, (list, np.ndarray, np.matrix, function_type)):
+#     if isinstance(m, (list, np.ndarray, np.matrix, types.FunctionType)):
 #         return True
 #     if m in MATRIX_KEYWORD_VALUES:
 #         return True
@@ -3172,7 +3103,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
         return np.random.rand(rows, cols)
 
     # Function is specified, so assume it uses random.rand() and call with sender_len and receiver_len
-    if isinstance(specification, function_type):
+    if isinstance(specification, types.FunctionType):
         return specification(rows, cols)
 
     # (7/12/17 CW) this is a PATCH (like the one in MappingProjection) to allow users to
@@ -3248,7 +3179,9 @@ class CostFunctions(IntEnum):
     """Options for selecting constituent cost functions to be used by a `TransferWithCosts` Function.
 
     These can be used alone or in combination with one another, by enabling or disabling each using the
-    `TransferWithCosts` Function's `toggle_cost_function <TransferWithCosts.toggle_cost_function>` method.
+    `TransferWithCosts` Function's `enable_costs <TransferWithCosts.enable_costs>`,
+    `disable_costs <TransferWithCosts.disable_costs>`, `toggle_cost <TransferWithCosts.toggle_cost>` and
+    `assign_costs <TransferWithCosts.assign_costs>` methods.
 
     Attributes
     ----------
@@ -3403,14 +3336,13 @@ class TransferWithCosts(TransferFunction):
 
     .. _TransferWithCosts:
 
-    `function <TransferWithCosts.function>` returns value of `variable <Exponential.variable>` transformed by
-    `transfer_fct <TransferWithCosts.transfer_fct>`, after calling any cost functions that are enable and assigning
-    the result(s) to the corresponding parameter(s), as described below
+    returns value of `variable <TransferWithCosts.variable>` transformed by `transfer_fct
+    <TransferWithCosts.transfer_fct>`, after calling any cost functions that are enabled and assigning
+    the result(s) to the corresponding parameter(s), as described below.
 
     .. _TransferWithCosts_Cost_Functions:
 
-    Cost Functions
-    ~~~~~~~~~~~~~~
+    **Cost Functions**
 
     The TransferWithCosts function has three individual cost functions that it can execute when its `function
     <TransferWithCosts.function>` is executed, which assign their results to the attributes indicated below:
@@ -3420,11 +3352,12 @@ class TransferWithCosts(TransferFunction):
     * `duration_cost_fct <TransferWithCosts.duration_cost_fct>` -> `duration_cost <TransferWithCosts.duration_cost>`;
 
     Which functions are called is determined by the settings in `enabled_cost_functions
-    <TransferWithCosts.enabled_cost_functions>`, which can be initialized in the constructor using the
-    **enabled_cost_functions** argument, and modified using the `toggle_cost_function
-    <TransferWithCosts.toggle_cost_function>` method.  The value of any cost for which its function has
+    <TransferWithCosts.enabled_cost_functions>`, that can be initialized in the constructor using the
+    **enabled_cost_functions** argument, and later modified using the `enable_costs <TransferWithCosts.enable_costs>`,
+    `disable_costs <TransferWithCosts.disable_costs>`, `toggle_cost <TransferWithCosts.toggle_cost>` and
+    `assign_costs <TransferWithCosts.assign_costs>` methods.  The value of any cost for which its function has
     *never* been enabled is None;  otherwise, it is the value assigned when it was last enabled and executed
-    (see `duration_cost_fct <TransferWithCosts.duration_cost_fct> for additional details concerning that function).
+    (see `duration_cost_fct <TransferWithCosts.duration_cost_fct>` for additional details concerning that function).
 
     If any cost functions are enabled, then the `combine_costs_fct <TransferWithCosts.combine_costs_fct>` function
     is executed, which sums the results of those that are enabled (Hadamard style, if the costs are arrays), and
@@ -3434,28 +3367,26 @@ class TransferWithCosts(TransferFunction):
 
     .. _TransferWithCosts_Modulation_of_Cost_Params:
 
-    Modulation of Cost Function Parameters
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    **Modulation of Cost Function Parameters**
 
     The `multiplicative_param <Function_Modulatory_Params>` and `additive_param <Function_Modulatory_Params>` of each
-    cost function is assigned as a parameter of the TransferWIthCost `Function`.  This makes them accessible for
-    `modulation <ModulatorySignal_Modulation>` when the Function is assigned to a `Port` (e.g., as the default
-    `function <ControlSignal.function>` of a `ControlSignal`), or a `Mechanism <Mechanism>`.
+    `cost function <TransferWithCosts_Cost_Functions>` is assigned as a parameter of the TransferWithCost `Function`.
+    This makes them accessible for `modulation <ModulatorySignal_Modulation>` when the Function is assigned to a
+    `Port` (e.g., as the default `function <ControlSignal.function>` of a `ControlSignal`), or a `Mechanism
+    <Mechanism>`.  They can be referred to in the **modulation** argument of a `ModulatorySignal`\\'s constructor
+    (see `ModulatorySignal_Types`) using the following keywords:
 
-    For example, the following scripts shows how modulate the `intensity_cost_function
-    <ControlSignal.intensity_cost_function>` of a `ControlSignal`::
-
-   FIX: 9/3/19 FINISH EXAMPLE
-        >>> mech_1 = ProcessingMechanism()
-        >>> mech_2 = ProcessingMechanism()
-        >>> ctrl_mech_A = ControlMechanism(monitor_for_control=mech_1,
-              contol_signals)
-
-
-
-    COMMENT:
-    FIX 8/30/19: ADD EXAMPLES HERE FOR ASSIGNMENT TO ControlSignal AND DIRECTLY TO A MECHANISM
-    COMMENT
+        *INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM*
+        *INTENSITY_COST_FCT_ADDITIVE_PARAM*
+        *ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM*
+        *ADJUSTMENT_COST_FCT_ADDITIVE_PARAM*
+        *DURATION_COST_FCT_MULTIPLICATIVE_PARAM*
+        *DURATION_COST_FCT_ADDITIVE_PARAM*
+        *COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM*
+        *COMBINE_COSTS_FCT_ADDITIVE_PARAM*
+    |
+    See `example <ControlSignal_Example_Modulate_Costs>` of how these keywords can be used to
+    modulate the parameters of the cost functions of a TransferMechanism assigned to a ControlSignal.
 
     Arguments
     ---------
@@ -3476,19 +3407,19 @@ class TransferWithCosts(TransferFunction):
 
     enabled_cost_functions : CostFunctions or List[CostFunctions] : None
         specifies the costs to execute when `function <TransferWithCosts.function>` is called, and
-        include in the computation of `combined_cost <TransferWithCosts.combined_cost>`.
+        include in the computation of `combined_costs <TransferWithCosts.combined_costs>`.
 
     intensity_cost_fct : Optional[`TransferFunction`] : default `Exponential`
-        specifies the function used to compute the `intensity_cost <TransferWithCosts.intensity_cost>.
+        specifies the function used to compute the `intensity_cost <TransferWithCosts.intensity_cost>`.
 
     adjustment_cost_fct : Optional[`TransferFunction`] : default `Linear`
-        specifies the function used to compute the `adjustment_cost <TransferWithCosts.adjustment_cost>.
+        specifies the function used to compute the `adjustment_cost <TransferWithCosts.adjustment_cost>`.
 
     duration_cost_fct : `IntegratorFunction` : default `IntegratorFunction`
-        specifies the function used to compute the `duration_cost <TransferWithCosts.duration_cost>.
+        specifies the function used to compute the `duration_cost <TransferWithCosts.duration_cost>`.
 
     combine_costs_fct : function : default `LinearCombination`
-        specifies the function used to compute `combined_cost <TransferWithCosts.combined_cost>.
+        specifies the function used to compute `combined_costs <TransferWithCosts.combined_costs>`.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -3530,13 +3461,13 @@ class TransferWithCosts(TransferFunction):
     enabled_cost_functions : CostFunctions or None
         boolean combination of currently enabled CostFunctions;  determines which `cost functions
         <TransferWithCosts_Cost_Functions>` are calculated when `function <TransferWithCosts.function>` is called, and
-        are included in the computation of `combined_cost <TransferWithCosts.combined_cost>` (see
-        `TransferWithCosts_Cost_Functions` for additional details).
+        are included in the computation of `combined_costs <TransferWithCosts.combined_costs>` (see
+        `Cost Functions <TransferWithCosts_Cost_Functions>` for additional details).
 
     intensity_cost : float or None
         cost computed by `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>` for current `intensity
         <TransferWithCosts.intensity>`.  Value is None if `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>`
-        has not been enabled (see `TransferWithCosts_Cost_Functions` for additional details).
+        has not been enabled (see `Cost Functions <TransferWithCosts_Cost_Functions>` for additional details).
 
     intensity_cost_fct : TransferFunction
         calculates `intensity_cost` from the current value of `intensity <TransferWithCosts.intensity>`.
@@ -3554,8 +3485,8 @@ class TransferWithCosts(TransferFunction):
     adjustment_cost : float or None
         cost of change in `intensity <TransferWithCosts.intensity>` from the last time `function
         <TransferWithCosts.function>` was executed.  Value is None if `adjustment_cost_fct
-        <TransferWithCosts.adjustment_cost_fct>` has not been enabled (see `TransferWithCosts_Cost_Functions` for
-        additional details).
+        <TransferWithCosts.adjustment_cost_fct>` has not been enabled (see `Cost Functions
+        <TransferWithCosts_Cost_Functions>` for additional details).
 
     adjustment_cost_fct : TransferFunction
         calculates `adjustment_cost <TransferWithCosts.adjustment_cost>` based on the change in `intensity
@@ -3593,7 +3524,7 @@ class TransferWithCosts(TransferFunction):
         combined result of all `cost functions <TransferWithCostss_Cost_Functions>` that are enabled;
         computed by `combined_costs_fct <TransferWithCosts.combined_costs_fct>` for current `intensity
         <TransferWithCosts.intensity>`.  Value is None if no costs have been enabled (see
-        `TransferWithCosts_Cost_Functions` for additional details).
+        `Cost Functions <TransferWithCosts_Cost_Functions>` for additional details).
 
     combine_costs_fct : function
         combines the results of all `cost functions <TransferWithCostss_Cost_Functions>` that are enabled, and assigns
@@ -3871,20 +3802,19 @@ class TransferWithCosts(TransferFunction):
         #         raise FunctionError(f"Both {repr(DEFAULT_VARIABLE)} ({default_variable}) and {repr(SIZE)} ({size}) "
         #                             f"are specified for {self.name} but are {SIZE}!=len({DEFAULT_VARIABLE}).")
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(transfer_fct=transfer_fct,
-                                                  enabled_cost_functions=enabled_cost_functions,
-                                                  intensity_cost_fct=intensity_cost_fct,
-                                                  adjustment_cost_fct=adjustment_cost_fct,
-                                                  duration_cost_fct=duration_cost_fct,
-                                                  combine_costs_fct=combine_costs_fct,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+        super().__init__(
+            default_variable=default_variable,
+            transfer_fct=transfer_fct,
+            enabled_cost_functions=enabled_cost_functions,
+            intensity_cost_fct=intensity_cost_fct,
+            adjustment_cost_fct=adjustment_cost_fct,
+            duration_cost_fct=duration_cost_fct,
+            combine_costs_fct=combine_costs_fct,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=ContextFlags.CONSTRUCTOR
+        )
 
         # # MODIFIED 6/12/19 NEW: [JDC]
         # self._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
@@ -3912,9 +3842,9 @@ class TransferWithCosts(TransferFunction):
 
         def instantiate_fct(fct_name, fct):
             if not fct:
-                self.toggle_cost_function(fct_name, OFF)
+                self.toggle_cost(fct_name, OFF)
                 return None
-            if isinstance(fct, (Function, function_type, method_type)):
+            if isinstance(fct, (Function, types.FunctionType, types.MethodType)):
                 return fct
             elif issubclass(fct, Function):
                 return fct()
@@ -4003,7 +3933,7 @@ class TransferWithCosts(TransferFunction):
             # For each cost function that is enabled:
             # - get params for the cost functon using get_current_function_param:
             #   - if TransferWithControl is owned by a Mechanism, get value from ParameterPort for param
-            #   - otherwise, get from TransferWithControl parameter ModulationParam (which is also subject to modulation)
+            #   - otherwise, get from TransferWithControl modulation parameter (which is also subject to modulation)
 
             # Compute intensity_cost
             if enabled_cost_functions & CostFunctions.INTENSITY:
@@ -4133,7 +4063,7 @@ class TransferWithCosts(TransferFunction):
         self.parameters.enabled_cost_functions.set(enabled_cost_functions, execution_context)
         return enabled_cost_functions
 
-    def toggle_cost_function(self, cost_function_name:tc.any(str, CostFunctions),
+    def toggle_cost(self, cost_function_name:tc.any(str, CostFunctions),
                              assignment:bool=ON,
                              execution_context=None):
         """Enable/disable a `cost functions <TransferWithCosts_Cost_Functions>`.
@@ -4161,11 +4091,11 @@ class TransferWithCosts(TransferFunction):
         elif cost_function_name == COMBINE_COSTS_FUNCTION:
             raise FunctionError("{} cannot be disabled".format(COMBINE_COSTS_FUNCTION))
         else:
-            raise FunctionError("toggle_cost_function: unrecognized cost function: {}".format(cost_function_name))
+            raise FunctionError("toggle_cost: unrecognized cost function: {}".format(cost_function_name))
 
         enabled_cost_functions = self.parameters.enabled_cost_functions.get(execution_context)
         if assignment:
-            if not self.paramsCurrent[cost_function_name]:
+            if not cost_function_name in self.parameters.names():
                 raise FunctionError("Unable to toggle {} ON as function assignment is \'None\'".
                                          format(cost_function_name))
             if not enabled_cost_functions:

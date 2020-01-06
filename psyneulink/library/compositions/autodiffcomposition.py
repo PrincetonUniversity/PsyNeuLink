@@ -294,6 +294,7 @@ import numpy as np
 import ctypes
 from collections.abc import Iterable
 from toposort import toposort
+from inspect import isgenerator
 
 import logging
 try:
@@ -495,9 +496,6 @@ class AutodiffComposition(Composition):
             raise AutodiffCompositionError('Pytorch python module (torch) is not installed. Please install it with '
                                            '`pip install torch` or `pip3 install torch`')
 
-        # params = self._assign_args_to_param_dicts(learning_rate=learning_rate)
-        #
-        # super(AutodiffComposition, self).__init__(params=params, name=name)
         super(AutodiffComposition, self).__init__(name = name,
                                                   patience = patience,
                                                   min_delta = min_delta,
@@ -1117,25 +1115,32 @@ class AutodiffComposition(Composition):
                     self.parameters.losses._set([], context)
                 if callable(inputs):
                     stimuli = inputs()
+                elif isgenerator(inputs):
+                    stimuli = inputs
                 else:
                     stimuli = self._adjust_stimulus_dict(inputs)
-                trial_output = self.execute(
-                    inputs=stimuli,
-                    minibatch_size=minibatch_size,
-                    call_before_minibatch=call_before_minibatch,
-                    call_after_minibatch=call_after_minibatch,
-                    num_trials=num_trials,
-                    context=context,
-                    do_logging=do_logging,
-                    bin_execute=bin_execute
-                )
-                full_results = self.parameters.results._get(context)
-                if full_results is None:
-                    full_results = trial_output
-                else:
-                    full_results.append(trial_output)
-                self.parameters.results._set(full_results, context)
-                results = full_results
+
+                if isinstance(stimuli, dict):
+                    stimuli = [stimuli]
+
+                for stimulus_set in stimuli:
+                    trial_output = self.execute(
+                        inputs=stimulus_set,
+                        minibatch_size=minibatch_size,
+                        call_before_minibatch=call_before_minibatch,
+                        call_after_minibatch=call_after_minibatch,
+                        num_trials=num_trials,
+                        context=context,
+                        do_logging=do_logging,
+                        bin_execute=bin_execute
+                    )
+                    full_results = self.parameters.results._get(context)
+                    if full_results is None:
+                        full_results = trial_output
+                    else:
+                        full_results.append(trial_output)
+                    self.parameters.results._set(full_results, context)
+                    results = full_results
             self.most_recent_context = context
             return results
 

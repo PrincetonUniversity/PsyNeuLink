@@ -13,9 +13,9 @@ and `logged values <Log>`.
 Defaults
 ========
 
-Parameters have two types of defaults: *instance* defaults and *class* defaults. Class defaults belong to a PNL class, and suggest
-valid types and shapes of Parameter values. Instance defaults belong to an instance of a PNL class, and are used to validate
-compatibility between this instance and other PNL objects. Given a `TransferMechanism` *t*:
+Parameters have two types of defaults: *instance* defaults and *class* defaults. Class defaults belong to a PNL class,
+and suggest valid types and shapes of Parameter values. Instance defaults belong to an instance of a PNL class,
+and are used to validate compatibility between this instance and other PNL objects. Given a `TransferMechanism` *t*:
 
     - instance defaults are accessible by ``t.defaults``
     - class defaults are accessible by ``t.class_defaults`` or ``TransferMechanism.defaults``
@@ -307,7 +307,7 @@ def copy_parameter_value(value, shared_types=None, memo=None):
         used in computation requiring it to be a "real" instance
         (like `Component.function`)
 
-        e.g. in spec attribute or Parameter `Mechanism.input_ports_spec`
+        e.g. in spec attribute or Parameter `Mechanism.input_ports`
     """
     from psyneulink.core.components.component import Component, ComponentsMeta
 
@@ -338,7 +338,7 @@ class ParametersTemplate:
 
     def __init__(self, owner, parent=None):
         # using weakref to allow garbage collection of unused objects of this type
-        self._owner = weakref.proxy(owner)
+        self._owner = owner
         self._parent = parent
         if isinstance(self._parent, ParametersTemplate):
             # using weakref to allow garbage collection of unused children
@@ -424,6 +424,17 @@ class ParametersTemplate:
 
     def names(self, show_all=False):
         return sorted([p for p in self.values(show_all)])
+
+    @property
+    def _owner(self):
+        return unproxy_weakproxy(self.__owner)
+
+    @_owner.setter
+    def _owner(self, value):
+        try:
+            self.__owner = weakref.proxy(value)
+        except TypeError:
+            self.__owner = value
 
 
 class Defaults(ParametersTemplate):
@@ -618,10 +629,7 @@ class Parameter(types.SimpleNamespace):
 
         constructor_argument
             if not None, this indicates the argument in the owning Component's
-            constructor that this Parameter corresponds to. Typically this is
-            used in Parameters that save specification types, as in
-            `input_ports_spec <Mechanism.input_ports_spec>` and
-            `output_ports_spec <Mechanism.output_ports_spec>`
+            constructor that this Parameter corresponds to.
 
             :default: None
 
@@ -654,7 +662,12 @@ class Parameter(types.SimpleNamespace):
     # will be included as "param attrs" - the attributes of a Parameter that may be of interest to/settable by users
     # To add an additional property-like param attribute, add its name here, and a _set_<param_name> method
     # (see _set_history_max_length)
-    _additional_param_attr_properties = {'default_value', 'history_max_length', 'log_condition'}
+    _additional_param_attr_properties = {
+        'default_value',
+        'history_max_length',
+        'log_condition',
+        'spec',
+    }
 
     def __init__(
         self,
@@ -662,9 +675,11 @@ class Parameter(types.SimpleNamespace):
         name=None,
         stateful=True,
         modulable=False,
+        structural=False,
         modulation_combination_function=None,
         read_only=False,
         function_arg=True,
+        function_parameter=False,
         pnl_internal=False,
         aliases=None,
         user=True,
@@ -681,6 +696,7 @@ class Parameter(types.SimpleNamespace):
         retain_old_simulation_data=False,
         constructor_argument=None,
         spec=None,
+        parse_spec=False,
         valid_types=None,
         _owner=None,
         _inherited=False,
@@ -709,9 +725,11 @@ class Parameter(types.SimpleNamespace):
             name=name,
             stateful=stateful,
             modulable=modulable,
+            structural=structural,
             modulation_combination_function=modulation_combination_function,
             read_only=read_only,
             function_arg=function_arg,
+            function_parameter=function_parameter,
             pnl_internal=pnl_internal,
             aliases=aliases,
             user=user,
@@ -728,19 +746,13 @@ class Parameter(types.SimpleNamespace):
             retain_old_simulation_data=retain_old_simulation_data,
             constructor_argument=constructor_argument,
             spec=spec,
+            parse_spec=parse_spec,
             valid_types=valid_types,
             _inherited=_inherited,
             _user_specified=_user_specified,
         )
 
-        if _owner is None:
-            self._owner = None
-        else:
-            try:
-                self._owner = weakref.proxy(_owner)
-            except TypeError:
-                self._owner = _owner
-
+        self._owner = _owner
         self._param_attrs = [k for k in self.__dict__ if k[0] != '_'] \
             + [k for k in self.__class__.__dict__ if k in self._additional_param_attr_properties]
         self._inherited_attrs_cache = {}
@@ -762,6 +774,9 @@ class Parameter(types.SimpleNamespace):
         except AttributeError:
             return super().__str__()
 
+    def __lt__(self, other):
+        return self.name < other.name
+
     def __deepcopy__(self, memo):
         result = Parameter(
             **{
@@ -769,7 +784,8 @@ class Parameter(types.SimpleNamespace):
                 for k in self._param_attrs
             },
             _owner=self._owner,
-            _inherited=self._inherited
+            _inherited=self._inherited,
+            _user_specified=self._user_specified,
         )
         memo[id(self)] = result
 
@@ -832,8 +848,12 @@ class Parameter(types.SimpleNamespace):
                         delattr(self, attr)
             else:
                 for attr in self._param_attrs:
-                    if attr not in self._uninherited_attrs:
+                    if (
+                        attr not in self._uninherited_attrs
+                        and getattr(self, attr) is getattr(self._parent, attr)
+                    ):
                         setattr(self, attr, self._inherited_attrs_cache[attr])
+
             self.__inherited = value
 
     def _cache_inherited_attrs(self):
@@ -1174,6 +1194,11 @@ class Parameter(types.SimpleNamespace):
 
         super().__setattr__('log_condition', value)
 
+    def _set_spec(self, value):
+        if self.parse_spec:
+            value = self._parse(value)
+        super().__setattr__('spec', value)
+
 
 class _ParameterAliasMeta(type):
     # these will not be taken from the source
@@ -1201,19 +1226,30 @@ class ParameterAlias(types.SimpleNamespace, metaclass=_ParameterAliasMeta):
     """
     def __init__(self, source=None, name=None):
         super().__init__(name=name)
-        try:
-            self.source = weakref.proxy(source)
-        except TypeError:
-            # source is already a weakref proxy, coming from another ParameterAlias
-            self.source = source
+
+        self.source = source
 
         try:
             source._register_alias(name)
         except AttributeError:
             pass
 
+    def __lt__(self, other):
+        return self.name < other.name
+
     def __getattr__(self, attr):
         return getattr(self.source, attr)
+
+    @property
+    def source(self):
+        return unproxy_weakproxy(self._source)
+
+    @source.setter
+    def source(self, value):
+        try:
+            self._source = weakref.proxy(value)
+        except TypeError:
+            self._source = value
 
 
 # KDM 6/29/18: consider assuming that ALL parameters are stateful
@@ -1274,7 +1310,10 @@ class ParametersBase(ParametersTemplate):
         except AttributeError:
             try:
                 param_owner = self._owner
-                owner_string = f' of {param_owner.name}'
+                if isinstance(param_owner, type):
+                    owner_string = f' of {param_owner}'
+                else:
+                    owner_string = f' of {param_owner.name}'
                 if hasattr(param_owner, 'owner') and param_owner.owner:
                     owner_string += f' for {param_owner.owner.name}'
                     if hasattr(param_owner.owner, 'owner') and param_owner.owner.owner:
@@ -1299,7 +1338,13 @@ class ParametersBase(ParametersTemplate):
 
                 if value.aliases is not None:
                     for alias in value.aliases:
-                        if not hasattr(self, alias) or unproxy_weakproxy(getattr(self, alias)._owner) is not self:
+                        # the alias doesn't exist, or it's an alias on the
+                        # parent
+                        if (
+                            not hasattr(self, alias)
+                            or not hasattr(getattr(self, alias), '_owner')
+                            or unproxy_weakproxy(getattr(self, alias)._owner) is not self
+                        ):
                             super().__setattr__(alias, ParameterAlias(source=getattr(self, attr), name=alias))
                             self._register_parameter(alias)
 

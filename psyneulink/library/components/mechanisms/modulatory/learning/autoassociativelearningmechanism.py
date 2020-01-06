@@ -105,6 +105,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     ADDITIVE, AUTOASSOCIATIVE_LEARNING_MECHANISM, CONTROL_PROJECTIONS, INPUT_PORTS, \
     LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_PORTS, OWNER_VALUE, VARIABLE
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, parameter_spec
@@ -274,34 +275,38 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
             Attributes
             ----------
 
-                learning_signals
-                    see `learning_signals <AutoAssociativeLearningMechanism.learning_signals>`
-
-                    :default value: None
-                    :type:
-
                 modulation
                     see `modulation <AutoAssociativeLearningMechanism.modulation>`
 
                     :default value: ADDITIVE
-                    :type: `ModulationParam`
+                    :type: str
 
         """
-        learning_signals = None
+        function = Parameter(Hebbian, stateful=False, loggable=False)
         modulation = ADDITIVE
+        input_ports = Parameter(
+            [ACTIVATION_INPUT],
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
+            parse_spec=True,
+        )
+        output_ports = Parameter(
+            [{
+                NAME: LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
+                VARIABLE: (OWNER_VALUE, 0)
+            }],
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
+        )
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
     learning_type = LearningType.UNSUPERVISED
     learning_timing = LearningTiming.EXECUTION_PHASE
-
-    paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        CONTROL_PROJECTIONS: None,
-        INPUT_PORTS:input_port_names,
-        OUTPUT_PORTS:[{NAME:LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
-                        VARIABLE: (OWNER_VALUE,0)}
-                       ]})
 
     @tc.typecheck
     def __init__(self,
@@ -316,11 +321,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                  prefs:is_pref_set=None,
                  **kwargs
                  ):
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  learning_signals=learning_signals,
-                                                  params=params)
 
         # # USE FOR IMPLEMENTATION OF deferred_init()
         # # Store args for deferred initialization
@@ -342,6 +342,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                          params=params,
                          name=name,
                          prefs=prefs,
+                         learning_signals=learning_signals,
                          **kwargs
                          )
 

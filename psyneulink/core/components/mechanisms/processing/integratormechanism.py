@@ -151,18 +151,14 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         """
         function = Parameter(AdaptiveIntegrator(rate=0.5), stateful=False, loggable=False)
 
-    paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({
-    #     OUTPUT_PORTS:[PREDICTION_MECHANISM_OUTPUT]
-    # })
-
+        #
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,
                  input_ports:tc.optional(tc.any(list, dict))=None,
                  function=None,
-                 output_ports:tc.optional(tc.any(str, Iterable))=RESULTS,
+                 output_ports:tc.optional(tc.any(str, Iterable))=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -170,19 +166,14 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         """Assign type-level preferences, default input value (SigmoidLayer_DEFAULT_BIAS) and call super.__init__
         """
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(input_ports=input_ports,
-                                                  output_ports=output_ports,
-                                                  function=function,
-                                                  params=params)
-
         super(IntegratorMechanism, self).__init__(default_variable=default_variable,
                                                   size=size,
                                                   function=function,
                                                   params=params,
                                                   name=name,
                                                   prefs=prefs,
-
+                                                  input_ports=input_ports,
+                                                  output_ports=output_ports,
                                                   **kwargs)
 
         # IMPLEMENT: INITIALIZE LOG ENTRIES, NOW THAT ALL PARTS OF THE MECHANISM HAVE BEEN INSTANTIATED

@@ -1,7 +1,27 @@
+import sys
+import os
 import timeit
 import numpy as np
+import argparse
+
 from psyneulink import *
 from double_dqn import DoubleDQNAgent
+
+from gym_forager.envs.forager_env import ForagerEnv
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--seed", type=int,
+        default=int.from_bytes(os.urandom(4), byteorder="big"),
+        help='Random seed, seed from os.urandom if unspecified.')
+args = parser.parse_args()
+
+# Set the global seed for PsyNeuLink
+SEED = args.seed
+from psyneulink.core.globals.utilities import set_global_seed
+set_global_seed(SEED)
+np.random.seed(SEED+1)
+gym_forager_env = ForagerEnv(obs_type='egocentric', incl_values=False, frameskip=2)
+gym_forager_env.seed(SEED+2)
 
 # *********************************************************************************************************************
 # *********************************************** CONSTANTS ***********************************************************
@@ -23,7 +43,7 @@ ACTION = AGENT_ACTION
 # Verbosity levels for console printout
 ACTION_REPORTING = 2
 STANDARD_REPORTING = 1
-VERBOSE = ACTION_REPORTING
+VERBOSE = STANDARD_REPORTING
 
 
 # ControlSignal parameters
@@ -83,7 +103,9 @@ def get_trial_type(observation):
 # ddqn_agent = DoubleDQNAgent(env=env, model_load_path='', eval_mode=True)
 ddqn_agent = DoubleDQNAgent(model_load_path=MODEL_PATH,
                             eval_mode=True,
+                            save_frames=False,
                             # render=False
+                            env=gym_forager_env
                             )
 
 def new_episode():
@@ -212,11 +234,16 @@ if SHOW_GRAPH:
     #                       )
 
 
+# Wrap the entire composition inside another composition so we can perform
+# parameter optimization.
+opt_comp = Composition(name='outer_opt_comp')
+opt_comp.add_node(agent_comp)
+
 # *********************************************************************************************************************
 # ******************************************   RUN SIMULATION  ********************************************************
 # *********************************************************************************************************************
 
-num_episodes = 100
+num_episodes = 20
 outcome_log = []
 reward_log = []
 predator_control_log = []
@@ -257,7 +284,6 @@ def input_generator():
 
         ddqn_agent.env.trialType = trialType  # 0 is single prey, 1 is two prey, 2 is prey & predator
         observation = ddqn_agent.env.reset()
-        print(f"observation = {observation}")
         new_episode()
         while True:
 
@@ -276,17 +302,23 @@ def input_generator():
             if VERBOSE >= ACTION_REPORTING:
                 print(f'\nOUTER LOOP OPTIMAL ACTION:{optimal_action}')
 
-            # Yield the next input the agent composition.
-            yield {player_percept:[observation[player_coord_slice]],
-                   predator_percept:[observation[predator_coord_slice]],
-                   prey_percept:[observation[prey_coord_slice]],
-                   prey_pred_trial_input_mech:[prey_pred_trialType],
-                   single_prey_trial_input_mech: [single_prey_trialType],
-                   double_prey_trial_input_mech: [double_prey_trialType],
-                   reward_input_mech:[reward]}
+            # Yield the next input the agent composition. Since this generator is
+            # passed to the outert optimization composition, it must generate
+            # an input dictionary keyed by the inner agent composition node.
+            yield {
+                    agent_comp: {
+                        player_percept:[observation[player_coord_slice]],
+                        predator_percept:[observation[predator_coord_slice]],
+                        prey_percept:[observation[prey_coord_slice]],
+                        prey_pred_trial_input_mech:[prey_pred_trialType],
+                        single_prey_trial_input_mech: [single_prey_trialType],
+                        double_prey_trial_input_mech: [double_prey_trialType],
+                        reward_input_mech:[reward]
+                        }
+                    }
 
             # Get agent's action based on perceptual distortion of observation (and application of control)
-            run_results = agent_comp.results[-1]
+            run_results = opt_comp.results[-1]
             agent_action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
 
             if VERBOSE >= ACTION_REPORTING:
@@ -359,28 +391,24 @@ def input_generator():
     if RENDER:
         ddqn_agent.env.render(close=True)  # If visualization is desired
 
-def main():
-
-    if RENDER:
-        ddqn_agent.env.render()  # If visualization is desired
-    else:
-        print('\nRunning simulation... ')
-
-    optimization_comp = Composition(name='optim_comp')
-    optimization_comp.add_node(agent_comp)
+def run_games(cost_rate):
+    ocm.control_signals[0].parameters.intensity_cost_function.get(context).parameters.rate.set(cost_rate, context)
+    ocm.control_signals[0].parameters.intensity_cost_function.get(context).parameters.rate.set(cost_rate, context)
+    ocm.control_signals[0].parameters.intensity_cost_function.get(context).parameters.rate.set(cost_rate, context)
 
     # Run num_episodes games to completion.
-    optimization_comp.run(inputs=input_generator,
+    opt_comp.run(inputs=input_generator,
                    bin_execute='LLVM' if PNL_COMPILE else 'Python',
                    context=context)
 
     loss = np.abs(np.mean(np.asarray(predator_control_log[-20:])) - 500) + np.mean(np.asarray(prey_control_log[-20:]))
+    print(f"Loss = {loss}")
 
-    if RENDER:
-        ddqn_agent.env.render(close=True)  # If visualization is desired
+    return loss
 
+def main(cost_rate):
+    return run_games(cost_rate)
 
-if RUN:
-    if __name__ == "__main__":
-        main()
+if __name__ == "__main__":
+    main(COST_RATE)
 

@@ -42,7 +42,7 @@ A GatingMechanism is created by calling its constructor.  When a GatingMechanism
 monitors and the `InputPorts <InputPort>` and/or `OutputPorts <OutputPort>` it modulates can be specified in the
 **montior_for_gating** and **gate** arguments of its constructor, respectively.  Each can be specified in several
 ways, paralleling those used for a ControlMechanism, and described in `ControlMechanism_Monitor_for_Control` and
-`ControlMechanism_Control_Signals` respectively. If neither the **montior_for_gating** or **gate** arguments is
+`ControlMechanism_ControlSignals` respectively. If neither the **montior_for_gating** or **gate** arguments is
 specified, then only the GatingMechanism is constructed, and its inputs and the InputPorts and/or OutputPorts it
 modulates must be specified in some other way.
 COMMENT:
@@ -185,7 +185,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultGatingAllocation
 from psyneulink.core.globals.keywords import \
     GATING, GATING_PROJECTION, GATING_PROJECTIONS,GATING_SIGNAL,GATING_SIGNALS,GATING_SIGNAL_SPECS, \
-    INIT_EXECUTE_METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, MONITOR_FOR_CONTROL, MULTIPLICATIVE, PROJECTION_TYPE
+    INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, MULTIPLICATIVE, PROJECTION_TYPE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -267,11 +267,6 @@ class GatingMechanism(ControlMechanism):
             Protocol for instantiating unassigned GatingProjections (i.e., w/o a sender specified):
                If sender is not specified for a GatingProjection (e.g., in an InputPort or OutputPort tuple spec)
                    it is flagged for deferred_init() in its __init__ method
-               When the next GatingMechanism is instantiated, if its params[MAKE_DEFAULT_GATING_MECHANISM] == True, its
-                   _take_over_as_default_gating_mechanism method is called in _instantiate_attributes_after_function;
-                   it then iterates through all of the InputPorts and OutputPorts of all of the Mechanisms in its
-                   System, identifies ones without a sender specified, calls its deferred_init() method,
-                   instantiates a GatingSignal for it, and assigns it as the GatingProjection's sender.
     COMMENT
 
     Arguments
@@ -310,7 +305,7 @@ class GatingMechanism(ControlMechanism):
         argument; if a `Mechanism <Mechanism>` is specified, its `primary InputPort <InputPort_Primary>`
         is used (see `GatingMechanism_GatingSignals for details).
 
-    modulation : ModulationParam : MULTIPLICATIVE
+    modulation : str : MULTIPLICATIVE
         specifies the default form of modulation used by the GatingMechanism's `GatingSignals <GatingSignal>`,
         unless they are `individually specified <GatingSignal_Specification>`.
 
@@ -382,7 +377,7 @@ class GatingMechanism(ControlMechanism):
         GatingMechanism's `value <GatingMechanism.value>` attribute. Default is a single item used by all of the
         `gating_signals <GatingMechanism.gating_signals>`.
 
-    modulation : ModulationParam
+    modulation : str
         the default form of modulation used by the GatingMechanism's `GatingSignals <GatingSignal>`,
         unless they are `individually specified <GatingSignal_Specification>`.
 
@@ -476,10 +471,6 @@ class GatingMechanism(ControlMechanism):
                 if args:
                     monitor_for_gating.extend(convert_to_list(args))
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  params=params)
-
         super().__init__(default_variable=default_gating_allocation,
                          size=size,
                          monitor_for_control=monitor_for_gating,
@@ -523,50 +514,6 @@ class GatingMechanism(ControlMechanism):
     def _check_for_duplicates(self, control_signal, control_signals, context):
         """Override ControlMechanism to check in self.gating_signals rather than self.control_signals"""
         super()._check_for_duplicates(control_signal, self.gating_signals, context)
-
-    def _instantiate_attributes_after_function(self, context=None):
-        """Take over as default GatingMechanism (if specified) and implement any specified GatingProjections
-        """
-
-        super()._instantiate_attributes_after_function(context=context)
-
-        if MAKE_DEFAULT_GATING_MECHANISM in self.paramsCurrent:
-            if self.paramsCurrent[MAKE_DEFAULT_GATING_MECHANISM]:
-                self._assign_as_gating_mechanism(context=context)
-
-        # FIX: 5/23/17 CONSOLIDATE/SIMPLIFY THIS RE: gating_signal ARG??  USE OF PROJECTIONS, ETC.
-        # FIX:         ?? WHERE WOULD GATING_PROJECTIONS HAVE BEEN SPECIFIED IN paramsCURRENT??
-        # FIX:         DOCUMENT THAT VALUE OF GATING ENTRY CAN BE A PROJECTION
-        # FIX:         RE-WRITE parse_port_spec TO TAKE TUPLE THAT SPECIFIES (PARAM VALUE, GATING SIGNAL)
-        #                       RATHER THAN (PARAM VALUE, GATING PROJECTION)
-        # FIX: NOT CLEAR THIS IS GETTING USED AT ALL; ALSO, ??REDUNDANT WITH CALL IN _instantiate_output_ports
-        # If GatingProjections were specified, implement them
-        if GATING_PROJECTIONS in self.paramsCurrent:
-            if self.paramsCurrent[GATING_PROJECTIONS]:
-                for key, projection in self.paramsCurrent[GATING_PROJECTIONS].items():
-                    self._instantiate_gating_projection(projection, context=context)
-
-    def _assign_as_gating_mechanism(self, context=None):
-
-        # FIX 5/23/17: INTEGRATE THIS WITH ASSIGNMENT OF gating_signals
-        # FIX:         (E.G., CHECK IF SPECIFIED GatingSignal ALREADY EXISTS)
-        # Check the input_ports and output_ports of the System's Mechanisms
-        #    for any GatingProjections with deferred_init()
-        for mech in self.system.mechanisms:
-            for port in mech._input_ports + mech._output_ports:
-                for projection in port.mod_afferents:
-                    # If projection was deferred for init, initialize it now and instantiate for self
-                    if (projection.initialization_status == ContextFlags.DEFERRED_INIT
-                        and projection._init_args['sender'] is None):
-                        # FIX 5/23/17: MODIFY THIS WHEN (param, GatingProjection) tuple
-                        # FIX:         IS REPLACED WITH (param, GatingSignal) tuple
-                        # Add projection itself to any params specified in the GatingProjection for the GatingSignal
-                        #    (cached in the GatingProjection's gating_signal attrib)
-                        gating_signal_specs = projection.gating_signal or {}
-                        gating_signal_specs.update({GATING_SIGNAL_SPECS: [projection]})
-                        self._instantiate_gating_signal(gating_signal_specs, context=context)
-
-        self._activate_projections_for_compositions(self.system)
 
     # Overrided gating_signals
     @property

@@ -407,8 +407,9 @@ from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, NAME, \
-    OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMETER_PORTS, PARAMS
-from psyneulink.core.globals.parameters import Parameter
+    OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMETER_PORTS, PARAMS, \
+    CONTROL, AUTO_ASSIGN_MATRIX
+from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 from psyneulink.core import llvm as pnlvm
@@ -674,22 +675,30 @@ class OptimizationControlMechanism(ControlMechanism):
         comp_execution_mode = Parameter('Python', stateful=False, loggable=False, pnl_internal=True)
         search_statefulness = Parameter(True, stateful=False, loggable=False)
 
-        agent_rep = Parameter(None, stateful=False, loggable=False, pnl_internal=True)
+        agent_rep = Parameter(None, stateful=False, loggable=False, pnl_internal=True, structural=True)
 
         feature_values = Parameter(_parse_feature_values_from_variable([defaultControlAllocation]), user=False, pnl_internal=True)
 
-        features = Parameter(None, pnl_internal=True)
-        num_estimates = 1
+        input_ports = Parameter(
+            [{NAME: OUTCOME, PARAMS: {INTERNAL_ONLY: True}}],
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
+            parse_spec=True,
+            aliases='features',
+            constructor_argument='features'
+        )
+        num_estimates = None
         # search_space = None
         control_allocation_search_space = None
 
-    paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
-    paramClassDefaults.update({PARAMETER_PORTS: NotImplemented}) # This suppresses parameterPorts
-
-
+        saved_samples = None
+        saved_values = None
     @tc.typecheck
     def __init__(self,
                  agent_rep=None,
+                 function=None,
                  features: tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort)) = None,
                  feature_function: tc.optional(tc.any(is_function_type)) = None,
                  num_estimates = None,
@@ -700,43 +709,33 @@ class OptimizationControlMechanism(ControlMechanism):
                  **kwargs):
         """Implement OptimizationControlMechanism"""
 
-        self.agent_rep = agent_rep
-        self.search_function = search_function
-        self.search_termination_function = search_termination_function
-        self.saved_samples = None
-        self.saved_values = None
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(input_ports=features,
-                                                  feature_function=feature_function,
-                                                  num_estimates=num_estimates,
-                                                  search_statefulness=search_statefulness,
-                                                  search_function=search_function,
-                                                  search_termination_function=search_termination_function,
-                                                  agent_rep=agent_rep,
-                                                  features=features,
-                                                  params=params)
-
-        super().__init__(system=None,
-                         params=params,
-                         **kwargs)
+        super().__init__(
+            system=None,
+            function=function,
+            input_ports=features,
+            features=features,
+            feature_function=feature_function,
+            num_estimates=num_estimates,
+            search_statefulness=search_statefulness,
+            search_function=search_function,
+            search_termination_function=search_termination_function,
+            agent_rep=agent_rep,
+            params=params,
+            **kwargs
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Insure that specification of ObjectiveMechanism has projections to it"""
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        if self.function is None:
-            raise OptimizationControlMechanismError(f"The {repr(FUNCTION)} arg of an {self.__class__.__name__} must "
-                                                    f"be specified and be an {OptimizationFunction.__name__}")
-
         from psyneulink.core.compositions.composition import Composition
-        if self.agent_rep is None:
+        if request_set[AGENT_REP] is None:
             raise OptimizationControlMechanismError(f"The {repr(AGENT_REP)} arg of an {self.__class__.__name__} must "
                                                     f"be specified and be a {Composition.__name__}")
 
-        elif not (isinstance(self.agent_rep, Composition)
-                  or (isinstance(self.agent_rep, type) and issubclass(self.agent_rep, Composition))):
+        elif not (isinstance(request_set[AGENT_REP], Composition)
+                  or (isinstance(request_set[AGENT_REP], type) and issubclass(request_set[AGENT_REP], Composition))):
             raise OptimizationControlMechanismError(f"The {repr(AGENT_REP)} arg of an {self.__class__.__name__} "
                                                     f"must be either a {Composition.__name__} or a sublcass of one")
 
@@ -790,10 +789,11 @@ class OptimizationControlMechanism(ControlMechanism):
         Assign each modulatory_signal sequentially to corresponding item of control_allocation.
         """
         from psyneulink.core.globals.keywords import OWNER_VALUE
-        for i, spec in enumerate(self.control):
+        output_port_specs = list(enumerate(self.output_ports))
+        for i, spec in output_port_specs:
             control_signal = self._instantiate_control_signal(spec, context=context)
             control_signal._variable_spec = (OWNER_VALUE, i)
-            self.control_signals[i] = control_signal
+            self.output_ports[i] = control_signal
         self.defaults.value = np.tile(control_signal.parameters.variable.default_value, (i + 1, 1))
         self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
 
@@ -827,6 +827,33 @@ class OptimizationControlMechanism(ControlMechanism):
         from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
         if (isinstance(self.agent_rep, CompositionFunctionApproximator)):
             self._initialize_composition_function_approximator(context)
+
+    def _instantiate_objective_mechanism(self, context=None):
+        from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+        # differs from parent because it should not use add_to_monitor on its
+        # input_states (formerly monitor_for_control)
+
+        # Assign ObjectiveMechanism's role as CONTROL
+        self.objective_mechanism._role = CONTROL
+
+        # Instantiate MappingProjection from ObjectiveMechanism to ControlMechanism
+        projection_from_objective = MappingProjection(sender=self.objective_mechanism,
+                                                      receiver=self,
+                                                      matrix=AUTO_ASSIGN_MATRIX,
+                                                      context=context)
+
+        # CONFIGURE FOR ASSIGNMENT TO COMPOSITION
+
+        # Insure that ObjectiveMechanism's input_ports are not assigned projections from a Composition's input_CIM
+        for input_port in self.objective_mechanism.input_ports:
+            input_port.internal_only = True
+        # Flag ObjectiveMechanism and its Projection to ControlMechanism for inclusion in Composition
+        self.aux_components.append(self.objective_mechanism)
+        self.aux_components.append(projection_from_objective)
+
+        # ASSIGN ATTRIBUTES
+
+        self._objective_projection = projection_from_objective
 
     def _update_input_ports(self, context=None, runtime_params=None):
         """Update value for each InputPort in self.input_ports:

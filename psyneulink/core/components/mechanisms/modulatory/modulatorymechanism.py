@@ -46,19 +46,10 @@ There are two primary types of ModulatoryMechanism:
     `OutputPorts <OutputPort>` that appear after its ControlSignals in its `output_ports
     <ControlMechanism.output_ports>` attribute.
 
-COMMENT:
-..
-* `GatingMechanism`
-    a subclsass of `ModulatoryMechanism` that is specialized for modulating the input to or output from a `Mechanism
-    <Mechanism>`; it takes an evaluative signal (generally received from an `ObjectiveMechanism`) and generates a
-    `gating_allocation <GatingMechanism.gating_allocation>`, each item of which is assigned to one of its
-    `GatingSignals <ControlSignal>`;  each of those generates a `gating_signal <ControlSignal.control_signal>`
-    that is used by its `GatingProjection(s) <ControlProjection>` to modulate the parameter of a `function
-    <Port_Base.function>` (and thereby the `value <Port_Base.value>`) of an `InputPort` or `OutputPort`.
-    A GatingMechanism can be assigned only the `GatingSignal` class of `ModulatorySignal`, but can be also be assigned
-    other generic `OutputPorts <OutputPort>`.
-COMMENT.
-..
+    `GatingMechanism` is a specialized subclass of ControlMechanism,
+    that is used to modulate the `value <Port_Base.value>` of an `InputPort` or `OutputPort`, and that uses
+    `GatingSignals <GatingSignal>` which do not have any cost attributes.
+
 * `LearningMechanism`
     modulates the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`.  Takes an error signal
     (received from an `ObjectiveMechanism` or another `LearningMechanism`) and generates a `learning_signal
@@ -68,20 +59,30 @@ COMMENT.
     as its `OuputStates <OutputPort>`, but can be also be assigned other generic `OutputPorts <OutputPort>`,
     that appear after its LearningSignals in its `output_ports <LearningMechanism.output_ports>` attribute.
 
-See `ModulatorySignal <ModulatorySignal_Naming>` for conventions used for the names of Modulatory components.
-
 A single `ModulatoryMechanism` can be assigned more than one ModulatorySignal of the appropriate type, each of which
 can be assigned different `control_allocations <ControlSignal.control_allocation>` (for ControlSignals) or
 `learning_signals <LearningMechanism.learning_signal>` (for LearningSignals).  A single ModulatorySignal can also be
 assigned multiple ModulatoryProjections; however, as described  in `ModulatorySignal_Projections`, they will all
 be assigned the same `variable <ModulatoryProjection_Base.variable>`.
 
-COMMENT:
-ModulatoryMechanisms are always executed after all `ProcessingMechanisms <ProcessingMechanism>` in the `Process` or
-`System` to which they belong have been executed, with all LearningMechanism executed first, then GatingMechanism,
-ControlMechanism. All three types of ModulatoryMechanisms are executed before the next `TRIAL`, so that the
-modifications they make are available during the next `TRIAL` run for the Process or System.
-COMMENT
+.. _ModulatoryMechanism_Naming:
+
+*Naming Conventions for Modulatory Components*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Modulatory Components and their attributes are named according to the type of modulation using the following templates:
+
+  * ModulatoryMechanism name
+      <*Type*>Mechanism (e.g., ControlMechanism)
+  * ModulatorySignal name
+      <*Type*>Signal (e.g., ControlSignal)
+  * ModulatoryProjection name
+      <*Type*>Projection (e.g., ControlProjection)
+  * List of a ModulatoryMechanism's ModulatorySignals
+      <*Type*>Mechanism.<type>_signals (e.g., ControlMechanism.control_signals)
+  * Value of a ModulatorySignal
+      <*Type*>Signal.<type>_signal (e.g., ControlSignal.control_signal)
+
 
 .. _ModulatoryMechanism_Creation:
 
@@ -92,7 +93,7 @@ A ModulatoryMechanism can be created by using the standard Python method of call
 ModulatoryMechanisms of the appropriate subtype are also created automatically when other Components are created that
 require them, or a form of modulation is specified for them. For example, a `ControlMechanism <ControlMechanism>` is
 automatically created as part of a `System <System_Creation>` (for use as its `controller
-<System.controller>`), or when `control is specified <ControlMechanism_Control_Signals>` for the parameter of a
+<System.controller>`), or when `control is specified <ControlMechanism_ControlSignals>` for the parameter of a
 `Mechanism <Mechanism>`; and one or more `LearningMechanism <LearningMechanism>` are created when learning is
 specified for a `Process <Process_Learning_Sequence>` or a `System <System_Learning>` (see the documentation for
 `subtypes <ModulatoryMechanism_Subtypes>` of ModulatoryMechanisms for more specific information about how to create them).
@@ -154,7 +155,7 @@ class ModulatoryMechanism_Base(Mechanism_Base):
     Attributes
     ----------
 
-    modulation : ModulationParam
+    modulation : str
         determines how the output of the ModulatoryMechanism's `ModulatorySignal(s) <ModulatorySignal>` are used to
         modulate the value of the Port(s) to which their `ModulatoryProjection(s) <ModulatoryProjection>` project.
    """
@@ -196,19 +197,14 @@ class ModulatoryMechanism_Base(Mechanism_Base):
         """Abstract class for ModulatoryMechanism
         """
 
-        if not hasattr(self, 'system'):
-            self.system = None
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(params=params,
-                                                  modulation=modulation)
-
-        super().__init__(default_variable=default_variable,
-                         size=size,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         context=context,
-                         function=function,
-                         **kwargs
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            size=size,
+            modulation=modulation,
+            params=params,
+            name=name,
+            prefs=prefs,
+            context=context,
+            function=function,
+            **kwargs
+        )

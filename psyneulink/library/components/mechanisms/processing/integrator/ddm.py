@@ -359,14 +359,13 @@ Class Reference
 ---------------
 """
 import logging
-import random
+import types
 
 from collections.abc import Iterable
 
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import method_type
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import \
     DriftDiffusionIntegrator, IntegratorFunction
 from psyneulink.core.components.functions.distributionfunctions import STARTING_POINT, \
@@ -384,7 +383,9 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.core.globals.utilities import is_numeric, is_same_function_spec, object_has_single_value
+from psyneulink.core.globals.utilities import is_numeric, is_same_function_spec, object_has_single_value, get_global_seed
+
+from psyneulink.core import llvm as pnlvm
 
 __all__ = [
     'ARRAY', 'DDM', 'DDMError', 'DECISION_VARIABLE', 'DECISION_VARIABLE_ARRAY',
@@ -695,6 +696,9 @@ class DDM(ProcessingMechanism):
                     :default value: `SCALAR`
                     :type: str
 
+                random_state
+                    :type: np.random.RandomState
+
         """
         function = Parameter(
             DriftDiffusionAnalytical(
@@ -708,12 +712,9 @@ class DDM(ProcessingMechanism):
             loggable=False
         )
         input_format = Parameter(SCALAR, stateful=False, loggable=False)
-
         initializer = np.array([[0]])
+        random_state = Parameter("random_state", loggable=False)
 
-    paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        OUTPUT_PORTS: None})
 
     standard_output_ports =[{NAME: DECISION_VARIABLE,},           # Upper or lower threshold for Analtyic function
                             {NAME: RESPONSE_TIME},                # TIME_STEP within TRIAL for Integrator function
@@ -740,6 +741,7 @@ class DDM(ProcessingMechanism):
                                                    t0=.200),
                  input_ports=None,
                  output_ports:tc.optional(tc.any(str, Iterable))=(DECISION_VARIABLE, RESPONSE_TIME),
+                 seed=None,
                  params=None,
                  name=None,
                  prefs: is_pref_set = None,
@@ -748,6 +750,9 @@ class DDM(ProcessingMechanism):
         # Override instantiation of StandardOutputPorts usually done in _instantiate_output_ports
         #    in order to use SEQUENTIAL indices
         self.standard_output_ports = StandardOutputPorts(self, self.standard_output_ports, indices=SEQUENTIAL)
+
+        if seed is None:
+            seed = get_global_seed()
 
         if input_format is not None and input_ports is not None:
             raise DDMError(
@@ -807,12 +812,8 @@ class DDM(ProcessingMechanism):
         if isinstance(output_ports, (str, tuple)):
             output_ports = list(output_ports)
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  # input_format=input_format,
-                                                  input_ports=input_ports,
-                                                  output_ports=output_ports,
-                                                  params=params)
+        # Instantiate RandomState
+        random_state = np.random.RandomState([seed])
 
         # IMPLEMENTATION NOTE: this manner of setting default_variable works but is idiosyncratic
         # compared to other mechanisms: see TransferMechanism.py __init__ function for a more normal example.
@@ -822,7 +823,7 @@ class DDM(ProcessingMechanism):
                 if not is_numeric(default_variable):
                     # set normally by default
                     default_variable = None
-            except KeyError:
+            except (KeyError, TypeError):
                 # set normally by default
                 pass
 
@@ -832,6 +833,7 @@ class DDM(ProcessingMechanism):
         self.parameters.execute_until_finished.default_value = False
 
         super(DDM, self).__init__(default_variable=default_variable,
+                                  random_state=random_state,
                                   input_ports=input_ports,
                                   output_ports=output_ports,
                                   function=function,
@@ -938,7 +940,7 @@ class DDM(ProcessingMechanism):
             # If target_set[FUNCTION] is a method of a Function (e.g., being assigned in _instantiate_function),
             #   get the Function to which it belongs
             fun = target_set[FUNCTION]
-            if isinstance(fun, method_type):
+            if isinstance(fun, types.MethodType):
                 fun = fun.__self__.__class__
 
             for function_type in functions:
@@ -974,10 +976,14 @@ class DDM(ProcessingMechanism):
 
     def _instantiate_plotting_functions(self, context=None):
         if "DriftDiffusionIntegrator" in str(self.function):
-            self.get_axes_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
-                                                              noise=self.function_params['noise']).function
-            self.plot_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
-                                                          noise=self.function_params['noise']).function
+            self.get_axes_function = DriftDiffusionIntegrator(
+                rate=self.function.defaults.rate,
+                noise=self.function.defaults.noise
+            ).function
+            self.plot_function = DriftDiffusionIntegrator(
+                rate=self.function.defaults.rate,
+                noise=self.function.defaults.noise
+            ).function
 
     def _execute(
         self,
@@ -1065,11 +1071,85 @@ class DDM(ProcessingMechanism):
 
             # Convert ER to decision variable:
             threshold = float(self.function.get_current_function_param(THRESHOLD, context))
-            if random.random() < return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]:
+            random_state = self.get_current_mechanism_param("random_state", context)
+            if random_state.rand() < return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]:
                 return_value[self.DECISION_VARIABLE_INDEX] = np.atleast_1d(-1 * threshold)
             else:
                 return_value[self.DECISION_VARIABLE_INDEX] = threshold
             return return_value
+
+    def _get_mech_state_struct_type(self, ctx):
+        return ctx.convert_python_struct_to_llvm_ir(self.random_state)
+
+    def _get_mech_state_init(self, context):
+        random_state = self.get_current_mechanism_param("random_state", context)
+        return pnlvm._tupleize(random_state.get_state()[1:])
+
+    def _gen_llvm_function_postprocess(self, builder, ctx, mf_out):
+        mech_out_ty = ctx.convert_python_struct_to_llvm_ir(self.defaults.value)
+        mech_out = builder.alloca(mech_out_ty)
+
+        if isinstance(self.function, IntegratorFunction):
+            # Integrator version of the DDM mechanism converts the
+            # second element to a 2d array
+            builder.store(builder.load(builder.gep(mf_out, [ctx.int32_ty(0),
+                                                            ctx.int32_ty(0)])),
+                          builder.gep(mech_out, [ctx.int32_ty(0),
+                                                 ctx.int32_ty(0)]))
+            builder.store(builder.load(builder.gep(mf_out, [ctx.int32_ty(0),
+                                                            ctx.int32_ty(1)])),
+                          builder.gep(mech_out, [ctx.int32_ty(0),
+                                                 ctx.int32_ty(1),
+                                                 ctx.int32_ty(0)]))
+        elif isinstance(self.function, DriftDiffusionAnalytical):
+            for res_idx, idx in enumerate((self.RESPONSE_TIME_INDEX,
+                                           self.PROBABILITY_LOWER_THRESHOLD_INDEX,
+                                           self.RT_CORRECT_MEAN_INDEX,
+                                           self.RT_CORRECT_VARIANCE_INDEX,
+                                           self.RT_CORRECT_SKEW_INDEX,
+                                           self.RT_INCORRECT_MEAN_INDEX,
+                                           self.RT_INCORRECT_VARIANCE_INDEX,
+                                           self.RT_INCORRECT_SKEW_INDEX)):
+                src = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(res_idx)])
+                dst = builder.gep(mech_out, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+                builder.store(builder.load(src), dst)
+
+            # Handle upper threshold probability
+            src = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(1),
+                                       ctx.int32_ty(0)])
+            dst = builder.gep(mech_out, [ctx.int32_ty(0),
+                ctx.int32_ty(self.PROBABILITY_UPPER_THRESHOLD_INDEX),
+                ctx.int32_ty(0)])
+            prob_lower_thr = builder.load(src)
+            prob_upper_thr = builder.fsub(prob_lower_thr.type(1),
+                                          prob_lower_thr)
+            builder.store(prob_upper_thr, dst)
+            
+            # Load mechanism state and function threshold parameter
+            params, state, _, _ = builder.function.args
+            func_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            threshold_ptr = ctx.get_param_ptr(self.function, builder,
+                                              func_params, THRESHOLD)
+            threshold = pnlvm.helpers.load_extract_scalar_array_one(builder,
+                                                                    threshold_ptr)
+            random_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+            random_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
+            random_val_ptr = builder.alloca(random_f.args[1].type.pointee)
+            builder.call(random_f, [random_state, random_val_ptr])
+            random_val = builder.load(random_val_ptr)
+
+            # Convert ER to decision variable:
+            dst = builder.gep(mech_out, [ctx.int32_ty(0),
+                ctx.int32_ty(self.DECISION_VARIABLE_INDEX),
+                ctx.int32_ty(0)])
+            thr_cmp = builder.fcmp_ordered("<", random_val, prob_lower_thr)
+            neg_threshold = builder.fsub(threshold.type(-0.0), threshold)
+            res = builder.select(thr_cmp, neg_threshold, threshold)
+
+            builder.store(res, dst)
+        else:
+            assert False, "Only Integrator mode is supported for compiled DDM!"
+        return mech_out, builder
 
     @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, *args, context=None):

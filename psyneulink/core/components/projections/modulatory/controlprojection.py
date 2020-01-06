@@ -247,10 +247,8 @@ class ControlProjection(ModulatoryProjection_Base):
             pnl_internal=True
         )
 
-    paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        PROJECTION_SENDER: ControlMechanism,
-    })
+
+    projection_sender = ControlMechanism
 
     @tc.typecheck
     def __init__(self,
@@ -264,29 +262,27 @@ class ControlProjection(ModulatoryProjection_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  **kwargs):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  control_signal_params=control_signal_params,
-                                                  params=params)
-
         # If receiver has not been assigned, defer init to Port.instantiate_projection_to_state()
         if (sender is None or sender.initialization_status == ContextFlags.DEFERRED_INIT or
                 inspect.isclass(receiver) or receiver is None or
                     receiver.initialization_status == ContextFlags.DEFERRED_INIT):
             self.initialization_status = ContextFlags.DEFERRED_INIT
 
-        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
+        # Validate sender (as variable) and params, and assign to variable
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
         # super(ControlSignal_Base, self).__init__(sender=sender,
-        super(ControlProjection, self).__init__(sender=sender,
-                                                receiver=receiver,
-                                                weight=weight,
-                                                exponent=exponent,
-                                                function=function,
-                                                params=params,
-                                                name=name,
-                                                prefs=prefs,
-                                                **kwargs)
+        super(ControlProjection, self).__init__(
+            sender=sender,
+            receiver=receiver,
+            weight=weight,
+            exponent=exponent,
+            function=function,
+            control_signal_params=control_signal_params,
+            params=params,
+            name=name,
+            prefs=prefs,
+            **kwargs
+        )
 
     def _instantiate_sender(self, sender, params=None, context=None):
         """Check if DefaultController is being assigned and if so configure it for the requested ControlProjection
@@ -342,15 +338,12 @@ class ControlProjection(ModulatoryProjection_Base):
         if isinstance(self.receiver, Mechanism):
             # If there is just one param of ParameterPort type in the receiver Mechanism
             # then assign it as actual receiver (which must be a Port);  otherwise, raise exception
-            from psyneulink.core.components.ports.parameterport import ParameterPort
-            if len(dict((param_name, port) for param_name, port in self.receiver.paramsCurrent.items()
-                    if isinstance(port, ParameterPort))) == 1:
-                receiver_parameter_port = [port for port in dict.values()][0]
+            if len(self.receiver.parameter_ports) == 1:
                 # Reassign self.receiver to Mechanism's parameterPort
-                self.receiver = receiver_parameter_port
+                self.receiver = self.receiver.parameter_ports[0]
             else:
                 raise ControlProjectionError("Unable to assign ControlProjection ({0}) from {1} to {2}, "
-                                         "as it has several ParameterPorts;  must specify one (or each) of them"
+                                         "as it does not have exactly one ParameterPort;  must specify one (or each) of them"
                                          " as receiver(s)".
                                          format(self.name, self.sender.owner, self.receiver.name))
         # else:

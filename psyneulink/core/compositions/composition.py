@@ -589,7 +589,7 @@ A controller can also be specified for the System, in the **controller** argumen
 existing `ControlMechanism`, a constructor for one, or a class of ControlMechanism in which case a default
 instance of that class will be created.  If an existing ControlMechanism or the constructor for one is used, then
 the `OutputPorts it monitors <ControlMechanism_ObjectiveMechanism>` and the `parameters it controls
-<ControlMechanism_Control_Signals>` can be specified using its `objective_mechanism
+<ControlMechanism_ControlSignals>` can be specified using its `objective_mechanism
 <ControlMechanism.objective_mechanism>` and `control_signals <ControlMechanism.control_signals>`
 attributes, respectively.  In addition, these can be specified in the **monitor_for_control** and **control_signal**
 arguments of the `System`, as described below.
@@ -624,7 +624,7 @@ arguments of the `System`, as described below.
   ObjectiveMechanism's `monitored_output_ports <ObjectiveMechanism.monitored_output_ports>` attribute).
 ..
 * **control_signals** argument -- used to specify the parameters of Components in the System to be controlled. These
-  can be specified in any of the ways used to `specify ControlSignals <ControlMechanism_Control_Signals>` in the
+  can be specified in any of the ways used to `specify ControlSignals <ControlMechanism_ControlSignals>` in the
   *control_signals* argument of a ControlMechanism. These are added to any `ControlSignals <ControlSignal>` that have
   already been specified for the `controller <System.controller>` (listed in its `control_signals
   <ControlMechanism.control_signals>` attribute), and any parameters that have directly been `specified for
@@ -1114,8 +1114,8 @@ import numpy as np
 import typecheck as tc
 
 from PIL import Image
-from copy import deepcopy
-from inspect import isgeneratorfunction
+from copy import deepcopy, copy
+from inspect import isgenerator, isgeneratorfunction
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta
@@ -1620,6 +1620,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if True, all Parameter values generated during simulations will be saved for later inspection;
         if False, simulation values will be deleted unless otherwise specified by individual Parameters
 
+    input_specification : None or dict or list or generator or function
+        stores the `inputs` for executions of the Composition when it is executed using its `run <Composition.run>`
+        method.
+
     name : str
         the name of the Composition; if it is not specified in the **name** argument of the constructor, a default
         is assigned by CompositionRegistry (see `Naming` for conventions used for default and duplicate names).
@@ -1663,6 +1667,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         results = Parameter([], loggable=False, pnl_internal=True)
         simulation_results = Parameter([], loggable=False, pnl_internal=True)
         retain_old_simulation_data = Parameter(False, stateful=False, loggable=False)
+        input_specification = Parameter(None, stateful=False, loggable=False, pnl_internal=True)
 
     class _CompilationData(ParametersBase):
         ptx_execution = None
@@ -1766,9 +1771,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._update_parameter_components()
 
         self.initialization_status = ContextFlags.INITIALIZED
-
-    def __repr__(self):
-        return '({0} {1})'.format(type(self).__name__, self.name)
 
     @property
     def graph_processing(self):
@@ -2049,8 +2051,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.controller._remove_default_control_signal(type=CONTROL_SIGNAL)
                 for ctl_sig_spec in deferred_init_control_specs:
                     # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
-                    self.controller._instantiate_control_signal(control_signal=ctl_sig_spec,
+                    control_signal = self.controller._instantiate_control_signal(control_signal=ctl_sig_spec,
                                                            context=Context(source=ContextFlags.COMPOSITION))
+                    self.controller.control.append(control_signal)
                     self.controller._activate_projections_for_compositions(self)
 
     def add_nodes(self, nodes, required_roles=None):
@@ -2428,7 +2431,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     interface_output_port = OutputPort(owner=self.input_CIM,
                                                         variable=OWNER_VALUE,
-                                                        default_variable=self.input_CIM.defaults.variable,
                                                         function=InterfacePortMap(
                                                              corresponding_input_port=interface_input_port),
                                                         name="INPUT_CIM_" + node.name + "_" + input_port.name)
@@ -2561,7 +2563,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 owner = pcim,
                                 modulation = modulation,
                                 variable = OWNER_VALUE,
-                                function = InterfacePortMap(
+                                transfer_function=InterfacePortMap(
                                     corresponding_input_port = input_port
                                 ),
                                 modulates = receiver,
@@ -4424,7 +4426,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # INSTANTIATE SHADOW_INPUT PROJECTIONS
         # Skip controller's first (OUTCOME) input_port (that receives the Projection from its objective_mechanism
-        input_cims=[self.input_CIM] + [comp.input_CIM for comp in self._get_nested_compositions()]
+        nested_cims = [comp.input_CIM for comp in self._get_nested_compositions()]
+        input_cims= [self.input_CIM] + nested_cims
         # For the rest of the controller's input_ports if they are marked as receiving SHADOW_INPUTS,
         #    instantiate the shadowing Projection to them from the sender to the shadowed InputPort
         for input_port in controller.input_ports[1:]:
@@ -4437,13 +4440,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                             receiver=controller)
                         shadow_proj._activate_for_compositions(self)
                     else:
-                        try:
-                            shadow_proj = MappingProjection(sender=proj.sender, receiver=input_port)
-                            shadow_proj._activate_for_compositions(self)
-                        except DuplicateProjectionError:
-                            pass
+                        if not sender.owner.composition == self:
+                            sender_input_cim = sender.owner
+                            proj_index = sender_input_cim.output_ports.index(sender)
+                            sender_corresponding_input_projection = sender_input_cim.input_ports[
+                                proj_index].path_afferents[0]
+                            input_projection_sender = sender_corresponding_input_projection.sender
+                            if input_projection_sender.owner == self.input_CIM:
+                                shadow_proj = MappingProjection(sender = input_projection_sender,receiver = input_port)
+                                shadow_proj._activate_for_compositions(self)
+                        else:
+                            try:
+                                shadow_proj = MappingProjection(sender=proj.sender, receiver=input_port)
+                                shadow_proj._activate_for_compositions(self)
+                            except DuplicateProjectionError:
+                                pass
             for proj in input_port.path_afferents:
-                proj._activate_for_compositions(self)
+                if not proj.sender.owner in nested_cims:
+                    proj._activate_for_compositions(self)
 
         # Check whether controller has input, and if not then disable
         if not (isinstance(self.controller.input_ports, ContentAddressableList)
@@ -4469,8 +4483,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Don't add any that are already on the ControlMechanism
 
             # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
-            controller._instantiate_control_signal(control_signal=ctl_sig_spec,
+            new_signal = controller._instantiate_control_signal(control_signal=ctl_sig_spec,
                                                    context=Context(source=ContextFlags.COMPOSITION))
+            controller.control.append(new_signal)
             # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITON:
             #                ?DON'T ASSIGN ControlProjection?
             #                ?JUST DON'T ACTIVATE IT FOR COMPOSITON?
@@ -4574,21 +4589,49 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             context=None,
             execution_mode=False,
             return_results=False,
+            block_simulate=False
     ):
         """Runs a simulation of the `Composition`, with the specified control_allocation, excluding its
            `controller <Composition.controller>` in order to return the
            `net_outcome <ControlMechanism.net_outcome>` of the Composition, according to its
            `controller <Composition.controller>` under that control_allocation. All values are
            reset to pre-simulation values at the end of the simulation.
+
+           If `block_simulate` is set to True, the `controller <Composition.controller>` will attempt to use the
+           entire input set provided to the `run <Composition.run>` method of the `Composition` as input for the
+           simulated call to `run <Composition.run>`. If it is not, the `controller <Composition.controller>` will
+           use the inputs slated for its next or previous execution, depending on whether the `controller_mode` of the
+           `Composition` is set to `before` or `after`, respectively.
+
+           .. note::
+                Block simulation can not be used if the Composition's stimuli were specified as a generator. If
+                `block_simulate` is set to True and the input type for the Composition was a generator,
+                block simulation will be disabled for the current execution of `evaluate <Composition.evaluate>`.
         """
         # Apply candidate control to signal(s) for the upcoming simulation and determine its cost
         total_cost = self._get_total_cost_of_control_allocation(control_allocation, context, runtime_params)
 
         # Build input dictionary for simulation
-        if hasattr(self, '_input_spec') and isgeneratorfunction(self._input_spec):
-            inputs = self._input_spec()
+        input_spec = self.parameters.input_specification.get(context)
+        if input_spec and block_simulate and not isgenerator(input_spec):
+            if isgeneratorfunction(input_spec):
+                inputs = input_spec()
+            elif isinstance(input_spec, dict):
+                inputs = input_spec
         else:
             inputs = self._build_predicted_inputs_dict(predicted_input)
+
+        if hasattr(self, '_input_spec') and block_simulate and isgenerator(input_spec):
+            warnings.warn(f"The evaluate method of {self.name} is attempting to use block simulation, but the "
+                          f"supplied input spec is a generator. Generators can not be used as inputs for block "
+                          f"simulation. This evaluation will not use block simulation.")
+
+        # HACK: _animate attribute is set in execute method, but Evaluate can be called on a Composition that has not
+        # yet called the execute method, so we need to do a check here too.
+        # -DTS
+        if not hasattr(self, '_animate'):
+            # These are meant to be assigned in run method;  needed here for direct call to execute method
+            self._animate = False
 
         # Run Composition in "SIMULATION" context
         if self._animate is not False and self._animate_simulations is not False:
@@ -6333,7 +6376,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             node.reinitialize(*reinitialize_values[node], context=context)
 
         if ContextFlags.SIMULATION not in context.execution_phase:
-            self._input_spec = inputs
+            try:
+                self.parameters.input_specification._set(copy(inputs), context)
+            except:
+                self.parameters.input_specification._set(inputs, context)
 
         # MODIFIED 8/27/19 OLD:
         # try:
@@ -6361,11 +6407,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # set auto logging if it's not already set, and if log argument is True
         if log:
-            for item in self.nodes + self.projections:
-                if not isinstance(item, CompositionInterfaceMechanism):
-                    for param in item.parameters:
-                        if param.loggable and param.log_condition is LogCondition.OFF:
-                            param.log_condition = LogCondition.EXECUTION
+            self.enable_logging()
 
         # Set animation attributes
         if animate is True:
@@ -6390,7 +6432,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if isgeneratorfunction(inputs):
             inputs = inputs()
 
-        # if there is only one INPUT Node, allow inputs to be specified in a list
         # if there is only one INPUT Node, allow inputs to be specified in a list
         if isinstance(inputs, (list, np.ndarray)):
             if len(input_nodes) == 1:
@@ -6579,6 +6620,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             if call_after_trial:
                 call_with_pruned_args(call_after_trial, context=context)
+
+        # Reset input spec for next trial
+        self.parameters.input_specification._set(None, context)
 
         scheduler.get_clock(context)._increment_time(TimeScale.RUN)
 
@@ -7720,6 +7764,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             builder.ret_void()
 
         return llvm_func
+
+    def enable_logging(self):
+        for item in self.nodes + self.projections:
+            if isinstance(item, Composition):
+                item.enable_logging()
+            elif not isinstance(item, CompositionInterfaceMechanism):
+                for param in item.parameters:
+                    if param.loggable and param.log_condition is LogCondition.OFF:
+                        param.log_condition = LogCondition.EXECUTION
 
     @property
     def _dict_summary(self):

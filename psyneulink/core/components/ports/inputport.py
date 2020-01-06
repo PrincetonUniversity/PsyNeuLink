@@ -494,6 +494,7 @@ Class Reference
 ---------------
 
 """
+import inspect
 import numbers
 import warnings
 
@@ -693,7 +694,7 @@ class InputPort(Port_Base):
     projectionSocket = SENDER
     modulators = [GATING_SIGNAL, CONTROL_SIGNAL]
     canReceive = modulators + [MAPPING_PROJECTION]
-
+    projection_type = MAPPING_PROJECTION
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
@@ -755,13 +756,8 @@ class InputPort(Port_Base):
         exponent = Parameter(None, modulable=True)
         combine = None
         internal_only = Parameter(False, stateful=False, loggable=False, pnl_internal=True)
-        shadow_inputs = Parameter(None, stateful=False, loggable=False, read_only=True, pnl_internal=True)
+        shadow_inputs = Parameter(None, stateful=False, loggable=False, read_only=True, pnl_internal=True, structural=True)
 
-    paramClassDefaults = Port_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
-                               MECHANISM: None,     # These are used to specifiy InputPorts by projections to them
-                               OUTPUT_PORTS: None  # from the OutputPorts of a particular Mechanism (see docs)
-                               })
     #endregion
 
     @handle_external_context()
@@ -787,17 +783,8 @@ class InputPort(Port_Base):
             variable = self._assign_variable_from_projection(variable, size, projections)
 
         # If combine argument is specified, save it along with any user-specified function for _validate_params()
-        # (but don't pass to _assign_args_to_param_dicts, as it is an option not a legitimate InputPort parameter)
         if combine:
             self.combine_function_args = (combine, function)
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  weight=weight,
-                                                  exponent=exponent,
-                                                  internal_only=internal_only,
-                                                  shadow_inputs=None,
-                                                  params=params)
 
         # If owner or reference_value has not been assigned, defer init to Port._instantiate_projection()
         # if owner is None or (variable is None and reference_value is None and projections is None):
@@ -805,10 +792,7 @@ class InputPort(Port_Base):
             # Temporarily name InputPort
             self._assign_deferred_init_name(name, context)
             # Store args for deferred initialization
-            self._init_args = locals().copy()
-            self._init_args['context'] = context
-            self._init_args['name'] = name
-            self._init_args['projections'] = projections
+            self._store_deferred_init_args(**locals())
 
             # Flag for deferred initialization
             self.initialization_status = ContextFlags.DEFERRED_INIT
@@ -816,18 +800,23 @@ class InputPort(Port_Base):
 
         self.reference_value = reference_value
 
-        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
+        # Validate sender (as variable) and params, and assign to variable
         # Note: pass name of owner (to override assignment of componentName in super.__init__)
-        super(InputPort, self).__init__(owner,
-                                        variable=variable,
-                                        size=size,
-                                        projections=projections,
-                                        function=function,
-                                        params=params,
-                                        name=name,
-                                        prefs=prefs,
-                                        context=context,
-                                        )
+        super(InputPort, self).__init__(
+            owner,
+            variable=variable,
+            size=size,
+            projections=projections,
+            function=function,
+            weight=weight,
+            exponent=exponent,
+            internal_only=internal_only,
+            shadow_inputs=None,
+            params=params,
+            name=name,
+            prefs=prefs,
+            context=context,
+        )
 
         if self.name is self.componentName or self.componentName + '-' in self.name:
             self._assign_default_port_Name(context=context)
@@ -857,7 +846,7 @@ class InputPort(Port_Base):
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate weights and exponents
 
-        This needs to be done here, since paramClassDefault declarations assign None as default
+        This needs to be done here
             (so that they can be ignored if not specified here or in the function)
         """
 
@@ -1337,7 +1326,7 @@ class InputPort(Port_Base):
 def _instantiate_input_ports(owner, input_ports=None, reference_value=None, context=None):
     """Call Port._instantiate_port_list() to instantiate ContentAddressableList of InputPort(s)
 
-    Create ContentAddressableList of InputPort(s) specified in paramsCurrent[INPUT_PORTS]
+    Create ContentAddressableList of InputPort(s) specified in self.input_ports
 
     If input_ports is not specified:
         - use owner.input_ports as list of InputPort specifications
@@ -1346,7 +1335,7 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
     When completed:
         - self.input_ports contains a ContentAddressableList of one or more input_ports
         - self.input_port contains the `primary InputPort <InputPort_Primary>`:  first or only one in input_ports
-        - paramsCurrent[INPUT_PORTS] contains the same ContentAddressableList (of one or more input_ports)
+        - self.input_ports contains the same ContentAddressableList (of one or more input_ports)
         - each InputPort corresponds to an item in the variable of the owner's function
         - the value of all of the input_ports is stored in a list in input_value
         - if there is only one InputPort, it is assigned the full value
@@ -1382,10 +1371,10 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
     if context.source & (ContextFlags.METHOD | ContextFlags.COMMAND_LINE):
         owner.input_ports.extend(port_list)
     else:
-        owner._input_ports = port_list
+        owner.input_ports = port_list
 
     # Assign value of require_projection_in_composition
-    for port in owner._input_ports:
+    for port in owner.input_ports:
         # Assign True for owner's primary InputPort and the value has not already been set in InputPort constructor
         if port.require_projection_in_composition is None and owner.input_port == port:
             port.parameters.require_projection_in_composition._set(True, context)

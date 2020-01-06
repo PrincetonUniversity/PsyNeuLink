@@ -102,8 +102,11 @@ class PytorchModelCreator(torch.nn.Module):
                         # set up pytorch weights that correspond to projection. If copying params from psyneulink,
                         # copy weight values from projection. Otherwise, use random values.
                         if param_init_from_pnl:
-                            weights = nn.Parameter(torch.tensor(
-                                proj_matrix.copy(), device=self.device).double())
+                            weights = nn.Parameter(
+                                    torch.tensor(
+                                            proj_matrix.copy(),
+                                            device=self.device).double(),
+                                    requires_grad=mapping_proj.learnable)
                         else:
                             weights = nn.Parameter(torch.rand(
                                 np.shape(proj_matrix), device=self.device).double())

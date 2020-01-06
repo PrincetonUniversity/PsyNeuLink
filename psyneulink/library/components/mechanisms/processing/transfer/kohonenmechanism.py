@@ -252,9 +252,13 @@ class KohonenMechanism(TransferMechanism):
         enable_learning = True
         matrix = DEFAULT_MATRIX
 
-
-    paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
-    paramClassDefaults.update({'function': Linear})  # perhaps hacky? not sure (7/10/17 CW)
+        output_ports = Parameter(
+            [RESULT, {NAME: INPUT_PATTERN, VARIABLE: OWNER_VARIABLE}],
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
+        )
 
     standard_output_ports = TransferMechanism.standard_output_ports.copy()
     standard_output_ports.extend([{NAME:MAXIMUM_ACTIVITY,
@@ -299,28 +303,26 @@ class KohonenMechanism(TransferMechanism):
         self._learning_enabled = enable_learning
         self._learning_enable_deferred = False
 
-        params = self._assign_args_to_param_dicts(
-                integrator_mode=integrator_mode,
-                learning_rate=learning_rate,
-                learning_function=learning_function,
-                learned_projection=learned_projection,
-                enable_learning=enable_learning,
-                output_ports=output_ports)
-
-        super().__init__(default_variable=default_variable,
-                         size=size,
-                         function=function,
-                         integrator_function=integrator_function,
-                         integrator_mode=integrator_mode,
-                         initial_value=initial_value,
-                         noise=noise,
-                         integration_rate=integration_rate,
-                         clip=clip,
-                         output_ports=output_ports,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         **kwargs)
+        super().__init__(
+            default_variable=default_variable,
+            size=size,
+            function=function,
+            integrator_function=integrator_function,
+            integrator_mode=integrator_mode,
+            learning_rate=learning_rate,
+            learning_function=learning_function,
+            learned_projection=learned_projection,
+            enable_learning=enable_learning,
+            initial_value=initial_value,
+            noise=noise,
+            integration_rate=integration_rate,
+            clip=clip,
+            output_ports=output_ports,
+            params=params,
+            name=name,
+            prefs=prefs,
+            **kwargs
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set, target_set, context)

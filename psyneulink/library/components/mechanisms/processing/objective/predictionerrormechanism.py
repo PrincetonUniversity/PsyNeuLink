@@ -280,7 +280,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
 
         variable = Parameter(None, read_only=True, pnl_internal=True, constructor_argument='default_variable')
         learning_rate = Parameter(0.3, modulable=True)
-        function = PredictionErrorDeltaFunction
+        function = Parameter(PredictionErrorDeltaFunction, stateful=False, loggable=False)
         sample = None
         target = None
 
@@ -293,7 +293,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
                                             is_numeric,
                                             str)) = None,
                  function=PredictionErrorDeltaFunction(),
-                 output_ports: tc.optional(tc.any(str, Iterable)) = OUTCOME,
+                 output_ports: tc.optional(tc.any(str, Iterable)) = None,
                  learning_rate: is_numeric = 0.3,
                  params=None,
                  name=None,
@@ -302,24 +302,18 @@ class PredictionErrorMechanism(ComparatorMechanism):
                  ):
 
         input_ports = [sample, target]
-        params = self._assign_args_to_param_dicts(sample=sample,
-                                                  target=target,
-                                                  function=function,
-                                                  input_ports=input_ports,
-                                                  output_ports=output_ports,
-                                                  learning_rate=learning_rate,
-                                                  params=params)
-
-        super().__init__(sample=sample,
-                         target=target,
-                         input_ports=input_ports,
-                         function=function,
-                         output_ports=output_ports,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         **kwargs
-                         )
+        super().__init__(
+            sample=sample,
+            target=target,
+            input_ports=input_ports,
+            function=function,
+            output_ports=output_ports,
+            learning_rate=learning_rate,
+            params=params,
+            name=name,
+            prefs=prefs,
+            **kwargs
+        )
 
     def _parse_function_variable(self, variable, context=None):
         # TODO: update to take sample/reward from variable

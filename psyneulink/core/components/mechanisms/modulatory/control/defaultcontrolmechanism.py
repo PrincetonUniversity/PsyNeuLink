@@ -73,8 +73,6 @@ class DefaultControlMechanism(ControlMechanism):
 
             Class attributes:
                 + componentType (str): System Default Mechanism
-                + paramClassDefaults (dict):
-                    + FUNCTION: Linear
     COMMENT
     """
 
@@ -90,12 +88,6 @@ class DefaultControlMechanism(ControlMechanism):
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     from psyneulink.core.components.functions.transferfunctions import Linear
-    paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
-    paramClassDefaults.update({FUNCTION:Linear,
-                               FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0},
-                               OBJECTIVE_MECHANISM:None,
-                               MODULATION:None,
-                               })
 
     @tc.typecheck
     def __init__(self,

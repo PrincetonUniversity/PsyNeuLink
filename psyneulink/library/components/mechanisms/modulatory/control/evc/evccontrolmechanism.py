@@ -61,7 +61,7 @@ An EVCControlMechanism can be created in any of the ways used to `create a Contr
 class is specified in the **controller** argument of the System's constructor (see `System_Creation`).  The
 ObjectiveMechanism, the OutputPorts it monitors and evaluates, and the parameters controlled by an
 EVCControlMechanism can be specified in the standard way for a ControlMechanism (see
-`ControlMechanism_ObjectiveMechanism` and `ControlMechanism_Control_Signals`, respectively).
+`ControlMechanism_ObjectiveMechanism` and `ControlMechanism_ControlSignals`, respectively).
 
 .. note::
    Although an EVCControlMechanism can be created on its own, it can only be assigned to, and executed within a `System`
@@ -379,7 +379,6 @@ import numpy as np
 import typecheck as tc
 import warnings
 
-from psyneulink.core.components.component import function_type
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismList
@@ -433,9 +432,6 @@ class EVCControlMechanism(ControlMechanism):
     COMMENT:
         Class attributes:
             + componentType (str): System Default Mechanism
-            + paramClassDefaults (dict):
-                + SYSTEM (System)
-                + MONITORED_OUTPUT_PORTS (list of Mechanisms and/or OutputPorts)
 
         Class methods:
             None
@@ -820,8 +816,8 @@ class EVCControlMechanism(ControlMechanism):
                 modulation
                     see `modulation <EVCControlMechanism.modulation>`
 
-                    :default value: ModulationParam.MULTIPLICATIVE
-                    :type: `ModulationParam`
+                    :default value: MULTIPLICATIVE
+                    :type: str
 
                 predicted_input
                     see `predicted_input <EVCControlMechanism.predicted_input>`
@@ -859,9 +855,10 @@ class EVCControlMechanism(ControlMechanism):
         control_signal_search_space = Parameter(None, read_only=True)
         predicted_input = Parameter(None, read_only=True)
 
-    # from Components.__init__ import DefaultSystem
-    paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
-    paramClassDefaults.update({PARAMETER_PORTS: NotImplemented}) # This suppresses parameterPorts
+        prediction_mechanisms = None
+        origin_objective_mechanism = None
+        terminal_objective_mechanism = None
+        system = None
 
     @tc.typecheck
     def __init__(self,
@@ -882,26 +879,24 @@ class EVCControlMechanism(ControlMechanism):
                  name=None,
                  prefs:is_pref_set=None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(system=system,
-                                                  prediction_mechanisms=prediction_mechanisms,
-                                                  origin_objective_mechanism=origin_objective_mechanism,
-                                                  terminal_objective_mechanism=terminal_objective_mechanism,
-                                                  value_function=value_function,
-                                                  cost_function=cost_function,
-                                                  combine_outcome_and_cost_function=combine_outcome_and_cost_function,
-                                                  save_all_values_and_policies=save_all_values_and_policies,
-                                                  params=params)
-
-        super().__init__(system=system,
-                         objective_mechanism=objective_mechanism,
-                         monitor_for_control=monitor_for_control,
-                         function=function,
-                         control_signals=control_signals,
-                         modulation=modulation,
-                         params=params,
-                         name=name,
-                         prefs=prefs)
+        super().__init__(
+            system=system,
+            prediction_mechanisms=prediction_mechanisms,
+            origin_objective_mechanism=origin_objective_mechanism,
+            terminal_objective_mechanism=terminal_objective_mechanism,
+            value_function=value_function,
+            cost_function=cost_function,
+            combine_outcome_and_cost_function=combine_outcome_and_cost_function,
+            save_all_values_and_policies=save_all_values_and_policies,
+            objective_mechanism=objective_mechanism,
+            monitor_for_control=monitor_for_control,
+            function=function,
+            control_signals=control_signals,
+            modulation=modulation,
+            params=params,
+            name=name,
+            prefs=prefs
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate prediction_mechanisms"""
@@ -936,10 +931,10 @@ class EVCControlMechanism(ControlMechanism):
         Assign each modulatory_signal sequentially to corresponding item of control_allocation.
         """
         from psyneulink.core.globals.keywords import OWNER_VALUE
-        for i, spec in enumerate(self.control):
+        for i, spec in list(enumerate(self.control)):
             control_signal = self._instantiate_control_signal(spec, context=context)
             control_signal._variable_spec = (OWNER_VALUE, i)
-            self.control_signals[i] = control_signal
+            self.control[i] = control_signal
         self.defaults.value = np.tile(control_signal.parameters.variable.default_value, (i + 1, 1))
         self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
 
@@ -1292,55 +1287,3 @@ class EVCControlMechanism(ControlMechanism):
         # MODIFIED 9/18/18 END
 
         return monitored_ports
-
-    # The following implementation of function attributes as properties insures that even if user sets the value of a
-    #    function directly (i.e., without using assign_params), it will still be wrapped as a UserDefinedFunction.
-    # This is done to insure they can be called by value_function in the same way as the defaults
-    #    (which are all Functions), and so that they can be passed a params dict.
-
-    # def wrap_function(self, function):
-    #     if isinstance(function, function_type):
-    #         return ValueFunction(function)
-    #     elif inspect.isclass(assignment) and issubclass(assignment, Function):
-    #         self._value_function = ValueFunction()
-    #     else:
-    #         self._value_function = assignment
-
-    @property
-    def value_function(self):
-        return self._value_function
-
-    @value_function.setter
-    def value_function(self, assignment):
-        if isinstance(assignment, function_type):
-            self._value_function = ValueFunction(assignment)
-        elif assignment is ValueFunction:
-            self._value_function = ValueFunction()
-        else:
-            self._value_function = assignment
-
-    @property
-    def cost_function(self):
-        return self._cost_function
-
-    @cost_function.setter
-    def cost_function(self, value):
-        from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
-        if isinstance(value, function_type):
-            udf = UserDefinedFunction(function=value)
-            self._cost_function = udf
-        else:
-            self._cost_function = value
-
-    @property
-    def combine_outcome_and_cost_function(self):
-        return self._combine_outcome_and_cost_function
-
-    @combine_outcome_and_cost_function.setter
-    def combine_outcome_and_cost_function(self, value):
-        from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
-        if isinstance(value, function_type):
-            udf = UserDefinedFunction(function=value)
-            self._combine_outcome_and_cost_function = udf
-        else:
-            self._combine_outcome_and_cost_function = value
