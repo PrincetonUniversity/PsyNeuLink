@@ -110,6 +110,125 @@ class TestControlSpecification:
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
         assert np.allclose(comp.controller.control[0].allocation_samples(), [0.2, 0.5, 0.8])
 
+    def test_deferred_init(self):
+        # Test to insure controller works the same regardless of whether it is added to a composition before or after
+        # the nodes it connects to
+
+        # Mechanisms
+        Input = pnl.TransferMechanism(name='Input')
+        reward = pnl.TransferMechanism(output_ports=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE],
+                                       name='reward')
+        Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate=(1.0,
+                                                                             pnl.ControlProjection(function=pnl.Linear,
+                                                                                                   control_signal_params={
+                                                                                                       pnl.ALLOCATION_SAMPLES: np.arange(
+                                                                                                               0.1,
+                                                                                                               1.01,
+                                                                                                               0.3)})),
+                                                                 threshold=(1.0,
+                                                                            pnl.ControlProjection(function=pnl.Linear,
+                                                                                                  control_signal_params={
+                                                                                                      pnl.ALLOCATION_SAMPLES:
+                                                                                                          np.arange(
+                                                                                                                  0.1,
+                                                                                                                  1.01,
+                                                                                                                  0.3)})),
+                                                                 noise=0.5,
+                                                                 starting_point=0,
+                                                                 t0=0.45),
+                           output_ports=[pnl.DECISION_VARIABLE,
+                                         pnl.RESPONSE_TIME,
+                                         pnl.PROBABILITY_UPPER_THRESHOLD],
+                           name='Decision')
+
+        comp = pnl.Composition(name="evc", retain_old_simulation_data=True)
+
+        ### add the controller to the Composition before we add the relevant mechanisms
+        comp.add_controller(controller=pnl.OptimizationControlMechanism(
+                agent_rep=comp,
+                features=[Input.input_port, reward.input_port],
+                feature_function=pnl.AdaptiveIntegrator(rate=0.5),
+                objective_mechanism=pnl.ObjectiveMechanism(
+                        function=pnl.LinearCombination(operation=pnl.PRODUCT),
+                        monitor=[reward,
+                                 Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
+                                 (Decision.output_ports[pnl.RESPONSE_TIME], -1, 1)]),
+                function=pnl.GridSearch(),
+                control_signals=[{PROJECTIONS: ("drift_rate", Decision),
+                                  ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
+                                 {PROJECTIONS: ("threshold", Decision),
+                                  ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
+        )
+
+        assert comp.controller.initialization_status == pnl.ContextFlags.DEFERRED_INIT
+
+        comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
+        comp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
+        task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
+        comp.add_linear_processing_pathway(task_execution_pathway)
+
+        comp.enable_controller = True
+
+        # comp._analyze_graph()
+
+        stim_list_dict = {
+            Input: [0.5, 0.123],
+            reward: [20, 20]
+        }
+
+        comp.run(inputs=stim_list_dict)
+
+        # Note: Removed decision variable OutputPort from simulation results because sign is chosen randomly
+        expected_sim_results_array = [
+            [[10.], [10.0], [0.0], [0.48999867], [0.50499983]],
+            [[10.], [10.0], [0.0], [1.08965888], [0.51998934]],
+            [[10.], [10.0], [0.0], [2.40680493], [0.53494295]],
+            [[10.], [10.0], [0.0], [4.43671978], [0.549834]],
+            [[10.], [10.0], [0.0], [0.48997868], [0.51998934]],
+            [[10.], [10.0], [0.0], [1.08459402], [0.57932425]],
+            [[10.], [10.0], [0.0], [2.36033556], [0.63645254]],
+            [[10.], [10.0], [0.0], [4.24948962], [0.68997448]],
+            [[10.], [10.0], [0.0], [0.48993479], [0.53494295]],
+            [[10.], [10.0], [0.0], [1.07378304], [0.63645254]],
+            [[10.], [10.0], [0.0], [2.26686573], [0.72710822]],
+            [[10.], [10.0], [0.0], [3.90353015], [0.80218389]],
+            [[10.], [10.0], [0.0], [0.4898672], [0.549834]],
+            [[10.], [10.0], [0.0], [1.05791834], [0.68997448]],
+            [[10.], [10.0], [0.0], [2.14222978], [0.80218389]],
+            [[10.], [10.0], [0.0], [3.49637662], [0.88079708]],
+            [[15.], [15.0], [0.0], [0.48999926], [0.50372993]],
+            [[15.], [15.0], [0.0], [1.08981011], [0.51491557]],
+            [[15.], [15.0], [0.0], [2.40822035], [0.52608629]],
+            [[15.], [15.0], [0.0], [4.44259627], [0.53723096]],
+            [[15.], [15.0], [0.0], [0.48998813], [0.51491557]],
+            [[15.], [15.0], [0.0], [1.0869779], [0.55939819]],
+            [[15.], [15.0], [0.0], [2.38198336], [0.60294711]],
+            [[15.], [15.0], [0.0], [4.33535807], [0.64492386]],
+            [[15.], [15.0], [0.0], [0.48996368], [0.52608629]],
+            [[15.], [15.0], [0.0], [1.08085171], [0.60294711]],
+            [[15.], [15.0], [0.0], [2.32712843], [0.67504223]],
+            [[15.], [15.0], [0.0], [4.1221271], [0.7396981]],
+            [[15.], [15.0], [0.0], [0.48992596], [0.53723096]],
+            [[15.], [15.0], [0.0], [1.07165729], [0.64492386]],
+            [[15.], [15.0], [0.0], [2.24934228], [0.7396981]],
+            [[15.], [15.0], [0.0], [3.84279648], [0.81637827]]
+        ]
+
+        for simulation in range(len(expected_sim_results_array)):
+            assert np.allclose(expected_sim_results_array[simulation],
+                               # Note: Skip decision variable OutputPort
+                               comp.simulation_results[simulation][0:3] + comp.simulation_results[simulation][4:6])
+
+        expected_results_array = [
+            [[20.0], [20.0], [0.0], [1.0], [2.378055160151634], [0.9820137900379085]],
+            [[20.0], [20.0], [0.0], [-0.1], [0.48999967725112503], [0.5024599801509442]]
+        ]
+
+        for trial in range(len(expected_results_array)):
+            np.testing.assert_allclose(comp.results[trial], expected_results_array[trial], atol=1e-08,
+                                       err_msg='Failed on expected_output[{0}]'.format(trial))
+
+
 class TestControlMechanisms:
 
     def test_modulation_of_control_signal_intensity_cost_function_MULTIPLICATIVE(self):
