@@ -1,7 +1,6 @@
 ipykernel
 ipython
 jupyter
-nbformat<5
 psyneulink-sphinx-theme
 pytest
 pytest-benchmark
