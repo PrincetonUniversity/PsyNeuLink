@@ -2,4 +2,3 @@ graphviz
 ipython
 jupyter
 matplotlib
-nbformat<5
