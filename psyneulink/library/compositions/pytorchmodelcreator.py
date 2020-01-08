@@ -456,17 +456,12 @@ class PytorchModelCreator(torch.nn.Module):
     # generates a function responsible for a single epoch of the training
     def _gen_llvm_training_backprop(self, ctx, optimizer, loss):
         composition = self._composition
-        learning_targets = pnlvm.ir.LiteralStructType([
-            ctx.int32_ty,  # dimensionality
-            pnlvm.ir.IntType(64)
-        ])
         args = [ctx.get_state_struct_type(self).as_pointer(),
                 ctx.get_param_struct_type(self).as_pointer(),
                 ctx.get_input_struct_type(self).as_pointer(),
                 ctx.get_data_struct_type(self).as_pointer(),
                 optimizer._get_optimizer_struct_type(ctx).as_pointer(),
-                learning_targets.as_pointer(),  # inputs
-                learning_targets.as_pointer(),  # targets
+                self._get_learning_struct_type(ctx).as_pointer(), # training set
                 ctx.int32_ty  # input idx
                 ]
         name = self._composition.name + "_training_backprop"
@@ -476,32 +471,20 @@ class PytorchModelCreator(torch.nn.Module):
             if isinstance(a.type, pnlvm.ir.PointerType):
                 a.attributes.add('noalias')
 
-        model_context, model_params, model_input, model_output, optim_struct, input_struct_ptr, target_struct_ptr, trial_num = llvm_func.args[:len(args)]
-        ctx.inject_printf(builder,"TRIAL NUM: %d\n",trial_num)
+        model_context, model_params, model_input, model_output, optim_struct, training_set, trial_num = llvm_func.args
+        ctx.inject_printf(builder,"TRIAL NUM: %d\n", trial_num)
         # setup useful mappings
         input_nodes = composition.get_nodes_by_role(NodeRole.INPUT)
         output_nodes = composition.get_nodes_by_role(NodeRole.OUTPUT)
 
-        def _get_node_array_ptr(node, node_idx, struct_ptr):
-            array_ptr = builder.gep(struct_ptr, [ctx.int32_ty(node_idx), ctx.int32_ty(1)])
-            array_ptr = builder.load(array_ptr)
-            array_ty = pnlvm.ir.ArrayType(pnlvm.ir.ArrayType(ctx.float_ty, len(node.defaults.value[0])), 1)
-            return builder.inttoptr(array_ptr, array_ty.as_pointer())
-
-        node_input_arrays = {node: _get_node_array_ptr(node, i, input_struct_ptr) for i, node in enumerate(input_nodes)}
-
-        node_target_arrays = {node: _get_node_array_ptr(node, i, target_struct_ptr) for i, node in enumerate(output_nodes)}
-
-
         # initialize optimizer params:
-        delta_w = builder.gep(optim_struct,[ctx.int32_ty(0),ctx.int32_ty(optimizer._DELTA_W_NUM)])
+        delta_w = builder.gep(optim_struct, [ctx.int32_ty(0), ctx.int32_ty(optimizer._DELTA_W_NUM)])
 
         # first we copy input values to data struct of input_CIM
-        for node in input_nodes:
+        for i, node in enumerate(input_nodes):
             node_idx = composition._get_node_index(node)
-            node_input_array_ptr = builder.gep(node_input_arrays[node],
-                                               [trial_num, ctx.int32_ty(0)])
-            node_model_input = builder.gep(model_input,[ctx.int32_ty(0), ctx.int32_ty(node_idx)])
+            node_input_array_ptr = builder.gep(training_set, [trial_num, ctx.int32_ty(0), ctx.int32_ty(i), ctx.int32_ty(0), ctx.int32_ty(0)])
+            node_model_input = builder.gep(model_input, [ctx.int32_ty(0), ctx.int32_ty(node_idx)])
             self._gen_inject_vec_copy(ctx, builder, node_input_array_ptr, node_model_input)
 
             ctx.inject_printf_float_array(builder, node_model_input, prefix=f"\tNODE {node_idx} INPUT: ")
@@ -532,7 +515,6 @@ class PytorchModelCreator(torch.nn.Module):
 
             node_idx = composition._get_node_index(node)
 
-
             activation_func_derivative_bin_func = ctx.import_llvm_function(self.bin_function_derivative_creator(ctx,node).name)
             activation_func_derivative = self._gen_inject_bin_function_call(ctx, builder, activation_func_derivative_bin_func, z_values[node])
 
@@ -543,9 +525,9 @@ class PytorchModelCreator(torch.nn.Module):
             if node in output_nodes:
                 # We handle output layer here
                 # compute  dC/da = a_l - y(x) (TODO: Allow other cost functions! This only applies to MSE)
-                node_target = builder.gep(node_target_arrays[node], [
-                                            trial_num, ctx.int32_ty(0)])
-                node_output = self._get_output_value_ptr(ctx,builder,model_output,node_idx)
+                out_node_idx = output_nodes.index(node)
+                node_target = builder.gep(training_set, [trial_num, ctx.int32_ty(1), ctx.int32_ty(out_node_idx), ctx.int32_ty(0), ctx.int32_ty(0)])
+                node_output = self._get_output_value_ptr(ctx, builder, model_output, node_idx)
 
                 tmp_loss = loss._gen_inject_lossfunc_call(ctx, builder, loss_fn, node_output, node_target)
 
@@ -619,6 +601,12 @@ class PytorchModelCreator(torch.nn.Module):
 
         return builder.function
 
+    def _get_learning_struct_type(self, ctx):
+        input_struct = pnlvm.ir.LiteralStructType(ctx.get_input_struct_type(node) for node in self._composition.get_nodes_by_role(NodeRole.INPUT))
+
+        target_struct = pnlvm.ir.LiteralStructType(ctx.get_input_struct_type(node) for node in self._composition.get_nodes_by_role(NodeRole.OUTPUT))
+        return pnlvm.ir.LiteralStructType((input_struct, target_struct))
+
     def _gen_llvm_training_function_body(self, ctx, builder, context, params, comp_in, data):
         # 1) Setup autodiff learning stuff
         # if "ref_pass" not in debug_env:
@@ -633,34 +621,21 @@ class PytorchModelCreator(torch.nn.Module):
         num_trials = builder.load(builder.gep(autodiff_stimuli_struct, [
             ctx.int32_ty(0), ctx.int32_ty(1)]))
 
-        num_target_structs = builder.load(builder.gep(
-            autodiff_stimuli_struct, [ctx.int32_ty(0), ctx.int32_ty(2)]))
-
-        # Get pointer to the first element
-        target_struct_ptr = builder.gep(
-            autodiff_stimuli_struct, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(0)])
-
-        num_input_structs = builder.load(builder.gep(
-            autodiff_stimuli_struct, [ctx.int32_ty(0), ctx.int32_ty(4)]))
-        
-        # Get pointer to the first element
-        input_struct_ptr = builder.gep(
-            autodiff_stimuli_struct, [ctx.int32_ty(0), ctx.int32_ty(5), ctx.int32_ty(0)])
+        # Get pointer to the training set
+        member_count = len(autodiff_stimuli_struct.type.pointee.elements)
+        training_set_ptr = builder.gep(autodiff_stimuli_struct,
+                                       [ctx.int32_ty(0),
+                                        ctx.int32_ty(member_count -1)])
+        training_set_array = builder.load(training_set_ptr)
 
         ctx.inject_printf(builder,"Running Autodiff Training with params:\n\tepoch count: %d \n\tnum_trials: %d \n",
                             epochs,
                             num_trials,
                             override_debug=True)
 
-        ctx.inject_printf(builder,"\tnum_target_structs: %d \n\ttarget_struct_addr: 0x%Lx\n",
-                            num_target_structs,
-                            target_struct_ptr,
+        ctx.inject_printf(builder,"\tlearning_struct_addr: 0x%Lx \n",
+                            training_set_array,
                             override_debug=True)
-        ctx.inject_printf(builder,"\tnum_input_structs: %d \n\tinput_struct_addr: 0x%Lx \n",
-                            num_input_structs,
-                            input_struct_ptr,
-                            override_debug=True)
-
         input_cim_idx = composition._get_node_index(composition.input_CIM)
         model_context = context
         model_params = builder.gep(params, [ctx.int32_ty(0),
@@ -703,7 +678,7 @@ class PytorchModelCreator(torch.nn.Module):
                 ctx.inject_printf(b2, "OPTIMIZER ZERO GRAD %d\n", trial_num)
                 b2.call(optimizer_zero_grad,[optimizer_struct,model_params])
                 ctx.inject_printf(b2, "BACKPROP %d\n", trial_num)
-                b2.call(backprop,[model_context, model_params, model_input, model_output, optimizer_struct, input_struct_ptr, target_struct_ptr, trial_num])
+                b2.call(backprop, [model_context, model_params, model_input, model_output, optimizer_struct, training_set_array, trial_num])
                 ctx.inject_printf(b2, "OPTIMIZER STEP %d\n", trial_num)
                 b2.call(optimizer_step,[optimizer_struct,model_params])
 

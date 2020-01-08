@@ -1264,21 +1264,12 @@ class AutodiffComposition(Composition):
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
         output_nodes = self.get_nodes_by_role(NodeRole.OUTPUT)
 
-        learning_ty = pnlvm.ir.LiteralStructType([
-                ctx.int32_ty, # dimensionality
-                pnlvm.ir.IntType(64) # Data ptr
-            ])
-        learning_inputs = pnlvm.ir.LiteralStructType(
-            (learning_ty for node in input_nodes))
-        learning_targets = pnlvm.ir.LiteralStructType(
-            (learning_ty for node in output_nodes))
+        learning_ty = model._get_learning_struct_type(ctx)
+
         learning_params = pnlvm.ir.LiteralStructType([
             ctx.int32_ty, # epochs
             ctx.int32_ty, # number of targets/inputs to train with
-            ctx.int32_ty, # number target nodes
-            learning_targets, # target struct array
-            ctx.int32_ty, # number input nodes
-            learning_inputs, # input struct array
+            learning_ty.as_pointer()
         ])
         param_args = [pnlvm.ir.LiteralStructType(mech_param_type_list),
                       pnlvm.ir.LiteralStructType(proj_param_type_list),
@@ -1299,9 +1290,8 @@ class AutodiffComposition(Composition):
         self._build_pytorch_representation(self.default_execution_id)
         model = self.parameters.pytorch_representation.get(self.default_execution_id)
         pytorch_params = model._get_param_initializer()
-        learning_params = (0, 0, 0, (), 0, ())
         param_args = (tuple(mech_params), tuple(proj_params),
-                      pytorch_params, learning_params)
+                      pytorch_params, ())
         return tuple(param_args)
 
 class EarlyStopping(object):
