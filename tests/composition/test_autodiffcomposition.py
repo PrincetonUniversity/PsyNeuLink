@@ -261,15 +261,16 @@ class TestMiscTrainingFunctionality:
                         "epochs": 10}, bin_execute=mode)
 
 
+    @pytest.mark.benchmark(group="Optimizer specs")
     @pytest.mark.parametrize(
         'learning_rate, weight_decay, optimizer_type', [
             (10, 0, 'sgd'), (1.5, 1, 'sgd'),  (1.5, 1, 'adam'),
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
-                                    pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                    ])
-    def test_optimizer_specs(self, learning_rate, weight_decay, optimizer_type,mode):
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                     ])
+    def test_optimizer_specs(self, learning_rate, weight_decay, optimizer_type, mode, benchmark):
         xor_in = TransferMechanism(name='xor_in',
                                    default_variable=np.zeros(2))
 
@@ -306,9 +307,14 @@ class TestMiscTrainingFunctionality:
         # results_before_proc = xor.run(inputs={xor_in:xor_inputs},
         #                               targets={xor_out:xor_targets},
         #                               epochs=10)
-        results_before_proc = xor.run(inputs = {"inputs": {xor_in:xor_inputs},
-                                                "targets": {xor_out:xor_targets},
-                                               "epochs": 10}, bin_execute = mode)
+        results_before_proc = xor.run(inputs={"inputs": {xor_in:xor_inputs},
+                                              "targets": {xor_out:xor_targets},
+                                              "epochs": 10}, bin_execute=mode)
+
+        benchmark(xor.run, inputs={"inputs": {xor_in:xor_inputs},
+                                   "targets": {xor_out:xor_targets},
+                                   "epochs": 10}, bin_execute=mode)
+
 
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
     @pytest.mark.parametrize("mode", ['Python',
@@ -452,18 +458,19 @@ class TestMiscTrainingFunctionality:
 class TestTrainingCorrectness:
 
     # test whether xor model created as autodiff composition learns properly
+    @pytest.mark.benchmark(group="XOR")
     @pytest.mark.parametrize(
-        'eps, calls, opt, from_pnl_or_no', [
-            (20000, 'single', 'adam', True),
+        'eps, calls, opt, from_pnl_or_not', [
+            (2000, 'single', 'adam', True),
             # (6000, 'multiple', 'adam', True),
-            (20000, 'single', 'adam', False),
+            (2000, 'single', 'adam', False),
             # (6000, 'multiple', 'adam', False)
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
-                                    pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                    ])
-    def test_xor_training_correctness(self, eps, calls, opt, from_pnl_or_no,mode):
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                     ])
+    def test_xor_training_correctness(self, eps, calls, opt, from_pnl_or_not, mode, benchmark):
         xor_in = TransferMechanism(name='xor_in',
                                    default_variable=np.zeros(2))
 
@@ -478,7 +485,7 @@ class TestTrainingCorrectness:
         hid_map = MappingProjection(matrix=np.random.rand(2,10), sender=xor_in, receiver=xor_hid)
         out_map = MappingProjection(matrix=np.random.rand(10,1))
 
-        xor = AutodiffComposition(param_init_from_pnl=from_pnl_or_no,
+        xor = AutodiffComposition(param_init_from_pnl=from_pnl_or_not,
                                   optimizer_type=opt,
                                   learning_rate=0.1)
 
@@ -516,9 +523,13 @@ class TestTrainingCorrectness:
             for i in range(len(results[eps - 1])):
                 assert np.allclose(np.round(results[eps - 1][i][0]), xor_targets[i])
 
+        benchmark(xor.run, inputs={'inputs': {xor_in: xor_inputs},
+                                   'targets': {xor_out: xor_targets},
+                                   'epochs': eps}, bin_execute=mode)
 
-    @pytest.mark.benchmark(group="Recurrent")
+
     # tests whether semantic network created as autodiff composition learns properly
+    @pytest.mark.benchmark(group="Semantic net")
     @pytest.mark.parametrize(
         'eps, opt, from_pnl_or_not', [
             (1000, 'adam', True),
