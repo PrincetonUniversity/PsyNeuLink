@@ -51,7 +51,6 @@ class PytorchModelCreator(torch.nn.Module):
         self.params = nn.ParameterList()
         self.device = device
         self.__bin_exec_func = None
-        self._forward_llvm_func = None
         self._cached_param_list = None
         self._cached_tupleized_param_list = None
 
@@ -243,8 +242,6 @@ class PytorchModelCreator(torch.nn.Module):
             self._gen_llvm_forward_function_body(
                 ctx, builder, context, params, arg_in, arg_out)
             builder.ret_void()
-            llvm_func = builder.function
-        self._forward_llvm_func = llvm_func
         return llvm_func
 
     #FIXME: Move _gen functions to helper or change builtins to directly accept aggregate types
