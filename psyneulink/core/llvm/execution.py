@@ -527,7 +527,7 @@ class CompExecution(CUDAExecution):
         setattr(self._param_struct, autodiff_stimuli_field_name, autodiff_stimuli_struct)
 
 
-    def run(self, inputs, runs, num_input_sets, autodiff_stimuli={"targets": {}, "epochs": 1}):
+    def run(self, inputs, runs, num_input_sets, autodiff_stimuli={}):
         inputs = self._get_run_input_struct(inputs, num_input_sets)
         # Special casing for autodiff
         if hasattr(self._composition, "learning_enabled") and self._composition.learning_enabled is True:
