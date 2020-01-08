@@ -457,9 +457,8 @@ def _generate_component_string(
             # they may have different names than are used in the
             # constructor of the object.
             # Examples:
-            #   ControlMechanism.control_spec / control_signals
-            #   Mechanism.input_ports_spec / input_ports
-            #   Mechanism.output_ports_spec / output_ports
+            #   Component.variable / default_variable
+            #   ControlMechanism.output_ports / control
             if constructor_parameter_name is not None:
                 constructor_arg = constructor_parameter_name
             else:

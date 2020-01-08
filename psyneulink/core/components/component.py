@@ -3040,7 +3040,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             A set of Parameter names that should not be added to the generated
             constructor string
         """
-        return {'function', 'value', 'input_ports', 'output_ports', 'control'}
+        return {'function', 'value'}
 
 
 COMPONENT_BASE_CLASS = Component

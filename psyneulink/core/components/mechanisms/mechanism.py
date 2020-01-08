@@ -1410,33 +1410,12 @@ class Mechanism_Base(Mechanism):
             loggable=False,
             pnl_internal=True
         )
-
-        # fold these specs into the main
-        input_ports_spec = Parameter(
-            None,
-            stateful=False,
-            loggable=False,
-            read_only=True,
-            user=False,
-            pnl_internal=True,
-            constructor_argument='input_ports'
-        )
         input_ports = Parameter(
             None,
             stateful=False,
             loggable=False,
             read_only=True,
             structural=True,
-        )
-
-        output_ports_spec = Parameter(
-            None,
-            stateful=False,
-            loggable=False,
-            read_only=True,
-            user=False,
-            pnl_internal=True,
-            constructor_argument='output_ports'
         )
         output_ports = Parameter(
             None,
@@ -1446,31 +1425,36 @@ class Mechanism_Base(Mechanism):
             structural=True,
         )
 
-        def _parse_input_ports_spec(self, input_ports_spec):
-            if input_ports_spec is None:
-                return input_ports_spec
-            elif not isinstance(input_ports_spec, list):
-                input_ports_spec = [input_ports_spec]
+        def _parse_input_ports(self, input_ports):
+            if input_ports is None:
+                return input_ports
+            elif not isinstance(input_ports, list):
+                input_ports = [input_ports]
 
             spec_list = []
 
-            for port in input_ports_spec:
+            for port in input_ports:
                 # handle tuple specification only because it cannot
                 # be translated to and from JSON (converts to list, which is
                 # not accepted as a valid specification)
                 if isinstance(port, tuple):
                     if len(port) == 2:
-                        spec = {
-                            NAME: port[0],
-                            MECHANISM: port[1]
-                        }
+                        # allows case [(transfer_mech, None)] in
+                        # TestInputPortSpec
+                        if not isinstance(port[0], str):
+                            # no parsing
+                            spec = port
+                        else:
+                            spec = {
+                                NAME: port[0],
+                                MECHANISM: port[1]
+                            }
                     elif len(port) > 2:
-                        try:
-                            # if port is assigned to an object,
-                            # use a reference instead of name/value
-                            port[0].owner
+                        # if port is assigned to an object,
+                        # use a reference instead of name/value
+                        if isinstance(port[0], Component):
                             spec = {PORT_SPEC: port[0]}
-                        except AttributeError:
+                        else:
                             spec = {
                                 NAME: port[0].name,
                                 VALUE: port[0].defaults.value,
@@ -1480,7 +1464,7 @@ class Mechanism_Base(Mechanism):
                         spec[EXPONENT] = port[2]
 
                         try:
-                            spec[PROJECTIONS] = [port[3]]
+                            spec[PROJECTIONS] = port[3]
                         except IndexError:
                             pass
 
@@ -1489,14 +1473,6 @@ class Mechanism_Base(Mechanism):
                     spec_list.append(port)
 
             return spec_list
-
-        # _parse_input_ports = _parse_input_ports_spec
-
-        def _parse_input_ports(self, input_ports):
-            if input_ports is not None and not isinstance(input_ports, list):
-                return [input_ports]
-            else:
-                return input_ports
 
         def _parse_output_ports(self, output_ports):
             if output_ports is not None and not isinstance(output_ports, list):
@@ -1574,30 +1550,10 @@ class Mechanism_Base(Mechanism):
 
         default_variable = self._handle_default_variable(default_variable, size, input_ports, function, params)
 
-        try:
-            input_ports_spec = (
-                copy_iterable_with_shared(input_ports, shared_types=Component)
-                if input_ports is not None
-                else None
-            )
-        except TypeError:
-            input_ports_spec = input_ports
-
-        try:
-            output_ports_spec = (
-                copy_iterable_with_shared(output_ports, shared_types=Component)
-                if output_ports is not None
-                else None
-            )
-        except TypeError:
-            output_ports_spec = output_ports
-
         super(Mechanism_Base, self).__init__(
             default_variable=default_variable,
             size=size,
             function=function,
-            input_ports_spec=input_ports_spec,
-            output_ports_spec=output_ports_spec,
             param_defaults=params,
             prefs=prefs,
             name=name,

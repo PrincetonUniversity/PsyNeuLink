@@ -1702,7 +1702,6 @@ class GridSearch(OptimizationFunction):
                 variable=variable,
                 context=context,
                 params=params,
-
             )
 
             optimal_value_count = 1

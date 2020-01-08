@@ -2702,10 +2702,11 @@ def _parse_port_spec(port_type=None,
     Return either Port object or Port specification dictionary
     """
     from psyneulink.core.components.projections.projection \
-        import _is_projection_spec, _parse_projection_spec, _parse_connection_specs, ProjectionTuple
+        import _is_projection_spec, _parse_projection_spec, _parse_connection_specs, ProjectionTuple, ProjectionError
     from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
     from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
     from psyneulink.core.components.projections.projection import _get_projection_value_shape
+    from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 
 
     # Get all of the standard arguments passed from _instantiate_port (i.e., those other than port_spec) into a dict
@@ -2751,7 +2752,7 @@ def _parse_port_spec(port_type=None,
                 spec = port_spec[PORT_SPEC_ARG]
                 port_tuple = [spec[PORT_SPEC_ARG], spec[WEIGHT], spec[EXPONENT]]
                 try:
-                    port_tuple.append(spec[PROJECTION])
+                    port_tuple.append(spec[PROJECTIONS])
                 except KeyError:
                     pass
                 port_specification = tuple(port_tuple)
@@ -3081,8 +3082,19 @@ def _parse_port_spec(port_type=None,
                 if len(unrecognized_keys)==1:
                     key = unrecognized_keys[0]
                     port_dict[NAME] = key
-                    params[PROJECTIONS] = port_specific_args[key]
-                    del port_specific_args[key]
+                    # KDM 12/24/19: in some cases, params[PROJECTIONS] is
+                    # already parsed into a ProjectionTuple, and this assignment
+                    # will replace it with an unparsed ndarray which causes a
+                    # ProjectionError in _parse_connection_specs
+                    if (
+                        PROJECTIONS not in params
+                        or not any([
+                            isinstance(x, ProjectionTuple)
+                            for x in params[PROJECTIONS]
+                        ])
+                    ):
+                        params[PROJECTIONS] = port_specific_args[key]
+                        del port_specific_args[key]
                 else:
                     raise PortError("There is more than one entry of the {} "
                                      "specification dictionary for {} ({}) "
@@ -3094,8 +3106,26 @@ def _parse_port_spec(port_type=None,
                                             ", ".join([s for s in list(port_specific_args.keys())])))
 
             for param in port_type.portAttributes:
+                # KDM 12/24/19: below is meant to skip overwriting an already
+                # parsed ProjectionTuple just as in the section above
                 if param in port_specific_args:
-                    params[param] = port_specific_args[param]
+                    try:
+                        param_value_is_tuple = any([
+                            isinstance(x, ProjectionTuple)
+                            for x in params[param]
+                        ])
+                    except TypeError:
+                        param_value_is_tuple = isinstance(
+                            params[param],
+                            ProjectionTuple
+                        )
+                    except KeyError:
+                        # param may not be in port_specific_args, and in this
+                        # case use the default/previous behavior
+                        param_value_is_tuple = False
+
+                    if param not in params or not param_value_is_tuple:
+                        params[param] = port_specific_args[param]
 
             if PROJECTIONS in params and params[PROJECTIONS] is not None:
                 #       (E.G., WEIGHTS AND EXPONENTS FOR InputPort AND INDEX FOR OutputPort)

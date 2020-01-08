@@ -307,7 +307,7 @@ def copy_parameter_value(value, shared_types=None, memo=None):
         used in computation requiring it to be a "real" instance
         (like `Component.function`)
 
-        e.g. in spec attribute or Parameter `Mechanism.input_ports_spec`
+        e.g. in spec attribute or Parameter `Mechanism.input_ports`
     """
     from psyneulink.core.components.component import Component, ComponentsMeta
 
@@ -629,10 +629,7 @@ class Parameter(types.SimpleNamespace):
 
         constructor_argument
             if not None, this indicates the argument in the owning Component's
-            constructor that this Parameter corresponds to. Typically this is
-            used in Parameters that save specification types, as in
-            `input_ports_spec <Mechanism.input_ports_spec>` and
-            `output_ports_spec <Mechanism.output_ports_spec>`
+            constructor that this Parameter corresponds to.
 
             :default: None
 
