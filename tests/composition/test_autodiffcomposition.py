@@ -108,8 +108,8 @@ class TestMiscTrainingFunctionality:
 
     # test whether processing doesn't interfere with pytorch parameters after training
     @pytest.mark.parametrize("mode", ['Python',
-                                    pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                    ])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                     ])
     def test_training_then_processing(self,mode):
         xor_in = TransferMechanism(name='xor_in',
                                    default_variable=np.zeros(2))
@@ -150,9 +150,9 @@ class TestMiscTrainingFunctionality:
         # results_before_proc = xor.run(inputs={xor_in:xor_inputs},
         #                               targets={xor_out:xor_targets},
         #                               epochs=10)
-        results_before_proc = xor.run(inputs = {"inputs": {xor_in:xor_inputs},
-                                                "targets": {xor_out:xor_targets},
-                                               "epochs": 10},bin_execute = mode)
+        results_before_proc = xor.run(inputs={"inputs": {xor_in:xor_inputs},
+                                              "targets": {xor_out:xor_targets},
+                                              "epochs": 10}, bin_execute=mode)
 
         # get weight parameters from pytorch
         pt_weights_hid_bp = xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy().copy()
@@ -175,8 +175,8 @@ class TestMiscTrainingFunctionality:
         'loss', ['l1', 'poissonnll']
     )
     @pytest.mark.parametrize("mode", ['Python',
-                                    pytest.param('LLVMRun', marks=[pytest.mark.llvm,pytest.mark.skip]), # these loss specs remain unimplemented at the moment
-                                    ])
+                                      pytest.param('LLVMRun', marks=[pytest.mark.llvm,pytest.mark.skip]), # these loss specs remain unimplemented at the moment
+                                     ])
     def test_various_loss_specs(self, loss, mode):
         xor_in = TransferMechanism(name='xor_in',
                                    default_variable=np.zeros(2))
@@ -215,11 +215,11 @@ class TestMiscTrainingFunctionality:
 
         xor.run(inputs = {"inputs": {xor_in:xor_inputs},
                           "targets": {xor_out:xor_targets},
-                          "epochs": 10}, bin_execute = mode)
+                          "epochs": 10}, bin_execute=mode)
 
     @pytest.mark.parametrize("mode", ['Python',
-                                    pytest.param('LLVMRun', marks=[pytest.mark.llvm,pytest.mark.skip]), # Not implemented?
-                                    ])
+                                      pytest.param('LLVMRun', marks=[pytest.mark.llvm, pytest.mark.skip]), # Not implemented?
+                                     ])
     def test_pytorch_loss_spec(self,mode):
         import torch
         ls = torch.nn.SoftMarginLoss(reduction='sum')
@@ -248,23 +248,17 @@ class TestMiscTrainingFunctionality:
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
         xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0],
-             [0, 1],
-             [1, 0],
-             [1, 1]])
+            [[0, 0], [0, 1], [1, 0], [1, 1]])
 
         xor_targets = np.array(  # the outputs we wish to see from the model
-            [[0],
-             [1],
-             [1],
-             [0]])
+            [[0], [1], [1], [0]])
 
         xor.run(inputs={"inputs": {xor_in:xor_inputs},
-                          "targets": {xor_out:xor_targets},
-                          "epochs": 10}, bin_execute = mode)
+                        "targets": {xor_out:xor_targets},
+                        "epochs": 10}, bin_execute=mode)
         xor.run(inputs={"inputs": {xor_in: xor_inputs},
                         "targets": {xor_out: xor_targets},
-                        "epochs": 10}, bin_execute = mode)
+                        "epochs": 10}, bin_execute=mode)
 
 
     @pytest.mark.parametrize(
@@ -303,16 +297,10 @@ class TestMiscTrainingFunctionality:
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
         xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0],
-             [0, 1],
-             [1, 0],
-             [1, 1]])
+            [[0, 0], [0, 1], [1, 0], [1, 1]])
 
         xor_targets = np.array(  # the outputs we wish to see from the model
-            [[0],
-             [1],
-             [1],
-             [0]])
+            [[0], [1], [1], [0]])
 
         # train model for a few epochs
         # results_before_proc = xor.run(inputs={xor_in:xor_inputs},
@@ -324,8 +312,8 @@ class TestMiscTrainingFunctionality:
 
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
     @pytest.mark.parametrize("mode", ['Python',
-                                    pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                    ])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                     ])
     def test_params_stay_separate(self,mode):
         xor_in = TransferMechanism(name='xor_in',
                                    default_variable=np.zeros(2))
@@ -363,16 +351,10 @@ class TestMiscTrainingFunctionality:
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
         xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0],
-             [0, 1],
-             [1, 0],
-             [1, 1]])
+            [[0, 0], [0, 1], [1, 0], [1, 1]])
 
         xor_targets = np.array(  # the outputs we wish to see from the model
-            [[0],
-             [1],
-             [1],
-             [0]])
+            [[0], [1], [1], [0]])
 
         # train the model for a few epochs
         result = xor.run(inputs={"inputs": {xor_in:xor_inputs},
@@ -394,9 +376,9 @@ class TestMiscTrainingFunctionality:
 
     # test whether the autodiff composition's get_parameters method works as desired
     @pytest.mark.parametrize("mode", ['Python',
-                                    pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                    ])
-    def test_get_params(self,mode):
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                     ])
+    def test_get_params(self, mode):
 
         xor_in = TransferMechanism(name='xor_in',
                                    default_variable=np.zeros(2))
@@ -423,16 +405,10 @@ class TestMiscTrainingFunctionality:
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
         xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0],
-             [0, 1],
-             [1, 0],
-             [1, 1]])
+            [[0, 0], [0, 1], [1, 0], [1, 1]])
 
         xor_targets = np.array(  # the outputs we wish to see from the model
-            [[0],
-             [1],
-             [1],
-             [0]])
+            [[0], [1], [1], [0]])
 
         # call run to only process the inputs, so that pytorch representation of AC gets created
         # results = xor.run(inputs={xor_in:xor_inputs})
@@ -462,7 +438,7 @@ class TestMiscTrainingFunctionality:
         # call run to train the pytorch parameters
         results = xor.run(inputs={"inputs": {xor_in:xor_inputs},
                                   "targets": {xor_out:xor_targets},
-                                  "epochs": 10},bin_execute = mode)
+                                  "epochs": 10}, bin_execute=mode)
 
 
         # check that the parameter copies obtained from get_parameters have not changed with the
@@ -514,35 +490,28 @@ class TestTrainingCorrectness:
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
         xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0],
-             [0, 1],
-             [1, 0],
-             [1, 1]])
+            [[0, 0], [0, 1], [1, 0], [1, 1]])
 
         xor_targets = np.array(  # the outputs we wish to see from the model
-            [[0],
-             [1],
-             [1],
-             [0]])
+            [[0], [1], [1], [0]])
 
         if calls == 'single':
             results = xor.run(inputs={"inputs": {xor_in:xor_inputs},
                                       "targets": {xor_out:xor_targets},
-                                      "epochs": eps}, bin_execute = mode
-                                      )
+                                      "epochs": eps}, bin_execute=mode)
 
             for i in range(len(results[0])):
                 assert np.allclose(np.round(results[0][i][0]), xor_targets[i])
 
         else:
-            results = xor.run(inputs={"inputs": {xor_in:xor_inputs},
-                                      "targets": {xor_out:xor_targets},
-                                      "epochs": 1}, bin_execute = mode)
+            results = xor.run(inputs={"inputs": {xor_in: xor_inputs},
+                                      "targets": {xor_out: xor_targets},
+                                      "epochs": 1}, bin_execute=mode)
 
             for i in range(eps - 1):
-                results = xor.run(inputs={"inputs": {xor_in:xor_inputs},
-                                          "targets": {xor_out:xor_targets},
-                                          "epochs": 1}, bin_execute = mode)
+                results = xor.run(inputs={"inputs": {xor_in: xor_inputs},
+                                          "targets": {xor_out: xor_targets},
+                                          "epochs": 1}, bin_execute=mode)
 
             for i in range(len(results[eps - 1])):
                 assert np.allclose(np.round(results[eps - 1][i][0]), xor_targets[i])
@@ -551,15 +520,15 @@ class TestTrainingCorrectness:
     @pytest.mark.benchmark(group="Recurrent")
     # tests whether semantic network created as autodiff composition learns properly
     @pytest.mark.parametrize(
-        'eps, opt, from_pnl_or_no', [
+        'eps, opt, from_pnl_or_not', [
             (1000, 'adam', True),
             # (1000, 'adam', False)
         ]
     )
     @pytest.mark.parametrize("mode", ["Python",
-                                    pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                    ])
-    def test_semantic_net_training_correctness(self, eps, opt, from_pnl_or_no,mode,benchmark):
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                     ])
+    def test_semantic_net_training_correctness(self, eps, opt, from_pnl_or_not, mode, benchmark):
 
         # MECHANISMS FOR SEMANTIC NET:
 
@@ -631,7 +600,7 @@ class TestTrainingCorrectness:
                                        receiver=out_sig_can)
 
         # COMPOSITION FOR SEMANTIC NET
-        sem_net = AutodiffComposition(param_init_from_pnl=from_pnl_or_no,
+        sem_net = AutodiffComposition(param_init_from_pnl=from_pnl_or_not,
                                       optimizer_type=opt, learning_rate=.001)
 
         sem_net.add_node(nouns_in)
@@ -740,14 +709,14 @@ class TestTrainingCorrectness:
                 # compare model output for terminal node on current trial with target for terminal node on current trial
                 assert np.allclose(np.round(result[0][i][j]), correct_value)
 
-        benchmark(sem_net.run,inputs={'inputs': inputs_dict,
-                                      'targets': targets_dict,
-                                      'epochs': eps}, bin_execute=mode)
+        benchmark(sem_net.run, inputs={'inputs': inputs_dict,
+                                       'targets': targets_dict,
+                                       'epochs': eps}, bin_execute=mode)
 
     @pytest.mark.parametrize("mode", ["Python",
                                 pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                 ])
-    def test_pytorch_equivalence_with_autodiff_composition(self,mode):
+    def test_pytorch_equivalence_with_autodiff_composition(self, mode):
         iSs = np.array(
             [np.array([0.47360805, 0.8009108, 0.5204775, 0.53737324, 0.7586156,
                     0.1059076, 0.9025985, 0.44994998, 0.61306345, 0.75068617,
