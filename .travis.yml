@@ -15,18 +15,13 @@ dist: bionic
 
 env:
   jobs:
-    - PYTHON=3.8.0
-    - PYTHON=3.7.5
+    - PYTHON=3.8.1
+    - PYTHON=3.7.6
     - PYTHON=3.6.8
   global:
     - PYTHONWARNINGS="ignore::DeprecationWarning"
     - PIP_PROGRESS_BAR="off"
     - COVERALLS_PARALLEL=true
-
-jobs:
-  exclude:
-    - env: PYTHON=3.8.0
-      os: osx
 
 # Cache downloaded(built) python packages
 # and homebrew downloads
@@ -42,8 +37,12 @@ addons:
       - graphviz
 
 before_install:
+  - | # Pytorch is not available for python 3.8 yet
+    if [ ${PYTHON%.*} == "3.8" ]; then
+      sed -i.bak '/torch/d' requirements.txt
+    fi
   - |
-    # Hombrew doesn't provide older python versions.
+    # Homebrew doesn't provide older python versions.
     # Install it manually from python.org
     if [ "$TRAVIS_OS_NAME" == "osx" ]; then
       # homebrew plugin is not working correctly
@@ -67,17 +66,10 @@ before_install:
     # Install venv on Linux using Ubuntu distributed python
     if [ "$TRAVIS_OS_NAME" == "linux" ]; then
       if [ ${PYTHON%.*} == "3.8" ]; then
-        # There are a lot fewer wheels distributed for python3.8.
-        # We end up building a lot of them locally. Install the dev packages
-        EXTRA_PKGS="gfortran llvm-8-dev liblapack-dev python3.8-distutils"
+        # Python 3.8 is in a custom ppa
         sudo apt-add-repository -y ppa:deadsnakes/ppa
         sudo apt-get update
-        export LLVM_CONFIG=llvm-config-8
-        export CXXFLAGS=-fPIC
-        # Drop torch for now
-        sed -i '/torch/d' requirements.txt
-        # Cython is needed to build scikit-learn
-        EXTRA_PIP="cython"
+        EXTRA_PKGS="python3.8-distutils"
       fi
       sudo apt-get install -y python${PYTHON%.*}-dev python${PYTHON%.*}-venv $EXTRA_PKGS
       python${PYTHON%.*} -m venv $HOME/venv

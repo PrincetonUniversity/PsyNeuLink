@@ -533,15 +533,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             aliases='monitor',
             constructor_argument='monitor'
         )
-        input_ports_spec = Parameter(
-            None,
-            stateful=False,
-            loggable=False,
-            read_only=True,
-            user=False,
-            pnl_internal=True,
-            constructor_argument='monitor'
-        )
         output_ports = Parameter(
             [OUTCOME],
             stateful=False,
