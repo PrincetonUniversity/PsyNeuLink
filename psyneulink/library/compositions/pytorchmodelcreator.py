@@ -227,7 +227,7 @@ class PytorchModelCreator(torch.nn.Module):
         return self._composition._get_state_struct_type(ctx)
 
     # generates llvm function for self.forward
-    def _gen_llvm_function(self, extra_args=[], name=None):
+    def _gen_llvm_function(self):
         llvm_func = None
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             args = [ctx.get_state_struct_type(self).as_pointer(),
@@ -235,7 +235,7 @@ class PytorchModelCreator(torch.nn.Module):
                     ctx.get_input_struct_type(self).as_pointer(),
                     ctx.get_data_struct_type(self).as_pointer()
                     ]
-            builder = ctx.create_llvm_function(args + extra_args, self, name)
+            builder = ctx.create_llvm_function(args, self)
             llvm_func = builder.function
 
             context, params, arg_in, arg_out = llvm_func.args[:len(args)]
@@ -454,7 +454,7 @@ class PytorchModelCreator(torch.nn.Module):
             return z_values
 
     # generates a function responsible for a single epoch of the training
-    def _gen_llvm_training_backprop(self, ctx, optimizer, loss, extra_args=[]):
+    def _gen_llvm_training_backprop(self, ctx, optimizer, loss):
         composition = self._composition
         learning_targets = pnlvm.ir.LiteralStructType([
             ctx.int32_ty,  # dimensionality
@@ -470,7 +470,7 @@ class PytorchModelCreator(torch.nn.Module):
                 ctx.int32_ty  # input idx
                 ]
         name = self._composition.name + "_training_backprop"
-        builder = ctx.create_llvm_function(args + extra_args, self, name)
+        builder = ctx.create_llvm_function(args, self, name)
         llvm_func = builder.function
         for a in llvm_func.args:
             if isinstance(a.type, pnlvm.ir.PointerType):
