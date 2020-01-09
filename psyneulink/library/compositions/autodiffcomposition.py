@@ -624,13 +624,7 @@ class AutodiffComposition(Composition):
         required_keys = {"inputs", "targets"}
         return required_keys.issubset(set(input_dict.keys()))
 
-    def _adjust_stimulus_dict(self, inputs, bin_execute=False):
-        # for bin executes, we manually parse out the autodiff stimuli
-        if bin_execute is True or str(bin_execute).endswith('Run'):
-            if not self.learning_enabled and isinstance(inputs, dict) and self._has_required_keys(inputs):
-                inputs = inputs["inputs"]
-            return super(AutodiffComposition, self)._adjust_stimulus_dict(inputs)
-
+    def _adjust_stimulus_dict(self, inputs):
         if self.learning_enabled:
             if isinstance(inputs, dict):
                 if self._has_required_keys(inputs):
@@ -1087,60 +1081,69 @@ class AutodiffComposition(Composition):
         scheduler._init_clock(context)
 
         if self.learning_enabled:
-            if bin_execute is True or str(bin_execute).endswith('Run'):
-                # Since the automatically generated llvm function is overwritten in the event that learning_enabled is true, we can just rely on the super function
-                results = super(AutodiffComposition, self).run(inputs=inputs,
-                                                    scheduler=scheduler,
-                                                    termination_processing=termination_processing,
-                                                    context=context,
-                                                    num_trials=num_trials,
-                                                    call_before_time_step=call_before_time_step,
-                                                    call_after_time_step=call_after_time_step,
-                                                    call_before_pass=call_before_pass,
-                                                    call_after_pass=call_after_pass,
-                                                    call_before_trial=call_before_trial,
-                                                    call_after_trial=call_after_trial,
-                                                    clamp_input=clamp_input,
-                                                    bin_execute=bin_execute,
-                                                    initial_values=initial_values,
-                                                    reinitialize_values=reinitialize_values,
-                                                    runtime_params=runtime_params,
-                                                    )
-                self.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
-                results = [self.parameters.results._get(context)]
+            self._analyze_graph()
+            self._initialize_from_context(context, base_context=Context(execution_id=None), override=False)
+            if self.refresh_losses or (self.parameters.losses._get(context) is None):
+                self.parameters.losses._set([], context)
+            if callable(inputs):
+                stimuli = inputs()
+            elif isgenerator(inputs):
+                stimuli = inputs
             else:
-                self._analyze_graph()
-                self._initialize_from_context(context, base_context=Context(execution_id=None), override=False)
-                if self.refresh_losses or (self.parameters.losses._get(context) is None):
-                    self.parameters.losses._set([], context)
-                if callable(inputs):
-                    stimuli = inputs()
-                elif isgenerator(inputs):
-                    stimuli = inputs
-                else:
-                    stimuli = self._adjust_stimulus_dict(inputs)
+                stimuli = self._adjust_stimulus_dict(inputs)
 
-                if isinstance(stimuli, dict):
-                    stimuli = [stimuli]
+            if isinstance(stimuli, dict):
+                stimuli = [stimuli]
 
-                for stimulus_set in stimuli:
-                    trial_output = self.execute(
-                        inputs=stimulus_set,
-                        minibatch_size=minibatch_size,
-                        call_before_minibatch=call_before_minibatch,
-                        call_after_minibatch=call_after_minibatch,
-                        num_trials=num_trials,
-                        context=context,
-                        do_logging=do_logging,
-                        bin_execute=bin_execute
-                    )
+            if (bin_execute is True or str(bin_execute).endswith('Run')):
+                # There's no mode to run simulations.
+                # Simulations are run as part of the controller node wrapper.
+                try:
+                    num_trials = len(next(iter(inputs["inputs"].values())))
+                    if bin_execute is True or bin_execute.startswith('LLVM'):
+                        _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
+                        results = _comp_ex.run(inputs, num_trials, num_trials, autodiff_stimuli=inputs)
+                    elif bin_execute.startswith('PTX'):
+                        self.__ptx_initialize(context)
+                        EX = self._compilation_data.ptx_execution._get(context)
+                        results = EX.cuda_run(inputs, num_trials, num_trials)
+
                     full_results = self.parameters.results._get(context)
                     if full_results is None:
-                        full_results = trial_output
+                        full_results = results
                     else:
-                        full_results.append(trial_output)
+                        full_results.extend([[r] for r in results])
+
                     self.parameters.results._set(full_results, context)
-                    results = full_results
+                    self.most_recent_context = context
+                    return full_results
+
+                except Exception as e:
+                    if bin_execute is not True:
+                        raise e
+
+                    print("WARNING: Failed to Run execution `{}': {}".format(
+                          self.name, str(e)))
+
+            for stimulus_set in stimuli:
+                trial_output = self.execute(
+                    inputs=stimulus_set,
+                    minibatch_size=minibatch_size,
+                    call_before_minibatch=call_before_minibatch,
+                    call_after_minibatch=call_after_minibatch,
+                    num_trials=num_trials,
+                    context=context,
+                    do_logging=do_logging,
+                    bin_execute=bin_execute
+                )
+                full_results = self.parameters.results._get(context)
+                if full_results is None:
+                    full_results = trial_output
+                else:
+                    full_results.append(trial_output)
+                self.parameters.results._set(full_results, context)
+                results = full_results
+
             self.most_recent_context = context
             return results
 

@@ -528,12 +528,13 @@ class CompExecution(CUDAExecution):
 
 
     def run(self, inputs, runs, num_input_sets, autodiff_stimuli={}):
-        inputs = self._get_run_input_struct(inputs, num_input_sets)
         # Special casing for autodiff
         if hasattr(self._composition, "learning_enabled") and self._composition.learning_enabled is True:
+            inputs = {k:[[x] for x in v] for k, v in autodiff_stimuli["inputs"].items()}
             assert num_input_sets == len(next(iter(autodiff_stimuli["inputs"].values())))
             assert num_input_sets == len(next(iter(autodiff_stimuli["targets"].values())))
             self._initialize_autodiff_param_struct(autodiff_stimuli)
+        inputs = self._get_run_input_struct(inputs, num_input_sets)
 
         ct_vo = self._bin_run_func.byref_arg_types[4] * runs
         if len(self._execution_contexts) > 1:

@@ -6537,14 +6537,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if not callable(inputs) \
                 and not hasattr(inputs, '__next__'):
             # Currently, no validation if 'inputs' arg is a function
-            ad_tmp = {}
-            if hasattr(self,'learning_enabled') and self.learning_enabled is True:
-                ad_tmp = inputs
-                inputs = inputs["inputs"]
-            inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(inputs,bin_execute=bin_execute)
-            #HACK: basically checks to see if we retrieved info from the _adjust_stimulus_dict call, and replaces it with our own parsed version if learning is enabled
-            if hasattr(self,'learning_enabled') and self.learning_enabled is True:
-                autodiff_stimuli = ad_tmp
+            inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(inputs)
 
         if num_trials is not None:
             num_trials = num_trials
@@ -6573,7 +6566,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             try:
                 if bin_execute is True or bin_execute.startswith('LLVM'):
                     _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
-                    results += _comp_ex.run(inputs, num_trials, num_inputs_sets,autodiff_stimuli=autodiff_stimuli)
+                    results += _comp_ex.run(inputs, num_trials, num_inputs_sets)
                 elif bin_execute.startswith('PTX'):
                     self.__ptx_initialize(context)
                     EX = self._compilation_data.ptx_execution._get(context)
@@ -6625,8 +6618,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             elif hasattr(inputs, '__next__'):
                 try:
                     next_inputs = inputs.__next__()
-                    next_inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(next_inputs,
-                                                                                                bin_execute=bin_execute)
+                    next_inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(next_inputs)
                     execution_stimuli = {}
                     for node in next_inputs:
                         if len(next_inputs[node]) == 1:
@@ -7353,7 +7345,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return "heterogeneous"
         return False
 
-    def _adjust_stimulus_dict(self, stimuli,bin_execute=False):
+    def _adjust_stimulus_dict(self, stimuli):
 
         autodiff_stimuli = {}
         all_stimuli_keys = list(stimuli.keys())
