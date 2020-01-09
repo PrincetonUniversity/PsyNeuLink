@@ -23,7 +23,6 @@ Functions that store and can return a record of their input.
 """
 
 from collections import deque, OrderedDict
-from random import choice
 
 import numpy as np
 import typecheck as tc
@@ -676,7 +675,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         rate = Parameter(1.0, modulable=True)
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_entries = Parameter(1000)
-        random_state = Parameter(None, modulable=False, stateful=True, pnl_internal=True)
+        random_state = Parameter(None, stateful=True, loggable=False)
 
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
@@ -1210,7 +1209,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                 return [[0]* self.parameters.key_size._get(context),
                         [0]* self.parameters.val_size._get(context)]
             if self.equidistant_keys_select == RANDOM:
-                index_of_selected_item = choice(indices_of_selected_items)
+                random_state = self.get_current_function_param('random_state', context)
+                index_of_selected_item = random_state.choice(indices_of_selected_items)
             elif self.equidistant_keys_select == OLDEST:
                 index_of_selected_item = indices_of_selected_items[0]
             elif self.equidistant_keys_select == NEWEST:

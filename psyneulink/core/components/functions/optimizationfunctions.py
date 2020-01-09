@@ -23,7 +23,6 @@ Functions that return the sample of a variable yielding the optimized value of a
 """
 
 import warnings
-import random
 import sys
 # from fractions import Fraction
 import itertools
@@ -1244,7 +1243,7 @@ class GridSearch(OptimizationFunction):
         grid = Parameter(None)
         save_samples = Parameter(True, pnl_internal=True)
         save_values = Parameter(True, pnl_internal=True)
-        random_state = Parameter(None, modulable=False, stateful=True, pnl_internal=True)
+        random_state = Parameter(None, stateful=True, loggable=False)
 
         direction = MAXIMIZE
 
@@ -2169,6 +2168,7 @@ class ParamEstimationFunction(OptimizationFunction):
 
         """
         variable = Parameter([[0], [0]], read_only=True)
+        random_state = Parameter(None, stateful=True, loggable=False)
         save_samples = True
         save_values = True
 
@@ -2210,13 +2210,13 @@ class ParamEstimationFunction(OptimizationFunction):
         # If no seed is specified, generate a different random one for
         # each instance
         if seed is None:
-            self._seed = random.randrange(sys.maxsize)
+            self._seed = get_global_seed()
         else:
             self._seed = seed
 
         # Setup a RNG for our stuff, we will also pass the seed to ELFI for
         # its crap.
-        self._rng = np.random.RandomState(seed=seed)
+        random_state = np.random.RandomState([seed])
 
         # Has the ELFI model been setup yet. Nope!
         self._is_model_initialized = False
@@ -2233,6 +2233,7 @@ class ParamEstimationFunction(OptimizationFunction):
             search_termination_function=None,
             save_samples=True,
             save_values=True,
+            random_state=random_state,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -2428,7 +2429,8 @@ class ParamEstimationFunction(OptimizationFunction):
         # number of simulations. N is not the total number of simulation
         # samples. We will return a random sample from this set for the
         # "optimal" control allocation.
-        sample_idx = self._rng.randint(low=0, high=result.n_samples)
+        random_state = self.get_current_function_param("random_state", context)
+        sample_idx = random_state.randint(low=0, high=result.n_samples)
         return_optimal_sample = np.array(result.samples_array[sample_idx])
         return_optimal_value = result.discrepancies[sample_idx]
         return_all_samples = np.array(result.samples_array)

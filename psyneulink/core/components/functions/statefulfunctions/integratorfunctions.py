@@ -2352,7 +2352,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         time_step_size = Parameter(1.0, modulable=True)
         previous_time = Parameter(None, pnl_internal=True)
         seed = Parameter(None, read_only=True)
-        random_state = Parameter(None, pnl_internal=True)
+        random_state = Parameter(None, stateful=True, loggable=False)
         enable_output_type_conversion = Parameter(
             False,
             stateful=False,

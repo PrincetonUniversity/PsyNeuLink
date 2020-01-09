@@ -713,7 +713,7 @@ class DDM(ProcessingMechanism):
         )
         input_format = Parameter(SCALAR, stateful=False, loggable=False)
         initializer = np.array([[0]])
-        random_state = Parameter("random_state", loggable=False)
+        random_state = Parameter(None, stateful=True, loggable=False)
 
 
     standard_output_ports =[{NAME: DECISION_VARIABLE,},           # Upper or lower threshold for Analtyic function
