@@ -85,8 +85,6 @@ as an attribute of the `owner <Function_Base.owner>`, and those are each associa
 `parameterPort <ParameterPort>` of the `owner <Function_Base.owner>`.  Projections to those parameterPorts can be
 used by `ControlProjections <ControlProjection>` to modify the Function's parameters.
 
-
-COMMENT:
 .. _Function_Output_Type_Conversion:
 
 If the `function <Function_Base.function>` returns a single numeric value, and the Function's class implements
@@ -96,10 +94,9 @@ FunctionOutputTypeConversion, then the type of value returned by its `function <
     * FunctionOutputType.NP_1D_ARRAY: return 1d np.array
     * FunctionOutputType.NP_2D_ARRAY: return 2d np.array.
 
-To implement FunctionOutputTypeConversion, the Function's FUNCTION_OUTPUT_TYPE_CONVERSION parameter must set to True,
-and function type conversion must be implemented by its `function <Function_Base.function>` method
+To implement FunctionOutputTypeConversion, the Function's `enable_output_type_conversion` parameter must set to True,
+and function type conversion must be implemented by its `_function <Function_Base._function>` method
 (see `Linear` for an example).
-COMMENT
 
 .. _Function_Modulatory_Params:
 
@@ -444,7 +441,6 @@ class Function_Base(Function):
     function : function
         called by the Function's `owner <Function_Base.owner>` when it is executed.
 
-    COMMENT:
     enable_output_type_conversion : Bool : False
         specifies whether `function output type conversion <Function_Output_Type_Conversion>` is enabled.
 
@@ -452,7 +448,6 @@ class Function_Base(Function):
         used to specify the return type for the `function <Function_Base.function>`;  `functionOuputTypeConversion`
         must be enabled and implemented for the class (see `FunctionOutputType <Function_Output_Type_Conversion>`
         for details).
-    COMMENT
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -636,6 +631,11 @@ class Function_Base(Function):
         return value
 
     def convert_output_type(self, value, output_type=None):
+        """
+            Performs `output type conversion
+            <Function_Output_Type_Conversion>` if it is `enabled
+            <Function.enable_output_type_conversion>`
+        """
         if output_type is None:
             if not self.enable_output_type_conversion or self.output_type is None:
                 return value

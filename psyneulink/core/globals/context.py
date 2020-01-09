@@ -642,6 +642,11 @@ def handle_external_context(
         a decorator that ensures a Context argument is passed in to the
         decorated method
 
+        ..note::
+            handle_external_context is not itself a decorator but a
+            function that returns a decorator. This is so that default
+            values for the returned Context object may be set
+
     """
     def decorator(func):
         # try to detect the position of the 'context' argument in function's

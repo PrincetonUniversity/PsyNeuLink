@@ -71,6 +71,8 @@ and be modulated during `control <System_Execution_Control>`.
     many cases, you can use this to get or set using the execution context you'd expect. However, in complex situations,
     if there is doubt, it is best to explicitly specify the execution context.
 
+.. _Parameter_Developers:
+
 For Developers
 --------------
 
@@ -137,11 +139,14 @@ To create new Parameters, reference this example of a new class *B*
 
                 return value
 
+- additional properties of a Parameter are described `below <_Parameter_Attributes_Table>`.
+
 .. note::
     The specification of Parameters is intended to mirror the PNL class hierarchy. So, it is only necessary for each new class to declare
     Parameters that are new, or whose specification has changed from their parent's. Parameters not present in a given class can be inherited
     from parents, but will be overridden if necessary, without affecting the parents.
 
+.. _Parameter_Use:
 
 Using Parameters
 ^^^^^^^^^^^^
@@ -149,10 +154,15 @@ Using Parameters
 Methods that are called during runtime in general must take *context* as an argument and must pass this *context* along to other
 PNL methods. The most likely place this will come up would be for the *function* method on a PNL `Function` class, or *_execute* method on other
 `Components`. Any getting and setting of stateful parameter values must use this *context*, and using standard attributes to store data
-must be avoided at risk of causing computation errors. You may use standard attributes only when their values will never change during a
-`Run <TimeScale.RUN>`.
+must be avoided at risk of causing computation errors. You should avoid using `dot notation <Parameter_Dot_Notation>` in internal code, as it is ambiguous and can potentially break statefulness.
 
-You should avoid using `dot notation <Parameter_Dot_Notation>` in internal code, as it is ambiguous and can potentially break statefulness.
+The value of a Parameter can be retrieved through `Parameter.get` or
+`Parameter._get`. `.get` is intended primarily for users, and generally
+should not be used internally. `._get` should be used for internal code,
+and assumes that a `Context` object is passed in. If the method you
+write is user-facing and requires Context, you may use a decorator from
+`handle_external_context` to parse the `context` argument. The same
+pattern is in place for `Parameter.set` and `Parameter._set`.
 
 .. _Parameter_Attributes_Table:
 

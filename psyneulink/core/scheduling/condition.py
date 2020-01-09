@@ -431,6 +431,15 @@ class Condition(JSONDumpable):
     owner (Component):
         the `Component` with which the Condition is associated, and the execution of which it determines.
 
+    func : callable
+        the function to be called when the Condition is evaluated, to determine whether it is currently satisfied.
+
+    args : *args
+        the formal arguments to pass to `func` when the Condition is evaluated.
+
+    kwargs : **kwargs
+        the keyword arguments to pass to `func` when the Condition is evaluated.
+
     """
     def __init__(self, func, *args, **kwargs):
         self.func = func
