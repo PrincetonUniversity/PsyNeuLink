@@ -59,7 +59,6 @@ before_install:
 
       # Deploy new virtualenv to match travis setup
       echo "Deploying new python venv"
-      python3 -m pip  install virtualenv
       python3 -m venv $HOME/venv
     fi
   - |
