@@ -59,24 +59,21 @@ before_install:
 
       # Deploy new virtualenv to match travis setup
       echo "Deploying new python venv"
-      python3 -m pip  install virtualenv
       python3 -m venv $HOME/venv
     fi
   - |
     # Install venv on Linux using Ubuntu distributed python
     if [ "$TRAVIS_OS_NAME" == "linux" ]; then
-      if [ ${PYTHON%.*} == "3.8" ]; then
-        # Python 3.8 is in a custom ppa
-        sudo apt-add-repository -y ppa:deadsnakes/ppa
-        sudo apt-get update
-        EXTRA_PKGS="python3.8-distutils"
-      fi
-      sudo apt-get install -y python${PYTHON%.*}-dev python${PYTHON%.*}-venv $EXTRA_PKGS
+      # distutils and lib2to3 are only needed for python3.8
+      # https://bugs.launchpad.net/ubuntu/+source/python3.8/+bug/1851684
+      sudo apt-get install -y python${PYTHON%.*}-dev python${PYTHON%.*}-venv python3-distutils python3-lib2to3
       python${PYTHON%.*} -m venv $HOME/venv
       # Provide fake xdg-open
       echo "#!/bin/sh" > $HOME/venv/bin/xdg-open
       chmod +x $HOME/venv/bin/xdg-open
     fi
+
+  # The rest of the setup is common for all environments
   - source $HOME/venv/bin/activate
 
   - python --version
