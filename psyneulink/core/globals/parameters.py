@@ -1136,6 +1136,27 @@ class Parameter(types.SimpleNamespace):
             self.log.pop(execution_ids, None)
 
     def _initialize_from_context(self, context=None, base_context=Context(execution_id=None), override=True):
+        """
+            Copies all values and histories for this Parameter from
+            **base_context** to **context**. Values are deep-copied
+            while histories are shallow-copied.
+
+            Arguments
+            ---------
+
+            context : `Context`
+                the target context
+
+            base_context : `Context`
+                the source context
+
+            override : bool
+                if True, values that already exist in **context** will
+                be overwritten by those in **base_context**.
+                if False, values that already exist in **context** will
+                NOT be overwritten by those in **base_context**.
+        """
+
         from psyneulink.core.components.component import Component
 
         try:

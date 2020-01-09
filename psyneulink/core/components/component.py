@@ -1795,6 +1795,31 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 )
 
     def _initialize_from_context(self, context, base_context=Context(execution_id=None), override=True, visited=None):
+        """
+            Copies all stateful Parameter values and histories from
+            **base_context** into **context** for all of this
+            Component's `_dependent_components`. This includes
+
+            Arguments
+            ---------
+
+            context : `Context`
+                the target context
+
+            base_context : `Context`
+                the source context
+
+            override : bool
+                if True, values that already exist in **context** will
+                be overwritten by those in **base_context**.
+                if False, values that already exist in **context** will
+                NOT be overwritten by those in **base_context**.
+
+            visited : set
+                used to avoid following cycles in _dependent_components
+                traversal
+        """
+
         if visited is None:
             visited = set()
 
