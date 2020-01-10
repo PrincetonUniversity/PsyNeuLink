@@ -10,7 +10,7 @@ from itertools import product
 
 import psyneulink.core.llvm as pnlvm
 import psyneulink as pnl
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator, SimpleIntegrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator, DriftDiffusionIntegrator, IntegratorFunction, SimpleIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
@@ -26,7 +26,7 @@ from psyneulink.core.compositions.systemcomposition import SystemComposition
 from psyneulink.core.globals.keywords import \
     ADDITIVE, ALLOCATION_SAMPLES, DISABLE, INPUT_PORT, NAME, PROJECTIONS, RESULT, OVERRIDE, TARGET_MECHANISM, VARIANCE
 from psyneulink.core.globals.utilities import NodeRole
-from psyneulink.core.scheduling.condition import AfterNCalls
+from psyneulink.core.scheduling.condition import AfterNCalls, AtTimeStep, AtTrial, Never
 from psyneulink.core.scheduling.condition import EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
@@ -5072,6 +5072,142 @@ class TestShadowInputs:
         comp.run(inputs={A: 10.0,
                          B: 15.0})
         assert obj.value == [[25.0]]
+
+
+class TestReinitializeValues:
+
+    def test_reinitialize_one_mechanism_through_run(self):
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(
+            name='B',
+            integrator_mode=True,
+            integration_rate=0.5
+        )
+        C = TransferMechanism(name='C')
+
+        comp = Composition()
+        comp.add_linear_processing_pathway([A, B, C])
+
+        C.log.set_log_conditions('value')
+
+        comp.run(
+            inputs={A: [1.0]},
+            num_trials=5,
+            reinitialize_nodes_when=AtTimeStep(0)
+        )
+
+        # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.5, Trial 3: 0.75. Trial 4: 0.875
+        assert np.allclose(
+            C.log.nparray_dictionary('value')[comp.default_execution_id]['value'],
+            [
+                [np.array([0.5])],
+                [np.array([0.5])],
+                [np.array([0.5])],
+                [np.array([0.5])],
+                [np.array([0.5])]
+            ]
+        )
+
+    def test_reinitialize_one_mechanism_at_trial_2_condition(self):
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(
+            name='B',
+            integrator_mode=True,
+            integration_rate=0.5
+        )
+        C = TransferMechanism(name='C')
+
+        comp = Composition()
+        comp.add_linear_processing_pathway([A, B, C])
+
+        # Set reinitialization condition
+        B.reinitialize_when = AtTrial(2)
+
+        C.log.set_log_conditions('value')
+
+        comp.run(
+            inputs={A: [1.0]},
+            reinitialize_values={B: [0.]},
+            num_trials=5
+        )
+
+        # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.5, Trial 3: 0.75. Trial 4: 0.875
+        assert np.allclose(
+            C.log.nparray_dictionary('value')[comp.default_execution_id]['value'],
+            [
+                [np.array([0.5])],
+                [np.array([0.75])],
+                [np.array([0.5])],
+                [np.array([0.75])],
+                [np.array([0.875])]
+            ]
+        )
+
+    def test_save_state_before_simulations(self):
+
+        A = TransferMechanism(
+            name='A',
+            integrator_mode=True,
+            integration_rate=0.2
+        )
+
+        B = IntegratorMechanism(name='B', function=DriftDiffusionIntegrator(rate=0.1))
+        C = TransferMechanism(name='C')
+
+        comp = Composition()
+        comp.add_linear_processing_pathway([A, B, C])
+
+        comp.run(inputs={A: [[1.0], [1.0]]})
+
+        run_1_values = [
+            A.parameters.value.get(comp),
+            B.parameters.value.get(comp)[0],
+            C.parameters.value.get(comp)
+        ]
+
+        # "Save state" code from EVCaux
+
+        # Get any values that need to be reinitialized for each run
+        reinitialization_values = {}
+        for mechanism in comp.stateful_nodes:
+            # "save" the current state of each stateful mechanism by storing the values of each of its stateful
+            # attributes in the reinitialization_values dictionary; this gets passed into run and used to call
+            # the reinitialize method on each stateful mechanism.
+            reinitialization_value = []
+
+            if isinstance(mechanism.function, IntegratorFunction):
+                for attr in mechanism.function.stateful_attributes:
+                    reinitialization_value.append(getattr(mechanism.function.parameters, attr).get(comp))
+            elif hasattr(mechanism, "integrator_function"):
+                if isinstance(mechanism.integrator_function, IntegratorFunction):
+                    for attr in mechanism.integrator_function.stateful_attributes:
+                        reinitialization_value.append(getattr(mechanism.integrator_function.parameters, attr).get(comp))
+
+            reinitialization_values[mechanism] = reinitialization_value
+
+        # Allow values to continue accumulating so that we can set them back to the saved state
+        comp.run(inputs={A: [[1.0], [1.0]]})
+
+        run_2_values = [A.parameters.value.get(comp),
+                        B.parameters.value.get(comp)[0],
+                        C.parameters.value.get(comp)]
+
+        comp.run(
+            inputs={A: [[1.0], [1.0]]},
+            reinitialize_values=reinitialization_values
+        )
+
+        run_3_values = [A.parameters.value.get(comp),
+                        B.parameters.value.get(comp)[0],
+                        C.parameters.value.get(comp)]
+
+        assert np.allclose(np.asfarray(run_2_values),
+                           np.asfarray(run_3_values))
+        assert np.allclose(np.asfarray(run_1_values),
+                           [np.array([[0.36]]), np.array([[0.056]]), np.array([[0.056]])])
+        assert np.allclose(np.asfarray(run_2_values),
+                           [np.array([[0.5904]]), np.array([[0.16384]]), np.array([[0.16384]])])
+
 
 
 class TestNodeRoles:
