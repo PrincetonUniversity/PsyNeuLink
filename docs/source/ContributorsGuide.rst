@@ -16,7 +16,8 @@ Contributors Guide
 Introduction
 ------------
 
-Thank you for your interest in contributing to PsyNeuLink! This page is written and maintained by contributors to PsyNeuLink. It compiles helpful info for new contributors, which may not be covered in the user documentation.
+Thank you for your interest in contributing to PsyNeuLink! This page is written and maintained by contributors to
+PsyNeuLink. It provides helpful information for new contributors that complements the user documentation.
 
 .. _File_Structure:
 
@@ -25,33 +26,45 @@ File Structure
 
 In the PsyNeuLink repo, there are many files. The following folders and files are the most relevant:
 
-- *docs* contains the documentation files, including the Contributors Guide
+- *docs*:  directory that contains the documentation files, including this Contributors Guide
 
-    * *source* contains the Sphinx files used to generate the HTML documentation
-    * *build* contains the generated HTML documentation, which is generated using Sphinx commands
+  * *source*: directory that contains the Sphinx files used to generate the HTML documentation
+  * *build*: directory that contains the generated HTML documentation, which is generated using Sphinx commands
 
-- *Scripts* contains sample PsyNeuLink scripts. These scripts are not actively maintained and may be outdated
+- *Scripts*:  directory that contains sample PsyNeuLink scripts. Not all of these scripts are actively maintained, and
+  some may be outdated
 
-- *tests* contains the test code, which is actively maintained
+- *tests*: directory that contains test code used by pytests, and is actively maintained
 
-- *CONVENTIONS.md* describes coding conventions that contributors must follow, such as documentation style and variable naming
+- *CONVENTIONS.md*: file that describes coding conventions that contributors must follow, such as documentation style
+  and variable naming
 
-- *psyneulink* contains the source code of PsyNeuLink
+- *psyneulink*: directory that contains the source code for PsyNeuLink
 
-Within *psyneulink*, the *library* folder represents non-core objects, while the other folders hold the core of PsyNeuLink. Thus, custom Mechanisms, Projections, etc. belong in *library*.
+  * *core*: directory that contains the core objects of psyneulink
+  * *library*: directory that contains user-contributed extensions to psyneulink and other non-core objects
 
 .. _Environment_Setup:
 
-Environment Setup
------------------
+Environment Setup and Installaion
+---------------------------------
 
-PsyNeuLink currently supports Python 3.6+, and we aim to support all future releases of Python. First install Python and pip on your machine, if not installed already. We suggest `anaconda <https://www.anaconda.com/>`_ or `pyenv <https://github.com/pyenv/pyenv>`_. Clone the PsyNeuLink git repository. Next, navigate to the PsyNeuLink folder and install development dependencies::
+PsyNeuLink currently supports Python 3.6+, and we aim to support all future releases of Python.
+First install Python and pip on your machine, if not installed already.
+We suggest `anaconda <https://www.anaconda.com/>`_ or `pyenv <https://github.com/pyenv/pyenv>`_.
+Next, clone the PsyNeuLink git repository.
+Finally, navigate to the PsyNeuLink folder and install development dependencies::
 
     pip install -e .[dev]
 
 If necessary, use `pip3` instead of `pip`.
 
-PsyNeuLink uses `pytest <https://docs.pytest.org/en/latest/index.html>`_ to run its tests. To build documentation, we use `Sphinx <https://www.sphinx-doc.org/en/master/usage/installation.html>`_. To contribute, make a branch off of the ``devel`` branch. Make a pull request to ``devel`` once your changes are complete. ``devel`` is periodically merged into the ``master`` branch, which is the branch most users use.
+PsyNeuLink uses `pytest <https://docs.pytest.org/en/latest/index.html>`_ to run its tests.
+To build documentation, we use `Sphinx <https://www.sphinx-doc.org/en/master/usage/installation.html>`_.
+To contribute, make a branch off of the ``devel`` branch.
+Make a pull request to ``devel`` once your changes are complete.
+``devel`` is periodically merged into the ``master`` branch, which is the branch most users use and is installed with
+pip install.
 
 .. _Contribution_Checklist:
 
@@ -60,31 +73,50 @@ Contribution Checklist
 
 This is the general workflow for contributing to PsyNeuLink:
 
-* Using git, create a branch off of the `devel` branch.
-* Make your changes to the code. Ideally, notify the PsyNeuLink team in advance of what you intend to do, so that they can provide you with relevant tips in advance.
+* Using git, create a branch off of the ``devel`` branch.
+* Make your changes to the code. Ideally, notify the PsyNeuLink team in advance of what you intend to do, so that
+  they can provide you with relevant tips in advance.
 
-   * While writing code on your branch, be sure to keep pulling from `devel` from time to time! Since PsyNeuLink is being developed rapidly, substantial changes are still being made to the code.
-   * Ensure that you write documentation for your new classes or functions, in the style of other PsyNeuLink classes.
+  * While writing code on your branch, be sure to keep pulling from `devel` from time to time! Since PsyNeuLink is
+    actively being developed, substantial changes may have been made to the code base on ``devel`` while you were
+    working on your branch;  getting too far behind these may make it difficult for you to merge your branch when you
+    are ready.
+  * Be sure to write documentation for your new classes or functions, in the style of other PsyNeuLink classes.
 
-* Once you've added your changes, add tests that check that your feature or bugfix functions as expected. This helps ensure that other developers don't accidentally break your code when making their own changes!
-* Once your changes are complete and working, run the `pytest <https://docs.pytest.org/en/latest/index.html>` tests and make sure all tests pass. If you encounter unexpected test failures, please notify the PsyNeuLink team.
-* Once tests pass, submit a pull request to the PsyNeuLink devel branch! The PsyNeuLink team will then review your changes.
+* Once you've completed the changes and/or additions on your branch, add tests that check that these
+  works as expected. This helps ensure that other developers don't accidentally break your code when making their own
+  changes!
+* Once your changes are complete and working, run the `pytest <https://docs.pytest.org/en/latest/index.html>`_ tests
+  and make sure all tests pass. If you encounter unexpected test failures, please notify the PsyNeuLink team.
+* Once all tests pass, submit a pull request to the PsyNeuLink devel branch! The PsyNeuLink team will then review your
+  changes and accept the pull request if they sastify the requirements described above.
 
 .. _Components_Overview:
 
 Components Overview
 -------------------
 
-Most PsyNeuLink objects are `Components <Component>`. All `Functions <Function>`, `Mechanisms <Mechanism>`, `Projections <Projection>`, and `Ports <Port>` are subclasses of Component. These subclasses use and override many functions from the Component class, so they are initialized and executed in similar ways.
+Most PsyNeuLink objects are `Components <Component>`. All `Functions <Function>`, `Mechanisms <Mechanism>`,
+`Projections <Projection>`, and `Ports <Port>` are subclasses of Component. These subclasses use and override many
+functions from the Component class, so they are initialized and executed in similar ways.
 
-The subclasses of Component should override Component's functions to implement their own functionality. However, function overrides must call the overridden function using `super()`, while passing the same arguments. For example, to instantiate a Projection's receiver after instantiating its function, the Projection_Base class overrides the `_instantiate_attributes_after_function` as follows::
+The subclasses of Component should override Component's functions to implement their own functionality.
+However, function overrides must call the overridden function using `super()`, while passing the same arguments.
+For example, to instantiate a Projection's receiver after instantiating its function,
+the Projection_Base class overrides the `_instantiate_attributes_after_function` as follows::
 
     class Projection_Base(Projection):
         def _instantiate_attributes_after_function(self, context=None):
             self._instantiate_receiver(context=context)
             super()._instantiate_attributes_after_function(context=context)
 
-If you wish to add a new Component to PsyNeuLink, you should keep in mind that changing the function or computation of a Component likely will not require creating a new Mechanism, Projection, or Port. Simple computations are likely served by using an instance of `UserDefinedFunction`, and more complex behavior likely only requires a new `Function` class. Only if there is significant deviation from the usual execution pattern would writing other `Component`\ s be necessary. Be sure to file an issue with your proposal to increase the chances of your contribution being accepted.
+If you wish to modify the behavior of a Component in PsyNeuLink, is is unlikely you will need to create an entirely
+new Component (e.g., Mechanism, Projection, or Port).  Usually this can be accomplished by assigning it a custom
+function, either by assigning it an instance of a `UserDefinedFunction` (in the case of simple computations), or
+by creating a new subclass of `Function` (for more complex computations).  A new subclass of `Component` should be
+created only if it requires a significant deviation from the usual execution pattern.  If this is the case, be sure to
+file an issue in the repo outlining this need and your plan for addressing, so that members of the team can advise
+you if there is an easier way of meeting your need.
 
 Parameters
 ^^^^^^^^^^
