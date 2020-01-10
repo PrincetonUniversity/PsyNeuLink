@@ -245,7 +245,7 @@ class PytorchModelCreator(torch.nn.Module):
         return llvm_func
 
     #FIXME: Move _gen functions to helper or change builtins to directly accept aggregate types
-    def _gen_inject_bin_function_call(self, ctx, builder, bin_func, vector, output_vec=None):
+    def _gen_inject_unary_function_call(self, ctx, builder, unary_func, vector, output_vec=None):
         dim = len(vector.type.pointee)
         if output_vec is None:
             output_vec = builder.alloca(pnlvm.ir.types.ArrayType(ctx.float_ty, dim))
@@ -255,7 +255,7 @@ class PytorchModelCreator(torch.nn.Module):
         vec_in = builder.gep(vector, [ctx.int32_ty(0), ctx.int32_ty(0)])
         vec_out = builder.gep(output_vec, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        builder.call(bin_func, [vec_in, ctx.int32_ty(dim), vec_out])
+        builder.call(unary_func, [vec_in, ctx.int32_ty(dim), vec_out])
         return output_vec
 
     def _gen_inject_vec_copy(self, ctx, builder, vector, output_vec=None):
@@ -440,7 +440,7 @@ class PytorchModelCreator(torch.nn.Module):
                 if store_z_values is True:
                     z_values[component] = self._gen_inject_vec_copy(ctx, builder, cmp_arg)
                 bin_func = ctx.import_llvm_function(self.bin_function_creator(ctx,component).name)
-                self._gen_inject_bin_function_call(ctx, builder, bin_func, cmp_arg, value)
+                self._gen_inject_unary_function_call(ctx, builder, bin_func, cmp_arg, value)
 
                 # TODO: Add bias to value
                 # if biases is not None:
@@ -513,7 +513,7 @@ class PytorchModelCreator(torch.nn.Module):
             node_idx = composition._get_node_index(node)
 
             activation_func_derivative_bin_func = ctx.import_llvm_function(self.bin_function_derivative_creator(ctx,node).name)
-            activation_func_derivative = self._gen_inject_bin_function_call(ctx, builder, activation_func_derivative_bin_func, z_values[node])
+            activation_func_derivative = self._gen_inject_unary_function_call(ctx, builder, activation_func_derivative_bin_func, z_values[node])
 
             error_val = builder.alloca(z_values[node].type.pointee)
 
