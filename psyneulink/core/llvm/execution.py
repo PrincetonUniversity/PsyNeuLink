@@ -527,13 +527,15 @@ class CompExecution(CUDAExecution):
         setattr(self._param_struct, autodiff_stimuli_field_name, autodiff_stimuli_struct)
 
 
-    def run(self, inputs, runs, num_input_sets, autodiff_stimuli={}):
-        # Special casing for autodiff
-        if hasattr(self._composition, "learning_enabled") and self._composition.learning_enabled is True:
-            inputs = {k:[[x] for x in v] for k, v in autodiff_stimuli["inputs"].items()}
-            assert num_input_sets == len(next(iter(autodiff_stimuli["inputs"].values())))
-            assert num_input_sets == len(next(iter(autodiff_stimuli["targets"].values())))
-            self._initialize_autodiff_param_struct(autodiff_stimuli)
+    def run(self, inputs, runs=0, num_input_sets=0, learning=False):
+        if learning:
+            # Special case for autodiff, everything is stored in inputs param
+            assert self._composition.learning_enabled
+            runs = num_input_sets = len(next(iter(inputs["inputs"].values())))
+            assert num_input_sets == len(next(iter(inputs["targets"].values())))
+            self._initialize_autodiff_param_struct(inputs)
+            inputs = {k:[[x] for x in v] for k, v in inputs["inputs"].items()}
+
         inputs = self._get_run_input_struct(inputs, num_input_sets)
 
         ct_vo = self._bin_run_func.byref_arg_types[4] * runs

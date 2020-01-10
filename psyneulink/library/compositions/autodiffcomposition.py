@@ -1099,14 +1099,13 @@ class AutodiffComposition(Composition):
                 # There's no mode to run simulations.
                 # Simulations are run as part of the controller node wrapper.
                 try:
-                    num_trials = len(next(iter(inputs["inputs"].values())))
                     if bin_execute is True or bin_execute.startswith('LLVM'):
                         _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
-                        results = _comp_ex.run(inputs, num_trials, num_trials, autodiff_stimuli=inputs)
+                        results = _comp_ex.run(inputs, learning=True)
                     elif bin_execute.startswith('PTX'):
                         self.__ptx_initialize(context)
                         EX = self._compilation_data.ptx_execution._get(context)
-                        results = EX.cuda_run(inputs, num_trials, num_trials)
+                        results = EX.cuda_run(inputs, learning=True)
 
                     full_results = self.parameters.results._get(context)
                     if full_results is None:
