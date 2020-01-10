@@ -644,7 +644,7 @@ class AutodiffComposition(Composition):
         return super(AutodiffComposition, self)._adjust_stimulus_dict(inputs)
 
     # performs forward computation for one input
-    def autodiff_processing(self, inputs, context=None, do_logging=False, scheduler=None,bin_execute=False):
+    def autodiff_processing(self, inputs, context=None, do_logging=False, scheduler=None):
         pytorch_representation = self.parameters.pytorch_representation._get(context)
         # run the model on inputs - switch autograd off for this (we don't need it)
         with torch.no_grad():
@@ -658,7 +658,7 @@ class AutodiffComposition(Composition):
         return outputs
 
     # performs learning/training on all input-target pairs it recieves for given number of epochs
-    def autodiff_training(self, inputs, targets, total_epochs, curr_epoch, context=None, do_logging=False, scheduler=None, bin_execute=False):
+    def autodiff_training(self, inputs, targets, total_epochs, curr_epoch, context=None, do_logging=False, scheduler=None):
 
         # FIX CW 11/1/18: this value of num_inputs assumes all inputs have same length, and that the length of
         # the input for an origin component equals the number of desired trials. We could clean this up
