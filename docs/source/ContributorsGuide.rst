@@ -111,9 +111,9 @@ the Projection_Base class overrides the `_instantiate_attributes_after_function`
             super()._instantiate_attributes_after_function(context=context)
 
 If you wish to modify the behavior of a Component in PsyNeuLink, it is unlikely you will need to create an entirely
-new Component (e.g., Mechanism, Projection, or Port).  Usually this can be accomplished by assigning it a custom
-function, either by assigning it an instance of a `UserDefinedFunction` (in the case of simple computations), or
-by creating a new subclass of `Function` (for more complex computations).  A new subclass of `Component` should be
+new Component (e.g., Mechanism, Projection, or Port) to do so.  Usually this can be accomplished by assigning it a
+custom function, either by assigning it an instance of a `UserDefinedFunction` (in the case of simple computations),
+or by creating a new subclass of `Function` (for more complex computations).  A new subclass of `Component` should be
 created only if it requires a significant deviation from the usual execution pattern.  If this is the case, be sure to
 file an issue in the repo outlining this need and your plan for addressing, so that members of the team can advise
 you if there is an easier way of meeting your need.
