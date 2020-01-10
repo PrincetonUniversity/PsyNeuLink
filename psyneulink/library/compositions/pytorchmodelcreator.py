@@ -238,7 +238,7 @@ class PytorchModelCreator(torch.nn.Module):
             builder = ctx.create_llvm_function(args, self)
             llvm_func = builder.function
 
-            context, params, arg_in, arg_out = llvm_func.args[:len(args)]
+            context, params, arg_in, arg_out = llvm_func.args
             self._gen_llvm_forward_function_body(
                 ctx, builder, context, params, arg_in, arg_out)
             builder.ret_void()
@@ -409,25 +409,24 @@ class PytorchModelCreator(torch.nn.Module):
             for component in current_exec_set:
                 component_id = self._composition._get_node_index(component)
                 biases = self.component_to_forward_info[component][1]
-                value = self._get_output_value_ptr(
-                    ctx, builder, arg_out, component_id)
+                value = self._get_output_value_ptr(ctx, builder, arg_out, component_id)
                 afferents = self.component_to_forward_info[component][3]
 
                 if i == 0:
-                    cmp_arg = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(component_id)])
+                    # input struct provides data for input nodes
+                    input_id = self._composition.get_nodes_by_role(NodeRole.INPUT).index(component)
+                    cmp_arg = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(input_id)])
                 else:
                     # is_set keeps track of if we already have valid (i.e. non-garbage) values inside the alloc'd value
                     is_set = False
                     for input_vertex, weights in afferents.items():
-                        input_node = input_vertex.component
-                        ctx.inject_printf(builder,f"COMPILED FORWARD {input_node} -> {component}\n")
-                        input_node_idx = self._composition._get_node_index(
-                            input_node)
-                        input_value = self._get_output_value_ptr(
-                            ctx, builder, arg_out, input_node_idx)
+                        source_node = input_vertex.component
+                        ctx.inject_printf(builder, f"COMPILED FORWARD {source_node} -> {component}\n")
+                        source_node_idx = self._composition._get_node_index(source_node)
+                        input_value = self._get_output_value_ptr(ctx, builder, arg_out, source_node_idx)
 
                         # We cast the ctype weights array to llvmlite pointer
-                        weights_llvmlite, _, _ = self._gen_get_node_weight_ptr(ctx, builder, params, component, input_node)
+                        weights_llvmlite, _, _ = self._gen_get_node_weight_ptr(ctx, builder, params, component, source_node)
                         weighted_inp = self._gen_inject_vxm(ctx, builder, input_value, weights_llvmlite)
                         if is_set == False:
                             # copy weighted_inp to value
