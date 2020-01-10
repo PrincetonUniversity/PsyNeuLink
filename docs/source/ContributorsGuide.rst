@@ -110,7 +110,7 @@ the Projection_Base class overrides the `_instantiate_attributes_after_function`
             self._instantiate_receiver(context=context)
             super()._instantiate_attributes_after_function(context=context)
 
-If you wish to modify the behavior of a Component in PsyNeuLink, is is unlikely you will need to create an entirely
+If you wish to modify the behavior of a Component in PsyNeuLink, it is unlikely you will need to create an entirely
 new Component (e.g., Mechanism, Projection, or Port).  Usually this can be accomplished by assigning it a custom
 function, either by assigning it an instance of a `UserDefinedFunction` (in the case of simple computations), or
 by creating a new subclass of `Function` (for more complex computations).  A new subclass of `Component` should be
