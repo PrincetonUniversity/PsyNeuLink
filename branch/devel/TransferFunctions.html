@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferFunctions &mdash; PsyNeuLink 0.7.2.0+110.g201fd4d documentation</title>
+  <title>TransferFunctions &mdash; PsyNeuLink 0.7.2.0+105.gc48b11a documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.2.0+110
+                  0.7.2.0+105
                 </div>
               
             
@@ -235,7 +235,7 @@ TransferFunction’s function (see <a class="reference internal" href="Functions
 </ul>
 <dl class="class">
 <dt id="psyneulink.core.components.functions.transferfunctions.TransferFunction">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.transferfunctions.</code><code class="descname">TransferFunction</code><span class="sig-paren">(</span><em>default_variable</em>, <em>params</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferFunction" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.transferfunctions.</code><code class="descname">TransferFunction</code><span class="sig-paren">(</span><em>default_variable</em>, <em>params</em>, <em>function=None</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function that transforms variable but maintains its shape.</p>
 <p>All TransferFunctions MUST have the following attributes:</p>
 <p><a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.bounds" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.bounds"><code class="xref any py py-attr docutils literal"><span class="pre">bounds</span></code></a> – specifies the lower and upper limits of the result;  if there are none, the attribute is set to
@@ -1769,7 +1769,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 
 <dl class="method">
 <dt id="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.assign_costs">
-<code class="descname">assign_costs</code><span class="sig-paren">(</span><em>cost_functions: &lt;typecheck.tc_predicates.any object at 0x115349fd0&gt;</em>, <em>execution_context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.assign_costs" title="Permalink to this definition">¶</a></dt>
+<code class="descname">assign_costs</code><span class="sig-paren">(</span><em>cost_functions: &lt;typecheck.tc_predicates.any object at 0x11aa97160&gt;</em>, <em>execution_context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.assign_costs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assigns specified functions; all others are disabled.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1787,7 +1787,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 
 <dl class="method">
 <dt id="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.disable_costs">
-<code class="descname">disable_costs</code><span class="sig-paren">(</span><em>cost_functions: &lt;typecheck.tc_predicates.any object at 0x1152da160&gt;</em>, <em>execution_context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.disable_costs" title="Permalink to this definition">¶</a></dt>
+<code class="descname">disable_costs</code><span class="sig-paren">(</span><em>cost_functions: &lt;typecheck.tc_predicates.any object at 0x11aa972b0&gt;</em>, <em>execution_context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.disable_costs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Disable specified <a class="reference internal" href="#transferwithcosts-cost-functions"><span class="std std-ref">cost functions</span></a>;
 settings for all other cost functions are left intact.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -1806,7 +1806,7 @@ settings for all other cost functions are left intact.</p>
 
 <dl class="method">
 <dt id="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.enable_costs">
-<code class="descname">enable_costs</code><span class="sig-paren">(</span><em>cost_functions: &lt;typecheck.tc_predicates.any object at 0x1152da128&gt;</em>, <em>execution_context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.enable_costs" title="Permalink to this definition">¶</a></dt>
+<code class="descname">enable_costs</code><span class="sig-paren">(</span><em>cost_functions: &lt;typecheck.tc_predicates.any object at 0x11aa97278&gt;</em>, <em>execution_context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.enable_costs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Enable specified <a class="reference internal" href="#transferwithcosts-cost-functions"><span class="std std-ref">cost functions</span></a>;
 settings for all other cost functions are left intact.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -1826,7 +1826,7 @@ in addition to any that are already enabled.</td>
 
 <dl class="method">
 <dt id="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.toggle_cost">
-<code class="descname">toggle_cost</code><span class="sig-paren">(</span><em>cost_function_name: &lt;typecheck.tc_predicates.any object at 0x1152da208&gt;</em>, <em>assignment: bool = True</em>, <em>execution_context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.toggle_cost" title="Permalink to this definition">¶</a></dt>
+<code class="descname">toggle_cost</code><span class="sig-paren">(</span><em>cost_function_name: &lt;typecheck.tc_predicates.any object at 0x11aa97358&gt;</em>, <em>assignment: bool = True</em>, <em>execution_context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.toggle_cost" title="Permalink to this definition">¶</a></dt>
 <dd><p>Enable/disable a <a class="reference internal" href="#transferwithcosts-cost-functions"><span class="std std-ref">cost functions</span></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1960,7 +1960,7 @@ based on its integral (i.e., it accumulated value over multiple executions).</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.2.0+110.g201fd4d',
+               VERSION:'0.7.2.0+105.gc48b11a',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
