@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Context &mdash; PsyNeuLink 0.7.2.0+105.gc48b11a documentation</title>
+  <title>Context &mdash; PsyNeuLink 0.7.2.0+110.g201fd4d documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.2.0+105
+                  0.7.2.0+110
                 </div>
               
             
@@ -365,6 +365,9 @@ Context is not specified</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
 <li><em>a decorator that ensures a Context argument is passed in to the</em></li>
 <li><em>decorated method</em></li>
+<li><em>..note::</em> – handle_external_context is not itself a decorator but a
+function that returns a decorator. This is so that default
+values for the returned Context object may be set</li>
 </ul>
 </p>
 </td>
@@ -434,7 +437,7 @@ Context is not specified</li>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.2.0+105.gc48b11a',
+               VERSION:'0.7.2.0+110.g201fd4d',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

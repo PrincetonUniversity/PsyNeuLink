@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Functions &mdash; PsyNeuLink 0.7.2.0+105.gc48b11a documentation</title>
+  <title>Functions &mdash; PsyNeuLink 0.7.2.0+110.g201fd4d documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.2.0+105
+                  0.7.2.0+110
                 </div>
               
             
@@ -282,6 +282,19 @@ that refers to that Component.  The Function itself is assigned as the Component
 as an attribute of the <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>, and those are each associated with with a
 <a class="reference internal" href="ParameterPort.html"><span class="doc">parameterPort</span></a> of the <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>.  Projections to those parameterPorts can be
 used by <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to modify the Function’s parameters.</p>
+<p id="function-output-type-conversion">If the <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> returns a single numeric value, and the Function’s class implements
+FunctionOutputTypeConversion, then the type of value returned by its <a class="reference internal" href="Function.html"><span class="doc">function</span></a> can be specified using the
+<a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.output_type" title="psyneulink.core.components.functions.function.Function_Base.output_type"><code class="xref any py py-attr docutils literal"><span class="pre">output_type</span></code></a> attribute, by assigning it one of the following <code class="xref any docutils literal"><span class="pre">FunctionOutputType</span></code> values:</p>
+<blockquote>
+<div><ul class="simple">
+<li>FunctionOutputType.RAW_NUMBER: return “exposed” number;</li>
+<li>FunctionOutputType.NP_1D_ARRAY: return 1d np.array</li>
+<li>FunctionOutputType.NP_2D_ARRAY: return 2d np.array.</li>
+</ul>
+</div></blockquote>
+<p>To implement FunctionOutputTypeConversion, the Function’s <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.enable_output_type_conversion" title="psyneulink.core.components.functions.function.Function_Base.enable_output_type_conversion"><code class="xref any py py-attr docutils literal"><span class="pre">enable_output_type_conversion</span></code></a> parameter must set to True,
+and function type conversion must be implemented by its <code class="xref any docutils literal"><span class="pre">_function</span></code> method
+(see <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> for an example).</p>
 </div>
 <div class="section" id="modulatory-parameters">
 <span id="function-modulatory-params"></span><h3><em>Modulatory Parameters</em><a class="headerlink" href="#modulatory-parameters" title="Permalink to this headline">¶</a></h3>
@@ -339,6 +352,20 @@ they are specified by the Function’s <code class="xref std std-keyword docutil
 </dd></dl>
 
 <dl class="attribute">
+<dt id="psyneulink.core.components.functions.function.Function_Base.enable_output_type_conversion">
+<code class="descname">enable_output_type_conversion</code><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.enable_output_type_conversion" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Bool : False</em> – specifies whether <a class="reference internal" href="#function-output-type-conversion"><span class="std std-ref">function output type conversion</span></a> is enabled.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.function.Function_Base.output_type">
+<code class="descname">output_type</code><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.output_type" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>FunctionOutputType : None</em> – used to specify the return type for the <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>;  <code class="xref any docutils literal"><span class="pre">functionOuputTypeConversion</span></code>
+must be enabled and implemented for the class (see <a class="reference internal" href="#function-output-type-conversion"><span class="std std-ref">FunctionOutputType</span></a>
+for details).</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.function.Function_Base.owner">
 <code class="descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Component</em> – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
@@ -356,6 +383,12 @@ default is assigned by FunctionRegistry (see <a class="reference internal" href=
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.function.Function_Base.convert_output_type">
+<code class="descname">convert_output_type</code><span class="sig-paren">(</span><em>value</em>, <em>output_type=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.convert_output_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs <a class="reference internal" href="#function-output-type-conversion"><span class="std std-ref">output type conversion</span></a> if it is <code class="xref any docutils literal"><span class="pre">enabled</span></code></p>
 </dd></dl>
 
 </dd></dl>
@@ -505,7 +538,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.2.0+105.gc48b11a',
+               VERSION:'0.7.2.0+110.g201fd4d',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

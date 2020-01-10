@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Condition &mdash; PsyNeuLink 0.7.2.0+105.gc48b11a documentation</title>
+  <title>Condition &mdash; PsyNeuLink 0.7.2.0+110.g201fd4d documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.2.0+105
+                  0.7.2.0+110
                 </div>
               
             
@@ -1129,8 +1129,8 @@ allowed to execute.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>func</strong> (<em>callable</em>) – specifies function to be called when the Condition is evaluated, to determine whether it is currently satisfied.</li>
-<li><strong>args</strong> (<a href="#id21"><span class="problematic" id="id22">*</span></a>args) – specifies formal arguments to pass to <code class="xref any docutils literal"><span class="pre">func</span></code> when the Condition is evaluated.</li>
-<li><strong>kwargs</strong> (<a href="#id23"><span class="problematic" id="id24">**</span></a>kwargs) – specifies keyword arguments to pass to <code class="xref any docutils literal"><span class="pre">func</span></code> when the Condition is evaluated.</li>
+<li><strong>args</strong> (<a href="#id21"><span class="problematic" id="id22">*</span></a>args) – specifies formal arguments to pass to <a class="reference internal" href="#psyneulink.core.scheduling.condition.Condition.func" title="psyneulink.core.scheduling.condition.Condition.func"><code class="xref any py py-attr docutils literal"><span class="pre">func</span></code></a> when the Condition is evaluated.</li>
+<li><strong>kwargs</strong> (<a href="#id23"><span class="problematic" id="id24">**</span></a>kwargs) – specifies keyword arguments to pass to <a class="reference internal" href="#psyneulink.core.scheduling.condition.Condition.func" title="psyneulink.core.scheduling.condition.Condition.func"><code class="xref any py py-attr docutils literal"><span class="pre">func</span></code></a> when the Condition is evaluated.</li>
 </ul>
 </td>
 </tr>
@@ -1142,6 +1142,24 @@ allowed to execute.</p>
 <dd><p>the <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> with which the Condition is associated, and the execution of which it determines.</p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="psyneulink.core.scheduling.condition.Condition.func">
+<code class="descname">func</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.Condition.func" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>callable</em> – the function to be called when the Condition is evaluated, to determine whether it is currently satisfied.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.scheduling.condition.Condition.args">
+<code class="descname">args</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.Condition.args" title="Permalink to this definition">¶</a></dt>
+<dd><p><a href="#id25"><span class="problematic" id="id26">**</span></a>args* – the formal arguments to pass to <a class="reference internal" href="#psyneulink.core.scheduling.condition.Condition.func" title="psyneulink.core.scheduling.condition.Condition.func"><code class="xref any py py-attr docutils literal"><span class="pre">func</span></code></a> when the Condition is evaluated.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.scheduling.condition.Condition.kwargs">
+<code class="descname">kwargs</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.Condition.kwargs" title="Permalink to this definition">¶</a></dt>
+<dd><p><a href="#id27"><span class="problematic" id="id28">**</span></a><em>kwargs</em> – the keyword arguments to pass to <a class="reference internal" href="#psyneulink.core.scheduling.condition.Condition.func" title="psyneulink.core.scheduling.condition.Condition.func"><code class="xref any py py-attr docutils literal"><span class="pre">func</span></code></a> when the Condition is evaluated.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="psyneulink.core.scheduling.condition.Condition.is_satisfied">
 <code class="descname">is_satisfied</code><span class="sig-paren">(</span><em>*args</em>, <em>context=None</em>, <em>execution_id=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.Condition.is_satisfied" title="Permalink to this definition">¶</a></dt>
@@ -1151,9 +1169,9 @@ allowed to execute.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>args</strong> (<a href="#id25"><span class="problematic" id="id26">*</span></a>args) – specifies additional formal arguments to pass to <code class="xref any docutils literal"><span class="pre">func</span></code> when the Condition is evaluated.
+<li><strong>args</strong> (<a href="#id29"><span class="problematic" id="id30">*</span></a>args) – specifies additional formal arguments to pass to <a class="reference internal" href="#psyneulink.core.scheduling.condition.Condition.func" title="psyneulink.core.scheduling.condition.Condition.func"><code class="xref any py py-attr docutils literal"><span class="pre">func</span></code></a> when the Condition is evaluated.
 these are appended to the <strong>args</strong> specified at instantiation of this Condition</li>
-<li><strong>kwargs</strong> (<a href="#id27"><span class="problematic" id="id28">**</span></a>kwargs) – specifies additional keyword arguments to pass to <code class="xref any docutils literal"><span class="pre">func</span></code> when the Condition is evaluated.
+<li><strong>kwargs</strong> (<a href="#id31"><span class="problematic" id="id32">**</span></a>kwargs) – specifies additional keyword arguments to pass to <a class="reference internal" href="#psyneulink.core.scheduling.condition.Condition.func" title="psyneulink.core.scheduling.condition.Condition.func"><code class="xref any py py-attr docutils literal"><span class="pre">func</span></code></a> when the Condition is evaluated.
 these are added to the <strong>kwargs</strong> specified at instantiation of this Condition</li>
 </ul>
 </td>
@@ -1475,10 +1493,10 @@ this Condition) can vary arbitrarily in time.</li>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>func</strong> – callable
 specifies function to be called when the Condition is evaluated, to determine whether it is currently satisfied.</li>
-<li><strong>args</strong> – <a href="#id29"><span class="problematic" id="id30">*</span></a>args
-specifies formal arguments to pass to <code class="xref any docutils literal"><span class="pre">func</span></code> when the Condition is evaluated.</li>
-<li><strong>kwargs</strong> – <a href="#id31"><span class="problematic" id="id32">**</span></a>kwargs
-specifies keyword arguments to pass to <code class="xref any docutils literal"><span class="pre">func</span></code> when the Condition is evaluated.</li>
+<li><strong>args</strong> – <a href="#id33"><span class="problematic" id="id34">*</span></a>args
+specifies formal arguments to pass to <a class="reference internal" href="#psyneulink.core.scheduling.condition.Condition.func" title="psyneulink.core.scheduling.condition.Condition.func"><code class="xref any py py-attr docutils literal"><span class="pre">func</span></code></a> when the Condition is evaluated.</li>
+<li><strong>kwargs</strong> – <a href="#id35"><span class="problematic" id="id36">**</span></a>kwargs
+specifies keyword arguments to pass to <a class="reference internal" href="#psyneulink.core.scheduling.condition.Condition.func" title="psyneulink.core.scheduling.condition.Condition.func"><code class="xref any py py-attr docutils literal"><span class="pre">func</span></code></a> when the Condition is evaluated.</li>
 </ul>
 </td>
 </tr>
@@ -1570,7 +1588,7 @@ specifies keyword arguments to pass to <code class="xref any docutils literal"><
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.2.0+105.gc48b11a',
+               VERSION:'0.7.2.0+110.g201fd4d',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

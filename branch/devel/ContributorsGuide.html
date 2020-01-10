@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Contributors Guide &mdash; PsyNeuLink 0.7.2.0+105.gc48b11a documentation</title>
+  <title>Contributors Guide &mdash; PsyNeuLink 0.7.2.0+110.g201fd4d documentation</title>
   
 
   
@@ -96,7 +96,7 @@
               
               
                 <div class="version">
-                  0.7.2.0+105
+                  0.7.2.0+110
                 </div>
               
             
@@ -223,26 +223,25 @@
 </ul>
 </div></blockquote>
 </li>
-</ul>
-<ul class="simple">
-<li><em>Scripts</em> contains sample PsyNeuLink scripts. These scripts are not actively maintained and may be outdated</li>
-</ul>
-<ul class="simple">
-<li><em>tests</em> contains the test code, which is actively maintained</li>
-</ul>
-<ul class="simple">
-<li><em>CONVENTIONS.md</em> describes coding conventions that contributors must follow, such as documentation style and variable naming</li>
-</ul>
-<ul class="simple">
-<li><em>psyneulink</em> contains the source code of PsyNeuLink</li>
+<li><p class="first"><em>Scripts</em> contains sample PsyNeuLink scripts. These scripts are not actively maintained and may be outdated</p>
+</li>
+<li><p class="first"><em>tests</em> contains the test code, which is actively maintained</p>
+</li>
+<li><p class="first"><em>CONVENTIONS.md</em> describes coding conventions that contributors must follow, such as documentation style and variable naming</p>
+</li>
+<li><p class="first"><em>psyneulink</em> contains the source code of PsyNeuLink</p>
+</li>
 </ul>
 <p>Within <em>psyneulink</em>, the <em>library</em> folder represents non-core objects, while the other folders hold the core of PsyNeuLink. Thus, custom Mechanisms, Projections, etc. belong in <em>library</em>.</p>
 </div>
 <div class="section" id="environment-setup">
 <span id="id3"></span><h2>Environment Setup<a class="headerlink" href="#environment-setup" title="Permalink to this headline">¶</a></h2>
-<p>PsyNeuLink is coded in Python 3, and should work in Python 3.6. First install Python and pip on your machine, if not installed already. Clone the PsyNeuLink git repository. To install the required packages, navigate to the PsyNeuLink folder and run <code class="xref any docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">requirements.txt</span></code> and <code class="xref any docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">dev_requirements.txt</span></code>. If necessary, use <code class="xref any docutils literal"><span class="pre">pip3</span></code> instead of <code class="xref any docutils literal"><span class="pre">pip</span></code>.</p>
-<p>PsyNeuLink uses <code class="xref any docutils literal"><span class="pre">pytest</span></code> to run its tests. To build documentation, we use Sphinx. <strong>insert Sphinx setup instructions here</strong></p>
-<p>To contribute, make a branch off of the <code class="xref any docutils literal"><span class="pre">devel</span></code> branch. Make a pull request to <code class="xref any docutils literal"><span class="pre">devel</span></code> once your changes are complete. <code class="xref any docutils literal"><span class="pre">devel</span></code> is periodically merged into the <code class="xref any docutils literal"><span class="pre">master</span></code> branch, which is the branch most users use.</p>
+<p>PsyNeuLink currently supports Python 3.6+, and we aim to support all future releases of Python. First install Python and pip on your machine, if not installed already. We suggest <a class="reference external" href="https://www.anaconda.com/">anaconda</a> or <a class="reference external" href="https://github.com/pyenv/pyenv">pyenv</a>. Clone the PsyNeuLink git repository. Next, navigate to the PsyNeuLink folder and install development dependencies:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">e</span> <span class="o">.</span><span class="p">[</span><span class="n">dev</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>If necessary, use <code class="xref any docutils literal"><span class="pre">pip3</span></code> instead of <code class="xref any docutils literal"><span class="pre">pip</span></code>.</p>
+<p>PsyNeuLink uses <a class="reference external" href="https://docs.pytest.org/en/latest/index.html">pytest</a> to run its tests. To build documentation, we use <a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/installation.html">Sphinx</a>. To contribute, make a branch off of the <code class="docutils literal"><span class="pre">devel</span></code> branch. Make a pull request to <code class="docutils literal"><span class="pre">devel</span></code> once your changes are complete. <code class="docutils literal"><span class="pre">devel</span></code> is periodically merged into the <code class="docutils literal"><span class="pre">master</span></code> branch, which is the branch most users use.</p>
 </div>
 <div class="section" id="contribution-checklist">
 <span id="id4"></span><h2>Contribution Checklist<a class="headerlink" href="#contribution-checklist" title="Permalink to this headline">¶</a></h2>
@@ -254,12 +253,13 @@
 <blockquote>
 <div><ul class="simple">
 <li>While writing code on your branch, be sure to keep pulling from <code class="xref any docutils literal"><span class="pre">devel</span></code> from time to time! Since PsyNeuLink is being developed rapidly, substantial changes are still being made to the code.</li>
+<li>Ensure that you write documentation for your new classes or functions, in the style of other PsyNeuLink classes.</li>
 </ul>
 </div></blockquote>
 </li>
 <li><p class="first">Once you’ve added your changes, add tests that check that your feature or bugfix functions as expected. This helps ensure that other developers don’t accidentally break your code when making their own changes!</p>
 </li>
-<li><p class="first">Once your changes are complete and working, run the Pytest tests and make sure all tests pass. If you encounter unexpected test failures, please notify the PsyNeuLink team.</p>
+<li><p class="first">Once your changes are complete and working, run the <code class="xref any docutils literal"><span class="pre">pytest</span></code> tests and make sure all tests pass. If you encounter unexpected test failures, please notify the PsyNeuLink team.</p>
 </li>
 <li><p class="first">Once tests pass, submit a pull request to the PsyNeuLink devel branch! The PsyNeuLink team will then review your changes.</p>
 </li>
@@ -275,22 +275,186 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_instantiate_attributes_after_function</span><span class="p">(</span><span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="Context.html#module-psyneulink.core.globals.context" title="psyneulink.core.globals.context"><code class="xref any py py-mod docutils literal"><span class="pre">context</span></code></a> is a string argument passed among PsyNeuLink functions to provide outside information about when a function is being called. Usually, if you modify <a class="reference internal" href="Context.html#module-psyneulink.core.globals.context" title="psyneulink.core.globals.context"><code class="xref any py py-mod docutils literal"><span class="pre">context</span></code></a>, you should append to it rather than overwriting it.</p>
+<p>If you wish to add a new Component to PsyNeuLink, you should keep in mind that changing the function or computation of a Component likely will not require creating a new Mechanism, Projection, or Port. Simple computations are likely served by using an instance of <a class="reference internal" href="UserDefinedFunction.html"><span class="doc">UserDefinedFunction</span></a>, and more complex behavior likely only requires a new <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> class. Only if there is significant deviation from the usual execution pattern would writing other <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>s be necessary. Be sure to file an issue with your proposal to increase the chances of your contribution being accepted.</p>
+<div class="section" id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h3>
+<p>Any parameters necessary for your Component should be created as <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a>s rather than simple python attributes. This ensures their values will be threadsafe and correct in all of PsyNeuLink, and they will be exposed as key parameters of your Component. See the <a class="reference internal" href="Parameters.html#parameter-developers"><span class="std std-ref">developer documentation for Parameters</span></a> for more information.</p>
+</div>
+<div class="section" id="context">
+<h3>Context<a class="headerlink" href="#context" title="Permalink to this headline">¶</a></h3>
+<p>You must be aware of <a class="reference internal" href="Context.html"><span class="doc">Context</span></a>, or your Component is likely to crash or produce incorrect results. A <a class="reference internal" href="Context.html"><span class="doc">Context</span></a> object stores information about the current state of execution and must be passed through most PsyNeuLink methods and functions. <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a> values must always be set and retrieved using a <a class="reference internal" href="Context.html"><span class="doc">Context</span></a> object (see <a class="reference internal" href="Parameters.html#parameter-use"><span class="std std-ref">here</span></a> for more information)</p>
+<p>Contexts are typically generated within <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">Composition.run</span></code></a>. When using non-default contexts outside of Compositions, <code class="xref any docutils literal"><span class="pre">_initialize_from_context</span></code> must be called manually. The below code will fail, because <code class="xref any docutils literal"><span class="pre">m</span></code> has no parameter values for ‘some custom context’.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">m</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">()</span>
+<span class="n">m</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s1">&#39;some custom context&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To fix this, ‘some custom context’ must be initialized beforehand</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">m</span><span class="o">.</span><span class="n">_initialize_from_context</span><span class="p">(</span><span class="n">context</span><span class="o">=</span><span class="n">Context</span><span class="p">(</span><span class="n">execution_id</span><span class="o">=</span><span class="s1">&#39;some custom context&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="initialization">
+<span id="component-initialization"></span><h3>Initialization<a class="headerlink" href="#initialization" title="Permalink to this headline">¶</a></h3>
+<p>Constructors should include explicit arguments for each of the new Parameters the class introduces or those that need preprocessing in the constructor. Any others may be passed through the <code class="xref any docutils literal"><span class="pre">__init__</span></code> hierarchy through <code class="xref any docutils literal"><span class="pre">**kwargs</span></code>. Additional parameter defaults for a Component’s function may be passed in a dictionary in the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function_params" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function_params"><code class="xref any py py-attr docutils literal"><span class="pre">function_params</span></code></a> argument. Default/initial values for all these parameters should be set in the <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> class, instead of the python standard default argument value, which should be set to <code class="xref any docutils literal"><span class="pre">None</span></code>. This is to ensure that the <code class="xref any docutils literal"><span class="pre">_user_specified</span></code> attribute is set correctly, which is used to indicate whether the value for a Parameter was explicitly given by the user or a default was assigned.</p>
+<p>Broadly, the sequence of events for Component initialization are as follows:</p>
+<ol class="arabic simple">
+<li>Call <code class="xref any docutils literal"><span class="pre">__init__</span></code> methods in hierarchic order</li>
+<li>Set Parameter default values based on input and <code class="xref any docutils literal"><span class="pre">class</span> <span class="pre">defaults</span></code> (<code class="xref any docutils literal"><span class="pre">_initialize_parameters</span></code>)</li>
+<li>Set default <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> based on input (<a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.Concatenate.default_variable" title="psyneulink.core.components.functions.combinationfunctions.Concatenate.default_variable"><code class="xref any py py-attr docutils literal"><span class="pre">default_variable</span></code></a> and other Parameters) and class defaults (<code class="xref any docutils literal"><span class="pre">_handle_default_variable</span></code>)</li>
+<li>Call <code class="xref any docutils literal"><span class="pre">_instantiate_attributes_before_function</span></code> hook</li>
+<li>Construct, copy, or assign function (<code class="xref any docutils literal"><span class="pre">_instantiate_function</span></code>)</li>
+<li>Execute once to produce a default <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (<code class="xref any docutils literal"><span class="pre">_instantiate_value</span></code>)</li>
+<li>Call <code class="xref any docutils literal"><span class="pre">_instantiate_attributes_after_function</span></code> hook</li>
+</ol>
+</div>
+<div class="section" id="execution">
+<h3>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h3>
+<p>Components (excluding Compositions) run the following steps during <a class="reference internal" href="Component.html#component-execution"><span class="std std-ref">execution</span></a>.</p>
+<ol class="arabic simple">
+<li>Call <code class="xref any docutils literal"><span class="pre">_parse_function_variable</span></code> on the input <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a></li>
+<li>Call <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> on the result of 1.</li>
+</ol>
+<p>Mechanisms add a few extra steps:</p>
+<ol class="arabic simple">
+<li>If no variable is passed in, call <code class="xref any docutils literal"><span class="pre">_update_input_ports</span></code> and use the values of the <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.input_ports" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.input_ports"><code class="xref any py py-attr docutils literal"><span class="pre">input_ports</span></code></a> as <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a></li>
+<li>Call <code class="xref any docutils literal"><span class="pre">_update_parameter_ports</span></code></li>
+<li>Call <code class="xref any docutils literal"><span class="pre">_parse_function_variable</span></code> on the input <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a></li>
+<li>Call <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> on the result of 3.</li>
+<li>Call <code class="xref any docutils literal"><span class="pre">_update_output_ports</span></code></li>
+<li>If <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.execute_until_finished" title="psyneulink.core.components.component.Component.execute_until_finished"><code class="xref any py py-attr docutils literal"><span class="pre">execute_until_finished</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>, repeat steps 1-5 until one of the following:<ol class="loweralpha">
+<li><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> returns <code class="xref any docutils literal"><span class="pre">True</span></code></li>
+<li><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.num_executions_before_finished" title="psyneulink.core.components.component.Component.num_executions_before_finished"><code class="xref any py py-attr docutils literal"><span class="pre">num_executions_before_finished</span></code></a> is greater than or equal to <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.max_executions_before_finished" title="psyneulink.core.components.component.Component.max_executions_before_finished"><code class="xref any py py-attr docutils literal"><span class="pre">max_executions_before_finished</span></code></a></li>
+</ol>
+</li>
+</ol>
+</div>
 </div>
 <div class="section" id="compositions-overview">
 <span id="id6"></span><h2>Compositions Overview<a class="headerlink" href="#compositions-overview" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id7">
+<h3>Execution<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<p>Composition execution is handled by <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a>, <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.execute" title="psyneulink.core.compositions.composition.Composition.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> as a helper to <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.run" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a>, and <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.evaluate" title="psyneulink.core.compositions.composition.Composition.evaluate"><code class="xref any py py-meth docutils literal"><span class="pre">evaluate</span></code></a> for simulations.</p>
+<p><strong>Extensive summary of function calls here?</strong></p>
+</div>
 </div>
 <div class="section" id="scheduler">
-<span id="id7"></span><h2>Scheduler<a class="headerlink" href="#scheduler" title="Permalink to this headline">¶</a></h2>
+<span id="id8"></span><h2>Scheduler<a class="headerlink" href="#scheduler" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> extension is most likely to be done by adding <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>s. <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>s that require no stored state can be created ad-hoc, using just an instance of <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.Condition" title="psyneulink.core.scheduling.condition.Condition"><code class="xref any py py-class docutils literal"><span class="pre">Condition</span></code></a>, <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.While" title="psyneulink.core.scheduling.condition.While"><code class="xref any py py-attr docutils literal"><span class="pre">While</span></code></a>, or <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.WhileNot" title="psyneulink.core.scheduling.condition.WhileNot"><code class="xref any py py-class docutils literal"><span class="pre">WhileNot</span></code></a>. If your Condition requires stored state, then to implement a subclass you should create a function that returns <code class="xref any docutils literal"><span class="pre">True</span></code> if the condition is satisfied, and <code class="xref any docutils literal"><span class="pre">False</span></code> otherwise, and assign it to the <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.Condition.func" title="psyneulink.core.scheduling.condition.Condition.func"><code class="xref any py py-attr docutils literal"><span class="pre">func</span></code></a> attribute. Any <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.Condition.args" title="psyneulink.core.scheduling.condition.Condition.args"><code class="xref any py py-attr docutils literal"><span class="pre">args</span></code></a> and <code class="xref any docutils literal"><span class="pre">**kwargs</span></code> passed in to <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.Condition" title="psyneulink.core.scheduling.condition.Condition"><code class="xref any py py-class docutils literal"><span class="pre">Condition.__init__</span></code></a> will be given, unchanged, to each call of <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.Condition.func" title="psyneulink.core.scheduling.condition.Condition.func"><code class="xref any py py-attr docutils literal"><span class="pre">func</span></code></a>, along with an <a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context.execution_id" title="psyneulink.core.globals.context.Context.execution_id"><code class="xref any py py-attr docutils literal"><span class="pre">execution_id</span></code></a>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Your stored state must be independent for each <code class="docutils literal"><span class="pre">context</span></code>/<code class="docutils literal"><span class="pre">execution_id</span></code></p>
+</div>
 </div>
 <div class="section" id="testing">
-<span id="id8"></span><h2>Testing<a class="headerlink" href="#testing" title="Permalink to this headline">¶</a></h2>
+<span id="id9"></span><h2>Testing<a class="headerlink" href="#testing" title="Permalink to this headline">¶</a></h2>
+<p>PsyNeuLink uses pytest and a test suite in the <code class="docutils literal"><span class="pre">tests</span></code> directory. When contributing, you should include tests with your submission. You may find it helpful to create tests for your contribution before writing it, to help you achieve your desired behavior. Code and documentation style is enforced by the python modules <code class="docutils literal"><span class="pre">pytest-pycodestyle</span></code> and <code class="docutils literal"><span class="pre">pytest-pydocstyle</span></code>.</p>
+<p>To run all the tests that must pass for your contribution to be accepted, simply run <code class="docutils literal"><span class="pre">pytest</span></code> in the <code class="xref any docutils literal"><span class="pre">PsyNeuLink</span></code> directory.</p>
 </div>
 <div class="section" id="documentation">
-<span id="id9"></span><h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
+<span id="id10"></span><h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
 <p>Documentation is done through the Sphinx library. Documentation for the <code class="xref any docutils literal"><span class="pre">master</span></code> and <code class="xref any docutils literal"><span class="pre">devel</span></code> branches can be found <a class="reference external" href="https://princetonuniversity.github.io/PsyNeuLink/">here</a> and <a class="reference external" href="https://princetonuniversity.github.io/PsyNeuLink/branch/devel/index.html">here</a>, respectively. When learning about PsyNeuLink, generating the Sphinx documentation is unnecessary because the online documentation exists.</p>
 <p>To understand Sphinx syntax, start <a class="reference external" href="http://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html">here</a> .</p>
 <p>However, when editing documentation, you should generate Sphinx documentation in order to preview your changes before publishing to <code class="xref any docutils literal"><span class="pre">devel</span></code>. To generate Sphinx documentation from your local branch, run <code class="xref any docutils literal"><span class="pre">make</span> <span class="pre">html</span></code> in Terminal, while in the <code class="xref any docutils literal"><span class="pre">docs</span></code> folder. The resulting HTML should be in your <code class="xref any docutils literal"><span class="pre">docs/build</span></code> folder. (Do not commit these built HTML files to Github. They are simply for testing/preview purposes.)</p>
+</div>
+<div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<p>Here, we will create a custom Function, <code class="docutils literal"><span class="pre">RandomIntegrator</span></code> that uses stored state and randomness.</p>
+<p>1. Inherit from a relevant PsyNeuLink Component. Use <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal"><span class="pre">IntegratorFunction</span></code></a> so that we have access to the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator.previous_value" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> and <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator.rate" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> Parameters.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">RandomIntegrator</span><span class="p">(</span><span class="n">IntegratorFunction</span><span class="p">):</span>
+</pre></div>
+</div>
+<p>2. Create a nested <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> class with values we will need.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Parameters</span><span class="p">(</span><span class="n">IntegratorFunction</span><span class="o">.</span><span class="n">Parameters</span><span class="p">):</span>
+
+    <span class="n">random_state</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">pnl_internal</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">previous_value_2</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1000</span><span class="p">]),</span> <span class="n">pnl_internal</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="MemoryFunctions.html#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.random_state" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.random_state"><code class="xref any py py-attr docutils literal"><span class="pre">random_state</span></code></a> is used to generate random numbers statefully and independently. <code class="xref any docutils literal"><span class="pre">previous_value_2</span></code> will be used in our function, and has its default value set arbitrarily to 10 to distinguish it from <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator.previous_value" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a>, which is created on <code class="xref any docutils literal"><span class="pre">IntegratorFunction.Parameters</span></code> and so does not need to be overridden here. We set the attribute <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.pnl_internal" title="psyneulink.core.globals.parameters.Parameter.pnl_internal"><code class="xref any py py-attr docutils literal"><span class="pre">pnl_internal</span></code></a> to <code class="docutils literal"><span class="pre">True</span></code> on each of these Parameters for use with the <a class="reference internal" href="json.html"><span class="doc">JSON/OpenNeuro collaboration</span></a>, indicating that they are not going to be relevant to modeling platforms other than PsyNeuLink.</p>
+<p>3. Create an <code class="xref any docutils literal"><span class="pre">__init__</span></code> method.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">previous_value_2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">):</span>
+    <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">seed</span> <span class="o">=</span> <span class="n">get_global_seed</span><span class="p">()</span>
+
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="n">previous_value_2</span><span class="o">=</span><span class="n">previous_value_2</span><span class="p">,</span>
+        <span class="n">random_state</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">([</span><span class="n">seed</span><span class="p">]),</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that the default value for <code class="docutils literal"><span class="pre">previous_value_2</span></code> is <code class="docutils literal"><span class="pre">None</span></code>, <a class="reference internal" href="#component-initialization"><span class="std std-ref">see above</span></a>. Any other Parameters will be handled through <code class="xref any docutils literal"><span class="pre">**kwargs</span></code>.</p>
+<p>4. Write a <code class="xref any docutils literal"><span class="pre">_function</span></code> method (<code class="xref any docutils literal"><span class="pre">function</span></code> is implemented as a generic wrapper around other Function classes’ <code class="xref any docutils literal"><span class="pre">_function</span></code> methods.)</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">_function</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">variable</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># the main input</span>
+    <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>    <span class="c1"># future use, runtime_params</span>
+<span class="p">):</span>
+    <span class="n">rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_current_function_param</span><span class="p">(</span><span class="s1">&#39;rate&#39;</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">random_state</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="n">context</span><span class="p">)</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">new_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">previous_value</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="n">context</span><span class="p">)</span> <span class="o">+</span> <span class="n">rate</span> <span class="o">*</span> <span class="n">variable</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">previous_value</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="n">new_value</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">new_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">previous_value_2</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="n">context</span><span class="p">)</span> <span class="o">+</span> <span class="n">rate</span> <span class="o">*</span> <span class="n">variable</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">previous_value_2</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="n">new_value</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_output_type</span><span class="p">(</span><span class="n">new_value</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="xref any docutils literal"><span class="pre">RandomIntegrator</span></code> chooses one of its previous values, adds the product of <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator.rate" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> and <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> to it, returns the result, and stores that result back into the appropriate previous value.</p>
+<p>We use <code class="xref any docutils literal"><span class="pre">get_current_function_param</span></code> instead of a basic <code class="xref any docutils literal"><span class="pre">_get</span></code> for rate, because it is a <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.modulable" title="psyneulink.core.globals.parameters.Parameter.modulable"><code class="xref any py py-attr docutils literal"><span class="pre">modulable</span> <span class="pre">Parameter</span></code></a>, meaning it has an associated <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> on its owning Mechanism (if it exists). This ensures that the modulated value for rate is returned, if applicable (otherwise, the base value is used, which is equivalent to <code class="xref any docutils literal"><span class="pre">_get</span></code>. <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator.previous_value" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> and <code class="xref any docutils literal"><span class="pre">previous_value_2</span></code> are not modulable, so we can simply use <code class="xref any docutils literal"><span class="pre">_get</span></code> directly.</p>
+<p>We run <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.convert_output_type" title="psyneulink.core.components.functions.function.Function_Base.convert_output_type"><code class="xref any py py-meth docutils literal"><span class="pre">convert_output_type</span></code></a> before returning as a general pattern on Functions with simple output. See <code class="xref any docutils literal"><span class="pre">Function_Output_Type_Conversion</span></code>.</p>
+<p>Below is the full class, ready to be included in PsyNeuLink.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">psyneulink</span> <span class="k">import</span> <span class="n">IntegratorFunction</span><span class="p">,</span> <span class="n">Parameter</span>
+<span class="kn">from</span> <span class="nn">psyneulink.core.globals.utilities</span> <span class="k">import</span> <span class="n">get_global_seed</span>
+
+
+<span class="k">class</span> <span class="nc">RandomIntegrator</span><span class="p">(</span><span class="n">IntegratorFunction</span><span class="p">):</span>
+
+    <span class="k">class</span> <span class="nc">Parameters</span><span class="p">(</span><span class="n">IntegratorFunction</span><span class="o">.</span><span class="n">Parameters</span><span class="p">):</span>
+
+        <span class="n">random_state</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">pnl_internal</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">previous_value_2</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1000</span><span class="p">]),</span> <span class="n">pnl_internal</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">previous_value_2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">seed</span> <span class="o">=</span> <span class="n">get_global_seed</span><span class="p">()</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">previous_value_2</span><span class="o">=</span><span class="n">previous_value_2</span><span class="p">,</span>
+            <span class="n">random_state</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">([</span><span class="n">seed</span><span class="p">]),</span>
+            <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_function</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">variable</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># the main input</span>
+        <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>    <span class="c1"># future use, runtime_params</span>
+    <span class="p">):</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_current_function_param</span><span class="p">(</span><span class="s1">&#39;rate&#39;</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">random_state</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="n">context</span><span class="p">)</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">new_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">previous_value</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="n">context</span><span class="p">)</span> <span class="o">+</span> <span class="n">rate</span> <span class="o">*</span> <span class="n">variable</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">previous_value</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="n">new_value</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">new_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">previous_value_2</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="n">context</span><span class="p">)</span> <span class="o">+</span> <span class="n">rate</span> <span class="o">*</span> <span class="n">variable</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">previous_value_2</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="n">new_value</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_output_type</span><span class="p">(</span><span class="n">new_value</span><span class="p">)</span>
+</pre></div>
+</div>
 </div>
 </div>
 
@@ -340,11 +504,21 @@
 <li><a class="reference internal" href="#file-structure">File Structure</a></li>
 <li><a class="reference internal" href="#environment-setup">Environment Setup</a></li>
 <li><a class="reference internal" href="#contribution-checklist">Contribution Checklist</a></li>
-<li><a class="reference internal" href="#components-overview">Components Overview</a></li>
-<li><a class="reference internal" href="#compositions-overview">Compositions Overview</a></li>
+<li><a class="reference internal" href="#components-overview">Components Overview</a><ul>
+<li><a class="reference internal" href="#parameters">Parameters</a></li>
+<li><a class="reference internal" href="#context">Context</a></li>
+<li><a class="reference internal" href="#initialization">Initialization</a></li>
+<li><a class="reference internal" href="#execution">Execution</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#compositions-overview">Compositions Overview</a><ul>
+<li><a class="reference internal" href="#id7">Execution</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#scheduler">Scheduler</a></li>
 <li><a class="reference internal" href="#testing">Testing</a></li>
 <li><a class="reference internal" href="#documentation">Documentation</a></li>
+<li><a class="reference internal" href="#example">Example</a></li>
 </ul>
 </li>
 </ul>
@@ -364,7 +538,7 @@
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.2.0+105.gc48b11a',
+               VERSION:'0.7.2.0+110.g201fd4d',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
