@@ -135,13 +135,13 @@ class PytorchModelCreator(torch.nn.Module):
 
     # defines input type
     def _get_input_struct_type(self, ctx):  # Test case: {[1 x [2 x double]]}
-        input_ty = [None] * len(self.execution_sets[0])
-        for component in self.execution_sets[0]:
-            component_id = self._composition._get_node_index(component)
-            input_ty[component_id] = ctx.convert_python_struct_to_llvm_ir(
-                component.defaults.variable[0])
-        struct_ty = pnlvm.ir.types.LiteralStructType(input_ty)
-        return struct_ty
+        input_nodes = self._composition.get_nodes_by_role(NodeRole.INPUT)
+        assert set(input_nodes) == set(self.execution_sets[0])
+        # FIXME: Why remove nesting? 'elements[0]' removes outer struct,
+        # and '.element' removes outer array dimension
+        input_list = (ctx.get_input_struct_type(node).elements[0].element for node in input_nodes)
+        input_struct = pnlvm.ir.LiteralStructType(input_list)
+        return input_struct
 
     def _get_data_struct_type(self, ctx):
         # Ensures that data struct is the same as the autodiffcomp
@@ -402,8 +402,7 @@ class PytorchModelCreator(torch.nn.Module):
         if isinstance(out_t, pnlvm.ir.ArrayType) and isinstance(out_t.element, pnlvm.ir.ArrayType):
             assert len(out_t) == 1
 
-        if store_z_values is True:
-            z_values = {}
+        z_values = {}
         for i, current_exec_set in enumerate(self.execution_sets):
 
             for component in current_exec_set:
@@ -449,8 +448,8 @@ class PytorchModelCreator(torch.nn.Module):
                 if store_z_values is True:
                     ctx.inject_printf_float_array(builder, z_values[component], prefix=f"Z VALUE FOR {component} :\t")
                 ctx.inject_printf_float_array(builder, value, prefix=f"FORWARD VALUE FOR {component} :\t")
-        if store_z_values is True:
-            return z_values
+
+        return z_values
 
     # generates a function responsible for a single epoch of the training
     def _gen_llvm_training_backprop(self, ctx, optimizer, loss):
@@ -481,12 +480,11 @@ class PytorchModelCreator(torch.nn.Module):
 
         # first we copy input values to data struct of input_CIM
         for i, node in enumerate(input_nodes):
-            node_idx = composition._get_node_index(node)
             node_input_array_ptr = builder.gep(training_set, [trial_num, ctx.int32_ty(0), ctx.int32_ty(i), ctx.int32_ty(0), ctx.int32_ty(0)])
-            node_model_input = builder.gep(model_input, [ctx.int32_ty(0), ctx.int32_ty(node_idx)])
+            node_model_input = builder.gep(model_input, [ctx.int32_ty(0), ctx.int32_ty(i)])
             self._gen_inject_vec_copy(ctx, builder, node_input_array_ptr, node_model_input)
 
-            ctx.inject_printf_float_array(builder, node_model_input, prefix=f"\tNODE {node_idx} INPUT: ")
+            ctx.inject_printf_float_array(builder, node_model_input, prefix=f"\tNODE {i} INPUT: ")
 
         # 2) call forward computation
         z_values = self._gen_llvm_forward_function_body(
