@@ -128,6 +128,7 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_same_as_val_size
             content_size=3,
             assoc_size=3,
             function = ContentAddressableMemory(
+                    seed=2,
                     initializer=np.array([stimuli['F'], stimuli['F']]),
                     duplicate_keys=True,
                     equidistant_keys_select=RANDOM)
@@ -197,7 +198,7 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_diff_from_val_si
         retrieved = [i for i in em.execute(stimuli[key])]
         retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
         retrieved_keys.append(retrieved_key)
-    assert retrieved_keys == [['F'], ['A'], ['A'], ['C'], ['B'], ['F']]
+    assert retrieved_keys == [['F'], ['A'], ['A'], ['A'], ['B'], ['F']]
 
     stim = 'C'
     em.function.equidistant_keys_select = OLDEST
@@ -246,7 +247,7 @@ def test_ContentAddressableMemory_without_initializer_and_key_size_same_as_val_s
         retrieved = [i for i in em.execute(stimuli[key])]
         retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
         retrieved_keys.append(retrieved_key)
-    assert retrieved_keys == [[None], ['A'], ['A'], ['C'], ['B'], ['C']]
+    assert retrieved_keys == [[None], ['A'], ['A'], ['C'], ['B'], ['D']]
 
     stim = 'C'
     em.function.equidistant_keys_select = OLDEST
@@ -295,7 +296,7 @@ def test_ContentAddressableMemory_without_initializer_and_key_size_diff_from_val
         retrieved = [i for i in em.execute(stimuli[key])]
         retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
         retrieved_keys.append(retrieved_key)
-    assert retrieved_keys == [[None], ['A'], ['A'], ['C'], ['B'], ['C']]
+    assert retrieved_keys == [[None], ['A'], ['A'], ['C'], ['B'], ['D']]
 
     stim = 'C'
     em.function.equidistant_keys_select = OLDEST

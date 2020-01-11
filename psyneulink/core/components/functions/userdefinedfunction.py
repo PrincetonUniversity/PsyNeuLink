@@ -471,7 +471,6 @@ class UserDefinedFunction(Function_Base):
 
         super().__init__(
             default_variable=default_variable,
-            function=custom_function,
             custom_function=custom_function,
             params=params,
             owner=owner,

@@ -1054,9 +1054,6 @@ class TestTrainingCorrectness:
         D_o = nf * nd
 
         np.random.seed(0)
-        import random
-
-        random.seed(0)
 
         wih = np.random.rand(D_i, D_h) * 0.02 - 0.01
         wch = np.random.rand(D_c, D_h) * 0.02 - 0.01
