@@ -5349,3 +5349,208 @@ class TestMisc:
         ])
         comp.add_node(Reward)
         # no assert, should only complete without error
+
+
+class TestInputSpecsDocumentationExamples:
+
+    @pytest.mark.parametrize(
+        "variable_a, num_trials, inputs, expected_inputs", [
+            # "If num_trials is in use, run will iterate over the inputs
+            # until num_trials is reached. For example, if five inputs
+            # are provided for each ORIGIN mechanism, and
+            # num_trials = 7, the system will execute seven times. The
+            # first two items in the list of inputs will be used on the
+            # 6th and 7th trials, respectively."
+            pytest.param(
+                None,
+                7,
+                [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]],
+                [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]], [[1.0]], [[2.0]]],
+                id='example_2'
+            ),
+            # Origin mechanism has only one InputPort
+            # COMPLETE specification
+            pytest.param(
+                None,
+                None,
+                [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.1]]],
+                [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.1]]],
+                id='example_3'
+            ),
+            # Origin mechanism has only one InputPort
+            # SHORTCUT: drop the outer list on each input because 'a'
+            # only has one InputPort
+            pytest.param(
+                None,
+                None,
+                [[1.0], [2.0], [3.0], [4.0], [5.2]],
+                [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.2]]],
+                id='example_4'
+            ),
+            # Origin mechanism has only one InputPort
+            # SHORTCUT: drop the remaining list on each input because
+            # 'a' only has one element
+            pytest.param(
+                None,
+                None,
+                [1.0, 2.0, 3.0, 4.0, 5.3],
+                [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.3]]],
+                id='example_5'
+            ),
+            # Only one input is provided for the mechanism
+            # [single trial]
+            # COMPLETE input specification
+            pytest.param(
+                [[0.0], [0.0]],
+                None,
+                [[[1.0], [2.0]]],
+                [[[1.0], [2.0]]],
+                id='example_6'
+            ),
+            # Only one input is provided for the mechanism
+            # [single trial]
+            # SHORTCUT: Remove outer list because we only have one trial
+            pytest.param(
+                [[0.0], [0.0]],
+                None,
+                [[1.0], [2.0]],
+                [[[1.0], [2.0]]],
+                id='example_7'
+            ),
+            # Only one input is provided for the mechanism [repeat]
+            # COMPLETE SPECIFICATION
+            pytest.param(
+                [[0.0], [0.0]],
+                None,
+                [
+                    [[1.0], [2.0]],
+                    [[1.0], [2.0]],
+                    [[1.0], [2.0]],
+                    [[1.0], [2.0]],
+                    [[1.0], [2.0]]
+                ],
+                [
+                    [[1.0], [2.0]],
+                    [[1.0], [2.0]],
+                    [[1.0], [2.0]],
+                    [[1.0], [2.0]],
+                    [[1.0], [2.0]]
+                ],
+                id='example_8'
+            ),
+            # Only one input is provided for the mechanism [REPEAT]
+            # SHORTCUT: Remove outer list because we want to use the
+            # same input on every trial
+            pytest.param(
+                [[0.0], [0.0]],
+                5,
+                [[1.0], [2.0]],
+                [
+                    [[1.0], [2.0]],
+                    [[1.0], [2.0]],
+                    [[1.0], [2.0]],
+                    [[1.0], [2.0]],
+                    [[1.0], [2.0]]
+                ],
+                id='example_9'
+            ),
+            # There is only one origin mechanism in the system
+            # COMPLETE SPECIFICATION
+            pytest.param(
+                [[1.0, 2.0, 3.0]],
+                None,
+                [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]],
+                [[[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]],
+                id='example_10',
+                marks=pytest.mark.xfail(
+                    reason='System version used np.allclose for inputs'
+                    + ' comparison, resulting in hiding the failure of this'
+                    + ' test. (resulting inputs are only 2d, instead of 3d)'
+                )
+            )
+        ]
+    )
+    def test_documentation_example_two_mechs(
+        self,
+        variable_a,
+        num_trials,
+        inputs,
+        expected_inputs
+    ):
+        a = pnl.TransferMechanism(name='a', default_variable=variable_a)
+        b = pnl.TransferMechanism(name='b')
+
+        comp = pnl.Composition()
+        comp.add_linear_processing_pathway([a, b])
+
+        check_inputs = []
+
+        def store_inputs():
+            check_inputs.append(a.get_input_values(comp))
+
+        comp.run(
+            inputs={a: inputs},
+            num_trials=num_trials,
+            call_after_trial=store_inputs
+        )
+
+        assert check_inputs == expected_inputs
+
+    def test_example_1(self):
+        # "If num_trials is not in use, the number of inputs provided
+        # determines the number of trials in the run. For example, if
+        # five inputs are provided for each origin mechanism, and
+        # num_trials is not specified, the system will execute five
+        # times."
+
+        import psyneulink as pnl
+
+        a = pnl.TransferMechanism(name="a", default_variable=[[0.0, 0.0]])
+        b = pnl.TransferMechanism(name="b", default_variable=[[0.0], [0.0]])
+        c = pnl.TransferMechanism(name="c")
+
+        comp = pnl.Composition()
+        comp.add_linear_processing_pathway([a, c])
+        comp.add_linear_processing_pathway([b, c])
+
+        input_dictionary = {
+            a: [[[1.0, 1.0]], [[1.0, 1.0]]],
+            b: [[[2.0], [3.0]], [[2.0], [3.0]]],
+        }
+
+        check_inputs_dictionary = {a: [], b: []}
+
+        def store_inputs():
+            check_inputs_dictionary[a].append(a.get_input_values(comp))
+            check_inputs_dictionary[b].append(b.get_input_values(comp))
+
+        comp.run(inputs=input_dictionary, call_after_trial=store_inputs)
+
+        for mech in input_dictionary:
+            assert np.allclose(
+                check_inputs_dictionary[mech], input_dictionary[mech]
+            )
+
+    def test_example_11(self):
+        # There is only one origin mechanism in the system
+        # SHORT CUT - specify inputs as a list instead of a dictionary
+
+        a = pnl.TransferMechanism(name='a', default_variable=[[1.0, 2.0, 3.0]])
+        b = pnl.TransferMechanism(name='b')
+
+        comp = pnl.Composition()
+        comp.add_linear_processing_pathway([a, b])
+
+        check_inputs = []
+
+        def store_inputs():
+            check_inputs.append(a.get_input_values(comp))
+
+        input_list = [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]
+
+        comp.run(
+            inputs=input_list,
+            call_after_trial=store_inputs
+        )
+
+        assert np.allclose(check_inputs, [[[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]])
