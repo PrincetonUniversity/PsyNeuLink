@@ -1548,8 +1548,6 @@ class Mechanism_Base(Mechanism):
                           registry=self._portRegistry,
                           context=context)
 
-        default_variable = self._handle_default_variable(default_variable, size, input_ports, function, params)
-
         super(Mechanism_Base, self).__init__(
             default_variable=default_variable,
             size=size,
