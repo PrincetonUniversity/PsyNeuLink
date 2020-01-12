@@ -517,11 +517,9 @@ class AutodiffComposition(Composition):
         self.loss = None
 
 
-        self.__forward_bin_run_func = None
-        self.__learning_bin_run_func = None
         # stores compiled binary execute function
-        self.__forward_bin_exec_func = None
-        self.__learning_bin_exec_func = None
+        self.__generated_forward_execc = None
+        self.__generated_learning_execc = None
         self.__generated_learning_run = None
         self.__generated_forward_run = None
 
@@ -791,15 +789,15 @@ class AutodiffComposition(Composition):
     @property
     def _bin_exec_func(self):
         if self.learning_enabled is True:
-            if self.__learning_bin_exec_func is None:
+            if self.__generated_learning_execc is None:
                 with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                    self.__learning_bin_exec_func = ctx.gen_autodiffcomp_learning_exec(self)
-            return self.__learning_bin_exec_func
+                    self.__generated_learning_execc = ctx.gen_autodiffcomp_learning_exec(self)
+            return self.__generated_learning_execc
         else:
-            if self.__forward_bin_exec_func is None:
+            if self.__generated_forward_execc is None:
                 with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                    self.__forward_bin_exec_func = ctx.gen_autodiffcomp_exec(self)
-            return self.__forward_bin_exec_func
+                    self.__generated_forward_execc = ctx.gen_autodiffcomp_exec(self)
+            return self.__generated_forward_execc
 
     @property
     def _llvm_run(self):
