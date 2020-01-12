@@ -498,7 +498,7 @@ class CompExecution(CUDAExecution):
         return self.__bin_run_multi_func
 
     # inserts autodiff params into the param struct (this unfortunately needs to be done dynamically, as we don't know autodiff inputs ahead of time)
-    def _initialize_autodiff_param_struct(self, autodiff_stimuli):
+    def _initialize_autodiff_struct(self, autodiff_stimuli):
         inputs = autodiff_stimuli.get("inputs", {})
         targets = autodiff_stimuli.get("targets", {})
         epochs = autodiff_stimuli.get("epochs", 1)
@@ -508,9 +508,7 @@ class CompExecution(CUDAExecution):
         input_nodes = self._composition.get_nodes_by_role(NodeRole.INPUT)
         output_nodes = self._composition.get_nodes_by_role(NodeRole.OUTPUT)
 
-        autodiff_param_cty = self._bin_run_func.byref_arg_types[1]
-        autodiff_stimuli_field_name = self._param_struct._fields_[3][0]
-        autodiff_stimuli_cty = autodiff_param_cty._fields_[3][1]
+        autodiff_stimuli_cty = self._bin_run_func.byref_arg_types[-1]
 
         training_name = autodiff_stimuli_cty._fields_[-1][0]
         training_p_cty = autodiff_stimuli_cty._fields_[-1][1]
@@ -524,7 +522,7 @@ class CompExecution(CUDAExecution):
         autodiff_stimuli_struct = autodiff_stimuli_cty(*autodiff_stimuli_init)
         setattr(autodiff_stimuli_struct, training_name, training_data)
 
-        setattr(self._param_struct, autodiff_stimuli_field_name, autodiff_stimuli_struct)
+        return autodiff_stimuli_struct
 
 
     def run(self, inputs, runs=0, num_input_sets=0, learning=False):
@@ -533,8 +531,11 @@ class CompExecution(CUDAExecution):
             assert self._composition.learning_enabled
             runs = num_input_sets = len(next(iter(inputs["inputs"].values())))
             assert num_input_sets == len(next(iter(inputs["targets"].values())))
-            self._initialize_autodiff_param_struct(inputs)
+            autodiff_struct = self._initialize_autodiff_struct(inputs)
             inputs = {k:[[x] for x in v] for k, v in inputs["inputs"].items()}
+            extra_args = (autodiff_struct,)
+        else:
+            extra_args = ()
 
         inputs = self._get_run_input_struct(inputs, num_input_sets)
 
@@ -551,7 +552,7 @@ class CompExecution(CUDAExecution):
         else:
             self._bin_run_func.wrap_call(self._state_struct, self._param_struct,
                                          self._data_struct, inputs, outputs,
-                                         runs_count, input_count)
+                                         runs_count, input_count, *extra_args)
         return _convert_ctype_to_python(outputs)
 
     def cuda_run(self, inputs, runs, num_input_sets):

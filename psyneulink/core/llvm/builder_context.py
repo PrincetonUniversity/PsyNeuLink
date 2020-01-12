@@ -277,7 +277,7 @@ class LLVMBuilderContext:
         self.inject_printf(builder, suffix, override_debug=override_debug)
 
     @contextmanager
-    def _gen_composition_exec_context(self, composition, simulation=False, suffix=""):
+    def _gen_composition_exec_context(self, composition, simulation=False, suffix="", extra_args=[]):
         cond_gen = ConditionGenerator(self, composition)
 
         name = 'exec_sim_wrap_' if simulation else 'exec_wrap_'
@@ -287,13 +287,13 @@ class LLVMBuilderContext:
                 self.get_input_struct_type(composition).as_pointer(),
                 self.get_data_struct_type(composition).as_pointer(),
                 cond_gen.get_condition_struct_type().as_pointer()]
-        builder = self.create_llvm_function(args, composition, name)
+        builder = self.create_llvm_function(args + extra_args, composition, name)
         llvm_func = builder.function
 
         for a in llvm_func.args:
             a.attributes.add('noalias')
 
-        state, params, comp_in, data_arg, cond = llvm_func.args
+        state, params, comp_in, data_arg, cond, *_ = llvm_func.args
         if "const_params" in debug_env:
             const_params = params.type.pointee(composition._get_param_initializer(None))
             params = builder.alloca(const_params.type, name="const_params_loc")
@@ -320,11 +320,17 @@ class LLVMBuilderContext:
     def gen_autodiffcomp_learning_exec(self, composition, simulation=False):
         composition._build_pytorch_representation(composition.default_execution_id)
         pytorch_model = composition.parameters.pytorch_representation.get(composition.default_execution_id)
-        with self._gen_composition_exec_context(composition, simulation, "_learning") as (builder, data, params, cond_gen):
-            state, _, comp_in, _, cond = builder.function.args
+        learning_struct_ty = pnlvm.ir.LiteralStructType((
+            self.int32_ty,
+            self.int32_ty,
+            pytorch_model._get_learning_struct_type(self).as_pointer(),
+        ))
+        with self._gen_composition_exec_context(composition, simulation, "_learning", extra_args=[learning_struct_ty.as_pointer()]) as (builder, data, params, cond_gen):
+            state, _, comp_in, _, cond, learning = builder.function.args
 
             pytorch_model._gen_llvm_training_function_body(self, builder, state,
-                                                           params, comp_in, data)
+                                                           params, comp_in,
+                                                           data, learning)
             # Call output CIM
             output_cim_w = composition._get_node_wrapper(composition.output_CIM)
             output_cim_f = self.import_llvm_function(output_cim_w)
@@ -511,12 +517,15 @@ class LLVMBuilderContext:
                 self.get_output_struct_type(composition).as_pointer(),
                 self.int32_ty.as_pointer(),
                 self.int32_ty.as_pointer()]
+        if learning:
+            exec_learning_f = self.import_llvm_function(composition)
+            args.append(exec_learning_f.args[-1].type)
         builder = self.create_llvm_function(args, composition, name)
         llvm_func = builder.function
         for a in llvm_func.args:
             a.attributes.add('noalias')
 
-        state, params, data, data_in, data_out, runs_ptr, inputs_ptr = llvm_func.args
+        state, params, data, data_in, data_out, runs_ptr, inputs_ptr, *learning_ptr = llvm_func.args
         # simulation does not care about the output
         # it extracts results of the controller objective mechanism
         if simulation:
@@ -553,9 +562,9 @@ class LLVMBuilderContext:
 
         if learning:
             # Call training function
-            data_in_ptr = builder.gep(data_in, [self.int32_ty(0)])
             exec_learning_f = self.import_llvm_function(composition)
-            builder.call(exec_learning_f, [state, params, data_in_ptr, data, cond])
+            builder.call(exec_learning_f, [state, params, data_in, data, cond,
+                                           *learning_ptr])
 
         runs = builder.load(runs_ptr, "runs")
         with pnlvm.helpers.for_loop_zero_inc(builder, runs, "run_loop") as (b, iters):
