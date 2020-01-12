@@ -225,8 +225,8 @@ Compositions Overview
 Execution
 ^^^^^^^^^
 
-The execution of a `Composition` is handled by `run <Composition.run>`, `execute <Composition.execute>` as a helper to
-`run`, and `evaluate <Composition.evaluate>` that is used to simulate the execution of a Composition when it is
+The execution of a `Composition` is handled by `run <Composition.run>`, `execute <Composition.execute>` as a helper
+to `run`, and `evaluate <Composition.evaluate>` that is used to simulate the execution of a Composition when it is
 assigned as the `agent_rep <OptimizationControlMechanism.agent_rep>` of an `OptimizationControlMechanism`.
 
 .. **Extensive summary of function calls here?** [JDC:  PROBABLY A GOOD IDEA]
@@ -236,7 +236,14 @@ assigned as the `agent_rep <OptimizationControlMechanism.agent_rep>` of an `Opti
 Scheduler
 ---------
 
-`Scheduler` extension is most likely to be done by adding `Condition`\ s. `Condition`\ s that require no stored state can be created ad-hoc, using just an instance of `Condition <psyneulink.core.scheduling.condition.Condition>`, `While`, or `WhileNot`. If your Condition requires stored state, then to implement a subclass you should create a function that returns `True` if the condition is satisfied, and `False` otherwise, and assign it to the `func <Condition.func>` attribute. Any `args` and `**kwargs` passed in to `Condition.__init__ <psyneulink.core.scheduling.condition.Condition>` will be given, unchanged, to each call of `func <Condition.func>`, along with an `execution_id`.
+Customizing scheduling can almost always be handled by adding `Condition`\s. `Condition`\s that require
+no stored state can be created ad-hoc, using just an instance of
+`Condition <psyneulink.core.scheduling.condition.Condition>`, `While`, or `WhileNot`.
+If a Condition is need that requires stored state, then to implement a subclass you should create a function that
+returns `True` if the condition is satisfied, and `False` otherwise, and assign it to the `func <Condition.func>`
+attribute of the `Condition`. Any ``args`` and ``**kwargs`` passed in to `Condition.__init__ <psyneulink.core
+.scheduling.condition.Condition>` will be given, unchanged, to each call of `func <Condition.func>`, along with an
+``execution_id``.
 
 .. note::
 
@@ -247,9 +254,13 @@ Scheduler
 Testing
 -------
 
-PsyNeuLink uses pytest and a test suite in the ``tests`` directory. When contributing, you should include tests with your submission. You may find it helpful to create tests for your contribution before writing it, to help you achieve your desired behavior. Code and documentation style is enforced by the python modules ``pytest-pycodestyle`` and ``pytest-pydocstyle``.
+PsyNeuLink uses `pytest <https://docs.pytest.org/en/latest/>`_ and a test suite in the ``tests`` directory.
+When contributing, you should include tests with your submission. You may find it helpful to create
+tests for your contribution before writing it, to help you achieve your desired behavior. Code and documentation
+style is enforced by the python modules ``pytest-pycodestyle`` and ``pytest-pydocstyle``.
 
-To run all the tests that must pass for your contribution to be accepted, simply run ``pytest`` in the `PsyNeuLink` directory.
+To run all the tests that must pass for your contribution to be accepted, simply run ``pytest`` in the `PsyNeuLink`
+directory.
 
 .. _Documentation:
 
