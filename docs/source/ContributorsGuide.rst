@@ -225,9 +225,9 @@ Compositions Overview
 Execution
 ^^^^^^^^^
 
-Composition execution is handled by `run <Composition.run>`, `execute <Composition.execute>` as a helper to `run`,
-and `evaluate <Composition.evaluate>` that is used to simulate the execution of a Composition when it is assigned as
-the `agent_rep <OptimizationControlMechanism.agent_rep>` of an `OptimizationControlMechanism`.
+The execution of a `Composition` is handled by `run <Composition.run>`, `execute <Composition.execute>` as a helper to
+`run`, and `evaluate <Composition.evaluate>` that is used to simulate the execution of a Composition when it is
+assigned as the `agent_rep <OptimizationControlMechanism.agent_rep>` of an `OptimizationControlMechanism`.
 
 .. **Extensive summary of function calls here?** [JDC:  PROBABLY A GOOD IDEA]
 
