@@ -6,6 +6,7 @@ Contributors Guide
 * `Environment_Setup`
 * `Contribution_Checklist`
 * `Components_Overview`
+* `Component_Creation`
 * `Compositions_Overview`
 * `Scheduler`
 * `Testing`
@@ -111,73 +112,110 @@ the Projection_Base class overrides the `_instantiate_attributes_after_function`
             super()._instantiate_attributes_after_function(context=context)
 
 If you wish to modify the behavior of a `Mechanism <Mechanism>`, `Projection <Projection>`, or `Port <Port>` in
-PsyNeuLink, it is unlikely you will need to create an entirely new subclass to do so.  Usually this can be
+PsyNeuLink, most likely you will *not* need to create an entirely new subclass.  Usually, this can be
 accomplished by assigning a custom function to an existing class, either by assigning it an instance of a
 `UserDefinedFunction` (in the case of simple computations), or by creating a new subclass of `Function` (for more
 complex computations).  A new subclass of `Mechanism <Mechanism>`, `Projection <Projection>`, or `Port <Port>`
-should be created only if it requires a significant deviation from the usual execution pattern.  If this is the case,
-be sure to file an issue in the repo outlining this need and your plan for addressing, so that members of the team
-can advise you if there is an easier way of meeting your need.
+should be created only if the desired behavior requires a significant deviation from the usual execution pattern.  If
+that is the case, be sure to file an issue in the repo outlining your needs and your plan for addressing them, so that
+members of the team can advise you if there is an easier way of approaching the problem.
 
 Parameters
 ^^^^^^^^^^
 
-Any parameters necessary for your Component should be created as `Parameter`\ s rather than simple python attributes. This ensures their values will be threadsafe and correct in all of PsyNeuLink, and they will be exposed as key parameters of your Component. See the `developer documentation for Parameters <Parameter_Developers>` for more information.
+Any parameters necessary for your Component should be created as `Parameter`\ s rather than simple python attributes.
+This ensures their values will be threadsafe and correct in all contexts, and that they will be exposed as
+user-accessible parameters of your Component. See the `developer documentation for Parameters <Parameter_Developers>`
+for additional information.
 
 Context
 ^^^^^^^
 
-You must be aware of `Context`, or your Component is likely to crash or produce incorrect results. A `Context` object stores information about the current state of execution and must be passed through most PsyNeuLink methods and functions. `Parameter` values must always be set and retrieved using a `Context` object (see `here <Parameter_Use>` for more information)
+Any modifications you make to a `Component` must be aware of its `Context` object, and manage it appropriately, or
+the Component is likely to produce incorrect behaviors or crash. A `Context` object stores information about the
+current state of execution of the Component to which it belongs, and must be passed through most PsyNeuLink methods
+and functions called on that Component. Also, `Parameter` values must always be set and retrieved using a `Context`
+object (see `here <Parameter_Use>` for additional information).
 
-Contexts are typically generated within `Composition.run`. When using non-default contexts outside of Compositions, `_initialize_from_context` must be called manually. The below code will fail, because `m` has no parameter values for 'some custom context'.
-::
+Default contexts are specified for a Component when it is executed within `Composition.run`.  When using
+non-default contexts outside of Compositions, `_initialize_from_context` must be called manually. The below code will
+fail, because ``m`` has no parameter values for ``some custom context``::
 
     m = pnl.ProcessingMechanism()
     m.execute(1, context='some custom context')
 
-To fix this, 'some custom context' must be initialized beforehand
-::
+To fix this, ``some custom context`` must be initialized beforehand, as follows::
 
     m._initialize_from_context(context=Context(execution_id='some custom context'))
 
 
+.. _Component_Creation:
+
+Creating a Custom Subclass of Component
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 .. _Component_Initialization:
 
-Initialization
-^^^^^^^^^^^^^^
+*Initialization*
+~~~~~~~~~~~~~~~~
 
-Constructors should include explicit arguments for each of the new Parameters the class introduces or those that need preprocessing in the constructor. Any others may be passed through the `__init__` hierarchy through `**kwargs`. Additional parameter defaults for a Component's function may be passed in a dictionary in the `function_params` argument. Default/initial values for all these parameters should be set in the `Parameters` class, instead of the python standard default argument value, which should be set to `None`. This is to ensure that the `_user_specified <Parameter._user_specified>` attribute is set correctly, which is used to indicate whether the value for a Parameter was explicitly given by the user or a default was assigned.
+*Parameter specification*
 
-Broadly, the sequence of events for Component initialization are as follows:
+The constructor (``__init__ method``) of new sublcass should include an explicit argument for each `Parameter` that
+is introduced in the subclass (i.e., that is not defined in the parent class) and/or any that needs preprocessing in
+the constructor before being passed to the parent class for completion of initialization. Any others may be passed
+through the `__init__` hierarchy in the ``**kwargs`` argument.  Parameter defaults for the Component's function may
+be passed in a dictionary in the ``function_params`` argument, using the parameters name as the key and it value as
+the value of each entry.
 
-#. Call `__init__` methods in hierarchic order
-#. Set Parameter default values based on input and `class defaults <Component.class_defaults>` (`_initialize_parameters`)
-#. Set default `variable` based on input (`default_variable` and other Parameters) and class defaults (`_handle_default_variable`)
-#. Call `_instantiate_attributes_before_function` hook
-#. Construct, copy, or assign function (`_instantiate_function`)
-#. Execute once to produce a default `value` (`_instantiate_value`)
-#. Call `_instantiate_attributes_after_function` hook
+.. [## DOES THE FOLLOWING APPLY TO THE COMPONENT'S function's PARAMS?  IF SO,
+   SEEMS TO CONFLICT WITH PREVIOUS SENTENCE.  IF NOT, THEN MOVE TO BEFORE PREVIOUS SENTENCE.]
+
+Default/initial values for
+all these parameters should be set in the `Parameters` class, instead of the python standard default argument value,
+which should be set to `None`. This is to ensure that the `_user_specified <Parameter._user_specified>` attribute is
+set correctly, which is used to indicate whether the value for a Parameter was explicitly given by the user or its
+default value was assigned.
+
+.. [## I THINK IT WOULD BE GOOD TO HAVE AN EXAMPLE OR TWO HERE]
+
+*Initialization sequence*
+
+Broadly, the sequence of events for initialization of a `Component` are as follows:
+
+#. Call ``__init__`` methods in hierarchical order (``__init__``, ``super().__init__()``, etc.).
+#. Set Parameter default values based on input and `class defaults <Component.class_defaults>`
+   (``_initialize_parameters``).
+#. Set default `variable <Component.variable>` based on input (``default_variable`` and any other Parameters on which
+   it depends) and class defaults (``_handle_default_variable``).
+#. Call ``_instantiate_attributes_before_function`` hook.
+#. Construct, copy, or assign function (``_instantiate_function``).
+#. Execute once to produce a default `value <Component.value>` (``_instantiate_value``).
+#. Call ``_instantiate_attributes_after_function`` hook.
 
 
-Execution
-^^^^^^^^^
+*Execution*
+~~~~~~~~~~~
 
 Components (excluding Compositions) run the following steps during `execution <Component_Execution>`.
 
-#. Call `_parse_function_variable` on the input `variable`
+#. Call ``_parse_function_variable`` on the input `variable <Component.variale>`.
 #. Call `function <Component.function>` on the result of 1.
 
-Mechanisms add a few extra steps:
+`Mechanisms <Mechanism>` add a few extra steps:
 
-#. If no variable is passed in, call `_update_input_ports` and use the values of the `input_ports` as `variable`
-#. Call `_update_parameter_ports`
-#. Call `_parse_function_variable` on the input `variable`
+#. If no variable is passed in, call ``_update_input_ports`` and use the values of the `input_ports <Mechanism
+.input_ports>` as `variable <Mechanism.variable>`.
+#. Call ``_update_parameter_ports``.
+#. Call ``_parse_function_variable`` on the input `variable`
 #. Call `function <Component.function>` on the result of 3.
-#. Call `_update_output_ports`
-#. If `execute_until_finished` is `True`, repeat steps 1-5 until one of the following:
+#. Call ``_update_output_ports``
+#. If `execute_until_finished <Component.execute_until_finished>` is `True`, repeat steps 1-5 until one of the
+   following:
 
    a. `is_finished <Component.is_finished>` returns `True`
-   b. `num_executions_before_finished` is greater than or equal to `max_executions_before_finished`
+   b. `num_executions_before_finished <Component.num_executions_before_finished>` is greater than or equal to
+      `max_executions_before_finished <Component.max_executions_before_finished>`.
 
 .. _Compositions_Overview:
 
