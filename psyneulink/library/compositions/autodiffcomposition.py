@@ -855,6 +855,26 @@ class AutodiffComposition(Composition):
 
             self._analyze_graph()  # ADDED by CW 12/17/18: unsure if correct here
 
+            if (bin_execute is True or str(bin_execute).endswith('Exec')):
+                try:
+                    if bin_execute is True or bin_execute.startswith('LLVM'):
+                        _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
+                        results = _comp_ex.run(inputs, learning=True)
+                    elif bin_execute.startswith('PTX'):
+                        self.__ptx_initialize(context)
+                        EX = self._compilation_data.ptx_execution._get(context)
+                        results = EX.cuda_run(inputs, learning=True)
+
+                    return results
+
+                except Exception as e:
+                    if bin_execute is not True:
+                        raise e
+
+                    print("WARNING: Failed to Run execution `{}': {}".format(
+                          self.name, str(e)))
+
+
             autodiff_inputs = inputs["inputs"]
             autodiff_targets = inputs["targets"]
             autodiff_epochs = 1
@@ -1094,35 +1114,6 @@ class AutodiffComposition(Composition):
 
             if isinstance(stimuli, dict):
                 stimuli = [stimuli]
-
-            if (bin_execute is True or str(bin_execute).endswith('Run')):
-                # There's no mode to run simulations.
-                # Simulations are run as part of the controller node wrapper.
-                try:
-                    if bin_execute is True or bin_execute.startswith('LLVM'):
-                        _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
-                        results = _comp_ex.run(inputs, learning=True)
-                    elif bin_execute.startswith('PTX'):
-                        self.__ptx_initialize(context)
-                        EX = self._compilation_data.ptx_execution._get(context)
-                        results = EX.cuda_run(inputs, learning=True)
-
-                    full_results = self.parameters.results._get(context)
-                    if full_results is None:
-                        full_results = results
-                    else:
-                        full_results.extend([[r] for r in results])
-
-                    self.parameters.results._set(full_results, context)
-                    self.most_recent_context = context
-                    return full_results
-
-                except Exception as e:
-                    if bin_execute is not True:
-                        raise e
-
-                    print("WARNING: Failed to Run execution `{}': {}".format(
-                          self.name, str(e)))
 
             for stimulus_set in stimuli:
                 trial_output = self.execute(
