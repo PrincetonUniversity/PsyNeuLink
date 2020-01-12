@@ -205,7 +205,7 @@ Components (excluding Compositions) run the following steps during `execution <C
 `Mechanisms <Mechanism>` add a few extra steps:
 
 #. If no variable is passed in, call ``_update_input_ports`` and use the values of the `input_ports <Mechanism
-.input_ports>` as `variable <Mechanism.variable>`.
+   .input_ports>` as `variable <Mechanism.variable>`.
 #. Call ``_update_parameter_ports``.
 #. Call ``_parse_function_variable`` on the input `variable`
 #. Call `function <Component.function>` on the result of 3.
@@ -225,9 +225,11 @@ Compositions Overview
 Execution
 ^^^^^^^^^
 
-Composition execution is handled by `run <Composition.run>`, `execute <Composition.execute>` as a helper to `run`, and `evaluate <Composition.evaluate>` for simulations.
+Composition execution is handled by `run <Composition.run>`, `execute <Composition.execute>` as a helper to `run`,
+and `evaluate <Composition.evaluate>` that is used to simulate the execution of a Composition when it is assigned as
+the `agent_rep <OptimizationControlMechanism.agent_rep>` of an `OptimizationControlMechanism`.
 
-**Extensive summary of function calls here?**
+.. **Extensive summary of function calls here?** [JDC:  PROBABLY A GOOD IDEA]
 
 .. _Scheduler:
 
