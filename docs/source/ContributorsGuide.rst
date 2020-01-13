@@ -120,16 +120,21 @@ should be created only if the desired behavior requires a significant deviation 
 that is the case, be sure to file an issue in the repo outlining your needs and your plan for addressing them, so that
 members of the team can advise you if there is an easier way of approaching the problem.
 
-Parameters
-^^^^^^^^^^
+Parameters vs. Attributes
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Any parameters necessary for your Component should be created as `Parameter`\ s rather than simple python attributes.
-This ensures their values will be threadsafe and correct in all contexts, and that they will be exposed as
-user-accessible parameters of your Component. See the `developer documentation for Parameters <Parameter_Developers>`
-for additional information.
+Any attribute of a Component that you create should generally implemented as a `Parameter` rather than a simple
+python attribute.  This ensures that it will be:
 
-Context
-^^^^^^^
+  * threadsafe and correct in all contexts (see below);
+  * accessible to the user with standard PsyNeuLink notations and/or procedures;
+  * accessible for `modulation <ModulatorySignal_Modulation>` by PsyNeuLink's Modulatory Components;
+  * properly represented in a `json` export of a script that uses your Component.
+
+See the `developer documentation for Parameters <Parameter_Developers>` for additional information.
+
+Context and Statefulness
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 Any modifications you make to a `Component` must be aware of its `Context` object, and manage it appropriately, or
 the Component is likely to produce incorrect behaviors or crash. A `Context` object stores information about the
@@ -193,6 +198,9 @@ Broadly, the sequence of events for initialization of a `Component` are as follo
 #. Execute once to produce a default `value <Component.value>` (``_instantiate_value``).
 #. Call ``_instantiate_attributes_after_function`` hook.
 
+.. [## I THINK IT WOULD BE GOOD TO HAVE SLIGHTLY MORE INFORMATION ABOUT WHY EACH OF THESE METHODS IS THERE AND WHAT
+   THEY (CAN BE USED TO) DO.  WHILE I TOTALLY AGREE THIS DOCUMENT SHOULD BE AS CONCISE AS POSSIBLE, I ALSO THINK IT
+   WILL BE HELPFUL TO HAVE, IN ONE PLACE, THE RATIONALE FOR THE OVERALL ARCHITECTURE / PROCESS FLOW].
 
 *Execution*
 ~~~~~~~~~~~
@@ -217,6 +225,9 @@ Components (excluding Compositions) run the following steps during `execution <C
    b. `num_executions_before_finished <Component.num_executions_before_finished>` is greater than or equal to
       `max_executions_before_finished <Component.max_executions_before_finished>`.
 
+.. [## AGAIN, I THINK IT WOULD BE GOOD TO HAVE SLIGHTLY MORE INFORMATION ABOUT WHY EACH OF THESE METHODS IS THERE AND
+   WHAT THEY (CAN BE USED TO) DO]
+
 .. _Compositions_Overview:
 
 Compositions Overview
@@ -229,7 +240,8 @@ The execution of a `Composition` is handled by `run <Composition.run>`, `execute
 to `run`, and `evaluate <Composition.evaluate>` that is used to simulate the execution of a Composition when it is
 assigned as the `agent_rep <OptimizationControlMechanism.agent_rep>` of an `OptimizationControlMechanism`.
 
-.. **Extensive summary of function calls here?** [JDC:  PROBABLY A GOOD IDEA]
+.. **Extensive summary of function calls here?**
+.. [JDC:  PROBABLY A GOOD IDEA]
 
 .. _Scheduler:
 
@@ -271,7 +283,7 @@ Documentation is done in docstrings for the PsyNeuLink objects using the Sphinx 
 `master` and `devel` branches can be found `here <https://princetonuniversity.github.io/PsyNeuLink/>`_ and
 `here <https://princetonuniversity.github.io/PsyNeuLink/branch/devel/index.html>`_, respectively.
 
-.. [#JDCNot sure what the following statement means:]
+.. [#JDC: Not sure what the following statement means:]
 
 When learning about PsyNeuLink, generating the Sphinx documentation is unnecessary because the online documentation
 exists. To understand Sphinx syntax, start
@@ -286,24 +298,26 @@ Example
 
 Here, we will create a custom Function, ``RandomIntegrator`` that uses stored state and randomness.
 
-1. Inherit from a relevant PsyNeuLink Component. Use `IntegratorFunction` so that we have access to
-the `previous_value` and `rate` Parameters.
-::
+1. Inherit from a relevant PsyNeuLink Component; use `IntegratorFunction` so that we have access to
+   its `previous_value <IntegratorFunction.previous_value>` and `rate <IntegratorFunction.rate>` Parameters::
 
-    class RandomIntegrator(IntegratorFunction):
+        class RandomIntegrator(IntegratorFunction):
 
-2. Create a nested `Parameters` class with values we will need
-::
+2. Create a subclass of `Parameters` from the one defined for `IntegratorFunction` that adds attributes we will need::
 
         class Parameters(IntegratorFunction.Parameters):
 
             random_state = Parameter(None, pnl_internal=True)
             previous_value_2 = Parameter(np.array([1000]), pnl_internal=True)
 
-`random_state` is used to generate random numbers statefully and independently. `previous_value_2` will be used in our function, and has its default value set arbitrarily to 10 to distinguish it from `previous_value`, which is created on `IntegratorFunction.Parameters` and so does not need to be overridden here. We set the attribute `pnl_internal` to ``True`` on each of these Parameters for use with the `JSON/OpenNeuro collaboration <json>`, indicating that they are not going to be relevant to modeling platforms other than PsyNeuLink.
+``random_state`` will be used to generate random numbers statefully and independently.
+``previous_value_2`` will be used in our function, and has its default value set arbitrarily to 10 to distinguish it
+from `previous_value`, which is created on `IntegratorFunction.Parameters` and so does not need to be overridden here.
+We set the attribute ``pnl_internal`` to ``True`` on each of these Parameters for use with the
+`JSON/OpenNeuro collaboration <json>`, to indicate that they are not relevant to modeling platforms other than
+PsyNeuLink.
 
-3. Create an `__init__` method.
-::
+3. Create an `__init__` method::
 
         def __init__(
             self,
