@@ -228,7 +228,7 @@ class PytorchModelCreator(torch.nn.Module):
         llvm_func = None
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             args = [ctx.get_state_struct_type(self._composition).as_pointer(),
-                    ctx.get_param_struct_type(self).as_pointer(),
+                    ctx.get_param_struct_type(self._composition).as_pointer(),
                     ctx.get_input_struct_type(self).as_pointer(),
                     ctx.get_data_struct_type(self).as_pointer()
                     ]
@@ -374,7 +374,7 @@ class PytorchModelCreator(torch.nn.Module):
         return output_vec
 
     # gets a pointer for the weights matrix between node and afferent_node
-    def _gen_get_node_weight_ptr(self, ctx, builder,model_params,node,afferent_node):
+    def _gen_get_node_weight_ptr(self, ctx, builder, params, node, afferent_node):
         node_idx = self._composition._get_node_index(node)
         forward_info_weights = self.component_to_forward_info[node][3]
         afferent_node_index = self._get_afferent_node_index(node,afferent_node)
@@ -383,10 +383,11 @@ class PytorchModelCreator(torch.nn.Module):
                 weight_matrix = matrix
                 break
         dim_x,dim_y = weight_matrix.detach().numpy().shape
-        node_weights = builder.gep(model_params,[ctx.int32_ty(0),
-                                                ctx.int32_ty(node_idx),
-                                                ctx.int32_ty(0),
-                                                ctx.int32_ty(afferent_node_index)])
+        node_weights = builder.gep(params, [ctx.int32_ty(0),
+                                            ctx.int32_ty(2),
+                                            ctx.int32_ty(node_idx),
+                                            ctx.int32_ty(0),
+                                            ctx.int32_ty(afferent_node_index)])
         if "no_ref_pass" not in debug_env:
             mem_addr = builder.load(node_weights)
             node_weights = builder.inttoptr(mem_addr, pnlvm.ir.types.ArrayType(
@@ -452,7 +453,7 @@ class PytorchModelCreator(torch.nn.Module):
     def _gen_llvm_training_backprop(self, ctx, optimizer, loss):
         composition = self._composition
         args = [ctx.get_state_struct_type(composition).as_pointer(),
-                ctx.get_param_struct_type(self).as_pointer(),
+                ctx.get_param_struct_type(composition).as_pointer(),
                 ctx.get_input_struct_type(self).as_pointer(),
                 ctx.get_data_struct_type(self).as_pointer(),
                 optimizer._get_optimizer_struct_type(ctx).as_pointer(),
@@ -466,7 +467,7 @@ class PytorchModelCreator(torch.nn.Module):
             if isinstance(a.type, pnlvm.ir.PointerType):
                 a.attributes.add('noalias')
 
-        context, model_params, model_input, model_output, optim_struct, training_set, trial_num = llvm_func.args
+        context, params, model_input, model_output, optim_struct, training_set, trial_num = llvm_func.args
         ctx.inject_printf(builder,"TRIAL NUM: %d\n", trial_num)
         # setup useful mappings
         input_nodes = composition.get_nodes_by_role(NodeRole.INPUT)
@@ -484,8 +485,9 @@ class PytorchModelCreator(torch.nn.Module):
             ctx.inject_printf_float_array(builder, node_model_input, prefix=f"\tNODE {i} INPUT: ")
 
         # 2) call forward computation
+        model_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
         z_values = self._gen_llvm_forward_function_body(
-            ctx, builder, context, model_params, model_input, model_output, store_z_values=True)
+            ctx, builder, context, params, model_input, model_output, store_z_values=True)
         # 3) compute errors
 
         ctx.inject_printf(builder, "\tCOMPUTE ERR FOR INPUT %d\n", trial_num)
@@ -546,7 +548,7 @@ class PytorchModelCreator(torch.nn.Module):
                 for efferent_node in efferents:
                     efferent_node_error = error_dict[efferent_node]
 
-                    weights_llvmlite, _, _ = self._gen_get_node_weight_ptr(ctx, builder, model_params, efferent_node, node)
+                    weights_llvmlite, _, _ = self._gen_get_node_weight_ptr(ctx, builder, params, efferent_node, node)
 
                     if is_set is False:
                         self._gen_inject_vxm_transposed(ctx, builder, efferent_node_error, weights_llvmlite, error_val)
@@ -573,7 +575,7 @@ class PytorchModelCreator(torch.nn.Module):
                 afferent_node_activation = self._get_output_value_ptr(ctx,builder,model_output,self._composition._get_node_index(afferent_node))
 
                 # get dimensions of weight matrix
-                weights_llvmlite,weights_dim_x,weights_dim_y = self._gen_get_node_weight_ptr(ctx,builder,model_params,node,afferent_node)
+                weights_llvmlite,weights_dim_x,weights_dim_y = self._gen_get_node_weight_ptr(ctx, builder, params, node, afferent_node)
                 # update delta_W
                 node_delta_w = builder.gep(delta_w,[ctx.int32_ty(0),ctx.int32_ty(node_idx), ctx.int32_ty(afferent_node_idx)])
 
@@ -629,8 +631,7 @@ class PytorchModelCreator(torch.nn.Module):
                             training_set_array,
                             override_debug=True)
         input_cim_idx = composition._get_node_index(composition.input_CIM)
-        model_params = builder.gep(params, [ctx.int32_ty(0),
-                                            ctx.int32_ty(2)])
+        model_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
 
         # Extract the input that should be inserted into the model
         model_input = builder.gep(data, [ctx.int32_ty(0),
@@ -665,11 +666,11 @@ class PytorchModelCreator(torch.nn.Module):
             with pnlvm.helpers.for_loop_zero_inc(b1, num_trials, "input_loop") as (b2, trial_num):
                 ctx.inject_printf(b2, "\n\033[0;31mINPUT %d\033[0m\n", trial_num)
                 ctx.inject_printf(b2, "OPTIMIZER ZERO GRAD %d\n", trial_num)
-                b2.call(optimizer_zero_grad,[optimizer_struct,model_params])
+                b2.call(optimizer_zero_grad, [optimizer_struct, params])
                 ctx.inject_printf(b2, "BACKPROP %d\n", trial_num)
-                b2.call(backprop, [context, model_params, model_input, data, optimizer_struct, training_set_array, trial_num])
+                b2.call(backprop, [context, params, model_input, data, optimizer_struct, training_set_array, trial_num])
                 ctx.inject_printf(b2, "OPTIMIZER STEP %d\n", trial_num)
-                b2.call(optimizer_step,[optimizer_struct,model_params])
+                b2.call(optimizer_step, [optimizer_struct, params])
 
 
     def _get_output_value_ptr(self, ctx, builder, arg_out, index):

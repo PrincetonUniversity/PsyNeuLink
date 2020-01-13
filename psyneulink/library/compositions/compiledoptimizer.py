@@ -67,10 +67,10 @@ class Optimizer():
         #     pass
 
         args = [self._get_optimizer_struct_type(ctx).as_pointer(),
-                self._pytorch_model._get_param_struct_type(ctx).as_pointer()]
+                ctx.get_param_struct_type(self._composition).as_pointer()]
         builder = ctx.create_llvm_function(args, self, name)
         llvm_func = builder.function
-        optim_struct, model_params = llvm_func.args
+        optim_struct, params = llvm_func.args
 
         delta_w_struct = builder.gep(
             optim_struct, [ctx.int32_ty(0), ctx.int32_ty(self._DELTA_W_NUM)])
@@ -141,10 +141,10 @@ class AdamOptimizer(Optimizer):
         #     pass
 
         args = [self._get_optimizer_struct_type(ctx).as_pointer(),
-                self._pytorch_model._get_param_struct_type(ctx).as_pointer()]
+                ctx.get_param_struct_type(self._composition).as_pointer()]
         builder = ctx.create_llvm_function(args, self, name)
         llvm_func = builder.function
-        optim_struct, model_params = llvm_func.args
+        optim_struct, params = llvm_func.args
 
         # setup values
         zero = ctx.int32_ty(0)
@@ -248,7 +248,7 @@ class AdamOptimizer(Optimizer):
                 delta_w, [zero, node_idx_ir, afferent_node_index_ir])
             # this is messy - #TODO - cleanup this
             weights_llvmlite, weights_dim_x, weights_dim_y = self._pytorch_model._gen_get_node_weight_ptr(
-                ctx, builder, model_params, node, afferent_node)
+                ctx, builder, params, node, afferent_node)
             ctx.inject_printf(
                 builder, f"OPTIM UPDATE WEIGHTS {afferent_node.name} {node.name}\n",override_debug=False)
             weight_row = None
@@ -310,10 +310,10 @@ class SGDOptimizer(Optimizer):
         #     pass
 
         args = [self._get_optimizer_struct_type(ctx).as_pointer(),
-                self._pytorch_model._get_param_struct_type(ctx).as_pointer()]
+                ctx.get_param_struct_type(self._composition).as_pointer()]
         builder = ctx.create_llvm_function(args, self, name)
         llvm_func = builder.function
-        optim_struct, model_params = llvm_func.args
+        optim_struct, params = llvm_func.args
 
         zero = ctx.int32_ty(0)
         delta_w = builder.gep(optim_struct, [zero, ctx.int32_ty(self._DELTA_W_NUM)])
@@ -328,7 +328,7 @@ class SGDOptimizer(Optimizer):
             afferent_node_index_ir = ctx.int32_ty(afferent_node_index)
 
             delta_w_ptr = builder.gep(delta_w,[zero,node_idx_ir,afferent_node_index_ir])
-            weights_llvmlite, _, _ = self._pytorch_model._gen_get_node_weight_ptr(ctx, builder, model_params, node, afferent_node)
+            weights_llvmlite, _, _ = self._pytorch_model._gen_get_node_weight_ptr(ctx, builder, params, node, afferent_node)
             
             multiplied_delta_w = self._pytorch_model._gen_inject_mat_scalar_mult(ctx, builder, delta_w_ptr, lr)
             self._pytorch_model._gen_inject_mat_sub(ctx, builder, weights_llvmlite, multiplied_delta_w, weights_llvmlite)

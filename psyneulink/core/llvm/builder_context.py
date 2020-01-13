@@ -355,9 +355,6 @@ class LLVMBuilderContext:
             # Call pytorch internal compiled llvm func
             input_cim_idx = composition._get_node_index(composition.input_CIM)
 
-            model_params = builder.gep(params, [self.int32_ty(0),
-                                                self.int32_ty(2)])
-
             # Extract the input that should be inserted into the model
             model_input = builder.gep(data, [self.int32_ty(0),
                                              self.int32_ty(0),
@@ -365,7 +362,7 @@ class LLVMBuilderContext:
             model_output = builder.gep(data, [self.int32_ty(0)])
 
             pytorch_forward_func = self.import_llvm_function(pytorch_model)
-            builder.call(pytorch_forward_func, [state, model_params,
+            builder.call(pytorch_forward_func, [state, params,
                                                 model_input, model_output])
 
             # Call output CIM
