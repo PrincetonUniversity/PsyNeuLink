@@ -58,17 +58,11 @@ class Optimizer():
 
     def zero_grad(self, ctx):
         name = self._composition.name + "_ZERO_GRAD"
-        # try:
-        #     llvm_func = ctx.import_llvm_function(name)
-        #     return llvm_func
-        # except Exception as e:
-        #     pass
 
-        args = [self._get_optimizer_struct_type(ctx).as_pointer(),
-                ctx.get_param_struct_type(self._composition).as_pointer()]
+        args = [self._get_optimizer_struct_type(ctx).as_pointer()]
         builder = ctx.create_llvm_function(args, self, name)
         llvm_func = builder.function
-        optim_struct, params = llvm_func.args
+        optim_struct = llvm_func.args[0]
 
         delta_w_struct = builder.gep(
             optim_struct, [ctx.int32_ty(0), ctx.int32_ty(self._DELTA_W_NUM)])
@@ -112,11 +106,6 @@ class AdamOptimizer(Optimizer):
     # steps the adam optimizer (methodology: https://arxiv.org/pdf/1412.6980.pdf )
     def step(self, ctx):
         name = self._composition.name + "_ADAM_STEP"
-        # try:
-        #     llvm_func = ctx.import_llvm_function(name)
-        #     return llvm_func
-        # except Exception as e:
-        #     pass
 
         args = [self._get_optimizer_struct_type(ctx).as_pointer(),
                 ctx.get_param_struct_type(self._composition).as_pointer()]
@@ -275,11 +264,6 @@ class SGDOptimizer(Optimizer):
     # steps the sgd optimizer (methodology: https://arxiv.org/pdf/1412.6980.pdf )
     def step(self, ctx):
         name = self._composition.name + "_SGD_STEP"
-        # try:
-        #     llvm_func = ctx.import_llvm_function(name)
-        #     return llvm_func
-        # except Exception as e:
-        #     pass
 
         args = [self._get_optimizer_struct_type(ctx).as_pointer(),
                 ctx.get_param_struct_type(self._composition).as_pointer()]
