@@ -36,9 +36,7 @@ class Optimizer():
         return delta_w
 
     def _get_optimizer_struct_type(self, ctx, extra_types=[]):
-        structs = []
-        structs.append(self._get_delta_w_struct_type(ctx))
-        structs += extra_types
+        structs = (self._get_delta_w_struct_type(ctx), *extra_types)
         return pnlvm.ir.types.LiteralStructType(structs)
 
     def _get_listof_gradient_struct_values(self):
@@ -104,14 +102,11 @@ class AdamOptimizer(Optimizer):
         self._T_NUM = 3
 
     def _get_optimizer_struct_type(self, ctx):
-        extra_types = []
-        m_t = self._get_delta_w_struct_type(
-            ctx)  # current timestep first moment
-        v_t = self._get_delta_w_struct_type(
-            ctx)  # current timestep second moment
+        m_t = self._get_delta_w_struct_type(ctx)  # current timestep first moment
+        v_t = self._get_delta_w_struct_type(ctx)  # current timestep second moment
         time_counter = ctx.float_ty  # keeps track of timestep
 
-        extra_types += [m_t, v_t, time_counter]
+        extra_types = [m_t, v_t, time_counter]
         return super()._get_optimizer_struct_type(ctx, extra_types=extra_types)
 
     # steps the adam optimizer (methodology: https://arxiv.org/pdf/1412.6980.pdf )
