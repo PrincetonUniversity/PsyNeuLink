@@ -79,9 +79,8 @@ class Optimizer():
 
         return llvm_func
 
-    # to be implemented by child classes - sets the initial values for the optim struct
     def initialize_optimizer_struct(self, ctx, builder, optim_struct):
-        raise Exception("Unimplemented method!")
+        builder.store(optim_struct.type.pointee(None), optim_struct)
 
     # to be implemented by child classes - steps the optimizer
     def step(self, ctx, builder, optim_struct, model_params):
@@ -114,22 +113,6 @@ class AdamOptimizer(Optimizer):
 
         extra_types += [m_t, v_t, time_counter]
         return super()._get_optimizer_struct_type(ctx, extra_types=extra_types)
-
-    def initialize_optimizer_struct(self, ctx, builder, optim_struct):
-        # set initial moments to 0
-        delta_w = builder.gep(
-            optim_struct, [ctx.int32_ty(0), ctx.int32_ty(self._DELTA_W_NUM)])
-        m_t = builder.gep(
-            optim_struct, [ctx.int32_ty(0), ctx.int32_ty(self._M_T_NUM)])
-        v_t = builder.gep(
-            optim_struct, [ctx.int32_ty(0), ctx.int32_ty(self._V_T_NUM)])
-        t = builder.gep(
-            optim_struct, [ctx.int32_ty(0), ctx.int32_ty(self._T_NUM)])
-        self._gen_zero_gradient_struct(ctx, builder, delta_w)
-        self._gen_zero_gradient_struct(ctx, builder, m_t)
-        self._gen_zero_gradient_struct(ctx, builder, v_t)
-        builder.store(ctx.float_ty(0), t)
-
 
     # steps the adam optimizer (methodology: https://arxiv.org/pdf/1412.6980.pdf )
     def step(self, ctx):
@@ -293,12 +276,6 @@ class SGDOptimizer(Optimizer):
     def __init__(self, pytorch_model, lr=1e-3):
         super().__init__(pytorch_model)
         self.lr = lr
-
-    def _get_optimizer_struct_type(self, ctx):
-        return super()._get_optimizer_struct_type(ctx)
-
-    def initialize_optimizer_struct(self, ctx, builder, optim_struct):
-        pass
 
     # steps the sgd optimizer (methodology: https://arxiv.org/pdf/1412.6980.pdf )
     def step(self, ctx):
