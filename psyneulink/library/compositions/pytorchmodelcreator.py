@@ -223,14 +223,11 @@ class PytorchModelCreator(torch.nn.Module):
             return self._cached_param_list
         return pnlvm.execution._tupleize(self._cached_param_list)
 
-    def _get_state_struct_type(self, ctx):
-        return self._composition._get_state_struct_type(ctx)
-
     # generates llvm function for self.forward
     def _gen_llvm_function(self):
         llvm_func = None
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
-            args = [ctx.get_state_struct_type(self).as_pointer(),
+            args = [ctx.get_state_struct_type(self._composition).as_pointer(),
                     ctx.get_param_struct_type(self).as_pointer(),
                     ctx.get_input_struct_type(self).as_pointer(),
                     ctx.get_data_struct_type(self).as_pointer()
@@ -454,7 +451,7 @@ class PytorchModelCreator(torch.nn.Module):
     # generates a function responsible for a single epoch of the training
     def _gen_llvm_training_backprop(self, ctx, optimizer, loss):
         composition = self._composition
-        args = [ctx.get_state_struct_type(self).as_pointer(),
+        args = [ctx.get_state_struct_type(composition).as_pointer(),
                 ctx.get_param_struct_type(self).as_pointer(),
                 ctx.get_input_struct_type(self).as_pointer(),
                 ctx.get_data_struct_type(self).as_pointer(),
@@ -469,7 +466,7 @@ class PytorchModelCreator(torch.nn.Module):
             if isinstance(a.type, pnlvm.ir.PointerType):
                 a.attributes.add('noalias')
 
-        model_context, model_params, model_input, model_output, optim_struct, training_set, trial_num = llvm_func.args
+        context, model_params, model_input, model_output, optim_struct, training_set, trial_num = llvm_func.args
         ctx.inject_printf(builder,"TRIAL NUM: %d\n", trial_num)
         # setup useful mappings
         input_nodes = composition.get_nodes_by_role(NodeRole.INPUT)
@@ -488,7 +485,7 @@ class PytorchModelCreator(torch.nn.Module):
 
         # 2) call forward computation
         z_values = self._gen_llvm_forward_function_body(
-            ctx, builder, model_context, model_params, model_input, model_output, store_z_values=True)
+            ctx, builder, context, model_params, model_input, model_output, store_z_values=True)
         # 3) compute errors
 
         ctx.inject_printf(builder, "\tCOMPUTE ERR FOR INPUT %d\n", trial_num)
@@ -632,7 +629,6 @@ class PytorchModelCreator(torch.nn.Module):
                             training_set_array,
                             override_debug=True)
         input_cim_idx = composition._get_node_index(composition.input_CIM)
-        model_context = context
         model_params = builder.gep(params, [ctx.int32_ty(0),
                                             ctx.int32_ty(2)])
 
@@ -640,8 +636,6 @@ class PytorchModelCreator(torch.nn.Module):
         model_input = builder.gep(data, [ctx.int32_ty(0),
                                          ctx.int32_ty(0),
                                          ctx.int32_ty(input_cim_idx)])
-        model_output = builder.gep(data, [ctx.int32_ty(0),
-                                          ])
 
         # setup optimizer
         optimizer_type = self._composition.optimizer_type
@@ -673,7 +667,7 @@ class PytorchModelCreator(torch.nn.Module):
                 ctx.inject_printf(b2, "OPTIMIZER ZERO GRAD %d\n", trial_num)
                 b2.call(optimizer_zero_grad,[optimizer_struct,model_params])
                 ctx.inject_printf(b2, "BACKPROP %d\n", trial_num)
-                b2.call(backprop, [model_context, model_params, model_input, model_output, optimizer_struct, training_set_array, trial_num])
+                b2.call(backprop, [context, model_params, model_input, data, optimizer_struct, training_set_array, trial_num])
                 ctx.inject_printf(b2, "OPTIMIZER STEP %d\n", trial_num)
                 b2.call(optimizer_step,[optimizer_struct,model_params])
 
