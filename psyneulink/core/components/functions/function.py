@@ -87,6 +87,9 @@ used by `ControlProjections <ControlProjection>` to modify the Function's parame
 
 .. _Function_Output_Type_Conversion:
 
+*Output Type Conversion*
+~~~~~~~~~~~~~~~~~~~~~~~~
+
 If the `function <Function_Base.function>` returns a single numeric value, and the Function's class implements
 FunctionOutputTypeConversion, then the type of value returned by its `function <Function>` can be specified using the
 `output_type` attribute, by assigning it one of the following `FunctionOutputType` values:

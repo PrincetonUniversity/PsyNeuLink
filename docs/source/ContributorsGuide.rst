@@ -11,6 +11,7 @@ Contributors Guide
 * `Scheduler`
 * `Testing`
 * `Documentation`
+* `Example`
 
 .. _Introduction:
 
@@ -310,14 +311,16 @@ Here, we will create a custom Function, ``RandomIntegrator`` that uses stored st
             random_state = Parameter(None, pnl_internal=True)
             previous_value_2 = Parameter(np.array([1000]), pnl_internal=True)
 
-``random_state`` will be used to generate random numbers statefully and independently.
-``previous_value_2`` will be used in our function, and has its default value set arbitrarily to 10 to distinguish it
-from `previous_value`, which is created on `IntegratorFunction.Parameters` and so does not need to be overridden here.
-We set the attribute ``pnl_internal`` to ``True`` on each of these Parameters for use with the
-`JSON/OpenNeuro collaboration <json>`, to indicate that they are not relevant to modeling platforms other than
-PsyNeuLink.
+.. [JDC: NOT SURE I FULLY UNDERSTAND THE RATIONALE FOR previous_value_2 AS EXPLAINED BELOW]
 
-3. Create an `__init__` method::
+``random_state`` will be used to generate random numbers statefully and independently.
+``previous_value_2`` will be used in our function, and has its default value set arbitrarily to 10, to distinguish it
+from `previous_value <IntegratorFunction.previous_value>` which is created on `IntegratorFunction.Parameters` and so
+does not need to be overridden here. We set the attribute ``pnl_internal`` to ``True`` on each of these Parameters
+for use with the `JSON/OpenNeuro collaboration <json>`, to indicate that they are not relevant to modeling platforms
+other than PsyNeuLink.
+
+3. Create an ``__init__`` method::
 
         def __init__(
             self,
@@ -334,10 +337,15 @@ PsyNeuLink.
                 **kwargs
             )
 
-Note that the default value for ``previous_value_2`` is ``None``, `see above <Component_Initialization>`. Any other Parameters will be handled through `**kwargs`.
+Note that the default value for ``previous_value_2`` is ``None`` (`see above <Component_Initialization>`).
+Any other Parameters will be handled through `**kwargs`.
 
-4. Write a `_function` method (`function <Function.function>` is implemented as a generic wrapper around other Function classes' `_function` methods.)
-::
+.. [JDC: WHAT ABOUT SEED?  SHOULDN'T THAT BE MENTIONED EARLIER OR HERE?]
+
+.. [JDC:  CHECK FOLLOWING EDITTED STATEMENT FOR ACCURACY]
+
+4. Write a ``_function`` method (this will be automatically wrapped and accessible as the Component's `function
+   <Component_Function>` method)::
 
         def _function(
             self,
@@ -355,15 +363,25 @@ Note that the default value for ``previous_value_2`` is ``None``, `see above <Co
 
             return self.convert_output_type(new_value)
 
-`RandomIntegrator` chooses one of its previous values, adds the product of `rate` and `variable` to it, returns the result, and stores that result back into the appropriate previous value.
+When an instance of ``RandomIntegrator`` is executed, and its `function <Component.function>` method is called, it
+chooses one of its previous values, addS the product of ``rate`` and ``variable`` to it, returns the result, and
+stores that result back into the appropriate previous value.
 
-We use `get_current_function_param` instead of a basic `_get` for rate, because it is a `modulable Parameter <Parameter.modulable>`, meaning it has an associated `ParameterPort` on its owning Mechanism (if it exists). This ensures that the modulated value for rate is returned, if applicable (otherwise, the base value is used, which is equivalent to `_get`. `previous_value` and `previous_value_2` are not modulable, so we can simply use `_get` directly.
+.. [JDC: WHERE IN THE SOURCE CODE IS THE INFORMATION BELOW EXPLAINED... IN THE DOCSTRING FOR
+   get_current_function_param AND/OR _get?  IF NOT, THEN NEED TO REFERENCE WHEREVER IT IS EXPLAINED].
+   ALSO, WHY ISN'T get_current_function_param UNDERSCORED?  IS IT MEANT TO BE USER (NOT JUST CONTRIBUTOR)
+   ACCESSIBLE?
 
-We run `convert_output_type` before returning as a general pattern on Functions with simple output. See `Function_Output_Type_Conversion`.
+We use `get_current_function_param` instead of just `_get` for ``rate``, because it is a `modulable Parameter
+<Parameter.modulable>`, meaning it has an associated `ParameterPort` on its owner Mechanism, ``RandomIntegrator``.
+This ensures that if ``rate`` is subject to `modulation <ModulatorySignal_Modulation>`, its modulated value is
+returned;  otherwise, its base value would be used, which is equivalent to value returned by `_get`.  In contrast,
+neither `previous_value` nor `previous_value_2` are not modulable, and so we can simply use `_get` for them.
 
-Below is the full class, ready to be included in PsyNeuLink.
+We call `convert_output_type` before returning as a general pattern on Functions with simple output (see
+`Function_Output_Type_Conversion` for additional information).
 
-::
+Below is the fully implemented class, ready to be included in PsyNeuLink::
 
     import numpy as np
     from psyneulink import IntegratorFunction, Parameter

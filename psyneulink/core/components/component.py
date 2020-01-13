@@ -125,7 +125,7 @@ user once the component is constructed, with the one exception of `prefs <Compon
     * **Function** - this can be either an existing `Function <Function>` object or the constructor for one, as in the
       following examples::
 
-        my_component = SomeComponent(function=SomeFunction)
+        my_component = SomeComponent(function=SomeFunction())
 
         or
 
