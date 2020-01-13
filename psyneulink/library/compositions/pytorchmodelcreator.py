@@ -519,7 +519,7 @@ class PytorchModelCreator(torch.nn.Module):
         for node in output_nodes:
             backprop_queue.append(node)
 
-        loss_fn = ctx.import_llvm_function(loss._gen_call_function(ctx).name)
+        loss_fn = ctx.import_llvm_function(loss)
         total_loss = builder.alloca(ctx.float_ty)
         builder.store(ctx.float_ty(0),total_loss)
 
@@ -547,7 +547,7 @@ class PytorchModelCreator(torch.nn.Module):
                 node_target = builder.gep(training_set, [trial_num, ctx.int32_ty(1), ctx.int32_ty(out_node_idx), ctx.int32_ty(0), ctx.int32_ty(0)])
                 node_output = self._get_output_value_ptr(ctx, builder, model_output, node_idx)
 
-                tmp_loss = loss._gen_inject_lossfunc_call(ctx, builder, loss_fn, node_output, node_target)
+                tmp_loss = loss.gen_inject_lossfunc_call(ctx, builder, loss_fn, node_output, node_target)
 
                 ctx.inject_printf_float_array(builder, node_target, prefix=f"{node} target:")
                 ctx.inject_printf_float_array(builder, node_output, prefix=f"{node} value:")

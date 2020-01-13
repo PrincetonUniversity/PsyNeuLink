@@ -13,7 +13,13 @@ class Loss():
 
         self._DELTA_W_NUM = 0
 
-    def _gen_inject_lossfunc_call(self, ctx, builder, bin_func, value, target):
+
+    def _gen_llvm_function(self):
+        with pnlvm.LLVMBuilderContext.get_global() as ctx:
+            return self._gen_loss_function(ctx)
+
+
+    def gen_inject_lossfunc_call(self, ctx, builder, bin_func, value, target):
         return builder.call(bin_func, [builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(0)]),
                                        ctx.int32_ty(len(value.type.pointee)),
                                        builder.gep(target, [ctx.int32_ty(0), ctx.int32_ty(0)])])
@@ -27,8 +33,7 @@ class MSELoss(Loss):
         super().__init__(pytorch_model)
         self.reduction = reduction
 
-    # creates a bin func that returns the mse loss
-    def _gen_call_function(self,ctx):
+    def _gen_loss_function(self, ctx):
         name = self._composition.name + "_MSE_CALL"
 
         # args:
