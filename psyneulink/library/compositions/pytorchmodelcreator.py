@@ -678,11 +678,11 @@ class PytorchModelCreator(torch.nn.Module):
         else:
             raise Exception("LOSS TYPE",loss_type,"NOT SUPPORTED")
 
-        optimizer_struct = builder.alloca(optimizer._get_optimizer_struct_type(ctx))
-        optimizer.initialize_optimizer_struct(ctx,builder,optimizer_struct)
-        backprop = ctx.import_llvm_function(self._gen_llvm_training_backprop(ctx,optimizer,loss).name)
-        optimizer_step = ctx.import_llvm_function(optimizer)
+        optimizer_step_f = ctx.import_llvm_function(optimizer)
+        optimizer_struct = builder.alloca(optimizer_step_f.args[0].type.pointee)
         optimizer_zero_grad = ctx.import_llvm_function(optimizer.zero_grad(ctx).name)
+        optimizer.initialize_optimizer_struct(ctx, builder, optimizer_struct)
+        backprop = ctx.import_llvm_function(self._gen_llvm_training_backprop(ctx, optimizer, loss).name)
         with pnlvm.helpers.for_loop_zero_inc(builder, epochs, "epoch_loop") as (b1, epoch_idx):
             ctx.inject_printf(builder, "\033[0;32mEPOCH %d\033[0m\n", epoch_idx)
             with pnlvm.helpers.for_loop_zero_inc(b1, num_trials, "input_loop") as (b2, trial_num):
@@ -694,7 +694,7 @@ class PytorchModelCreator(torch.nn.Module):
                 ctx.inject_printf(b2, "BACKPROP %d\n", trial_num)
                 b2.call(backprop, [context, params, model_input, data, optimizer_struct, training_set_array, trial_num])
                 ctx.inject_printf(b2, "OPTIMIZER STEP %d\n", trial_num)
-                b2.call(optimizer_step, [optimizer_struct, params])
+                b2.call(optimizer_step_f, [optimizer_struct, params])
 
 
     def _get_output_value_ptr(self, ctx, builder, arg_out, index):

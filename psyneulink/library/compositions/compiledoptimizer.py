@@ -74,8 +74,12 @@ class Optimizer():
     def initialize_optimizer_struct(self, ctx, builder, optim_struct):
         builder.store(optim_struct.type.pointee(None), optim_struct)
 
+    def _gen_llvm_function(self):
+        with pnlvm.LLVMBuilderContext.get_global() as ctx:
+            return self.step(ctx)
+
     # to be implemented by child classes - steps the optimizer
-    def step(self, ctx, builder, optim_struct, model_params):
+    def step(self, ctx):
         raise Exception("Unimplemented method!")
 
 # Class that is used to represent a compiled optimizer - aims to reimplement the logic of torch.optimizer in the form of llvmlite compileable code
