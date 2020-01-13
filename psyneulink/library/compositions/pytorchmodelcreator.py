@@ -395,7 +395,7 @@ class PytorchModelCreator(torch.nn.Module):
 
         return node_weights,dim_x,dim_y
 
-    def _gen_llvm_forward_function_body(self, ctx, builder, _, params, arg_in, arg_out, store_z_values=False):
+    def _gen_llvm_forward_function_body(self, ctx, builder, state, params, arg_in, arg_out, store_z_values=False):
         out_t = arg_out.type.pointee
         if isinstance(out_t, pnlvm.ir.ArrayType) and isinstance(out_t.element, pnlvm.ir.ArrayType):
             assert len(out_t) == 1
@@ -409,14 +409,20 @@ class PytorchModelCreator(torch.nn.Module):
                 value = self._get_output_value_ptr(ctx, builder, arg_out, component_id)
                 afferents = self.component_to_forward_info[component][3]
 
+                mech_input_ty = ctx.get_input_struct_type(component)
+                mech_input = builder.alloca(mech_input_ty)
+
                 if i == 0:
                     # input struct provides data for input nodes
                     input_id = self._composition.get_nodes_by_role(NodeRole.INPUT).index(component)
                     cmp_arg = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(input_id)])
+                    # node inputs are 2d arrays in a struct
+                    input_ptr = builder.gep(mech_input, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+                    builder.store(builder.load(cmp_arg), input_ptr)
                 else:
                     # is_set keeps track of if we already have valid (i.e. non-garbage) values inside the alloc'd value
                     is_set = False
-                    for input_vertex, weights in afferents.items():
+                    for j, (input_vertex, weights) in enumerate(afferents.items()):
                         source_node = input_vertex.component
                         ctx.inject_printf(builder, f"COMPILED FORWARD {source_node} -> {component}\n")
                         source_node_idx = self._composition._get_node_index(source_node)
@@ -424,21 +430,37 @@ class PytorchModelCreator(torch.nn.Module):
 
                         # We cast the ctype weights array to llvmlite pointer
                         weights_llvmlite, _, _ = self._gen_get_node_weight_ptr(ctx, builder, params, component, source_node)
-                        weighted_inp = self._gen_inject_vxm(ctx, builder, input_value, weights_llvmlite)
-                        if is_set == False:
-                            # copy weighted_inp to value
-                            self._gen_inject_vec_copy(ctx, builder, weighted_inp, value)
-                            is_set = True
-                        else:
-                            # add to value
-                            self._gen_inject_vec_add(ctx, builder, weighted_inp, value, value)
+                        # node inputs are 2d arrays in a struct
+                        input_ptr = builder.gep(mech_input, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(j)])
+                        self._gen_inject_vxm(ctx, builder, input_value, weights_llvmlite, input_ptr)
+                        if store_z_values:
+                            if is_set == False:
+                                # copy weighted_inp to value
+                                self._gen_inject_vec_copy(ctx, builder, input_ptr, value)
+                                is_set = True
+                            else:
+                                # add to value
+                                self._gen_inject_vec_add(ctx, builder, input_ptr, value, value)
 
                     cmp_arg = value
                 # Apply Activation Func to values
                 if store_z_values is True:
                     z_values[component] = self._gen_inject_vec_copy(ctx, builder, cmp_arg)
-                bin_func = ctx.import_llvm_function(self.bin_function_creator(ctx,component).name)
-                self._gen_inject_unary_function_call(ctx, builder, bin_func, cmp_arg, value)
+
+                mech_func = ctx.import_llvm_function(component)
+                mech_param = builder.gep(params, [ctx.int32_ty(0),
+                                                  ctx.int32_ty(0),
+                                                  ctx.int32_ty(component_id)])
+                mech_state = builder.gep(state, [ctx.int32_ty(0),
+                                                 ctx.int32_ty(0),
+                                                 ctx.int32_ty(component_id)])
+                mech_output = builder.gep(arg_out, [ctx.int32_ty(0),
+                                                    ctx.int32_ty(0),
+                                                    ctx.int32_ty(component_id)])
+                builder.call(mech_func, [mech_param, mech_state,
+                                         mech_input, mech_output])
+
+
 
                 # TODO: Add bias to value
                 # if biases is not None:
@@ -761,77 +783,6 @@ class PytorchModelCreator(torch.nn.Module):
         for projection, weights in self.projections_to_pytorch_weights.items():
             projection.parameters.matrix._log_value(
                 weights.detach().cpu().numpy(), context)
-
-    # Helper method that functions the same as function_creator, but instead injects the computation to the builder
-    # FIXME: Change to directly using compiled function methods
-    @handle_external_context()
-    def bin_function_creator(self, ctx, node, context=None):
-        # first try to get cached func
-        name = node.name + "_" + node.function.name
-        try:
-            llvm_func = ctx.import_llvm_function(name)
-            return llvm_func
-        except Exception as e:
-            pass
-
-
-        # args: 1) ptr to input vector
-        #       2) sizeof vector
-        #       3) ptr to output vector
-        float_ptr_ty = ctx.float_ty.as_pointer()
-        args = [float_ptr_ty, ctx.int32_ty, float_ptr_ty]
-
-        builder = ctx.create_llvm_function(args, self, name)
-        llvm_func = builder.function
-        llvm_func.attributes.add('alwaysinline')
-        input_vector, dim, output_vector = llvm_func.args
-
-        def get_fct_param_value(param_name):
-            val = node.function.get_current_function_param(
-                param_name, context)
-            if val is None:
-                val = node.function.get_current_function_param(
-                    param_name, None)
-            return ctx.float_ty(val[0])
-
-        if isinstance(node.function, Linear):
-            slope = get_fct_param_value('slope')
-            intercept = get_fct_param_value('intercept')
-            def modify_value(x):
-                ret = builder.fadd(builder.fmul(x, slope), intercept)
-                return ret
-
-        elif isinstance(node.function, Logistic):
-            neg_one = ctx.float_ty(-1)
-            gain = builder.fmul(neg_one, get_fct_param_value('gain'))
-            bias = get_fct_param_value('bias')
-            offset = get_fct_param_value('offset')
-            one = ctx.float_ty(1)
-            exp = ctx.import_llvm_function("__pnl_builtin_exp")
-            def modify_value(x):
-                arg = builder.fadd(x, bias)
-                arg = builder.fmul(gain, arg)
-                arg = builder.fadd(arg, offset)
-
-                ret = builder.call(exp, [arg])
-                ret = builder.fadd(one, ret)
-                ret = builder.fdiv(one, ret)
-                return ret
-
-        else:
-            raise Exception(f"Unsupported compiled activation function {node.function}")
-
-        #do computations
-        with pnlvm.helpers.for_loop_zero_inc(builder, dim, "function_loop") as (b1, iterator):
-            val_ptr = b1.gep(input_vector,[iterator])
-            val = b1.load(val_ptr)
-            val = modify_value(val)
-            output_location = b1.gep(output_vector,[iterator])
-            b1.store(val,output_location)
-
-        builder.ret_void()
-
-        return llvm_func
 
     # Helper method that creates a bin func that returns the derivative of the function into the builder
     # FIXME: Add compiled derivative functions, and move these calls there
