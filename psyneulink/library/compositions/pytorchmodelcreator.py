@@ -625,7 +625,7 @@ class PytorchModelCreator(torch.nn.Module):
         target_struct = pnlvm.ir.LiteralStructType(ctx.get_input_struct_type(node) for node in self._composition.get_nodes_by_role(NodeRole.OUTPUT))
         return pnlvm.ir.LiteralStructType((input_struct, target_struct))
 
-    def _gen_llvm_training_function_body(self, ctx, builder, context, params, comp_in, data, autodiff_stimuli_struct):
+    def _gen_llvm_training_function_body(self, ctx, builder, context, params, data, autodiff_stimuli_struct):
         # 1) Setup autodiff learning stuff
         # if "ref_pass" not in debug_env:
         #    raise Exception("ref_pass must be enabled in debug!")
