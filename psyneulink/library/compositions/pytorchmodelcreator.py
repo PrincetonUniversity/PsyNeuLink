@@ -632,16 +632,14 @@ class PytorchModelCreator(torch.nn.Module):
         # gets a reference to the autodiff_stimuli_struct from params
         composition = self._composition
 
-        epochs = builder.load(builder.gep(autodiff_stimuli_struct, [
-                            ctx.int32_ty(0), ctx.int32_ty(0)]))
-        num_trials = builder.load(builder.gep(autodiff_stimuli_struct, [
-            ctx.int32_ty(0), ctx.int32_ty(1)]))
+        epochs = builder.load(builder.gep(autodiff_stimuli_struct,
+                                          [ctx.int32_ty(0), ctx.int32_ty(0)]))
+        num_trials = builder.load(builder.gep(autodiff_stimuli_struct,
+                                              [ctx.int32_ty(0), ctx.int32_ty(1)]))
 
         # Get pointer to the training set
-        member_count = len(autodiff_stimuli_struct.type.pointee.elements)
         training_set_ptr = builder.gep(autodiff_stimuli_struct,
-                                       [ctx.int32_ty(0),
-                                        ctx.int32_ty(member_count -1)])
+                                       [ctx.int32_ty(0), ctx.int32_ty(2)])
         training_set_array = builder.load(training_set_ptr)
 
         ctx.inject_printf(builder,"Running Autodiff Training with params:\n\tepoch count: %d \n\tnum_trials: %d \n",
@@ -692,7 +690,9 @@ class PytorchModelCreator(torch.nn.Module):
                 # significant longer compilation times
                 b2.call(optimizer_zero_grad, [optimizer_struct])
                 ctx.inject_printf(b2, "BACKPROP %d\n", trial_num)
-                b2.call(backprop, [context, params, model_input, data, optimizer_struct, training_set_array, trial_num])
+                b2.call(backprop, [context, params, model_input, data,
+                                   optimizer_struct, training_set_array,
+                                   trial_num])
                 ctx.inject_printf(b2, "OPTIMIZER STEP %d\n", trial_num)
                 b2.call(optimizer_step_f, [optimizer_struct, params])
 
