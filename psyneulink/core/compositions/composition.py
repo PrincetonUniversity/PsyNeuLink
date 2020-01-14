@@ -6891,6 +6891,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # FIX: 6/12/19 Deprecate?
         # Manage input clamping
+
+        # 1 because call_before_pass is called before the main
+        # scheduler loop to ensure it happens regardless of whether
+        # the scheduler terminates a trial immediately
         next_pass_before = 1
         next_pass_after = 1
         if clamp_input:
@@ -7011,6 +7015,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # SETUP EXECUTION ----------------------------------------------------------------------------
 
             # FIX: 6/12/19 WHY IS call_*after*_pass BEING CALLED BEFORE THE PASS?
+            # KDM 1/15/20: Because we can't tell at the end of this
+            # code block whether a PASS has ended or not. The scheduler
+            # only modifies the pass after we receive an execution_set.
+            # So, we only know a PASS has ended in retrospect after the
+            # scheduler has changed the clock to indicate it. So, we
+            # have to run call_after_pass before the next PASS (here) or
+            # after this code block (see the call to call_after_pass
+            # below)
             if call_after_pass:
                 if next_pass_after == \
                         execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS,
