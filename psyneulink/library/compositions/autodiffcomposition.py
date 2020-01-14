@@ -517,11 +517,11 @@ class AutodiffComposition(Composition):
         self.loss = None
 
 
-        # stores compiled binary execute function
-        self.__generated_forward_execc = None
-        self.__generated_learning_execc = None
-        self.__generated_learning_run = None
+        # store generated llvm functions
+        self.__generated_forward_exec = None
+        self.__generated_learning_exec = None
         self.__generated_forward_run = None
+        self.__generated_learning_run = None
 
         # user indication of how to initialize pytorch parameters
         self.param_init_from_pnl = param_init_from_pnl
@@ -800,15 +800,15 @@ class AutodiffComposition(Composition):
 
     def _gen_llvm_function(self):
         if self.learning_enabled is True:
-            if self.__generated_learning_execc is None:
+            if self.__generated_learning_exec is None:
                 with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                    self.__generated_learning_execc = ctx.gen_autodiffcomp_learning_exec(self)
-            return self.__generated_learning_execc
+                    self.__generated_learning_exec = ctx.gen_autodiffcomp_learning_exec(self)
+            return self.__generated_learning_exec
         else:
-            if self.__generated_forward_execc is None:
+            if self.__generated_forward_exec is None:
                 with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                    self.__generated_forward_execc = ctx.gen_autodiffcomp_exec(self)
-            return self.__generated_forward_execc
+                    self.__generated_forward_exec = ctx.gen_autodiffcomp_exec(self)
+            return self.__generated_forward_exec
 
     @handle_external_context()
     def execute(self,
