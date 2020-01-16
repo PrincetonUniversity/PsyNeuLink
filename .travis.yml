@@ -37,14 +37,14 @@ addons:
       - graphviz
 
 before_install:
-  - | # Pytorch is not available for python 3.8 yet
-    if [ ${PYTHON%.*} == "3.8" ]; then
-      sed -i.bak '/torch/d' requirements.txt
-    fi
   - |
     # Homebrew doesn't provide older python versions.
     # Install it manually from python.org
     if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+      # Pytorch is not available for python 3.8 yet
+      if [ ${PYTHON%.*} == "3.8" ]; then
+        sed -i.bak '/torch/d' requirements.txt
+      fi
       # homebrew plugin is not working correctly
       # https://travis-ci.community/t/xcode-8-3-homebrew-outdated-error/3798
       HOMEBREW_NO_AUTO_UPDATE=1 brew install graphviz
