@@ -18,9 +18,16 @@ jobs:
       with:
         fetch-depth: 10
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
-      with:
-        python-version: ${{ matrix.python-version }}
+      shell: bash
+      run: |
+        PYTHON_DIR=`ls -d ${RUNNER_TOOL_CACHE}/Python/${PYTHON_VERSION}*/x64`
+        echo "::add-path::$PYTHON_DIR"
+        echo "::add-path::$PYTHON_DIR/bin"
+        echo "::add-path::$PYTHON_DIR/Scripts"
+      env:
+        PYTHON_VERSION: ${{ matrix.python-version }}
+    - name: Test Python ${{ matrix.python-version }}
+      run: python --version
     - name: MacOS dependencies
       run: HOMEBREW_NO_AUTO_UPDATE=1 brew install graphviz
       if: matrix.os == 'macos-latest'
