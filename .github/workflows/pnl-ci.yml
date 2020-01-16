@@ -56,7 +56,7 @@ jobs:
     - name: Python3.8 dependencies setup
       run: |
         sed "-i.tmp" "/torch/d" requirements.txt
-      if: matrix.python-version == '3.8'
+      if: matrix.python-version == '3.8' && matrix.os != 'ubuntu-latest'
     - name: Shared dependencies
       shell: bash
       run: |
