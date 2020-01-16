@@ -5264,3 +5264,88 @@ class TestMisc:
         comp.run(inputs={A: [2]})
 
         assert len(A.parameters.value.history[comp.default_execution_id]) == 0
+
+    def test_danglingControlledMech(self):
+        #
+        #   first section is from Stroop Demo
+        #
+        Color_Input = TransferMechanism(
+            name='Color Input',
+            function=Linear(slope=0.2995)
+        )
+        Word_Input = TransferMechanism(
+            name='Word Input',
+            function=Linear(slope=0.2995)
+        )
+
+        # Processing Mechanisms (Control)
+        Color_Hidden = TransferMechanism(
+            name='Colors Hidden',
+            function=Logistic(gain=(1.0, pnl.ControlProjection)),
+        )
+        Word_Hidden = TransferMechanism(
+            name='Words Hidden',
+            function=Logistic(gain=(1.0, pnl.ControlProjection)),
+        )
+        Output = TransferMechanism(
+            name='Output',
+            function=Logistic(gain=(1.0, pnl.ControlProjection)),
+        )
+
+        # Decision Mechanisms
+        Decision = pnl.DDM(
+            function=pnl.DriftDiffusionAnalytical(
+                drift_rate=(1.0),
+                threshold=(0.1654),
+                noise=(0.5),
+                starting_point=(0),
+                t0=0.25,
+            ),
+            name='Decision',
+        )
+        # Outcome Mechanisms:
+        Reward = TransferMechanism(name='Reward')
+
+        # add another DDM but do not add to system
+        second_DDM = pnl.DDM(
+            function=pnl.DriftDiffusionAnalytical(
+                drift_rate=(
+                    1.0,
+                    pnl.ControlProjection(
+                        function=Linear,
+                        control_signal_params={
+                            ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
+                        },
+                    ),
+                ),
+                threshold=(
+                    1.0,
+                    pnl.ControlProjection(
+                        function=Linear,
+                        control_signal_params={
+                            ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
+                        },
+                    ),
+                ),
+                noise=(0.5),
+                starting_point=(0),
+                t0=0.45
+            ),
+            name='second_DDM',
+        )
+
+        comp = Composition(enable_controller=True)
+        comp.add_linear_processing_pathway([
+            Color_Input,
+            Color_Hidden,
+            Output,
+            Decision
+        ])
+        comp.add_linear_processing_pathway([
+            Word_Input,
+            Word_Hidden,
+            Output,
+            Decision
+        ])
+        comp.add_node(Reward)
+        # no assert, should only complete without error
