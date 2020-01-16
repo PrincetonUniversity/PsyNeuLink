@@ -520,8 +520,6 @@ class AutodiffComposition(Composition):
         # store generated llvm functions
         self.__generated_forward_exec = None
         self.__generated_learning_exec = None
-        self.__generated_forward_run = None
-        self.__generated_learning_run = None
 
         # user indication of how to initialize pytorch parameters
         self.param_init_from_pnl = param_init_from_pnl
@@ -786,18 +784,6 @@ class AutodiffComposition(Composition):
         else:
             return outputs
 
-    @property
-    def _llvm_run(self):
-        if self.learning_enabled is True:
-            if self.__generated_learning_run is None:
-                with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                    self.__generated_learning_run = ctx.gen_composition_run(self, learning=self.learning_enabled)
-            return self.__generated_learning_run
-        if self.__generated_forward_run is None:
-            with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                self.__generated_forward_run = ctx.gen_composition_run(self)
-        return self.__generated_forward_run
-
     def _gen_llvm_function(self):
         if self.learning_enabled is True:
             if self.__generated_learning_exec is None:
@@ -853,11 +839,9 @@ class AutodiffComposition(Composition):
                 try:
                     if bin_execute is True or bin_execute.startswith('LLVM'):
                         _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
-                        results = _comp_ex.run(inputs, learning=True)
-                    elif bin_execute.startswith('PTX'):
-                        self.__ptx_initialize(context)
-                        EX = self._compilation_data.ptx_execution._get(context)
-                        results = EX.cuda_run(inputs, learning=True)
+                        results = _comp_ex.execute_learning(inputs)
+                    else:
+                        assert False, "Execution method `{}' not supported".format(bin_execute)
 
                     return results
 

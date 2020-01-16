@@ -325,8 +325,13 @@ class LLVMBuilderContext:
             self.int32_ty,
             pytorch_model._get_learning_struct_type(self).as_pointer(),
         ))
-        with self._gen_composition_exec_context(composition, simulation, "_learning", extra_args=[learning_struct_ty.as_pointer()]) as (builder, data, params, cond_gen):
-            state, _, comp_in, _, cond, learning = builder.function.args
+        args=[
+            learning_struct_ty.as_pointer(),
+            self.get_output_struct_type(composition).as_pointer()
+        ]
+        with self._gen_composition_exec_context(composition, simulation,
+            "_learning", extra_args=args) as (builder, data, params, cond_gen):
+            state, _, comp_in, _, cond, learning, data_out = builder.function.args
 
             pytorch_model._gen_llvm_training_function_body(self, builder, state,
                                                            params, data, learning)
@@ -335,6 +340,24 @@ class LLVMBuilderContext:
             output_cim_f = self.import_llvm_function(output_cim_w)
             builder.block.name = "invoke_" + output_cim_f.name
             builder.call(output_cim_f, [state, params, comp_in, data, data])
+
+            composition.learning_enabled = False
+            exec_f = self.import_llvm_function(composition)
+            composition.learning_enabled = True
+
+            runs_ptr = builder.gep(learning, [self.int32_ty(0), self.int32_ty(1)])
+            runs = builder.load(runs_ptr, "runs")
+            with pnlvm.helpers.for_loop_zero_inc(builder, runs, "run_loop") as (b, iters):
+                data_in_ptr = builder.gep(comp_in, [iters])
+                b.call(exec_f, [state, params, data_in_ptr, data, cond])
+
+                # Extract output_CIM result
+                idx = composition._get_node_index(composition.output_CIM)
+                result_ptr = b.gep(data, [self.int32_ty(0), self.int32_ty(0),
+                                          self.int32_ty(idx)])
+                result = b.load(result_ptr)
+                output_ptr = b.gep(data_out, [iters])
+                b.store(result, output_ptr)
 
             return builder.function
 
@@ -503,7 +526,7 @@ class LLVMBuilderContext:
 
         return builder.function
 
-    def gen_composition_run(self, composition, simulation=False, learning=False):
+    def gen_composition_run(self, composition, simulation=False):
         name = 'run_sim_wrap_' if simulation else 'run_wrap_'
         name += composition.name
         args = [self.get_state_struct_type(composition).as_pointer(),
@@ -513,15 +536,12 @@ class LLVMBuilderContext:
                 self.get_output_struct_type(composition).as_pointer(),
                 self.int32_ty.as_pointer(),
                 self.int32_ty.as_pointer()]
-        if learning:
-            exec_learning_f = self.import_llvm_function(composition)
-            args.append(exec_learning_f.args[-1].type)
         builder = self.create_llvm_function(args, composition, name)
         llvm_func = builder.function
         for a in llvm_func.args:
             a.attributes.add('noalias')
 
-        state, params, data, data_in, data_out, runs_ptr, inputs_ptr, *learning_ptr = llvm_func.args
+        state, params, data, data_in, data_out, runs_ptr, inputs_ptr = llvm_func.args
         # simulation does not care about the output
         # it extracts results of the controller objective mechanism
         if simulation:
@@ -556,12 +576,6 @@ class LLVMBuilderContext:
         cond_init = cond_type(cond_gen.get_condition_initializer())
         builder.store(cond_init, cond)
 
-        if learning:
-            # Call training function
-            exec_learning_f = self.import_llvm_function(composition)
-            builder.call(exec_learning_f, [state, params, data_in, data, cond,
-                                           *learning_ptr])
-
         runs = builder.load(runs_ptr, "runs")
         with pnlvm.helpers.for_loop_zero_inc(builder, runs, "run_loop") as (b, iters):
             # Get the right input stimulus
@@ -569,14 +583,10 @@ class LLVMBuilderContext:
             data_in_ptr = b.gep(data_in, [input_idx])
 
             # Call execution
-            if learning:
-                composition.learning_enabled = False
             if simulation:
                 exec_f = self.import_llvm_function(composition._llvm_simulation.name)
             else:
                 exec_f = self.import_llvm_function(composition)
-            if learning:
-                composition.learning_enabled = True
             b.call(exec_f, [state, params, data_in_ptr, data, cond])
 
             if not simulation:
