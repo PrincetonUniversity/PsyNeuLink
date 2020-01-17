@@ -454,6 +454,7 @@ import itertools
 import numbers
 import re
 import types
+import typing
 import warnings
 
 from collections import UserList, namedtuple
@@ -2624,7 +2625,7 @@ class Process(Process_Base):
         return self._phaseSpecMax + 1
 
     @property
-    def _dependent_components(self):
+    def _dependent_components(self) -> typing.List[Component]:
         return list(itertools.chain(
             super()._dependent_components,
             self._mechs,

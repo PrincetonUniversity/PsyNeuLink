@@ -430,6 +430,7 @@ import logging
 import math
 import numbers
 import re
+import typing
 import warnings
 
 from PIL import Image
@@ -3749,7 +3750,7 @@ class System(System_Base):
             raise SystemError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
 
     @property
-    def _dependent_components(self):
+    def _dependent_components(self) -> typing.List[Component]:
         return list(itertools.chain(
             super()._dependent_components,
             self.execution_list,

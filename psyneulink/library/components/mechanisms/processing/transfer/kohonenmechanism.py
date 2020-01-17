@@ -70,6 +70,7 @@ Class Reference
 import itertools
 import logging
 import numbers
+import typing
 import warnings
 
 from collections.abc import Iterable
@@ -77,6 +78,7 @@ from collections.abc import Iterable
 import numpy as np
 import typecheck as tc
 
+from psyneulink.core.components.component import Component
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.learningfunctions import Kohonen
 from psyneulink.core.components.functions.transferfunctions import Linear
@@ -465,7 +467,7 @@ class KohonenMechanism(TransferMechanism):
             return
 
     @property
-    def _dependent_components(self):
+    def _dependent_components(self) -> typing.List[Component]:
         return list(itertools.chain(
             super()._dependent_components,
             [self.learning_mechanism],

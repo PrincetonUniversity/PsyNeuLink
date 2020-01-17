@@ -564,6 +564,7 @@ import collections
 import itertools
 import numpy as np
 import threading
+import typing
 import typecheck as tc
 import warnings
 
@@ -1882,7 +1883,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         return '{0}{1}-{2}'.format(context.execution_id, EID_SIMULATION, sim_num)
 
     @property
-    def _dependent_components(self):
+    def _dependent_components(self) -> typing.List[Component]:
         return list(itertools.chain(
             super()._dependent_components,
             # [self.objective_mechanism],

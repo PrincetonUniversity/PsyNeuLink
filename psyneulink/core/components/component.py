@@ -434,6 +434,7 @@ import logging
 import numbers
 import re
 import types
+import typing
 import warnings
 import weakref
 
@@ -1240,9 +1241,18 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             Finds whether default_variable can be determined using **default_variable** and **size**
             arguments.
 
+            Arguments
+            ---------
+                default_variable : list, np.ndarray, numbers.Number
+                    an explicit variable specification
+
+                size : list, np.ndarray, numbers.Number
+                    a shorthand variable specification that corresponds
+                    to an array length. See `_handle_size`.
+
             Returns
             -------
-                a default variable if possible
+                a 1+d np.ndarray, default variable if possible
                 None otherwise
         """
         default_variable = self._parse_arg_variable(default_variable)
@@ -1665,7 +1675,25 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                                       target_set=target_set,
                                       context=context)
 
-    def _initialize_parameters(self, context=None, **param_defaults):
+    def _initialize_parameters(self, context: Context = None, **param_defaults):
+        """
+            Populates self.parameters and self.defaults based on
+            **param_defaults** and `class_defaults`. Runs unnamed
+            Parameter parsing (e.g. `_parse_modulable`), sets `spec`,
+            and sets `values <Parameter.values>` for **context**. Uses
+            copies of the passed objects for defaults and `spec`, but
+            uses the same object for items in
+            ``values[**context**.execution_id]``.
+
+            Args:
+                context
+                    the `Context <Context_Overview>` in which this
+                    method is called
+
+                param_defaults
+                    **kwargs argument-value pairs used for each default
+                    value and initial Parameter value setting
+        """
         alias_names = {p.name for p in self.class_parameters if isinstance(p, ParameterAlias)}
 
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
@@ -1921,10 +1949,13 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     # Misc parsers
     # ---------------------------------------------------------
 
-    def _parse_function_variable(self, variable, context=None):
+    def _parse_function_variable(self, variable, context: Context = None):
         """
             Parses the **variable** passed in to a Component into a function_variable that can be used with the
-            Function associated with this Component
+            Function associated with this Component. The variables for
+            some Components may contain extra information than their
+            functions use, or the variable may of a different shape than
+            the function needs.
         """
         return variable
 
@@ -2310,6 +2341,12 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         pass
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
+        """
+            A hook that is called after `initializing Parameter values
+            <Component._initialize_parameters>` but before
+            `instantiating the Component's function
+            <Component._instantiate_function>`
+        """
         pass
 
     def _instantiate_function(self, function, function_params=None, context=None):
@@ -2435,6 +2472,17 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         self._parse_param_port_sources()
 
     def _instantiate_attributes_after_function(self, context=None):
+        """
+            A hook that is called after `instantiating the
+            Component's function <_instantiate_function>` but before
+            `updating dependent Components
+            <Component._update_parameter_components>`
+
+            Args:
+                context
+                    the `Context <Context_Overview>` in which this
+                    method is called
+        """
         if hasattr(self, "_parameter_ports"):
             for param_port in self._parameter_ports:
                 setattr(self.__class__, "mod_" + param_port.name, make_property_mod(param_port.name))
@@ -3010,9 +3058,18 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             return self.__parameter_components
 
     @handle_external_context()
-    def _update_parameter_components(self, context=None):
-        # store all Components in Parameters to be used in
-        # _dependent_components for _initialize_from_context
+    def _update_parameter_components(self, context: Context = None):
+        """
+            Stores all Components in Parameters to be used in
+            `_dependent_components <Component._dependent_components>`
+            for `_initialize_from_context
+            <Component._initialize_from_context>`
+
+            Args:
+                context
+                    the `Context <Context_Overview>` in which this
+                    method is called
+        """
         for p in self.parameters:
             try:
                 param_value = p._get(context)
@@ -3026,9 +3083,14 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     raise
 
     @property
-    def _dependent_components(self):
+    def _dependent_components(self) -> typing.List['Component']:
+        # Component is a str for typing forward reference
         """
-            Returns a set of Components that will be executed if this Component is executed
+            Returns:
+                a set of Components that will be executed if this
+                Component is executed. Only these Components (and their
+                `_dependent_components` in turn), will be initialized
+                during calls to `_initialize_from_context`
         """
         return list(self._parameter_components)
 

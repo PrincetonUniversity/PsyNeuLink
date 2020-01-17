@@ -185,11 +185,13 @@ import numbers
 import numpy as np
 import typecheck as tc
 import types
+import typing
 import warnings
 
 from collections.abc import Iterable
 
 from psyneulink.core import llvm as pnlvm
+from psyneulink.core.components.component import Component
 from psyneulink.core.components.functions.function import Function, is_function_type
 from psyneulink.core.components.functions.learningfunctions import Hebbian
 from psyneulink.core.components.functions.objectivefunctions import Stability
@@ -1332,7 +1334,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         return builder
 
     @property
-    def _dependent_components(self):
+    def _dependent_components(self) -> typing.List[Component]:
         return list(itertools.chain(
             super()._dependent_components,
             [self.recurrent_projection],

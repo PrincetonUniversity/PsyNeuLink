@@ -612,7 +612,30 @@ class Function_Base(Function):
             raise FunctionError(f"{param} is not a valid specification for "
                                 f"the {param_name} argument of {self.__class__.__name__}{owner_name}.")
 
-    def get_current_function_param(self, param_name, context=None):
+    def get_current_function_param(
+        self,
+        param_name: str,
+        context: Context = None
+    ):
+        """
+            Gets the value of the Parameter **param_name** from the
+            corresponding ParameterPort of this Function's `owner
+            <Function.owner>` if it exists
+            (for `modulable Parameters <Parameter.modulable>`) or from
+            the `standard getter <Parameter.get>` otherwise.
+
+            Args:
+                param_name
+                    the name of the Parameter
+
+                context
+                    the `Context <Context_Overview>` in which this
+                    method is called
+
+            Returns:
+                the value of Parameter **param_name** in **context**
+
+        """
         if param_name == "variable":
             raise FunctionError(f"The method 'get_current_function_param' is intended for retrieving "
                                 f"the current value of a function parameter. 'variable' is not a function parameter. "

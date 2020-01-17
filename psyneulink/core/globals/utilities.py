@@ -125,7 +125,8 @@ __all__ = [
     'parameter_spec', 'powerset', 'random_matrix', 'ReadOnlyOrderedDict', 'safe_equals', 'safe_len',
     'scalar_distance', 'sinusoid',
     'tensor_power', 'TEST_CONDTION', 'type_match',
-    'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy'
+    'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy',
+    'get_global_seed', 'set_global_seed'
 ]
 
 logger = logging.getLogger(__name__)
@@ -1515,23 +1516,55 @@ def flatten_list(l):
 
 
 _seed = np.int32((time.time() * 1000) % 2**31)
-def get_global_seed(offset=1):
+def get_global_seed(offset: int = 1) -> int:
+    """
+        Manages a base seed to be used across PNL. Each call returns a
+        new seed to ensure each generator does not use the same rng
+        sequence. The returned seed will become the base seed on the
+        next call.
+
+        .. note::
+            We do not simply seed with current time in general (although
+            our global seed will initialize with current time) so that
+            a specific seed can be chosen for testing and replication of
+            entire PNL modules and scripts
+
+        Args:
+            offset
+                offset from the base seed
+
+        Returns:
+            the next seed
+
+    """
     global _seed
     _seed += offset
     _seed %= 2**31
     return _seed - offset
 
 
-def set_global_seed(new_seed):
+def set_global_seed(new_seed: int):
+    """
+        Sets a new base seed for `get_global_seed`
+
+        Args:
+            new_seed
+    """
     global _seed
     _seed = new_seed
 
 
-def safe_len(arr, fallback=1):
+def safe_len(arr, fallback: int = 1) -> int:
     """
-    Returns
-    -------
-        len(**arr**) if possible, otherwise **fallback**
+        Args:
+            arr
+                the object whose length is desired
+
+            fallback
+                the value to return if len(**arr**) fails
+
+        Returns:
+            len(**arr**) if possible, otherwise **fallback**
     """
     try:
         return len(arr)

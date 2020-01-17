@@ -768,6 +768,7 @@ import inspect
 import itertools
 import numbers
 import types
+import typing
 import warnings
 
 from collections.abc import Iterable
@@ -2285,7 +2286,7 @@ class Port_Base(Port):
         return function.execute(variable, context=Context(source=ContextFlags.UNSET))
 
     @property
-    def _dependent_components(self):
+    def _dependent_components(self) -> typing.List[Component]:
         return list(itertools.chain(
             super()._dependent_components,
             self.efferents,

@@ -926,6 +926,7 @@ import inspect
 import itertools
 import logging
 import types
+import typing
 import warnings
 
 from collections import OrderedDict
@@ -2125,7 +2126,29 @@ class Mechanism_Base(Mechanism):
             raise MechanismError(f"Reinitializing {self.name} is not allowed because this Mechanism is not stateful; "
                                  f"it does not have an accumulator to reinitialize.")
 
-    def get_current_mechanism_param(self, param_name, context=None):
+    def get_current_mechanism_param(
+        self,
+        param_name: str,
+        context: Context = None
+    ):
+        """
+            Gets the value of the Parameter **param_name** from the
+            corresponding ParameterPort of this Mechanism if it exists
+            for (`modulable Parameters <Parameter.modulable>`) or from
+            the `standard getter <Parameter.get>` otherwise.
+
+            Args:
+                param_name
+                    the name of the Parameter
+
+                context
+                    the `Context <Context_Overview>` in which this
+                    method is called
+
+            Returns:
+                the value of Parameter **param_name** in **context**
+
+        """
         if param_name == "variable":
             raise MechanismError(f"The method 'get_current_mechanism_param' is intended for retrieving the current "
                                  f"value of a mechanism parameter; 'variable' is not a mechanism parameter. If looking "
@@ -2434,8 +2457,25 @@ class Mechanism_Base(Mechanism):
             port._update(context=context, params=runtime_params)
         return np.array(self.get_input_values(context))
 
-    def _update_parameter_ports(self, context=None, runtime_params=None):
+    def _update_parameter_ports(
+        self,
+        context: Context = None,
+        runtime_params: dict = None
+    ):
+        """
+            Calls `_update <Port._update>` on each of this Mechanism's
+            `ParameterPort <Mechanism_Base.parameter_ports>`\\s.
 
+            Args:
+                context
+                    the `Context <Context_Overview>` in which this method
+                    is called
+
+                runtime_params
+                    any
+                    `runtime parameters <Mechanism_Runtime_Parameters>`
+                    needed to be passed for all Port updates
+        """
         for port in self._parameter_ports:
             port._update(context=context, params=runtime_params)
 
@@ -3557,7 +3597,7 @@ class Mechanism_Base(Mechanism):
                                             if isinstance(p.sender.owner, Mechanism_Base)])
 
     @property
-    def _dependent_components(self):
+    def _dependent_components(self) -> typing.List[Component]:
         return list(itertools.chain(
             super()._dependent_components,
             self.input_ports,

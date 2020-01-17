@@ -388,6 +388,7 @@ COMMENT
 import abc
 import inspect
 import itertools
+import typing
 import warnings
 
 import numpy as np
@@ -989,7 +990,7 @@ class Projection_Base(Projection):
         return builder
 
     @property
-    def _dependent_components(self):
+    def _dependent_components(self) -> typing.List[Component]:
         return list(itertools.chain(
             super()._dependent_components,
             self.parameter_ports,

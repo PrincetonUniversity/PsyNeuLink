@@ -1109,6 +1109,7 @@ import itertools
 import logging
 import warnings
 import sys
+import typing
 
 import numpy as np
 import typecheck as tc
@@ -6615,6 +6616,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             ):
                 break
 
+            # TODO: separate all this processing into a dedicated method?
             # PROCESSING ------------------------------------------------------------------------
             # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
             if callable(inputs):
@@ -8046,7 +8048,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return [param for param in self.parameters if param.stateful]
 
     @property
-    def _dependent_components(self):
+    def _dependent_components(self) -> typing.List[Component]:
         return list(itertools.chain(
             super()._dependent_components,
             self.nodes,
