@@ -4414,9 +4414,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         controller.composition = self
         self.controller = controller
 
-        aux_components_are_valid = self._validate_controller_aux_components(controller)
+        invalid_aux_components = self._get_invalid_aux_components(controller)
 
-        if aux_components_are_valid:
+        if not invalid_aux_components:
             if self.controller.objective_mechanism:
                 self.add_node(self.controller.objective_mechanism)
 
@@ -4549,11 +4549,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         inputs[comp]=np.concatenate([[predicted_input[j]],inputs[comp][0]])
         return inputs
 
-    def _validate_controller_aux_components(self, controller):
+    def _get_invalid_aux_components(self, controller):
         valid_nodes = \
             [node for node in self.nodes.data] + \
             [node for node, composition in self._get_nested_nodes()] + \
             [self.controller, self.controller.objective_mechanism, self]
+        invalid_components = []
         for aux in controller.aux_components:
             component = None
             if isinstance(aux, Projection):
@@ -4580,8 +4581,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         receiver_node = component.receiver.owner
                 if not all([sender_node in valid_nodes, receiver_node in valid_nodes]):
-                    return False
-        return True
+                    invalid_components.append(component)
+        if invalid_components:
+            return invalid_components
+        else:
+            return []
 
     def reshape_control_signal(self, arr):
 
@@ -4624,34 +4628,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Checks initialization status of controller (if applicable) and any projections or ports
 
         """
-        def deferred_init_warning(component):
-            warnings.warn(f"{component} is in a state of deferred initialization and will be ignored. \n"
-                          f"This usually occurs when a specification is made for the Component \n"
-                          f"that is unresolvable due to the configuration of its enclosing Composition. Generally, \n"
-                          f"if the Composition is changed in such a way that makes the Component \n"
-                          f"resolvable, it will automatically complete its initialization. If this is \n"
-                          f"unintentional, please reconfigure your Composition to make this Component \n"
-                          f"resolvable. \n")
-
         # Check if controller is in deferred init
         if self.controller and self.controller.initialization_status == ContextFlags.DEFERRED_INIT:
             self.add_controller(self.controller)
             if self.controller.initialization_status == ContextFlags.DEFERRED_INIT:
-                deferred_init_warning(self.controller)
+                invalid_aux_components = self._get_invalid_aux_components(self.controller)
+                for component in invalid_aux_components:
+                    if isinstance(component, Projection):
+                        if hasattr(component.receiver, 'owner_mech'):
+                            owner = component.receiver.owner_mech
+                        else:
+                            owner = component.receiver.owner
+                        raise CompositionError(
+                                f"The controller of {self.name} has been specified to project to {owner.name}, "
+                                f"but {owner.name} is not in {self.name} or any of its nested Compositions."
+                        )
 
         for node in self.nodes:
             # Check for deferred init projections
             for projection in node.projections:
                 if projection.initialization_status == ContextFlags.DEFERRED_INIT:
-                    deferred_init_warning(projection)
-
-            # Check for deferred init ports
-            if isinstance(node, Mechanism):
-                for port in node.ports:
-                    if port.initialization_status == ContextFlags.DEFERRED_INIT:
-                        deferred_init_warning(port)
-            else:
-                node._check_initialization_status()
+                    # NOTE:
+                    #   May want to add other conditions and warnings here. Currently
+                    #   just checking for unresolved control projections.
+                    if isinstance(projection, ControlProjection):
+                        warnings.warn(f"The {projection.receiver.name} parameter of {projection.receiver.owner.name} \n"
+                                      f"is specified for control, but {self.name} does not have a controller. Please \n"
+                                      f"add a controller to {self.name} or the control specification will be \n"
+                                      f"ignored.")
 
     def evaluate(
             self,
