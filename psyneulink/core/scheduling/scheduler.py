@@ -112,7 +112,7 @@ Pseudocode::
 Execution
 ---------
 
-When a Scheduler is run, it provides a set of Components that should be run next, based on their dependencies in the
+When a Scheduler is run, it provides a set of Components that should be run next (referred to as the ``execution set``), based on their dependencies in the
 Composition or graph specification dictionary, and any `Conditions <Condition>`, specified in the Scheduler's constructor.
 For each call to the `run <Scheduler.run>` method, the Scheduler sequentially evaluates its
 `consideration_sets <consideration_set>` in their order in the `consideration_queue`.  For each set, it  determines
