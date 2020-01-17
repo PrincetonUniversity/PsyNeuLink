@@ -391,8 +391,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 slope: parameter_spec = 1.0,
-                 intercept: parameter_spec = 0.0,
+                 slope: tc.optional(parameter_spec) = None,
+                 intercept: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
