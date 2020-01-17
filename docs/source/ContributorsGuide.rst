@@ -1,19 +1,19 @@
 Contributors Guide
 ==================
 
-* `Introduction`
-* `File_Structure`
-* `Environment_Setup`
-* `Contribution_Checklist`
-* `Components_Overview`
-* `Component_Creation`
-* `Compositions_Overview`
-* `Scheduler`
-* `Testing`
-* `Documentation`
-* `Example`
+* `Introduction <Contributors_Introduction>`
+* `File_Structure <Contributors_File_Structure>`
+* `Environment_Setup <Contributors_Environment_Setup>`
+* `Contribution_Checklist <Contributors_Contribution_Checklist>`
+* `Components_Overview <Contributors_Components_Overview>`
+* `Component_Creation <Contributors_Component_Creation>`
+* `Compositions_Overview <Contributors_Compositions_Overview>`
+* `Scheduler <Contributors_Scheduler>`
+* `Testing <Contributors_Testing>`
+* `Documentation <Contributors_Documentation>`
+* `Example <Contributors_Example>`
 
-.. _Introduction:
+.. _Contributors_Introduction:
 
 Introduction
 ------------
@@ -21,7 +21,7 @@ Introduction
 Thank you for your interest in contributing to PsyNeuLink! This page is written and maintained by contributors to
 PsyNeuLink. It provides helpful information for new contributors that complements the user documentation.
 
-.. _File_Structure:
+.. _Contributors_File_Structure:
 
 File Structure
 --------------
@@ -46,9 +46,9 @@ In the PsyNeuLink repo, there are many files. The following folders and files ar
   * *core*: directory that contains the core objects of psyneulink
   * *library*: directory that contains user-contributed extensions to psyneulink and other non-core objects
 
-.. _Environment_Setup:
+.. _Contributors_Environment_Setup:
 
-Environment Setup and Installaion
+Environment Setup and Installation
 ---------------------------------
 
 PsyNeuLink currently supports Python 3.6+, and we aim to support all future releases of Python.
@@ -65,10 +65,9 @@ PsyNeuLink uses `pytest <https://docs.pytest.org/en/latest/index.html>`_ to run 
 To build documentation, we use `Sphinx <https://www.sphinx-doc.org/en/master/usage/installation.html>`_.
 To contribute, make a branch off of the ``devel`` branch.
 Make a pull request to ``devel`` once your changes are complete.
-``devel`` is periodically merged into the ``master`` branch, which is the branch most users use and is installed with
-pip install.
+``devel`` is periodically merged into the ``master`` branch, which is the branch most users use and is installed with a standard pip install.
 
-.. _Contribution_Checklist:
+.. _Contributors_Contribution_Checklist:
 
 Contribution Checklist
 ----------------------
@@ -93,7 +92,7 @@ This is the general workflow for contributing to PsyNeuLink:
 * Once all tests pass, submit a pull request to the PsyNeuLink devel branch! The PsyNeuLink team will then review your
   changes and accept the pull request if they sastify the requirements described above.
 
-.. _Components_Overview:
+.. _Contributors_Components_Overview:
 
 Components Overview
 -------------------
@@ -134,6 +133,8 @@ python attribute.  This ensures that it will be:
 
 See the `developer documentation for Parameters <Parameter_Developers>` for additional information.
 
+.. _Contributors_Context:
+
 Context and Statefulness
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -155,19 +156,19 @@ To fix this, ``some custom context`` must be initialized beforehand, as follows:
     m._initialize_from_context(context=Context(execution_id='some custom context'))
 
 
-.. _Component_Creation:
+.. _Contributors_Component_Creation:
 
 Creating a Custom Subclass of Component
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. _Component_Initialization:
+.. _Contributors_Component_Initialization:
 
 *Initialization*
 ~~~~~~~~~~~~~~~~
 
 *Parameter specification*
 
-The constructor (``__init__ method``) of new sublcass should include an explicit argument for each `Parameter` that
+The constructor (``__init__`` method) of new sublcass should include an explicit argument for each `Parameter` that
 is introduced in the subclass (i.e., that is not defined in the parent class) and/or any that needs preprocessing in
 the constructor before being passed to the parent class for completion of initialization. Any others may be passed
 through the `__init__` hierarchy in the ``**kwargs`` argument.  Parameter defaults for the Component's function may
@@ -179,7 +180,7 @@ the value of each entry.
 
 Default/initial values for
 all these parameters should be set in the `Parameters` class, instead of the python standard default argument value,
-which should be set to `None`. This is to ensure that the `_user_specified <Parameter._user_specified>` attribute is
+which should be set to ``None``. This is to ensure that the `_user_specified <Parameter._user_specified>` attribute is
 set correctly, which is used to indicate whether the value for a Parameter was explicitly given by the user or its
 default value was assigned.
 
@@ -189,15 +190,15 @@ default value was assigned.
 
 Broadly, the sequence of events for initialization of a `Component` are as follows:
 
-#. Call ``__init__`` methods in hierarchical order (``__init__``, ``super().__init__()``, etc.).
+#. Call `__init__` methods in hierarchical order (`__init__`, ``super().__init__()``, etc.).
 #. Set Parameter default values based on input and `class defaults <Component.class_defaults>`
-   (``_initialize_parameters``).
-#. Set default `variable <Component.variable>` based on input (``default_variable`` and any other Parameters on which
-   it depends) and class defaults (``_handle_default_variable``).
-#. Call ``_instantiate_attributes_before_function`` hook.
-#. Construct, copy, or assign function (``_instantiate_function``).
-#. Execute once to produce a default `value <Component.value>` (``_instantiate_value``).
-#. Call ``_instantiate_attributes_after_function`` hook.
+   (`_initialize_parameters`).
+#. Set default `variable <Component.variable>` based on input (`default_variable` and any other Parameters on which
+   it depends) and class defaults (`_handle_default_variable`).
+#. Call `_instantiate_attributes_before_function` hook.
+#. Construct, copy, or assign function (`_instantiate_function`).
+#. Execute once to produce a default `value <Component.value>` (`_instantiate_value`).
+#. Call `_instantiate_attributes_after_function` hook.
 
 .. [## I THINK IT WOULD BE GOOD TO HAVE SLIGHTLY MORE INFORMATION ABOUT WHY EACH OF THESE METHODS IS THERE AND WHAT
    THEY (CAN BE USED TO) DO.  WHILE I TOTALLY AGREE THIS DOCUMENT SHOULD BE AS CONCISE AS POSSIBLE, I ALSO THINK IT
@@ -208,28 +209,26 @@ Broadly, the sequence of events for initialization of a `Component` are as follo
 
 Components (excluding Compositions) run the following steps during `execution <Component_Execution>`.
 
-#. Call ``_parse_function_variable`` on the input `variable <Component.variale>`.
+#. Call `_parse_function_variable` on the input `variable <Component.variable>`.
 #. Call `function <Component.function>` on the result of 1.
 
 `Mechanisms <Mechanism>` add a few extra steps:
 
-#. If no variable is passed in, call ``_update_input_ports`` and use the values of the `input_ports <Mechanism
-   .input_ports>` as `variable <Mechanism.variable>`.
-#. Call ``_update_parameter_ports``.
-#. Call ``_parse_function_variable`` on the input `variable`
+#. If no variable is passed in, call `_update_input_ports` and use the values of the `input_ports <Mechanism.input_ports>` as `variable <Mechanism.variable>`
+#. Call `_update_parameter_ports`
+#. Call `_parse_function_variable` on the input `variable`
 #. Call `function <Component.function>` on the result of 3.
-#. Call ``_update_output_ports``
+#. Call `_update_output_ports`
 #. If `execute_until_finished <Component.execute_until_finished>` is `True`, repeat steps 1-5 until one of the
    following:
 
-   a. `is_finished <Component.is_finished>` returns `True`
-   b. `num_executions_before_finished <Component.num_executions_before_finished>` is greater than or equal to
-      `max_executions_before_finished <Component.max_executions_before_finished>`.
+   a. `is_finished <Component.is_finished>` returns ``True``
+   b. `num_executions_before_finished <Component.num_executions_before_finished>` is greater than or equal to `max_executions_before_finished <Component.max_executions_before_finished>`
 
 .. [## AGAIN, I THINK IT WOULD BE GOOD TO HAVE SLIGHTLY MORE INFORMATION ABOUT WHY EACH OF THESE METHODS IS THERE AND
    WHAT THEY (CAN BE USED TO) DO]
 
-.. _Compositions_Overview:
+.. _Contributors_Compositions_Overview:
 
 Compositions Overview
 ---------------------
@@ -244,7 +243,7 @@ assigned as the `agent_rep <OptimizationControlMechanism.agent_rep>` of an `Opti
 .. **Extensive summary of function calls here?**
 .. [JDC:  PROBABLY A GOOD IDEA]
 
-.. _Scheduler:
+.. _Contributors_Scheduler:
 
 Scheduler
 ---------
@@ -254,15 +253,14 @@ no stored state can be created ad-hoc, using just an instance of
 `Condition <psyneulink.core.scheduling.condition.Condition>`, `While`, or `WhileNot`.
 If a Condition is need that requires stored state, then to implement a subclass you should create a function that
 returns `True` if the condition is satisfied, and `False` otherwise, and assign it to the `func <Condition.func>`
-attribute of the `Condition`. Any ``args`` and ``**kwargs`` passed in to `Condition.__init__ <psyneulink.core
-.scheduling.condition.Condition>` will be given, unchanged, to each call of `func <Condition.func>`, along with an
+attribute of the `Condition`. Any ``*args`` and ``**kwargs`` passed in to `Condition.__init__ psyneulink.core.scheduling.condition.Condition>` will be given, unchanged, to each call of `func <Condition.func>`, along with an
 ``execution_id``.
 
 .. note::
 
     Your stored state must be independent for each ``context``/``execution_id``
 
-.. _Testing:
+.. _Contributors_Testing:
 
 Testing
 -------
@@ -275,7 +273,7 @@ style is enforced by the python modules ``pytest-pycodestyle`` and ``pytest-pydo
 To run all the tests that must pass for your contribution to be accepted, simply run ``pytest`` in the `PsyNeuLink`
 directory.
 
-.. _Documentation:
+.. _Contributors_Documentation:
 
 Documentation
 -------------
@@ -293,6 +291,8 @@ When creating and/or editing documentation, you should generate Sphinx documenta
 before publishing to `devel`. To generate Sphinx documentation from your local branch, run `make html` in Terminal
 while in the `docs` folder. The resulting HTML should be in your `docs/build` folder. (Do not commit these built HTML
 files to Github. They are simply for your local testing/preview purposes.)
+
+.. _Contributors_Example:
 
 Example
 -------
@@ -316,7 +316,7 @@ Here, we will create a custom Function, ``RandomIntegrator`` that uses stored st
 ``random_state`` will be used to generate random numbers statefully and independently.
 ``previous_value_2`` will be used in our function, and has its default value set arbitrarily to 10, to distinguish it
 from `previous_value <IntegratorFunction.previous_value>` which is created on `IntegratorFunction.Parameters` and so
-does not need to be overridden here. We set the attribute ``pnl_internal`` to ``True`` on each of these Parameters
+does not need to be overridden here. We set the attribute `pnl_internal` to ``True`` on each of these Parameters
 for use with the `JSON/OpenNeuro collaboration <json>`, to indicate that they are not relevant to modeling platforms
 other than PsyNeuLink.
 
@@ -344,8 +344,7 @@ Any other Parameters will be handled through `**kwargs`.
 
 .. [JDC:  CHECK FOLLOWING EDITTED STATEMENT FOR ACCURACY]
 
-4. Write a ``_function`` method (this will be automatically wrapped and accessible as the Component's `function
-   <Component_Function>` method)::
+4. Write a ``_function`` method (this will be automatically wrapped and accessible as the Component's `function <Component_Function>` method)::
 
         def _function(
             self,
@@ -372,8 +371,7 @@ stores that result back into the appropriate previous value.
    ALSO, WHY ISN'T get_current_function_param UNDERSCORED?  IS IT MEANT TO BE USER (NOT JUST CONTRIBUTOR)
    ACCESSIBLE?
 
-We use `get_current_function_param` instead of just `_get` for ``rate``, because it is a `modulable Parameter
-<Parameter.modulable>`, meaning it has an associated `ParameterPort` on its owner Mechanism, ``RandomIntegrator``.
+We use `get_current_function_param` instead of just `_get` for ``rate``, because it is a `modulable Parameter <Parameter.modulable>`, meaning it has an associated `ParameterPort` on its owner Mechanism, ``RandomIntegrator``.
 This ensures that if ``rate`` is subject to `modulation <ModulatorySignal_Modulation>`, its modulated value is
 returned;  otherwise, its base value would be used, which is equivalent to value returned by `_get`.  In contrast,
 neither `previous_value` nor `previous_value_2` are not modulable, and so we can simply use `_get` for them.
