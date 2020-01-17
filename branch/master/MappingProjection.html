@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MappingProjection &mdash; PsyNeuLink 0.7.2.0 documentation</title>
+  <title>MappingProjection &mdash; PsyNeuLink 0.7.2.0+150.gc575d03 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.2.0
+                  0.7.2.0+150
                 </div>
               
             
@@ -355,6 +355,13 @@ a default set of <a class="reference internal" href="LearningMechanism.html#lear
 </ul>
 </div></blockquote>
 </div>
+<div class="section" id="specifying-learning-for-autodiffcompositions">
+<h4>Specifying Learning for AutodiffCompositions<a class="headerlink" href="#specifying-learning-for-autodiffcompositions" title="Permalink to this headline">¶</a></h4>
+<p>By default, all MappingProjections in an <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a> are treated as trainable PyTorch Parameters whose
+matrices are updated during backwards passes through the network. Optionally, users can specify during
+instantiation that a projection should not be updated. To do so, set the <code class="xref any docutils literal"><span class="pre">learnable</span></code> argument to False in the
+constructor of the projection.</p>
+</div>
 </div>
 <div class="section" id="deferred-initialization">
 <span id="mappingprojection-deferred-initialization"></span><h3><em>Deferred Initialization</em><a class="headerlink" href="#deferred-initialization" title="Permalink to this headline">¶</a></h3>
@@ -519,6 +526,12 @@ then the parenthesized name of class is used in place of the unassigned attribut
 <code class="docutils literal"><span class="pre">'MappingProjection</span> <span class="pre">from</span> <span class="pre">(OutputPort-0)</span> <span class="pre">to</span> <span class="pre">my_mech2[InputPort-0]'</span></code>).</p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.projection_sender">
+<code class="descname">projection_sender</code><a class="headerlink" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.projection_sender" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">OutputPort</span></code></p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -574,6 +587,7 @@ then the parenthesized name of class is used in place of the unassigned attribut
 <li><a class="reference internal" href="#specifying-the-matrix-parameter"><em>Specifying the Matrix Parameter</em></a></li>
 <li><a class="reference internal" href="#specifying-learning"><em>Specifying Learning</em></a><ul>
 <li><a class="reference internal" href="#specifying-learning-in-a-tuple">Specifying Learning in a Tuple</a></li>
+<li><a class="reference internal" href="#specifying-learning-for-autodiffcompositions">Specifying Learning for AutodiffCompositions</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#deferred-initialization"><em>Deferred Initialization</em></a></li>
@@ -604,7 +618,7 @@ then the parenthesized name of class is used in place of the unassigned attribut
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.2.0',
+               VERSION:'0.7.2.0+150.gc575d03',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

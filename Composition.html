@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.7.2.0 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.7.2.0+150.gc575d03 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.2.0
+                  0.7.2.0+150
                 </div>
               
             
@@ -1195,7 +1195,7 @@ and nested Compositions in an outer Composition, <code class="docutils literal">
 <span id="composition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.compositions.composition.Composition">
-<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>controller: psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism = None</em>, <em>enable_controller=None</em>, <em>controller_mode: &lt;typecheck.tc_predicates.enum object at 0x11424d7b8&gt; = 'after'</em>, <em>controller_condition: psyneulink.core.scheduling.condition.Condition = &lt;psyneulink.core.scheduling.condition.Always object&gt;</em>, <em>enable_learning=False</em>, <em>retain_old_simulation_data=None</em>, <em>prefs=None</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>controller: psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism = None</em>, <em>enable_controller=None</em>, <em>controller_mode: &lt;typecheck.tc_predicates.enum object at 0x11ae597b8&gt; = 'after'</em>, <em>controller_condition: psyneulink.core.scheduling.condition.Condition = &lt;psyneulink.core.scheduling.condition.Always object&gt;</em>, <em>enable_learning=False</em>, <em>retain_old_simulation_data=None</em>, <em>prefs=None</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>Composition(</dt>
 <dd>controller=None,
@@ -1387,6 +1387,13 @@ if False, simulation values will be deleted unless otherwise specified by indivi
 </dd></dl>
 
 <dl class="attribute">
+<dt id="psyneulink.core.compositions.composition.Composition.input_specification">
+<code class="descname">input_specification</code><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.input_specification" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>None or dict or list or generator or function</em> – stores the <code class="xref any docutils literal"><span class="pre">inputs</span></code> for executions of the Composition when it is executed using its <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a>
+method.</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="psyneulink.core.compositions.composition.Composition.name">
 <code class="descname">name</code><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.name" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>str</em> – the name of the Composition; if it is not specified in the <strong>name</strong> argument of the constructor, a default
@@ -1402,7 +1409,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.add_backpropagation_learning_pathway">
-<code class="descname">add_backpropagation_learning_pathway</code><span class="sig-paren">(</span><em>pathway</em>, <em>learning_rate=0.05</em>, <em>error_function=None</em>, <em>loss_function: &lt;typecheck.tc_predicates.enum object at 0x114a00860&gt; = 'MSE'</em>, <em>learning_update: &lt;typecheck.framework.optional object at 0x114a00940&gt; = 'after'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_backpropagation_learning_pathway" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_backpropagation_learning_pathway</code><span class="sig-paren">(</span><em>pathway</em>, <em>learning_rate=0.05</em>, <em>error_function=None</em>, <em>loss_function: &lt;typecheck.tc_predicates.enum object at 0x11b5ff860&gt; = 'MSE'</em>, <em>learning_update: &lt;typecheck.framework.optional object at 0x11b5ff9b0&gt; = 'after'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_backpropagation_learning_pathway" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convenience method that calls <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway" title="psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway"><code class="xref any py py-meth docutils literal"><span class="pre">add_linear_learning_pathway</span></code></a> with <a href="#id2"><span class="problematic" id="id3">**</span></a>learning_function**=`Backpropagation`</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1448,7 +1455,7 @@ an optimal Control policy.</p>
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway">
-<code class="descname">add_linear_learning_pathway</code><span class="sig-paren">(</span><em>pathway</em>, <em>learning_function</em>, <em>loss_function=None</em>, <em>learning_rate=0.05</em>, <em>error_function=(LinearCombination LinearCombination Function-8)</em>, <em>learning_update: &lt;typecheck.tc_predicates.any object at 0x114a00588&gt; = 'online'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_linear_learning_pathway</code><span class="sig-paren">(</span><em>pathway</em>, <em>learning_function</em>, <em>loss_function=None</em>, <em>learning_rate=0.05</em>, <em>error_function=(LinearCombination LinearCombination Function-8)</em>, <em>learning_update: &lt;typecheck.tc_predicates.any object at 0x11b5ff630&gt; = 'online'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implement learning pathway (including necessary <a class="reference internal" href="#composition-learning-components"><span class="std std-ref">learning components</span></a>.</p>
 <p>Generic method for implementing a learning pathway.  Calls <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway" title="psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway"><code class="xref any py py-meth docutils literal"><span class="pre">add_linear_processing_pathway</span></code></a> to implement
 the processing components including, if necessary, the MappingProjections between Mechanisms.  All of the
@@ -1661,7 +1668,7 @@ already specified.  If an item in the list is a list of projections, called recu
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.add_reinforcement_learning_pathway">
-<code class="descname">add_reinforcement_learning_pathway</code><span class="sig-paren">(</span><em>pathway</em>, <em>learning_rate=0.05</em>, <em>error_function=None</em>, <em>learning_update: &lt;typecheck.tc_predicates.any object at 0x114a006a0&gt; = 'online'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_reinforcement_learning_pathway" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_reinforcement_learning_pathway</code><span class="sig-paren">(</span><em>pathway</em>, <em>learning_rate=0.05</em>, <em>error_function=None</em>, <em>learning_update: &lt;typecheck.tc_predicates.any object at 0x11b5ff6a0&gt; = 'online'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_reinforcement_learning_pathway" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convenience method that calls <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway" title="psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway"><code class="xref any py py-meth docutils literal"><span class="pre">add_linear_learning_pathway</span></code></a> with <a href="#id4"><span class="problematic" id="id5">**</span></a>learning_function**=`Reinforcement`</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1697,7 +1704,7 @@ LEARNED_PROJECTION: learned_projection}</li>
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.add_td_learning_pathway">
-<code class="descname">add_td_learning_pathway</code><span class="sig-paren">(</span><em>pathway</em>, <em>learning_rate=0.05</em>, <em>error_function=None</em>, <em>learning_update: &lt;typecheck.tc_predicates.any object at 0x114a00748&gt; = 'online'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_td_learning_pathway" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_td_learning_pathway</code><span class="sig-paren">(</span><em>pathway</em>, <em>learning_rate=0.05</em>, <em>error_function=None</em>, <em>learning_update: &lt;typecheck.tc_predicates.any object at 0x11b5ff7f0&gt; = 'online'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_td_learning_pathway" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convenience method that calls <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway" title="psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway"><code class="xref any py py-meth docutils literal"><span class="pre">add_linear_learning_pathway</span></code></a> with <a href="#id6"><span class="problematic" id="id7">**</span></a>learning_function**=`TDLearning`</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1745,12 +1752,23 @@ LEARNED_PROJECTION: learned_projection}</li>
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>predicted_input=None</em>, <em>control_allocation=None</em>, <em>num_simulation_trials=None</em>, <em>runtime_params=None</em>, <em>base_context=&lt;psyneulink.core.globals.context.Context object&gt;</em>, <em>context=None</em>, <em>execution_mode=False</em>, <em>return_results=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.evaluate" title="Permalink to this definition">¶</a></dt>
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>predicted_input=None</em>, <em>control_allocation=None</em>, <em>num_simulation_trials=None</em>, <em>runtime_params=None</em>, <em>base_context=&lt;psyneulink.core.globals.context.Context object&gt;</em>, <em>context=None</em>, <em>execution_mode=False</em>, <em>return_results=False</em>, <em>block_simulate=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.evaluate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Runs a simulation of the <a class="reference internal" href="#"><span class="doc">Composition</span></a>, with the specified control_allocation, excluding its
 <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> in order to return the
 <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a> of the Composition, according to its
 <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> under that control_allocation. All values are
 reset to pre-simulation values at the end of the simulation.</p>
+<p>If <code class="xref any docutils literal"><span class="pre">block_simulate</span></code> is set to True, the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> will attempt to use the
+entire input set provided to the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method of the <a class="reference internal" href="#"><span class="doc">Composition</span></a> as input for the
+simulated call to <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a>. If it is not, the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> will
+use the inputs slated for its next or previous execution, depending on whether the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller_mode" title="psyneulink.core.compositions.composition.Composition.controller_mode"><code class="xref any py py-attr docutils literal"><span class="pre">controller_mode</span></code></a> of the
+<a class="reference internal" href="#"><span class="doc">Composition</span></a> is set to <code class="xref any docutils literal"><span class="pre">before</span></code> or <code class="xref any docutils literal"><span class="pre">after</span></code>, respectively.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Block simulation can not be used if the Composition’s stimuli were specified as a generator. If
+<code class="xref any docutils literal"><span class="pre">block_simulate</span></code> is set to True and the input type for the Composition was a generator,
+block simulation will be disabled for the current execution of <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.evaluate" title="psyneulink.core.compositions.composition.Composition.evaluate"><code class="xref any py py-meth docutils literal"><span class="pre">evaluate</span></code></a>.</p>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -2221,7 +2239,7 @@ by checking whether any of its nodes are stateful.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.2.0',
+               VERSION:'0.7.2.0+150.gc575d03',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

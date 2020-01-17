@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCControlMechanism &mdash; PsyNeuLink 0.7.2.0 documentation</title>
+  <title>LCControlMechanism &mdash; PsyNeuLink 0.7.2.0+150.gc575d03 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.2.0
+                  0.7.2.0+150
                 </div>
               
             
@@ -277,7 +277,7 @@ LCControlMechanism’s <a class="reference internal" href="#psyneulink.library.c
 <p>The Mechanisms to be modulated by an LCControlMechanism are specified in the <strong>modulated_mechanisms</strong> argument of its
 constructor. An LCControlMechanism controls a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> by modifying the <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> of the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  Therefore, any Mechanism
 specified for control by an LCControlMechanism must be either a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>, or a Mechanism that uses a
-<code class="xref any docutils literal"><span class="pre">TransferFunction</span></code> or a class of <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> that implements a <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a>.  The <strong>modulate_mechanisms</strong> argument must be a list of such Mechanisms. The keyword
+<a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.TransferFunction" title="psyneulink.core.components.functions.transferfunctions.TransferFunction"><code class="xref any py py-class docutils literal"><span class="pre">TransferFunction</span></code></a> or a class of <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> that implements a <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a>.  The <strong>modulate_mechanisms</strong> argument must be a list of such Mechanisms. The keyword
 <em>ALL</em> can also be used to specify all of the eligible <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessMechanisms</span></a> in all of the
 <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a> to which the LCControlMechanism belongs.  If a Mechanism specified in the
 <strong>modulated_mechanisms</strong> argument does not implement a multiplicative_param, it is ignored. A <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> is
@@ -757,7 +757,7 @@ and the <a class="reference internal" href="Functions.html#function-modulatory-p
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.2.0',
+               VERSION:'0.7.2.0+150.gc575d03',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

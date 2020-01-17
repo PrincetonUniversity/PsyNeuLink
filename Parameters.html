@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0.7.2.0 documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0.7.2.0+150.gc575d03 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.2.0
+                  0.7.2.0+150
                 </div>
               
             
@@ -201,9 +201,9 @@ access to the data used in actual computations - <a class="reference internal" h
 and <a class="reference internal" href="Log.html"><span class="doc">logged values</span></a>.</p>
 <div class="section" id="defaults">
 <span id="parameter-defaults"></span><h2>Defaults<a class="headerlink" href="#defaults" title="Permalink to this headline">¶</a></h2>
-<p>Parameters have two types of defaults: <em>instance</em> defaults and <em>class</em> defaults. Class defaults belong to a PNL class, and suggest
-valid types and shapes of Parameter values. Instance defaults belong to an instance of a PNL class, and are used to validate
-compatibility between this instance and other PNL objects. Given a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> <em>t</em>:</p>
+<p>Parameters have two types of defaults: <em>instance</em> defaults and <em>class</em> defaults. Class defaults belong to a PNL class,
+and suggest valid types and shapes of Parameter values. Instance defaults belong to an instance of a PNL class,
+and are used to validate compatibility between this instance and other PNL objects. Given a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> <em>t</em>:</p>
 <blockquote>
 <div><ul class="simple">
 <li>instance defaults are accessible by <code class="docutils literal"><span class="pre">t.defaults</span></code></li>
@@ -385,7 +385,7 @@ get or set the default value of the associated <code class="xref py py-class doc
 
 <dl class="class">
 <dt id="psyneulink.core.globals.parameters.Parameter">
-<em class="property">class </em><code class="descclassname">psyneulink.core.globals.parameters.</code><code class="descname">Parameter</code><span class="sig-paren">(</span><em>default_value=None</em>, <em>name=None</em>, <em>stateful=True</em>, <em>modulable=False</em>, <em>structural=False</em>, <em>modulation_combination_function=None</em>, <em>read_only=False</em>, <em>function_arg=True</em>, <em>pnl_internal=False</em>, <em>aliases=None</em>, <em>user=True</em>, <em>values=None</em>, <em>getter=None</em>, <em>setter=None</em>, <em>loggable=True</em>, <em>log=None</em>, <em>log_condition=&lt;LogCondition.OFF: 0&gt;</em>, <em>history=None</em>, <em>history_max_length=1</em>, <em>history_min_length=0</em>, <em>fallback_default=False</em>, <em>retain_old_simulation_data=False</em>, <em>constructor_argument=None</em>, <em>spec=None</em>, <em>parse_spec=False</em>, <em>valid_types=None</em>, <em>_owner=None</em>, <em>_inherited=False</em>, <em>_user_specified=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.globals.parameters.</code><code class="descname">Parameter</code><span class="sig-paren">(</span><em>default_value=None</em>, <em>name=None</em>, <em>stateful=True</em>, <em>modulable=False</em>, <em>structural=False</em>, <em>modulation_combination_function=None</em>, <em>read_only=False</em>, <em>function_arg=True</em>, <em>function_parameter=False</em>, <em>pnl_internal=False</em>, <em>aliases=None</em>, <em>user=True</em>, <em>values=None</em>, <em>getter=None</em>, <em>setter=None</em>, <em>loggable=True</em>, <em>log=None</em>, <em>log_condition=&lt;LogCondition.OFF: 0&gt;</em>, <em>history=None</em>, <em>history_max_length=1</em>, <em>history_min_length=0</em>, <em>fallback_default=False</em>, <em>retain_old_simulation_data=False</em>, <em>constructor_argument=None</em>, <em>spec=None</em>, <em>parse_spec=False</em>, <em>valid_types=None</em>, <em>_owner=None</em>, <em>_inherited=False</em>, <em>_user_specified=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="attribute">
 <dt id="psyneulink.core.globals.parameters.Parameter.default_value">
 <code class="descname">default_value</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.default_value" title="Permalink to this definition">¶</a></dt>
@@ -713,10 +713,7 @@ inspection.</p>
 <dt id="psyneulink.core.globals.parameters.Parameter.constructor_argument">
 <code class="descname">constructor_argument</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.constructor_argument" title="Permalink to this definition">¶</a></dt>
 <dd><p>if not None, this indicates the argument in the owning Component’s
-constructor that this Parameter corresponds to. Typically this is
-used in Parameters that save specification types, as in
-<code class="xref any docutils literal"><span class="pre">input_ports_spec</span></code> and
-<code class="xref any docutils literal"><span class="pre">output_ports_spec</span></code></p>
+constructor that this Parameter corresponds to.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -925,7 +922,7 @@ refers to another <a class="reference internal" href="#psyneulink.core.globals.p
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.2.0',
+               VERSION:'0.7.2.0+150.gc575d03',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

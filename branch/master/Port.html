@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Ports &mdash; PsyNeuLink 0.7.2.0 documentation</title>
+  <title>Ports &mdash; PsyNeuLink 0.7.2.0+150.gc575d03 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.2.0
+                  0.7.2.0+150
                 </div>
               
             
@@ -483,9 +483,9 @@ The following types of Projections can be specified for each type of Port:</p>
 <p><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a></p>
 <p class="last"><a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection(s)</span></a></p>
 </td>
-<td><p class="first"><code class="xref any docutils literal"><span class="pre">path_afferents</span></code></p>
-<p><code class="xref any docutils literal"><span class="pre">mod_afferents</span></code></p>
-<p class="last"><code class="xref any docutils literal"><span class="pre">mod_afferents</span></code></p>
+<td><p class="first"><a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.path_afferents" title="psyneulink.core.components.ports.port.Port_Base.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a></p>
+<p><a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.mod_afferents" title="psyneulink.core.components.ports.port.Port_Base.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a></p>
+<p class="last"><a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.mod_afferents" title="psyneulink.core.components.ports.port.Port_Base.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a></p>
 </td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a></td>
@@ -497,9 +497,9 @@ The following types of Projections can be specified for each type of Port:</p>
 <p><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a></p>
 <p class="last"><a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection(s)</span></a></p>
 </td>
-<td><p class="first"><code class="xref any docutils literal"><span class="pre">efferents</span></code></p>
-<p><code class="xref any docutils literal"><span class="pre">mod_afferents</span></code></p>
-<p class="last"><code class="xref any docutils literal"><span class="pre">mod_afferents</span></code></p>
+<td><p class="first"><a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.efferents" title="psyneulink.core.components.ports.port.Port_Base.efferents"><code class="xref any py py-attr docutils literal"><span class="pre">efferents</span></code></a></p>
+<p><a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.mod_afferents" title="psyneulink.core.components.ports.port.Port_Base.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a></p>
+<p class="last"><a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.mod_afferents" title="psyneulink.core.components.ports.port.Port_Base.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a></p>
 </td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="ModulatorySignal.html"><span class="doc">Modulatory Signals</span></a></td>
@@ -585,7 +585,8 @@ assigns one of its parameters as its <em>ADDITIVE_PARAM</em> and another as its 
 <a class="reference internal" href="ModulatorySignal.html#psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.modulation" title="psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute of a ModulatorySignal determines which of these to modify when the
 Port uses it <a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to calculate its <a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.  However, the
 ModulatorySignal can also be configured to override the Port’s <a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (i.e., assign it directly),
-or to disable modulation, using one of the values of <code class="xref any docutils literal"><span class="pre">ModulationParam</span></code> for its <a class="reference internal" href="ModulatorySignal.html#psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.modulation" title="psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a> for a more detailed discussion).</p>
+or to disable modulation, using either the keyword <em>OVERRIDE</em> or <em>DSIABLE</em>, respectively, to specify the value for its
+<a class="reference internal" href="ModulatorySignal.html#psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.modulation" title="psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a> for a more detailed discussion).</p>
 </div>
 </div>
 <div class="section" id="execution">
@@ -850,7 +851,7 @@ as in the first example above (see <a class="reference internal" href="Mechanism
 <span id="port-class-reference"></span><h3>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="psyneulink.core.components.ports.port.Port_Base">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.ports.port.</code><code class="descname">Port_Base</code><span class="sig-paren">(</span><em>owner: &lt;typecheck.tc_predicates.any object at 0x113cacf28&gt;</em>, <em>variable=None</em>, <em>size=None</em>, <em>projections=None</em>, <em>function=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em>, <em>**kargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.ports.port.</code><code class="descname">Port_Base</code><span class="sig-paren">(</span><em>owner: &lt;typecheck.tc_predicates.any object at 0x11ab63da0&gt;</em>, <em>variable=None</em>, <em>size=None</em>, <em>projections=None</em>, <em>function=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for Port.
 The arguments below can be used in the constructor for any subclass of Port.
 See <a class="reference internal" href="Component.html#component-class-reference"><span class="std std-ref">Component</span></a> for additional arguments and attributes.</p>
@@ -1064,7 +1065,7 @@ details).</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.2.0',
+               VERSION:'0.7.2.0+150.gc575d03',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

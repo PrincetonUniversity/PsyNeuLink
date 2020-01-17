@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationFunctions &mdash; PsyNeuLink 0.7.2.0 documentation</title>
+  <title>OptimizationFunctions &mdash; PsyNeuLink 0.7.2.0+150.gc575d03 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.2.0
+                  0.7.2.0+150
                 </div>
               
             
@@ -247,7 +247,7 @@ all values of <a class="reference internal" href="#psyneulink.core.components.fu
 <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_termination_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_termination_function"><code class="xref any py py-attr docutils literal"><span class="pre">search_termination_function</span></code></a> returns <code class="xref any docutils literal"><span class="pre">True</span></code>.  The <code class="xref any docutils literal"><span class="pre">function</span></code> returns:</p>
 <ul class="simple">
 <li>the last sample evaluated (which may or may not be the optimal value, depending on the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>);</li>
-<li>the value of <code class="xref any docutils literal"><span class="pre">objective_function</span></code> associated with the last sample;</li>
+<li>the value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> associated with the last sample;</li>
 <li>two lists, that may contain all of the samples evaluated and their values, depending on whether <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.save_samples" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.save_samples"><code class="xref any py py-attr docutils literal"><span class="pre">save_samples</span></code></a> and/or <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.save_values" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.save_values"><code class="xref any py py-attr docutils literal"><span class="pre">save_vales</span></code></a> are <code class="xref any docutils literal"><span class="pre">True</span></code>,
 respectively.</li>
 </ul>
@@ -260,13 +260,13 @@ its parameters when specifying the OptimizationFunction in the constructor for a
 example, an OptimizationFunction may use for its <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>
 or <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_function"><code class="xref any py py-attr docutils literal"><span class="pre">search_function</span></code></a> a method of the Component to which it is being
 assigned;  however, those methods will not yet be available, as the Component itself has not yet been
-constructed. This can be handled by calling the OptimizationFunction’s <code class="xref any docutils literal"><span class="pre">reinitialization</span></code> method after the Component has been instantiated, with a parameter
+constructed. This can be handled by calling the OptimizationFunction’s <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.reinitialize" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method after the Component has been instantiated, with a parameter
 specification dictionary with a key for each entry that is the name of a parameter and its value the value to
 be assigned to the parameter.  This is done automatically for Mechanisms that take an ObjectiveFunction as
-their <code class="xref any docutils literal"><span class="pre">function</span></code> (such as the <a class="reference internal" href="EVCControlMechanism.html"><span class="doc">EVCControlMechanism</span></a>, <code class="xref any docutils literal"><span class="pre">LVOCControlMechanism</span></code> and
-<code class="xref any docutils literal"><span class="pre">ParamterEstimationControlMechanism</span></code>), but will require it be done explicitly for Components for which that
-is not the case. A warning is issued if defaults are used for the arguments of an OptimizationFunction or
-its subclasses;  this can be suppressed by specifying the relevant argument(s) as <code class="xref any docutils literal"><span class="pre">NotImplemnted</span></code>.</p>
+their <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (such as the <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a>), but will require it be
+done explicitly for Components for which that is not the case. A warning is issued if defaults are used for
+the arguments of an OptimizationFunction or its subclasses;  this can be suppressed by specifying the
+relevant argument(s) as <code class="xref any docutils literal"><span class="pre">NotImplemnted</span></code>.</p>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -935,7 +935,7 @@ deterministic function.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.2.0',
+               VERSION:'0.7.2.0+150.gc575d03',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

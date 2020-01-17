@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OutputPort &mdash; PsyNeuLink 0.7.2.0 documentation</title>
+  <title>OutputPort &mdash; PsyNeuLink 0.7.2.0+150.gc575d03 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.2.0
+                  0.7.2.0+150
                 </div>
               
             
@@ -543,9 +543,12 @@ using the following:</p>
 <div><p><em>OWNER_VALUE</em> – keyword specifying the entire <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the OutputPort’s <code class="xref any docutils literal"><span class="pre">owner</span></code>.</p>
 <p><em>(OWNER_VALUE, &lt;int&gt;)</em> – tuple specifying an item of the <code class="xref any docutils literal"><span class="pre">owner</span></code>’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> indexed by the int;  indexing begins with 0 (e.g.; 1 references the 2nd item).</p>
 <p><em>&lt;attribute name&gt;</em> – the name of an attribute of the OutputPort’s <code class="xref any docutils literal"><span class="pre">owner</span></code> (must be one
-in the <code class="xref any docutils literal"><span class="pre">owner</span></code>’s <code class="xref any docutils literal"><span class="pre">params_dict</span></code> dictionary); returns the value
+in the <code class="xref any docutils literal"><span class="pre">owner</span></code>’s <code class="xref any docutils literal"><span class="pre">Parameters</span></code> class); returns the value
 of the named attribute for use in the OutputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.variable" title="psyneulink.core.components.ports.outputport.OutputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
-<p><em>PARAMS_DICT</em> – keyword specifying the <code class="xref any docutils literal"><span class="pre">owner</span></code> Mechanism’s entire <code class="xref any docutils literal"><span class="pre">params_dict</span></code> dictionary, that contains entries for all of it accessible attributes.  The
+<p><em>PARAMS_DICT</em> – keyword specifying the <code class="xref any docutils literal"><span class="pre">owner</span></code> Mechanism’s
+entire dictionary of Parameters, that contains its own Parameters, its
+<code class="xref any docutils literal"><span class="pre">function</span> <span class="pre">&lt;Mechanism.function</span></code>’s Parameters, and the current <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
+for the Mechanism’s <code class="xref any docutils literal"><span class="pre">input_ports</span></code>. The
 OutputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.function" title="psyneulink.core.components.ports.outputport.OutputPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> must be able to parse the dictionary.</p>
 <p><em>List[&lt;any of the above items&gt;]</em> – this assigns the value of each item in the list to the corresponding item of
 the OutputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.variable" title="psyneulink.core.components.ports.outputport.OutputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.  This must be compatible (in number and type of elements) with
@@ -764,11 +767,17 @@ If the OutputPort has been assigned to:
 </ul>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="psyneulink.core.components.ports.outputport.OutputPort.projection_type">
+<code class="descname">projection_type</code><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort.projection_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">MappingProjection</span></code></p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="psyneulink.core.components.ports.outputport.StandardOutputPorts">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.ports.outputport.</code><code class="descname">StandardOutputPorts</code><span class="sig-paren">(</span><em>owner: psyneulink.core.components.component.Component</em>, <em>output_port_dicts: list</em>, <em>indices: &lt;typecheck.framework.optional object at 0x113f74da0&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.StandardOutputPorts" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.ports.outputport.</code><code class="descname">StandardOutputPorts</code><span class="sig-paren">(</span><em>owner: psyneulink.core.components.component.Component</em>, <em>output_port_dicts: list</em>, <em>indices: &lt;typecheck.framework.optional object at 0x11ab5e2e8&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.StandardOutputPorts" title="Permalink to this definition">¶</a></dt>
 <dd><p>Collection of OutputPort specification dicts for <a class="reference internal" href="#outputport-standard"><span class="std std-ref">standard OutputPorts</span></a> of a class.</p>
 <p>Parses specification of VARIABLE, assigning indices to OWNER_VALUE if specified.
 Adds &lt;NAME_INDEX&gt; of each OutputPort as property of the owner’s class, that returns the index of the OutputPort
@@ -923,7 +932,7 @@ ignoring any VARIABLE entries previously specified for individual OutputPorts;</
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.2.0',
+               VERSION:'0.7.2.0+150.gc575d03',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
