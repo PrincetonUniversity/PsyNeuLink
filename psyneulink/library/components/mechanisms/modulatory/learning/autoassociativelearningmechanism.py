@@ -279,7 +279,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                     see `modulation <AutoAssociativeLearningMechanism.modulation>`
 
                     :default value: ADDITIVE
-                    :type: `ModulationParam`
+                    :type: str
 
         """
         function = Parameter(Hebbian, stateful=False, loggable=False)
@@ -308,14 +308,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     learning_type = LearningType.UNSUPERVISED
     learning_timing = LearningTiming.EXECUTION_PHASE
 
-    paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        CONTROL_PROJECTIONS: None,
-        INPUT_PORTS:input_port_names,
-        OUTPUT_PORTS:[{NAME:LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
-                        VARIABLE: (OWNER_VALUE,0)}
-                       ]})
-
     @tc.typecheck
     def __init__(self,
                  default_variable:tc.any(list, np.ndarray),
@@ -329,10 +321,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                  prefs:is_pref_set=None,
                  **kwargs
                  ):
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  params=params)
 
         # # USE FOR IMPLEMENTATION OF deferred_init()
         # # Store args for deferred initialization

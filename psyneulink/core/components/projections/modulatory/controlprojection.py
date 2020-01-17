@@ -247,10 +247,8 @@ class ControlProjection(ModulatoryProjection_Base):
             pnl_internal=True
         )
 
-    paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        PROJECTION_SENDER: ControlMechanism,
-    })
+
+    projection_sender = ControlMechanism
 
     @tc.typecheck
     def __init__(self,
@@ -264,29 +262,27 @@ class ControlProjection(ModulatoryProjection_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  **kwargs):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  control_signal_params=control_signal_params,
-                                                  params=params)
-
         # If receiver has not been assigned, defer init to Port.instantiate_projection_to_state()
         if (sender is None or sender.initialization_status == ContextFlags.DEFERRED_INIT or
                 inspect.isclass(receiver) or receiver is None or
                     receiver.initialization_status == ContextFlags.DEFERRED_INIT):
             self.initialization_status = ContextFlags.DEFERRED_INIT
 
-        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
+        # Validate sender (as variable) and params, and assign to variable
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
         # super(ControlSignal_Base, self).__init__(sender=sender,
-        super(ControlProjection, self).__init__(sender=sender,
-                                                receiver=receiver,
-                                                weight=weight,
-                                                exponent=exponent,
-                                                function=function,
-                                                params=params,
-                                                name=name,
-                                                prefs=prefs,
-                                                **kwargs)
+        super(ControlProjection, self).__init__(
+            sender=sender,
+            receiver=receiver,
+            weight=weight,
+            exponent=exponent,
+            function=function,
+            control_signal_params=control_signal_params,
+            params=params,
+            name=name,
+            prefs=prefs,
+            **kwargs
+        )
 
     def _instantiate_sender(self, sender, params=None, context=None):
         """Check if DefaultController is being assigned and if so configure it for the requested ControlProjection

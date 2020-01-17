@@ -323,7 +323,17 @@ class SampleIterator(Iterator):
             self.generator = specification                       # the list
 
             def generate_current_value():                        # index into the list
-                return self.generator[self.current_step]
+                # KDM 12/11/19: for currently unknown and unreplicable
+                # reasons, the checks in __next__ will fail to ensure
+                # that self.current_step is less than the length of
+                # self.generator, and an IndexError will be thrown
+                # occurs in tests/log/test_log.py::TestFiltering
+                # and tests/models/test_greedy_agent.py due to
+                # GridSearch use
+                try:
+                    return self.generator[self.current_step]
+                except IndexError:
+                    raise StopIteration
 
         elif isinstance(specification, SampleSpec):
 

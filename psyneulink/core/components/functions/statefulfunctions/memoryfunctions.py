@@ -23,7 +23,6 @@ Functions that store and can return a record of their input.
 """
 
 from collections import deque, OrderedDict
-from random import choice
 
 import numpy as np
 import typecheck as tc
@@ -191,12 +190,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         history = None
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        NOISE: None,
-        RATE: None
-    })
+        initializer = Parameter(np.array([]), pnl_internal=True)
 
 
     @tc.typecheck
@@ -216,7 +210,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                  # rate: tc.optional(tc.any(int, float, list, np.ndarray)) = 1.0,
                  # noise: tc.optional(tc.any(int, float, list, np.ndarray, callable)) = 0.0,
                  history: tc.optional(int) = None,
-                 initializer=[],
+                 initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
@@ -224,20 +218,16 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         if default_variable is None:
             default_variable = []
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(rate=rate,
-                                                  initializer=initializer,
-                                                  noise=noise,
-                                                  history=history,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
+            rate=rate,
             initializer=initializer,
+            noise=noise,
+            history=history,
             params=params,
             owner=owner,
             prefs=prefs,
-            )
+        )
 
         self.has_initializers = True
 
@@ -250,8 +240,13 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         return previous_value
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
-
-        self.has_initializers = True
+        self.parameters.previous_value._set(
+            self._initialize_previous_value(
+                self.parameters.initializer._get(context),
+                context
+            ),
+            context
+        )
 
     @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, *args, context=None):
@@ -680,18 +675,10 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         rate = Parameter(1.0, modulable=True)
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_entries = Parameter(1000)
-        random_state = Parameter(None, modulable=False, stateful=True, pnl_internal=True)
+        random_state = Parameter(None, stateful=True, loggable=False)
 
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        NOISE: None,
-        RATE: None,
-        RETRIEVAL_PROB: 1.0,
-        STORAGE_PROB: 1.0
-    })
 
 
     @tc.typecheck
@@ -721,25 +708,21 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
         self._memory = []
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(retrieval_prob=retrieval_prob,
-                                                  storage_prob=storage_prob,
-                                                  initializer=initializer,
-                                                  duplicate_keys=duplicate_keys,
-                                                  equidistant_keys_select=equidistant_keys_select,
-                                                  rate=rate,
-                                                  noise=noise,
-                                                  max_entries=max_entries,
-                                                  random_state=random_state,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
+            retrieval_prob=retrieval_prob,
+            storage_prob=storage_prob,
             initializer=initializer,
+            duplicate_keys=duplicate_keys,
+            equidistant_keys_select=equidistant_keys_select,
+            rate=rate,
+            noise=noise,
+            max_entries=max_entries,
+            random_state=random_state,
             params=params,
             owner=owner,
             prefs=prefs,
-            )
+        )
 
         if self.previous_value.size != 0:
             self.parameters.key_size._set(len(self.previous_value[KEYS][0]), Context())
@@ -1021,9 +1004,16 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                     warnings.warn(f"Attempt to initialize memory of {self.__class__.__name__} with an entry ({entry}) "
                                   f"that has the same key as a previous one, while 'duplicate_keys'==False; "
                                   f"that entry has been skipped")
-            return self._memory
+            return np.asarray(self._memory)
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
+        self.parameters.previous_value._set(
+            self._initialize_previous_value(
+                self.parameters.initializer._get(context),
+                context
+            ),
+            context
+        )
 
         self.has_initializers = True
 
@@ -1219,7 +1209,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                 return [[0]* self.parameters.key_size._get(context),
                         [0]* self.parameters.val_size._get(context)]
             if self.equidistant_keys_select == RANDOM:
-                index_of_selected_item = choice(indices_of_selected_items)
+                random_state = self.get_current_function_param('random_state', context)
+                index_of_selected_item = random_state.choice(indices_of_selected_items)
             elif self.equidistant_keys_select == OLDEST:
                 index_of_selected_item = indices_of_selected_items[0]
             elif self.equidistant_keys_select == NEWEST:

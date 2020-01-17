@@ -2,7 +2,6 @@ import numpy as np
 import psyneulink as pnl
 import pytest
 
-from psyneulink.core.globals.utilities import unproxy_weakproxy
 
 # (ancestor, child, should_override)
 ancestor_child_data = [
@@ -74,11 +73,11 @@ def test_parameter_values_overriding(ancestor, child, should_override, reset_var
 @pytest.mark.parametrize('obj, param_name, alias_name', param_alias_data)
 def test_aliases(obj, param_name, alias_name):
     obj = obj()
-    assert unproxy_weakproxy(obj.parameters._owner) is obj
-    assert unproxy_weakproxy(getattr(obj.parameters, alias_name)._owner._owner) is obj
+    assert obj.parameters._owner is obj
+    assert getattr(obj.parameters, alias_name)._owner._owner is obj
     assert getattr(obj.defaults, param_name) == getattr(obj.defaults, alias_name)
     # if hasattr(getattr(obj.parameters, alias_name), 'source'):
-    assert unproxy_weakproxy(getattr(obj.parameters, alias_name).source) is getattr(obj.parameters, param_name)
+    assert getattr(obj.parameters, alias_name).source is getattr(obj.parameters, param_name)
 
 
 @pytest.mark.parametrize('obj, param_name, alias_name', param_alias_data)

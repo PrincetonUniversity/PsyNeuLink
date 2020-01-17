@@ -90,7 +90,7 @@ class LLVMBuilderContext:
     @classmethod
     def get_unique_name(cls, name: str):
         cls.__uniq_counter += 1
-        name = re.sub(r"[- ()\[\]]", "_", name)
+        name = re.sub(r"[^a-zA-Z0-9_]", "_", name)
         return name + '_' + str(cls.__uniq_counter)
 
     def get_builtin(self, name: str, args=[], function_type=None):
@@ -137,15 +137,15 @@ class LLVMBuilderContext:
             cache[obj] = obj._gen_llvm_function()
         return cache[obj]
 
-    def import_llvm_function(self, name) -> ir.Function:
+    def import_llvm_function(self, obj) -> ir.Function:
         """
         Get function handle if function exists in current modele.
         Create function declaration if it exists in a older module.
         """
         try:
-            f = self.gen_llvm_function(name)
+            f = self.gen_llvm_function(obj)
         except AttributeError:
-            f = _find_llvm_function(name, _all_modules | {self.module})
+            f = _find_llvm_function(obj, _all_modules | {self.module})
         # Add declaration to the current module
         if f.name not in self.module.globals:
             decl_f = ir.Function(self.module, f.type.pointee, f.name)
@@ -249,26 +249,24 @@ class LLVMBuilderContext:
     def inject_printf(self, builder, fmt, *args, override_debug=False):
         if "print_values" not in debug_env and not override_debug:
             return
+
+        ir_module = builder.function.module
         fmt += "\0"
 
         int8 = ir.IntType(8)
-        stack_save = self.get_builtin("stacksave", [],
-                                      ir.FunctionType(int8.as_pointer(), []))
-        stack_restore = self.get_builtin("stackrestore", [],
-                                         ir.FunctionType(ir.VoidType(), [int8.as_pointer()]))
-
-        old_stack = builder.call(stack_save, [])
         fmt_data = bytearray(fmt.encode("utf8"))
+        fmt_ty = ir.ArrayType(int8, len(fmt_data))
+        global_fmt = ir.GlobalVariable(ir_module, fmt_ty,
+                                       name="printf_fmt_" + str(len(ir_module.globals)))
+        global_fmt.linkage = "internal"
+        global_fmt.global_constant = True
+        global_fmt.initializer = fmt_ty(fmt_data)
 
-        # Allocate array to ease initialization
-        fmt = builder.alloca(ir.ArrayType(int8, len(fmt_data)))
-        builder.store(fmt.type.pointee(fmt_data), fmt)
-        fmt_ptr = builder.gep(fmt, [self.int32_ty(0), self.int32_ty(0)])
+        fmt_ptr = builder.gep(global_fmt, [self.int32_ty(0), self.int32_ty(0)])
 
         printf = self.get_builtin("printf")
         builder.call(printf, [fmt_ptr] + list(args))
 
-        builder.call(stack_restore, [old_stack])
 
     def inject_printf_float_array(self, builder, array, prefix="", suffix="\n", override_debug=False):
         self.inject_printf(builder, prefix, override_debug=override_debug)
@@ -279,7 +277,7 @@ class LLVMBuilderContext:
         self.inject_printf(builder, suffix, override_debug=override_debug)
 
     @contextmanager
-    def _gen_composition_exec_context(self, composition, simulation=False, suffix=""):
+    def _gen_composition_exec_context(self, composition, simulation=False, suffix="", extra_args=[]):
         cond_gen = ConditionGenerator(self, composition)
 
         name = 'exec_sim_wrap_' if simulation else 'exec_wrap_'
@@ -289,13 +287,13 @@ class LLVMBuilderContext:
                 self.get_input_struct_type(composition).as_pointer(),
                 self.get_data_struct_type(composition).as_pointer(),
                 cond_gen.get_condition_struct_type().as_pointer()]
-        builder = self.create_llvm_function(args, composition, name)
+        builder = self.create_llvm_function(args + extra_args, composition, name)
         llvm_func = builder.function
 
         for a in llvm_func.args:
             a.attributes.add('noalias')
 
-        state, params, comp_in, data_arg, cond = llvm_func.args
+        state, params, comp_in, data_arg, cond, *_ = llvm_func.args
         if "const_params" in debug_env:
             const_params = params.type.pointee(composition._get_param_initializer(None))
             params = builder.alloca(const_params.type, name="const_params_loc")
@@ -322,11 +320,17 @@ class LLVMBuilderContext:
     def gen_autodiffcomp_learning_exec(self, composition, simulation=False):
         composition._build_pytorch_representation(composition.default_execution_id)
         pytorch_model = composition.parameters.pytorch_representation.get(composition.default_execution_id)
-        with self._gen_composition_exec_context(composition, simulation, "_learning") as (builder, data, params, cond_gen):
-            state, _, comp_in, _, cond = builder.function.args
+        learning_struct_ty = pnlvm.ir.LiteralStructType((
+            self.int32_ty,
+            self.int32_ty,
+            pytorch_model._get_learning_struct_type(self).as_pointer(),
+        ))
+        with self._gen_composition_exec_context(composition, simulation, "_learning", extra_args=[learning_struct_ty.as_pointer()]) as (builder, data, params, cond_gen):
+            state, _, comp_in, _, cond, learning = builder.function.args
 
             pytorch_model._gen_llvm_training_function_body(self, builder, state,
-                                                           params, comp_in, data)
+                                                           params, comp_in,
+                                                           data, learning)
             # Call output CIM
             output_cim_w = composition._get_node_wrapper(composition.output_CIM)
             output_cim_f = self.import_llvm_function(output_cim_w)
@@ -351,9 +355,6 @@ class LLVMBuilderContext:
             # Call pytorch internal compiled llvm func
             input_cim_idx = composition._get_node_index(composition.input_CIM)
 
-            model_params = builder.gep(params, [self.int32_ty(0),
-                                                self.int32_ty(2)])
-
             # Extract the input that should be inserted into the model
             model_input = builder.gep(data, [self.int32_ty(0),
                                              self.int32_ty(0),
@@ -361,13 +362,12 @@ class LLVMBuilderContext:
             model_output = builder.gep(data, [self.int32_ty(0)])
 
             pytorch_forward_func = self.import_llvm_function(pytorch_model)
-            builder.call(pytorch_forward_func, [state, model_params,
+            builder.call(pytorch_forward_func, [state, params,
                                                 model_input, model_output])
 
             # Call output CIM
             output_cim_w = composition._get_node_wrapper(composition.output_CIM)
             output_cim_f = self.import_llvm_function(output_cim_w)
-            builder.block.name = "invoke_" + output_cim_f.name
             builder.call(output_cim_f, [state, params, comp_in, data, data])
 
             return builder.function
@@ -514,12 +514,15 @@ class LLVMBuilderContext:
                 self.get_output_struct_type(composition).as_pointer(),
                 self.int32_ty.as_pointer(),
                 self.int32_ty.as_pointer()]
+        if learning:
+            exec_learning_f = self.import_llvm_function(composition)
+            args.append(exec_learning_f.args[-1].type)
         builder = self.create_llvm_function(args, composition, name)
         llvm_func = builder.function
         for a in llvm_func.args:
             a.attributes.add('noalias')
 
-        state, params, data, data_in, data_out, runs_ptr, inputs_ptr = llvm_func.args
+        state, params, data, data_in, data_out, runs_ptr, inputs_ptr, *learning_ptr = llvm_func.args
         # simulation does not care about the output
         # it extracts results of the controller objective mechanism
         if simulation:
@@ -556,9 +559,9 @@ class LLVMBuilderContext:
 
         if learning:
             # Call training function
-            data_in_ptr = builder.gep(data_in, [self.int32_ty(0)])
             exec_learning_f = self.import_llvm_function(composition)
-            builder.call(exec_learning_f, [state, params, data_in_ptr, data, cond])
+            builder.call(exec_learning_f, [state, params, data_in, data, cond,
+                                           *learning_ptr])
 
         runs = builder.load(runs_ptr, "runs")
         with pnlvm.helpers.for_loop_zero_inc(builder, runs, "run_loop") as (b, iters):

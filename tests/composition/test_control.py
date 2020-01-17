@@ -8,6 +8,7 @@ import re
 from psyneulink.core.components.functions.optimizationfunctions import OptimizationFunctionError
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleIteratorError, SampleSpec
 from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, PROJECTIONS
+from psyneulink.core.globals.log import LogCondition
 
 class TestControlSpecification:
     # These test the coordination of adding a node with a control specification to a Composition
@@ -108,6 +109,124 @@ class TestControlSpecification:
         assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
         assert np.allclose(comp.controller.control[0].allocation_samples(), [0.2, 0.5, 0.8])
+
+    def test_deferred_init(self):
+        # Test to insure controller works the same regardless of whether it is added to a composition before or after
+        # the nodes it connects to
+
+        # Mechanisms
+        Input = pnl.TransferMechanism(name='Input')
+        reward = pnl.TransferMechanism(output_ports=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE],
+                                       name='reward')
+        Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate=(1.0,
+                                                                             pnl.ControlProjection(function=pnl.Linear,
+                                                                                                   control_signal_params={
+                                                                                                       pnl.ALLOCATION_SAMPLES: np.arange(
+                                                                                                               0.1,
+                                                                                                               1.01,
+                                                                                                               0.3)})),
+                                                                 threshold=(1.0,
+                                                                            pnl.ControlProjection(function=pnl.Linear,
+                                                                                                  control_signal_params={
+                                                                                                      pnl.ALLOCATION_SAMPLES:
+                                                                                                          np.arange(
+                                                                                                                  0.1,
+                                                                                                                  1.01,
+                                                                                                                  0.3)})),
+                                                                 noise=0.5,
+                                                                 starting_point=0,
+                                                                 t0=0.45),
+                           output_ports=[pnl.DECISION_VARIABLE,
+                                         pnl.RESPONSE_TIME,
+                                         pnl.PROBABILITY_UPPER_THRESHOLD],
+                           name='Decision')
+
+        comp = pnl.Composition(name="evc", retain_old_simulation_data=True)
+
+        ### add the controller to the Composition before we add the relevant mechanisms
+        comp.add_controller(controller=pnl.OptimizationControlMechanism(
+                agent_rep=comp,
+                features=[Input.input_port, reward.input_port],
+                feature_function=pnl.AdaptiveIntegrator(rate=0.5),
+                objective_mechanism=pnl.ObjectiveMechanism(
+                        function=pnl.LinearCombination(operation=pnl.PRODUCT),
+                        monitor=[reward,
+                                 Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
+                                 (Decision.output_ports[pnl.RESPONSE_TIME], -1, 1)]),
+                function=pnl.GridSearch(),
+                control_signals=[{PROJECTIONS: ("drift_rate", Decision),
+                                  ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
+                                 {PROJECTIONS: ("threshold", Decision),
+                                  ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
+        )
+        assert comp.controller.initialization_status == pnl.ContextFlags.DEFERRED_INIT
+
+        comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
+        comp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
+        task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
+        comp.add_linear_processing_pathway(task_execution_pathway)
+
+        comp.enable_controller = True
+
+        # comp._analyze_graph()
+
+        stim_list_dict = {
+            Input: [0.5, 0.123],
+            reward: [20, 20]
+        }
+
+        comp.run(inputs=stim_list_dict)
+
+        # Note: Removed decision variable OutputPort from simulation results because sign is chosen randomly
+        expected_sim_results_array = [
+            [[10.], [10.0], [0.0], [0.48999867], [0.50499983]],
+            [[10.], [10.0], [0.0], [1.08965888], [0.51998934]],
+            [[10.], [10.0], [0.0], [2.40680493], [0.53494295]],
+            [[10.], [10.0], [0.0], [4.43671978], [0.549834]],
+            [[10.], [10.0], [0.0], [0.48997868], [0.51998934]],
+            [[10.], [10.0], [0.0], [1.08459402], [0.57932425]],
+            [[10.], [10.0], [0.0], [2.36033556], [0.63645254]],
+            [[10.], [10.0], [0.0], [4.24948962], [0.68997448]],
+            [[10.], [10.0], [0.0], [0.48993479], [0.53494295]],
+            [[10.], [10.0], [0.0], [1.07378304], [0.63645254]],
+            [[10.], [10.0], [0.0], [2.26686573], [0.72710822]],
+            [[10.], [10.0], [0.0], [3.90353015], [0.80218389]],
+            [[10.], [10.0], [0.0], [0.4898672], [0.549834]],
+            [[10.], [10.0], [0.0], [1.05791834], [0.68997448]],
+            [[10.], [10.0], [0.0], [2.14222978], [0.80218389]],
+            [[10.], [10.0], [0.0], [3.49637662], [0.88079708]],
+            [[15.], [15.0], [0.0], [0.48999926], [0.50372993]],
+            [[15.], [15.0], [0.0], [1.08981011], [0.51491557]],
+            [[15.], [15.0], [0.0], [2.40822035], [0.52608629]],
+            [[15.], [15.0], [0.0], [4.44259627], [0.53723096]],
+            [[15.], [15.0], [0.0], [0.48998813], [0.51491557]],
+            [[15.], [15.0], [0.0], [1.0869779], [0.55939819]],
+            [[15.], [15.0], [0.0], [2.38198336], [0.60294711]],
+            [[15.], [15.0], [0.0], [4.33535807], [0.64492386]],
+            [[15.], [15.0], [0.0], [0.48996368], [0.52608629]],
+            [[15.], [15.0], [0.0], [1.08085171], [0.60294711]],
+            [[15.], [15.0], [0.0], [2.32712843], [0.67504223]],
+            [[15.], [15.0], [0.0], [4.1221271], [0.7396981]],
+            [[15.], [15.0], [0.0], [0.48992596], [0.53723096]],
+            [[15.], [15.0], [0.0], [1.07165729], [0.64492386]],
+            [[15.], [15.0], [0.0], [2.24934228], [0.7396981]],
+            [[15.], [15.0], [0.0], [3.84279648], [0.81637827]]
+        ]
+
+        for simulation in range(len(expected_sim_results_array)):
+            assert np.allclose(expected_sim_results_array[simulation],
+                               # Note: Skip decision variable OutputPort
+                               comp.simulation_results[simulation][0:3] + comp.simulation_results[simulation][4:6])
+
+        expected_results_array = [
+            [[20.0], [20.0], [0.0], [1.0], [2.378055160151634], [0.9820137900379085]],
+            [[20.0], [20.0], [0.0], [-0.1], [0.48999967725112503], [0.5024599801509442]]
+        ]
+
+        for trial in range(len(expected_results_array)):
+            np.testing.assert_allclose(comp.results[trial], expected_results_array[trial], atol=1e-08,
+                                       err_msg='Failed on expected_output[{0}]'.format(trial))
+
 
 class TestControlMechanisms:
 
@@ -398,7 +517,6 @@ class TestControlMechanisms:
                 ),
                 function=pnl.GridSearch(direction=pnl.MINIMIZE),
                 control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
-                                                   function=pnl.Linear,
                                                    variable=1.0,
                                                    intensity_cost_function=pnl.Linear(slope=0.0),
                                                    allocation_samples=pnl.SampleSpec(start=1.0, stop=5.0, num=5))])
@@ -416,7 +534,6 @@ class TestControlMechanisms:
                 ),
                 function=pnl.GridSearch(direction=pnl.MAXIMIZE),
                 control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
-                                                   function=pnl.Linear,
                                                    variable=1.0,
                                                    intensity_cost_function=pnl.Linear(slope=0.0),
                                                    allocation_samples=pnl.SampleSpec(start=1.0, stop=5.0, num=5))])
@@ -461,7 +578,6 @@ class TestControlMechanisms:
                 ),
                 function=pnl.GridSearch(direction=pnl.MAXIMIZE),
                 control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
-                                                   function=pnl.Linear,
                                                    variable=1.0,
                                                    intensity_cost_function=pnl.Linear(slope=0.0),
                                                    allocation_samples=pnl.SampleSpec(start=1.0,
@@ -481,7 +597,6 @@ class TestControlMechanisms:
                 ),
                 function=pnl.GridSearch(direction=pnl.MAXIMIZE),
                 control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
-                                                   function=pnl.Linear,
                                                    variable=1.0,
                                                    intensity_cost_function=pnl.Linear(slope=0.0),
                                                    allocation_samples=pnl.SampleSpec(start=1.0,
@@ -528,7 +643,6 @@ class TestControlMechanisms:
                 ),
                 function=pnl.GridSearch(direction=pnl.MINIMIZE),
                 control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
-                                                   function=pnl.Linear,
                                                    variable=1.0,
                                                    intensity_cost_function=pnl.Linear(slope=0.0),
                                                    allocation_samples=pnl.SampleSpec(start=1.0,
@@ -548,7 +662,6 @@ class TestControlMechanisms:
                 ),
                 function=pnl.GridSearch(direction=pnl.MINIMIZE),
                 control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
-                                                   function=pnl.Linear,
                                                    variable=1.0,
                                                    intensity_cost_function=pnl.Linear(slope=0.0),
                                                    allocation_samples=pnl.SampleSpec(start=1.0,
@@ -687,7 +800,6 @@ class TestControlMechanisms:
                                              function=pnl.GridSearch(),
                                              control_signals=[pnl.ControlSignal(
                                                  projections=[(pnl.GAIN, activation)],
-                                                 function=pnl.Linear,
                                                  variable=1.0,
                                                  intensity_cost_function=pnl.Linear(
                                                      slope=0.0),
@@ -714,7 +826,6 @@ class TestControlMechanisms:
                                              control_signals=[
                                                  pnl.ControlSignal(
                                                      projections=[(pnl.THRESHOLD, decisionMaker)],
-                                                     function=pnl.Linear,
                                                      variable=1.0,
                                                      intensity_cost_function=pnl.Linear(
                                                          slope=0.0),
@@ -769,7 +880,7 @@ class TestControlMechanisms:
             control_signals=[
                 pnl.ControlSignal(
                     name='ControllerTransfer',
-                    function=pnl.Linear(slope=2),
+                    transfer_function=pnl.Linear(slope=2),
                     modulates=(pnl.SLOPE, iA),
                 )
             ],
@@ -781,7 +892,7 @@ class TestControlMechanisms:
             control_signals=[
                 pnl.ControlSignal(
                     name='ControllerTransfer',
-                    function=pnl.Linear(slope=4),
+                    transfer_function=pnl.Linear(slope=4),
                     modulates=(pnl.SLOPE, iB)
                 )
             ],
@@ -890,7 +1001,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         expected_results_array = [
             [[20.0], [20.0], [0.0], [1.0], [2.378055160151634], [0.9820137900379085]],
-            [[20.0], [20.0], [0.0], [0.1], [0.48999967725112503], [0.5024599801509442]]
+            [[20.0], [20.0], [0.0], [-0.1], [0.48999967725112503], [0.5024599801509442]]
         ]
 
         for trial in range(len(expected_results_array)):
@@ -944,13 +1055,11 @@ class TestModelBasedOptimizationControlMechanisms:
         signalSearchRange = pnl.SampleSpec(start=1.0, stop=1.8, step=0.2)
 
         target_rep_control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, Target_Rep)],
-                                                      function=pnl.Linear,
                                                       variable=1.0,
                                                       intensity_cost_function=pnl.Exponential(rate=0.8046),
                                                       allocation_samples=signalSearchRange)
 
         flanker_rep_control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, Flanker_Rep)],
-                                                       function=pnl.Linear,
                                                        variable=1.0,
                                                        intensity_cost_function=pnl.Exponential(rate=0.8046),
                                                        allocation_samples=signalSearchRange)
@@ -1185,7 +1294,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         expected_results_array = [
             [[20.0], [20.0], [0.0], [1.0], [2.378055160151634], [0.9820137900379085]],
-            [[20.0], [20.0], [0.0], [0.1], [0.48999967725112503], [0.5024599801509442]]
+            [[20.0], [20.0], [0.0], [-0.1], [0.48999967725112503], [0.5024599801509442]]
         ]
 
         for trial in range(len(expected_results_array)):
@@ -1324,7 +1433,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         expected_results_array = [
             [[20.0], [20.0], [0.0], [1.0], [3.4963766238230596], [0.8807970779778824]],
-            [[20.0], [20.0], [0.0], [0.1], [0.4899992579951842], [0.503729930808051]]
+            [[20.0], [20.0], [0.0], [-0.1], [0.4899992579951842], [0.503729930808051]]
         ]
 
         for trial in range(len(expected_results_array)):
@@ -1353,7 +1462,6 @@ class TestModelBasedOptimizationControlMechanisms:
 
         search_range = pnl.SampleSpec(start=0.25, stop=0.75, step=0.25)
         control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, A)],
-                                           function=pnl.Linear,
                                            variable=1.0,
                                            allocation_samples=search_range,
                                            intensity_cost_function=pnl.Linear(slope=0.))
@@ -1394,7 +1502,6 @@ class TestModelBasedOptimizationControlMechanisms:
 
         search_range = pnl.SampleSpec(start=0.25, stop=0.75, step=0.25)
         control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, A)],
-                                           function=pnl.Linear,
                                            variable=1.0,
                                            allocation_samples=search_range,
                                            intensity_cost_function=pnl.Linear(slope=0.))
@@ -1430,7 +1537,6 @@ class TestModelBasedOptimizationControlMechanisms:
 
         search_range = pnl.SampleSpec(start=0.25, stop=0.75, step=0.25)
         control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, A)],
-                                           function=pnl.Linear,
                                            variable=1.0,
                                            allocation_samples=search_range,
                                            intensity_cost_function=pnl.Linear(slope=0.))
@@ -1623,7 +1729,6 @@ class TestModelBasedOptimizationControlMechanisms:
         # Modulate the GAIN parameter from activation layer
         # Initalize cost function as 0
         signal = pnl.ControlSignal(projections=[(pnl.GAIN, activation)],
-                                   function=pnl.Linear,
                                    variable=1.0,
                                    intensity_cost_function=pnl.Linear(slope=0.0),
                                    allocation_samples=searchRange)
@@ -1669,7 +1774,6 @@ class TestModelBasedOptimizationControlMechanisms:
 
         search_range = pnl.SampleSpec(start=0.25, stop=0.75, step=0.25)
         control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, A)],
-                                           function=pnl.Linear,
                                            variable=1.0,
                                            allocation_samples=search_range,
                                            intensity_cost_function=pnl.Linear(slope=0.))
@@ -1703,7 +1807,6 @@ class TestModelBasedOptimizationControlMechanisms:
 
         control_signal = pnl.ControlSignal(
             projections=[(pnl.SLOPE, A)],
-            function=pnl.Linear,
             variable=1.0,
             allocation_samples=[1, 2, 3],
             intensity_cost_function=pnl.Linear(slope=0.)
@@ -1729,7 +1832,15 @@ class TestModelBasedOptimizationControlMechanisms:
         # initial 1 + each allocation sample (1, 2, 3) integrated
         assert B.parameters.value.get(comp) == 7
 
-    def test_grid_search_random_selection(self):
+    @pytest.mark.control
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="Multilevel")
+    @pytest.mark.parametrize("mode", ["Python",
+                                      pytest.param("LLVM", marks=pytest.mark.llvm),
+                                      pytest.param("LLVMExec", marks=pytest.mark.llvm),
+                                      pytest.param("LLVMRun", marks=pytest.mark.llvm),
+                                     ])
+    def test_grid_search_random_selection(self, mode, benchmark):
         A = pnl.ProcessingMechanism(name='A')
 
         A.log.set_log_conditions(items="mod_slope")
@@ -1741,7 +1852,6 @@ class TestModelBasedOptimizationControlMechanisms:
 
         search_range = pnl.SampleSpec(start=15., stop=35., step=5)
         control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, A)],
-                                           function=pnl.Linear,
                                            variable=1.0,
                                            allocation_samples=search_range,
                                            intensity_cost_function=pnl.Linear(slope=0.))
@@ -1757,16 +1867,21 @@ class TestModelBasedOptimizationControlMechanisms:
 
         inputs = {A: [[[1.0]]]}
 
-        comp.run(inputs=inputs,
-                 num_trials=10,
-                 context='outer_comp')
-
-        log_arr = A.log.nparray_dictionary()
+        comp.run(inputs=inputs, num_trials=10, context='outer_comp', bin_execute=mode)
+        assert np.allclose(comp.results, [[[0.7310585786300049]], [[0.999999694097773]], [[0.999999694097773]], [[0.9999999979388463]], [[0.9999999979388463]], [[0.999999694097773]], [[0.9999999979388463]], [[0.999999999986112]], [[0.999999694097773]], [[0.9999999999999993]]])
 
         # control signal value (mod slope) is chosen randomly from all of the control signal values
         # that correspond to a net outcome of 1
-        assert np.allclose([[1.], [15.], [15.], [20.], [20.], [15.], [20.], [25.], [15.], [35.]],
-                           log_arr['outer_comp']['mod_slope'])
+        if mode == "Python":
+            log_arr = A.log.nparray_dictionary()
+            assert np.allclose([[1.], [15.], [15.], [20.], [20.], [15.], [20.], [25.], [15.], [35.]],
+                               log_arr['outer_comp']['mod_slope'])
+
+        # Disable logging for the benchmark run
+        A.log.set_log_conditions(items="mod_slope", log_condition=LogCondition.OFF)
+        A.log.clear_entries()
+        benchmark(comp.run, inputs=inputs, num_trials=10, context='bench_outer_comp', bin_execute=mode)
+        assert len(A.log.get_logged_entries()) == 0
 
 class TestSampleIterator:
 

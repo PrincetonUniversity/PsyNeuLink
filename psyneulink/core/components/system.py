@@ -63,7 +63,7 @@ A controller can also be specified for the System, in the **controller** argumen
 existing `ControlMechanism`, a constructor for one, or a class of ControlMechanism in which case a default
 instance of that class will be created.  If an existing ControlMechanism or the constructor for one is used, then
 the `OutputPorts it monitors <ControlMechanism_ObjectiveMechanism>` and the `parameters it controls
-<ControlMechanism_Control_Signals>` can be specified using its `objective_mechanism
+<ControlMechanism_ControlSignals>` can be specified using its `objective_mechanism
 <ControlMechanism.objective_mechanism>` and `control_signals <ControlMechanism.control_signals>`
 attributes, respectively.  In addition, these can be specified in the **monitor_for_control** and **control_signal**
 arguments of the `System`, as described below.
@@ -98,7 +98,7 @@ arguments of the `System`, as described below.
   ObjectiveMechanism's `monitored_output_ports <ObjectiveMechanism.monitored_output_ports>` attribute).
 ..
 * **control_signals** argument -- used to specify the parameters of Components in the System to be controlled. These
-  can be specified in any of the ways used to `specify ControlSignals <ControlMechanism_Control_Signals>` in the
+  can be specified in any of the ways used to `specify ControlSignals <ControlMechanism_ControlSignals>` in the
   *control_signals* argument of a ControlMechanism. These are added to any `ControlSignals <ControlSignal>` that have
   already been specified for the `controller <System.controller>` (listed in its `control_signals
   <ControlMechanism.control_signals>` attribute), and any parameters that have directly been `specified for
@@ -338,7 +338,7 @@ can be assigned as its `controller <System.controller>`;  all other ControlMecha
 <System.controller>` uses its `objective_mechanism <ControlMechanism.objective_mechanism>` to monitor and evaluate
 the `OutputPort(s) <OutputPort>` of Mechanisms in the System; based on the information it receives from that
 `ObjectiveMechanism`, it modulates the value of the parameters of Components in the System that have been `specified
-for control <ControlMechanism_Control_Signals>`, which then take effect in the next `TRIAL` (see `System_Control` for
+for control <ControlMechanism_ControlSignals>`, which then take effect in the next `TRIAL` (see `System_Control` for
 additional information about control). The control Components of a System can be displayed using the System's
 `show_graph`method with its **show_control** argument assigned `True`.
 
@@ -628,8 +628,7 @@ class System(System_Base):
         + classPreference (PreferenceSet): ProcessPreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + class_defaults.variable = inputValueSystemDefault                     # Used as default input value to Process)
-        + paramClassDefaults = {PROCESSES: [Mechanism_Base.default_mechanism],
-                                CONTROLLER: None}
+
        Class methods
        -------------
         - _validate_variable(variable, context):  insures that variable is 3D np.array (one 2D for each Process)
@@ -871,18 +870,13 @@ class System(System_Base):
         """
         variable = Parameter(None, pnl_internal=True, constructor_argument='default_variable')
 
-    paramClassDefaults = Component.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        'outputPorts': None,
-        '_phaseSpecMax': 0,
-        'stimulusInputPorts': None,
-        'inputs': None,
-        'current_input': None,
-        'target_input_ports': None,
-        'targets': None,
-        'current_targets': None,
-        'learning': False
-    })
+        processes = None
+        initial_values = None
+        enable_controller = None
+        monitor_for_control = None
+        learning_rate = None
+        targets = None
+
 
     # FIX 5/23/17: ADD control_signals ARGUMENT HERE (AND DOCUMENT IT ABOVE)
     @tc.typecheck
@@ -929,17 +923,6 @@ class System(System_Base):
 
         self.projections = []
 
-        # fAssign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(processes=processes,
-                                                  initial_values=initial_values,
-                                                  # controller=controller,
-                                                  enable_controller=enable_controller,
-                                                  monitor_for_control=monitor_for_control,
-                                                  # control_signals=control_signals,
-                                                  learning_rate=learning_rate,
-                                                  targets=targets,
-                                                  params=params)
-
         self.inputs = []
         self.stimulusInputPorts = []
         self.target_input_ports = []
@@ -947,6 +930,9 @@ class System(System_Base):
         self.scheduler = scheduler
         self.scheduler_learning = None
         self.termination_learning = None
+
+        self._phaseSpecMax = 0
+        self.learning = False
 
         register_category(entry=self,
                           base_class=System,
@@ -962,12 +948,19 @@ class System(System_Base):
 
         self.default_execution_id = self.name
 
-        super().__init__(default_variable=default_variable,
-                         size=size,
-                         param_defaults=params,
-                         name=self.name,
-                         prefs=prefs,
-                         context=context)
+        super().__init__(
+            default_variable=default_variable,
+            size=size,
+            processes=processes,
+            initial_values=initial_values,
+            enable_controller=enable_controller,
+            monitor_for_control=monitor_for_control,
+            learning_rate=learning_rate,
+            targets=targets,
+            param_defaults=params,
+            name=self.name,
+            prefs=prefs,
+        )
 
         self.reinitialize_mechanisms_when = reinitialize_mechanisms_when
 
@@ -1075,7 +1068,7 @@ class System(System_Base):
 # FIX: AUGMENT LinearMatrix TO USE FULL_CONNECTIVITY_MATRIX IF len(sender) != len(receiver)
         """Instantiate processes of System
 
-        Use self.processes (populated by self.processes in Function._assign_args_to_param_dicts
+        Use self.processes
         If self.processes is empty, instantiate default process by calling process()
         Iterate through self.processes, instantiating each (including the input to each input projection)
         If input is specified, check that it's length equals the number of processes
@@ -1639,13 +1632,13 @@ class System(System_Base):
         self.execution_list = self._toposort_with_ordered_mechs(self.execution_graph)
 
         # Construct self.defaults.variable from inputs to ORIGIN mechanisms
-        self.defaults.variable = []
+        new_variable = []
         for mech in self.origin_mechanisms:
             orig_mech_input = []
             for input_port in mech.input_ports:
                 orig_mech_input.append(input_port.value)
-            self.defaults.variable.append(orig_mech_input)
-        self.defaults.variable = convert_to_np_array(self.defaults.variable, 2)
+            new_variable.append(orig_mech_input)
+        self.defaults.variable = convert_to_np_array(new_variable, 2)
         # should add Utility to allow conversion to 3D array
         # An example: when InputPort values are vectors, then self.defaults.variable is a 3D array because
         # an origin mechanism could have multiple input ports if there is a recurrent InputPort. However,
@@ -2246,7 +2239,7 @@ class System(System_Base):
         else:
             controller_specs = []
 
-        # Get system's MONITOR_FOR_CONTROL specifications (specified in paramClassDefaults, so must be there)
+        # Get system's MONITOR_FOR_CONTROL specifications
         system_specs = self.monitor_for_control.copy()
 
         # If controller_specs has a MonitoredOutputPortsOption specification, remove any such spec from system specs
@@ -2584,7 +2577,10 @@ class System(System_Base):
                 for projection in parameter_port.mod_afferents:
                     # If Projection was deferred for init, instantiate its ControlSignal and then initialize it
                     if projection.initialization_status == ContextFlags.DEFERRED_INIT:
-                        proj_control_signal_specs = projection.control_signal_params or {}
+                        try:
+                            proj_control_signal_specs = projection._init_args['control_signal_params'] or {}
+                        except (KeyError, TypeError):
+                            proj_control_signal_specs = {}
                         proj_control_signal_specs.update({PROJECTIONS: [projection]})
                         control_signal_specs.append(proj_control_signal_specs)
         return control_signal_specs
@@ -3435,7 +3431,7 @@ class System(System_Base):
 
 
         # Sort by phaseSpec and, within each phase, by mechanism name
-#        sorted_execution_list.sort(key=lambda object_item: object_item.phase)
+        # sorted_execution_list.sort(key=lambda object_item: object_item.phase)
 
 
         # Add controller to execution list for printing if enabled

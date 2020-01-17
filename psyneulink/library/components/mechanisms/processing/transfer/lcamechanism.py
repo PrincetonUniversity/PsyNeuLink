@@ -6,7 +6,6 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 # NOTES:
-#  * COULD NOT IMPLEMENT integrator_function in paramClassDefaults (see notes below)
 #  * NOW THAT NOISE AND BETA ARE PROPRETIES THAT DIRECTLY REFERERNCE integrator_function,
 #      SHOULD THEY NOW BE VALIDATED ONLY THERE (AND NOT IN TransferMechanism)??
 #  * ARE THOSE THE ONLY TWO integrator PARAMS THAT SHOULD BE PROPERTIES??
@@ -325,13 +324,6 @@ class LCAMechanism(RecurrentTransferMechanism):
     """
     componentType = LCA_MECHANISM
 
-    paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        NOISE: None,
-        # RATE: None,
-        BETA: None
-    })
-
     class Parameters(RecurrentTransferMechanism.Parameters):
         """
             Attributes
@@ -445,35 +437,31 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         integrator_function = LeakyCompetingIntegrator
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(
-                                                  leak=leak,
-                                                  self_excitation=self_excitation,
-                                                  hetero=hetero,
-                                                  competition=competition,
-                                                  integrator_mode=integrator_mode,
-                                                  time_step_size=time_step_size,
-                                                  output_ports=output_ports,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         size=size,
-                         input_ports=input_ports,
-                         auto=self_excitation,
-                         hetero=hetero,
-                         function=function,
-                         integrator_function=LeakyCompetingIntegrator,
-                         initial_value=initial_value,
-                         noise=noise,
-                         clip=clip,
-                         termination_threshold=termination_threshold,
-                         termination_measure=termination_measure,
-                         termination_comparison_op=termination_comparison_op,
-                         output_ports=output_ports,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         **kwargs)
+        super().__init__(
+            default_variable=default_variable,
+            size=size,
+            input_ports=input_ports,
+            auto=self_excitation,
+            hetero=hetero,
+            function=function,
+            integrator_function=LeakyCompetingIntegrator,
+            initial_value=initial_value,
+            noise=noise,
+            clip=clip,
+            termination_threshold=termination_threshold,
+            termination_measure=termination_measure,
+            termination_comparison_op=termination_comparison_op,
+            leak=leak,
+            self_excitation=self_excitation,
+            competition=competition,
+            integrator_mode=integrator_mode,
+            time_step_size=time_step_size,
+            output_ports=output_ports,
+            params=params,
+            name=name,
+            prefs=prefs,
+            **kwargs
+        )
 
         # Do these here so that name of the object (assigned by super) can be used in the warning messages
         if matrix is not None:

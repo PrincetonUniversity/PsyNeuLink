@@ -432,14 +432,8 @@ class LearningProjection(ModulatoryProjection_Base):
         learning_signal = Parameter(None, read_only=True, getter=_learning_signal_getter, setter=_learning_signal_setter, pnl_internal=True)
         learning_enabled = None
 
-    paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_SENDER: LearningMechanism,
-                               PARAMETER_PORTS: NotImplemented, # This suppresses parameterPorts
-                               FUNCTION: Linear,
-                               FUNCTION_PARAMS:
-                                   {SLOPE: 1,
-                                    INTERCEPT: 0},
-                               })
+
+    projection_sender = LearningMechanism
 
     @tc.typecheck
     def __init__(self,
@@ -464,21 +458,23 @@ class LearningProjection(ModulatoryProjection_Base):
         #     error function and learning function specifications from the specification of a LearningProjection (used
         #     to implement learning for a MappingProjection, e.g., in a tuple) to the LearningMechanism responsible
         #     for implementing the function; and for specifying the default LearningProjection for a Process.
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(error_function=error_function,
-                                                  learning_function=learning_function,
-                                                  learning_rate=learning_rate,
-                                                  # FIX: 10/3/17 - TEST IF THIS OK AND REINSTATE IF SO
-                                                  # learning_signal_params=learning_signal_params,
-                                                  learning_enabled=learning_enabled,
-                                                  weight=weight,
-                                                  exponent=exponent,
-                                                  params=params)
-
         # If receiver has not been assigned, defer init to Port.instantiate_projection_to_state()
         if sender is None or receiver is None:
             # Flag for deferred initialization
             self.initialization_status = ContextFlags.DEFERRED_INIT
+
+            # parameters should be passed through methods like
+            # instantiate_sender instead of grabbed from attributes like this
+            self._learning_function = learning_function
+            self._learning_rate = learning_rate
+            self._error_function = error_function
+
+        # replaces similar code in _instantiate_sender
+        try:
+            if sender.owner.learning_rate is not None:
+                learning_rate = sender.owner.learning_rate
+        except AttributeError:
+            pass
 
         super().__init__(sender=sender,
                          receiver=receiver,
@@ -487,6 +483,10 @@ class LearningProjection(ModulatoryProjection_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
+                         error_function=error_function,
+                         learning_function=learning_function,
+                         learning_rate=learning_rate,
+                         learning_enabled=learning_enabled,
                          **kwargs)
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -568,9 +568,6 @@ class LearningProjection(ModulatoryProjection_Base):
         #    OutputPort and formats the LearningProjection's defaults.variable to be compatible with
         #    the LearningSignal's value
         super()._instantiate_sender(self.sender, context=context)
-
-        if self.sender.owner.learning_rate is not None:
-            self.learning_rate = self.sender.owner.learning_rate
 
     def _instantiate_receiver(self, context=None):
         """Validate that receiver has been assigned and is compatible with the output of function
@@ -680,10 +677,6 @@ class LearningProjection(ModulatoryProjection_Base):
             runtime_params=runtime_params,
 
         )
-
-        learning_rate = self.parameters.learning_rate._get(context)
-        if learning_rate is not None:
-            value *= learning_rate
 
         if self.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, np.diag(value)))

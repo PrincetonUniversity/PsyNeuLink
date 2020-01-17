@@ -1184,7 +1184,7 @@ class TestIntegratorNoise:
         )
 
         val = I.execute(10.0)
-        assert np.allclose(val, [[[14.17598662]], [[ 1.        ]]])
+        assert np.allclose(val, [[[4.29013944]], [[ 1.        ]]])
 
 # COMMENTED OUT UNTIL OU INTEGRATOR IS VALIDATED
     @pytest.mark.mechanism
@@ -1382,7 +1382,6 @@ class TestDualAdaptiveIntegrator:
         # import numpy as np
         # from mpl_toolkits.mplot3d import Axes3D
         # import matplotlib.pyplot as plt
-        # import random
         #
         #
         # fig = plt.figure()

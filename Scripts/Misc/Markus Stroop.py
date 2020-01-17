@@ -23,7 +23,7 @@ task_layer = pnl.TransferMechanism(size=2,
                                    function=psyneulink.core.components.functions.transferfunctions.Logistic(
                                        gain=(1.0, pnl.ControlProjection(  # receiver= response_layer.output_ports[1],
                                            # 'DECISION_ENERGY'
-                                           # modulation=pnl.ModulationParam.OVERRIDE,#what to implement here
+                                           # modulation=pnl.OVERRIDE,#what to implement here
                                        ))),
                                    name='TASK')
 task_layer.set_log_conditions('gain')

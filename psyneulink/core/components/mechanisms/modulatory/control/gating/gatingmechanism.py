@@ -42,7 +42,7 @@ A GatingMechanism is created by calling its constructor.  When a GatingMechanism
 monitors and the `InputPorts <InputPort>` and/or `OutputPorts <OutputPort>` it modulates can be specified in the
 **montior_for_gating** and **gate** arguments of its constructor, respectively.  Each can be specified in several
 ways, paralleling those used for a ControlMechanism, and described in `ControlMechanism_Monitor_for_Control` and
-`ControlMechanism_Control_Signals` respectively. If neither the **montior_for_gating** or **gate** arguments is
+`ControlMechanism_ControlSignals` respectively. If neither the **montior_for_gating** or **gate** arguments is
 specified, then only the GatingMechanism is constructed, and its inputs and the InputPorts and/or OutputPorts it
 modulates must be specified in some other way.
 COMMENT:
@@ -305,7 +305,7 @@ class GatingMechanism(ControlMechanism):
         argument; if a `Mechanism <Mechanism>` is specified, its `primary InputPort <InputPort_Primary>`
         is used (see `GatingMechanism_GatingSignals for details).
 
-    modulation : ModulationParam : MULTIPLICATIVE
+    modulation : str : MULTIPLICATIVE
         specifies the default form of modulation used by the GatingMechanism's `GatingSignals <GatingSignal>`,
         unless they are `individually specified <GatingSignal_Specification>`.
 
@@ -377,7 +377,7 @@ class GatingMechanism(ControlMechanism):
         GatingMechanism's `value <GatingMechanism.value>` attribute. Default is a single item used by all of the
         `gating_signals <GatingMechanism.gating_signals>`.
 
-    modulation : ModulationParam
+    modulation : str
         the default form of modulation used by the GatingMechanism's `GatingSignals <GatingSignal>`,
         unless they are `individually specified <GatingSignal_Specification>`.
 
@@ -470,10 +470,6 @@ class GatingMechanism(ControlMechanism):
                 args = kwargs.pop(MONITOR_FOR_CONTROL)
                 if args:
                     monitor_for_gating.extend(convert_to_list(args))
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  params=params)
 
         super().__init__(default_variable=default_gating_allocation,
                          size=size,

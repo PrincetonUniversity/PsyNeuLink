@@ -196,11 +196,16 @@ Contributors
 *(in alphabetical order)*
 
 * **Allie Burton**, Princeton Neuroscience Institute, Princeton University
+* **Laura Bustamante**, Princeton Neuroscience Institute, Princeton University
 * **Jonathan D. Cohen**, Princeton Neuroscience Institute, Princeton University
+* **Samyak Gupta**, Department of Computer Science, Rutgers University
+* **Abigail Hoskin**, Department of Psychology, Princeton University
 * **Peter Johnson**, Princeton Neuroscience Institute, Princeton University
 * **Justin Junge**, Department of Psychology, Princeton University
+* **Qihong Lu**, Department of Psychology, Princeton University
 * **Kristen Manning**, Princeton Neuroscience Institute, Princeton University
 * **Katherine Mantel**, Princeton Neuroscience Institute, Princeton University
+* **Lena Rosendahl**, Department of Mechanical and Aerospace Engineering, Princeton University
 * **Dillon Smith**, Princeton Neuroscience Institute, Princeton University
 * **Markus Spitzer**, Princeton Neuroscience Institute, Princeton University
 * **David Turner**, Princeton Neuroscience Institute, Princeton University
