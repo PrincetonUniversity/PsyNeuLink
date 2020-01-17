@@ -238,12 +238,6 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 
         self.has_initializers = True
 
-    # MODIFIED 6/21/19 NEW: [JDC]
-    def _handle_default_variable(self, default_variable=None, size=None):
-        if default_variable is not None:
-            self.parameters.variable._user_specified = True
-        return super()._handle_default_variable(default_variable, size)
-
     # FIX CONSIDER MOVING THIS TO THE LEVEL OF Function_Base OR EVEN Component
     def _validate_params(self, request_set, target_set=None, context=None):
         """Check inner dimension (length) of all parameters used for the function

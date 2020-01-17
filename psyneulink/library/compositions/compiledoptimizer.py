@@ -36,9 +36,7 @@ class Optimizer():
         return delta_w
 
     def _get_optimizer_struct_type(self, ctx, extra_types=[]):
-        structs = []
-        structs.append(self._get_delta_w_struct_type(ctx))
-        structs += extra_types
+        structs = (self._get_delta_w_struct_type(ctx), *extra_types)
         return pnlvm.ir.types.LiteralStructType(structs)
 
     def _get_listof_gradient_struct_values(self):
@@ -60,17 +58,11 @@ class Optimizer():
 
     def zero_grad(self, ctx):
         name = self._composition.name + "_ZERO_GRAD"
-        # try:
-        #     llvm_func = ctx.import_llvm_function(name)
-        #     return llvm_func
-        # except Exception as e:
-        #     pass
 
-        args = [self._get_optimizer_struct_type(ctx).as_pointer(),
-                self._pytorch_model._get_param_struct_type(ctx).as_pointer()]
+        args = [self._get_optimizer_struct_type(ctx).as_pointer()]
         builder = ctx.create_llvm_function(args, self, name)
         llvm_func = builder.function
-        optim_struct, model_params = llvm_func.args
+        optim_struct = llvm_func.args[0]
 
         delta_w_struct = builder.gep(
             optim_struct, [ctx.int32_ty(0), ctx.int32_ty(self._DELTA_W_NUM)])
@@ -79,12 +71,15 @@ class Optimizer():
 
         return llvm_func
 
-    # to be implemented by child classes - sets the initial values for the optim struct
     def initialize_optimizer_struct(self, ctx, builder, optim_struct):
-        raise Exception("Unimplemented method!")
+        builder.store(optim_struct.type.pointee(None), optim_struct)
+
+    def _gen_llvm_function(self):
+        with pnlvm.LLVMBuilderContext.get_global() as ctx:
+            return self.step(ctx)
 
     # to be implemented by child classes - steps the optimizer
-    def step(self, ctx, builder, optim_struct, model_params):
+    def step(self, ctx):
         raise Exception("Unimplemented method!")
 
 # Class that is used to represent a compiled optimizer - aims to reimplement the logic of torch.optimizer in the form of llvmlite compileable code
@@ -105,46 +100,22 @@ class AdamOptimizer(Optimizer):
         self._T_NUM = 3
 
     def _get_optimizer_struct_type(self, ctx):
-        extra_types = []
-        m_t = self._get_delta_w_struct_type(
-            ctx)  # current timestep first moment
-        v_t = self._get_delta_w_struct_type(
-            ctx)  # current timestep second moment
+        m_t = self._get_delta_w_struct_type(ctx)  # current timestep first moment
+        v_t = self._get_delta_w_struct_type(ctx)  # current timestep second moment
         time_counter = ctx.float_ty  # keeps track of timestep
 
-        extra_types += [m_t, v_t, time_counter]
+        extra_types = [m_t, v_t, time_counter]
         return super()._get_optimizer_struct_type(ctx, extra_types=extra_types)
-
-    def initialize_optimizer_struct(self, ctx, builder, optim_struct):
-        # set initial moments to 0
-        delta_w = builder.gep(
-            optim_struct, [ctx.int32_ty(0), ctx.int32_ty(self._DELTA_W_NUM)])
-        m_t = builder.gep(
-            optim_struct, [ctx.int32_ty(0), ctx.int32_ty(self._M_T_NUM)])
-        v_t = builder.gep(
-            optim_struct, [ctx.int32_ty(0), ctx.int32_ty(self._V_T_NUM)])
-        t = builder.gep(
-            optim_struct, [ctx.int32_ty(0), ctx.int32_ty(self._T_NUM)])
-        self._gen_zero_gradient_struct(ctx, builder, delta_w)
-        self._gen_zero_gradient_struct(ctx, builder, m_t)
-        self._gen_zero_gradient_struct(ctx, builder, v_t)
-        builder.store(ctx.float_ty(0), t)
-
 
     # steps the adam optimizer (methodology: https://arxiv.org/pdf/1412.6980.pdf )
     def step(self, ctx):
         name = self._composition.name + "_ADAM_STEP"
-        # try:
-        #     llvm_func = ctx.import_llvm_function(name)
-        #     return llvm_func
-        # except Exception as e:
-        #     pass
 
         args = [self._get_optimizer_struct_type(ctx).as_pointer(),
-                self._pytorch_model._get_param_struct_type(ctx).as_pointer()]
+                ctx.get_param_struct_type(self._composition).as_pointer()]
         builder = ctx.create_llvm_function(args, self, name)
         llvm_func = builder.function
-        optim_struct, model_params = llvm_func.args
+        optim_struct, params = llvm_func.args
 
         # setup values
         zero = ctx.int32_ty(0)
@@ -248,7 +219,7 @@ class AdamOptimizer(Optimizer):
                 delta_w, [zero, node_idx_ir, afferent_node_index_ir])
             # this is messy - #TODO - cleanup this
             weights_llvmlite, weights_dim_x, weights_dim_y = self._pytorch_model._gen_get_node_weight_ptr(
-                ctx, builder, model_params, node, afferent_node)
+                ctx, builder, params, node, afferent_node)
             ctx.inject_printf(
                 builder, f"OPTIM UPDATE WEIGHTS {afferent_node.name} {node.name}\n",override_debug=False)
             weight_row = None
@@ -294,26 +265,15 @@ class SGDOptimizer(Optimizer):
         super().__init__(pytorch_model)
         self.lr = lr
 
-    def _get_optimizer_struct_type(self, ctx):
-        return super()._get_optimizer_struct_type(ctx)
-
-    def initialize_optimizer_struct(self, ctx, builder, optim_struct):
-        pass
-
     # steps the sgd optimizer (methodology: https://arxiv.org/pdf/1412.6980.pdf )
     def step(self, ctx):
         name = self._composition.name + "_SGD_STEP"
-        # try:
-        #     llvm_func = ctx.import_llvm_function(name)
-        #     return llvm_func
-        # except Exception as e:
-        #     pass
 
         args = [self._get_optimizer_struct_type(ctx).as_pointer(),
-                self._pytorch_model._get_param_struct_type(ctx).as_pointer()]
+                ctx.get_param_struct_type(self._composition).as_pointer()]
         builder = ctx.create_llvm_function(args, self, name)
         llvm_func = builder.function
-        optim_struct, model_params = llvm_func.args
+        optim_struct, params = llvm_func.args
 
         zero = ctx.int32_ty(0)
         delta_w = builder.gep(optim_struct, [zero, ctx.int32_ty(self._DELTA_W_NUM)])
@@ -328,7 +288,7 @@ class SGDOptimizer(Optimizer):
             afferent_node_index_ir = ctx.int32_ty(afferent_node_index)
 
             delta_w_ptr = builder.gep(delta_w,[zero,node_idx_ir,afferent_node_index_ir])
-            weights_llvmlite, _, _ = self._pytorch_model._gen_get_node_weight_ptr(ctx, builder, model_params, node, afferent_node)
+            weights_llvmlite, _, _ = self._pytorch_model._gen_get_node_weight_ptr(ctx, builder, params, node, afferent_node)
             
             multiplied_delta_w = self._pytorch_model._gen_inject_mat_scalar_mult(ctx, builder, delta_w_ptr, lr)
             self._pytorch_model._gen_inject_mat_sub(ctx, builder, weights_llvmlite, multiplied_delta_w, weights_llvmlite)

@@ -510,7 +510,6 @@ class Function_Base(Function):
         self,
         default_variable,
         params,
-        function=None,
         owner=None,
         name=None,
         prefs=None,
@@ -544,7 +543,6 @@ class Function_Base(Function):
 
         super().__init__(
             default_variable=default_variable,
-            function=function,
             param_defaults=params,
             name=name,
             prefs=prefs,
