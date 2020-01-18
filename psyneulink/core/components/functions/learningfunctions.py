@@ -1868,14 +1868,14 @@ class BackPropagation(LearningFunction):
 
         error_matrix = Parameter(None, read_only=True)
 
-        activation_derivative_fct = Parameter(Logistic().derivative, stateful=False, loggable=False)
+        activation_derivative_fct = Parameter(Logistic.derivative, stateful=False, loggable=False)
 
     default_learning_rate = 1.0
 
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 activation_derivative_fct: tc.optional(tc.any(types.FunctionType, types.MethodType)) = Logistic().derivative,
+                 activation_derivative_fct: tc.optional(tc.any(types.FunctionType, types.MethodType)) = None,
                  # learning_rate: tc.optional(parameter_spec) = None,
                  learning_rate=None,
                  loss_function=None,
