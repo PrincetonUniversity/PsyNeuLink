@@ -7704,7 +7704,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 data_struct_ptr, data_struct_ptr]
 
             if not is_mech:
-                # Add condition struct
+                # Add condition struct of the parent composition
+                # This includes structures of all nested compositions
                 cond_gen = pnlvm.helpers.ConditionGenerator(ctx, self)
                 cond_ty = cond_gen.get_condition_struct_type().as_pointer()
                 args.append(cond_ty)
