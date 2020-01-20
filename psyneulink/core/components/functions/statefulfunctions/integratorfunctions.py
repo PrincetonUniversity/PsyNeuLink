@@ -2877,7 +2877,15 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
 
     .. math::
 
-        rate \\cdot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
+        previous\\_value + (rate \\cdot previous\\_value + variable) \\cdot time\\_step\\_size +
+        noise \\sqrt{time\\_step\\_size}
+
+    where `rate <LeakyCompetingIntegrator.rate>` corresponds to :math:`k` (the leak parameter), `variable
+    <LeakyCompetingIntegrator.variable>` corresponds to :math:`\\rho_i` + :math:`\\beta` :math:`\\Sigma f(x_{\\neq i})`
+    (the net input to a unit), and `time_step_size <LeakyCompetingIntegrator.time_step_size>` corresponds to
+    :math:`\\frac{dt}{\\tau}` in Equation 2 of `Usher & McClelland (2001)
+    <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_.
+
 
     *Modulatory Parameters:*
 
@@ -3006,7 +3014,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
                     :type: float
 
         """
-        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM], function_arg=True)
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM], function_arg=True, aliases='leak')
         offset = Parameter(None, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
         time_step_size = Parameter(0.1, modulable=True, function_arg=True)
 
