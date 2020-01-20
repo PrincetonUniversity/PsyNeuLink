@@ -2877,7 +2877,23 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
 
     .. math::
 
-        rate \\cdot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
+        previous\\_value + (rate \\cdot previous\\_value + variable) \\cdot time\\_step\\_size +
+        noise \\sqrt{time\\_step\\_size}
+
+    where `rate <LeakyCompetingIntegrator.rate>` corresponds to :math:`k` (the leak parameter), `variable
+    <LeakyCompetingIntegrator.variable>` corresponds to :math:`\\rho_i` + :math:`\\beta` :math:`\\Sigma f(x_{\\neq i})`
+    (the net input to a unit), and `time_step_size <LeakyCompetingIntegrator.time_step_size>` corresponds to
+    :math:`\\frac{dt}{\\tau}` in Equation 2 of `Usher & McClelland (2001)
+    <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_.
+
+    .. note::
+        When used as the `function <Mechanism.function>` of an `LCAMechanism`, the value passed to `variable
+        <LeakyCompetingIntegrator.variable>` is the sum of the external and recurrent inputs to the Mechanism
+        (see `here <RecurrentTransferMechanism_Structure>` for how the external and recurrent inputs can be
+        configured in a `RecurrentTransferMechanism`, of which LCAMechanism is subclass).
+
+    .. hint::
+        ``leak`` can be used as an alias for `rate <LeakyCompetingIntegrator.rate>`.
 
     *Modulatory Parameters:*
 
@@ -2896,6 +2912,9 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         specifies the value used to scale the contribution of `previous_value <LeakyCompetingIntegrator.previous_value>`
         to the integral on each time step.  If it is a list or array, it must be the same length as `variable
         <LeakyCompetingIntegrator.variable>` (see `rate <LeakyCompetingIntegrator.rate>` for details).
+
+    leak : float, list or 1d array : default 1.0
+        alias for **rate**.
 
     noise : float, function, list or 1d array : default 0.0
         specifies random value added to integral in each call to `function <LeakyCompetingIntegrator.function>`;
@@ -2939,11 +2958,15 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
 
     rate : float or 1d array
         scales the contribution of `previous_value <LeakyCompetingIntegrator.previous_value>` to the accumulation of
-        the `value <LeakyCompetingIntegrator.value>` on each time step. If it is a float or has a single element,
-        its value is applied to all the elements of `previous_value <LeakyCompetingIntegrator.previous_value>`; if it
-        is an array, each element is applied to the corresponding element of `previous_value
-        <LeakyCompetingIntegrator.previous_value>`.  Serves as *MULTIPLICATIVE_PARAM*  for `modulation
-        <ModulatorySignal_Modulation>` of `function <LeakyCompetingIntegrator.function>`.
+        the `value <LeakyCompetingIntegrator.value>` on each time step (corrsponding to the ``leak`` term of the
+        function described in Equation 2 of `Usher & McClelland (2001) <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_.
+        If it is a float or has a single element, its value is applied to all the elements of `previous_value
+        <LeakyCompetingIntegrator.previous_value>`; if it is an array, each element is applied to the corresponding
+        element of `previous_value <LeakyCompetingIntegrator.previous_value>`.  Serves as *MULTIPLICATIVE_PARAM*  for
+        `modulation <ModulatorySignal_Modulation>` of `function <LeakyCompetingIntegrator.function>`.
+
+    leak : float, list or 1d array
+        alias for `rate <LeakyCompetingIntegrator.rate>`.
 
     noise : float, Function, or 1d array
         random value added to integral in each call to `function <LeakyCompetingIntegrator.function>`.
@@ -3006,7 +3029,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
                     :type: float
 
         """
-        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM], function_arg=True)
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM, 'leak'], function_arg=True)
         offset = Parameter(None, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
         time_step_size = Parameter(0.1, modulable=True, function_arg=True)
 
