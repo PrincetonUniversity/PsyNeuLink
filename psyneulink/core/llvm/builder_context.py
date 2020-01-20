@@ -306,6 +306,12 @@ class LLVMBuilderContext:
         else:
             data = data_arg
 
+        # Call input CIM
+        input_cim_node = composition._get_node_wrapper(composition.input_CIM)
+        input_cim_f = self.import_llvm_function(input_cim_node)
+
+        builder.call(input_cim_f, [state, params, comp_in, data, data])
+
         yield builder, data, params, cond_gen
 
         if "alloca_data" in debug_env:
@@ -368,12 +374,6 @@ class LLVMBuilderContext:
         pytorch_model = composition.parameters.pytorch_representation.get(composition.default_execution_id)
         with self._gen_composition_exec_context(composition, simulation) as (builder, data, params, cond_gen):
             state, _, comp_in, _, cond = builder.function.args
-            # Call input CIM
-            input_cim_w = composition._get_node_wrapper(composition.input_CIM)
-            input_cim_f = self.import_llvm_function(input_cim_w)
-
-            builder.call(input_cim_f, [state, params, comp_in, data, data])
-
             # Call pytorch internal compiled llvm func
             input_cim_idx = composition._get_node_index(composition.input_CIM)
 
@@ -397,10 +397,6 @@ class LLVMBuilderContext:
     def gen_composition_exec(self, composition, simulation=False):
         with self._gen_composition_exec_context(composition, simulation) as (builder, data, params, cond_gen):
             state, _, comp_in, _, cond = builder.function.args
-            # Call input CIM
-            input_cim_w = composition._get_node_wrapper(composition.input_CIM)
-            input_cim_f = self.import_llvm_function(input_cim_w)
-            builder.call(input_cim_f, [state, params, comp_in, data, data])
 
             # Call parameter CIM
             param_cim_w = composition._get_node_wrapper(composition.parameter_CIM)
