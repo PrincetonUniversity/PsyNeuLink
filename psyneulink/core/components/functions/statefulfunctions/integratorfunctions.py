@@ -2886,6 +2886,8 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
     :math:`\\frac{dt}{\\tau}` in Equation 2 of `Usher & McClelland (2001)
     <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_.
 
+    Note that ``leak`` can be used as an alias for `rate <LeakyCompetingIntegrator.rate>`.
+
 
     *Modulatory Parameters:*
 
@@ -3014,7 +3016,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
                     :type: float
 
         """
-        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM], function_arg=True, aliases='leak')
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM, 'leak'], function_arg=True)
         offset = Parameter(None, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
         time_step_size = Parameter(0.1, modulable=True, function_arg=True)
 
