@@ -338,6 +338,7 @@ class LLVMBuilderContext:
         with self._gen_composition_exec_context(composition, simulation,
             "_learning", extra_args=args) as (builder, data, params, cond_gen):
             state, _, comp_in, _, cond, learning, data_out = builder.function.args
+            data_out.attributes.remove('nonnull')
 
             pytorch_model._gen_llvm_training_function_body(self, builder, state,
                                                            params, data, learning)
@@ -358,12 +359,15 @@ class LLVMBuilderContext:
                 b.call(exec_f, [state, params, data_in_ptr, data, cond])
 
                 # Extract output_CIM result
-                idx = composition._get_node_index(composition.output_CIM)
-                result_ptr = b.gep(data, [self.int32_ty(0), self.int32_ty(0),
-                                          self.int32_ty(idx)])
-                result = b.load(result_ptr)
-                output_ptr = b.gep(data_out, [iters])
-                b.store(result, output_ptr)
+                output_cond = builder.icmp_unsigned("!=", data_out, data_out.type(None))
+                with builder.if_then(output_cond):
+                    idx = composition._get_node_index(composition.output_CIM)
+                    result_ptr = b.gep(data, [self.int32_ty(0),
+                                              self.int32_ty(0),
+                                              self.int32_ty(idx)])
+                    result = b.load(result_ptr)
+                    output_ptr = b.gep(data_out, [iters])
+                    b.store(result, output_ptr)
 
             return builder.function
 
