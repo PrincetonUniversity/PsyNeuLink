@@ -7696,6 +7696,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         is_mech = isinstance(node, Mechanism)
 
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
+            node_function = ctx.import_llvm_function(node)
+
             data_struct_ptr = ctx.get_data_struct_type(self).as_pointer()
             args = [
                 ctx.get_state_struct_type(self).as_pointer(),
@@ -7717,32 +7719,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 a.attributes.add('nonnull')
 
             context, params, comp_in, data_in, data_out = llvm_func.args[:5]
-            cond_ptr = llvm_func.args[-1]
-
-            m_function = ctx.import_llvm_function(node)
 
             if node is self.input_CIM:
                 # if there are incoming modulatory projections,
                 # the input structure is shared
                 if self.parameter_CIM.afferents:
-                    m_in = builder.gep(comp_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+                    node_in = builder.gep(comp_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
                 else:
-                    m_in = comp_in
+                    node_in = comp_in
                 incoming_projections = []
             elif node is self.parameter_CIM and node.afferents:
                 # if parameter_CIM has afferent projections,
                 # their values are in comp_in[1]
-                m_in = builder.gep(comp_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
+                node_in = builder.gep(comp_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
                 # And we run no further projection
                 incoming_projections = []
             elif not is_mech:
-                m_in = builder.alloca(m_function.args[2].type.pointee)
+                node_in = builder.alloca(node_function.args[2].type.pointee)
                 incoming_projections = node.input_CIM.afferents + node.parameter_CIM.afferents
             else:
                 # this path also handles parameter_CIM with no afferent
                 # projections. 'comp_in' does not include any extra values,
                 # and the entire call should be optimized out.
-                m_in = builder.alloca(m_function.args[2].type.pointee)
+                node_in = builder.alloca(node_function.args[2].type.pointee)
                 incoming_projections = node.afferents
 
             # Execute all incoming projections
@@ -7802,7 +7801,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     assert False, "Projection neither pathway nor modulatory"
 
-                proj_out = builder.gep(m_in, [ctx.int32_ty(i) for i in indices])
+                proj_out = builder.gep(node_in, [ctx.int32_ty(i) for i in indices])
 
                 # Get projection parameters and state
                 proj_idx = self.projections.index(proj)
@@ -7818,25 +7817,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             idx = ctx.int32_ty(self._get_node_index(node))
             zero = ctx.int32_ty(0)
-            m_params = builder.gep(params, [zero, zero, idx])
-            m_context = builder.gep(context, [zero, zero, idx])
-            m_out = builder.gep(data_out, [zero, zero, idx])
+            node_params = builder.gep(params, [zero, zero, idx])
+            node_context = builder.gep(context, [zero, zero, idx])
+            node_out = builder.gep(data_out, [zero, zero, idx])
             if is_mech:
-                call_args = [m_params, m_context, m_in, m_out]
-                if len(m_function.args) > 4:
+                call_args = [node_params, node_context, node_in, node_out]
+                if len(node_function.args) > 4:
                     assert node is self.controller
                     call_args += [params, context, data_in]
-                builder.call(m_function, call_args)
+                builder.call(node_function, call_args)
             else:
                 # Condition and data structures includes parent first
                 nested_idx = ctx.int32_ty(self._get_node_index(node) + 1)
-                m_data = builder.gep(data_in, [zero, nested_idx])
-                m_cond = builder.gep(cond_ptr, [zero, nested_idx])
-                builder.call(m_function, [m_context, m_params, m_in, m_data, m_cond])
+                node_data = builder.gep(data_in, [zero, nested_idx])
+                node_cond = builder.gep(llvm_func.args[5], [zero, nested_idx])
+                builder.call(node_function, [node_context, node_params, node_in,
+                                             node_data, node_cond])
                 # Copy output of the nested composition to its output place
                 output_idx = node._get_node_index(node.output_CIM)
-                result = builder.gep(m_data, [zero, zero, ctx.int32_ty(output_idx)])
-                builder.store(builder.load(result), m_out)
+                result = builder.gep(node_data, [zero, zero, ctx.int32_ty(output_idx)])
+                builder.store(builder.load(result), node_out)
 
             builder.ret_void()
 
