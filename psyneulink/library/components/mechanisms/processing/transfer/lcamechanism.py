@@ -196,7 +196,7 @@ from psyneulink.core.components.functions.statefulfunctions.integratorfunctions 
 from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.globals.keywords import \
-    BETA, CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, INITIALIZER, LCA_MECHANISM, LESS_THAN_OR_EQUAL, NAME, NOISE, \
+    CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, INITIALIZER, LCA_MECHANISM, LESS_THAN_OR_EQUAL, MATRIX, NAME, NOISE,\
     RATE, RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, TIME_STEP_SIZE, VALUE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags
@@ -387,7 +387,6 @@ class LCAMechanism(RecurrentTransferMechanism):
                  default_variable=None,
                  size:tc.optional(tc.any(int, list, np.array))=None,
                  input_ports:tc.optional(tc.any(list, dict))=None,
-                 matrix=None,
                  function=Logistic,
                  initial_value=None,
                  leak=0.5,
@@ -413,9 +412,13 @@ class LCAMechanism(RecurrentTransferMechanism):
             output_ports = [RESULT]
 
         # MODIFIED 1/22/20 NEW: [JDC]
-        if matrix is not None:
-            self_excitation = None
-            competition = None
+        if MATRIX in kwargs:
+            matrix = kwargs[MATRIX]
+            if matrix is not None:
+                self_excitation = None
+                competition = None
+        else:
+            matrix = None
         # MODIFIED 1/22/20 END
 
         if competition is not None and hetero is not None:
