@@ -34,9 +34,10 @@ Overview
 An LCAMechanism is a subclass of `RecurrentTransferMechanism` that implements a single-layered `leaky competitng
 accumulator (LCA) <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_  network. By default, it uses a
 `LeakyCompetingIntegrator` (the `rate <LeakyCompetingIntegrator.rate>` of which is specified by the **leak** argument)
-and a `Logistic` Function to compute the activity of its units, each of which has a  self-excitatory connection
+and a `Logistic` Function to compute the activity of the units, each of which has a  self-excitatory connection
 (specified by the **self_excitation** argument) and mutually inhibitory connections with every other element (specified
-by the **competition** argument).
+by the **competition** argument).  These are implemented by its `recurrent_projection
+<RecurrentTransferMechanism.recurrent_projection>`, the `matrix  <MappingProjection.matrix>` of which
 
     COMMENT:
     .. math::
