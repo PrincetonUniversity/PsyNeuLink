@@ -446,43 +446,44 @@ class LLVMBuilderContext:
             any_cond = ir.IntType(1)(0)
 
             # Calculate execution set before running the mechanisms
-            for idx, mech in enumerate(composition.nodes):
-                run_set_mech_ptr = builder.gep(run_set_ptr,
+            for idx, node in enumerate(composition.nodes):
+                run_set_node_ptr = builder.gep(run_set_ptr,
                                                [zero, self.int32_ty(idx)],
-                                               name="run_cond_ptr_" + mech.name)
-                mech_cond = cond_gen.generate_sched_condition(
-                    builder, composition._get_processing_condition_set(mech),
-                    cond, mech)
-                ran = cond_gen.generate_ran_this_pass(builder, cond, mech)
-                mech_cond = builder.and_(mech_cond, builder.not_(ran),
-                                         name="run_cond_" + mech.name)
-                any_cond = builder.or_(any_cond, mech_cond, name="any_ran_cond")
-                builder.store(mech_cond, run_set_mech_ptr)
+                                               name="run_cond_ptr_" + node.name)
+                node_cond = cond_gen.generate_sched_condition(
+                    builder, composition._get_processing_condition_set(node),
+                    cond, node)
+                ran = cond_gen.generate_ran_this_pass(builder, cond, node)
+                node_cond = builder.and_(node_cond, builder.not_(ran),
+                                         name="run_cond_" + node.name)
+                any_cond = builder.or_(any_cond, node_cond, name="any_ran_cond")
+                builder.store(node_cond, run_set_node_ptr)
 
-            for idx, mech in enumerate(composition.nodes):
-                run_set_mech_ptr = builder.gep(run_set_ptr, [zero, self.int32_ty(idx)])
-                mech_cond = builder.load(run_set_mech_ptr, name="mech_" + mech.name + "_should_run")
-                with builder.if_then(mech_cond):
-                    mech_w = composition._get_node_wrapper(mech)
-                    mech_f = self.import_llvm_function(mech_w)
-                    builder.block.name = "invoke_" + mech_f.name
+            for idx, node in enumerate(composition.nodes):
+                run_set_node_ptr = builder.gep(run_set_ptr, [zero, self.int32_ty(idx)])
+                node_cond = builder.load(run_set_node_ptr, name="node_" + node.name + "_should_run")
+                with builder.if_then(node_cond):
+                    node_w = composition._get_node_wrapper(node)
+                    node_f = self.import_llvm_function(node_w)
+                    builder.block.name = "invoke_" + node_f.name
                     # Wrappers do proper indexing of all structures
-                    if len(mech_f.args) == 5:  # Mechanism wrappers have 5 inputs
-                        builder.call(mech_f, [state, params, comp_in, data, output_storage])
-                    else:
-                        builder.call(mech_f, [state, params, comp_in, data, output_storage, cond])
+                    # Mechanisms have only 5 args
+                    args = [state, params, comp_in, data, output_storage]
+                    if len(node_f.args) >= 6:  # Composition wrappers have 6 args
+                        args.append(cond)
+                    builder.call(node_f, args)
 
-                    cond_gen.generate_update_after_run(builder, cond, mech)
-                builder.block.name = "post_invoke_" + mech_f.name
+                    cond_gen.generate_update_after_run(builder, cond, node)
+                builder.block.name = "post_invoke_" + node_f.name
 
             # Writeback results
-            for idx, mech in enumerate(composition.nodes):
-                run_set_mech_ptr = builder.gep(run_set_ptr, [zero, self.int32_ty(idx)])
-                mech_cond = builder.load(run_set_mech_ptr, name="mech_" + mech.name + "_ran")
-                with builder.if_then(mech_cond):
-                    out_ptr = builder.gep(output_storage, [zero, zero, self.int32_ty(idx)], name="result_ptr_" + mech.name)
+            for idx, node in enumerate(composition.nodes):
+                run_set_node_ptr = builder.gep(run_set_ptr, [zero, self.int32_ty(idx)])
+                node_cond = builder.load(run_set_node_ptr, name="node_" + node.name + "_ran")
+                with builder.if_then(node_cond):
+                    out_ptr = builder.gep(output_storage, [zero, zero, self.int32_ty(idx)], name="result_ptr_" + node.name)
                     data_ptr = builder.gep(data, [zero, zero, self.int32_ty(idx)],
-                                           name="data_result_" + mech.name)
+                                           name="data_result_" + node.name)
                     builder.store(builder.load(out_ptr), data_ptr)
 
             # Update step counter
