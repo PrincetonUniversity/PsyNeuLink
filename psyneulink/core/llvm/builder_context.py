@@ -312,6 +312,11 @@ class LLVMBuilderContext:
 
         builder.call(input_cim_f, [state, params, comp_in, data, data])
 
+        # Call parameter CIM
+        param_cim_w = composition._get_node_wrapper(composition.parameter_CIM)
+        param_cim_f = self.import_llvm_function(param_cim_w)
+        builder.call(param_cim_f, [state, params, comp_in, data, data])
+
         yield builder, data, params, cond_gen
 
         if "alloca_data" in debug_env:
@@ -401,11 +406,6 @@ class LLVMBuilderContext:
     def gen_composition_exec(self, composition, simulation=False):
         with self._gen_composition_exec_context(composition, simulation) as (builder, data, params, cond_gen):
             state, _, comp_in, _, cond = builder.function.args
-
-            # Call parameter CIM
-            param_cim_w = composition._get_node_wrapper(composition.parameter_CIM)
-            param_cim_f = self.import_llvm_function(param_cim_w)
-            builder.call(param_cim_f, [state, params, comp_in, data, data])
 
             if simulation is False and composition.enable_controller and \
                composition.controller_mode == BEFORE:
