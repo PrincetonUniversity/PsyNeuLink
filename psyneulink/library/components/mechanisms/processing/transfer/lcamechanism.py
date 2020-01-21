@@ -37,7 +37,9 @@ accumulator (LCA) <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_  network. By 
 and a `Logistic` Function to compute the activity of the units, each of which has a  self-excitatory connection
 (specified by the **self_excitation** argument) and mutually inhibitory connections with every other element (specified
 by the **competition** argument).  These are implemented by its `recurrent_projection
-<RecurrentTransferMechanism.recurrent_projection>`, the `matrix  <MappingProjection.matrix>` of which
+<RecurrentTransferMechanism.recurrent_projection>`, the `matrix  <MappingProjection.matrix>` of which consists of
+diagnoal elements assign the value of `self_excitation <LCAMechanism.self_excitation>` off-diagonal elements assigned
+the negative of the value of `competition <LCAMechanism.competition>`.
 
     COMMENT:
     .. math::
