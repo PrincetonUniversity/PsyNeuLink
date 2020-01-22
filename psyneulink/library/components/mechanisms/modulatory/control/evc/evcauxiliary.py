@@ -841,18 +841,23 @@ class PredictionMechanism(IntegratorMechanism):
                     :default value: None
                     :type:
 
+                input_type
+                    see `input_type <PredictionMechanism.input_type>`
+
+                    :default value: None
+                    :type:
+
                 rate
                     see `rate <PredictionMechanism.rate>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 window_size
                     see `window_size <PredictionMechanism.window_size>`
 
                     :default value: 1
-                    :type: int
-
+                    :type: ``int``
         """
         window_size = Parameter(1, stateful=False, loggable=False)
         filter_function = Parameter(None, stateful=False, loggable=False)

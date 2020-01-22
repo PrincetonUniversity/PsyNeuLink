@@ -592,7 +592,6 @@ class Projection_Base(Projection):
 
                     :default value: None
                     :type:
-
         """
         weight = Parameter(None, modulable=True)
         exponent = Parameter(None, modulable=True)

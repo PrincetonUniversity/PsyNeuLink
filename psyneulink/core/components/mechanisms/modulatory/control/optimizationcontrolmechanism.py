@@ -608,7 +608,7 @@ class OptimizationControlMechanism(ControlMechanism):
             ----------
 
                 agent_rep
-                    see `agent_rep <OptimizationControlMechanism.agent_rep>`
+                    see `agent_rep <OptimizationControlMechanism_Agent_Rep>`
 
                     :default value: None
                     :type:
@@ -617,7 +617,7 @@ class OptimizationControlMechanism(ControlMechanism):
                     see `comp_execution_mode <OptimizationControlMechanism.comp_execution_mode>`
 
                     :default value: `PYTHON`
-                    :type: str
+                    :type: ``str``
 
                 control_allocation_search_space
                     see `control_allocation_search_space <OptimizationControlMechanism.control_allocation_search_space>`
@@ -626,28 +626,41 @@ class OptimizationControlMechanism(ControlMechanism):
                     :type:
 
                 feature_function
-                    see `feature_function <OptimizationControlMechanism.feature_function>`
-
-                    :default value: None
-                    :type:
-
-                features
-                    see `features <OptimizationControlMechanism.features>`
+                    see `feature_function <OptimizationControlMechanism_Feature_Function>`
 
                     :default value: None
                     :type:
 
                 function
-                    see `function <OptimizationControlMechanism.function>`
+                    see `function <OptimizationControlMechanism_Function>`
 
                     :default value: None
                     :type:
 
+                input_ports
+                    see `input_ports <OptimizationControlMechanism.input_ports>`
+
+                    :default value: ["{name: OUTCOME, params: {internal_only: True}}"]
+                    :type: ``list``
+                    :read only: True
+
                 num_estimates
                     see `num_estimates <OptimizationControlMechanism.num_estimates>`
 
-                    :default value: 1
-                    :type: int
+                    :default value: None
+                    :type:
+
+                saved_samples
+                    see `saved_samples <OptimizationControlMechanism.saved_samples>`
+
+                    :default value: None
+                    :type:
+
+                saved_values
+                    see `saved_values <OptimizationControlMechanism.saved_values>`
+
+                    :default value: None
+                    :type:
 
                 search_function
                     see `search_function <OptimizationControlMechanism.search_function>`
@@ -659,14 +672,13 @@ class OptimizationControlMechanism(ControlMechanism):
                     see `search_statefulness <OptimizationControlMechanism.search_statefulness>`
 
                     :default value: True
-                    :type: bool
+                    :type: ``bool``
 
                 search_termination_function
                     see `search_termination_function <OptimizationControlMechanism.search_termination_function>`
 
                     :default value: None
                     :type:
-
         """
         function = Parameter(None, stateful=False, loggable=False)
         feature_function = Parameter(None, stateful=False, loggable=False)

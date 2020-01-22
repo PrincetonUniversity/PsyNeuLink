@@ -1364,14 +1364,14 @@ class Mechanism_Base(Mechanism):
                     see `variable <Mechanism_Base.variable>`
 
                     :default value: numpy.array([[0]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 value
                     see `value <Mechanism_Base.value>`
 
                     :default value: numpy.array([[0]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 function
@@ -1380,13 +1380,38 @@ class Mechanism_Base(Mechanism):
                     :default value: `Linear`
                     :type: `Function`
 
+                input_labels_dict
+                    see `input_labels_dict <Mechanism_Base.input_labels_dict>`
+
+                    :default value: {}
+                    :type: <class 'dict'>
+
+                input_ports
+                    see `input_ports <Mechanism_Base.input_ports>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                output_labels_dict
+                    see `output_labels_dict <Mechanism_Base.output_labels_dict>`
+
+                    :default value: {}
+                    :type: <class 'dict'>
+
+                output_ports
+                    see `output_ports <Mechanism_Base.output_ports>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
                 previous_value
                     see `previous_value <Mechanism_Base.previous_value>`
 
                     :default value: None
                     :type:
                     :read only: True
-
         """
         variable = Parameter(np.array([[0]]),
                              read_only=True, pnl_internal=True,

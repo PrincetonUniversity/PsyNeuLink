@@ -550,7 +550,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                     see `auto <RecurrentTransferMechanism.auto>`
 
                     :default value: 1
-                    :type: int
+                    :type: ``int``
 
                 combination_function
                     see `combination_function <RecurrentTransferMechanism.combination_function>`
@@ -562,19 +562,25 @@ class RecurrentTransferMechanism(TransferMechanism):
                     see `enable_learning <RecurrentTransferMechanism.enable_learning>`
 
                     :default value: False
-                    :type: bool
+                    :type: ``bool``
+
+                has_recurrent_input_port
+                    see `has_recurrent_input_port <RecurrentTransferMechanism.has_recurrent_input_port>`
+
+                    :default value: None
+                    :type:
 
                 hetero
                     see `hetero <RecurrentTransferMechanism.hetero>`
 
                     :default value: 0
-                    :type: int
+                    :type: ``int``
 
                 integration_rate
                     see `integration_rate <RecurrentTransferMechanism.integration_rate>`
 
                     :default value: 0.5
-                    :type: float
+                    :type: ``float``
 
                 learning_condition
                     see `learning_condition <RecurrentTransferMechanism.learning_condition>`
@@ -598,20 +604,19 @@ class RecurrentTransferMechanism(TransferMechanism):
                     see `matrix <RecurrentTransferMechanism.matrix>`
 
                     :default value: `HOLLOW_MATRIX`
-                    :type: str
+                    :type: ``str``
 
                 noise
                     see `noise <RecurrentTransferMechanism.noise>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 smoothing_factor
                     see `smoothing_factor <RecurrentTransferMechanism.smoothing_factor>`
 
                     :default value: 0.5
-                    :type: float
-
+                    :type: ``float``
         """
         matrix = Parameter(HOLLOW_MATRIX, modulable=True, getter=_recurrent_transfer_mechanism_matrix_getter, setter=_recurrent_transfer_mechanism_matrix_setter)
         auto = Parameter(1, modulable=True)

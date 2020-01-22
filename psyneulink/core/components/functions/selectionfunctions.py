@@ -175,14 +175,13 @@ class OneHot(SelectionFunction):
                     see `mode <OneHot.mode>`
 
                     :default value: `MAX_VAL`
-                    :type: str
+                    :type: ``str``
 
                 random_state
                     see `random_state <OneHot.random_state>`
 
                     :default value: None
-                    :type:
-
+                    :type: ``numpy.random.RandomState``
         """
         mode = Parameter(MAX_VAL, stateful=False)
         random_state = Parameter(None, stateful=True, loggable=False)

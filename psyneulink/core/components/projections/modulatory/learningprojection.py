@@ -383,7 +383,7 @@ class LearningProjection(ModulatoryProjection_Base):
                     see `value <LearningProjection.value>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 error_function
@@ -422,7 +422,6 @@ class LearningProjection(ModulatoryProjection_Base):
                     :default value: None
                     :type:
                     :read only: True
-
         """
         value = Parameter(np.array([0]), read_only=True, aliases=['weight_change_matrix'], pnl_internal=True)
         function = Parameter(Linear, stateful=False, loggable=False)

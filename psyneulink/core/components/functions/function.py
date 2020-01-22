@@ -487,9 +487,20 @@ class Function_Base(Function):
                     see `variable <Function_Base.variable>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
+                enable_output_type_conversion
+                    see `enable_output_type_conversion <Function_Base.enable_output_type_conversion>`
+
+                    :default value: False
+                    :type: ``bool``
+
+                output_type
+                    see `output_type <Function_Base.output_type>`
+
+                    :default value: FunctionOutputType.DEFAULT
+                    :type: `FunctionOutputType`
         """
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 

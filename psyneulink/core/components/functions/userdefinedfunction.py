@@ -358,6 +358,16 @@ class UserDefinedFunction(Function_Base):
     componentType = USER_DEFINED_FUNCTION_TYPE
 
     class Parameters(Function_Base.Parameters):
+        """
+            Attributes
+            ----------
+
+                custom_function
+                    see `custom_function <UserDefinedFunction.custom_function>`
+
+                    :default value: None
+                    :type:
+        """
         custom_function = Parameter(
             None,
             stateful=False,

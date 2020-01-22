@@ -229,11 +229,10 @@ class ControlProjection(ModulatoryProjection_Base):
                     :read only: True
 
                 function
-                    see `function <Projection_Base.function>`
+                    see `function <ControlProjection.function>`
 
                     :default value: `Linear`
                     :type: `Function`
-
         """
         function = Parameter(Linear, stateful=False, loggable=False)
         control_signal = Parameter(None, read_only=True, getter=_control_signal_getter, setter=_control_signal_setter, pnl_internal=True)

@@ -101,7 +101,6 @@ class TransferFunction(Function_Base):
 
                     :default value: None
                     :type:
-
         """
         bounds = None
 
@@ -376,14 +375,13 @@ class Linear(TransferFunction):  # ---------------------------------------------
                     see `intercept <Linear.intercept>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 slope
                     see `slope <Linear.slope>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         slope = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         intercept = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -614,26 +612,25 @@ class Exponential(TransferFunction):  # ----------------------------------------
                     see `bias <Exponential.bias>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 offset
                     see `offset <Exponential.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 rate
                     see `rate <Exponential.rate>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 scale
                     see `scale <Exponential.scale>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -876,32 +873,31 @@ class Logistic(TransferFunction):  # -------------------------------------------
                     see `bias <Logistic.bias>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 gain
                     see `gain <Logistic.gain>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 offset
                     see `offset <Logistic.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 scale
                     see `scale <Logistic.scale>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 x_0
                     see `x_0 <Logistic.x_0>`
 
                     :default value: 0.0
-                    :type: float
-
+                    :type: ``float``
         """
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         x_0 = Parameter(0.0, modulable=True)
@@ -1173,32 +1169,31 @@ class Tanh(TransferFunction):  # -----------------------------------------------
                     see `bias <Tanh.bias>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 gain
                     see `gain <Tanh.gain>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 offset
                     see `offset <Tanh.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 scale
                     see `scale <Tanh.scale>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 x_0
                     see `x_0 <Tanh.x_0>`
 
                     :default value: 0.0
-                    :type: float
-
+                    :type: ``float``
         """
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         x_0 = Parameter(0.0, modulable=True)
@@ -1416,20 +1411,19 @@ class ReLU(TransferFunction):  # -----------------------------------------------
                     see `bias <ReLU.bias>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 gain
                     see `gain <ReLU.gain>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 leak
                     see `leak <ReLU.leak>`
 
                     :default value: 0.0
-                    :type: float
-
+                    :type: ``float``
         """
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -1647,26 +1641,25 @@ class Gaussian(TransferFunction):  # -------------------------------------------
                     see `bias <Gaussian.bias>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 offset
                     see `offset <Gaussian.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 scale
                     see `scale <Gaussian.scale>`
 
-                    :default value: 0.0
-                    :type: float
+                    :default value: 1.0
+                    :type: ``float``
 
                 standard_deviation
                     see `standard_deviation <Gaussian.standard_deviation>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -1915,32 +1908,31 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
                     see `bias <GaussianDistort.bias>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 offset
                     see `offset <GaussianDistort.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 random_state
                     see `random_state <GaussianDistort.random_state>`
 
                     :default value: None
-                    :type:
+                    :type: ``numpy.random.RandomState``
 
                 scale
                     see `scale <GaussianDistort.scale>`
 
-                    :default value: 0.0
-                    :type: float
+                    :default value: 1.0
+                    :type: ``float``
 
                 variance
                     see `variance <GaussianDistort.variance>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         variance = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -2196,7 +2188,7 @@ class SoftMax(TransferFunction):
                     see `variable <SoftMax.variable>`
 
                     :default value: numpy.array(0.)
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 bounds
@@ -2209,20 +2201,19 @@ class SoftMax(TransferFunction):
                     see `gain <SoftMax.gain>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 output
                     see `output <SoftMax.output>`
 
                     :default value: `ALL`
-                    :type: str
+                    :type: ``str``
 
                 per_item
                     see `per_item <SoftMax.per_item>`
 
                     :default value: True
-                    :type: bool
-
+                    :type: ``bool``
         """
         variable = Parameter(np.array(0.0), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -2610,7 +2601,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
                     :default value: None
                     :type:
-
         """
         matrix = Parameter(None, modulable=True)
         bounds = None
@@ -3570,11 +3560,29 @@ class TransferWithCosts(TransferFunction):
             Attributes
             ----------
 
+                variable
+                    see `variable <TransferWithCosts.variable>`
+
+                    :default value: numpy.array([0])
+                    :type: ``numpy.ndarray``
+
+                LinearCombination
+                    see `LinearCombination <TransferWithCosts.LinearCombination>`
+
+                    :default value: `LinearCombination`
+                    :type: `Function`
+
+                SimpleIntegrator
+                    see `SimpleIntegrator <TransferWithCosts.SimpleIntegrator>`
+
+                    :default value: `SimpleIntegrator`
+                    :type: `Function`
+
                 adjustment_cost
                     see `adjustment_cost <TransferWithCosts.adjustment_cost>`
 
                     :default value: None
-                    :type: int
+                    :type:
 
                 adjustment_cost_fct
                     see `adjustment_cost_fct <TransferWithCosts.adjustment_cost_fct>`
@@ -3582,53 +3590,47 @@ class TransferWithCosts(TransferFunction):
                     :default value: `Linear`
                     :type: `Function`
 
-                adjustment_cost_fct_mult_param
-                    see `adjustment_cost_fct_mult_param <TransferWithCosts.adjustment_cost_fct_mult_param>`
-
-                    :default value:  adjustment_cost.multiplicative.param
-                    :type: number
-
                 adjustment_cost_fct_add_param
                     see `adjustment_cost_fct_add_param <TransferWithCosts.adjustment_cost_fct_add_param>`
 
-                    :default value: adjustment_cost.additive.param
-                    :type: number
+                    :default value: None
+                    :type:
 
-                combined_costs
-                    see `cost <TransferWithCosts.combined_costs>`
+                adjustment_cost_fct_mult_param
+                    see `adjustment_cost_fct_mult_param <TransferWithCosts.adjustment_cost_fct_mult_param>`
 
                     :default value: None
                     :type:
 
                 combine_costs_fct
-                    see `combine_costs_fct < TransferWithCosts.combine_costs_fct>`
+                    see `combine_costs_fct <TransferWithCosts.combine_costs_fct>`
 
                     :default value: `LinearCombination`
                     :type: `Function`
 
-                combine_costs_fct_mult_param
-                    see `combine_costs_fct_mult_param <TransferWithCosts.combine_costs_fct_mult_param>`
-
-                    :default value:  combine_costs.multiplicative.param
-                    :type: number
-
                 combine_costs_fct_add_param
                     see `combine_costs_fct_add_param <TransferWithCosts.combine_costs_fct_add_param>`
 
-                    :default value: combine_costs.additive.param
-                    :type: number
+                    :default value: None
+                    :type:
 
-                enabled_cost_functions
-                    see `enabled_cost_functions <TransferWithCosts.enabled_cost_functions>`
+                combine_costs_fct_mult_param
+                    see `combine_costs_fct_mult_param <TransferWithCosts.combine_costs_fct_mult_param>`
 
-                    :default value: CostFunctions.INTENSITY
-                    :type: `CostFunctions`
+                    :default value: None
+                    :type:
+
+                combined_costs
+                    see `combined_costs <TransferWithCosts.combined_costs>`
+
+                    :default value: None
+                    :type:
 
                 duration_cost
                     see `duration_cost <TransferWithCosts.duration_cost>`
 
                     :default value: None
-                    :type: int
+                    :type:
 
                 duration_cost_fct
                     see `duration_cost_fct <TransferWithCosts.duration_cost_fct>`
@@ -3636,23 +3638,29 @@ class TransferWithCosts(TransferFunction):
                     :default value: `SimpleIntegrator`
                     :type: `Function`
 
-                duration_cost_fct_mult_param
-                    see `duration_cost_fct_mult_param <TransferWithCosts.duration_cost_fct_mult_param>`
-
-                    :default value:  duration_cost.multiplicative.param
-                    :type: number
-
                 duration_cost_fct_add_param
                     see `duration_cost_fct_add_param <TransferWithCosts.duration_cost_fct_add_param>`
 
-                    :default value: duration_cost.additive.param
-                    :type: number
+                    :default value: None
+                    :type:
+
+                duration_cost_fct_mult_param
+                    see `duration_cost_fct_mult_param <TransferWithCosts.duration_cost_fct_mult_param>`
+
+                    :default value: None
+                    :type:
+
+                enabled_cost_functions
+                    see `enabled_cost_functions <TransferWithCosts.enabled_cost_functions>`
+
+                    :default value: CostFunctions.INTENSITY
+                    :type: `CostFunctions`
 
                 intensity
                     see `intensity <TransferWithCosts.intensity>`
 
-                    :default value: 0
-                    :type: number
+                    :default value: numpy.array([0])
+                    :type: ``numpy.ndarray``
 
                 intensity_cost
                     see `intensity_cost <TransferWithCosts.intensity_cost>`
@@ -3666,17 +3674,17 @@ class TransferWithCosts(TransferFunction):
                     :default value: `Exponential`
                     :type: `Function`
 
-                intensity_cost_fct_mult_param
-                    see `intensity_cost_fct_mult_param <TransferWithCosts.intensity_cost_fct_mult_param>`
-
-                    :default value:  intensity_cost.multiplicative.param
-                    :type: number
-
                 intensity_cost_fct_add_param
                     see `intensity_cost_fct_add_param <TransferWithCosts.intensity_cost_fct_add_param>`
 
-                    :default value: intensity_cost.additive.param
-                    :type: number
+                    :default value: None
+                    :type:
+
+                intensity_cost_fct_mult_param
+                    see `intensity_cost_fct_mult_param <TransferWithCosts.intensity_cost_fct_mult_param>`
+
+                    :default value: None
+                    :type:
 
                 transfer_fct
                     see `transfer_fct <TransferWithCosts.transfer_fct>`
@@ -3684,18 +3692,17 @@ class TransferWithCosts(TransferFunction):
                     :default value: `Linear`
                     :type: `Function`
 
-                transfer_fct_mult_param
-                    serves as `multiplicative_param <Function_Modulatory_Params>` for TransferWithCosts
-
-                    :default value:  transfer.multiplicative.param
-                    :type: number
-
                 transfer_fct_add_param
-                    serves as `additive_param <Function_Modulatory_Params>` for TransferWithCosts
+                    see `transfer_fct_add_param <TransferWithCosts.transfer_fct_add_param>`
 
-                    :default value: transfer.additive.param
-                    :type: number
+                    :default value: None
+                    :type:
 
+                transfer_fct_mult_param
+                    see `transfer_fct_mult_param <TransferWithCosts.transfer_fct_mult_param>`
+
+                    :default value: None
+                    :type:
         """
         variable = Parameter(np.array([0]),
                              history_min_length=1)

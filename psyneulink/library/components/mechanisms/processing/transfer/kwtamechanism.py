@@ -295,7 +295,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
                     see `average_based <KWTAMechanism.average_based>`
 
                     :default value: False
-                    :type: bool
+                    :type: ``bool``
 
                 function
                     see `function <KWTAMechanism.function>`
@@ -307,26 +307,25 @@ class KWTAMechanism(RecurrentTransferMechanism):
                     see `inhibition_only <KWTAMechanism.inhibition_only>`
 
                     :default value: True
-                    :type: bool
+                    :type: ``bool``
 
                 k_value
                     see `k_value <KWTAMechanism.k_value>`
 
                     :default value: 0.5
-                    :type: float
+                    :type: ``float``
 
                 ratio
                     see `ratio <KWTAMechanism.ratio>`
 
                     :default value: 0.5
-                    :type: float
+                    :type: ``float``
 
                 threshold
                     see `threshold <KWTAMechanism.threshold>`
 
                     :default value: 0.0
-                    :type: float
-
+                    :type: ``float``
         """
         function = Parameter(Logistic, stateful=False, loggable=False)
         k_value = Parameter(0.5, modulable=True)

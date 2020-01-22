@@ -313,13 +313,6 @@ class KohonenLearningMechanism(LearningMechanism):
 
                     :default value: None
                     :type:
-
-                modulation
-                    see `modulation <KohonenLearningMechanism.modulation>`
-
-                    :default value: ADDITIVE
-                    :type: str
-
         """
         function = Parameter(Hebbian, stateful=False, loggable=False)
 

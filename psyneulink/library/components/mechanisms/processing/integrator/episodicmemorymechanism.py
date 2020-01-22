@@ -176,11 +176,42 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
             ----------
 
                 variable
-                    see `variable <Mechanism_Base.variable>`
+                    see `variable <EpisodicMemoryMechanism.variable>`
 
                     :default value: [[0]]
-                    :type: list
+                    :type: ``list``
 
+                assoc_size
+                    see `assoc_size <EpisodicMemoryMechanism.assoc_size>`
+
+                    :default value: 0
+                    :type: ``int``
+
+                content_size
+                    see `content_size <EpisodicMemoryMechanism.content_size>`
+
+                    :default value: 1
+                    :type: ``int``
+
+                function
+                    see `function <EpisodicMemoryMechanism.function>`
+
+                    :default value: `ContentAddressableMemory`
+                    :type: `Function`
+
+                input_ports
+                    see `input_ports <EpisodicMemoryMechanism.input_ports>`
+
+                    :default value: ["{name: CONTENT_INPUT, size: 1}"]
+                    :type: ``list``
+                    :read only: True
+
+                output_ports
+                    see `output_ports <EpisodicMemoryMechanism.output_ports>`
+
+                    :default value: ["{name: CONTENT_OUTPUT, variable: (OWNER_VALUE, 0)}"]
+                    :type: ``list``
+                    :read only: True
         """
         variable = Parameter([[0]], pnl_internal=True, constructor_argument='default_variable')
         function = Parameter(ContentAddressableMemory, stateful=False, loggable=False)

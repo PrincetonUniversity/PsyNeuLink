@@ -1645,24 +1645,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Attributes
             ----------
 
+                input_specification
+                    see `input_specification <Composition.input_specification>`
+
+                    :default value: None
+                    :type:
+
                 results
                     see `results <Composition.results>`
 
                     :default value: []
-                    :type: list
+                    :type: ``list``
 
                 retain_old_simulation_data
                     see `retain_old_simulation_data <Composition.retain_old_simulation_data>`
 
                     :default value: False
-                    :type: bool
+                    :type: ``bool``
 
                 simulation_results
                     see `simulation_results <Composition.simulation_results>`
 
                     :default value: []
-                    :type: list
-
+                    :type: ``list``
         """
         results = Parameter([], loggable=False, pnl_internal=True)
         simulation_results = Parameter([], loggable=False, pnl_internal=True)

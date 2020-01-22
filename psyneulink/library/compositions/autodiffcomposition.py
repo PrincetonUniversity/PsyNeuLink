@@ -438,7 +438,7 @@ class AutodiffComposition(Composition):
                     see `learning_rate <AutodiffComposition.learning_rate>`
 
                     :default value: 0.001
-                    :type: float
+                    :type: ``float``
 
                 losses
                     see `losses <AutodiffComposition.losses>`
@@ -450,7 +450,7 @@ class AutodiffComposition(Composition):
                     see `min_delta <AutodiffComposition.min_delta>`
 
                     :default value: 0
-                    :type: int
+                    :type: ``int``
 
                 optimizer
                     see `optimizer <AutodiffComposition.optimizer>`
@@ -469,7 +469,6 @@ class AutodiffComposition(Composition):
 
                     :default value: None
                     :type:
-
         """
         optimizer = None
         learning_rate = Parameter(.001, fallback_default=True)

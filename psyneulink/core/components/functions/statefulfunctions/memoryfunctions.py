@@ -174,18 +174,23 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                     :default value: None
                     :type:
 
+                initializer
+                    see `initializer <Buffer.initializer>`
+
+                    :default value: numpy.array([], dtype=float64)
+                    :type: ``numpy.ndarray``
+
                 noise
                     see `noise <Buffer.noise>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 rate
                     see `rate <Buffer.rate>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -590,7 +595,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                     see `variable <ContentAddressableMemory.variable>`
 
                     :default value: [[0], [0]]
-                    :type: list
+                    :type: ``list``
 
                 distance_function
                     see `distance_function <ContentAddressableMemory.distance_function>`
@@ -602,49 +607,49 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                     see `duplicate_keys <ContentAddressableMemory.duplicate_keys>`
 
                     :default value: False
-                    :type: bool
+                    :type: ``bool``
 
                 equidistant_keys_select
                     see `equidistant_keys_select <ContentAddressableMemory.equidistant_keys_select>`
 
                     :default value: `RANDOM`
-                    :type: str
+                    :type: ``str``
 
                 key_size
                     see `key_size <ContentAddressableMemory.key_size>`
 
                     :default value: 1
-                    :type: int
+                    :type: ``int``
 
                 max_entries
                     see `max_entries <ContentAddressableMemory.max_entries>`
 
                     :default value: 1000
-                    :type: int
+                    :type: ``int``
 
                 noise
                     see `noise <ContentAddressableMemory.noise>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 random_state
                     see `random_state <ContentAddressableMemory.random_state>`
 
                     :default value: None
-                    :type:
+                    :type: ``numpy.random.RandomState``
 
                 rate
                     see `rate <ContentAddressableMemory.rate>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 retrieval_prob
                     see `retrieval_prob <ContentAddressableMemory.retrieval_prob>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 selection_function
                     see `selection_function <ContentAddressableMemory.selection_function>`
@@ -656,14 +661,13 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                     see `storage_prob <ContentAddressableMemory.storage_prob>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 val_size
                     see `val_size <ContentAddressableMemory.val_size>`
 
                     :default value: 1
-                    :type: int
-
+                    :type: ``int``
         """
         variable = Parameter([[0],[0]], pnl_internal=True, constructor_argument='default_variable')
         retrieval_prob = Parameter(1.0, modulable=True)

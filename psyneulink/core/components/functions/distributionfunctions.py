@@ -130,14 +130,13 @@ class NormalDist(DistributionFunction):
                     see `mean <NormalDist.mean>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 standard_deviation
                     see `standard_deviation <NormalDist.standard_deviation>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -272,21 +271,20 @@ class UniformToNormalDist(DistributionFunction):
                     see `variable <UniformToNormalDist.variable>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 mean
                     see `mean <UniformToNormalDist.mean>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 standard_deviation
                     see `standard_deviation <UniformToNormalDist.standard_deviation>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -399,8 +397,7 @@ class ExponentialDist(DistributionFunction):
                     see `beta <ExponentialDist.beta>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         beta = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
 
@@ -503,14 +500,13 @@ class UniformDist(DistributionFunction):
                     see `high <UniformDist.high>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 low
                     see `low <UniformDist.low>`
 
                     :default value: 0.0
-                    :type: float
-
+                    :type: ``float``
         """
         low = Parameter(0.0, modulable=True)
         high = Parameter(1.0, modulable=True)
@@ -624,14 +620,13 @@ class GammaDist(DistributionFunction):
                     see `dist_shape <GammaDist.dist_shape>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 scale
                     see `scale <GammaDist.scale>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         dist_shape = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -744,14 +739,13 @@ class WaldDist(DistributionFunction):
                     see `mean <WaldDist.mean>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 scale
                     see `scale <WaldDist.scale>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         mean = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -932,39 +926,45 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                     see `bias <DriftDiffusionAnalytical.bias>`
 
                     :default value: 0.5
-                    :type: float
+                    :type: ``float``
                     :read only: True
 
                 drift_rate
                     see `drift_rate <DriftDiffusionAnalytical.drift_rate>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
+
+                enable_output_type_conversion
+                    see `enable_output_type_conversion <DriftDiffusionAnalytical.enable_output_type_conversion>`
+
+                    :default value: False
+                    :type: ``bool``
+                    :read only: True
 
                 noise
                     see `noise <DriftDiffusionAnalytical.noise>`
 
                     :default value: 0.5
-                    :type: float
+                    :type: ``float``
 
                 starting_point
                     see `starting_point <DriftDiffusionAnalytical.starting_point>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 t0
                     see `t0 <DriftDiffusionAnalytical.t0>`
 
                     :default value: 0.2
-                    :type: float
+                    :type: ``float``
 
                 threshold
                     see `threshold <DriftDiffusionAnalytical.threshold>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         drift_rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         starting_point = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])

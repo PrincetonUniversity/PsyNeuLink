@@ -688,17 +688,19 @@ class DDM(ProcessingMechanism):
                     see `initializer <DDM.initializer>`
 
                     :default value: numpy.array([[0]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
 
                 input_format
                     see `input_format <DDM.input_format>`
 
                     :default value: `SCALAR`
-                    :type: str
+                    :type: ``str``
 
                 random_state
-                    :type: np.random.RandomState
+                    see `random_state <DDM.random_state>`
 
+                    :default value: None
+                    :type: ``numpy.random.RandomState``
         """
         function = Parameter(
             DriftDiffusionAnalytical(

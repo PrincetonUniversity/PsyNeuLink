@@ -329,11 +329,29 @@ class LCAMechanism(RecurrentTransferMechanism):
             Attributes
             ----------
 
+                auto
+                    see `auto <LCAMechanism.auto>`
+
+                    :default value: 0.0
+                    :type: ``float``
+
                 competition
                     see `competition <LCAMechanism.competition>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
+
+                function
+                    see `function <LCAMechanism.function>`
+
+                    :default value: `Logistic`
+                    :type: `Function`
+
+                hetero
+                    see `hetero <LCAMechanism.hetero>`
+
+                    :default value: -1.0
+                    :type: ``float``
 
                 initial_value
                     see `initial_value <LCAMechanism.initial_value>`
@@ -341,29 +359,35 @@ class LCAMechanism(RecurrentTransferMechanism):
                     :default value: None
                     :type:
 
+                integrator_function
+                    see `integrator_function <LCAMechanism.integrator_function>`
+
+                    :default value: `LeakyCompetingIntegrator`
+                    :type: `Function`
+
                 integrator_mode
-                    see `integrator_mode <LCAMechanism.integrator_mode>`
+                    see `integrator_mode <LCAMechanism_Integrator_Mode>`
 
                     :default value: True
-                    :type: bool
+                    :type: ``bool``
 
                 leak
                     see `leak <LCAMechanism.leak>`
 
                     :default value: 0.5
-                    :type: float
+                    :type: ``float``
 
-                self_excitation
-                    see `self_excitation <LCAMechanism.self_excitation>`
+                termination_measure
+                    see `termination_measure <LCAMechanism.termination_measure>`
 
-                    :default value: 0.0
-                    :type: float
+                    :default value: ``max``
+                    :type: ``types.FunctionType``
 
                 time_step_size
                     see `time_step_size <LCAMechanism.time_step_size>`
 
                     :default value: 0.1
-                    :type: float
+                    :type: ``float``
         """
 
         function = Parameter(Logistic, stateful=False, loggable=False)

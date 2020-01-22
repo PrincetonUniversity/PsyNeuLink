@@ -417,22 +417,14 @@ class GatingMechanism(ControlMechanism):
                     see `value <GatingMechanism.value>`
 
                     :default value: numpy.array([0.5])
-                    :type: numpy.ndarray
-
-                control_allocation
-                    see `control_allocation <GatingMechanism.control_allocation>`
-
-                    :default value: NotImplemented
-                    :type: <class 'NotImplementedType'>
-                    :read only: True
+                    :type: ``numpy.ndarray``
 
                 gating_allocation
                     see `gating_allocation <GatingMechanism.gating_allocation>`
 
                     :default value: numpy.array([0.5])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
-
         """
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         value = Parameter(np.array([defaultGatingAllocation]), aliases='control_allocation', pnl_internal=True)

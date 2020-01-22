@@ -729,16 +729,16 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             ----------
 
                 variable
-                    see `variable <Mechanism_Base.variable>`
+                    see `variable <ContrastiveHebbianMechanism.variable>`
 
                     :default value: numpy.array([[0, 0]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
 
                 clamp
                     see `clamp <ContrastiveHebbianMechanism.clamp>`
 
                     :default value: `HARD_CLAMP`
-                    :type: str
+                    :type: ``str``
 
                 combination_function
                     see `combination_function <ContrastiveHebbianMechanism.combination_function>`
@@ -750,20 +750,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                     see `continuous <ContrastiveHebbianMechanism.continuous>`
 
                     :default value: True
-                    :type: bool
-
-                phase_convergence_function
-                    see `phase_convergence_function <ContrastiveHebbianMechanism.phase_convergence_function>`
-
-                    :default value: `Distance`
-                    :type: `Function`
-
-                phase_convergence_threshold
-                    internal parameter, used by is_converged;  assigned the value of the termination_threshold for
-                    the current `phase of execution <ContrastiveHebbian_Execution>`.
-
-                    :default value: .01
-                    :type: float or int
+                    :type: ``bool``
 
                 current_activity
                     see `current_activity <ContrastiveHebbianMechanism.current_activity>`
@@ -800,8 +787,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 hidden_size
                     see `hidden_size <ContrastiveHebbianMechanism.hidden_size>`
 
-                    :default value: None
-                    :type:
+                    :default value: 0
+                    :type: ``int``
 
                 input_activity
                     see `input_activity <ContrastiveHebbianMechanism.input_activity>`
@@ -823,10 +810,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                     :type: `Function`
 
                 max_passes
-                    see `max_passes <TransferMechanism.max_passes>`
+                    see `max_passes <ContrastiveHebbianMechanism.max_passes>`
 
                     :default value: 1000
-                    :type: int
+                    :type: ``int``
 
                 minus_phase_activity
                     see `minus_phase_activity <ContrastiveHebbianMechanism.minus_phase_activity>`
@@ -835,18 +822,16 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                     :type:
 
                 minus_phase_termination_condition
-                    see `minus_phase_termination_condition
-                    <ContrastiveHebbianMechanism.minus_phase_termination_condition>`
+                    see `minus_phase_termination_condition <ContrastiveHebbianMechanism.minus_phase_termination_condition>`
 
                     :default value: `CONVERGENCE`
-                    :type: str
+                    :type: ``str``
 
                 minus_phase_termination_threshold
-                    see `minus_phase_termination_threshold
-                    <ContrastiveHebbianMechanism.minus_phase_termination_threshold>`
+                    see `minus_phase_termination_threshold <ContrastiveHebbianMechanism.minus_phase_termination_threshold>`
 
                     :default value: 0.01
-                    :type: float
+                    :type: ``float``
 
                 mode
                     see `mode <ContrastiveHebbianMechanism.mode>`
@@ -861,17 +846,30 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                     :type:
                     :read only: True
 
+                phase_convergence_function
+                    see `phase_convergence_function <ContrastiveHebbianMechanism.phase_convergence_function>`
+
+                    :default value: `Distance`
+                    :type: `Function`
+
+                phase_convergence_threshold
+                    internal parameter, used by is_converged;  assigned the value of the termination_threshold for
+                    the current `phase of execution <ContrastiveHebbian_Execution>`.
+
+                    :default value: 0.01
+                    :type: ``float``
+
                 phase_execution_count
                     see `phase_execution_count <ContrastiveHebbianMechanism.phase_execution_count>`
 
                     :default value: 0
-                    :type: int
+                    :type: ``int``
 
                 phase_terminated
                     see `phase_terminated <ContrastiveHebbianMechanism.phase_terminated>`
 
                     :default value: False
-                    :type: bool
+                    :type: ``bool``
 
                 plus_phase_activity
                     see `plus_phase_activity <ContrastiveHebbianMechanism.plus_phase_activity>`
@@ -880,24 +878,22 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                     :type:
 
                 plus_phase_termination_condition
-                    see `plus_phase_termination_condition
-                    <ContrastiveHebbianMechanism.plus_phase_termination_condition>`
+                    see `plus_phase_termination_condition <ContrastiveHebbianMechanism.plus_phase_termination_condition>`
 
                     :default value: `CONVERGENCE`
-                    :type: str
+                    :type: ``str``
 
                 plus_phase_termination_threshold
-                    see `plus_phase_termination_threshold
-                    <ContrastiveHebbianMechanism.plus_phase_termination_threshold>`
+                    see `plus_phase_termination_threshold <ContrastiveHebbianMechanism.plus_phase_termination_threshold>`
 
                     :default value: 0.01
-                    :type: float
+                    :type: ``float``
 
                 separated
                     see `separated <ContrastiveHebbianMechanism.separated>`
 
                     :default value: True
-                    :type: bool
+                    :type: ``bool``
 
                 target_activity
                     see `target_activity <ContrastiveHebbianMechanism.target_activity>`
@@ -909,11 +905,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 target_size
                     see `target_size <ContrastiveHebbianMechanism.target_size>`
 
-                    :default value: None
-                    :type:
-
-
-
+                    :default value: 0
+                    :type: ``int``
         """
         variable = np.array([[0, 0]])
         current_activity = Parameter(None, aliases=['recurrent_activity'])

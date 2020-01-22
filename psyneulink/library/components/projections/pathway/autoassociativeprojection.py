@@ -226,14 +226,14 @@ class AutoAssociativeProjection(MappingProjection):
                     see `variable <AutoAssociativeProjection.variable>`
 
                     :default value: numpy.array([[0]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 auto
                     see `auto <AutoAssociativeProjection.auto>`
 
                     :default value: 1
-                    :type: int
+                    :type: ``int``
 
                 function
                     see `function <AutoAssociativeProjection.function>`
@@ -245,14 +245,13 @@ class AutoAssociativeProjection(MappingProjection):
                     see `hetero <AutoAssociativeProjection.hetero>`
 
                     :default value: 0
-                    :type: int
+                    :type: ``int``
 
                 matrix
                     see `matrix <AutoAssociativeProjection.matrix>`
 
                     :default value: `AUTO_ASSIGN_MATRIX`
-                    :type: str
-
+                    :type: ``str``
         """
         variable = Parameter(np.array([[0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         # function is always LinearMatrix that requires 1D input

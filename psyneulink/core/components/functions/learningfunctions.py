@@ -123,15 +123,14 @@ class LearningFunction(Function_Base):
                     see `variable <LearningFunction.variable>`
 
                     :default value: numpy.array([0, 0, 0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 learning_rate
                     see `learning_rate <LearningFunction.learning_rate>`
 
                     :default value: 0.05
-                    :type: float
-
+                    :type: ``float``
         """
         variable = Parameter(np.array([0, 0, 0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         learning_rate = Parameter(0.05, modulable=True)
@@ -315,94 +314,93 @@ class BayesGLM(LearningFunction):
                     see `variable <BayesGLM.variable>`
 
                     :default value: [numpy.array([0, 0, 0]), numpy.array([0])]
-                    :type: list
+                    :type: ``list``
                     :read only: True
 
                 value
                     see `value <BayesGLM.value>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 Lambda_0
                     see `Lambda_0 <BayesGLM.Lambda_0>`
 
                     :default value: 0
-                    :type: int
+                    :type: ``int``
 
                 Lambda_n
                     see `Lambda_n <BayesGLM.Lambda_n>`
 
                     :default value: 0
-                    :type: int
+                    :type: ``int``
 
                 Lambda_prior
                     see `Lambda_prior <BayesGLM.Lambda_prior>`
 
                     :default value: 0
-                    :type: int
+                    :type: ``int``
 
                 gamma_shape_0
                     see `gamma_shape_0 <BayesGLM.gamma_shape_0>`
 
                     :default value: 1
-                    :type: int
+                    :type: ``int``
 
                 gamma_shape_n
                     see `gamma_shape_n <BayesGLM.gamma_shape_n>`
 
                     :default value: 1
-                    :type: int
+                    :type: ``int``
 
                 gamma_shape_prior
                     see `gamma_shape_prior <BayesGLM.gamma_shape_prior>`
 
                     :default value: 1
-                    :type: int
+                    :type: ``int``
 
                 gamma_size_0
                     see `gamma_size_0 <BayesGLM.gamma_size_0>`
 
                     :default value: 1
-                    :type: int
+                    :type: ``int``
 
                 gamma_size_n
                     see `gamma_size_n <BayesGLM.gamma_size_n>`
 
                     :default value: 1
-                    :type: int
+                    :type: ``int``
 
                 gamma_size_prior
                     see `gamma_size_prior <BayesGLM.gamma_size_prior>`
 
                     :default value: 1
-                    :type: int
+                    :type: ``int``
 
                 mu_0
                     see `mu_0 <BayesGLM.mu_0>`
 
                     :default value: 0
-                    :type: int
+                    :type: ``int``
 
                 mu_n
                     see `mu_n <BayesGLM.mu_n>`
 
                     :default value: 0
-                    :type: int
+                    :type: ``int``
 
                 mu_prior
                     see `mu_prior <BayesGLM.mu_prior>`
 
                     :default value: 0
-                    :type: int
+                    :type: ``int``
 
                 sigma_0
                     see `sigma_0 <BayesGLM.sigma_0>`
 
                     :default value: 1
-                    :type: int
-
+                    :type: ``int``
         """
         variable = Parameter([np.array([0, 0, 0]), np.array([0])], read_only=True, pnl_internal=True, constructor_argument='default_variable')
         value = Parameter(np.array([0]), read_only=True, aliases=['sample_weights'], pnl_internal=True)
@@ -718,16 +716,15 @@ class Kohonen(LearningFunction):  # --------------------------------------------
                 variable
                     see `variable <Kohonen.variable>`
 
-                    :default value: [[0, 0], [0, 0], [[0, 0], [0, 0]]]
-                    :type: list
+                    :default value: [[0, 0], [0, 0], numpy.array([[0, 0], [0, 0]])]
+                    :type: ``list``
                     :read only: True
 
                 distance_function
                     see `distance_function <Kohonen.distance_function>`
 
                     :default value: `GAUSSIAN`
-                    :type: str
-
+                    :type: ``str``
         """
         variable = Parameter([[0, 0], [0, 0], np.array([[0, 0], [0, 0]])], read_only=True, pnl_internal=True, constructor_argument='default_variable')
         distance_function = Parameter(GAUSSIAN, stateful=False)
@@ -994,15 +991,14 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                     see `variable <Hebbian.variable>`
 
                     :default value: numpy.array([0, 0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 learning_rate
                     see `learning_rate <Hebbian.learning_rate>`
 
                     :default value: 0.05
-                    :type: float
-
+                    :type: ``float``
         """
         variable = Parameter(np.array([0, 0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         learning_rate = 0.05
@@ -1229,9 +1225,8 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
                     see `variable <ContrastiveHebbian.variable>`
 
                     :default value: numpy.array([0, 0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
-
         """
         variable = Parameter(np.array([0, 0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
@@ -1489,30 +1484,36 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                     see `variable <Reinforcement.variable>`
 
                     :default value: numpy.array([[0], [0], [0]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 activation_input
                     see `activation_input <Reinforcement.activation_input>`
 
                     :default value: [0]
-                    :type: list
+                    :type: ``list``
                     :read only: True
 
                 activation_output
                     see `activation_output <Reinforcement.activation_output>`
 
                     :default value: [0]
-                    :type: list
+                    :type: ``list``
+                    :read only: True
+
+                enable_output_type_conversion
+                    see `enable_output_type_conversion <Reinforcement.enable_output_type_conversion>`
+
+                    :default value: False
+                    :type: ``bool``
                     :read only: True
 
                 error_signal
                     see `error_signal <Reinforcement.error_signal>`
 
                     :default value: [0]
-                    :type: list
+                    :type: ``list``
                     :read only: True
-
         """
         variable = Parameter(np.array([[0], [0], [0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         activation_input = Parameter([0], read_only=True, getter=_activation_input_getter)
@@ -1813,21 +1814,27 @@ class BackPropagation(LearningFunction):
                     see `variable <BackPropagation.variable>`
 
                     :default value: numpy.array([[0], [0], [0]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
+
+                activation_derivative_fct
+                    see `activation_derivative_fct <BackPropagation.activation_derivative_fct>`
+
+                    :default value: `Logistic`.derivative
+                    :type: ``types.FunctionType``
 
                 activation_input
                     see `activation_input <BackPropagation.activation_input>`
 
                     :default value: [0]
-                    :type: list
+                    :type: ``list``
                     :read only: True
 
                 activation_output
                     see `activation_output <BackPropagation.activation_output>`
 
                     :default value: [0]
-                    :type: list
+                    :type: ``list``
                     :read only: True
 
                 error_matrix
@@ -1841,22 +1848,21 @@ class BackPropagation(LearningFunction):
                     see `error_signal <BackPropagation.error_signal>`
 
                     :default value: [0]
-                    :type: list
+                    :type: ``list``
                     :read only: True
 
                 learning_rate
                     see `learning_rate <BackPropagation.learning_rate>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 loss_function
                     see `loss_function <BackPropagation.loss_function>`
 
-                    :default value: 'MSE'
-                    :type: string
+                    :default value: None
+                    :type:
                     :read only: True
-
         """
         variable = Parameter(np.array([[0], [0], [0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         learning_rate = Parameter(1.0, modulable=True)

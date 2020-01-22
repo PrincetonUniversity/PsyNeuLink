@@ -72,9 +72,8 @@ class CombinationFunction(Function_Base):
                     see `variable <CombinationFunction.variable>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
-
         """
         # variable = np.array([0, 0])
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
@@ -165,14 +164,13 @@ class Concatenate(CombinationFunction):  # -------------------------------------
                     see `offset <Concatenate.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 scale
                     see `scale <Concatenate.scale>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -375,7 +373,7 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
             ----------
 
                 arrangement
-                    see `arrangement <Rearrange.arrangement>`
+                    see `arrangement <Rearrange_Arrangement>`
 
                     :default value: None
                     :type:
@@ -384,14 +382,13 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
                     see `offset <Rearrange.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 scale
                     see `scale <Rearrange.scale>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         arrangement = Parameter(None, modulable=False)
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -667,26 +664,25 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                     see `offset <Reduce.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 operation
                     see `operation <Reduce.operation>`
 
                     :default value: `SUM`
-                    :type: str
+                    :type: ``str``
 
                 scale
                     see `scale <Reduce.scale>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 weights
                     see `weights <Reduce.weights>`
 
                     :default value: None
                     :type:
-
         """
         weights = None
         exponents = None
@@ -1042,26 +1038,25 @@ class LinearCombination(
                     see `offset <LinearCombination.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 operation
                     see `operation <LinearCombination.operation>`
 
                     :default value: `SUM`
-                    :type: str
+                    :type: ``str``
 
                 scale
                     see `scale <LinearCombination.scale>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 weights
                     see `weights <LinearCombination.weights>`
 
                     :default value: None
                     :type:
-
         """
         operation = SUM
 
@@ -1611,26 +1606,25 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                     see `offset <CombineMeans.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 operation
                     see `operation <CombineMeans.operation>`
 
                     :default value: `SUM`
-                    :type: str
+                    :type: ``str``
 
                 scale
                     see `scale <CombineMeans.scale>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 weights
                     see `weights <CombineMeans.weights>`
 
                     :default value: None
                     :type:
-
         """
         weights = None
         exponents = None
@@ -1886,14 +1880,13 @@ class PredictionErrorDeltaFunction(CombinationFunction):
                     see `variable <PredictionErrorDeltaFunction.variable>`
 
                     :default value: numpy.array([[1], [1]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
 
                 gamma
                     see `gamma <PredictionErrorDeltaFunction.gamma>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         variable = Parameter(np.array([[1], [1]]), pnl_internal=True, constructor_argument='default_variable')
         gamma = Parameter(1.0, modulable=True)
