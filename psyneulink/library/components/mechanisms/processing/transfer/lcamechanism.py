@@ -450,7 +450,7 @@ class LCAMechanism(RecurrentTransferMechanism):
             default_variable=default_variable,
             size=size,
             input_ports=input_ports,
-            matrix=matrix,
+            # matrix=matrix,
             auto=self_excitation,
             hetero=hetero,
             function=function,
