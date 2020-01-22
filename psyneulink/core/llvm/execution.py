@@ -321,7 +321,7 @@ class CompExecution(CUDAExecution):
     @property
     def _data_struct(self):
         # Run wrapper changed argument order
-        arg = 2 if len(self._bin_func.byref_arg_types) > 5 else 3
+        arg = 2 if self._bin_func is self.__bin_run_func else 3
 
         if len(self._execution_contexts) > 1:
             if self.__data_struct is None:
@@ -444,7 +444,7 @@ class CompExecution(CUDAExecution):
 
         return self.__bin_exec_multi_func
 
-    def execute(self, inputs):
+    def execute(self, inputs, autodiff_stimuli=None):
         # NOTE: Make sure that input struct generation is inlined.
         # We need the binary function to be setup for it to work correctly.
         if len(self._execution_contexts) > 1:
@@ -454,17 +454,26 @@ class CompExecution(CUDAExecution):
                                                 self._data_struct,
                                                 self._conditions, self._ct_len)
         else:
-            self._bin_exec_func(self._state_struct,
-                                self._param_struct,
+            extra_args = ()
+            if autodiff_stimuli is not None:
+                nested_autodiff = [n for n in self._composition.nodes if hasattr(n, 'learning_enabled') and n.learning_enabled]
+                assert len(nested_autodiff) <= 1
+                if len(nested_autodiff) == 1:
+                    autodiff_stimuli = autodiff_stimuli[nested_autodiff[0]]
+                    # autodiff stimuli is passed in the last arg
+                    extra_args = [self._initialize_autodiff_struct(autodiff_stimuli, -1, nested_autodiff[0])]
+            self._bin_exec_func(self._state_struct, self._param_struct,
                                 self._get_input_struct(inputs),
-                                self._data_struct, self._conditions)
+                                self._data_struct, self._conditions, *extra_args)
 
     def execute_learning(self, inputs):
         # Special case for autodiff, everything is stored in inputs param
         assert self._composition.learning_enabled
         runs = len(next(iter(inputs["inputs"].values())))
         outputs = (self._bin_exec_func.byref_arg_types[-1] * runs)()
-        autodiff_struct = self._initialize_autodiff_struct(inputs)
+        # Autodiff stimuli is in the second to last argument
+        autodiff_struct = self._initialize_autodiff_struct(inputs, -2,
+                                                           self._composition)
         r_data = self._get_compilation_param('data_struct', '_get_data_initializer', 3, self._execution_contexts[0])
 
         c_input = self._bin_exec_func.byref_arg_types[2] * runs
@@ -520,17 +529,18 @@ class CompExecution(CUDAExecution):
         return self.__bin_run_multi_func
 
     # inserts autodiff params into the param struct (this unfortunately needs to be done dynamically, as we don't know autodiff inputs ahead of time)
-    def _initialize_autodiff_struct(self, autodiff_stimuli):
+    def _initialize_autodiff_struct(self, autodiff_stimuli, arg_index,
+                                    composition):
         inputs = autodiff_stimuli.get("inputs", {})
         targets = autodiff_stimuli.get("targets", {})
         epochs = autodiff_stimuli.get("epochs", 1)
 
         num_trials = len(next(iter(inputs.values())))
 
-        input_nodes = self._composition.get_nodes_by_role(NodeRole.INPUT)
-        output_nodes = self._composition.get_nodes_by_role(NodeRole.OUTPUT)
+        input_nodes = composition.get_nodes_by_role(NodeRole.INPUT)
+        output_nodes = composition.get_nodes_by_role(NodeRole.OUTPUT)
 
-        autodiff_stimuli_cty = self._bin_func.byref_arg_types[-2]
+        autodiff_stimuli_cty = self._bin_exec_func.byref_arg_types[arg_index]
 
         training_name = autodiff_stimuli_cty._fields_[-1][0]
         training_p_cty = autodiff_stimuli_cty._fields_[-1][1]
