@@ -429,7 +429,11 @@ class CompExecution(CUDAExecution):
     @property
     def _bin_exec_func(self):
         if self.__bin_exec_func is None:
-            self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(self._composition)
+            try:
+                learning = 'learning' if self._composition.learning_enabled else None
+            except AttributeError:
+                learning = None
+            self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(self._composition, tag=learning)
 
         return self.__bin_exec_func
 
@@ -454,6 +458,24 @@ class CompExecution(CUDAExecution):
                                 self._param_struct,
                                 self._get_input_struct(inputs),
                                 self._data_struct, self._conditions)
+
+    def execute_learning(self, inputs):
+        # Special case for autodiff, everything is stored in inputs param
+        assert self._composition.learning_enabled
+        runs = len(next(iter(inputs["inputs"].values())))
+        outputs = (self._bin_exec_func.byref_arg_types[-1] * runs)()
+        autodiff_struct = self._initialize_autodiff_struct(inputs)
+        r_data = self._get_compilation_param('data_struct', '_get_data_initializer', 3, self._execution_contexts[0])
+
+        c_input = self._bin_exec_func.byref_arg_types[2] * runs
+        origins = self._composition.get_nodes_by_role(NodeRole.INPUT)
+        input_data = (([inputs["inputs"][n][i]] for n in origins) for i in range(runs))
+        r_inputs = c_input(*_tupleize(input_data))
+
+        self._bin_exec_func.wrap_call(self._state_struct, self._param_struct,
+                                      r_inputs, r_data, self._conditions,
+                                      autodiff_struct, outputs)
+        return _convert_ctype_to_python(outputs)
 
     def cuda_execute(self, inputs):
         # NOTE: Make sure that input struct generation is inlined.
@@ -508,7 +530,7 @@ class CompExecution(CUDAExecution):
         input_nodes = self._composition.get_nodes_by_role(NodeRole.INPUT)
         output_nodes = self._composition.get_nodes_by_role(NodeRole.OUTPUT)
 
-        autodiff_stimuli_cty = self._bin_run_func.byref_arg_types[-1]
+        autodiff_stimuli_cty = self._bin_func.byref_arg_types[-2]
 
         training_name = autodiff_stimuli_cty._fields_[-1][0]
         training_p_cty = autodiff_stimuli_cty._fields_[-1][1]
@@ -526,17 +548,6 @@ class CompExecution(CUDAExecution):
 
 
     def run(self, inputs, runs=0, num_input_sets=0, learning=False):
-        if learning:
-            # Special case for autodiff, everything is stored in inputs param
-            assert self._composition.learning_enabled
-            runs = num_input_sets = len(next(iter(inputs["inputs"].values())))
-            assert num_input_sets == len(next(iter(inputs["targets"].values())))
-            autodiff_struct = self._initialize_autodiff_struct(inputs)
-            inputs = {k:[[x] for x in v] for k, v in inputs["inputs"].items()}
-            extra_args = (autodiff_struct,)
-        else:
-            extra_args = ()
-
         inputs = self._get_run_input_struct(inputs, num_input_sets)
 
         ct_vo = self._bin_run_func.byref_arg_types[4] * runs
@@ -552,7 +563,7 @@ class CompExecution(CUDAExecution):
         else:
             self._bin_run_func.wrap_call(self._state_struct, self._param_struct,
                                          self._data_struct, inputs, outputs,
-                                         runs_count, input_count, *extra_args)
+                                         runs_count, input_count)
         return _convert_ctype_to_python(outputs)
 
     def cuda_run(self, inputs, runs, num_input_sets):
