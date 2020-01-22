@@ -198,6 +198,7 @@ Contributors
 * **Allie Burton**, Princeton Neuroscience Institute, Princeton University
 * **Laura Bustamante**, Princeton Neuroscience Institute, Princeton University
 * **Jonathan D. Cohen**, Princeton Neuroscience Institute, Princeton University
+* **Samyak Gupta**, Department of Computer Science, Rutgers University
 * **Abigail Hoskin**, Department of Psychology, Princeton University
 * **Peter Johnson**, Princeton Neuroscience Institute, Princeton University
 * **Justin Junge**, Department of Psychology, Princeton University

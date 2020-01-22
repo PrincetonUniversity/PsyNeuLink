@@ -148,6 +148,13 @@ class TestLCA:
         result2 = comp2.run(inputs={lca_single_step:[1,0]})
         assert np.allclose(result1, result2)
 
+    def test_LCAMechanism_matrix(self):
+        matrix = [[0,-2],[-2,0]]
+        lca1 = LCAMechanism(size=2, competition=2)
+        assert np.allclose(lca1.matrix, matrix)
+        lca2 = LCAMechanism(size=2, matrix=matrix)
+        assert np.allclose(lca1.matrix, lca2.matrix)
+
     # Note: In the following tests, since the LCAMechanism's threshold is specified
     #       it executes until the it reaches threshold.
     def test_LCAMechanism_threshold(self):

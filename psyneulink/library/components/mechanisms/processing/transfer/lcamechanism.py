@@ -32,19 +32,14 @@ Overview
 --------
 
 An LCAMechanism is a subclass of `RecurrentTransferMechanism` that implements a single-layered `leaky competitng
-accumulator (LCA) <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_  network, in which each element is connected to
-every other element with mutually inhibitory weights. The LCAMechanism's `recurrent_projection
-<RecurrentTransferMechanism.recurrent_projection>` `matrix <MappingProjection.matrix>` *always* consists
-of `self_excitation <LCAMechanism.self_excitation>` on the diagonal and -`competition <LCAMechanism.competition>`
-off-diagonal.
-
-The key distinguishing features of an LCAMechanism are:
-
-1. its `integrator_function <TransferMechanism.integrator_function>`,
-   which implements the `LeakyCompetingIntegrator` (for which *rate* = *leak*)
-
-2. its `matrix <LCAMechanism.matrix>`, consisting of `self_excitation <LCAMechanism.self_excitation>` (diagonal)
-   and `competition <LCAMechanism.competition>` (off diagonal) components.
+accumulator (LCA) <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_  network. By default, it uses a
+`LeakyCompetingIntegrator` (the `rate <LeakyCompetingIntegrator.rate>` of which is specified by the **leak** argument)
+and a `Logistic` Function to compute the activity of the units, each of which has a  self-excitatory connection
+(specified by the **self_excitation** argument) and mutually inhibitory connections with every other element (specified
+by the **competition** argument).  These are implemented by its `recurrent_projection
+<RecurrentTransferMechanism.recurrent_projection>`, the `matrix  <MappingProjection.matrix>` of which consists of
+diagnoal elements assign the value of `self_excitation <LCAMechanism.self_excitation>` off-diagonal elements assigned
+the negative of the value of `competition <LCAMechanism.competition>`.
 
     COMMENT:
     .. math::
@@ -59,10 +54,10 @@ The key distinguishing features of an LCAMechanism are:
 
 When all of the following conditions are true:
 
-- The `LCAMechanism` mechanism has two elements
-- The value of its `competition <LCAMechanism.competition>` parameter is equal to its `leak <LCAMechanism.leak>`
-  parameter
-- `Competition <LCAMechanism.competition>` and `leak <LCAMechanism.leak>` are of sufficient magnitude
+- the `LCAMechanism` mechanism has two elements,
+- the value of its `competition <LCAMechanism.competition>` parameter is equal to its `leak <LCAMechanism.leak>`
+  parameter,
+- `competition <LCAMechanism.competition>` and `leak <LCAMechanism.leak>` are of sufficient magnitude,
 
 then the `LCAMechanism` implements a close approximation of a `DDM` Mechanism (see `Usher & McClelland, 2001;
 <http://psycnet.apa.org/?&fa=main.doiLanding&doi=10.1037/0033-295X.108.3.550>`_ and `Bogacz et al (2006)
@@ -73,12 +68,11 @@ then the `LCAMechanism` implements a close approximation of a `DDM` Mechanism (s
 Creating an LCAMechanism
 ------------------------
 
-An LCAMechanism can be created directly by calling its constructor.
-
-The self-excitatory and mutually-inhibitory connections are implemented as a recurrent `MappingProjection`
-with a `matrix <LCAMechanism.matrix>` in which the diagonal consists of uniform weights specified by
-**self_excitation** and the off-diagonal consists of uniform weights specified by the *negative* of the
-**competition** argument.
+An LCAMechanism is created by calling its constructor.  Ordinarily, the **self-excitation** and **competion**
+arguments are used to specify the values of the diagonal and off-diagonal elements of the `matrix <LCAMechanism.matrix>`
+of its `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` (see `LCAMechanism_Structure` below).
+However, if the **matrix** argument is specified, a warning is issued and the **self_excitation** and **competition**
+arguments are ignored.
 
 .. _LCAMechanism_Integrator_Mode:
 
@@ -87,9 +81,11 @@ with a `matrix <LCAMechanism.matrix>` in which the diagonal consists of uniform 
 
 The **noise**, **leak**, **initial_value**, and **time_step_size** arguments are used to implement the
 `LeakyCompetingIntegrator` as the LCAMechanism's `integrator_function <TransferMechanism.integrator_function>`.
-This is only used used when `integrator_mode <TransferMechanism_Integrator_Mode>` is True (which it is by default).  If
-`integrator_mode <TransferMechanism.integrator_mode>` is False, the `LeakyCompetingIntegrator` function is skipped
-entirely, and all related arguments (**noise**, **leak**, **initial_value**, and **time_step_size**) have no effect.
+The **leak** argument is used to specify the `rate <LeakyCompetingIntegrator.rate>` parameter of the
+`LeakyCompetingIntegrator`.  This function is only used used when `integrator_mode <TransferMechanism_Integrator_Mode>`
+is True (which it is by default).  If `integrator_mode <TransferMechanism.integrator_mode>` is False, the
+`LeakyCompetingIntegrator` function is skipped entirely, and all related arguments (**noise**, **leak**,
+**initial_value**, and **time_step_size**) have no effect.
 
 .. _LCAMechanism_Threshold:
 
@@ -144,14 +140,18 @@ COMMENT
 Structure
 ---------
 
-The key distinguishing features of an LCAMechanism are:
+The key features that disinguish an LCAMechanism from its parent class (`RecurrentTransferMechainsm`) are:
 
-1. its `integrator_function <TransferMechanism.integrator_function>`, which implements the `LeakyCompetingIntegrator`
-Function by default (in place of the `AdaptiveIntegrator` used as the default by other `TransferMechanisms
-<TransferMechanism>`).
+1. its default `function <Mechanism.function>` is a `Logistic` Function (rather than `Linear`);
 
-2. its `matrix <LCAMechanism.matrix>` consisting of `self_excitation <LCAMechanism.self_excitation>` and `competition
-<LCAMechanism.competition>` off diagonal.
+2. its default `integrator_function <TransferMechanism.integrator_function>` is a `LeakyCompetingIntegrator`
+   Function (rather than `AdaptiveIntegrator`);
+
+3. the `matrix <LCAMechanism.matrix>` of its `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`,
+   by default, has diagonal elements with uniform weights assigned the value of `self_excitation
+   <LCAMechanism.self_excitation>`, and off-diagonal elements with uniform weights assigned the *negative* of the
+   value of `competition <LCAMechanism.competition>`;  however, if the **matrix** argument is specified, then
+   `self_excitation <LCAMechanism.self_excitation>` and `competition <LCAMechanism.competition>` are ignored.
 
 Like any RecurrentTransferMechanism, by default an LCAMechanism has a single `primary OutputPort <OutputPort_Primary>`
 named *RESULT* that contains the Mechanism's current `value <Mechanism_Base.value>`.  It also has two
@@ -199,7 +199,7 @@ from psyneulink.core.components.functions.statefulfunctions.integratorfunctions 
 from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.globals.keywords import \
-    BETA, CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, INITIALIZER, LCA_MECHANISM, LESS_THAN_OR_EQUAL, NAME, NOISE, \
+    CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, INITIALIZER, LCA_MECHANISM, LESS_THAN_OR_EQUAL, MATRIX, NAME, NOISE,\
     RATE, RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, TIME_STEP_SIZE, VALUE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags
@@ -390,7 +390,6 @@ class LCAMechanism(RecurrentTransferMechanism):
                  default_variable=None,
                  size:tc.optional(tc.any(int, list, np.array))=None,
                  input_ports:tc.optional(tc.any(list, dict))=None,
-                 matrix=None,
                  function=Logistic,
                  initial_value=None,
                  leak=0.5,
@@ -414,6 +413,16 @@ class LCAMechanism(RecurrentTransferMechanism):
         # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
         if output_ports is None or output_ports is RESULT:
             output_ports = [RESULT]
+
+        # MODIFIED 1/22/20 NEW: [JDC]
+        if MATRIX in kwargs:
+            matrix = kwargs[MATRIX]
+            if matrix is not None:
+                self_excitation = None
+                competition = None
+        else:
+            matrix = None
+        # MODIFIED 1/22/20 END
 
         if competition is not None and hetero is not None:
             if competition != -1.0 * hetero:
@@ -441,6 +450,7 @@ class LCAMechanism(RecurrentTransferMechanism):
             default_variable=default_variable,
             size=size,
             input_ports=input_ports,
+            # matrix=matrix,
             auto=self_excitation,
             hetero=hetero,
             function=function,
@@ -465,11 +475,16 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         # Do these here so that name of the object (assigned by super) can be used in the warning messages
         if matrix is not None:
-            warnings.warn(f"The 'matrix' arg was specified for {self.name} but will not be used; "
-                          f"the matrix for an {self.__class__.__name__} is specified using "
-                          f"the 'self_excitation' and 'competition' args.")
+            # # MODIFIED 1/22/20 OLD:
+            # warnings.warn(f"The 'matrix' arg was specified for {self.name} but will not be used; "
+            #               f"the matrix for an {self.__class__.__name__} is specified using "
+            #               f"the 'self_excitation' and 'competition' args.")
+            # MODIFIED 1/22/20 NEW: [JDC]
+            warnings.warn(f"The 'matrix' arg was specified for {self.name}, "
+                          f"so its 'self_excitation' and 'competition' arguments will be ignored.")
+            # MODIFIED 1/22/20 END
 
-        if competition < 0:
+        elif competition < 0:
             warnings.warn(f"The 'competition' arg specified for {self.name} is a negative value ({competition}); "
                           f"note that this will result in a matrix that has positive off-diagonal elements "
                           f"since 'competition' is assumed to specify the magnitude of inhibition.")
