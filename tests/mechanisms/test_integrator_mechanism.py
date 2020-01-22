@@ -1128,7 +1128,7 @@ class TestIntegratorNoise:
 
         val = float(I.execute(10))
 
-        np.testing.assert_allclose(val, -0.977277879876411)
+        np.testing.assert_allclose(val, 0.1648065410516709, atol=3.0, rtol=0.0)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
