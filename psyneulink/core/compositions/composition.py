@@ -6926,7 +6926,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 try:
                     if bin_execute is True or bin_execute.startswith('LLVM'):
                         _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
-                        _comp_ex.execute(inputs)
+                        _comp_ex.execute(inputs, autodiff_stimuli=autodiff_stimuli)
                         return _comp_ex.extract_node_output(self.output_CIM)
                     elif bin_execute.startswith('PTX'):
                         self.__ptx_initialize(context)
@@ -7698,6 +7698,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def __gen_node_wrapper(self, node):
         name = 'comp_wrap_'
         is_mech = isinstance(node, Mechanism)
+        # TODO: pass this explicitly
+        # FIXME: Can we use node_roles here?
+        is_learning_autodiff = hasattr(node, 'learning_enabled') and node.learning_enabled
 
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             node_function = ctx.import_llvm_function(node)
@@ -7715,6 +7718,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 cond_gen = pnlvm.helpers.ConditionGenerator(ctx, self)
                 cond_ty = cond_gen.get_condition_struct_type().as_pointer()
                 args.append(cond_ty)
+
+                # Append learning param if needed
+                if is_learning_autodiff:
+                    args.append(node_function.args[-2].type)
 
             builder = ctx.create_llvm_function(args, node, name + node.name)
             llvm_func = builder.function
@@ -7835,8 +7842,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 nested_idx = ctx.int32_ty(self._get_node_index(node) + 1)
                 node_data = builder.gep(data_in, [zero, nested_idx])
                 node_cond = builder.gep(llvm_func.args[5], [zero, nested_idx])
+                node_learn = (llvm_func.args[6], node_function.args[-1].type(None)) if is_learning_autodiff else ()
                 builder.call(node_function, [node_context, node_params, node_in,
-                                             node_data, node_cond])
+                                             node_data, node_cond, *node_learn])
                 # Copy output of the nested composition to its output place
                 output_idx = node._get_node_index(node.output_CIM)
                 result = builder.gep(node_data, [zero, zero, ctx.int32_ty(output_idx)])

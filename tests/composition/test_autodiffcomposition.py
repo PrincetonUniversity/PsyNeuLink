@@ -2414,20 +2414,15 @@ class TestNested:
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
-                                    pytest.param('LLVMExec', marks=[pytest.mark.llvm,pytest.mark.skip]), # Not implemented
-                                    ])
-    def test_xor_nested_train_then_no_train(self, num_epochs, learning_rate, patience, min_delta,mode):
-        xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0],
-             [0, 1],
-             [1, 0],
-             [1, 1]])
+                                      pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
+                                     ])
+    def test_xor_nested_train_then_no_train(self, num_epochs, learning_rate,
+                                            patience, min_delta, mode):
+        # the inputs we will provide to the model
+        xor_inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
 
-        xor_targets = np.array(  # the outputs we wish to see from the model
-            [[0],
-             [1],
-             [1],
-             [0]])
+        # the outputs we wish to see from the model
+        xor_targets = np.array([[0], [1], [1], [0]])
 
         # -----------------------------------------------------------------
 
@@ -2480,12 +2475,16 @@ class TestNested:
         input = {xor_autodiff: input_dict}
         no_training_input = {xor_autodiff: no_training_input_dict}
 
-        result1 = parentComposition.run(inputs=input)
+        result1 = parentComposition.run(inputs=input, bin_execute=mode)
+        assert np.allclose(result1, [[0]], atol=0.1)
+
+        if mode != 'Python':
+            #FIXME: Enable the rest of the test when recompilation is supported
+            return
 
         xor_autodiff.learning_enabled = False
-        result2 = parentComposition.run(inputs=no_training_input,bin_execute=mode)
+        result2 = parentComposition.run(inputs=no_training_input, bin_execute=mode)
 
-        assert np.allclose(result1, [[0]], atol=0.1)
         assert np.allclose(result2, [[0]], atol=0.1)
 
     @pytest.mark.parametrize(
@@ -2493,18 +2492,16 @@ class TestNested:
             (2000, 4, 10, .00001),
         ]
     )
-    def test_xor_nested_no_train_then_train(self, num_epochs, learning_rate, patience, min_delta):
-        xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0],
-             [0, 1],
-             [1, 0],
-             [1, 1]])
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
+                                     ])
+    def test_xor_nested_no_train_then_train(self, num_epochs, learning_rate,
+                                            patience, min_delta, mode):
+        # the inputs we will provide to the model
+        xor_inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
 
-        xor_targets = np.array(  # the outputs we wish to see from the model
-            [[0],
-             [1],
-             [1],
-             [0]])
+        # the outputs we wish to see from the model
+        xor_targets = np.array([[0], [1], [1], [0]])
 
         # -----------------------------------------------------------------
 
@@ -2557,10 +2554,13 @@ class TestNested:
         input = {xor_autodiff: input_dict}
         no_training_input = {xor_autodiff: no_training_input_dict}
 
-        result1 = parentComposition.run(inputs=no_training_input)
+        result1 = parentComposition.run(inputs=no_training_input, bin_execute=mode)
+        if mode != 'Python':
+            #FIXME: Enable the rest of the test when recompilation is supported
+            return
 
         xor_autodiff.learning_enabled = True
-        result2 = parentComposition.run(inputs=input)
+        result2 = parentComposition.run(inputs=input, bin_execute=mode)
 
         assert np.allclose(result2, [[0]], atol=0.1)
 
@@ -2650,7 +2650,10 @@ class TestNested:
             (1, 'sgd'),
         ]
     )
-    def test_semantic_net_nested(self, eps, opt):
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
+                                     ])
+    def test_semantic_net_nested(self, eps, opt, mode):
 
         # SET UP MECHANISMS FOR SEMANTIC NET:
 
@@ -2895,7 +2898,11 @@ class TestNested:
         input = {sem_net: input_dict}
         no_training_input = {sem_net: inputs_dict.copy()}
 
-        parentComposition.run(inputs=input)
+        parentComposition.run(inputs=input, bin_execute=mode)
+
+        if mode != 'Python':
+            #FIXME: Enable the rest of the test when recompilation is supported
+            return
 
         sem_net.learning_enabled = False
 
