@@ -321,7 +321,7 @@ class CompExecution(CUDAExecution):
     @property
     def _data_struct(self):
         # Run wrapper changed argument order
-        arg = 2 if len(self._bin_func.byref_arg_types) > 6 else 3
+        arg = 2 if self._bin_func is self.__bin_run_func else 3
 
         if len(self._execution_contexts) > 1:
             if self.__data_struct is None:
