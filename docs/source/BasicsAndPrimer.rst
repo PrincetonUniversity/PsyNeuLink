@@ -1,17 +1,17 @@
-Basics and Sampler
-==================
+Basics and Primer
+=================
 
-* `BasicsAndSampler_Basics`
-* `BasicsAndSampler_Sampler`
-    * `BasicsAndSampler_Simple_Configurations`
-    * `BasicsAndSampler_Elaborate_Configurations`
-    * `BasicsAndSampler_Dynamics_of_Execution`
-    * `BasicsAndSampler_Control`
-    * `BasicsAndSampler_Logging_and_Animation`
-    * `BasicsAndSampler_Learning`
-    * `BasicsAndSampler_Customization`
+* `BasicsAndPrimer_Basics`
+* `BasicsAndPrimer_Primer`
+    * `BasicsAndPrimer_Simple_Configurations`
+    * `BasicsAndPrimer_Elaborate_Configurations`
+    * `BasicsAndPrimer_Dynamics_of_Execution`
+    * `BasicsAndPrimer_Control`
+    * `BasicsAndPrimer_Logging_and_Animation`
+    * `BasicsAndPrimer_Learning`
+    * `BasicsAndPrimer_Customization`
 
-.. _BasicsAndSampler_Basics:
+.. _BasicsAndPrimer_Basics:
 
 Basics
 ------
@@ -48,7 +48,7 @@ drift diffusion decision process); and there are `ModulatoryMechanisms <Modulato
 `LearningMechanisms <LearningMechanism>` that can be used to modify Projections, respectively.  The `function
 <Mechanism_Base.function>` of a Mechanism defines the operation it carries out. PsyNeuLink provides a rich `library
 <Functions>` of mathematical, statistical and matrix manipulation functions. However, a Mechanism can also be
-assigned any Python function that is consistent with that Mechanism's type (see `BasicsAndSampler_Customization`).
+assigned any Python function that is consistent with that Mechanism's type (see `BasicsAndPrimer_Customization`).
 Since Mechanisms can implement virtually any function, Projections ensure that they can "communicate" with each other
 seamlessly.
 
@@ -58,28 +58,28 @@ commit each part of their model to a form of processing and/or level of analysis
 while providing the opportunity to test and explore how they interact with one another at the level of the entire
 system.  The figure below provides an example of the kinds of elements available in PsyNeuLink, and some that are
 planned for future inclusion.  The `QuickReference` provides a more detailed overview of PsyNeuLink objects and its
-other facilities.  In the sections that follow, the Sampler provides some examples of how these are used to construct
+other facilities.  In the sections that follow, the Primer provides some examples of how these are used to construct
 models in PsyNeuLink.
 
-.. _BasicsAndSampler_GrandView_Figure:
+.. _BasicsAndPrimer_GrandView_Figure:
 
-.. figure:: _static/BasicsAndSampler_GrandView_fig.svg
+.. figure:: _static/BasicsAndPrimer_GrandView_fig.svg
 
     **PsyNeuLink Environment.**  Full-colored items are examples of currently implemented elements; dimmed
     items are examples of elements planned for future implementation.
 
 
-.. _BasicsAndSampler_Sampler:
+.. _BasicsAndPrimer_Primer:
 
-Sampler
--------
+Primer
+------
 
 The examples below are intended to provide a quick illustrations of some of PsyNeuLink's basic and more advanced
 capabilities.  They assume some experience with computational modeling and/or relevant background knowledge.  The
 `tutorial <>` provides additional introductory material for those who are newer to computational modeling, as well as a
 more detailed and comprehensive introduction to the use of PsyNeuLink.
 
-.. _BasicsAndSampler_Simple_Configurations:
+.. _BasicsAndPrimer_Simple_Configurations:
 
 Simple Configurations
 ~~~~~~~~~~~~~~~~~~~~~
@@ -111,9 +111,9 @@ with an appropriately-sized input array, for example::
 The Composition connects the Mechanisms into a pathway that form a graph, which can be shown using its `show_graph
 <Composition.show_graph>` method:
 
-.. _BasicsAndSampler_Simple_Pathway_Example_Figure:
+.. _BasicsAndPrimer_Simple_Pathway_Example_Figure:
 
-.. figure:: _static/BasicsAndSampler_SimplePathway_fig.svg
+.. figure:: _static/BasicsAndPrimer_SimplePathway_fig.svg
    :width: 30%
 
    **Composition Graph.**  Representation of the graph of the simple Composition in the example above.  Note that the
@@ -173,7 +173,7 @@ been accomplished by explicitly creating the recurrent connection::
     my_encoder.add_projection(recurent_projection)
 
 
-.. _BasicsAndSampler_Elaborate_Configurations:
+.. _BasicsAndPrimer_Elaborate_Configurations:
 
 More Elaborate Configurations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -224,9 +224,9 @@ a more complete version of which can be found in the `PsyNeuLink Library <https:
 .io/PsyNeuLink/Library.html>`_ at `Stroop Model <XXXX GET FROM Q>`.  The figure belows shows the model using the
 Composition's `show_graph <Composition.show_graph>` method.
 
-.. _BasicsAndSampler_Simple_Stroop_Example_Figure:
+.. _BasicsAndPrimer_Simple_Stroop_Example_Figure:
 
-.. figure:: _static/BasicsAndSampler_Stroop_Model.svg
+.. figure:: _static/BasicsAndPrimer_Stroop_Model.svg
    :width: 50%
 
    **Stroop Model.** Representation of the Composition in the example above.
@@ -259,7 +259,7 @@ significantly longer than for the first, congruent trial;  note also that, on so
 the response in the second trials since, by default, the `function <DDM.function>` used for the decision process has
 a non-zero `noise <DriftDiffusionAnalytical.noise>` term).
 
-.. _BasicsAndSampler_Dynamics_of_Execution:
+.. _BasicsAndPrimer_Dynamics_of_Execution:
 
 Dynamics of Execution
 ~~~~~~~~~~~~~~~~~~~~~
@@ -350,7 +350,7 @@ PsyNeuLink provides a rich set of `pre-defined Conditions <Condition_Pre-Specifi
 examples above), but Conditions can also be constructed using any Python function.  Together, these can be combined to
 construct virtually any schedule of execution that is logically possible.
 
-.. _BasicsAndSampler_Control:
+.. _BasicsAndPrimer_Control:
 
 Control
 ~~~~~~~
@@ -412,9 +412,9 @@ is then added to the ``Stroop_model`` as its `controller <Composition .controlle
 The result is shown in the figure below, using the **show_controller** option of the Composition's `show_graph
 <Composition.show_graph>` method:
 
-.. _BasicsAndSampler_Stroop_Example_With_Control_Figure:
+.. _BasicsAndPrimer_Stroop_Example_With_Control_Figure:
 
-.. figure:: _static/BasicsAndSampler_Stroop_Model_Control.svg
+.. figure:: _static/BasicsAndPrimer_Stroop_Model_Control.svg
    :width: 50%
 
    **Stroop Model with Controller.** Representation of the Composition with the ``control`` Mechanism added, generated
@@ -437,7 +437,7 @@ the next time it executes (i.e., on the next `trial <TimeScale.TRIAL>`;  a Compo
 at the end of each `trial <TimeScale.TRIAL>`.  The **animate** argument of the `run <Composition.run>` method can be
 used to generate an animation of the Composition's execution, as shown below:
 
-.. figure:: _static/BasicsAndSampler_Stroop_Model_movie.gif
+.. figure:: _static/BasicsAndPrimer_Stroop_Model_movie.gif
    :width: 75%
 
    **Animation of Stroop Model with Controller.** Generated by a call to ``Stroop_model.show_graph(show_controller)
@@ -504,7 +504,7 @@ script), or to implement `model-based learning <https://royalsocietypublishing.o
 ..   - ``word_hidden`` to ``orthography``
 
 
-.. _BasicsAndSampler_Logging_and_Animation:
+.. _BasicsAndPrimer_Logging_and_Animation:
 
 Logging and Animation
 ~~~~~~~~~~~~~~~~~~~~~
@@ -560,7 +560,7 @@ times, as specified in the Conditions described above.  The output of the `Log` 
 formats, including a `numpy <https://docs.scipy.org/doc/numpy/reference/generated/numpy.array.html>`_ array,
 a dictionary of values for each entry, and `CSV <https://en.wikipedia.org/wiki/Comma-separated_values>`_ format.
 
-.. _BasicsAndSampler_Learning:
+.. _BasicsAndPrimer_Learning:
 
 Learning
 ~~~~~~~~
@@ -612,9 +612,9 @@ a simple three-layered neural network that learns to compute the X-OR operation:
 Calling the Composition's ``show_graph`` with ``show_learning=True`` shows the network along with all of the learning
 components created by the call to ``add_backpropagation_pathway``:
 
-.. _BasicsAndSampler_XOR_MODEL_Figure:
+.. _BasicsAndPrimer_XOR_MODEL_Figure:
 
-.. figure:: _static/BasicsAndSampler_XOR_Model_fig.svg
+.. figure:: _static/BasicsAndPrimer_XOR_Model_fig.svg
    :width: 100%
 
     **XOR Model.**  Items in orange are learning components implemented by the call to ``add_backpropagation_pathway``;
@@ -638,7 +638,7 @@ target Mechanism (that receives the input specifying the target responses)::
 
 It can also be run without learning by calling the run method with ``enable_learning=False``.
 
-.. _BasicsAndSampler_Rumelhart_Model:
+.. _BasicsAndPrimer_Rumelhart_Model:
 
 The model shown above implements learning for a simple linear path.  However, virtually any model can be created
 using calls to a Composition's `learning methods <Composition_Learning_Methods>` to build up more complex pathways.
@@ -679,9 +679,9 @@ For example, the following implements a network for learning semantic representa
 
 The figure below shows this network with all of its `learning components <Composition_Learning_Components>`:
 
-.. _BasicsAndSampler_Rumelhart_Network_Figure:
+.. _BasicsAndPrimer_Rumelhart_Network_Figure:
 
-.. figure:: _static/BasicsAndSampler_Rumelhart_Network.svg
+.. figure:: _static/BasicsAndPrimer_Rumelhart_Network.svg
    :width: 75%
 
     **Rumelhart Semantic Network.**  Items in orange are learning components implemented by the calls to
@@ -698,7 +698,7 @@ three orders of magnitude) faster (see `Composition_Learning`, as well as `Compo
 for comparisons of the advantages and disadvantages of using a standard `Composition` vs. `AutodiffComposition` for
 learning).
 
-.. _BasicsAndSampler_Customization:
+.. _BasicsAndPrimer_Customization:
 
 Customization
 ~~~~~~~~~~~~~
@@ -735,7 +735,7 @@ As a result, the phase and amplitude of ``my_wave_mech`` can be modulated in by 
                                                      'amplitude', my_wave_mech])
 
 This facility not only makes PsyNeuLink flexible, but can be used to extend it in powerful ways.  For example, as
-mentioned under `BasicsAndSampler_Learning`, functions from other environments that implement complex learning models
+mentioned under `BasicsAndPrimer_Learning`, functions from other environments that implement complex learning models
 can be assigned as the `function <Mechanism_Base.function>` of a Mechanism, and in that way integrated into a
 PsyNeuLink model.
 
