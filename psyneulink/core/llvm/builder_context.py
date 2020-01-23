@@ -404,8 +404,18 @@ class LLVMBuilderContext:
             return builder.function
 
     def gen_composition_exec(self, composition, simulation=False):
-        with self._gen_composition_exec_context(composition, simulation) as (builder, data, params, cond_gen):
-            state, _, comp_in, _, cond = builder.function.args
+
+        extra_args = []
+        # If there is a node that needs learning input we need to export it
+        # FIXME: Should we use node roles here?
+        for node in filter(lambda n: hasattr(n, 'learning_enabled') and n.learning_enabled, composition.nodes):
+            node_wrap = composition._get_node_wrapper(node)
+            node_f = self.import_llvm_function(node_wrap)
+            extra_args = [node_f.args[-1].type]
+
+
+        with self._gen_composition_exec_context(composition, simulation, extra_args=extra_args) as (builder, data, params, cond_gen):
+            state, _, comp_in, _, cond, *learning = builder.function.args
 
             if simulation is False and composition.enable_controller and \
                composition.controller_mode == BEFORE:
@@ -471,6 +481,8 @@ class LLVMBuilderContext:
                     args = [state, params, comp_in, data, output_storage]
                     if len(node_f.args) >= 6:  # Composition wrappers have 6 args
                         args.append(cond)
+                    if len(node_f.args) == 7:  # Learning wrappers have 7 args
+                        args.append(*learning)
                     builder.call(node_f, args)
 
                     cond_gen.generate_update_after_run(builder, cond, node)
