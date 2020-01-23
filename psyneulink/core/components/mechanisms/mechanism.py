@@ -2150,9 +2150,9 @@ class Mechanism_Base(Mechanism):
             raise MechanismError(f"Reinitializing {self.name} is not allowed because this Mechanism is not stateful; "
                                  f"it does not have an accumulator to reinitialize.")
 
-    def get_current_mechanism_param(self, param_name, context=None):
+    def _get_current_mechanism_param(self, param_name, context=None):
         if param_name == "variable":
-            raise MechanismError(f"The method 'get_current_mechanism_param' is intended for retrieving the current "
+            raise MechanismError(f"The method '_get_current_mechanism_param' is intended for retrieving the current "
                                  f"value of a mechanism parameter; 'variable' is not a mechanism parameter. If looking "
                                  f"for {self.name}'s default variable, try '{self.name}.defaults.variable'.")
         try:

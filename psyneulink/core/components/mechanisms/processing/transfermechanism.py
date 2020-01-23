@@ -1343,7 +1343,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _get_integrated_function_input(self, function_variable, initial_value, noise, context, **kwargs):
 
-        integration_rate = self.get_current_mechanism_param(INTEGRATION_RATE, context)
+        integration_rate = self._get_current_mechanism_param(INTEGRATION_RATE, context)
 
         if (
             self.initialization_status == ContextFlags.INITIALIZING
@@ -1490,7 +1490,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # FIX: JDC 7/2/18 - THIS SHOULD BE MOVED TO AN STANDARD OUTPUT_PORT
         # Clip outputs
-        clip = self.get_current_mechanism_param("clip", context)
+        clip = self._get_current_mechanism_param("clip", context)
 
         value = super(Mechanism, self)._execute(variable=variable,
                                                 context=context,
@@ -1520,12 +1520,12 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
         integrator_mode = self.parameters.integrator_mode._get(context)
-        noise = self.get_current_mechanism_param(NOISE, context)
+        noise = self._get_current_mechanism_param(NOISE, context)
 
         # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
         # Update according to time-scale of integration
         if integrator_mode:
-            initial_value = self.get_current_mechanism_param(INITIAL_VALUE, context)
+            initial_value = self._get_current_mechanism_param(INITIAL_VALUE, context)
 
             value = self._get_integrated_function_input(variable,
                                                         initial_value,

@@ -421,11 +421,11 @@ class KWTAMechanism(RecurrentTransferMechanism):
         self.indexOfInhibitionInputPort = len(self.input_ports) - 1
 
     def _kwta_scale(self, current_input, context=None):
-        k_value = self.get_current_mechanism_param("k_value", context)
-        threshold = self.get_current_mechanism_param("threshold", context)
-        average_based = self.get_current_mechanism_param("average_based", context)
-        ratio = self.get_current_mechanism_param("ratio", context)
-        inhibition_only = self.get_current_mechanism_param("inhibition_only", context)
+        k_value = self._get_current_mechanism_param("k_value", context)
+        threshold = self._get_current_mechanism_param("threshold", context)
+        average_based = self._get_current_mechanism_param("average_based", context)
+        ratio = self._get_current_mechanism_param("ratio", context)
+        inhibition_only = self._get_current_mechanism_param("inhibition_only", context)
 
         try:
             int_k_value = int(k_value[0])
