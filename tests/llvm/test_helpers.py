@@ -192,33 +192,31 @@ def test_helper_all_close(mode):
     assert np.array_equal(res, ref)
 
 @pytest.mark.llvm
-@pytest.mark.parametrize("ctype,ir_argtype,format_spec,values_to_check", [
-    (ctypes.c_int32, pnlvm.ir.IntType(32), "%u", range(0,100)),
-    (ctypes.c_int64, pnlvm.ir.IntType(64), "%ld", [int(-4E10), int(-3E10), int(-2E10)]),
-    (ctypes.c_float, pnlvm.ir.FloatType(), "%f", range(0,10)),
+@pytest.mark.parametrize("ir_argtype,format_spec,values_to_check", [
+    (pnlvm.ir.IntType(32), "%u", range(0,100)),
+    (pnlvm.ir.IntType(64), "%ld", [int(-4E10), int(-3E10), int(-2E10)]),
+    (pnlvm.ir.DoubleType(), "%lf", [x*.5 for x in range(0,10)]),
     ])
 @pytest.mark.skipif(sys.platform == 'win32', reason="Loading C library is complicated on windows")
-def test_helper_printf(capfd, ctype, ir_argtype, format_spec, values_to_check):
-    format_str = f"Hello {(format_spec+' ')*len(values_to_check)}" +"\n"
+def test_helper_printf(capfd, ir_argtype, format_spec, values_to_check):
+    format_str = f"Hello {(format_spec+' ')*len(values_to_check)} \n"
     with pnlvm.LLVMBuilderContext() as ctx:
-        func_ty = ir.FunctionType(ir.VoidType(), [ir_argtype] *len(values_to_check))
-
-        custom_name = ctx.get_unique_name("hello")
+        func_ty = ir.FunctionType(ir.VoidType(), [])
+        ir_values_to_check = [ir_argtype(i) for i in values_to_check]
+        custom_name = ctx.get_unique_name("test_printf")
         function = ir.Function(ctx.module, func_ty, name=custom_name)
         block = function.append_basic_block(name="entry")
         builder = ir.IRBuilder(block)
 
-        ctx.inject_printf(builder, format_str, *function.args, override_debug=True)
+        ctx.inject_printf(builder, format_str, *ir_values_to_check, override_debug=True)
         builder.ret_void()
 
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
 
 
     # Printf is buffered in libc.
-    res = [ctype(i) for i in values_to_check]
-    bin_f(*res)
+    bin_f()
     libc = ctypes.util.find_library("c")
     libc = ctypes.CDLL(libc)
-    # fflush(NULL) flushes all open streams.
     libc.fflush(0)
     assert capfd.readouterr().out == format_str % tuple(values_to_check)
