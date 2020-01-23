@@ -249,23 +249,34 @@ class LLVMBuilderContext:
     def inject_printf(self, builder, fmt, *args, override_debug=False):
         if "print_values" not in debug_env and not override_debug:
             return
+        #FIXME: Fix builtin printf and use that instead of this
+        try:
+            import llvmlite.binding as llvm
+            libc = ctypes.util.find_library("c")
+            llvm.load_library_permanently(libc)
+            # Address will be none if the symbol is not found
+            printf_address = llvm.address_of_symbol("printf")
+            # Direct pointer constants don't work
+            printf_ty = ir.FunctionType(ir.IntType(32), [ir.IntType(8).as_pointer()], var_arg=True)
+            printf = builder.inttoptr(pnlvm.ir.IntType(64)(printf_address), printf_ty.as_pointer())
+            ir_module = builder.function.module
+            fmt += "\0"
 
-        ir_module = builder.function.module
-        fmt += "\0"
+            int8 = ir.IntType(8)
+            fmt_data = bytearray(fmt.encode("utf8"))
+            fmt_ty = ir.ArrayType(int8, len(fmt_data))
+            global_fmt = ir.GlobalVariable(ir_module, fmt_ty,
+                                        name="printf_fmt_" + str(len(ir_module.globals)))
+            global_fmt.linkage = "internal"
+            global_fmt.global_constant = True
+            global_fmt.initializer = fmt_ty(fmt_data)
 
-        int8 = ir.IntType(8)
-        fmt_data = bytearray(fmt.encode("utf8"))
-        fmt_ty = ir.ArrayType(int8, len(fmt_data))
-        global_fmt = ir.GlobalVariable(ir_module, fmt_ty,
-                                       name="printf_fmt_" + str(len(ir_module.globals)))
-        global_fmt.linkage = "internal"
-        global_fmt.global_constant = True
-        global_fmt.initializer = fmt_ty(fmt_data)
+            fmt_ptr = builder.gep(global_fmt, [self.int32_ty(0), self.int32_ty(0)])
+            builder.call(printf, [fmt_ptr] + list(args))
+        except:
+            return
 
-        fmt_ptr = builder.gep(global_fmt, [self.int32_ty(0), self.int32_ty(0)])
-
-        printf = self.get_builtin("printf")
-        builder.call(printf, [fmt_ptr] + list(args))
+            
 
 
     def inject_printf_float_array(self, builder, array, prefix="", suffix="\n", override_debug=False):

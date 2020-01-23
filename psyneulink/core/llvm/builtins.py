@@ -416,6 +416,7 @@ def _generate_intrinsic_wrapper(module, name, ret, args):
 
 
 def _generate_cpu_printf_wrapper(module):
+    #FIXME: Does not seem to handle varargs correctly (varargs aren't passed to function.args)
     printf_ty = ir.FunctionType(ir.IntType(32), [ir.IntType(8).as_pointer()], var_arg=True)
     function = ir.Function(module, printf_ty, name=_BUILTIN_PREFIX + "printf")
     function.attributes.add('alwaysinline')
