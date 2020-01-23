@@ -490,7 +490,7 @@ class PytorchModelCreator(torch.nn.Module):
                 a.attributes.add('noalias')
 
         context, params, model_input, model_output, optim_struct, training_set, trial_num = llvm_func.args
-        ctx.inject_printf(builder,"TRIAL NUM: %d\n", trial_num)
+        ctx.inject_printf(builder, "TRIAL NUM: %d\n", trial_num)
         # setup useful mappings
         input_nodes = composition.get_nodes_by_role(NodeRole.INPUT)
         output_nodes = composition.get_nodes_by_role(NodeRole.OUTPUT)
