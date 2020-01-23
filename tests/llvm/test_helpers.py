@@ -1,4 +1,3 @@
-from ctypes import util
 import ctypes
 import copy
 import numpy as np
