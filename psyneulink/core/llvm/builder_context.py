@@ -272,7 +272,7 @@ class LLVMBuilderContext:
         self.inject_printf(builder, prefix, override_debug=override_debug)
 
         with pnlvm.helpers.array_ptr_loop(builder, array, "print_array_loop") as (b1, i):
-            self.inject_printf(b1, "%f ", b1.load(b1.gep(array, [self.int32_ty(0), i])), override_debug=override_debug)
+            self.inject_printf(b1, "%lf ", b1.load(b1.gep(array, [self.int32_ty(0), i])), override_debug=override_debug)
 
         self.inject_printf(builder, suffix, override_debug=override_debug)
 
