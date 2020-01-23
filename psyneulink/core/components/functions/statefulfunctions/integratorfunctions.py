@@ -525,8 +525,8 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
                     :type:
 
         """
-        rate = Parameter(None, modulable=True, aliases=[MULTIPLICATIVE_PARAM], function_arg=True)
-        increment = Parameter(None, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM], function_arg=True)
+        increment = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
 
     @tc.typecheck
     def __init__(self,
@@ -632,12 +632,6 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         rate = self.get_current_function_param(RATE, context)
         increment = self.get_current_function_param(INCREMENT, context)
         noise = self._try_execute_param(self.get_current_function_param(NOISE, context), variable)
-
-        if rate is None:
-            rate = 1.0
-
-        if increment is None:
-            increment = 0.0
 
         previous_value = np.atleast_2d(self.get_previous_value(context))
 
