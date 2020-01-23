@@ -644,12 +644,10 @@ class PytorchModelCreator(torch.nn.Module):
 
         ctx.inject_printf(builder,"Running Autodiff Training with params:\n\tepoch count: %d \n\tnum_trials: %d \n",
                             epochs,
-                            num_trials,
-                            override_debug=True)
+                            num_trials)
 
         ctx.inject_printf(builder,"\tlearning_struct_addr: 0x%Lx \n",
-                            training_set_array,
-                            override_debug=True)
+                            training_set_array)
         input_cim_idx = composition._get_node_index(composition.input_CIM)
         model_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
 
