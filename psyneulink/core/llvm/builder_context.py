@@ -49,7 +49,7 @@ def module_count():
 
 
 _BUILTIN_PREFIX = "__pnl_builtin_"
-_builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'printf'))
+_builtin_intrinsics = frozenset(('pow', 'log', 'exp'))
 
 
 class LLVMBuilderContext:
