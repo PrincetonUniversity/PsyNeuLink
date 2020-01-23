@@ -942,7 +942,7 @@ class TestTrainingCorrectness:
                              0.05186586, 0.05829845, 0.05179337, 0.03504668, 0.05379566,
                              0.07103772, 0.03544133, 0.03019486, 0.12605846, 0.03976812])
 
-        np.allclose(output,comparator)
+        assert np.allclose(output,comparator)
 
     def test_pytorch_equivalence_with_autodiff_training_disabled_on_proj(self):
         iSs = np.array(
