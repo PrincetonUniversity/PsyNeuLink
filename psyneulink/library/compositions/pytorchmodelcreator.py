@@ -630,10 +630,10 @@ class PytorchModelCreator(torch.nn.Module):
 
         input_vector, dim, output_vector = llvm_func.args
         def get_fct_param_value(param_name):
-            val = node.function.get_current_function_param(
+            val = node.function._get_current_function_param(
                 param_name, context)
             if val is None:
-                val = node.function.get_current_function_param(
+                val = node.function._get_current_function_param(
                     param_name, None)
             return ctx.float_ty(val[0])
 
@@ -683,10 +683,10 @@ class PytorchModelCreator(torch.nn.Module):
     # parameters and uses them to create a function object representing the function, then returns it
     def function_creator(self, node, context=None):
         def get_fct_param_value(param_name):
-            val = node.function.get_current_function_param(
+            val = node.function._get_current_function_param(
                 param_name, context)
             if val is None:
-                val = node.function.get_current_function_param(
+                val = node.function._get_current_function_param(
                     param_name, Context(execution_id=None))
             return float(val)
 

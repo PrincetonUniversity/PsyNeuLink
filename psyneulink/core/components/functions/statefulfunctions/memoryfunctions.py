@@ -271,7 +271,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         # no arguments were passed in -- use current values of initializer attributes
         if len(args) == 0 or args is None:
-            reinitialization_value = self.get_current_function_param("initializer", context)
+            reinitialization_value = self._get_current_function_param("initializer", context)
 
         elif len(args) == 1:
             reinitialization_value = args[0]
@@ -318,10 +318,10 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         updated value of deque : deque
 
         """
-        rate = np.array(self.get_current_function_param(RATE, context)).astype(float)
+        rate = np.array(self._get_current_function_param(RATE, context)).astype(float)
 
         # execute noise if it is a function
-        noise = self._try_execute_param(self.get_current_function_param(NOISE, context), variable)
+        noise = self._try_execute_param(self._get_current_function_param(NOISE, context), variable)
 
         # If this is an initialization run, leave deque empty (don't want to count it as an execution step);
         # Just return current input (for validation).
@@ -968,7 +968,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         selection_function = self.selection_function
         test_var = np.asfarray([distance_result if i==0
                                 else np.zeros_like(distance_result)
-                                for i in range(self.get_current_function_param('max_entries', context))])
+                                for i in range(self._get_current_function_param('max_entries', context))])
         if isinstance(selection_function, type):
             selection_function = selection_function(default_variable=test_var, context=context)
             fct_string = 'Function type'
@@ -1047,7 +1047,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
         # no arguments were passed in -- use current values of initializer attributes
         if len(args) == 0 or args is None:
-            reinitialization_value = self.get_current_function_param("initializer", context)
+            reinitialization_value = self._get_current_function_param("initializer", context)
 
         elif len(args) == 1:
             reinitialization_value = args[0]
@@ -1102,14 +1102,14 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         # if len(variable)==2:
         val = variable[VALS]
 
-        retrieval_prob = np.array(self.get_current_function_param(RETRIEVAL_PROB, context)).astype(float)
-        storage_prob = np.array(self.get_current_function_param(STORAGE_PROB, context)).astype(float)
+        retrieval_prob = np.array(self._get_current_function_param(RETRIEVAL_PROB, context)).astype(float)
+        storage_prob = np.array(self._get_current_function_param(STORAGE_PROB, context)).astype(float)
 
         # execute noise if it is a function
-        noise = self._try_execute_param(self.get_current_function_param(NOISE, context), variable)
+        noise = self._try_execute_param(self._get_current_function_param(NOISE, context), variable)
 
         # get random state
-        random_state = self.get_current_function_param('random_state', context)
+        random_state = self._get_current_function_param('random_state', context)
 
         # If this is an initialization run, leave memory empty (don't want to count it as an execution step),
         # and return current value (variable[1]) for validation.
@@ -1213,7 +1213,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                 return [[0]* self.parameters.key_size._get(context),
                         [0]* self.parameters.val_size._get(context)]
             if self.equidistant_keys_select == RANDOM:
-                random_state = self.get_current_function_param('random_state', context)
+                random_state = self._get_current_function_param('random_state', context)
                 index_of_selected_item = random_state.choice(indices_of_selected_items)
             elif self.equidistant_keys_select == OLDEST:
                 index_of_selected_item = indices_of_selected_items[0]

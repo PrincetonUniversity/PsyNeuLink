@@ -171,8 +171,8 @@ class NormalDist(DistributionFunction):
                  context=None,
                  params=None,
                  ):
-        mean = self.get_current_function_param(DIST_MEAN, context)
-        standard_deviation = self.get_current_function_param(STANDARD_DEVIATION, context)
+        mean = self._get_current_function_param(DIST_MEAN, context)
+        standard_deviation = self._get_current_function_param(STANDARD_DEVIATION, context)
 
         result = np.random.normal(mean, standard_deviation)
 
@@ -318,8 +318,8 @@ class UniformToNormalDist(DistributionFunction):
         except:
             raise FunctionError("The UniformToNormalDist function requires the SciPy package.")
 
-        mean = self.get_current_function_param(DIST_MEAN, context)
-        standard_deviation = self.get_current_function_param(STANDARD_DEVIATION, context)
+        mean = self._get_current_function_param(DIST_MEAN, context)
+        standard_deviation = self._get_current_function_param(STANDARD_DEVIATION, context)
 
         sample = np.random.rand(1)[0]
         result = ((np.sqrt(2) * erfinv(2 * sample - 1)) * standard_deviation) + mean
@@ -422,7 +422,7 @@ class ExponentialDist(DistributionFunction):
                  params=None,
                  ):
 
-        beta = self.get_current_function_param(BETA, context)
+        beta = self._get_current_function_param(BETA, context)
         result = np.random.exponential(beta)
 
         return self.convert_output_type(result)
@@ -534,8 +534,8 @@ class UniformDist(DistributionFunction):
                  params=None,
                  ):
 
-        low = self.get_current_function_param(LOW, context)
-        high = self.get_current_function_param(HIGH, context)
+        low = self._get_current_function_param(LOW, context)
+        high = self._get_current_function_param(HIGH, context)
         result = np.random.uniform(low, high)
 
         return self.convert_output_type(result)
@@ -654,8 +654,8 @@ class GammaDist(DistributionFunction):
                  params=None,
                  ):
 
-        scale = self.get_current_function_param(SCALE, context)
-        dist_shape = self.get_current_function_param(DIST_SHAPE, context)
+        scale = self._get_current_function_param(SCALE, context)
+        dist_shape = self._get_current_function_param(DIST_SHAPE, context)
 
         result = np.random.gamma(dist_shape, scale)
 
@@ -773,8 +773,8 @@ class WaldDist(DistributionFunction):
                  params=None,
                  ):
 
-        scale = self.get_current_function_param(SCALE, context)
-        mean = self.get_current_function_param(DIST_MEAN, context)
+        scale = self._get_current_function_param(SCALE, context)
+        mean = self._get_current_function_param(DIST_MEAN, context)
 
         result = np.random.wald(mean, scale)
 
@@ -1077,13 +1077,13 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
 
         """
 
-        attentional_drift_rate = float(self.get_current_function_param(DRIFT_RATE, context))
+        attentional_drift_rate = float(self._get_current_function_param(DRIFT_RATE, context))
         stimulus_drift_rate = float(variable)
         drift_rate = attentional_drift_rate * stimulus_drift_rate
-        threshold = self.get_current_function_param(THRESHOLD, context)
-        starting_point = float(self.get_current_function_param(STARTING_POINT, context))
-        noise = float(self.get_current_function_param(NOISE, context))
-        t0 = float(self.get_current_function_param(NON_DECISION_TIME, context))
+        threshold = self._get_current_function_param(THRESHOLD, context)
+        starting_point = float(self._get_current_function_param(STARTING_POINT, context))
+        noise = float(self._get_current_function_param(NOISE, context))
+        t0 = float(self._get_current_function_param(NON_DECISION_TIME, context))
 
         # drift_rate = float(self.drift_rate) * float(variable)
         # threshold = float(self.threshold)
@@ -1567,9 +1567,9 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
             <DriftDiffusionAnalytical.drift_rate>`.
 
         """
-        Z = output or self.get_current_function_param(THRESHOLD, context)
-        A = input or self.get_current_function_param(DRIFT_RATE, context)
-        c = self.get_current_function_param(NOISE, context)
+        Z = output or self._get_current_function_param(THRESHOLD, context)
+        A = input or self._get_current_function_param(DRIFT_RATE, context)
+        c = self._get_current_function_param(NOISE, context)
         c_sq = c ** 2
         E = np.exp(-2 * Z * A / c_sq)
         D_iti = 0

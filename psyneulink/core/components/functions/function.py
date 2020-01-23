@@ -625,9 +625,9 @@ class Function_Base(Function):
             raise FunctionError(f"{param} is not a valid specification for "
                                 f"the {param_name} argument of {self.__class__.__name__}{owner_name}.")
 
-    def get_current_function_param(self, param_name, context=None):
+    def _get_current_function_param(self, param_name, context=None):
         if param_name == "variable":
-            raise FunctionError(f"The method 'get_current_function_param' is intended for retrieving "
+            raise FunctionError(f"The method '_get_current_function_param' is intended for retrieving "
                                 f"the current value of a function parameter. 'variable' is not a function parameter. "
                                 f"If looking for {self.name}'s default variable, try {self.name}.defaults.variable.")
         try:
@@ -922,8 +922,8 @@ class ArgumentTherapy(Function_Base):
         """
         # Compute the function
         statement = variable
-        propensity = self.get_current_function_param(PROPENSITY, context)
-        pertinacity = self.get_current_function_param(PERTINACITY, context)
+        propensity = self._get_current_function_param(PROPENSITY, context)
+        pertinacity = self._get_current_function_param(PERTINACITY, context)
         whim = np.random.randint(-10, 10)
 
         if propensity == self.Manner.OBSEQUIOUS:

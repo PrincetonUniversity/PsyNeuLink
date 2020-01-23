@@ -516,7 +516,7 @@ class UserDefinedFunction(Function_Base):
                 self.cust_fct_params[param] = kwargs[PARAMS][param]
             else:
                 # Otherwise, get current value from ParameterPort (in case it is being modulated by ControlSignal(s)
-                self.cust_fct_params[param] = self.get_current_function_param(param, context)
+                self.cust_fct_params[param] = self._get_current_function_param(param, context)
 
         call_params = self.cust_fct_params.copy()
 
