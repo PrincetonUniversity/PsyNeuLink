@@ -3109,6 +3109,41 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
 
         return self.convert_output_type(adjusted_value)
 
+    def _gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
+        rate = self._gen_llvm_load_param(ctx, builder, params, index, RATE)
+        noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE)
+        offset = self._gen_llvm_load_param(ctx, builder, params, index, OFFSET)
+        time_step = self._gen_llvm_load_param(ctx, builder, params, index, TIME_STEP_SIZE)
+
+        # Get the only context member -- previous value
+        prev_ptr = ctx.get_state_ptr(self, builder, state, "previous_value")
+        # Get rid of 2d array. When part of a Mechanism the input,
+        # (and output, and context) are 2d arrays.
+        prev_ptr = ctx.unwrap_2d_array(builder, prev_ptr)
+        assert len(prev_ptr.type.pointee) == len(vi.type.pointee)
+
+        prev_ptr = builder.gep(prev_ptr, [ctx.int32_ty(0), index])
+        prev_val = builder.load(prev_ptr)
+
+        in_ptr = builder.gep(vi, [ctx.int32_ty(0), index])
+        in_val = builder.load(in_ptr)
+
+        ret = builder.fmul(prev_val, rate)
+        ret = builder.fadd(ret, in_val)
+        ret = builder.fmul(ret, time_step)
+
+        sqrt_f = ctx.get_builtin("sqrt", [ctx.float_ty])
+        mod_step = builder.call(sqrt_f, [time_step])
+        mod_noise = builder.fmul(noise, mod_step)
+
+        ret = builder.fadd(ret, prev_val)
+        ret = builder.fadd(ret, mod_noise)
+        ret = builder.fadd(ret, offset)
+
+        out_ptr = builder.gep(vo, [ctx.int32_ty(0), index])
+        builder.store(ret, out_ptr)
+        builder.store(ret, prev_ptr)
+
 
 class FitzHughNagumoIntegrator(IntegratorFunction):  # ----------------------------------------------------------------------------
     """

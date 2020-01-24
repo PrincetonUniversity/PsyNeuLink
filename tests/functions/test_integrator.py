@@ -51,6 +51,18 @@ def DriftIntFun(init, value, iterations, **kwargs):
                      2.36535325, 2.3125881 , 1.94195457, 3.4923464 , 2.73809322],
                     [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.])
 
+def LeakyFun(init, value, iterations, **kwargs):
+    assert iterations == 3
+    if np.isscalar(kwargs["noise"]):
+        if "initializer" not in kwargs:
+            return [2.32811721, 2.37936209, 2.34473413, 2.32690665, 2.2895675 , 2.35801869, 2.29385877, 2.43375102, 2.45589355, 2.27718154]
+        else:
+            return [3.18435588, 2.95135395, 2.95906574, 3.32792543, 2.36639192, 2.45224771, 2.31572467, 3.3342168 , 3.29745831, 3.21808653]
+    else:
+        if "initializer" not in kwargs:
+            return [2.52718839, 2.40363898, 2.04011061, 2.33303847, 1.65066149, 2.2271978, 1.67937964, 2.59975537, 2.21006955, 1.92695773]
+        else:
+            return [3.38342706, 2.97563084, 2.65444222, 3.33405725, 1.72748591, 2.32142682, 1.70124553, 3.50022115, 3.05163432, 2.86786272]
 
 GROUP_PREFIX="IntegratorFunction "
 
@@ -67,6 +79,7 @@ GROUP_PREFIX="IntegratorFunction "
     (Functions.AdaptiveIntegrator, AdaptiveIntFun),
     (Functions.SimpleIntegrator, SimpleIntFun),
     (Functions.DriftDiffusionIntegrator, DriftIntFun),
+    (Functions.LeakyCompetingIntegrator, LeakyFun),
     ], ids=lambda x: x[0])
 @pytest.mark.parametrize("mode", [
     "Python",
