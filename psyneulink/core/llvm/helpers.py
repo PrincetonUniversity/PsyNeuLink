@@ -55,11 +55,6 @@ def array_ptr_loop(builder, array, id):
     stop = ir.IntType(32)(array.type.pointee.count)
     return for_loop_zero_inc(builder, stop, id)
 
-def matrix_ptr_loop(builder, matrix, id):
-    with array_ptr_loop(builder, matrix, id+"_outer") as (b1,outer_idx):
-        row = b1.load(b1.gep(matrix, [self.int32_ty(0), outer_idx]))
-        with array_ptr_loop(b1, row, id+"_inner") as (b2, inner_idx):
-            yield (b2, outer_idx, inner_idx)
 
 def fclamp(builder, val, min_val, max_val):
     min_val = min_val if isinstance(min_val, ir.Value) else val.type(min_val)
