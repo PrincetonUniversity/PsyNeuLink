@@ -75,7 +75,7 @@ class MSELoss(Loss):
             # we take mean
             self._pytorch_model._gen_inject_vec_sub(ctx, builder, value, target, output)
             # multiply each element i by 2/n to get dC/da_i
-            scalar_mult = builder.fdiv(ctx.float_ty(2), ctx.float_ty(dim)) 
+            scalar_mult = builder.fdiv(ctx.float_ty(2), ctx.float_ty(dim))
             with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(dim), "mse_mean_mult_loop") as (b1, index):
                 element_ptr = b1.gep(output, [ctx.int32_ty(0), index])
                 b1.store(b1.fmul(b1.load(element_ptr),scalar_mult),element_ptr)
