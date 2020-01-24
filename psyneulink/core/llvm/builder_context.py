@@ -287,6 +287,15 @@ class LLVMBuilderContext:
 
         self.inject_printf(builder, suffix, override_debug=override_debug)
 
+    def inject_printf_float_matrix(self, builder, matrix, prefix="", suffix="\n", override_debug=False):
+        self.inject_printf(builder, prefix, override_debug=override_debug)
+        with pnlvm.helpers.array_ptr_loop(builder, matrix, "print_row_loop") as (b1, i):
+            row = b1.gep(matrix, [self.int32_ty(0), i])
+            with pnlvm.helpers.array_ptr_loop(b1, row, "print_col_loop") as (b2, j):
+                self.inject_printf(b2, "%lf ", b2.load(b2.gep(row, [self.int32_ty(0), j])), override_debug=override_debug)
+            self.inject_printf(b2, "\n",override_debug=override_debug)
+        self.inject_printf(builder, suffix, override_debug=override_debug)
+
     @contextmanager
     def _gen_composition_exec_context(self, composition, simulation=False, suffix="", extra_args=[]):
         cond_gen = ConditionGenerator(self, composition)
