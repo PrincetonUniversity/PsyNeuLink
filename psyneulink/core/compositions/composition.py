@@ -6590,10 +6590,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             except Exception as e:
                 if bin_execute is not True:
-                    raise e
+                    raise e from None
 
-                print("WARNING: Failed to Run execution `{}': {}".format(
-                      self.name, str(e)))
+                warnings.warn("Failed to run `{}': {}".format(self.name, str(e)))
 
         # Reset gym forager environment for the current trial
         if self.env:
@@ -6935,10 +6934,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         return __execution.extract_node_output(self.output_CIM)
                 except Exception as e:
                     if bin_execute is not True:
-                        raise e
+                        raise e from None
 
-                    string = "Failed to execute `{}': {}".format(self.name, str(e))
-                    print("WARNING: {}".format(string))
+                    warnings.warn("Failed to execute `{}': {}".format(self.name, str(e)))
 
             # Exec failed for some reason, we can still try node level bin_execute
             try:
@@ -6958,10 +6956,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 bin_execute = True
             except Exception as e:
                 if bin_execute is not True:
-                    raise e
+                    raise e from None
 
-                string = "Failed to compile wrapper for `{}' in `{}': {}".format(m.name, self.name, str(e))
-                print("WARNING: {}".format(string))
+                warnings.warn("Failed to compile wrapper for `{}' in `{}': {}".format(m.name, self.name, str(e)))
                 bin_execute = False
 
         # Execute controller --------------------------------------------------------
