@@ -14,8 +14,16 @@ from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism i
     LCAMechanism, MAX_VS_AVG, MAX_VS_NEXT, CONVERGENCE
 
 class TestLCA:
-    def test_LCAMechanism_length_1(self):
-
+    @pytest.mark.mechanism
+    @pytest.mark.lca_mechanism
+    @pytest.mark.benchmark(group="LCAMechanism")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_LCAMechanism_length_1(self, benchmark, mode):
         T = TransferMechanism(function=Linear(slope=1.0))
         L = LCAMechanism(function=Linear(slope=2.0),
                          self_excitation=3.0,
@@ -38,13 +46,7 @@ class TestLCA:
 
         #  - - - - - - - - - - - - - -  - - - - - - - - - - - -
 
-        results=[]
-        def record_execution():
-            results.append(L.parameters.value.get(C)[0][0])
-
-        C.run(inputs={T: [1.0]},
-              num_trials=3,
-              call_after_trial=record_execution)
+        C.run(inputs={T: [1.0]}, num_trials=3, bin_execute=mode)
 
         # - - - - - - - TRIAL 1 - - - - - - -
 
@@ -61,9 +63,19 @@ class TestLCA:
         # new_transfer_input = 0.265 + ( 0.5 * 0.265 + 3.0 * 0.53 + 0.0 + 1.0)*0.1 + 0.0    =    0.53725
         # f(new_transfer_input) = 0.53725 * 2.0 = 1.0745
 
-        assert np.allclose(results, [0.2, 0.53, 1.0745])
+        assert np.allclose(C.results, [[[0.2]], [[0.53]], [[1.0745]]])
+        benchmark(C.run, inputs={T: [1.0]}, num_trials=3, bin_execute=mode)
 
-    def test_LCAMechanism_length_2(self):
+    @pytest.mark.mechanism
+    @pytest.mark.lca_mechanism
+    @pytest.mark.benchmark(group="LCAMechanism")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_LCAMechanism_length_2(self, benchmark, mode):
         # Note: since the LCAMechanism's threshold is not specified in this test, each execution only updates
         #       the Mechanism once.
 
@@ -91,13 +103,7 @@ class TestLCA:
 
         #  - - - - - - - - - - - - - -  - - - - - - - - - - - -
 
-        results=[]
-        def record_execution():
-            results.append(L.parameters.value.get(C)[0])
-
-        C.run(inputs={T: [1.0, 2.0]},
-              num_trials=3,
-              call_after_trial=record_execution)
+        C.run(inputs={T: [1.0, 2.0]}, num_trials=3, bin_execute=mode)
 
         # - - - - - - - TRIAL 1 - - - - - - -
 
@@ -123,7 +129,8 @@ class TestLCA:
         # new_transfer_input_2 = 0.51 + ( 0.5 * 0.51 + 3.0 * 1.02 - 1.0*0.45 + 2.0)*0.1 + 0.0    =    0.9965
         # f(new_transfer_input_2) = 0.9965 * 2.0 = 1.463
 
-        assert np.allclose(results, [[0.2, 0.4], [0.45, 1.02], [0.7385, 1.993]])
+        assert np.allclose(C.results, [[[0.2, 0.4]], [[0.45, 1.02]], [[0.7385, 1.993]]])
+        benchmark(C.run, inputs={T: [1.0, 2.0]}, num_trials=3, bin_execute=mode)
 
     def test_equivalance_of_threshold_and_when_finished_condition(self):
         # Note: This tests the equivalence of results when:
