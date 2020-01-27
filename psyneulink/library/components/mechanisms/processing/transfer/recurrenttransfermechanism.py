@@ -1263,6 +1263,12 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         return pnlvm.ir.LiteralStructType(input_type_list)
 
+    def _get_mech_state_struct_type(self, ctx):
+        return self._get_mech_is_finished_struct_type(ctx)
+
+    def _get_mech_state_init(self, context):
+        return self._get_mech_is_finished_initializer(context)
+
     def _get_param_struct_type(self, ctx):
         transfer_t = ctx.get_param_struct_type(super())
         projection_t = ctx.get_param_struct_type(self.recurrent_projection)
@@ -1288,11 +1294,47 @@ class RecurrentTransferMechanism(TransferMechanism):
         retval_init = (tuple(os.defaults.value) if not np.isscalar(os.defaults.value) else os.defaults.value for os in self.output_ports)
         return tuple((transfer_init, projection_init, tuple(retval_init)))
 
+    def _get_mech_is_finished_struct_type(self, ctx):
+        return pnlvm.ir.LiteralStructType([ctx.int32_ty, ctx.int32_ty,
+                                           ctx.int32_ty])
+
+    def _get_mech_is_finished_initializer(self, context):
+        return (self.parameters.is_finished_flag.get(context),
+                self.parameters.num_executions_before_finished.get(context),
+                self.parameters.max_executions_before_finished.get(context))
+
+    def _gen_llvm_get_is_finished_struct(self, ctx, builder, state):
+        # mechanism private state is #2
+        return builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+
+    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, arg_in, arg_out):
+        return pnlvm.ir.IntType(1)(1)
+
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+        transfer_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        transfer_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
         # Allocate space for transfer mechanism.
         # This includes space for the autoprojection
         transfer_input_type = super()._get_input_struct_type(ctx)
         transfer_in = builder.alloca(transfer_input_type)
+
+        is_finished_ptr = self._gen_llvm_get_is_finished_struct(ctx, builder, transfer_state)
+        is_finished_flag_ptr = builder.gep(is_finished_ptr, [ctx.int32_ty(0),
+                                                             ctx.int32_ty(0)])
+        is_finished_count_ptr = builder.gep(is_finished_ptr, [ctx.int32_ty(0),
+                                                             ctx.int32_ty(1)])
+        is_finished_max_ptr = builder.gep(is_finished_ptr, [ctx.int32_ty(0),
+                                                            ctx.int32_ty(2)])
+
+        # Reset the flag and counter
+        builder.store(is_finished_flag_ptr.type.pointee(0), is_finished_flag_ptr)
+        builder.store(is_finished_count_ptr.type.pointee(0), is_finished_flag_ptr)
+
+        # Enter the loop
+        loop_block = builder.append_basic_block(builder.basic_block.name + "_loop")
+        end_block = builder.append_basic_block(builder.basic_block.name + "_end")
+        builder.branch(loop_block)
+        builder.position_at_end(loop_block)
 
         # Get previous value
         prev_val = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
@@ -1336,11 +1378,29 @@ class RecurrentTransferMechanism(TransferMechanism):
             builder.store(builder.load(mod_afferent_arg_ptr), mod_afferent_in_ptr)
 
         # Run the transfer mechanism
-        transfer_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        transfer_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
         builder = super()._gen_llvm_function_body(ctx, builder, transfer_params, transfer_state, transfer_in, arg_out)
 
         builder.store(builder.load(arg_out), prev_val)
+
+        is_finished_cond = self._gen_llvm_is_finished_cond(ctx, builder,
+                                                           transfer_params,
+                                                           transfer_state,
+                                                           transfer_in,
+                                                           arg_out)
+        is_finished_count = builder.load(is_finished_count_ptr)
+        is_finished_count = builder.add(is_finished_count,
+                                        is_finished_count.type(1))
+        builder.store(is_finished_count, is_finished_count_ptr)
+        is_finished_max = builder.load(is_finished_max_ptr)
+        max_reached = builder.icmp_unsigned(">=", is_finished_count,
+                                            is_finished_max)
+        is_finished_cond = builder.or_(is_finished_cond, max_reached)
+        with builder.if_then(is_finished_cond):
+            builder.store(is_finished_flag_ptr.type.pointee(1), is_finished_flag_ptr)
+            builder.branch(end_block)
+
+        builder.branch(loop_block)
+        builder.position_at_end(end_block)
 
         return builder
 
