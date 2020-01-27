@@ -195,13 +195,24 @@ class TestLCA:
         result = comp.run(inputs={lca:[1,0.5,0]})
         assert np.allclose(result, [[0.5100369 , 0.43776452, 0.36808511]])
 
-    def test_LCAMechanism_threshold_with_convergence(self):
+    @pytest.mark.mechanism
+    @pytest.mark.lca_mechanism
+    @pytest.mark.benchmark(group="LCAMechanism")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_LCAMechanism_threshold_with_convergence(self, benchmark, mode):
         lca = LCAMechanism(size=3, threshold=0.01, threshold_criterion=CONVERGENCE)
         comp = Composition()
         comp.add_node(lca)
-        result = comp.run(inputs={lca:[0,1,2]})
+        result = comp.run(inputs={lca:[0,1,2]}, bin_execute=mode)
         assert np.allclose(result, [[0.02377001, 0.5, 0.97622999]])
-        assert lca.num_executions_before_finished == 19
+        if mode == "Python":
+            assert lca.num_executions_before_finished == 19
+        benchmark(comp.run, inputs={lca:[0,1,2]}, bin_execute=mode)
 
     def test_equivalance_of_threshold_and_termination_specifications_just_threshold(self):
         # Note: This tests the equivalence of using LCAMechanism-specific threshold arguments and

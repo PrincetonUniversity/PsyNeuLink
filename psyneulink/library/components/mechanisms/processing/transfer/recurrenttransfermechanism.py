@@ -1301,7 +1301,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         return tuple((transfer_init, projection_init, tuple(retval_init)))
 
     def _get_mech_is_finished_state_struct_type(self, ctx):
-        types = [ctx.int32_ty, ctx.int32_ty, ctx.int32_ty]
+        types = [ctx.int32_ty, ctx.int32_ty]
         if isinstance(self.termination_measure, Function):
             types.append(ctx.get_state_struct_type(self.termination_measure))
         else:
@@ -1310,8 +1310,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     def _get_mech_is_finished_state_initializer(self, context):
         init = [self.parameters.is_finished_flag.get(context),
-                self.parameters.num_executions_before_finished.get(context),
-                self.parameters.max_executions_before_finished.get(context)]
+                self.parameters.num_executions_before_finished.get(context)]
         if isinstance(self.termination_measure, Function):
             init.append(self.termination_measure._get_state_initializer(context))
         else:
@@ -1319,7 +1318,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         return tuple(init)
 
     def _get_mech_is_finished_param_struct_type(self, ctx):
-        types = [ctx.int32_ty]
+        types = [ctx.int32_ty]   # max_executions_before_finished
         if isinstance(self.termination_measure, Function):
             types.append(ctx.get_param_struct_type(self.termination_measure))
         else:
@@ -1371,8 +1370,29 @@ class RecurrentTransferMechanism(TransferMechanism):
                 cond = b.fcmp_ordered(">=", test_val, max_val)
                 max_val = b.select(cond, test_val, max_val)
                 b.store(max_val, cmp_val_ptr)
+        elif isinstance(self.termination_measure, Function):
+            # FIXME: HACK the distance function is not initialized
+            self.termination_measure.defaults.variable = np.zeros_like([self.defaults.value[0], self.defaults.value[0]])
+            self.termination_measure.defaults.value = float(0)
+
+            func = ctx.import_llvm_function(self.termination_measure)
+            func_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            func_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+            func_in = builder.alloca(func.args[2].type.pointee)
+            # Populate input
+            func_in_current_ptr = builder.gep(func_in, [ctx.int32_ty(0),
+                                                        ctx.int32_ty(0)])
+            current_ptr = builder.gep(current, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            builder.store(builder.load(current_ptr), func_in_current_ptr)
+
+            func_in_prev_ptr = builder.gep(func_in, [ctx.int32_ty(0),
+                                                     ctx.int32_ty(1)])
+            prev_ptr = builder.gep(prev, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            builder.store(builder.load(prev_ptr), func_in_prev_ptr)
+
+            builder.call(func, [func_params, func_state, func_in, cmp_val_ptr])
         else:
-            assert False, "Not Supported"
+            assert False, "Not Supported: {}".format(self.termination_measure)
 
         cmp_val = builder.load(cmp_val_ptr)
         cmp_str = self.parameters.termination_comparison_op.get(None)
