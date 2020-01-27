@@ -1348,12 +1348,35 @@ class RecurrentTransferMechanism(TransferMechanism):
         # mechanism private params is #2
         return builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
 
-    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, arg_in, arg_out):
+    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, prev, current):
         #FIXME: This should really be in TransferMechanism, but those don't
         #       support 'is_finished' yet
-        if self.parameters.termination_threshold.get(None) is None:
+        if self.parameters.termination_threshold.get(None) is None or \
+           not self.execute_until_finished:
             return pnlvm.ir.IntType(1)(1)
-        assert False, "Not Supported"
+
+        threshold_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        threshold = builder.load(threshold_ptr)
+        cmp_val_ptr = builder.alloca(threshold.type)
+        builder.store(threshold, cmp_val_ptr)
+        if self.termination_measure is max:
+            assert self._termination_measure_num_items_expected == 1
+            # Get inside of the structure
+            val = builder.gep(current, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            first_val = builder.load(builder.gep(val, [ctx.int32_ty(0), ctx.int32_ty(0)]))
+            builder.store(first_val, cmp_val_ptr)
+            with pnlvm.helpers.array_ptr_loop(builder, val, "max_loop") as (b, idx):
+                test_val = b.load(b.gep(val, [ctx.int32_ty(0), idx]))
+                max_val = b.load(cmp_val_ptr)
+                cond = b.fcmp_ordered(">=", test_val, max_val)
+                max_val = b.select(cond, test_val, max_val)
+                b.store(max_val, cmp_val_ptr)
+        else:
+            assert False, "Not Supported"
+
+        cmp_val = builder.load(cmp_val_ptr)
+        cmp_str = self.parameters.termination_comparison_op.get(None)
+        return builder.fcmp_ordered(cmp_str, builder.load(cmp_val_ptr), threshold)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         transfer_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -1426,15 +1449,13 @@ class RecurrentTransferMechanism(TransferMechanism):
         # Run the transfer mechanism
         builder = super()._gen_llvm_function_body(ctx, builder, transfer_params, transfer_state, transfer_in, arg_out)
 
-        compare_prev = builder.load(prev_val_ptr)
-        compare_current = builder.load(arg_out)
-        builder.store(builder.load(arg_out), prev_val_ptr)
-
         is_finished_cond = self._gen_llvm_is_finished_cond(ctx, builder,
                                                            is_finished_param_ptr,
                                                            is_finished_state_ptr,
-                                                           compare_prev,
-                                                           compare_current)
+                                                           prev_val_ptr,
+                                                           arg_out)
+        builder.store(builder.load(arg_out), prev_val_ptr)
+
         is_finished_count = builder.load(is_finished_count_ptr)
         is_finished_count = builder.add(is_finished_count,
                                         is_finished_count.type(1))

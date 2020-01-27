@@ -164,12 +164,22 @@ class TestLCA:
 
     # Note: In the following tests, since the LCAMechanism's threshold is specified
     #       it executes until the it reaches threshold.
-    def test_LCAMechanism_threshold(self):
+    @pytest.mark.mechanism
+    @pytest.mark.lca_mechanism
+    @pytest.mark.benchmark(group="LCAMechanism")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_LCAMechanism_threshold(self, benchmark, mode):
         lca = LCAMechanism(size=2, threshold=0.7)
         comp = Composition()
         comp.add_node(lca)
-        result = comp.run(inputs={lca:[1,0]})
+        result = comp.run(inputs={lca:[1,0]}, bin_execute=mode)
         assert np.allclose(result, [[0.71463572, 0.28536428]])
+        benchmark(comp.run, inputs={lca:[1,0]}, bin_execute=mode)
 
     def test_LCAMechanism_threshold_with_max_vs_next(self):
         lca = LCAMechanism(size=3, threshold=0.1, threshold_criterion=MAX_VS_NEXT)
