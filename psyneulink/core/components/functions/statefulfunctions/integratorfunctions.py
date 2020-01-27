@@ -3030,7 +3030,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
 
         """
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM, 'leak'], function_arg=True)
-        offset = Parameter(None, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
         time_step_size = Parameter(0.1, modulable=True, function_arg=True)
 
     @tc.typecheck
@@ -3087,9 +3087,6 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         initializer = self.get_current_function_param(INITIALIZER, context)  # unnecessary?
         time_step_size = self.get_current_function_param(TIME_STEP_SIZE, context)
         offset = self.get_current_function_param(OFFSET, context)
-
-        if offset is None:
-            offset = 0.0
 
         # execute noise if it is a function
         noise = self._try_execute_param(self.get_current_function_param(NOISE, context), variable)
