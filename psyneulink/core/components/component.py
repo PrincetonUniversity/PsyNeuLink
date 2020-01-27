@@ -1159,17 +1159,18 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         lists = (_convert(s) for s in self._get_state_values(context))
         return pnlvm._tupleize(lists)
 
-    def _get_compilation_params(self, context=None):
+    def _get_compilation_params(self):
         # Filter out known unused/invalid params
         black_list = {'variable', 'value', 'initializer'}
         try:
-            # Don't list stateful params, the are included in context
+            # Don't list stateful params, the are included in state
             black_list.update(self.stateful_attributes)
         except AttributeError:
             pass
         def _is_compilation_param(p):
             if p.name not in black_list and not isinstance(p, ParameterAlias):
-                val = p.get(context)
+                #FIXME: this should use defaults
+                val = p.get()
                 # Check if the value is string (like integration_method)
                 return not isinstance(val, (str, ComponentsMeta))
             return False
@@ -1177,7 +1178,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         return filter(_is_compilation_param, self.parameters)
 
     def _get_param_ids(self, context=None):
-        return [p.name for p in self._get_compilation_params(context)]
+        return [p.name for p in self._get_compilation_params()]
 
     def _get_param_values(self, context=None):
         def _get_values(p):
@@ -1206,7 +1207,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     param = np.asfarray(param[0]).tolist()
             return param
 
-        return tuple(map(_get_values, self._get_compilation_params(context)))
+        return tuple(map(_get_values, self._get_compilation_params()))
 
     def _get_param_initializer(self, context):
         return pnlvm._tupleize(self._get_param_values(context))
