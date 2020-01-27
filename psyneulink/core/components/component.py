@@ -1141,8 +1141,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # mechanism functions are handled separately
         blacklist = {"function"} if hasattr(self, 'ports') else {}
         def _is_compilation_state(p):
-            return (p.name in stateful or isinstance(p.get(), Component)) and \
-                    p.name not in blacklist
+            return p.name not in blacklist and (
+                   p.name in stateful or
+                   isinstance(p.get(), (Component, np.random.RandomState)))
 
         return filter(_is_compilation_state, self.parameters)
 
