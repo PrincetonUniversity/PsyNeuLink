@@ -1135,11 +1135,16 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     # ------------------------------------------------------------------------------------------------------------------
     def _get_compilation_state(self):
         try:
-            stateful = self.stateful_attributes
+            stateful = set(self.stateful_attributes)
         except AttributeError:
-            stateful = []
+            stateful = set()
+        # mechanism functions are handled separately
+        blacklist = {"function"} if hasattr(self, 'ports') else {}
+        def _is_compilation_state(p):
+            return (p.name in stateful or isinstance(p.get(), Component)) and \
+                    p.name not in blacklist
 
-        return (p for p in self.parameters if p.name in stateful or isinstance(p.get(), Component))
+        return filter(_is_compilation_state, self.parameters)
 
     def _get_state_ids(self):
         return [sp.name for sp in self._get_compilation_state()]
@@ -1154,10 +1159,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             if isinstance(x, np.random.RandomState):
                 # Skip first element of random state (id string)
                 return x.get_state()[1:]
-            else:
+            try:
+                return (_convert(i) for i in x)
+            except:
                 return x
-        lists = (_convert(s) for s in self._get_state_values(context))
-        return pnlvm._tupleize(lists)
+        return pnlvm._tupleize(_convert(self._get_state_values(context)))
 
     def _get_compilation_params(self):
         # Filter out known unused/invalid params
