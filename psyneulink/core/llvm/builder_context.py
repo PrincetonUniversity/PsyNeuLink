@@ -49,7 +49,7 @@ def module_count():
 
 
 _BUILTIN_PREFIX = "__pnl_builtin_"
-_builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'printf'))
+_builtin_intrinsics = frozenset(('pow', 'log', 'exp'))
 
 
 class LLVMBuilderContext:
@@ -250,31 +250,51 @@ class LLVMBuilderContext:
     def inject_printf(self, builder, fmt, *args, override_debug=False):
         if "print_values" not in debug_env and not override_debug:
             return
+        #FIXME: Fix builtin printf and use that instead of this
+        try:
+            import llvmlite.binding as llvm
+            libc = ctypes.util.find_library("c")
+            llvm.load_library_permanently(libc)
+            # Address will be none if the symbol is not found
+            printf_address = llvm.address_of_symbol("printf")
+            # Direct pointer constants don't work
+            printf_ty = ir.FunctionType(ir.IntType(32), [ir.IntType(8).as_pointer()], var_arg=True)
+            printf = builder.inttoptr(pnlvm.ir.IntType(64)(printf_address), printf_ty.as_pointer())
+            ir_module = builder.function.module
+            fmt += "\0"
 
-        ir_module = builder.function.module
-        fmt += "\0"
+            int8 = ir.IntType(8)
+            fmt_data = bytearray(fmt.encode("utf8"))
+            fmt_ty = ir.ArrayType(int8, len(fmt_data))
+            global_fmt = ir.GlobalVariable(ir_module, fmt_ty,
+                                        name="printf_fmt_" + str(len(ir_module.globals)))
+            global_fmt.linkage = "internal"
+            global_fmt.global_constant = True
+            global_fmt.initializer = fmt_ty(fmt_data)
 
-        int8 = ir.IntType(8)
-        fmt_data = bytearray(fmt.encode("utf8"))
-        fmt_ty = ir.ArrayType(int8, len(fmt_data))
-        global_fmt = ir.GlobalVariable(ir_module, fmt_ty,
-                                       name="printf_fmt_" + str(len(ir_module.globals)))
-        global_fmt.linkage = "internal"
-        global_fmt.global_constant = True
-        global_fmt.initializer = fmt_ty(fmt_data)
+            fmt_ptr = builder.gep(global_fmt, [self.int32_ty(0), self.int32_ty(0)])
+            builder.call(printf, [fmt_ptr] + list(args))
+        except:
+            return
 
-        fmt_ptr = builder.gep(global_fmt, [self.int32_ty(0), self.int32_ty(0)])
-
-        printf = self.get_builtin("printf")
-        builder.call(printf, [fmt_ptr] + list(args))
+            
 
 
     def inject_printf_float_array(self, builder, array, prefix="", suffix="\n", override_debug=False):
         self.inject_printf(builder, prefix, override_debug=override_debug)
 
         with pnlvm.helpers.array_ptr_loop(builder, array, "print_array_loop") as (b1, i):
-            self.inject_printf(b1, "%f ", b1.load(b1.gep(array, [self.int32_ty(0), i])), override_debug=override_debug)
+            self.inject_printf(b1, "%lf ", b1.load(b1.gep(array, [self.int32_ty(0), i])), override_debug=override_debug)
 
+        self.inject_printf(builder, suffix, override_debug=override_debug)
+
+    def inject_printf_float_matrix(self, builder, matrix, prefix="", suffix="\n", override_debug=False):
+        self.inject_printf(builder, prefix, override_debug=override_debug)
+        with pnlvm.helpers.array_ptr_loop(builder, matrix, "print_row_loop") as (b1, i):
+            row = b1.gep(matrix, [self.int32_ty(0), i])
+            with pnlvm.helpers.array_ptr_loop(b1, row, "print_col_loop") as (b2, j):
+                self.inject_printf(b2, "%lf ", b2.load(b2.gep(row, [self.int32_ty(0), j])), override_debug=override_debug)
+            self.inject_printf(b2, "\n",override_debug=override_debug)
         self.inject_printf(builder, suffix, override_debug=override_debug)
 
     @contextmanager

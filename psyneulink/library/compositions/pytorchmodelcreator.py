@@ -424,12 +424,12 @@ class PytorchModelCreator(torch.nn.Module):
                     is_set = False
                     for j, (input_vertex, weights) in enumerate(afferents.items()):
                         source_node = input_vertex.component
-                        ctx.inject_printf(builder, f"COMPILED FORWARD {source_node} -> {component}\n")
                         source_node_idx = self._composition._get_node_index(source_node)
                         input_value = self._get_output_value_ptr(ctx, builder, arg_out, source_node_idx)
 
                         # We cast the ctype weights array to llvmlite pointer
                         weights_llvmlite, _, _ = self._gen_get_node_weight_ptr(ctx, builder, params, component, source_node)
+                        ctx.inject_printf_float_matrix(builder, weights_llvmlite, prefix=f"{source_node} -> {component}\tweight:\t")
                         # node inputs are 2d arrays in a struct
                         input_ptr = builder.gep(mech_input, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(j)])
                         self._gen_inject_vxm(ctx, builder, input_value, weights_llvmlite, input_ptr)
@@ -466,8 +466,8 @@ class PytorchModelCreator(torch.nn.Module):
                 # if biases is not None:
                 #   value = value + biases
                 if store_z_values is True:
-                    ctx.inject_printf_float_array(builder, z_values[component], prefix=f"Z VALUE FOR {component} :\t")
-                ctx.inject_printf_float_array(builder, value, prefix=f"FORWARD VALUE FOR {component} :\t")
+                    ctx.inject_printf_float_array(builder, z_values[component], prefix=f"{component}\tforward input:\t")
+                ctx.inject_printf_float_array(builder, value, prefix=f"{component}\tforward output:\t")
 
         return z_values
 
@@ -490,7 +490,6 @@ class PytorchModelCreator(torch.nn.Module):
                 a.attributes.add('noalias')
 
         context, params, model_input, model_output, optim_struct, training_set, trial_num = llvm_func.args
-        ctx.inject_printf(builder,"TRIAL NUM: %d\n", trial_num)
         # setup useful mappings
         input_nodes = composition.get_nodes_by_role(NodeRole.INPUT)
         output_nodes = composition.get_nodes_by_role(NodeRole.OUTPUT)
@@ -504,7 +503,7 @@ class PytorchModelCreator(torch.nn.Module):
             node_model_input = builder.gep(model_input, [ctx.int32_ty(0), ctx.int32_ty(i)])
             self._gen_inject_vec_copy(ctx, builder, node_input_array_ptr, node_model_input)
 
-            ctx.inject_printf_float_array(builder, node_model_input, prefix=f"\tNODE {i} INPUT: ")
+            ctx.inject_printf_float_array(builder, node_model_input, prefix=f"{node}\tinput:\t")
 
         # 2) call forward computation
         model_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
@@ -512,7 +511,6 @@ class PytorchModelCreator(torch.nn.Module):
             ctx, builder, context, params, model_input, model_output, store_z_values=True)
         # 3) compute errors
 
-        ctx.inject_printf(builder, "\tCOMPUTE ERR FOR INPUT %d\n", trial_num)
 
         error_dict = {}
         backprop_queue = deque()
@@ -549,10 +547,10 @@ class PytorchModelCreator(torch.nn.Module):
 
                 tmp_loss = loss.gen_inject_lossfunc_call(ctx, builder, loss_fn, node_output, node_target)
 
-                ctx.inject_printf_float_array(builder, node_target, prefix=f"{node} target:")
-                ctx.inject_printf_float_array(builder, node_output, prefix=f"{node} value:")
+                ctx.inject_printf_float_array(builder, node_target, prefix=f"{node}\ttarget:\t")
+                ctx.inject_printf_float_array(builder, node_output, prefix=f"{node}\tvalue:\t")
 
-                ctx.inject_printf(builder,f"tmp loss for {node} :%f\n",tmp_loss)
+                ctx.inject_printf(builder,f"{node}\tloss:\t%f\n",tmp_loss)
                 builder.store(builder.fadd(builder.load(total_loss),tmp_loss),total_loss)
                 loss_derivative = loss._gen_inject_loss_differential(ctx, builder, node_output, node_target)
                 # compute δ_l = dσ/da ⊙ σ'(z)
@@ -582,8 +580,8 @@ class PytorchModelCreator(torch.nn.Module):
 
                 self._gen_inject_vec_hadamard(ctx, builder, activation_func_derivative, error_val, error_val)
 
-            ctx.inject_printf_float_array(builder, activation_func_derivative, prefix=f"dSIGMA VALUE FOR {node}:\t")
-            ctx.inject_printf_float_array(builder, error_val, prefix=f"ERROR VALUE FOR {node}:\t")
+            ctx.inject_printf_float_array(builder, activation_func_derivative, prefix=f"{node}\tdSigma:\t")
+            ctx.inject_printf_float_array(builder, error_val, prefix=f"{node}\terror:\t")
 
         # 4) compute weight gradients
         for (node, err_val) in error_dict.items():
@@ -614,7 +612,7 @@ class PytorchModelCreator(torch.nn.Module):
                                                  [ctx.int32_ty(0), weight_row, weight_column]))
                     
         builder.store(builder.fmul(ctx.float_ty(.5),builder.load(total_loss)),total_loss)
-        ctx.inject_printf(builder,"TOTAL LOSS: %f\n",builder.load(total_loss))
+        ctx.inject_printf(builder,"TOTAL LOSS:\t%f\n",builder.load(total_loss))
         builder.ret_void()
 
         return builder.function
@@ -644,12 +642,10 @@ class PytorchModelCreator(torch.nn.Module):
 
         ctx.inject_printf(builder,"Running Autodiff Training with params:\n\tepoch count: %d \n\tnum_trials: %d \n",
                             epochs,
-                            num_trials,
-                            override_debug=True)
+                            num_trials)
 
         ctx.inject_printf(builder,"\tlearning_struct_addr: 0x%Lx \n",
-                            training_set_array,
-                            override_debug=True)
+                            training_set_array)
         input_cim_idx = composition._get_node_index(composition.input_CIM)
         model_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
 
@@ -689,7 +685,7 @@ class PytorchModelCreator(torch.nn.Module):
                 # FIXME: converting this call to direct code results in
                 # significant longer compilation times
                 b2.call(optimizer_zero_grad, [optimizer_struct])
-                ctx.inject_printf(b2, "BACKPROP %d\n", trial_num)
+                ctx.inject_printf(b2, "TRIAL %d\n", trial_num)
                 b2.call(backprop, [context, params, model_input, data,
                                    optimizer_struct, training_set_array,
                                    trial_num])
