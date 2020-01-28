@@ -1263,12 +1263,6 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         return pnlvm.ir.LiteralStructType(input_type_list)
 
-    def _get_mech_state_struct_type(self, ctx):
-        return self._get_mech_is_finished_state_struct_type(ctx)
-
-    def _get_mech_state_init(self, context):
-        return self._get_mech_is_finished_state_initializer(context)
-
     def _get_mech_param_struct_type(self, ctx):
         return self._get_mech_is_finished_param_struct_type(ctx)
 
@@ -1299,23 +1293,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         # That is what the recurrent projection finds.
         retval_init = (tuple(os.defaults.value) if not np.isscalar(os.defaults.value) else os.defaults.value for os in self.output_ports)
         return tuple((transfer_init, projection_init, tuple(retval_init)))
-
-    def _get_mech_is_finished_state_struct_type(self, ctx):
-        types = [ctx.int32_ty, ctx.int32_ty]
-        if isinstance(self.termination_measure, Function):
-            types.append(ctx.get_state_struct_type(self.termination_measure))
-        else:
-            types.append(pnlvm.ir.LiteralStructType([]))
-        return pnlvm.ir.LiteralStructType(types)
-
-    def _get_mech_is_finished_state_initializer(self, context):
-        init = [self.parameters.is_finished_flag.get(context),
-                self.parameters.num_executions_before_finished.get(context)]
-        if isinstance(self.termination_measure, Function):
-            init.append(self.termination_measure._get_state_initializer(context))
-        else:
-            init.append(())
-        return tuple(init)
 
     def _get_mech_is_finished_param_struct_type(self, ctx):
         types = [ctx.int32_ty]   # max_executions_before_finished
@@ -1377,7 +1354,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
             func = ctx.import_llvm_function(self.termination_measure)
             func_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-            func_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+            func_state = ctx.get_state_ptr(self, builder, state, "termination_measure")
             func_in = builder.alloca(func.args[2].type.pointee)
             # Populate input
             func_in_current_ptr = builder.gep(func_in, [ctx.int32_ty(0),
@@ -1408,10 +1385,12 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         is_finished_state_ptr = self._gen_llvm_get_is_finished_state_struct(ctx, builder, transfer_state)
         is_finished_param_ptr = self._gen_llvm_get_is_finished_param_struct(ctx, builder, transfer_params)
-        is_finished_flag_ptr = builder.gep(is_finished_state_ptr,
-                                           [ctx.int32_ty(0), ctx.int32_ty(0)])
-        is_finished_count_ptr = builder.gep(is_finished_state_ptr,
-                                            [ctx.int32_ty(0), ctx.int32_ty(1)])
+        is_finished_flag_ptr = ctx.get_state_ptr(self, builder,
+                                                 is_finished_state_ptr,
+                                                 "is_finished_flag")
+        is_finished_count_ptr = ctx.get_state_ptr(self, builder,
+                                                 is_finished_state_ptr,
+                                                 "num_executions_before_finished")
         is_finished_max_ptr = builder.gep(is_finished_param_ptr,
                                           [ctx.int32_ty(0), ctx.int32_ty(0)])
 
@@ -1476,13 +1455,15 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                            arg_out)
         builder.store(builder.load(arg_out), prev_val_ptr)
 
+        #FIXME: Flag and count should be int instead of float
         is_finished_count = builder.load(is_finished_count_ptr)
-        is_finished_count = builder.add(is_finished_count,
-                                        is_finished_count.type(1))
+        is_finished_count = builder.fadd(is_finished_count,
+                                         is_finished_count.type(1))
         builder.store(is_finished_count, is_finished_count_ptr)
         is_finished_max = builder.load(is_finished_max_ptr)
-        max_reached = builder.icmp_unsigned(">=", is_finished_count,
-                                            is_finished_max)
+        is_finished_max = builder.uitofp(is_finished_max, is_finished_count.type)
+        max_reached = builder.fcmp_ordered(">=", is_finished_count,
+                                           is_finished_max)
         is_finished_cond = builder.or_(is_finished_cond, max_reached)
         with builder.if_then(is_finished_cond):
             builder.store(is_finished_flag_ptr.type.pointee(1), is_finished_flag_ptr)

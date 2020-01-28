@@ -1136,7 +1136,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     def _get_compilation_state(self):
         # FIXME: MAGIC LIST, Use stateful tag for this
         whitelist = {"previous_time", "previous_value", "previous_v",
-                     "previous_w", "random_state"}
+                     "previous_w", "random_state", "is_finished_flag",
+                     "num_executions_before_finished"}
         # mechanism functions are handled separately
         blacklist = {"function"} if hasattr(self, 'ports') else {}
         def _is_compilation_state(p):
