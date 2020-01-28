@@ -1175,7 +1175,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      # Invalid types
                      "input_port_variables", "results", "simulation_results",
                      "monitor_for_control", "feature_values", "simulation_ids",
-                     "input_labels_dict", "output_labels_dict"}
+                     "input_labels_dict", "output_labels_dict",
+                     "modulated_mechanisms"}
         # mechanism functions are handled separately
         if hasattr(self, 'ports'):
             blacklist.add("function")
