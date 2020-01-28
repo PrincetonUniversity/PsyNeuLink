@@ -1171,13 +1171,20 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         blacklist = {"previous_time", "previous_value", "previous_v",
                      "previous_w", "random_state", "is_finished_flag",
                      "num_executions_before_finished", "variable",
-                     "value", "initializer"}
+                     "value", "initializer",
+                     # Invalid types
+                     "input_port_variables", "results", "simulation_results",
+                     "monitor_for_control", "feature_values", "simulation_ids",
+                     "input_labels_dict", "output_labels_dict"}
+        # mechanism functions are handled separately
+        if hasattr(self, 'ports'):
+            blacklist.add("function")
         def _is_compilation_param(p):
             if p.name not in blacklist and not isinstance(p, ParameterAlias):
                 #FIXME: this should use defaults
                 val = p.get()
                 # Check if the value is string (like integration_method)
-                return not isinstance(val, (str, ComponentsMeta))
+                return not isinstance(val, (str, dict, ComponentsMeta, ContentAddressableList, type(_is_compilation_param)))
             return False
 
         return filter(_is_compilation_param, self.parameters)

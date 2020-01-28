@@ -2492,7 +2492,7 @@ class Mechanism_Base(Mechanism):
         return ctx.get_param_struct_type(self.function)
 
     def _get_mech_param_struct_type(self, ctx):
-        return pnlvm.ir.LiteralStructType(())
+        return ctx.get_param_struct_type(super())
 
     def _get_param_struct_type(self, ctx):
         states_param_struct = self._get_states_param_struct_type(ctx)
@@ -2550,7 +2550,7 @@ class Mechanism_Base(Mechanism):
         return (port_param_init, function_param_init, mech_param_init)
 
     def _get_mech_params_init(self, context):
-        return ()
+        return super()._get_param_initializer(context)
 
     def _get_ports_state_initializer(self, context):
         gen = (s._get_state_initializer(context) for s in self.ports)
