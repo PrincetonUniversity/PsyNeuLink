@@ -2073,7 +2073,7 @@ class Mechanism_Base(Mechanism):
 
         .. note::
                 The reinitialize method of an IntegratorFunction Function typically resets the function's
-                `previous_value <IntegratorFunction.previous_value>` (and any other `portful_attributes
+                `previous_value <IntegratorFunction.previous_value>` (and any other `stateful_attributes
                 <IntegratorFunction.stateful_attributes>`) and `value <IntegratorFunction.value>` to the quantity (or
                 quantities) specified. If `reinitialize <Mechanism_Base.reinitialize>` is called without arguments,
                 the `initializer <IntegratorFunction.initializer>` value (or the values of each of the attributes in

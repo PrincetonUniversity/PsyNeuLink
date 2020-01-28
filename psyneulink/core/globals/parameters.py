@@ -4,7 +4,7 @@
 
 PsyNeuLink `parameters <Parameter>` are objects that represent the user-modifiable parameters of a `Component`. `Parameter`\\ s have
 names, default values, and other attributes that define how they are used in models. `Parameter` \\s also maintain and provide
-access to the data used in actual computations - `default values <Parameter_Defaults>`, `current values <Parameter_portfulness>`, `previous values <Parameter.history>`,
+access to the data used in actual computations - `default values <Parameter_Defaults>`, `current values <Parameter_statefulness>`, `previous values <Parameter.history>`,
 and `logged values <Log>`.
 
 
@@ -25,7 +25,7 @@ and are used to validate compatibility between this instance and other PNL objec
     ``t.defaults.noise`` is shorthand for ``t.parameters.noise.default_value``, and they both refer to the default noise value for *t*
 
 
-.. _Parameter_portfulness:
+.. _Parameter_statefulness:
 
 Statefulness of Parameters
 ==========================
