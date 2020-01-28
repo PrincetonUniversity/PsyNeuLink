@@ -1134,16 +1134,15 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     # Compilation support
     # ------------------------------------------------------------------------------------------------------------------
     def _get_compilation_state(self):
-        try:
-            stateful = set(self.stateful_attributes)
-        except AttributeError:
-            stateful = set()
+        # FIXME: MAGIC LIST, Use stateful tag for this
+        whitelist = {"previous_time", "previous_value", "previous_v",
+                     "previous_w", "random_state"}
         # mechanism functions are handled separately
         blacklist = {"function"} if hasattr(self, 'ports') else {}
         def _is_compilation_state(p):
-            return p.name not in blacklist and (
-                   p.name in stateful or
-                   isinstance(p.get(), (Component, np.random.RandomState)))
+            val = p.get()   # memoize for this function
+            return val is not None and p.name not in blacklist and \
+                   (p.name in whitelist or isinstance(val, Component))
 
         return filter(_is_compilation_state, self.parameters)
 
