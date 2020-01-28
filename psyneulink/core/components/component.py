@@ -1167,15 +1167,13 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         return pnlvm._tupleize(_convert(self._get_state_values(context)))
 
     def _get_compilation_params(self):
-        # Filter out known unused/invalid params
-        black_list = {'variable', 'value', 'initializer'}
-        try:
-            # Don't list stateful params, the are included in state
-            black_list.update(self.stateful_attributes)
-        except AttributeError:
-            pass
+        # FIXME: MAGIC LIST, Use stateful tag for this
+        blacklist = {"previous_time", "previous_value", "previous_v",
+                     "previous_w", "random_state", "is_finished_flag",
+                     "num_executions_before_finished", "variable",
+                     "value", "initializer"}
         def _is_compilation_param(p):
-            if p.name not in black_list and not isinstance(p, ParameterAlias):
+            if p.name not in blacklist and not isinstance(p, ParameterAlias):
                 #FIXME: this should use defaults
                 val = p.get()
                 # Check if the value is string (like integration_method)
