@@ -1377,57 +1377,28 @@ class TransferMechanism(ProcessingMechanism_Base):
             current_input[maxCapIndices] = np.max(clip)
         return current_input
 
-    def _get_function_param_struct_type(self, ctx):
-        param_type_list = [ctx.get_param_struct_type(self.function)]
-        if self.integrator_mode:
-            assert self.integrator_function is not None
-            param_type_list.append(ctx.get_param_struct_type(self.integrator_function))
-        return pnlvm.ir.LiteralStructType(param_type_list)
-
-    def _get_function_state_struct_type(self, ctx):
-        state_struct_type_list = [ctx.get_state_struct_type(self.function)]
-        if self.integrator_mode:
-           assert self.integrator_function is not None
-           state_struct_type_list.append(ctx.get_state_struct_type(self.integrator_function))
-
-        return pnlvm.ir.LiteralStructType(state_struct_type_list)
-
-    def _get_function_param_initializer(self, context):
-        function_param_list = [self.function._get_param_initializer(context)]
-        if self.integrator_mode:
-            assert self.integrator_function is not None
-            function_param_list.append(self.integrator_function._get_param_initializer(context))
-        return tuple(function_param_list)
-
-    def _get_function_state_initializer(self, context):
-        context_list = [self.function._get_state_initializer(context)]
-        if self.integrator_mode:
-            assert self.integrator_function is not None
-            context_list.append(self.integrator_function._get_state_initializer(context))
-        return tuple(context_list)
-
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
-        is_out, builder = self._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
+        ip_out, builder = self._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
 
-        # Parameters and state for both integrator and main function
-        f_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        f_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
 
         if self.integrator_mode:
-            # IntegratorFunction function is the second in the function param aggregate
-            if_state = builder.gep(f_state, [ctx.int32_ty(0), ctx.int32_ty(1)])
-            if_param_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            if_state = ctx.get_state_ptr(self, builder, mech_state,
+                                         "integrator_function")
+            if_param_raw = ctx.get_param_ptr(self, builder, mech_params,
+                                             "integrator_function")
             if_params, builder = self._gen_llvm_param_ports(self.integrator_function,
-                                                            if_param_ptr, ctx, builder, params, state, arg_in)
+                                                            if_param_raw, ctx, builder,
+                                                            params, state, arg_in)
 
             mf_in, builder = self._gen_llvm_invoke_function(ctx, builder, self.integrator_function,
-                                                            if_params, if_state, is_out)
+                                                            if_params, if_state, ip_out)
         else:
-            mf_in = is_out
+            mf_in = ip_out
 
-        # Main function is the first in the function param aggregate
-        mf_state = builder.gep(f_state, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        mf_param_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        mf_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        mf_param_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
         mf_params, builder = self._gen_llvm_param_ports(self.function, mf_param_ptr, ctx,
                                                         builder, params, state, arg_in)
 
