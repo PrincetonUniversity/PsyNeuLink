@@ -1406,32 +1406,32 @@ class TransferMechanism(ProcessingMechanism_Base):
             context_list.append(self.integrator_function._get_state_initializer(context))
         return tuple(context_list)
 
-    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
-        is_out, builder = self._gen_llvm_input_ports(ctx, builder, params, context, arg_in)
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+        is_out, builder = self._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
 
-        # Parameters and context for both integrator and main function
+        # Parameters and state for both integrator and main function
         f_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        f_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        f_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
         if self.integrator_mode:
             # IntegratorFunction function is the second in the function param aggregate
-            if_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            if_state = builder.gep(f_state, [ctx.int32_ty(0), ctx.int32_ty(1)])
             if_param_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1)])
             if_params, builder = self._gen_llvm_param_ports(self.integrator_function,
-                                                            if_param_ptr, ctx, builder, params, context, arg_in)
+                                                            if_param_ptr, ctx, builder, params, state, arg_in)
 
             mf_in, builder = self._gen_llvm_invoke_function(ctx, builder, self.integrator_function,
-                                                            if_params, if_context, is_out)
+                                                            if_params, if_state, is_out)
         else:
             mf_in = is_out
 
         # Main function is the first in the function param aggregate
-        mf_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        mf_state = builder.gep(f_state, [ctx.int32_ty(0), ctx.int32_ty(0)])
         mf_param_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(0)])
         mf_params, builder = self._gen_llvm_param_ports(self.function, mf_param_ptr, ctx,
-                                                        builder, params, context, arg_in)
+                                                        builder, params, state, arg_in)
 
-        mf_out, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_context, mf_in)
+        mf_out, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_state, mf_in)
 
         # FIXME: Convert to runtime instead of compile time
         clip = self.parameters.clip.get()
@@ -1446,7 +1446,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                     val = pnlvm.helpers.fclamp(b1, val, clip[0], clip[1])
                     b1.store(val, ptro)
 
-        builder = self._gen_llvm_output_ports(ctx, builder, mf_out, params, context, arg_in, arg_out)
+        builder = self._gen_llvm_output_ports(ctx, builder, mf_out, params, state, arg_in, arg_out)
 
         return builder
 
