@@ -1184,7 +1184,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 #FIXME: this should use defaults
                 val = p.get()
                 # Check if the value is string (like integration_method)
-                return not isinstance(val, (str, dict, ComponentsMeta, ContentAddressableList, type(_is_compilation_param)))
+                return not isinstance(val, (str, dict, ComponentsMeta, ContentAddressableList, type(_is_compilation_param), type(max)))
             return False
 
         return filter(_is_compilation_param, self.parameters)

@@ -1263,12 +1263,6 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         return pnlvm.ir.LiteralStructType(input_type_list)
 
-    def _get_mech_param_struct_type(self, ctx):
-        return self._get_mech_is_finished_param_struct_type(ctx)
-
-    def _get_mech_params_init(self, context):
-        return self._get_mech_is_finished_param_initializer(context)
-
     def _get_param_struct_type(self, ctx):
         transfer_t = ctx.get_param_struct_type(super())
         projection_t = ctx.get_param_struct_type(self.recurrent_projection)
@@ -1294,28 +1288,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         retval_init = (tuple(os.defaults.value) if not np.isscalar(os.defaults.value) else os.defaults.value for os in self.output_ports)
         return tuple((transfer_init, projection_init, tuple(retval_init)))
 
-    def _get_mech_is_finished_param_struct_type(self, ctx):
-        types = [ctx.int32_ty]   # max_executions_before_finished
-        if isinstance(self.termination_measure, Function):
-            types.append(ctx.get_param_struct_type(self.termination_measure))
-        else:
-            types.append(pnlvm.ir.LiteralStructType([]))
-        threshold = self.parameters.termination_threshold.get(None)
-        if threshold is not None:
-            types.append(ctx.convert_python_struct_to_llvm_ir(threshold))
-        return pnlvm.ir.LiteralStructType(types)
-
-    def _get_mech_is_finished_param_initializer(self, context):
-        init = [self.parameters.max_executions_before_finished.get(context)]
-        if isinstance(self.termination_measure, Function):
-            init.append(self.termination_measure._get_param_initializer(context))
-        else:
-            init.append(())
-        threshold = self.parameters.termination_threshold.get(context)
-        if threshold is not None:
-            init.append(threshold)
-        return tuple(init)
-
     def _gen_llvm_get_is_finished_state_struct(self, ctx, builder, state):
         # mechanism private state is #2
         return builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
@@ -1331,7 +1303,8 @@ class RecurrentTransferMechanism(TransferMechanism):
            not self.execute_until_finished:
             return pnlvm.ir.IntType(1)(1)
 
-        threshold_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        threshold_ptr = ctx.get_param_ptr(self, builder, params,
+                                          "termination_threshold")
         threshold = builder.load(threshold_ptr)
         cmp_val_ptr = builder.alloca(threshold.type)
         builder.store(threshold, cmp_val_ptr)
@@ -1353,7 +1326,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.termination_measure.defaults.value = float(0)
 
             func = ctx.import_llvm_function(self.termination_measure)
-            func_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            func_params = ctx.get_param_ptr(self, builder, params, "termination_measure")
             func_state = ctx.get_state_ptr(self, builder, state, "termination_measure")
             func_in = builder.alloca(func.args[2].type.pointee)
             # Populate input
@@ -1383,16 +1356,14 @@ class RecurrentTransferMechanism(TransferMechanism):
         transfer_input_type = super()._get_input_struct_type(ctx)
         transfer_in = builder.alloca(transfer_input_type)
 
-        is_finished_state_ptr = self._gen_llvm_get_is_finished_state_struct(ctx, builder, transfer_state)
-        is_finished_param_ptr = self._gen_llvm_get_is_finished_param_struct(ctx, builder, transfer_params)
-        is_finished_flag_ptr = ctx.get_state_ptr(self, builder,
-                                                 is_finished_state_ptr,
+        mech_state_ptr = self._gen_llvm_get_is_finished_state_struct(ctx, builder, transfer_state)
+        mech_param_ptr = self._gen_llvm_get_is_finished_param_struct(ctx, builder, transfer_params)
+        is_finished_flag_ptr = ctx.get_state_ptr(self, builder, mech_state_ptr,
                                                  "is_finished_flag")
-        is_finished_count_ptr = ctx.get_state_ptr(self, builder,
-                                                 is_finished_state_ptr,
+        is_finished_count_ptr = ctx.get_state_ptr(self, builder, mech_state_ptr,
                                                  "num_executions_before_finished")
-        is_finished_max_ptr = builder.gep(is_finished_param_ptr,
-                                          [ctx.int32_ty(0), ctx.int32_ty(0)])
+        is_finished_max_ptr = ctx.get_param_ptr(self, builder, mech_param_ptr,
+                                                "max_executions_before_finished")
 
         # Reset the flag and counter
         builder.store(is_finished_flag_ptr.type.pointee(0), is_finished_flag_ptr)
@@ -1449,8 +1420,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         builder = super()._gen_llvm_function_body(ctx, builder, transfer_params, transfer_state, transfer_in, arg_out)
 
         is_finished_cond = self._gen_llvm_is_finished_cond(ctx, builder,
-                                                           is_finished_param_ptr,
-                                                           is_finished_state_ptr,
+                                                           mech_param_ptr,
+                                                           mech_state_ptr,
                                                            prev_val_ptr,
                                                            arg_out)
         builder.store(builder.load(arg_out), prev_val_ptr)
@@ -1461,7 +1432,6 @@ class RecurrentTransferMechanism(TransferMechanism):
                                          is_finished_count.type(1))
         builder.store(is_finished_count, is_finished_count_ptr)
         is_finished_max = builder.load(is_finished_max_ptr)
-        is_finished_max = builder.uitofp(is_finished_max, is_finished_count.type)
         max_reached = builder.fcmp_ordered(">=", is_finished_count,
                                            is_finished_max)
         is_finished_cond = builder.or_(is_finished_cond, max_reached)
