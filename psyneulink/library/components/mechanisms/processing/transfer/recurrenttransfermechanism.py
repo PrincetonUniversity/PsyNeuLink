@@ -1381,8 +1381,9 @@ class RecurrentTransferMechanism(TransferMechanism):
 
             prev_val_ptr = builder.gep(state, [ctx.int32_ty(0),
                 ctx.int32_ty(len(state.type.pointee) - 2)])
-            # FIXME: Why does this have a wrapper struct?
-            recurrent_in = builder.gep(prev_val_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            # Extract the correct output port
+            recurrent_in = builder.gep(prev_val_ptr, [ctx.int32_ty(0),
+                ctx.int32_ty(self.output_ports.index(self.recurrent_projection.sender))])
             builder.call(recurrent_f, [recurrent_params, recurrent_state, recurrent_in, real_last_ptr])
 
         # Copy mod afferents. These are not impacted by the recurrent projection
