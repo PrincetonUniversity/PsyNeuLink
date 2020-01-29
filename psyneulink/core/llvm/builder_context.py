@@ -235,10 +235,11 @@ class LLVMBuilderContext:
         return builder.gep(params_ptr, [self.int32_ty(0), idx],
                            name="ptr_param_{}_{}".format(param_name, component.name))
 
-    def get_state_ptr(self, component, builder, state_ptr, port_Name):
-        idx = self.int32_ty(component._get_state_ids().index(port_Name))
+    def get_state_ptr(self, component, builder, state_ptr, stateful_name):
+        idx = self.int32_ty(component._get_state_ids().index(stateful_name))
         return builder.gep(state_ptr, [self.int32_ty(0), idx],
-                           name="ptr_state_{}_{}".format(port_Name, component.name))
+                           name="ptr_state_{}_{}".format(stateful_name,
+                                                         component.name))
 
     def unwrap_2d_array(self, builder, element):
         if isinstance(element.type.pointee, ir.ArrayType) and isinstance(element.type.pointee.element, ir.ArrayType):

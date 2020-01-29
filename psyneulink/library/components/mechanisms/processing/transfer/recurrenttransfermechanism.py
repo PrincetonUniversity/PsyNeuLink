@@ -1238,98 +1238,172 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     def _get_input_struct_type(self, ctx):
         input_type_list = []
-        # FIXME: What if we have more than one state? Does the autoprojection
-        # connect only to the first one?
+        # FIXME: Assume only one input port
+        #        (autoassociative projection connects to primary input port)
         assert len(self.input_ports) == 1
         for port in self.input_ports:
             # Extract the non-modulation portion of InputPort input struct
-            s_type = ctx.get_input_struct_type(port).elements[0]
-            if isinstance(s_type, pnlvm.ir.ArrayType):
+            p_type = ctx.get_input_struct_type(port).elements[0]
+            if isinstance(p_type, pnlvm.ir.ArrayType):
                 # Subtract one incoming mapping projections.
                 # Unless it's the only incoming projection (mechanism is standalone)
-                new_count = max(s_type.count - 1, 1)
-                new_type = pnlvm.ir.ArrayType(s_type.element, new_count)
-            # FIXME consider struct types
+                new_count = max(p_type.count - 1, 1)
+                new_type = pnlvm.ir.ArrayType(p_type.element, new_count)
             else:
-                assert False
+                # FIXME consider other types
+                assert False, "Input struct is not an array!"
             input_type_list.append(new_type)
-        state_input_type_list = []
+
+        # Add modulatory inputs
+        mod_input_type_list = []
         for proj in self.mod_afferents:
-            state_input_type_list.append(ctx.get_output_struct_type(proj))
-        if len(state_input_type_list) > 1:
-            input_type_list.append(pnlvm.ir.LiteralStructType(state_input_type_list))
+            mod_input_type_list.append(ctx.get_output_struct_type(proj))
+        if len(mod_input_type_list) > 1:
+            input_type_list.append(pnlvm.ir.LiteralStructType(mod_input_type_list))
+
         return pnlvm.ir.LiteralStructType(input_type_list)
 
     def _get_param_struct_type(self, ctx):
         transfer_t = ctx.get_param_struct_type(super())
         projection_t = ctx.get_param_struct_type(self.recurrent_projection)
-        return pnlvm.ir.LiteralStructType([transfer_t, projection_t])
+        return pnlvm.ir.LiteralStructType([*transfer_t.elements, projection_t])
 
     def _get_state_struct_type(self, ctx):
         transfer_t = ctx.get_state_struct_type(super())
         projection_t = ctx.get_state_struct_type(self.recurrent_projection)
         return_t = ctx.get_output_struct_type(self)
-        return pnlvm.ir.LiteralStructType([transfer_t, projection_t, return_t])
+        return pnlvm.ir.LiteralStructType([*transfer_t.elements, return_t, projection_t])
 
     def _get_param_initializer(self, context):
         transfer_params = super()._get_param_initializer(context)
         projection_params = self.recurrent_projection._get_param_initializer(context)
-        return tuple([transfer_params, projection_params])
+        return (*transfer_params, projection_params)
 
     def _get_state_initializer(self, context):
         transfer_init = super()._get_state_initializer(context)
         projection_init = self.recurrent_projection._get_state_initializer(context)
 
-        # Initialize to OutputPort defaults. That is what the recurrent
-        # projection finds.
+        # Initialize to OutputPort defaults.
+        # That is what the recurrent projection finds.
+        # FIXME: This should use standard 'previous_value' stateful param
         retval_init = (tuple(os.defaults.value) if not np.isscalar(os.defaults.value) else os.defaults.value for os in self.output_ports)
-        return tuple((transfer_init, projection_init, tuple(retval_init)))
+        return (*transfer_init, tuple(retval_init), projection_init)
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
-        real_input_type = super()._get_input_struct_type(ctx)
-        real_in = builder.alloca(real_input_type)
-        old_val = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
+        #FIXME: This should really be in TransferMechanism, but those don't
+        #       support 'is_finished' yet
+        # previous_value is appended before AutoProjection in state struct
+        # FIXME: This should use standard "previous_value" param
+        rec_state = builder.function.args[1]
+        prev_val_ptr = builder.gep(rec_state, [ctx.int32_ty(0),
+            ctx.int32_ty(len(rec_state.type.pointee) - 2)])
 
-        # FIXME: What if we have more than one state? Does the autoprojection
-        # connect only to the first one?
+        # preserve the old prev value
+        prev_val = builder.load(prev_val_ptr)
+        # Update previous value to make sure that repeated executions work
+        builder.store(builder.load(current), prev_val_ptr)
+
+        if self.parameters.termination_threshold.get(None) is None or \
+           not self.execute_until_finished:
+            return pnlvm.ir.IntType(1)(1)
+
+        threshold_ptr = ctx.get_param_ptr(self, builder, params,
+                                          "termination_threshold")
+        threshold = builder.load(threshold_ptr)
+        cmp_val_ptr = builder.alloca(threshold.type)
+        builder.store(threshold, cmp_val_ptr)
+        if self.termination_measure is max:
+            assert self._termination_measure_num_items_expected == 1
+            # Get inside of the structure
+            val = builder.gep(current, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            first_val = builder.load(builder.gep(val, [ctx.int32_ty(0), ctx.int32_ty(0)]))
+            builder.store(first_val, cmp_val_ptr)
+            with pnlvm.helpers.array_ptr_loop(builder, val, "max_loop") as (b, idx):
+                test_val = b.load(b.gep(val, [ctx.int32_ty(0), idx]))
+                max_val = b.load(cmp_val_ptr)
+                cond = b.fcmp_ordered(">=", test_val, max_val)
+                max_val = b.select(cond, test_val, max_val)
+                b.store(max_val, cmp_val_ptr)
+        elif isinstance(self.termination_measure, Function):
+            # FIXME: HACK the distance function is not initialized
+            self.termination_measure.defaults.variable = np.zeros_like([self.defaults.value[0], self.defaults.value[0]])
+            self.termination_measure.defaults.value = float(0)
+
+            func = ctx.import_llvm_function(self.termination_measure)
+            func_params = ctx.get_param_ptr(self, builder, params, "termination_measure")
+            func_state = ctx.get_state_ptr(self, builder, state, "termination_measure")
+            func_in = builder.alloca(func.args[2].type.pointee)
+            # Populate input
+            func_in_current_ptr = builder.gep(func_in, [ctx.int32_ty(0),
+                                                        ctx.int32_ty(0)])
+            current_ptr = builder.gep(current, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            builder.store(builder.load(current_ptr), func_in_current_ptr)
+
+            func_in_prev_ptr = builder.gep(func_in, [ctx.int32_ty(0),
+                                                     ctx.int32_ty(1)])
+            builder.store(builder.extract_value(prev_val, 0), func_in_prev_ptr)
+
+            builder.call(func, [func_params, func_state, func_in, cmp_val_ptr])
+
+        else:
+            assert False, "Not Supported: {}".format(self.termination_measure)
+
+        cmp_val = builder.load(cmp_val_ptr)
+        cmp_str = self.parameters.termination_comparison_op.get(None)
+        return builder.fcmp_ordered(cmp_str, builder.load(cmp_val_ptr), threshold)
+
+    def _gen_llvm_input_ports(self, ctx, builder, params, state, arg_in):
+        # Allocate space for transfer mechanism.
+        # This includes space for the autoprojection
+        transfer_input_type = ctx.get_input_struct_type(super())
+        transfer_in = builder.alloca(transfer_input_type)
+
+        # FIXME: Assume only one input port
+        #        (autoassociative projection connects to primary input port)
         assert len(self.input_ports) == 1
         for i, port in enumerate(self.input_ports):
-            is_real_input = builder.gep(real_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            is_current_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            for idx in range(len(is_current_input.type.pointee)):
-                curr_ptr = builder.gep(is_current_input, [ctx.int32_ty(0), ctx.int32_ty(idx)])
-                real_ptr = builder.gep(is_real_input, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+            ip_current_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            ip_trans_input = builder.gep(transfer_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
+
+            # Copy all inputs to this port
+            for idx in range(len(ip_current_input.type.pointee)):
+                curr_ptr = builder.gep(ip_current_input, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+                real_ptr = builder.gep(ip_trans_input, [ctx.int32_ty(0), ctx.int32_ty(idx)])
                 builder.store(builder.load(curr_ptr), real_ptr)
 
-            # FIXME: This is a workaround to find out if we are in a
-            #        composition
+            # FIXME: This is a workaround to find out if we are in a composition
+            #        Standalone mechanisms don't update the recurrent projection
             if len(port.pathway_projections) == 1:
                 continue
 
-            assert len(is_real_input.type.pointee) == len(is_current_input.type.pointee) + 1
-            last_idx = len(is_real_input.type.pointee) - 1
-            real_last_ptr = builder.gep(is_real_input, [ctx.int32_ty(0), ctx.int32_ty(last_idx)])
+            assert len(ip_trans_input.type.pointee) == len(ip_current_input.type.pointee) + 1
 
+            # Run the autoprojection function to fill in the missing input
+            last_idx = len(ip_trans_input.type.pointee) - 1
+            real_last_ptr = builder.gep(ip_trans_input, [ctx.int32_ty(0), ctx.int32_ty(last_idx)])
+
+            # Autoprojection state is appended to the end of state struct
+            recurrent_state = builder.gep(state, [ctx.int32_ty(0),
+                ctx.int32_ty(len(state.type.pointee) - 1)])
+            # Autoprojection params are appended to the end of param struct
+            recurrent_params = builder.gep(params, [ctx.int32_ty(0),
+                ctx.int32_ty(len(params.type.pointee) - 1)])
             recurrent_f = ctx.import_llvm_function(self.recurrent_projection)
-            recurrent_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
-            recurrent_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-            # FIXME: Why does this have a wrapper struct?
-            recurrent_in = builder.gep(old_val, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            prev_val_ptr = builder.gep(state, [ctx.int32_ty(0),
+                ctx.int32_ty(len(state.type.pointee) - 2)])
+            # Extract the correct output port
+            recurrent_in = builder.gep(prev_val_ptr, [ctx.int32_ty(0),
+                ctx.int32_ty(self.output_ports.index(self.recurrent_projection.sender))])
             builder.call(recurrent_f, [recurrent_params, recurrent_state, recurrent_in, real_last_ptr])
 
         # Copy mod afferents. These are not impacted by the recurrent projection
         if len(self.mod_afferents) > 1:
             mod_afferent_arg_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(len(self.input_ports))])
-            mod_afferent_in_ptr = builder.gep(real_in, [ctx.int32_ty(0), ctx.int32_ty(len(self.input_ports))])
+            mod_afferent_in_ptr = builder.gep(transfer_in, [ctx.int32_ty(0), ctx.int32_ty(len(self.input_ports))])
             builder.store(builder.load(mod_afferent_arg_ptr), mod_afferent_in_ptr)
 
-        transfer_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        transfer_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        builder = super()._gen_llvm_function_body(ctx, builder, transfer_params, transfer_state, real_in, arg_out)
-
-        builder.store(builder.load(arg_out), old_val)
-
-        return builder
+        return super()._gen_llvm_input_ports(ctx, builder, params, state, transfer_in)
 
     @property
     def _dependent_components(self):

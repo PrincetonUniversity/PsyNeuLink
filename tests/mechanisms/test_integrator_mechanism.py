@@ -314,7 +314,7 @@ class TestReinitialize:
         assert np.allclose(I.value, 0.0)
         assert np.allclose(I.output_ports[0].value, 0.0)
 
-    def test_LCAMechanism_valid(self):
+    def test_LCIIntegrator_valid(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             function=LeakyCompetingIntegrator(),

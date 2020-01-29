@@ -1377,61 +1377,55 @@ class TransferMechanism(ProcessingMechanism_Base):
             current_input[maxCapIndices] = np.max(clip)
         return current_input
 
-    def _get_function_param_struct_type(self, ctx):
-        param_type_list = [ctx.get_param_struct_type(self.function)]
-        if self.integrator_mode:
-            assert self.integrator_function is not None
-            param_type_list.append(ctx.get_param_struct_type(self.integrator_function))
-        return pnlvm.ir.LiteralStructType(param_type_list)
+    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
+        return pnlvm.ir.IntType(1)(1)
 
-    def _get_function_state_struct_type(self, ctx):
-        state_struct_type_list = [ctx.get_state_struct_type(self.function)]
-        if self.integrator_mode:
-           assert self.integrator_function is not None
-           state_struct_type_list.append(ctx.get_state_struct_type(self.integrator_function))
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+        mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        mech_param = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        is_finished_flag_ptr = ctx.get_state_ptr(self, builder, mech_state,
+                                                 "is_finished_flag")
+        is_finished_count_ptr = ctx.get_state_ptr(self, builder, mech_state,
+                                                 "num_executions_before_finished")
+        is_finished_max_ptr = ctx.get_param_ptr(self, builder, mech_param,
+                                                "max_executions_before_finished")
 
-        return pnlvm.ir.LiteralStructType(state_struct_type_list)
+        # Reset the flag and counter
+        builder.store(is_finished_flag_ptr.type.pointee(0), is_finished_flag_ptr)
+        builder.store(is_finished_count_ptr.type.pointee(0), is_finished_count_ptr)
 
-    def _get_function_param_initializer(self, context):
-        function_param_list = [self.function._get_param_initializer(context)]
-        if self.integrator_mode:
-            assert self.integrator_function is not None
-            function_param_list.append(self.integrator_function._get_param_initializer(context))
-        return tuple(function_param_list)
+        # Enter the loop
+        loop_block = builder.append_basic_block(builder.basic_block.name + "_loop")
+        end_block = builder.append_basic_block(builder.basic_block.name + "_end")
+        builder.branch(loop_block)
+        builder.position_at_end(loop_block)
 
-    def _get_function_state_initializer(self, context):
-        context_list = [self.function._get_state_initializer(context)]
-        if self.integrator_mode:
-            assert self.integrator_function is not None
-            context_list.append(self.integrator_function._get_state_initializer(context))
-        return tuple(context_list)
+        # Generate the 'core' of the function
+        ip_out, builder = self._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
 
-    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
-        is_out, builder = self._gen_llvm_input_ports(ctx, builder, params, context, arg_in)
-
-        # Parameters and context for both integrator and main function
-        f_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        f_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
 
         if self.integrator_mode:
-            # IntegratorFunction function is the second in the function param aggregate
-            if_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(1)])
-            if_param_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            if_state = ctx.get_state_ptr(self, builder, mech_state,
+                                         "integrator_function")
+            if_param_raw = ctx.get_param_ptr(self, builder, mech_params,
+                                             "integrator_function")
             if_params, builder = self._gen_llvm_param_ports(self.integrator_function,
-                                                            if_param_ptr, ctx, builder, params, context, arg_in)
+                                                            if_param_raw, ctx, builder,
+                                                            params, state, arg_in)
 
             mf_in, builder = self._gen_llvm_invoke_function(ctx, builder, self.integrator_function,
-                                                            if_params, if_context, is_out)
+                                                            if_params, if_state, ip_out)
         else:
-            mf_in = is_out
+            mf_in = ip_out
 
-        # Main function is the first in the function param aggregate
-        mf_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        mf_param_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        mf_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        mf_param_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
         mf_params, builder = self._gen_llvm_param_ports(self.function, mf_param_ptr, ctx,
-                                                        builder, params, context, arg_in)
+                                                        builder, params, state, arg_in)
 
-        mf_out, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_context, mf_in)
+        mf_out, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_state, mf_in)
 
         # FIXME: Convert to runtime instead of compile time
         clip = self.parameters.clip.get()
@@ -1446,7 +1440,28 @@ class TransferMechanism(ProcessingMechanism_Base):
                     val = pnlvm.helpers.fclamp(b1, val, clip[0], clip[1])
                     b1.store(val, ptro)
 
-        builder = self._gen_llvm_output_ports(ctx, builder, mf_out, params, context, arg_in, arg_out)
+        builder = self._gen_llvm_output_ports(ctx, builder, mf_out, params, state, arg_in, arg_out)
+
+        is_finished_cond = self._gen_llvm_is_finished_cond(ctx, builder,
+                                                           mech_param,
+                                                           mech_state,
+                                                           arg_out)
+
+        #FIXME: Flag and count should be int instead of float
+        is_finished_count = builder.load(is_finished_count_ptr)
+        is_finished_count = builder.fadd(is_finished_count,
+                                         is_finished_count.type(1))
+        builder.store(is_finished_count, is_finished_count_ptr)
+        is_finished_max = builder.load(is_finished_max_ptr)
+        max_reached = builder.fcmp_ordered(">=", is_finished_count,
+                                           is_finished_max)
+        is_finished_cond = builder.or_(is_finished_cond, max_reached)
+        with builder.if_then(is_finished_cond):
+            builder.store(is_finished_flag_ptr.type.pointee(1), is_finished_flag_ptr)
+            builder.branch(end_block)
+
+        builder.branch(loop_block)
+        builder.position_at_end(end_block)
 
         return builder
 
