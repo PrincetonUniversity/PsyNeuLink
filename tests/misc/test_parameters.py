@@ -121,6 +121,34 @@ def test_history():
     assert t.parameters.value.get_previous() == 10
 
 
+@pytest.mark.parametrize(
+    'index, range_start, range_end, expected',
+    [
+        (1, None, None, 4),
+        (6, None, None, None),
+        (None, 2, None, [3, 4]),
+        (None, 2, 0, [3, 4]),
+        (1, 2, 0, [3, 4]),
+        (None, 5, 2, [0, 1, 2]),
+        (None, 10, 2, [0, 1, 2])
+    ]
+)
+def test_get_previous(index, range_start, range_end, expected):
+    t = pnl.TransferMechanism()
+    t.parameters.value.history_max_length = 10
+
+    for i in range(1, 6):
+        t.execute(i)
+
+    previous = t.parameters.value.get_previous(
+        index=index,
+        range_start=range_start,
+        range_end=range_end,
+    )
+
+    assert previous == expected
+
+
 def test_delta():
     t = pnl.TransferMechanism()
 
