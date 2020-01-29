@@ -1404,7 +1404,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         # Reset the flag and counter
         builder.store(is_finished_flag_ptr.type.pointee(0), is_finished_flag_ptr)
-        builder.store(is_finished_count_ptr.type.pointee(0), is_finished_flag_ptr)
+        builder.store(is_finished_count_ptr.type.pointee(0), is_finished_count_ptr)
 
         # Enter the loop
         loop_block = builder.append_basic_block(builder.basic_block.name + "_loop")
