@@ -1272,7 +1272,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         transfer_t = ctx.get_state_struct_type(super())
         projection_t = ctx.get_state_struct_type(self.recurrent_projection)
         return_t = ctx.get_output_struct_type(self)
-        return pnlvm.ir.LiteralStructType([transfer_t, projection_t, return_t])
+        return pnlvm.ir.LiteralStructType([*transfer_t.elements, return_t, projection_t])
 
     def _get_param_initializer(self, context):
         transfer_params = super()._get_param_initializer(context)
@@ -1285,8 +1285,9 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         # Initialize to OutputPort defaults.
         # That is what the recurrent projection finds.
+        # FIXME: This should use standard 'previous_value' stateful param
         retval_init = (tuple(os.defaults.value) if not np.isscalar(os.defaults.value) else os.defaults.value for os in self.output_ports)
-        return tuple((transfer_init, projection_init, tuple(retval_init)))
+        return (*transfer_init, tuple(retval_init), projection_init)
 
     def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, prev, current):
         #FIXME: This should really be in TransferMechanism, but those don't
@@ -1370,15 +1371,17 @@ class RecurrentTransferMechanism(TransferMechanism):
             last_idx = len(ip_trans_input.type.pointee) - 1
             real_last_ptr = builder.gep(ip_trans_input, [ctx.int32_ty(0), ctx.int32_ty(last_idx)])
 
-            # FIXME: We were passed the transfer_mech params and state, cheat and go one step up
-            rec_params, rec_state = builder.function.args[0:2]
-            recurrent_f = ctx.import_llvm_function(self.recurrent_projection)
-            recurrent_state = builder.gep(rec_state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            # Autoprojection state is appended to the end of state struct
+            recurrent_state = builder.gep(state, [ctx.int32_ty(0),
+                ctx.int32_ty(len(state.type.pointee) - 1)])
+            # Autoprojection params are appended to the end of param struct
             recurrent_params = builder.gep(params, [ctx.int32_ty(0),
                 ctx.int32_ty(len(params.type.pointee) - 1)])
+            recurrent_f = ctx.import_llvm_function(self.recurrent_projection)
 
+            prev_val_ptr = builder.gep(state, [ctx.int32_ty(0),
+                ctx.int32_ty(len(state.type.pointee) - 2)])
             # FIXME: Why does this have a wrapper struct?
-            prev_val_ptr = builder.gep(rec_state, [ctx.int32_ty(0), ctx.int32_ty(2)])
             recurrent_in = builder.gep(prev_val_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
             builder.call(recurrent_f, [recurrent_params, recurrent_state, recurrent_in, real_last_ptr])
 
@@ -1391,9 +1394,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         return super()._gen_llvm_input_ports(ctx, builder, params, state, transfer_in)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
-        transfer_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
-        mech_state = builder.gep(transfer_state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
         mech_param = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
         is_finished_flag_ptr = ctx.get_state_ptr(self, builder, mech_state,
                                                  "is_finished_flag")
@@ -1413,9 +1414,11 @@ class RecurrentTransferMechanism(TransferMechanism):
         builder.position_at_end(loop_block)
 
         # Run the transfer mechanism
-        builder = super()._gen_llvm_function_body(ctx, builder, params, transfer_state, arg_in, arg_out)
+        builder = super()._gen_llvm_function_body(ctx, builder, params, state, arg_in, arg_out)
 
-        prev_val_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        # previous_value is appended before AutoProjection in state struct
+        prev_val_ptr = builder.gep(state, [ctx.int32_ty(0),
+            ctx.int32_ty(len(state.type.pointee) - 2)])
         is_finished_cond = self._gen_llvm_is_finished_cond(ctx, builder,
                                                            mech_param,
                                                            mech_state,
