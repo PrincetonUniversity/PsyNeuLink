@@ -1288,14 +1288,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         retval_init = (tuple(os.defaults.value) if not np.isscalar(os.defaults.value) else os.defaults.value for os in self.output_ports)
         return tuple((transfer_init, projection_init, tuple(retval_init)))
 
-    def _gen_llvm_get_is_finished_state_struct(self, ctx, builder, state):
-        # mechanism private state is #2
-        return builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
-
-    def _gen_llvm_get_is_finished_param_struct(self, ctx, builder, params):
-        # mechanism private params is #2
-        return builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
-
     def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, prev, current):
         #FIXME: This should really be in TransferMechanism, but those don't
         #       support 'is_finished' yet
@@ -1401,13 +1393,13 @@ class RecurrentTransferMechanism(TransferMechanism):
         transfer_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
         transfer_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        mech_state_ptr = self._gen_llvm_get_is_finished_state_struct(ctx, builder, transfer_state)
-        mech_param_ptr = self._gen_llvm_get_is_finished_param_struct(ctx, builder, transfer_params)
-        is_finished_flag_ptr = ctx.get_state_ptr(self, builder, mech_state_ptr,
+        mech_state = builder.gep(transfer_state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        mech_param = builder.gep(transfer_params, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        is_finished_flag_ptr = ctx.get_state_ptr(self, builder, mech_state,
                                                  "is_finished_flag")
-        is_finished_count_ptr = ctx.get_state_ptr(self, builder, mech_state_ptr,
+        is_finished_count_ptr = ctx.get_state_ptr(self, builder, mech_state,
                                                  "num_executions_before_finished")
-        is_finished_max_ptr = ctx.get_param_ptr(self, builder, mech_param_ptr,
+        is_finished_max_ptr = ctx.get_param_ptr(self, builder, mech_param,
                                                 "max_executions_before_finished")
 
         # Reset the flag and counter
@@ -1425,8 +1417,8 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         prev_val_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
         is_finished_cond = self._gen_llvm_is_finished_cond(ctx, builder,
-                                                           mech_param_ptr,
-                                                           mech_state_ptr,
+                                                           mech_param,
+                                                           mech_state,
                                                            prev_val_ptr,
                                                            arg_out)
         # Update previous value
